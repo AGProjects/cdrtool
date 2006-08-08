@@ -1,0 +1,36 @@
+#!/usr/bin/php
+<?
+define_syslog_variables();
+openlog("CDRTool purge", LOG_PID, LOG_LOCAL0);
+
+$path=dirname(realpath($_SERVER['PHP_SELF']));
+include($path."/../global.inc");
+include($path."/../cdrlib.phtml");
+
+while (list($k,$v) = each($DATASOURCES)) {
+    if (strlen($v['purgeCDRsAfter'])) {
+        $class_name=$v["class"];
+
+        $log=sprintf("Datasource: %s\n",$v['name']);
+        print $log;
+        syslog(LOG_NOTICE,$log);
+
+        unset($CDRS);
+        $CDRS = new $class_name($k);
+
+        if ($argv[1] && !preg_match("/^(\d{4})(\d{2})$/",$argv[1],$m)) {
+        	print "Error: Month must be in YYYYMM format\n";
+            continue;
+        } else {
+        	$endDate=date('Y-m-d', time() - 3600*24*$v['purgeCDRsAfter']);
+        	$log=sprintf("Purge CDRs before %s\n",$endDate);
+        	print $log;
+        	syslog(LOG_NOTICE,$log);
+        }
+
+        $CDRS->purgeTable($argv[1]);
+        print "\n";
+    }
+}
+
+?>

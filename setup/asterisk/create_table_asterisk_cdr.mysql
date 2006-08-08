@@ -1,0 +1,42 @@
+-- MySQL dump 9.11
+--
+-- Host: db-log    Database: cdrtool
+-- ------------------------------------------------------
+-- Server version	4.0.24_Debian-2-log
+
+--
+-- Table structure for table `asterisk_cdr`
+--
+
+CREATE TABLE `asterisk_cdr` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `calldate` datetime NOT NULL default '0000-00-00 00:00:00',
+  `clid` varchar(45) NOT NULL default '',
+  `src` varchar(45) NOT NULL default '',
+  `dst` varchar(45) NOT NULL default '',
+  `dcontext` varchar(45) NOT NULL default '',
+  `channel` varchar(45) NOT NULL default '',
+  `dstchannel` varchar(45) NOT NULL default '',
+  `lastapp` varchar(45) NOT NULL default '',
+  `lastdata` varchar(45) NOT NULL default '',
+  `duration` int(11) NOT NULL default '0',
+  `billsec` int(11) NOT NULL default '0',
+  `disposition` int(11) NOT NULL default '0',
+  `amaflags` int(11) NOT NULL default '0',
+  `accountcode` varchar(45) NOT NULL default '',
+  `uniqueid` varchar(45) NOT NULL default '',
+  `DestinationId` varchar(255) NOT NULL default '',
+  `Price` varchar(255) NOT NULL default '',
+  `Rate` text NOT NULL default '',
+  `Normalized` enum('0','1') default '0',
+  PRIMARY KEY  (`id`),
+  KEY `calldate_idx` (`calldate`),
+  KEY `clid_idx` (`clid`),
+  KEY `src_idx` (`src`),
+  KEY `dst_idx` (`dst`),
+  KEY `channel_idx` (`channel`),
+  KEY `dstchannel_idx` (`dstchannel`),
+  KEY `normalized_idx` (`Normalized`)
+
+) TYPE=MyISAM;
+

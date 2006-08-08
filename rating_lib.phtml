@@ -1,0 +1,3582 @@
+<?
+// if this file is loaded, check global var $ratingEnabled
+$ratingEnabled=1;
+require_once("SOAP/Client.php");
+
+class Rate {
+    var $priceDenominator       = 10000; // allow sub cents
+    var $priceDecimalDigits     = 4;     // web display
+    var $minimumDurationCharged = 0;     // 0 to cancel it
+    var $durationPeriodRated    = 60;    // in seconds
+    var $trafficSizeRated       = 1024;  // in KBytes, default 1MByte
+
+    function Rate(&$parent) {
+        $this->CDRS = &$parent->CDRS;
+
+        if ($this->CDRS->CDRTool[rating][priceDenominator]) {
+            $this->priceDenominator=$this->CDRS->CDRTool[rating][priceDenominator];
+        }
+
+        if ($this->CDRS->CDRTool[rating][priceDecimalDigits]) {
+            $this->priceDecimalDigits=$this->CDRS->CDRTool[rating][priceDecimalDigits];
+        }
+
+        if ($this->CDRS->CDRTool[rating][minimumDurationCharged]) {
+            $this->minimumDurationCharged=$this->CDRS->CDRTool[rating][minimumDurationCharged];
+        }
+
+        if ($this->CDRS->CDRTool[rating][durationPeriodRated]) {
+            $this->durationPeriodRated=$this->CDRS->CDRTool[rating][durationPeriodRated];
+        }
+
+        if ($this->CDRS->CDRTool[rating][trafficSizeRated]) {
+            $this->trafficSizeRated=$this->CDRS->CDRTool[rating][trafficSizeRated];
+        }
+
+        $this->fromEmail = $this->CDRS->CDRTool[provider][fromEmail];
+        $this->toEmail   = $this->CDRS->CDRTool[provider][toEmail];
+        $this->bccEmail  = $this->CDRS->CDRTool[provider][bccEmail];
+
+        if ($this->fromEmail) $this->extraHeaders="From: $fromEmail\r\nBCC: $this->fromEmail";
+        if ($this->bccEmail)  $this->extraHeaders=$this->extraHeaders.",".$this->bccEmail;
+    }
+
+    function GetBillingTimezone() {
+
+        if ($this->RatingTables->customers[$this->BillingPartyId][timezone]) {
+
+            dprint("Found billing Party=$this->BillingPartyId");
+            return $this->RatingTables->customers[$this->BillingPartyId][timezone];
+
+        } elseif ($this->RatingTables->customers[$this->domain][timezone]) {
+
+            dprint("Found billing Party=$this->domain");
+            return $this->RatingTables->customers[$this->domain][timezone];
+
+        } elseif ($this->RatingTables->customers[$this->gateway][timezone]) {
+
+            dprint("Found billing Party=$this->gateway");
+            return $this->RatingTables->customers[$this->gateway][timezone];
+
+        } else {
+
+            dprint("Found billing Party=default");
+        	return $this->CDRS->CDRTool[provider][timezone];
+
+        }
+    }
+
+    function getRateFromNetwork(&$RateDictionary,&$fp) {
+    	$countEndofLines=0;
+        //dprint_r($RateDictionary);
+        $cmd="ShowPrice";
+        foreach (array_keys(&$RateDictionary) as $key) {
+            $cmd=$cmd." ".$key."=".$RateDictionary[$key]." ";
+        }
+
+        dprint("command: $cmd");
+
+        $this->price	   = "0";
+        $this->pricePrint  = "";
+		$this->rateInfo    = "";
+
+        if (fputs($fp,"$cmd\n") !== false) {
+    
+            $i=0;
+            while ($i < 200) {
+                $i++;
+
+                $line = fgets($fp,1024);
+
+                if (!$line) {
+                    syslog(LOG_NOTICE, "Error: getRateFromNetwork(): connection to network socket died");
+                    break;
+                }
+
+                //dprint("read: $line");
+                if (preg_match("/^\n/",$line) || preg_match("/^END/",$line)) {
+                    dprint("Found \\n or END");
+                    break;
+                }
+
+                if ($i == 1) {
+                	$this->price = trim($line);
+                	$this->pricePrint = number_format($this->price,4);
+                    continue;
+                }
+    
+                $this->rateInfo.=$line;
+
+            }
+            //dprint_r($this->rateInfo);
+        }
+
+    }
+
+    function calculate(&$dictionary) {
+        dprint("<b>Rate->calculate(&dictionary)</b>");
+
+        //dprint_r($dictionary);
+
+        /////////////////////////////////////////////////////
+        // required fields passed from a CDR structure
+        //
+        // Session start time
+        $this->id                = $dictionary['id'];
+        $this->timestamp         = $dictionary['timestamp'];
+        // Session usage, type and destination Id
+        $this->duration          = $dictionary['duration'];
+        $this->traffic           = $dictionary['traffic'];
+        $this->applicationType   = $dictionary['applicationType'];
+        $this->DestinationId     = $dictionary['DestinationId'];
+        // Billable entities we try to best match the rating tables
+        // against
+        $this->BillingPartyId    = $dictionary['BillingPartyId'];
+        $this->domain            = $dictionary['domain'];
+        $this->gateway           = $dictionary['gateway'];
+        // Contain all rating tables load once when
+        // normalization process starts in CDRS parent class
+        $this->RatingTables      = &$dictionary['RatingTables'];
+        //
+        /////////////////////////////////////////////////////////
+
+        /////////////////////////////////////////////////////////
+        // informational fields from CDR structure
+        $this->destinationName   = $dictionary['destinationName'];
+        $this->aNumber           = $dictionary['aNumber'];
+        $this->cNumber           = $dictionary['cNumber'];
+        //////////////////////////////////////////////////////////
+
+        if (!$this->duration) $this->duration = 0;
+		if (!$this->traffic)  $this->traffic  = 0;
+
+        $trafficRate            = 0;
+        $applicationRate        = 0;
+        $durationRate           = 0;
+
+        $foundRates=array();
+
+        if (!$this->DestinationId) {
+            dprint("Could not find destination id for $this->cNumber");
+        }
+
+        $this->billingTimezone    = $this->GetBillingTimezone();
+		$this->startTimeBilling   = getLocalTime($this->billingTimezone,$this->timestamp);
+        list($dateText,$timeText) = explode(" ",trim($this->startTimeBilling));
+
+        $Bdate = explode("-",$dateText);
+    	$Btime = explode(":",$timeText);
+
+        $this->timestampBilling   = mktime($Btime[0], $Btime[1], $Btime[2], $Bdate[1], $Bdate[2], $Bdate[0]);
+
+        $this->startTimeBilling   = Date("Y-m-d H:i:s",$this->timestampBilling);
+
+        dprint("Billing timezone = $this->billingTimezone ");
+        dprint("Billing start time: $this->startTimeBilling");
+        dprint("BillingPartyId: $this->BillingPartyId");
+        dprint("Billing domain: $this->domain");
+
+        if ($this->duration && $this->DestinationId) {
+            dprint("Rate PSTN call having $this->duration seconds to $this->cNumber DestinationId=$this->DestinationId ($this->destinationName)");
+            unset($IntervalsForPricing);
+
+            $i=0;
+            $durationRatedTotal=0;
+
+            // get recursively a set of arrays with rates
+            // until we billed the whole duration
+
+            while ($durationRatedTotal < $this->duration) {
+
+                dprint("Getting rate $i");
+
+                if ($i == "0") {
+                    $dayofweek       = date("w",$this->timestampBilling);
+                    $hourofday       = date("G",$this->timestampBilling);
+                    $dayofyear       = date("Y-m-d",$this->timestampBilling);
+                } else {
+                    $dayofweek       = date("w",$this->timestampBilling+$durationRatedTotal);
+                    $hourofday       = $foundRate["nextHourOfDay"];
+                    $dayofyear       = date("Y-m-d",$this->timestampBilling+$durationRatedTotal);
+                }
+
+                $foundRate           = $this->GetRatePSTN($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
+                $durationRatedTotal  = $durationRatedTotal + $foundRate["duration"];
+
+				if (!$foundRate['rate']) {
+        			syslog(LOG_NOTICE, "Error: Cannot find rate for call id $this->id (DestId=$this->DestinationId)");
+                    return 0;
+                }
+
+                $foundRates[]        = $foundRate;
+
+                $i++;
+
+                if ($i > 10) {
+                    // possible loop because of wrong coding make sure we can end this somehow
+                    $body="Rating of call $this->id (DestId=$this->DestinationId) has more than 10 spans. It could be a serious bug.\n";
+                    mail($this->toEmail, "CDRTool rating problem", $body , $this->extraHeaders);
+        			syslog(LOG_NOTICE, "Error: Rating of call $this->id (DestId=$this->DestinationId) has more than 10 spans.");
+                    return 0;
+                    break;
+                }
+            }
+        }
+
+		if ($this->duration) {
+        	dprint("Rate NGN call having $this->duration seconds to $this->cNumber");
+            if ($foundRate             = $this->GetRateNGN()) {
+                $foundRates[]          = $foundRate;
+            }
+        }
+
+        $this->price=0;
+        $j=0;
+        $span=0;
+
+        foreach ($foundRates as $thisRate) {
+        	$spanPrice=0;
+            $span++;
+            if ($j>0) {
+                $payConnect=0;
+                $durationForRating=$thisRate['duration'];
+            } else {
+                $payConnect=1;
+                if ($this->minimumDurationCharged && $this->duration < $this->minimumDurationCharged) {
+                    $durationForRating=$this->minimumDurationCharged;
+                } else {
+                    $durationForRating=$thisRate['duration'];
+                }
+            }
+
+            $connectCost     = $thisRate[values][connectCost];
+            $durationRate    = $thisRate[values][durationRate];
+            $trafficRate     = $thisRate[values][trafficRate];
+            $applicationRate = $thisRate[values][applicationRate];
+
+			if ($span=="1") {
+            	$connectCostSpan=$connectCost;
+            } else {
+            	$connectCostSpan=0;
+            }
+
+            $connectCostPrint     = number_format($connectCostSpan/$this->priceDenominator,$this->priceDecimalDigits);
+            $durationRatePrint    = number_format($durationRate/$this->priceDenominator,$this->priceDecimalDigits);
+            $trafficRatePrint     = number_format($trafficRate/$this->priceDenominator,$this->priceDecimalDigits);
+            $applicationRatePrint = number_format($applicationRate/$this->priceDenominator,$this->priceDecimalDigits);
+
+            if (!$connectCostSpan)     $connectCostSpan=0;
+            if (!$durationRate)        $durationRate=0;
+            if (!$trafficRate)         $trafficRate=0;
+            if (!$applicationRate)     $applicationRate=0;
+            if (!$this->inputTraffic)  $this->inputTraffic=0;
+            if (!$this->outputTraffic) $this->outputTraffic=0;
+
+            if ($span>1) $this->rateInfo = $this->rateInfo."--\n";
+
+            dprint("price=price+connectCostSpan/priceDenominator*payConnect+
+                            durationRate*durationForRating/durationPeriodRated/priceDenominator+
+                            trafficRate/priceDenominator/trafficSizeRated*(inputTraffic+outputTraffic)/8+
+                            applicationRate/priceDenominator*payConnect");
+
+            dprint("price=$this->price+$connectCostSpan/$this->priceDenominator*$payConnect+
+                            $durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator+
+                            $trafficRate/$this->priceDenominator/$this->trafficSizeRated*($this->inputTraffic+$this->outputTraffic)/8+
+                            $applicationRate/$this->priceDenominator*$payConnect=");
+
+            $spanPrice   =  $durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator+
+                            $trafficRate/$this->priceDenominator/$this->trafficSizeRated*($this->inputTraffic+$this->outputTraffic)/8+
+                            $applicationRate/$this->priceDenominator*$payConnect;
+
+            $this->price    = $this->price+$spanPrice;
+            $spanPricePrint = number_format($spanPrice,$this->priceDecimalDigits);
+
+			$this->rateSyslog="";
+            if ($span=="1" && $thisRate[profile]) {
+                $this->rateInfo = $this->rateInfo .
+                "  ConnectFee: $connectCostPrint\n".
+                "--\n";
+                $this->rateSyslog=$this->rateSyslog."ConnectFee=$connectCostPrint ";
+            	$this->price  = $this->price+$connectCostSpan/$this->priceDenominator*$payConnect;
+            }
+
+			$this->trafficKB=number_format($this->traffic/1024,0,"","");
+
+            if (!$this->destinationName) {
+                $this->destinationNamePrint="Internet";
+            } else {
+            	$this->destinationNamePrint=$this->destinationName;
+            }
+
+            $this->rateInfo = $this->rateInfo .
+            "        Span: $span\n".
+            "    Duration: $durationForRating s\n".
+            "        Appl: $thisRate[application] ($this->trafficKB KB)\n".
+            " Destination: $this->DestinationId ($this->destinationNamePrint)\n".
+            "    Customer: $thisRate[customer]\n";
+
+            $this->rateSyslog=$this->rateSyslog."Span=$span Dur=$durationForRating Prefix=$this->DestinationId Name=$this->destinationNamePrint $thisRate[customer]";
+
+            if ($this->CDRS->CSCODE) {
+                // We found a Peer Carrier so we will change BillingPartyId
+                if ($this->CDRS->CDRTool[normalize][CS_CODES][$this->CDRS->CSCODE][name]) {
+                    $CarrierName = $this->CDRS->CDRTool[normalize][CS_CODES][$this->CDRS->CSCODE][name];
+                } else {
+                    $CarrierName=$this->CDRS->CSCODE;
+                }
+
+                $this->rateInfo = $this->rateInfo .
+            	"     Carrier: $CarrierName\n";
+            }
+
+            if ($thisRate[profile]) {
+                $this->rateInfo = $this->rateInfo .
+                "   StartTime: $this->startTimeBilling ($this->billingTimezone)\n".
+                "   ProfileId: $thisRate[profile] for $thisRate[day]\n".
+                "      RateId: $thisRate[rate] for $thisRate[interval]h\n".
+                "        Rate: $durationRatePrint / $this->durationPeriodRated s\n".
+                "       Price: $spanPricePrint\n";
+                #" TrafficRate: $trafficRatePrint / $this->trafficSizeRated KBytes\n".
+                #"    ApplRate: $applicationRatePrint\n".
+                $this->rateSyslog=$this->rateSyslog." Profile=$thisRate[profile] Period=$thisRate[day] Rate=$thisRate[rate] Interval=$thisRate[interval] Cost=$durationRatePrint/$this->durationPeriodRated";
+
+            } else {
+                $this->rateInfo = $this->rateInfo .
+                "   ProfileId: none\n".
+                "      RateId: none\n";
+                $this->rateSyslog=$this->rateSyslog." Profile=none, Rate=none";
+            }
+
+			$this->rateSyslog=$this->rateSyslog." Price=".sprintf("%.4f",$spanPrice);
+	       	syslog(LOG_NOTICE, $this->rateSyslog);
+
+            dprint ($this->price);
+            $j++;
+        }
+
+        $this->rateInfo=trim($this->rateInfo);
+
+		$this->price=sprintf("%.4f",$this->price);
+
+        if ($this->price > 0) {
+            $this->pricePrint=number_format($this->price,$this->priceDecimalDigits);
+        } else if ($thisRate[profile]) {
+            if ($j) {
+                if ($this->DestinationId && !strlen($durationRate)) {
+                    if (!$this->CDRS->brokenRates[$this->DestinationId]) {
+                        dprint ("<font color=red>Warning: Found destination $this->DestinationId ($this->destinationName) with no Rate</font>\n");
+                    }
+                    $this->CDRS->brokenRates[$this->DestinationId]++;
+                }
+            }
+            $this->pricePrint="";
+        }
+
+        return 1;
+    }
+
+
+    function GetRatePSTN($dayofyear,$dayofweek,$hourofday,$durationRatedAlready) {
+        dprint("<b>GetRatePSTN(DayOfYear=$dayofyear,DayOfWeek=$dayofweek,HourOfDay=$hourofday,durationRatedAlready=$durationRatedAlready)</b>");
+
+        /*
+        // Required information from CDR structure
+        $this->BillingPartyId  # calling subscriber
+        $this->domain   	   # multiple callers may belong to same domain
+        $this->gateway  	   # multiple callers may belong to the same gateway
+
+        $this->cNumber         # E164 destination prefixed with 00  (e.g. 0041 CH)
+        $this->DestinationId   # longest matched DestinationId
+
+        // pertinent to the curent rating SPAN (a span = same profile like evening hours)
+        $hourofday             # which hour of teh day started for peak/ofpeak rates
+        $dayofweek             # which day of the week for matching profiles
+        $dayofyear             # which day of the year for matching holidays
+
+        $durationRatedAlready= the full duration for which a profile is defined (e.g. 0800-1800)
+        // the call is called recursively until the $durationRatedAlready = $CDR->duration
+        // when a call spans multiple profiles. If we span multiple profiles we must call
+        // the function again to lookup the corect rates
+
+
+        Rating logic
+        ------------
+
+        1. lookup the profile_name in billing_customers in the following order:
+           subscriber, domain, gateway (based on $dayofweek):
+           - profile1 matches days [1-5] (Work-day)
+           - profile2 matches days [6-0] (Week-end)
+           - week starts with 0 Sunday and ends with 6 Saturday
+
+            Alternatively look for profile1_alt and profile2_alt
+            If no rates are found for destination in the profileX,
+            than lookup rates in profileX_alt
+
+        2. using the profile_name found, lookup the rate_name based
+           on $hourofday in billing_profiles
+           - the day may be split in maximum 4 periods
+           - each day starts with hour 0 and ends with hour 24
+           - rate_name1 defines the first interval after hour 0
+           - rate_name2 defines the first interval after rate_name1
+           - rate_name3 defines the first interval after rate_name2
+           - rate_name4 defines the first interval after rate_name3
+           When the hour matches an interval use the rate_nameX found
+           to lookup the rate in billing_rates
+           - if no record is found use the rate called 'default'
+        3. lookup in billing_rates the record having same name found above
+           and billing_rates.destination = $this->DestinationId
+           - return an array with all the values to
+           $this->calculate() function that called us
+
+        */
+
+        if ($this->RatingTables->customers[$this->BillingPartyId]['profile1'] && $this->RatingTables->customers[$this->BillingPartyId]['profile2']) {
+            // Subscriber XXX@domain.com has rating profiles assigned
+            $this->allProfiles=$this->RatingTables->customers[$this->BillingPartyId];
+            $this->CustomerProfile="subscriber=$this->BillingPartyId";
+
+        } elseif ($this->RatingTables->customers[$this->domain]['profile1'] && $this->RatingTables->customers[$this->domain]['profile2']) {
+            // Domain domain.com has rating profiles assigned
+            $this->allProfiles=$this->RatingTables->customers[$this->domain];
+            $this->CustomerProfile="domain=$this->domain";
+
+        } elseif ($this->RatingTables->customers[$this->gateway]['profile1'] && $this->RatingTables->customers[$this->gateway]['profile2']) {
+            // Gateway (Source IP) has rating profiles assigned
+            $this->allProfiles=$this->RatingTables->customers[$this->gateway];
+            $this->CustomerProfile="gateway=$this->gateway";
+
+        } elseif ($this->RatingTables->customers['default']['profile1'] && $this->RatingTables->customers['default']['profile2']) {
+            // Otherwise we use the default profiles
+            $this->allProfiles=$this->RatingTables->customers['default'];
+            $this->CustomerProfile="default";
+        }
+
+        if (!$this->allProfiles[profile1] || !$this->allProfiles[profile2] ) {
+            dprint("Cannot find billing profiles for $this->BillingPartyId");
+            return 0;
+        }
+
+        dprint("Found profiles for $this->CustomerProfile");
+        dprint_r($this->allProfiles);
+
+        // get work-day or weekend profile
+        if ($this->RatingTables->holidays[$dayofyear]) {
+
+        	$this->profileName			= $this->allProfiles[profile2];
+            $this->profileNameAlt		= $this->allProfiles[profile2_alt];
+            $this->PeriodOfProfile		= "weekend";
+
+        } else {
+            if ($dayofweek >=1 && $dayofweek <=5 ) {
+                $this->profileName		= $this->allProfiles[profile1];
+	            $this->profileNameAlt	= $this->allProfiles[profile1_alt];
+                $this->PeriodOfProfile	= "weekday";
+            } else {
+                $this->profileName		= $this->allProfiles[profile2];
+            	$this->profileNameAlt	= $this->allProfiles[profile2_alt];
+                $this->PeriodOfProfile	= "weekend";
+            }
+        }
+
+        dprint("Found profile=$this->profileName for $this->PeriodOfProfile day=$dayofweek hour=$hourofday");
+
+        if ($this->profileNameAlt) dprint ("Alternative profile=$this->profileNameAlt");
+
+        // get rate for the time of the day
+        $timestampNextProfile	= $this->timestampBilling + $durationRatedAlready;
+        $profileValues			= $this->RatingTables->profiles[$this->profileName];
+        $profileValuesAlt		= $this->RatingTables->profiles[$this->profileNameAlt];
+
+        if (is_array($profileValues)) {
+            if ($hourofday          < $profileValues['hour1'] ) {
+                $this->rateName     = $profileValues['rate_name1'];
+                $this->timeInterval = "0-".$profileValues['hour1'];
+                $foundProfile       = $profileValues['hour1'];
+                $this->nextProfile  = $profileValues['hour1'];
+            } else if ($hourofday   < $profileValues['hour2']) {
+                $this->rateName     = $profileValues['rate_name2'];
+                $this->timeInterval = $profileValues['hour1']."-".$profileValues['hour2'];
+                $foundProfile       = $profileValues['hour2'];
+                $this->nextProfile  = $profileValues['hour2'];
+            } else if ($hourofday   < $profileValues['hour3']) {
+                $this->rateName     = $profileValues['rate_name3'];
+                $this->timeInterval = $profileValues['hour2']."-".$profileValues['hour3'];
+                $foundProfile       = $profileValues['hour3'];
+                $this->nextProfile  = $profileValues['hour3'];
+            } else if ($hourofday   < $profileValues['hour4']) {
+                $this->rateName     = $profileValues['rate_name4'];
+                $this->timeInterval = $profileValues['hour3']."-".$profileValues['hour4'];
+                $foundProfile       = $profileValues['hour4'];
+                $this->nextProfile  = 0;
+            }
+
+            if ($this->rateName) {
+            	dprint("Found rate=$this->rateName for interval=$this->timeInterval in profile=$this->profileName");
+            	$this->rateValues=$this->RatingTables->rates[$this->rateName][$this->DestinationId];
+            } else {
+                dprint("No rates for destination=$this->DestinationId. Trying alternative profile=$this->profileNameAlt");
+                dprint_r($profileValues);
+            }
+
+            if (!$this->rateValues && is_array($profileValuesAlt)) {
+                dprint("No rates for destination=$this->DestinationId in rate=$this->rateName. Trying alternative profile=$this->profileNameAlt");
+    
+                if ($hourofday          < $profileValuesAlt['hour1'] ) {
+                    $this->rateName     = $profileValuesAlt['rate_name1'];
+                    $this->timeInterval = "0-".$profileValuesAlt['hour1'];
+                    $foundProfile       = $profileValuesAlt['hour1'];
+                    $this->nextProfile  = $profileValuesAlt['hour1'];
+                } else if ($hourofday   < $profileValuesAlt['hour2']) {
+                    $this->rateName     = $profileValuesAlt['rate_name2'];
+                    $this->timeInterval = $profileValuesAlt['hour1']."-".$profileValuesAlt['hour2'];
+                    $foundProfile       = $profileValuesAlt['hour2'];
+                    $this->nextProfile  = $profileValuesAlt['hour2'];
+                } else if ($hourofday   < $profileValuesAlt['hour3']) {
+                    $this->rateName     = $profileValuesAlt['rate_name3'];
+                    $this->timeInterval = $profileValuesAlt['hour2']."-".$profileValuesAlt['hour3'];
+                    $foundProfile       = $profileValuesAlt['hour3'];
+                    $this->nextProfile  = $profileValuesAlt['hour3'];
+                } else if ($hourofday   < $profileValuesAlt['hour4']) {
+                    $this->rateName     = $profileValuesAlt['rate_name4'];
+                    $this->timeInterval = $profileValuesAlt['hour3']."-".$profileValuesAlt['hour4'];
+                    $foundProfile       = $profileValuesAlt['hour4'];
+                    $this->nextProfile  = 0;
+                }
+
+                if ($this->rateName) {
+                    dprint("Found rate \"$this->rateName\" for interval \"$this->timeInterval\" in alternative profile=\"$this->profileNameAlt\"");
+                    $this->rateValues=$this->RatingTables->rates[$this->rateName][$this->DestinationId];
+                } else {
+                    dprint("No rates for destination $this->DestinationId in alternative profile=$this->profileNameAlt.");
+                    dprint("");
+                }
+            }
+
+        } else if (!is_array($profileValuesAlt)) {
+            dprint("No rates for destination=$this->DestinationId in alternative profile=$this->profileNameAlt");
+            $body="No rates for destination=$this->DestinationId in alternative profile=$this->profileNameAlt";
+            mail($this->toEmail, "CDRTool rating problem", $body , $this->extraHeaders);
+        	syslog(LOG_NOTICE, "Error: Cannot find rates for profile=$this->profileName");
+            return 0;
+        }
+
+        if (!$this->rateValues) {
+            dprint("No rates for destination $this->DestinationId in rate=$this->rateName, profile=$this->profileName");
+            $body="No rates for destination=$this->DestinationId in rate=$this->rateName, profile=$this->profileName, customer=$this->CustomerProfile";
+            mail($this->toEmail, "CDRTool rating problem", $body , $this->extraHeaders);
+        	syslog(LOG_NOTICE, "Error: Cannot find rate $this->rateName for destination $this->DestinationId");
+            return 0;
+        }
+
+        if ($this->nextProfile == "24") $this->nextProfile = 0;
+
+        $DST   = Date("I",$timestampNextProfile);
+
+        if (!$this->nextProfile) {
+            // check it we change daylight saving time tomorrow
+            // yes this cann happen and we must apply a different rate
+            $timestampNextProfile =$timestampNextProfile+24*3600;
+        	$DSTNext   = Date("I",$timestampNextProfile);
+
+            if ($DST != $DSTNext) {
+            	if ($DSTNext==0) {
+            		$timestampNextProfile=$timestampNextProfile+3600;
+                	dprint("DST change: adding one hour");
+            	} else if ($DSTNext==1) {
+            		$timestampNextProfile=$timestampNextProfile-3600;
+                	dprint("DST change: substracting one hour");
+                }
+            }
+        }
+
+        $durationToRate=$this->duration-$durationRatedAlready;
+
+        $month = Date("m",$timestampNextProfile);
+        $day   = Date("d",$timestampNextProfile);
+        $year  = Date("Y",$timestampNextProfile);
+
+        $nextProfileTimestamp=mktime($this->nextProfile, 0, 0, $month,$day,$year);
+
+        $npdt=Date("Y-m-d H:i", $nextProfileTimestamp);
+
+        dprint("Next profile datetime: $npdt");
+
+        $timeTillNextProfile=$nextProfileTimestamp-$this->timestampBilling;
+
+        if ($timeTillNextProfile < 0) {
+            $body	= "Negative period till next billing profile for call id $this->callId\n";
+            mail($this->toEmail, "CDRTool rating problem", $body , $this->extraHeaders);
+        	syslog(LOG_NOTICE, "Error: Negative period till next billing profile for call id $this->callId");
+        }
+
+        dprint("Time till next profile: $timeTillNextProfile seconds");
+        if ($durationToRate > $timeTillNextProfile) {
+            $diff=$durationToRate-$timeTillNextProfile;
+            dprint("Call of $durationToRate seconds will extend $diff seconds into next profile $this->nextProfile ");
+            $this->durationRated=$timeTillNextProfile;
+        } else {
+            dprint("Call of $durationToRate seconds fits within curent profile");
+            $this->durationRated=$durationToRate;
+        }
+
+        $rate=array(
+                    "customer"      =>$this->CustomerProfile,
+                    "application"   =>"PSTN voice",
+                    "profile"       =>$this->profileName,
+                    "day"           =>$this->PeriodOfProfile,
+                    "destinationId" =>$this->DestinationId,
+                    "duration"      =>$this->durationRated,
+                    "rate"          =>$this->rateName,
+                    "values"        =>$this->rateValues,
+                    "interval"      =>$this->timeInterval,
+                    "nextHourOfDay" =>$this->nextProfile
+                    );
+        return $rate;
+    }
+
+    function GetRateNGN() {
+
+		if (preg_match("/video/i",$this->applicationType)) {
+            $application="video";
+        } else {
+            $application="audio";
+        }
+
+        dprint("<b>GetRateNGN($application)</b>");
+
+        dprint("Billing domain: $this->domain");
+        dprint("BillingPartyId: $this->BillingPartyId");
+
+        if ($this->RatingTables->customers[$this->BillingPartyId][profileNGN]) {
+            $this->allProfiles     = $this->RatingTables->customers[$this->BillingPartyId];
+            $this->CustomerProfile = "subscriber=$this->BillingPartyId";
+
+        } elseif ($this->RatingTables->customers[$this->domain][profileNGN]) {
+            $this->allProfiles     = $this->RatingTables->customers[$this->domain];
+            $this->CustomerProfile = "domain=$this->domain";
+
+        } elseif ($this->RatingTables->customers[$this->gateway][profileNGN]) {
+            $this->allProfiles     = $this->RatingTables->customers[$this->gateway];
+            $this->CustomerProfile = "gateway=$this->gateway";
+
+        } else {
+            $this->allProfiles     = $this->RatingTables->customers['default'];
+            $this->CustomerProfile = "default";
+        }
+
+		if (!$this->allProfiles[profileNGN]) {
+        	dprint("Could not find any NGN profile for $this->aNumber");
+            return 0;
+        }
+
+        $this->rateName=$this->RatingTables->profilesNGN[$this->allProfiles[profileNGN]][$application][rate];
+
+        if (!$this->rateName) {
+        	dprint("Cound not find any NGN rate for application=\"$application\"");
+            return 0;
+        } else {
+        	dprint("Found NGN rate $this->rateName for application=\"$application\"");
+        }
+
+        $rate=array(
+                    "customer"      =>$this->CustomerProfile,
+                    "application"   =>"NGN $this->applicationType ($application)",
+                    "duration"      =>$this->duration,
+                    "profile"       =>$this->allProfiles[profileNGN],
+                    "rate"          =>$this->rateName,
+                    "day"           =>"All days",
+                    "interval"      =>"0-24",
+                    "values"        =>$this->RatingTables->ratesNGN[$rateName]
+                    );
+        return $rate;
+    }
+
+    function MaxSessionTime($dictionary) {
+        // Used for prepaid application
+        dprint("<b>Rate->MaxSessionTime()</b>");
+
+        $trafficRate            = 0;
+        $applicationRate        = 0;
+        $durationRate           = 0;
+
+        /////////////////////////////////////////////////////
+        // required fields passed from the CDR structure
+        //
+        $this->timestamp         = time();
+        $this->DestinationId     = $dictionary['DestinationId'];
+        $this->BillingPartyId    = $dictionary['BillingPartyId'];
+        $this->domain            = $dictionary['domain'];
+        $this->duration          = $dictionary['duration'];
+        $this->aNumber           = $dictionary['aNumber'];
+        $this->cNumber           = $dictionary['cNumber'];
+        $this->RatingTables      = $dictionary['RatingTables'];
+        $Balance      			 = $dictionary['Balance'];
+
+        if (!$this->DestinationId) {
+            dprint("Could not find any destination id found for $this->cNumber");
+            return 0;
+        }
+
+        $this->billingTimezone    = $this->GetBillingTimezone();
+		$this->startTimeBilling   = getLocalTime($this->billingTimezone,$this->timestamp);
+        list($dateText,$timeText) = explode(" ",trim($this->startTimeBilling));
+
+        $Bdate = explode("-",$dateText);
+    	$Btime = explode(":",$timeText);
+
+        $this->timestampBilling   = mktime($Btime[0], $Btime[1], $Btime[2], $Bdate[1], $Bdate[2], $Bdate[0]);
+        $this->startTimeBilling   = Date("Y-m-d H:i:s",$this->timestampBilling);
+
+        dprint("Billing timezone = $this->billingTimezone ");
+        dprint("Billing start time: $this->startTimeBilling");
+        dprint("Get rate of PSTN call to $this->cNumber DestId = $this->DestinationId, Balance = $Balance");
+
+        $i=0;
+        $durationRatedTotal=0;
+
+        while ($Balance > 0 ) {
+            $span++;
+
+            //syslog(LOG_NOTICE,"Getting rate $i");
+
+            if ($i == "0") {
+                $dayofweek       = date("w",$this->timestampBilling);
+                $hourofday       = date("G",$this->timestampBilling);
+                $dayofyear       = date("Y-m-d",$this->timestampBilling);
+            } else {
+                $dayofweek       = date("w",$this->timestampBilling+$durationRatedTotal);
+                $hourofday       = $foundRate["nextHourOfDay"];
+                $dayofyear       = date("Y-m-d",$this->timestampBilling+$durationRatedTotal);
+            }
+
+            $foundRate            = $this->GetRatePSTN($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
+            dprint_r($foundRate);
+
+            $thisRate=$foundRate;
+
+            if ($j>0) {
+                $payConnect=0;
+                $durationForRating=$thisRate['duration'];
+            } else {
+                $payConnect=1;
+                if ($this->minimumDurationCharged && $this->duration < $this->minimumDurationCharged) {
+                    $durationForRating=$this->minimumDurationCharged;
+                } else {
+                    $durationForRating=$thisRate['duration'];
+                }
+            }
+
+            $j++;
+
+            $connectCost     = $thisRate[values][connectCost];
+            $durationRate    = $thisRate[values][durationRate];
+
+            if ($span=="1") {
+                $connectCostSpan=$connectCost;
+                $setupBalanceRequired=$connectCost/$this->priceDenominator;
+                if ($connectCost && $Balance <= $setupBalanceRequired) {
+                    syslog(LOG_NOTICE,"$Balance <= $setupBalanceRequired");
+                    return 0;
+                }
+                $Balance = $Balance-$setupBalanceRequired;
+
+            } else {
+                $connectCostSpan=0;
+                $setupBalanceRequired=0;
+            }
+
+            $connectCostPrint     = number_format($connectCostSpan/$this->priceDenominator,$this->priceDecimalDigits);
+            $durationRatePrint    = number_format($durationRate/$this->priceDenominator,$this->priceDecimalDigits);
+
+            $spanPrice            = $this->price+$setupBalanceRequired*$payConnect+
+                                    $durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator;
+
+            //syslog(LOG_NOTICE,"price=$this->price+$connectCostSpan/$this->priceDenominator*$payConnect+$durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator=$spanPrice");
+
+
+            if ($Balance > $spanPrice) {
+                $Balance = $Balance-$spanPrice;
+            	$durationRatedTotal   = $durationRatedTotal+ $foundRate["duration"];
+
+            } else {
+
+				$durationAllowedinThisSpan = $Balance /
+                                             $durationRate * $this->durationPeriodRated * $this->priceDenominator;
+				$rateOfThisSpan=$durationRate/$this->priceDenominator;
+
+            	/*
+                syslog(LOG_NOTICE,"Balance                   = $Balance");
+                syslog(LOG_NOTICE,"setupBalanceRequired      = $setupBalanceRequired");
+                syslog(LOG_NOTICE,"rateOfThisSpan            = $rateOfThisSpan");
+                syslog(LOG_NOTICE,"spanPrice                 = $spanPrice");
+                syslog(LOG_NOTICE,"durationRatedTotal        = $durationRatedTotal");
+                syslog(LOG_NOTICE,"durationPeriodRated       = $this->durationPeriodRated");
+                syslog(LOG_NOTICE,"durationAllowedinThisSpan = $durationAllowedinThisSpan");
+                */
+
+                $durationRatedTotal=$durationRatedTotal + $durationAllowedinThisSpan;
+
+                $Balance=$Balance-$spanPrice;
+                return $durationRatedTotal;
+            }
+
+            if ($durationRatedTotal >= $this->duration) {
+                return sprintf("%f",$durationRatedTotal);
+            }
+
+            $i++;
+
+            if ($i>10) {
+                return sprintf("%f",$durationRatedTotal);
+                break;
+            }
+        }
+
+    	return 0;
+    }
+}
+
+class RatingTables {
+
+    function RatingTables () {
+        global $CDRTool;
+
+        $this->cdrtool = new DB_cdrtool;
+        $this->CDRTool = $CDRTool;
+        $this->cdrtool->Halt_On_Error="no";
+
+        $period=$CDRTool[rating][durationPeriodRated] = 60;
+
+        $this->tables=array(
+                           "destinations"=>array("name"=>"Destinations",
+                                                 "keys"=>"id",
+                                                 "domainFilterColumn"=>"domain",
+                                                 "fields"=>array(
+                                                 				 "gateway"=>array("size"=>15,
+                                                                                  "name"=>"Gateway"
+                                                                                ),
+                                                                 "domain"=>array("size"=>15,
+                                                                 				 "name"=>"Domain"
+                                                                                 ),
+                                                                 "subscriber"=>array("size"=>30,
+                                                                 				 "name"=>"Subscriber"
+                                                                                 ),
+                                                                 "dest_id"=>array("size"=>10,
+                                                                 				 "name"=>"Destination"
+                                                                                 ),
+                                                                 "dest_name"=>array("size"=>30,
+                                                                 				 "name"=>"Description"
+                                                                                 )
+
+                                                 				)
+
+
+                                                 ),
+                           "billing_customers"=>array("name"=>"Customers",
+                                                 "keys"=>"id",
+                                                 "domainFilterColumn"=>"domain",
+                                                 "fields"=>array("gateway"=>array("size"=>15,
+                                                                                  "name"=>"Gateway"
+                                                                                ),
+                                                                 "domain"=>array("size"=>15,
+                                                                 				 "name"=>"Domain"
+                                                                                 ),
+                                                                 "subscriber"=>array("size"=>30,
+                                                                 				 "name"=>"Subscriber"
+                                                                                 ),
+                                                                 "profile_name1"=>array("size"=>10,
+                                                                 				 "name"=>"WeekDay"
+                                                                                 ),
+                                                                 "profile_name1_alt"=>array("size"=>10,
+                                                                 				 "name"=>"Alt"
+                                                                                 ),
+                                                                 "profileNGN"=>array("size"=>10,
+                                                                 				 "name"=>"NGN"
+                                                                                 ),
+                                                                 "profile_name2"=>array("size"=>10,
+                                                                 				 "name"=>"WeekEnd"
+                                                                                 ),
+                                                                 "profile_name2_alt"=>array("size"=>10,
+                                                                 				 "name"=>"Alt"
+                                                                                 ),
+                                                                 "timezone"     =>array("size"=>20,
+                                                                 				 "name"=>"Timezone"
+                                                                                 )
+
+                                                 				)
+
+                                                 ),
+                           "billing_profiles"=>array("name"=>"Profiles PSTN",
+                                                 "keys"=>"id",
+                                                 "size"=>6,
+                                                 "domainFilterColumn"=>"domain",
+                                                 "fields"=>array(
+                                                 				 "gateway"=>array("size"=>15,
+                                                                                  "name"=>"Gateway"
+                                                                                ),
+                                                                 "domain"=>array("size"=>15,
+                                                                 				 "name"=>"Domain"
+                                                                                 ),
+                                                                 "subscriber"=>array("size"=>30,
+                                                                 				 "name"=>"Subscriber"
+                                                                                 ),
+                                                 				 "name"=>array("size"=>10,
+                                                                                  "name"=>"Profile"
+                                                                                ),
+                                                                 "rate_name1"=>array("size"=>10,
+                                                                 				 "name"=>"Rate1"
+                                                                                 ),
+                                                                 "hour1"=>array("size"=>3,
+                                                                 				 "name"=>"Hour1"
+                                                                                 ),
+                                                                 "rate_name2"=>array("size"=>10,
+                                                                 				 "name"=>"Rate2"
+                                                                                 ),
+                                                                 "hour2"=>array("size"=>3,
+                                                                 				 "name"=>"Hour2"
+                                                                                 ),
+                                                                 "rate_name3"=>array("size"=>10,
+                                                                 				 "name"=>"Rate3"
+                                                                                 ),
+                                                                 "hour3"=>array("size"=>3,
+                                                                 				 "name"=>"Hour3"
+                                                                                 ),
+                                                                 "rate_name4"=>array("size"=>10,
+                                                                 				 "name"=>"Rate4"
+                                                                                 ),
+                                                                 "hour4"=>array("size"=>3,
+                                                                 				 "name"=>"Hour4"
+                                                                                 ),
+
+                                                 				)
+
+                                                 ),
+                           "billing_rates"=>array("name"=>"Rates PSTN",
+                                                 "keys"=>"id",
+                                                 "size"=>10,
+                                                 "domainFilterColumn"=>"domain",
+                                                 "fields"=>array(
+                                                 				 "gateway"=>array("size"=>15,
+                                                                                  "name"=>"Gateway"
+                                                                                ),
+                                                                 "domain"=>array("size"=>15,
+                                                                 				 "name"=>"Domain"
+                                                                                 ),
+                                                                 "subscriber"=>array("size"=>30,
+                                                                 				 "name"=>"Subscriber"
+                                                                                 ),
+                                                                 "name"=>array("size"=>10,
+                                                                               "name"=>"Rate"
+                                                                                ),
+                                                                 "destination"=>array("size"=>15,
+                                                                 				 "name"=>"Destination"
+                                                                                 ),
+                                                                 "durationRate"=>array("size"=>10,
+                                                                 				 "name"=>"DurationRate"
+                                                                                 ),
+                                                                 "applicationRate"=>array("size"=>10,
+                                                                 				 "name"=>"AppRate"
+                                                                                 ),
+                                                                 "connectCost"=>array("size"=>10,
+                                                                 				 "name"=>"SetupCost"
+                                                                                 )
+
+                                                                  )
+                                                   ),
+                           "billing_profilesNGN"=>array("name"=>"Profiles NGN",
+                                                 "keys"=>"id",
+                                                 "domainFilterColumn"=>"domain",
+                                                 "size"=>6,
+                                                 "fields"=>array(
+                                                 				 "gateway"=>array("size"=>15,
+                                                                                  "name"=>"Gateway"
+                                                                                ),
+                                                                 "domain"=>array("size"=>15,
+                                                                 				 "name"=>"Domain"
+                                                                                 ),
+                                                                 "subscriber"=>array("size"=>30,
+                                                                 				 "name"=>"Subscriber"
+                                                                                 )
+                                                                )
+
+                                                 ),
+                           "billing_ratesNGN"=>array("name"=>"Rates NGN",
+                                                 "keys"=>"id",
+                                                 "domainFilterColumn"=>"domain",
+                                                 "size"=>6,
+                                                 "fields"=>array(
+                                                 				 "gateway"=>array("size"=>15,
+                                                                                  "name"=>"Gateway"
+                                                                                ),
+                                                                 "domain"=>array("size"=>15,
+                                                                 				 "name"=>"Domain"
+                                                                                 ),
+                                                                 "subscriber"=>array("size"=>30,
+                                                                 				 "name"=>"Subscriber"
+                                                                                 )
+                                                                )
+
+                                                 ),
+                           "prepaid"=>array("name"=>"Prepaid",
+                                                 "keys"=>"id",
+                                                 "size"=>15,
+                                                 "domainMatchColumn"=>"account",
+                                                 "fields"=>array("account"=>array("size"=>35,
+                                                                               "name"=>"Account",
+                                                                               "readonly"=>0
+                                                                                ),
+                                                                 "balance"=>array("size"=>10,
+                                                                 				 "name"=>"Balance"
+                                                                                 ),
+                                                                 "change_date"=>array("size"=>19,
+                                                                 				 "name"=>"Last change",
+                                                                                 "readonly"=>1
+                                                                                 ),
+                                                                 "call_lock"=>array("size"=>1,
+                                                                 				 "name"=>"Lock",
+                                                                                 "readonly"=>0
+                                                                                 ),
+                                                                 "call_in_progress"=>array("size"=>18,
+                                                                 				 "name"=>"Call in progress",
+                                                                                 "readonly"=>1
+                                                                                 ),
+                                                                 "last_call_price"=>array("size"=>10,
+                                                                 				 "name"=>"Last call price",
+                                                                                 "readonly"=>1
+                                                                                 ),
+                                                                 "maxsessiontime"=>array("size"=>5,
+                                                                 				 "name"=>"Max",
+                                                                                 "readonly"=>1
+                                                                                 ),
+                                                                 "destination"=>array("size"=>12,
+                                                                 				 "name"=>"Destination",
+                                                                                 "readonly"=>1
+                                                                                 )
+                                                                  )
+                                                   ),
+                           );
+
+
+    }
+
+    function ImportCSVFiles() {
+        $this->ImportCustomers();
+        $this->ImportProfilesPSTN();
+        $this->ImportProfilesNGN();
+        $this->ImportDestinations();
+        $this->ImportRates();
+        $this->ImportRatesNGN();
+    }
+
+    function ImportRates($file='') {
+        if (!$file) {
+            $file=$this->CDRTool["Path"]."/csv/rates.csv";
+        }
+        dprint("ImportRates($file)");
+        if (!is_readable($file)) return 0;
+
+	    $digits = $this->CDRTool[normalize][stripFromDestination];
+        $i=0;
+        if (!$fp = fopen($file, "r")) {
+            return;
+        }
+        print "Importing Rates:\n";
+        print "Reading file $file\n";
+
+        while ($buffer = fgets($fp,1024)) {
+            $buffer=trim($buffer);
+
+            $p = explode(",", $buffer);
+
+            $ops             = trim($p[0]);
+            $gateway         = trim($p[1]);
+            $domain          = trim($p[2]);
+            $subscriber      = trim($p[3]);
+            $profile         = trim($p[4]);
+            $destination     = substr($p[5],$digits);
+            $durationRate    = trim($p[6]);
+            $trafficRate     = trim($p[7]);
+            $applicationRate = trim($p[8]);
+            $connectCost     = trim($p[9]);
+
+            if ($ops=="1") {
+
+                $query="insert into billing_rates
+                (
+                gateway,
+                domain,
+                subscriber,
+                name,
+                destination,
+                durationRate,
+                trafficRate,
+                applicationRate,
+                connectCost
+                ) values (
+                '$gateway',
+                '$domain',
+                '$subscriber',
+                '$profile',
+                '$destination',
+                '$durationRate',
+                '$trafficRate',
+                '$applicationRate',
+                '$connectCost'
+                )";
+                //dprint($query);
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $inserted++;
+                } else {
+                    $failed++;
+                }
+            } else if ($ops=="3") {
+                $query="delete from billing_rates
+                where name = '$profile'
+                and destination = '$destination'";
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $deleted++;
+                }
+            } else if ($ops=="2") {
+                $query="select * from billing_rates
+                where name       = '$profile'
+                and destination  = '$destination'
+                and gateway      = '$gateway'
+                and domain       = '$domain'
+                and subscriber   = '$subscriber'
+                ";
+                $this->cdrtool->query($query);
+
+                if ($this->cdrtool->num_rows()) {
+                    $query="update billing_rates set
+                    durationRate    = '$durationRate',
+                    trafficRate     = '$trafficRate',
+                    applicationRate = '$applicationRate',
+                    connectCost     = '$connectCost'
+                    where name      = '$profile'
+                    and destination = '$destination'
+                    and gateway      = '$gateway'
+                    and domain       = '$domain'
+                    and subscriber   = '$subscriber'
+                    ";
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows() >0) {
+                        $updated++;
+                    }
+
+                } else {
+                    $query="insert into billing_rates
+                    (
+                    gateway,
+                    domain,
+                    subscriber,
+                    name,
+                    destination,
+                    durationRate,
+                    trafficRate,
+                    applicationRate,
+                    connectCost
+                    ) values (
+                    '$gateway',
+                    '$domain',
+                    '$subscriber',
+                    '$profile',
+                    '$destination',
+                    '$durationRate',
+                    '$trafficRate',
+                    '$applicationRate',
+                    '$connectCost'
+                    )";
+                    //dprint($query);
+
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows() >0) {
+                        $inserted++;
+                    } else {
+                        $failed++;
+                    }
+                }
+            }
+
+            $j++;
+
+            if ($j=="10000") {
+                dprint("Loaded another $j rates");
+                flush();
+                $j=0;
+            }
+
+            $i++;
+        }
+
+        if ($i) print "Read $i records\n";
+        if ($inserted) print "Inserted $inserted records\n";
+        if ($updated)  print "Updated $updated records\n";
+        if ($deleted)  print "Delete $deleted records\n";
+
+    }
+
+    function ImportRatesNGN($file='') {
+        if (!$file) {
+            $file=$this->CDRTool["Path"]."/csv/ratesNGN.csv";
+        }
+        dprint("ImportRatesNGN($file)");
+        if (!is_readable($file)) return 0;
+
+        $i=0;
+        if (!$fp = fopen($file, "r")) {
+            return;
+        }
+
+        $inserted = 0;
+        $updated  = 0;
+        $deleted  = 0;
+        print "Importing NGN Rates:\n";
+        print "Reading file $file\n";
+
+        while ($buffer = fgets($fp,1024)) {
+            $buffer=trim($buffer);
+
+            $p = explode(",", $buffer);
+
+            $ops             = trim($p[0]);
+            $gateway         = trim($p[1]);
+            $domain          = trim($p[2]);
+            $subscriber      = trim($p[3]);
+            $name            = trim($p[4]);
+            $TrafficRate     = trim($p[5]);
+            $ConnectCost     = trim($p[6]);
+
+            if ($ops=="1") {
+                $query="insert into billing_ratesNGN
+                (
+                gateway,
+                domain,
+                subscriber,
+                name,
+                TrafficRate,
+                ConnectCost
+                ) values (
+                '$gateway',
+                '$domain',
+                '$subscriber',
+                '$name',
+                '$TrafficRate',
+                '$ConnectCost'
+                )";
+                //dprint($query);
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $inserted++;
+                } else {
+                    $failed++;
+                }
+            } else if ($ops=="3") {
+                $query="delete from billing_ratesNGN
+                where name ='$name'
+                and gateway      = '$gateway'
+                and domain       = '$domain'
+                and subscriber   = '$subscriber'
+                ";
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $deleted++;
+                }
+            } else if ($ops=="2") {
+                $query="select from billing_ratesNGN
+                where name ='$name'";
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->num_rows()) {
+                    $query="update billing_ratesNGN set
+                    TrafficRate = '$TrafficRate',
+                    ConnectCost = '$ConnectCost'
+                    where name ='$name'
+                    and gateway      = '$gateway'
+                    and domain       = '$domain'
+                    and subscriber   = '$subscriber'
+                    ";
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows() >0) {
+                        $updated++;
+                    }
+
+                } else {
+                    $query="insert into billing_ratesNGN
+                    (
+                    gateway,
+                    domain,
+                    subscriber,
+                    name,
+                    TrafficRate,
+                    ConnectCost
+                    ) values (
+                    '$gateway',
+                    '$domain',
+                    '$subscriber',
+                    '$name',
+                    '$TrafficRate',
+                    '$ConnectCost'
+                    )";
+                    //dprint($query);
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows() >0) {
+                        $inserted++;
+                    } else {
+                        $failed++;
+                    }
+                }
+
+            }
+
+            $j++;
+
+            if ($j=="10000") {
+                dprint("Loaded another $j rates");
+                flush();
+                $j=0;
+            }
+
+            $i++;
+        }
+
+        if ($i) print "Read $i records\n";
+        if ($inserted) print "Inserted $inserted records\n";
+        if ($updated)  print "Updated $updated records\n";
+        if ($deleted)  print "Delete $deleted records\n";
+
+    }
+
+    function ImportCustomers($file='') {
+        if (!$file) {
+            $file=$this->CDRTool["Path"]."/csv/customers.csv";
+        }
+
+        dprint("ImportCustomers($file)");
+        if (!is_readable($file)) return 0;
+        $i=0;
+        if (!$fp = fopen($file, "r")) {
+            dprint ("Failed to open $file\n");
+            return;
+        }
+
+        $inserted = 0;
+        $updated  = 0;
+        $deleted  = 0;
+
+        print "Importing Customers:\n";
+        print "Reading file $file\n";
+
+        while ($buffer = fgets($fp,1024)) {
+            $buffer=trim($buffer);
+
+            $p = explode(",", $buffer);
+
+            $ops           = trim($p[0]);
+            $gateway       = trim($p[1]);
+            $domain        = trim($p[2]);
+            $subscriber    = trim($p[3]);
+            $profile_name1 = trim($p[4]);
+            $profile_name2 = trim($p[5]);
+            $profileNGN    = trim($p[6]);
+            $timezone      = trim($p[7]);
+            $profile_name1_alt = trim($p[8]);
+            $profile_name2_alt = trim($p[9]);
+
+            if ($ops=="1") {
+                $query="insert into billing_customers
+                (
+                gateway,
+                domain,
+                subscriber,
+                profile_name1,
+                profile_name2,
+                profileNGN,
+                timezone,
+                profile_name1_alt,
+                profile_name2_alt
+                ) values (
+                '$gateway',
+                '$domain',
+                '$subscriber',
+                '$profile_name1',
+                '$profile_name2',
+                '$profileNGN',
+                '$timezone',
+                '$profile_name1_alt',
+                '$profile_name2_alt'
+                )";
+
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $inserted++;
+                } else {
+                    $failed++;
+                }
+            } else if ($ops=="3") {
+                $query="delete from billing_customers
+                where gateway      = '$gateway'
+                and domain         = '$domain'
+                and subscriber     = '$subscriber'
+                ";
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $deleted++;
+                }
+            } else if ($ops=="2") {
+                $query="select * from billing_customers
+                where gateway      = '$gateway'
+                and domain         = '$domain'
+                and subscriber     = '$subscriber'
+                ";
+
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->num_rows()) {
+                    $query="update billing_customers set
+                    profile_name1     = '$profile_name1',
+                    profile_name1     = '$profile_name2',
+                    profile_name1_alt = '$profile_name1_alt',
+                    profile_name2_alt = '$profile_name2_alt',
+                    profileNGN        = '$profileNGN',
+                    timezone          = '$timezone'
+
+                    where gateway     = '$gateway'
+                    and domain        = '$domain'
+                    and subscriber    = '$subscriber'
+                    ";
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows()) {
+                        $updated++;
+                    }
+
+                } else {
+                    $query="insert into billing_customers
+                    (
+                    gateway,
+                    domain,
+                    subscriber,
+                    profile_name1,
+                    profile_name2,
+                    profileNGN,
+                    timezone,
+                    profile_name1_alt,
+                    profile_name2_alt
+                    ) values (
+                    '$gateway',
+                    '$domain',
+                    '$subscriber',
+                    '$profile_name1',
+                    '$profile_name2',
+                    '$profileNGN',
+                    '$timezone',
+                    '$profile_name1_alt',
+                    '$profile_name2_alt'
+                    )";
+
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows()) {
+                        $inserted++;
+                    }
+                }
+            }
+            $i++;
+        }
+
+        if ($i) print "Read $i records\n";
+        if ($inserted) print "Inserted $inserted records\n";
+        if ($updated)  print "Updated $updated records\n";
+        if ($deleted)  print "Delete $deleted records\n";
+
+    }
+
+    function ImportDestinations($file='') {
+        if (!$file) {
+            $file=$this->CDRTool["Path"]."/csv/destinations.csv";
+        }
+        dprint("ImportDestinations($file)");
+        if (!is_readable($file)) return 0;
+
+        $i=0;
+        if (!$fp = fopen($file, "r")) {
+            return ;
+        }
+
+        $inserted = 0;
+        $updated  = 0;
+        $deleted  = 0;
+
+        print "Importing Destinations:\n";
+        print "Reading file $file\n";
+
+        while ($buffer = fgets($fp,1024)) {
+            $buffer=trim($buffer);
+
+            $p = explode(",", $buffer);
+
+            $ops             = trim($p[0]);
+            $gateway         = trim($p[1]);
+            $domain          = trim($p[2]);
+            $subscriber      = trim($p[3]);
+            $dest_id         = trim($p[4]);
+            $dest_name       = trim($p[5]);
+
+            if ($ops=="1") {
+                $query="insert into destinations
+                (
+                gateway,
+                domain,
+                subscriber,
+                dest_id,
+                dest_name
+                ) values (
+                '$gateway',
+                '$domain',
+                '$subscriber',
+                '$dest_id',
+                '$dest_name'
+                )";
+                //dprint($query);
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $inserted++;
+                } else {
+                    $failed++;
+                }
+            } elseif ($ops=="3") {
+                $query="delete from destinations
+                where gateway      = '$gateway'
+                and domain         = '$domain'
+                and subscriber     = '$subscriber'
+                and dest_id        = '$dest_id'
+                ";
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $deleted++;
+                }
+            } elseif ($ops=="2") {
+                $query="select * from destinations
+                where gateway      = '$gateway'
+                and domain         = '$domain'
+                and subscriber     = '$subscriber'
+                and dest_id        = '$dest_id'
+                ";
+
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->num_rows()) {
+                    $query="update destinations set
+                    dest_name  = '$dest_name'
+
+                    where gateway      = '$gateway'
+                    and domain         = '$domain'
+                    and subscriber     = '$subscriber'
+                    and dest_id        = '$dest_id'
+                    ";
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows()) {
+                        $updated++;
+                    }
+                 } else {
+                    $query="insert into destinations
+                    (
+                    gateway,
+                    domain,
+                    subscriber,
+                    dest_id,
+                    dest_name
+                    ) values (
+                    '$gateway',
+                    '$domain',
+                    '$subscriber',
+                    '$dest_id',
+                    '$dest_name'
+                    )";
+                    //dprint($query);
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows() >0) {
+                        $inserted++;
+                    } else {
+                        $failed++;
+                    }
+
+                 }
+
+            }
+
+            $i++;
+        }
+
+        if ($i) print "Read $i records\n";
+        if ($inserted) print "Inserted $inserted records\n";
+        if ($updated)  print "Updated $updated records\n";
+        if ($deleted)  print "Delete $deleted records\n";
+
+    }
+
+    function ImportProfilesPSTN($file='') {
+        if (!$file) {
+            $file=$this->CDRTool["Path"]."/csv/profiles.csv";
+        }
+        dprint("ImportProfilesPSTN($file)");
+        if (!is_readable($file)) return 0;
+
+        $i=0;
+        if (!$fp = fopen($file, "r")) {
+            return;
+        }
+
+        $inserted = 0;
+        $updated  = 0;
+        $deleted  = 0;
+
+        print "Importing PSTN Profiles:\n";
+        print "Reading file $file\n";
+
+        while ($buffer = fgets($fp,1024)) {
+            $buffer=trim($buffer);
+
+            $p = explode(",", $buffer);
+
+            $ops     = trim($p[0]);
+            $gateway    = trim($p[1]);
+            $domain     = trim($p[2]);
+            $subscriber = trim($p[3]);
+            $profile = trim($p[4]);
+            $rate1   = trim($p[5]);
+            $hour1   = trim($p[6]);
+            $rate2   = trim($p[7]);
+            $hour2   = trim($p[8]);
+            $rate3   = trim($p[9]);
+            $hour3   = trim($p[10]);
+            $rate4   = trim($p[1]);
+            $hour4   = trim($p[12]);
+
+            if (!$hour1) $hour1=0;
+            if (!$hour2) $hour2=0;
+            if (!$hour3) $hour3=0;
+            if (!$hour4) $hour4=0;
+
+            if ($ops=="1") {
+                $query="insert into billing_profiles
+                (
+                gateway,
+                domain,
+                subscriber,
+                name,
+                rate_name1,
+                hour1,
+                rate_name2,
+                hour2,
+                rate_name3,
+                hour3,
+                rate_name4,
+                hour4
+                ) values (
+                '$gateway',
+                '$domain',
+                '$subscriber',
+                '$profile',
+                '$rate1',
+                '$hour1',
+                '$rate2',
+                '$hour2',
+                '$rate3',
+                '$hour3',
+                '$rate4',
+                '$hour4'
+                )";
+                dprint($query);
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $inserted++;
+                } else {
+                    $failed++;
+                }
+            } else if ($ops=="3") {
+                $query="delete from billing_profiles
+                where name = '$profile'
+                and hour1  = '$hour1'
+                and hour2  = '$hour2'
+                and hour3  = '$hour3'
+                and hour4  = '$hour4'
+                and gateway      = '$gateway'
+                and domain       = '$domain'
+                and subscriber   = '$subscriber'
+                ";
+                dprint($query);
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $deleted++;
+                }
+
+            } else if ($ops=="2") {
+                $query="select from billing_profiles
+                where name = '$profile'
+                and hour1  = '$hour1'
+                and hour2  = '$hour2'
+                and hour3  = '$hour3'
+                and hour4  = '$hour4'
+                and gateway      = '$gateway'
+                and domain       = '$domain'
+                and subscriber   = '$subscriber'
+                ";
+
+                dprint($query);
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->num_rows()) {
+                    $query="update billing_profiles set
+                    rate_name1 = '$rate1',
+                    rate_name2 = '$rate2',
+                    rate_name3 = '$rate3',
+                    rate_name4 = '$rate4'
+
+                    where name = '$profile'
+                    and hour1  = '$hour1',
+                    and hour2  = '$hour2',
+                    and hour3  = '$hour3',
+                    and hour4  = '$hour4'
+                    and gateway      = '$gateway'
+                    and domain       = '$domain'
+                    and subscriber   = '$subscriber'
+                    ";
+
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows()) {
+                        $updated++;
+                    }
+                } else {
+                    $query="insert into billing_profiles
+                    (
+                    gateway,
+                    domain,
+                    subscriber,
+                    name,
+                    rate_name1,
+                    hour1,
+                    rate_name2,
+                    hour2,
+                    rate_name3,
+                    hour3,
+                    rate_name4,
+                    hour4
+                    ) values (
+                    '$gateway',
+                    '$domain',
+                    '$subscriber',
+                    '$profile',
+                    '$rate1',
+                    '$hour1',
+                    '$rate2',
+                    '$hour2',
+                    '$rate3',
+                    '$hour3',
+                    '$rate4',
+                    '$hour4'
+                    )";
+                    dprint($query);
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows() >0) {
+                        $inserted++;
+                    } else {
+                        $failed++;
+                    }
+                }
+            }
+            $i++;
+        }
+
+        if ($i) print "Read $i records\n";
+        if ($inserted) print "Inserted $inserted records\n";
+        if ($updated)  print "Updated $updated records\n";
+        if ($deleted)  print "Delete $deleted records\n";
+
+    }
+
+    function ImportProfilesNGN($file='') {
+        if (!$file) {
+            $file=$this->CDRTool["Path"]."/csv/profilesNGN.csv";
+        }
+        dprint("ImportProfilesNGN($file)");
+        if (!is_readable($file)) return 0;
+
+        $i=0;
+        if (!$fp = fopen($file, "r")) {
+            return ;
+        }
+
+        print "Importing NGN Profiles:\n";
+        print "Reading file $file\n";
+
+        while ($buffer = fgets($fp,1024)) {
+            $buffer=trim($buffer);
+
+            $p = explode(",", $buffer);
+
+            $ops         = trim($p[0]);
+            $gateway     = trim($p[1]);
+            $domain      = trim($p[2]);
+            $subscriber  = trim($p[3]);
+            $profile     = trim($p[4]);
+            $rate        = trim($p[5]);
+            $application = trim($p[6]);
+
+            if ($ops=="1") {
+                $query="insert into billing_profilesNGN
+                (
+                gateway,
+                domain,
+                subscriber,
+                name,
+                rate,
+                application
+                ) values (
+                '$gateway',
+                '$domain',
+                '$subscriber',
+                '$profile',
+                '$rate',
+                '$application'
+                )";
+                //dprint($query);
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $inserted++;
+                } else {
+                    $failed++;
+                }
+            } else if ($ops=="3") {
+                $query="delete from billing_profilesNGN
+                where name =  '$profile'
+                and application = '$application'
+                and gateway      = '$gateway'
+                and domain       = '$domain'
+                and subscriber   = '$subscriber'
+                ";
+                //dprint($query);
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $deleted++;
+                }
+
+            } else if ($ops=="2") {
+                $query="select * from billing_profilesNGN
+                where name      = '$profile'
+                and application = '$application'
+                and gateway      = '$gateway'
+                and domain       = '$domain'
+                and subscriber   = '$subscriber'
+                ";
+                //dprint($query);
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->num_rows()) {
+                    $query="update billing_profilesNGN set
+                    rate = '$rate'
+                    where name      = '$profile'
+                    and application = '$application'
+                    and gateway      = '$gateway'
+                    and domain       = '$domain'
+                    and subscriber   = '$subscriber'
+                    ";
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows() >0) {
+                        $update++;
+                    }
+
+                } else {
+                    $query="insert into billing_profilesNGN
+                    (
+                    gateway,
+                    domain,
+                    subscriber,
+                    name,
+                    rate,
+                    application
+                    ) values (
+                    '$gateway',
+                    '$domain',
+                    '$subscriber',
+                    '$profile',
+                    '$rate',
+                    '$application'
+                    )";
+                    //dprint($query);
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows() >0) {
+                        $inserted++;
+                    } else {
+                        $failed++;
+                    }
+                }
+
+            }
+            $i++;
+        }
+
+        if ($i) print "Read $i records\n";
+        if ($inserted) print "Inserted $inserted records\n";
+        if ($updated)  print "Updated $updated records\n";
+        if ($deleted)  print "Delete $deleted records\n";
+
+    }
+
+    function LoadRatingTables () {
+        $loaded=array();
+    	$loaded['customers']    = $this->LoadCustomersTable();
+        $loaded['profilesPSTN'] = $this->LoadProfilesPSTNTable();
+        $loaded['ratesPSTN']    = $this->LoadRatesTable();
+        $loaded['profilesNGN']  = $this->LoadProfilesNGNTable();
+        $loaded['ratesNGN']     = $this->LoadRatesNGNTable();
+        $loaded['holidays']     = $this->LoadHolidaysTable();
+
+        foreach(array_keys($loaded) as $_load) {
+        	syslog(LOG_NOTICE, "Loaded $loaded[$_load] $_load");
+        }
+
+        return $loaded;
+    }
+
+    function LoadCustomersTable($customerFilter='') {
+        $query="select * from billing_customers";
+
+        if (is_array($customerFilter)) {
+            if (strlen(trim($customerFilter['customer'])) &&
+            	(
+                 $customerFilter['type'] == "subscriber" ||
+                 $customerFilter['type'] == "domain" ||
+                 $customerFilter['type'] == "gateway"
+                )) {
+            	$query.=sprintf (" where %s = '%s'",
+                			      $customerFilter['type'],
+                                  trim($customerFilter['customer']));
+                $updateCustomer=true;
+            }
+        }
+
+        dprint($query);
+
+        $this->cdrtool->query($query);
+
+        if ($updateCustomer && !$this->cdrtool->num_rows()) {
+        	$log=sprintf("Customer %s of type %s not found ",$customerFilter['customer'],$customerFilter['type']);
+        	syslog(LOG_NOTICE, $log);
+            return 0;
+        }
+
+        $i=0;
+        while($this->cdrtool->next_record()) {
+
+            $subscriber   = $this->cdrtool->Record['subscriber'];
+            $domain       = $this->cdrtool->Record['domain'];
+            $gateway      = $this->cdrtool->Record['gateway'];
+
+            $profile1     = $this->cdrtool->Record['profile_name1'];
+            $profile1_alt = $this->cdrtool->Record['profile_name1_alt'];
+
+            $profile2     = $this->cdrtool->Record['profile_name2'];
+            $profile2_alt = $this->cdrtool->Record['profile_name2_alt'];
+
+            $profileNGN   = $this->cdrtool->Record['profileNGN'];
+            $timezone     = $this->cdrtool->Record['timezone'];
+
+            if ($profile1 || $profile2 || $profileNGN) {
+                $i++;
+                if ($subscriber) {
+                    $_els=explode(" ",trim($subscriber));
+                    foreach ($_els as $_el) {
+                    	$_el=trim($_el);
+                    	$_customers[$_el]=
+                        	array (
+                        	"profile1"     => $profile1,
+                        	"profile2"     => $profile2,
+	                        "profile1_alt" => $profile1_alt,
+    	                    "profile2_alt" => $profile2_alt,
+        	                "profileNGN"   => $profileNGN,
+            	            "timezone"     => $timezone
+                	        );
+                    }
+                    continue;
+                }
+
+                if ($domain) {
+                    $_els=explode(" ",trim($domain));
+                    foreach ($_els as $_el) {
+                    	$_el=trim($_el);
+	                    $_customers[$_el]=
+    	                    array (
+        	                "profile1"     => $profile1,
+            	            "profile2"     => $profile2,
+                	        "profile1_alt" => $profile1_alt,
+                    	    "profile2_alt" => $profile2_alt,
+                        	"profileNGN"   => $profileNGN,
+	                        "timezone"     => $timezone
+                        );
+                    }
+                    continue;
+                }
+
+                if ($gateway) {
+                    $_els=explode(" ",trim($gateway));
+                    foreach ($_els as $_el) {
+                    	$_el=trim($_el);
+	                    $_customers[$_el]=
+                        array (
+                        "profile1"     => $profile1,
+                        "profile2"     => $profile2,
+                        "profile1_alt" => $profile1_alt,
+                        "profile2_alt" => $profile2_alt,
+                        "profileNGN"   => $profileNGN,
+                        "timezone"     => $timezone
+                        );
+                    }
+                    continue;
+                }
+
+                $_customers['default']=
+                        array (
+                        "profile1"     => $profile1,
+                        "profile2"     => $profile2,
+                        "profile1_alt" => $profile1_alt,
+                        "profile2_alt" => $profile2_alt,
+                        "profileNGN"   => $profileNGN,
+                        "timezone"     => $timezone
+                        );
+             }
+
+         }
+
+         if ($updateCustomer) {
+            if ($this->customers[$customerFilter['customer']]) {
+                // update customer
+                $this->customers[$customerFilter['customer']]=$_customers;
+                $log=sprintf("Updated customer %s",$customerFilter['customer']);
+        		syslog(LOG_NOTICE, $log);
+            } else {
+                // append customer
+                $this->customers=array_merge($this->customers,$_customers);
+                $log=sprintf("Added customer %s",$customerFilter['customer']);
+        		syslog(LOG_NOTICE, $log);
+            }
+         } else {
+            // load all customers
+		 	$this->customers=$_customers;
+         }
+
+         dprint("Loaded $i customers");
+         return $i;
+    }
+
+    function LoadRatesTable() {
+        $query="select * from billing_rates
+        order by destination";
+        $this->cdrtool->query($query);
+
+        $i=0;
+        $rows=$this->cdrtool->num_rows();
+        while($this->cdrtool->next_record()) {
+            if ($this->cdrtool->Record['name'] && $this->cdrtool->Record['destination']) {
+                $i++;
+                $_rates[$this->cdrtool->Record['name']][$this->cdrtool->Record['destination']]=
+                array(
+                     "durationRate"    => $this->cdrtool->Record['durationRate'],
+                     "trafficRate"     => $this->cdrtool->Record['trafficRate'],
+                     "applicationRate" => $this->cdrtool->Record['applicationRate'],
+                     "connectCost"     => $this->cdrtool->Record['connectCost']
+                );
+            }
+        }
+
+		$this->rates=$_rates;
+        $this->ratesCount=$i;
+        dprint("Loaded $i PSTN rates");
+        return $i;
+    }
+
+    function LoadRatesNGNTable() {
+        $query="select * from billing_ratesNGN order by name";
+        $this->cdrtool->query($query);
+
+        $i=0;
+        $rows=$this->cdrtool->num_rows();
+        while($this->cdrtool->next_record()) {
+        	if ($this->cdrtool->Record['name']) {
+                $i++;
+                $_ratesNGN[$this->cdrtool->Record['name']]=
+                array(
+                     "trafficRate"     => $this->cdrtool->Record['TrafficRate'],
+                     "connectCost"     => $this->cdrtool->Record['ConnectCost']
+                );
+            }
+        }
+
+		$this->ratesNGN=$_ratesNGN;
+        dprint("Loaded $i NGN rates");
+        return $i;
+    }
+
+    function LoadProfilesPSTNTable() {
+        $query="select * from billing_profiles order by name";
+        $this->cdrtool->query($query);
+
+        $i=0;
+        while($this->cdrtool->next_record()) {
+            $i++;
+            if ($this->cdrtool->Record['name'] && $this->cdrtool->Record['hour1'] > 0 ) {
+                $_profiles[$this->cdrtool->Record['name']]=
+                array(
+                     "rate_name1"  => $this->cdrtool->Record['rate_name1'],
+                     "hour1"       => $this->cdrtool->Record['hour1'],
+                     "rate_name2"  => $this->cdrtool->Record['rate_name2'],
+                     "hour2"       => $this->cdrtool->Record['hour2'],
+                     "rate_name3"  => $this->cdrtool->Record['rate_name3'],
+                     "hour3"       => $this->cdrtool->Record['hour3'],
+                     "rate_name4"  => $this->cdrtool->Record['rate_name4'],
+                     "hour4"       => $this->cdrtool->Record['hour4'],
+                );
+            }
+        }
+
+        $this->profiles=$_profiles;
+        dprint("Loaded $i PSTN profiles");
+        return $i;
+
+    }
+
+    function LoadProfilesNGNTable() {
+        $query="select * from billing_profilesNGN order by name";
+        $this->cdrtool->query($query);
+
+        $i=0;
+        while($this->cdrtool->next_record()) {
+            if ($this->cdrtool->Record['name'] && $this->cdrtool->Record['application']) {
+                $i++;
+                $_profilesNGN[$this->cdrtool->Record['name']][$this->cdrtool->Record['application']]=
+                array(
+                     "rate"        => $this->cdrtool->Record['rate']
+                );
+            }
+        }
+
+        $this->profilesNGN=$_profilesNGN;
+        dprint("Loaded $i NGN profiles");
+        return $i;
+
+    }
+
+    function LoadHolidaysTable() {
+        $query="select * from billing_holidays order by day";
+        $this->cdrtool->query($query);
+
+        $i=0;
+        while($this->cdrtool->next_record()) {
+            if ($this->cdrtool->Record['day']) {
+                $i++;
+                $_holidays[$this->cdrtool->Record['day']]++;
+            }
+        }
+
+        $this->holidays=$_holidays;
+        dprint("Loaded $i holidays");
+        return $i;
+    }
+
+    function checkRatingEngineConnection () {
+    	global $RatingEngine;
+      	if ($RatingEngine["socketIP"] && $RatingEngine["socketPort"] &&
+        	$fp = fsockopen ($RatingEngine["socketIP"], $RatingEngine["socketPort"], $errno, $errstr, 2)) {
+          	fclose($fp);
+          	return 1;
+      	}
+        return 0;
+  	}
+
+    function showCustomers($filter) {
+        foreach (array_keys($this->customers) as $key) {
+            if (strlen($filter)) {
+                if (preg_match("/$filter/",$key)) {
+            		$customers=$customers.$key."\n";
+                }
+            } else {
+            	$customers=$customers.$key."\n";
+            }
+        }
+        return $customers;
+    }
+
+    function showProfiles() {
+        foreach (array_keys($this->profiles) as $key) {
+        	$profiles=$profiles.$key."\n";
+        }
+        return $profiles;
+    }
+
+    function showRates() {
+        foreach (array_keys($this->rates) as $key) {
+        	$rates=$rates.$key."\n";
+        }
+        return $rates;
+    }
+
+}
+
+class SERQuota {
+    function SERQuota(&$parent) {
+
+    	global $DATASOURCES;
+
+        $this->AccountsDBClass = &$parent->AccountsDBClass;
+        $this->UserQuotaTable  = &$parent->UserQuotaTable;
+        $this->CDRdb           = &$parent->CDRdb;
+	    $this->table           = &$parent->table;
+        $this->CDRTool         = &$parent->CDRTool;
+        $this->db_class_quota  = $parent->db_class_quota;
+
+        $this->AccountsDB      = new $this->AccountsDBClass;
+        $this->CDRquotaDB      = new $parent->db_class_quota;
+
+        $parent->LoadDomains();
+
+        $this->SERDomains      = &$parent->SERDomains;
+		$this->cdr_source      = &$parent->cdr_source;
+        $this->BillingPartyIdField = &$parent->CDRFields['BillingPartyId'];
+
+        $this->db = new DB_cdrtool;
+        $this->db->Halt_On_Error="no";
+
+        // load e-mail addresses for quota notifications
+        $query="select * from settings
+        where var_module = 'notifications'";
+
+        dprint($query);
+
+        if ($this->db->query($query) && $this->db->num_rows()) {
+
+            while ($this->db->next_record()) {
+                $_bp    =$this->db->f('billing_party');
+                $_name  =$this->db->f('var_name');
+                $_value =$this->db->f('var_value');
+                if ($_bp && $_name && $_value) {
+            		$this->notificationAddresses[$_bp][$_name]=$_value;
+                }
+            }
+        }
+
+ 		dprint_r($this->notificationAddresses);
+
+        if ($DATASOURCES[$this->cdr_source]['SOAPUsername'] &&
+            $DATASOURCES[$this->cdr_source]['SOAPPassword'] &&
+            $DATASOURCES[$this->cdr_source]['SOAPURL'] ) {
+
+			$this->NGNProURL=$DATASOURCES[$this->cdr_source]['SOAPURL'];
+
+    		syslog(LOG_NOTICE, "SOAP/XML URL: $this->NGNProURL");
+
+            $this->SOAPlogin=array(
+                                   "username"    =>$DATASOURCES[$this->cdr_source]['SOAPUsername'],
+                                   "password"    =>$DATASOURCES[$this->cdr_source]['SOAPPassword'],
+                                   "admin"       =>$DATASOURCES[$this->cdr_source]['SOAPAdmin']
+                                   );
+
+            $this->SoapAuth=array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+    
+            $this->soapclient = new NGNProSip($this->NGNProURL);
+            $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT, 5);
+            $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+            $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+        }
+
+    }
+
+    function LoadUserQuotas() {
+
+        if (!$this->AccountsDBClass) {
+            print("Info: No database defined for SER accounts.\n");
+            return 0;
+        }
+
+		if (!$this->UserQuotaTable) {
+            print("Info: No table defined for SER account quota.\n");
+            return 0;
+        }
+
+        $query="select * from subscriber where quota > 0";
+
+        dprint($query);
+
+        if (!$this->AccountsDB->query($query)) {
+            return 0;
+        }
+
+		$rows=$this->AccountsDB->num_rows();
+
+		$log=sprintf ("%d SIP accounts have quota enabled\n",$rows);
+        print $log;
+		syslog(LOG_NOTICE, $log);
+
+        while($this->AccountsDB->next_record()) {
+            $account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
+            $this->SERAccounts[$account][groups]=array();
+            $this->SERAccounts[$account]['quota']['cost'] = $this->AccountsDB->f('quota');
+            $this->SERAccounts[$account]['email_address'] = $this->AccountsDB->f('email_address');
+            $this->SERAccounts[$account]['fullname']      = $this->AccountsDB->f('first_name')." ".$this->AccountsDB->f('last_name');
+        }
+
+        $query="select * from grp";
+
+        dprint($query);
+        $this->AccountsDB->query($query);
+
+        while($this->AccountsDB->next_record()) {
+            $account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
+            $this->SERAccounts[$account][groups][] = $this->AccountsDB->f('grp');
+        }
+
+        $this->OK=1;
+
+ 		return $rows;
+    }
+
+    function ResetUserQuotas() {
+
+        if (!$this->AccountsDBClass) {
+            print("Info: No database defined for SER accounts.\n");
+            return 0;
+        }
+
+        $query="select CONCAT(username,'@',domain) as account from grp where grp = 'quota'";
+        if ($this->AccountsDB->query($query)) {
+            while ($this->AccountsDB->next_record()) {
+                $blockedAccounts[]=$this->AccountsDB->f('account');
+            }
+        }
+
+		if (count($blockedAccounts) >0 ) {
+            $this->unBlockRemoteAccounts($blockedAccounts);
+
+            $query="delete from grp where grp = 'quota'";
+            dprint($query);
+    
+            if (!$this->AccountsDB->query($query)) {
+                return 0;
+            } else {
+                return count($blockedAccounts);
+            }
+        } else {
+            return 0;
+        }
+
+    }
+
+    function getUsage($month="") {
+
+		if (!$month) {
+        	$check_month=Date("Y-m-01 00:00",time());
+        } else {
+        	$check_month=$month."-01 00:00";
+        }
+
+        $this->LoadUserQuotas();
+
+        $query="select $this->BillingPartyIdField, count(*) as calls,
+        sum(AcctSessionTime) as duration, sum(Price) as cost,
+        sum(AcctInputOctets+AcctOutputOctets)/2 as traffic
+        from $this->table
+        where AcctStartTime >= '$check_month'
+        and AcctStartTime < DATE_ADD('$check_month', INTERVAL 1 month)
+        group by $this->BillingPartyIdField";
+
+        dprint($query);
+        $this->CDRquotaDB->query($query);
+
+
+        $rows=$this->CDRquotaDB->num_rows();
+		$log=sprintf ("%d SIP accounts have traffic in %s, db=%s\n",$rows,Date("Y-m",time()),$this->db_class_quota);
+        print $log;
+		syslog(LOG_NOTICE, $log);
+
+        dprint_r($this->SERDomains);
+        while($this->CDRquotaDB->next_record()) {
+            $account = $this->CDRquotaDB->f($this->BillingPartyIdField);
+        	list($username,$domain)=explode("@",$account);
+
+            if (preg_match("/^(.*)[=:;]/U",$domain,$p)){
+                $domain = $p[1];
+		    }
+
+            $calls            = $this->CDRquotaDB->f('calls');
+            $cost             = $this->CDRquotaDB->f('cost');
+            $duration         = $this->CDRquotaDB->f('duration');
+            $traffic          = $this->CDRquotaDB->f('traffic');
+
+            if (!in_array($domain,$this->SERDomains)) {
+                // skip remote accounts
+                continue;
+            }
+
+            $this->SERAccounts[$account]['usage']['calls']    = $this->SERAccounts[$account]['usage']['calls']    + $calls;
+            $this->SERAccounts[$account]['usage']['duration'] = $this->SERAccounts[$account]['usage']['duration'] + $duration;
+            $this->SERAccounts[$account]['usage']['cost']     = $this->SERAccounts[$account]['usage']['cost']     + $cost;
+            $this->SERAccounts[$account]['usage']['traffic']  = $this->SERAccounts[$account]['usage']['traffic']  + $traffic;
+
+        }
+    }
+
+    function checkQuota($notify) {
+        dprint("checkQuota($notify)");
+        global $UserQuota;
+
+        $this->getUsage();
+
+        $toNotify=array();
+
+        foreach (array_keys($this->SERAccounts) as $account) {
+
+            list($username,$domain)=explode("@",$account);
+        
+            if ($reason=$this->checkLimit($account,$this->SERAccounts[$account]['usage'])) {
+                $exceeding_accounts++;
+
+                if (!in_array("quota",$this->SERAccounts[$account][groups])) {
+
+                    if (!$seen_title) {
+                        $line=sprintf ("%40s %6s %8s %8s %13s %s\n","User","Calls","Price","Minutes","Traffic","Reason");
+                        print $line;
+                        $email_body=$line;
+                        $seen_title++;
+                    }
+
+                    $traffic       = number_format($this->SERAccounts[$account]['usage']['traffic']/1024/1024,2);
+                    $duration      = number_format($this->SERAccounts[$account]['usage']['duration']/60,0,"","");
+                    $line          = sprintf ("%40s %6s %8s %8s %10s MB %s\n",$account,$this->SERAccounts[$account]['usage']['calls'],$this->SERAccounts[$account]['usage']['cost'],$duration,$traffic,$reason);
+                    $email_body    = $email_body.$line;
+                    print $line;
+
+		  			syslog(LOG_NOTICE, "Quota exceeded for $account: $reason");
+
+                    if ($this->blockAccount($account)) {
+                    	if ($notify && $this->SERAccounts[$account]['email_address']) {
+                        	$toNotify[]=$account;
+                        }
+                    	$blocked_now++;
+                        $blockedAccountsNow=$blockedAccountsNow.$account."\n";
+                    }
+                } else {
+                    $blockedAccountsPrevious=$blockedAccountsPrevious.$account."\n";
+                    $blocked_previous++;
+                }
+            }
+        }
+        
+        if ($exceeding_accounts) {
+            $line=sprintf("%6d accounts have exceeded their traffic limits\n",$exceeding_accounts);
+            print $line;
+            $email_body=$email_body.$line;
+        }
+        
+        if ($blocked_now) {
+        	$line=sprintf("%6d accounts have been blocked now\n",$blocked_now);
+            $email_body=$email_body.$line;
+        }
+        
+        if ($blockedAccountsNow) {
+            $line="Blocked accounts now:\n".$blockedAccountsNow;
+            print $line;
+            $email_body=$email_body.$line.$batch_block;
+        }
+        
+        if ($blockedAccountsPrevious) {
+            $line="Blocked acccounts previously:\n".$blockedAccountsPrevious;
+            print $line;
+            $email_body=$email_body.$line.$batch_unblock;
+        }
+
+        // send notification to the provider
+        if ($this->CDRTool[provider][toEmail] && $blockedAccountsNow) {
+
+            $from = $this->CDRTool[provider][fromEmail];
+            $to   = $this->CDRTool[provider][toEmail];
+            $bcc  = $this->CDRTool[provider][bccEmail];
+
+            $service  = $this->CDRTool[provider][service];
+            if (!$service) $service = "SIP";
+
+            if ($from) $extraHeaders="From: $from\r\nBCC: $from";
+            if ($bcc)  $extraHeaders=$extraHeaders.",".$bcc;
+
+            print("Notify CDRTool provider at $to\n");
+            mail($to, "$service platform - CDRTool quota check", $email_body, $extraHeaders);
+
+        }
+
+        dprint("Notify subscribers");
+
+        if ($notify && is_array($toNotify) && count($toNotify) >0) {
+            dprint_r($toNotify);
+
+            // send notification to subscribers
+            foreach($toNotify as $rcpt) {
+                $this->notifySubscriber($rcpt);
+            }
+        }
+    }
+
+    function checkLimit($account,$usage) {
+        global $UserQuota;
+    
+        $maxcost    = "";
+        $maxtraffic = "";
+    
+        if ($this->SERAccounts[$account]['quota']['cost']) {
+            $maxcost = $this->SERAccounts[$account]['quota']['cost'];
+        } elseif  ($UserQuota['default']['cost']) {
+            $maxcost = $UserQuota['default']['cost'];
+        }
+    
+        if ($maxcost && ($usage['cost'] > $maxcost)) {
+            return "Maximum cost exceeded ($usage[cost] > $maxcost)";
+        }
+    
+        if ($this->SERAccounts[$account]['quota']['traffic']) {
+            $maxtraffic = $this->SERAccounts[$account]['quota']['traffic'];
+        } elseif  ($UserQuota['default']['traffic']) {
+            $maxtraffic = $UserQuota['default']['traffic'];
+        }
+    
+        if ($maxtraffic && ($usage['traffic'] > $maxtraffic*1024*1024)) {
+            $trafficMB=number_format($usage['traffic']/1024/1024,0);
+            return "Maximum traffic exceeded ($trafficMB > $maxtraffic MB)";
+        }
+    
+        return 0;
+    }
+
+    function notifySubscriber($account) {
+        dprint("notifySubscriber($account)");
+        global $DATASOURCES;
+
+        list($username,$domain)=explode("@",$account);
+
+        if (!$DATASOURCES[$this->cdr_source][UserQuotaNotify]) {
+            return 0;
+        }
+
+        $body="Your SIP account $account has been temporarily blocked \n".
+        "because your quota has been exceeded. To deblock your account \n".
+        "please contact $providerName.\n\n".
+        "N.B. This is an automatically generated message. Do not reply to it.\n";
+
+        $fromEmail=$this->CDRTool[provider][fromEmail];
+        $bccEmail=$this->CDRTool[provider][bccEmail];
+        $seen_bcc[$bccEmail]++;
+
+        if (strlen($this->notificationAddresses[$domain]['fromEmail'])) {
+            $fromEmail=$this->notificationAddresses[$domain]['fromEmail'];
+        }
+
+        if (strlen($this->notificationAddresses[$domain]['quotaBody'])) {
+            $body=$this->notificationAddresses[$domain]['quotaBody'];
+        }
+
+        if (strlen($this->notificationAddresses[$domain]['quotaSubject'])) {
+            $subject=$this->notificationAddresses[$domain]['quotaSubject'];
+        }
+
+        $body=preg_replace("/__NAME__/",$this->SERAccounts[$account]['fullname'],$body);
+        $body=preg_replace("/__ACCOUNT__/",$account,$body);
+
+        $providerName=$this->notificationAddresses[$domain]['providerName'];
+
+        if (!strlen($providerName))  $providerName="your SIP service provider";
+
+        if (!strlen($subject)) {
+            $subject=sprintf("SIP account %s: quota exceeded",$account);
+        } else {
+            $subject=preg_replace("/__ACCOUNT__/",$account,$subject);
+        }
+
+		$toEmail=$this->SERAccounts[$account]['email_address'];
+
+        if (!$toEmail || !$fromEmail) {
+            dprint("missing from or rcpt");
+            return 0;
+        }
+
+        $seen_bcc[$toEmail]++;
+
+        $extraHeaders="From: $fromEmail";
+
+        if ($this->notificationAddresses[$domain][bccEmail]) {
+            if ($bccEmail) $bccEmail.= ",";
+        	$bccEmail.=$this->notificationAddresses[$domain][bccEmail];
+        }
+
+        if ($bccEmail) $extraHeaders= $extraHeaders."\r\nBCC: ".$bccEmail;
+
+    	mail($toEmail,$subject,$body, $extraHeaders);
+
+  		$log_msg=sprintf("Quota exceeded for $account. Notified To:%s From:%s Bcc:%s\n",$toEmail,$fromEmail,$bccEmail);
+  		syslog(LOG_NOTICE, $log_msg);
+        print $log_msg;
+
+    }
+
+    function blockAccount($account) {
+        list($username,$domain)=explode("@",$account);
+
+      	$this->blockAccountRemote($account);
+    
+        $query="delete from grp
+        where username = '$username'
+        and   domain   = '$domain'
+        and   grp      = 'quota' ";
+
+        dprint($query);
+        $this->AccountsDB->query($query);
+
+        $query="insert into grp
+        (username,domain,grp,last_modified)
+        values
+        ('$username','$domain','quota',NOW())";
+
+        dprint($query);
+
+        $this->AccountsDB->query($query) ;
+
+        return 1;
+    }
+
+    function blockAccountRemote($account) {
+        if (!is_object($this->soapclient)) {
+            return 1;
+        }
+
+        list($username,$domain)=explode("@",$account);
+
+        if (!$username || !$domain) return 1;
+
+        $this->soapclient->addHeader($this->SoapAuth);
+        $result     = $this->soapclient->addToGroup(array("username" => $username,"domain"=> $domain), "quota");
+
+        if (PEAR::isError($result)) {
+            $error_msg   = $result->getMessage();
+            $error_fault = $result->getFault();
+            $error_code  = $result->getCode();
+
+            $log1=sprintf("%s: %s",$error_fault->faultstring,$error_fault->faultcode);
+	        syslog(LOG_NOTICE, "SOAP error: $log1");
+
+            if ($error_fault->faultcode == "SOAP-ENV:Client") {
+                $log2=sprintf ("%s %s\n",$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+	            syslog(LOG_NOTICE, "SOAP client error: $log2");
+            }
+
+            if ($error_fault->detail->exception->errorcode!="1030") {
+
+                $from         = $this->CDRTool[provider][fromEmail];
+                $to           = $this->CDRTool[provider][toEmail];
+                $extraHeaders = "From: $from";
+                $email_body   = "Remote SOAP request failure when calling blockAccountRemote(): \n\n".$log1." ".$log2;
+
+                mail($to, "CDRTool remote SOAP failure", $email_body, $extraHeaders);
+            }
+
+            return 0;
+        } else {
+            $log=sprintf ("Block remote account %s at %s",$account,$this->NGNProURL);
+	        syslog(LOG_NOTICE, $log);
+            return 1;
+        }
+
+    }
+
+    function unBlockRemoteAccounts($accounts) {
+        if (!is_object($this->soapclient)) {
+            return;
+        }
+
+        foreach ($accounts as $account) {
+            list($username,$domain)=explode("@",$account);
+    
+            if (!$username || !$domain) return 1;
+    
+            $this->soapclient->addHeader($this->SoapAuth);
+            $result     = $this->soapclient->removeFromGroup(array("username" => $username,"domain"=> $domain), "quota");
+    
+            if (PEAR::isError($result)) {
+                $error_msg   = $result->getMessage();
+                $error_fault = $result->getFault();
+                $error_code  = $result->getCode();
+                if ($error_fault->detail->exception->errorcode &&
+                	$error_fault->detail->exception->errorcode != "1030" &&
+                    $error_fault->detail->exception->errorcode != "1031"
+                    ) {
+                    $from = $this->CDRTool[provider][fromEmail];
+                    $to   = $this->CDRTool[provider][toEmail];
+        
+                    $extraHeaders="From: $from";
+                    $email_body="SOAP request failure: \n\n".
+        
+                    $log=sprintf ("SOAP client error: %s %s\n",$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    syslog(LOG_NOTICE, $log);
+        
+                    mail($to, "CDRTool SOAP failure", $email_body, $extraHeaders);
+                }
+            } else {
+                $log=sprintf ("Unblock remote account %s at %s",$account,$this->NGNProURL);
+                syslog(LOG_NOTICE, $log);
+            }
+        }
+    }
+}
+
+class RatingEngine {
+
+    function RatingEngine (&$CDRS) {
+        $this->CDRS		= &$CDRS;
+		$this->db       = new DB_CDRTool;
+        $this->table    = "prepaid";
+
+        $this->sessionCounter		    = 0;
+        $this->beginStatisticsTime      = time();
+
+        $this->lastMinuteSessionCounter = 0;
+        $this->lastMinuteStatisticsTime = time();
+
+        $this->lastHourSessionCounter   = 0;
+        $this->lastHourStatisticsTime   = time();
+
+        $this->lastDaySessionCounter    = 0;
+        $this->lastDayStatisticsTime    = time();
+
+    }
+
+    function loadPrepaidAccounts($account='') {
+
+        $query="select * from $this->table";
+
+        if ($account) $query.=sprintf(" where account = '%s' ",addslashes($account));
+
+        dprint($query);
+        if (!$this->db->query($query)) return 0;
+
+        if ($account) {
+        	if ($this->db->num_rows()) {
+        		$this->db->next_record();
+            	$this->balance[$this->db->f('account')] = $this->db->f('balance');
+        		$log=sprintf("Loaded prepaid account %s",$this->db->f('account'));
+                return 1;
+            } else {
+        		$log=sprintf("Error: Prepaid account %s does not exist",$account);
+      			syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+        } else {
+        	while($this->db->next_record()) {
+            	$_balance[$this->db->f('account')] = $this->db->f('balance');
+            }
+            if (is_array($_balance)) {
+            	$this->balance=$_balance;
+            } else {
+        		$this->balance=array();
+            }
+        	$log=sprintf("Loaded %d prepaid accounts",count($this->balance));
+            return 1;
+        }
+    }
+
+    function reloadRatingTables () {
+        $b=time();
+    	$i=$this->CDRS->LoadDestinations();
+        syslog(LOG_NOTICE, "Loaded $i destinations");
+        $this->CDRS->RatingTables->LoadRatingTables();
+
+        // reload Prepaid accounts
+        $this->loadPrepaidAccounts();
+        $c=count($this->balance);
+        syslog(LOG_NOTICE, "Loaded $c prepaid accounts");
+
+        $e=time();
+        $d=$e-$b;
+        if ($d >0 ) syslog(LOG_NOTICE, "Loaded rating tables in $d seconds");
+
+        $this->db->query("update settings set var_value='' where var_name= 'reloadRating'");
+        return 1;
+    }
+
+    function reloadCustomers ($customerFilter) {
+        $b=time();
+        $this->CDRS->RatingTables->LoadCustomersTable($customerFilter);
+
+        $e=time();
+        $d=$e-$b;
+        if ($d >0 ) syslog(LOG_NOTICE, "Reloaded customers inn $d seconds");
+
+        return 1;
+    }
+
+    function reloadPrepaidAccounts($account='') {
+        return $this->loadPrepaidAccounts($account);
+    }
+
+    function showPrepaidAccounts($filter) {
+        foreach (array_keys($this->balance) as $key) {
+            if (strlen($filter)) {
+                if (preg_match("/$filter/",$key)) {
+            		$accounts=$accounts.sprintf("Account=%-35s Balance=%8.4f",$key,$this->balance[$key])."\n";
+                }
+            } else {
+            	$accounts=$accounts.sprintf("Account=%-35s Balance=%8.4f",$key,$this->balance[$key])."\n";
+            }
+        }
+        return $accounts;
+    }
+
+    function DebitBalance($BillingPartyId,$balance) {
+
+        $BillingPartyId=trim($BillingPartyId);
+
+ 		if (preg_match("/^(.*):(.*)$/",$BillingPartyId,$m)) {
+        	$BillingPartyId=$m[2];
+        }
+
+        if (!$BillingPartyId) {
+            syslog(LOG_NOTICE, "DebitBalance() error: missing BillingPartyId");
+            return 0;
+        }
+
+		if (strlen($BillingPartyId) > 254) {
+            syslog(LOG_NOTICE, "DebitBalance() error: BillingPartyId > 254 chars");
+            return 0;
+        }
+
+        if (!$BillingPartyId || !strlen($balance)) {
+        	syslog(LOG_NOTICE, "DebitBalance() error: missing BillingPartyId or balance");
+            return 0;
+        }
+
+        if ($this->balance[$BillingPartyId]) {
+
+            $query="update $this->table
+            set balance          = balance - '$balance',
+            change_date          = NOW(),
+            last_call_price      = '$balance',
+            call_in_progress     = '0000-00-00 00:00:00',
+            call_lock            = '0',
+            maxsessiontime       = '0',
+            destination          = ''
+            where account        = '$BillingPartyId'";
+            dprint($query);
+
+            if ($this->db->query($query)) {
+                $log=sprintf ("Session unlock for prepaid account $BillingPartyId");
+                syslog(LOG_NOTICE, $log);
+                $query="select balance from $this->table
+            	where account        = '$BillingPartyId'";
+            	dprint($query);
+        		$this->db->query($query);
+                $this->db->next_record();
+                $this->balance[$BillingPartyId]=$this->db->f('balance');
+                return 1;
+            } else {
+                $error_msg=$this->db->Error;
+                $log=sprintf ("DebitBalance() error: failed to debit balance ($error_msg)");
+                syslog(LOG_NOTICE, $log);
+        		return 0;
+            }
+
+        } else {
+            syslog(LOG_NOTICE, "DebitBalance() error: BillingPartyId=$BillingPartyId does not exist");
+            return "none";
+        }
+    }
+
+    function CreditBalance($BillingPartyId,$balance) {
+
+        if (!is_numeric($balance)) {
+            syslog(LOG_NOTICE, "CreditBalance() error: balance \"$balance\"is invalid");
+            return 0;
+        }
+
+        $BillingPartyId=trim($BillingPartyId);
+		if (preg_match("/^(.*):(.*)$/",$BillingPartyId,$m)) {
+        	$BillingPartyId=$m[2];
+        }
+
+        if (!$BillingPartyId) {
+            syslog(LOG_NOTICE, "CreditBalance() error: missing BillingPartyId");
+            return 0;
+        }
+
+		if (strlen($BillingPartyId) > 254) {
+            syslog(LOG_NOTICE, "CreditBalance() error: BillingPartyId > 254 chars");
+            return 0;
+        }
+
+        if ($this->balance[$BillingPartyId]) {
+            $query="update $this->table
+            set balance              = balance + '$balance',
+            change_date          = NOW()
+            where account        = '$BillingPartyId'";
+
+            dprint($query);
+
+            $this->db->query($query);
+            if ($this->db->affected_rows()) {
+            	$this->balance[$BillingPartyId]=$this->balance[$BillingPartyId]+$balance;
+                $log=sprintf ("Prepaid account $BillingPartyId credited with $balance");
+                syslog(LOG_NOTICE, $log);
+                return 1;
+            } else {
+                $error_msg=$this->db->Error;
+                $log=sprintf ("CreditBalance() error: failed to debit balance ($error_msg)");
+                syslog(LOG_NOTICE, $log);
+        		return 0;
+            }
+
+        } else {
+            $query="insert into $this->table (account, balance, change_date)
+            values ('$BillingPartyId','$balance',NOW())";
+
+            dprint($query);
+
+            $this->db->query($query);
+            if ($this->db->affected_rows()) {
+            	$this->balance[$BillingPartyId]=$this->balance[$BillingPartyId]+$balance;
+                $log=sprintf ("Added prepaid account $BillingPartyId with balance=$balance");
+                syslog(LOG_NOTICE, $log);
+                return 1;
+            } else {
+                $error_msg=$this->db->Error;
+                $log=sprintf ("CreditBalance() error: failed to credit balance ($error_msg)");
+                syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+        }
+    }
+
+    function showHelp() {
+        $help=
+        "Version\n".
+        "Help\n".
+		"ShowAccounts\n".
+        "MaxSessionTime From=sip:123@example.com To=sip:0031650222333 Duration=7200 Lock=1\n".
+        "DebitBalance   From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
+        "ShowPrice      From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
+        "AddBalance     From=sip:123@example.com Value=10.00\n".
+        "GetBalance     From=sip:123@example.com\n".
+        "ReloadRatingTables\n".
+        "ReloadCustomers Customer=123@example.com Type=[Subscriber|Domain|Gateway]\n".
+        "ShowCustomers Filter=123@example.com\n".
+        "ShowRates\n".
+        "ShowProfiles\n".
+        "ReloadPrepaidAccounts Account=abc@example.com\n".
+        "ShowPrepaidAccounts Filter=123@example.com\n".
+        "ShowMemory";
+        return $help;
+    }
+
+    function processNetworkInput($tinput) {
+
+        // Read key=value pairs from input
+        // Strip any unnecessary spaces
+
+        $tinput=preg_replace("/=\s{1,}/","= ",$tinput);
+        $tinput=preg_replace("/\s{1,}=/","= ",$tinput);
+        $tinput=preg_replace("/\s+/"," ",$tinput);
+
+        $_els=explode(" ",trim($tinput));
+
+        dprint_r($_els);
+        syslog(LOG_NOTICE, $tinput);
+
+        if (!$_els[0]) return 0;
+
+        // read fields from input
+        unset($NetFields);
+        unset($seenField);
+
+        $i=0;
+        while ($i < count($_els)) {
+            $i++;
+
+            $_dict  = explode("=",$_els[$i]);
+            $_key   = strtolower(trim($_dict[0]));
+            $_value = strtolower(trim($_dict[1]));
+
+            if (strlen($_key) && $seenField[$_key]) {
+                $log=sprintf ("Error: '$_key' attribute is present more than once in $tinput");
+                syslog(LOG_NOTICE, $log);
+                return 0;
+            } else {
+                if (strlen($_key)) {
+            		$NetFields[$_key]=$_value;
+                	$seenField[$_key]++;
+                }
+            }
+        }
+
+        $NetFields['action']=strtolower($_els[0]);
+
+        /*
+        foreach(array_keys($NetFields) as $_field) {
+            $log.=sprintf("Field=%s Value=%s ",$_field,$NetFields[$_field]);
+        }
+
+        syslog(LOG_NOTICE, $log);
+        */
+
+        // begin processing
+        if ($NetFields['action']=="maxsessiontime") {
+
+            if (!$NetFields['from']) {
+                dprint("Missing From parameter.");
+                $log=sprintf ("Error: Missing From parameter");
+                    syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+
+            if (!$NetFields['to']) {
+                dprint("Missing To parameter.");
+                $log=sprintf ("Error: Missing To parameter");
+                    syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+
+            if (!strlen($NetFields['duration'])) {
+                $NetFields['duration']=12*3600; // 12 hours
+            }
+
+			$this->sessionCounter++;
+            $this->lastMinuteSessionCounter++;
+            $this->lastHourSessionCounter++;
+            $this->lastDaySessionCounter++;
+
+			$_now=time();
+            $_runtime  = time() - $this->beginStatisticsTime;
+          	$_intervalMinute = $_now  - $this->lastMinuteStatisticsTime;
+
+            if ( $_now > $this->lastMinuteStatisticsTime + 60 && $_intervalMinute > 0) {
+
+                $_cpsTotal  = $this->sessionCounter/$_runtime;
+
+                $_cpsMinute = $this->lastMinuteSessionCounter/$_intervalMinute;
+
+                $this->statistics = array (
+                                            'lastMinute' => array('calls'      => $this->lastMinuteSessionCounter,
+                                                                    'interval' => $_intervalMinute,
+                                                                    'cps'      => $_cpsMinute ),
+                                            'total'      => array('calls'      => $this->sessionCounter,
+                                                                    'interval' => $_runtime,
+                                                                    'cps'      => $_cpsTotal)
+
+                                          );
+
+                $this->lastMinuteSessionCounter=0;
+                $this->lastMinuteStatisticsTime=time();
+
+                $log=sprintf ("Call statistics last minute: %s calls in the last %s seconds @ %s CPS",
+                $this->statistics['lastMinute']['calls'],
+                $this->statistics['lastMinute']['interval'],
+                sprintf("%.2f",$this->statistics['lastMinute']['cps']));
+                syslog(LOG_NOTICE, $log);
+
+                $log=sprintf ("Total call statistics: %s calls in %s seconds @ %s CPS",
+                $this->statistics['total']['calls'],
+                $this->statistics['total']['interval'],
+                sprintf("%.2f",$this->statistics['total']['cps']));
+                syslog(LOG_NOTICE, $log);
+
+	            $_intervalHour = $_now  - $this->lastHourStatisticsTime;
+
+	            if ( $_now > $this->lastHourStatisticsTime + 3600 && $_intervalHour > 0) {
+                    $_cpsHour 	= $this->lastHourSessionCounter/$_intervalHour;
+    
+                    $this->statistics['lastHour'] = array('calls'    => $this->lastHourSessionCounter,
+                                                          'interval' => $_intervalHour,
+                                                          'cps'      => $_cpsHour );
+                    $this->lastHourSessionCounter=0;
+                    $this->lastHourStatisticsTime=time();
+    
+                    $log=sprintf ("Call statistics last hour: %s calls in the last %s seconds @ %s CPS",
+                    $this->statistics['lastHour']['calls'],
+                    $this->statistics['lastHour']['interval'],
+                    sprintf("%.2f",$this->statistics['lastHour']['cps']));
+                    syslog(LOG_NOTICE, $log);
+
+                }
+
+	            $_intervalDay = $_now  - $this->lastDayStatisticsTime;
+
+                if ( $_now > $this->lastDayStatisticsTime + 3600*24 && $_intervalDay > 0) {
+                    $_cpsDay 	= $this->lastDaySessionCounter/$_intervalDay;
+    
+                    $this->statistics['lastDay'] = array('calls'    => $this->lastDaySessionCounter,
+                                                         'interval' => $_intervalDay,
+                                                         'cps'      => $_cpsDay );
+                    $this->lastDaySessionCounter=0;
+                    $this->lastDayStatisticsTime=time();
+    
+                    $log=sprintf ("Call statistics last day: %s calls in the last %s seconds @ %s CPS",
+                    $this->statistics['lastDay']['calls'],
+                    $this->statistics['lastDay']['interval'],
+                    sprintf("%.2f",$this->statistics['lastDay']['cps']));
+                    syslog(LOG_NOTICE, $log);
+
+                }
+
+            }
+
+            $CDRStructure=array (
+                              $this->CDRS->CDRFields['aNumber']  	   => $NetFields['from'],
+                              $this->CDRS->CDRFields['RemoteAddress']  => $NetFields['to'],
+                              $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
+                              $this->CDRS->CDRFields['cNumber']        => $NetFields['to'],
+                              $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
+                              $this->CDRS->CDRFields['duration']       => $NetFields['duration'],
+                              $this->CDRS->CDRFields['timestamp']      => time(),
+                              );
+
+            dprint_r($CDRStructure);
+
+            $CDR = new $this->CDRS->CDR_class($this->CDRS, $CDRStructure);
+            $CDR->normalize();
+
+            $Balance=$this->balance[$CDR->BillingPartyId];
+            $c=count($this->balance);
+
+            if (!strlen($Balance)) {
+                return "none";
+            }
+
+            $query="select * from $this->table where account = '$CDR->BillingPartyId'";
+
+            $this->db->query($query);
+            if ($this->db->num_rows()) {
+                $this->db->next_record();
+                if ($this->db->f('call_lock') == "1") {
+                    $_cip=$this->db->f('call_in_progress');
+                    $log = sprintf ("Account locked, call in progres since $_cip");
+                    syslog(LOG_NOTICE, $log);
+                    return "locked";
+                }
+            } else {
+               	$log = sprintf ("Prepaid $CDR->BillingPartyId does not exist");
+                syslog(LOG_NOTICE, $log);
+                return "none";
+            }
+
+            if (!preg_match("/^0/",$CDR->RemoteAddressNormalized)) {
+               	$log = sprintf ("Non-PSTN call to %s, no limit imposed",$CDR->RemoteAddressNormalized);
+                syslog(LOG_NOTICE, $log);
+                return "none";
+            } else {
+            	if (!$CDR->DestinationId) {
+            		$log = sprintf ("Error: cannot figure out the PSTN destination id for $CDR->RemoteAddress");
+                	syslog(LOG_NOTICE, $log);
+                	return "0";
+            	}
+            }
+
+            if ($Balance) {
+                $maxduration=0;
+                // Build Rate dictionary containing normalized CDR fields plus customer Balance
+                $RateDictionary=array(
+                                      'duration'        => $CDR->duration,
+                                      'Balance'         => $Balance,
+                                      'timestamp'       => $CDR->timestamp,
+                                      'DestinationId'   => $CDR->DestinationId,
+                                      'destinationName' => $CDR->destinationName,
+                                      'domain'          => $CDR->domain,
+                                      'BillingPartyId'  => $CDR->BillingPartyId,
+                                      'RatingTables'    => &$this->CDRS->RatingTables
+                                      );
+                
+                $Rate    = new Rate(&$CDR);
+                $maxduration = round($Rate->MaxSessionTime($RateDictionary));
+
+                if ($maxduration<0) {
+               		$log = sprintf ("Error: maxduration is negative ($maxduration)");
+                	syslog(LOG_NOTICE, $log);
+                	return 0;
+                }
+
+                if (!$Rate->billingTimezone) {
+               		$log = sprintf ("Error: cannot figure out the billing timezone");
+                	syslog(LOG_NOTICE, $log);
+                	return 0;
+                }
+
+                if (!$Rate->startTimeBilling) {
+               		$log = sprintf ("Error: cannot figure out the billing start time");
+                	syslog(LOG_NOTICE, $log);
+                	return 0;
+                }
+
+                // print maximum allowed session time based on customer Balance
+                $log=sprintf ("Caller party    : %s",$CDR->aNumber);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("Billing party   : %s",$CDR->BillingPartyId);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("Domain          : %s",$CDR->domain);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("Timezone        : %s",$Rate->billingTimezone);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("Balance         : %s",$RateDictionary['Balance']);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("Session start   : %s",$Rate->startTimeBilling);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("Destination     : %s",$CDR->RemoteAddress);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("Destination Id  : %s (%s)",$CDR->DestinationId,$CDR->destinationName);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("MaxSessionTime  : %s (%s)",sec2hms($maxduration),$maxduration);
+                    syslog(LOG_NOTICE, $log);
+
+				if ($NetFields['lock'] && $maxduration > 0) {
+                    if (preg_match("/^(sip|sips):(\d+)@/",$CDR->RemoteAddress,$m)) $destination=$m[2];
+
+                	// mark the account that is locked during call
+                    $query=sprintf("update $this->table
+                    set call_in_progress = NOW(),
+                    call_lock = '1',
+                    destination = '%s',
+                    maxsessiontime = '%s'
+                    where account = '%s'",
+                    addslashes($destination),
+                    addslashes($maxduration),
+                    addslashes($CDR->BillingPartyId));
+
+                    dprint($query);
+
+                    if ($this->db->query($query)) {
+                        if ($this->db->affected_rows()) {
+                        	$log=sprintf ("Session lock for $CDR->BillingPartyId");
+                        } else {
+                        	$log=sprintf ("$CDR->BillingPartyId is already locked");
+                        }
+                    } else {
+                    	$log=sprintf ("Error: cannot lock $CDR->BillingPartyId");
+                    }
+                    syslog(LOG_NOTICE, $log);
+                }
+
+                return $maxduration;
+
+            } else {
+                return 0;
+            }
+        } else if ($NetFields['action'] == "debitbalance") {
+
+            if (!$NetFields['from']) {
+                dprint("Missing From parameter.");
+                $log=sprintf ("Error: Missing From parameter");
+                    syslog(LOG_NOTICE, $log);
+                return "Failed";
+            }
+
+            if (!$NetFields['to']) {
+                dprint("Missing To parameter.");
+                $log=sprintf ("Error: Missing To parameter");
+                    syslog(LOG_NOTICE, $log);
+                return "Failed";
+            }
+
+            if (!strlen($NetFields['duration'])) {
+                dprint("Missing Duration parameter.");
+                $log=sprintf ("Error: Missing Duration parameter");
+                    syslog(LOG_NOTICE, $log);
+                return "Failed";
+            }
+
+            // simulate a CDR structure from network input
+            $CDRStructure=array (
+                              $this->CDRS->CDRFields['aNumber']  	   => $NetFields['from'],
+                              $this->CDRS->CDRFields['RemoteAddress']  => $NetFields['to'],
+                              $this->CDRS->CDRFields['duration']       => $NetFields['duration'],
+                              $this->CDRS->CDRFields['timestamp']      => time(),
+                              );
+
+            dprint_r($CDRStructure);
+
+            // Init CDR
+            $CDR = new $this->CDRS->CDR_class($this->CDRS, $CDRStructure);
+            $CDR->normalize();
+
+			if (!is_array($this->balance) || !array_key_exists($CDR->BillingPartyId,$this->balance)) {
+                $log=sprintf ("Warning: Account %s is not prepaid",$CDR->BillingPartyId);
+                    syslog(LOG_NOTICE, $log);
+                return "Not Prepaid";
+            }
+
+            // Build Rate dictionary containing normalized CDR fields plus customer Balance
+            $RateDictionary=array(
+                                  'duration'        => $CDR->duration,
+                                  'timestamp'       => $CDR->timestamp,
+                                  'DestinationId'   => $CDR->DestinationId,
+                                  'destinationName' => $CDR->destinationName,
+                                  'domain'          => $CDR->domain,
+                                  'traffic'         => $CDR->traffic,
+                                  'BillingPartyId'  => $CDR->BillingPartyId,
+                                  'RatingTables'    => &$this->CDRS->RatingTables
+                                  );
+            
+            $Rate = new Rate(&$CDR);
+            $Rate->calculate($RateDictionary);
+
+			if ($CDR->duration) {
+                // print maximum allowed session time based on customer Balance
+                $log=sprintf ("Customer        : %s",$CDR->BillingPartyId);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("Timezone        : %s",$Rate->billingTimezone);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("Destination     : %s",$CDR->RemoteAddress);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("Destination Id  : %s (%s)",$CDR->DestinationId,$CDR->destinationName);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("Duration        : %s (%s)",sec2hms($CDR->duration), $CDR->duration);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("Price           : %s", $Rate->price);
+                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("Balance         : %s",$this->balance[$CDR->BillingPartyId]);
+                    syslog(LOG_NOTICE, $log);
+            }
+
+            $result = $this->DebitBalance($CDR->BillingPartyId,$Rate->price);
+
+            if ($CDR->duration) {
+            	$log=sprintf ("New balance     : %s",$this->balance[$CDR->BillingPartyId]);
+                	syslog(LOG_NOTICE, $log);
+            }
+            if ($result) {
+                return "Ok";
+            } else {
+                return "Failed";
+            }
+
+        } else if ($NetFields['action'] == "addbalance") {
+
+        	if (!$NetFields['from']) {
+                dprint("Missing From parameter.");
+                $log=sprintf ("Error: Missing From parameter");
+                    syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+
+            if (!$NetFields['value']) {
+                dprint("Missing Value parameter.");
+                $log=sprintf ("Error: Missing Value parameter");
+                    syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+
+            $log=sprintf ("Customer        : %s",$NetFields['from']);
+                syslog(LOG_NOTICE, $log);
+            $log=sprintf ("Balance         : %s",$this->balance[$NetFields['from']]);
+                syslog(LOG_NOTICE, $log);
+
+            $result = $this->CreditBalance($NetFields['from'],$NetFields['value']);
+
+            $log=sprintf ("New Balance     : %s",$this->balance[$NetFields['from']]);
+                syslog(LOG_NOTICE, $log);
+
+            if ($result) {
+                return $result;
+            } else {
+                return 0;
+            }
+
+        } else if ($NetFields['action'] == "showprice") {
+
+            if (!$NetFields['from']) {
+                dprint("Missing From parameter.");
+                $log=sprintf ("Error: Missing From parameter");
+                    syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+
+            if (!$NetFields['to']) {
+                dprint("Missing To parameter.");
+                $log=sprintf ("Error: Missing To parameter");
+                    syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+
+            if (!strlen($NetFields['duration'])) {
+                dprint("Missing Duration parameter.");
+                $log=sprintf ("Error: Missing Duration parameter");
+                    syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+
+			if ($NetFields['timestamp']) {
+                $timestamp=$NetFields['timestamp'];
+            } else {
+            	$timestamp=time();
+            }
+
+            if ($NetFields['application']) {
+                $application=$NetFields['application'];
+            } else {
+                $application="Audio";
+            }
+
+            $CDRStructure=array (
+                              $this->CDRS->CDRFields['id']  	        => $NetFields['id'],
+                              $this->CDRS->CDRFields['timestamp']       => $timestamp,
+                              $this->CDRS->CDRFields['duration']        => $NetFields['duration'],
+                              $this->CDRS->CDRFields['aNumber']  	    => $NetFields['from'],
+                              $this->CDRS->CDRFields['cNumber']         => $NetFields['to'],
+                              $this->CDRS->CDRFields['RemoteAddress']   => $NetFields['to'],
+                              $this->CDRS->CDRFields['CanonicalURI']    => $NetFields['to'],
+                              $this->CDRS->CDRFields['inputTraffic']    => $NetFields['inputTraffic'],
+                              $this->CDRS->CDRFields['outputTraffic']   => $NetFields['outputTraffic'],
+                              $this->CDRS->CDRFields['applicationType'] => $application,
+                              $this->CDRS->CDRFields['gateway']         => $NetFields['gateway']
+                              );
+
+            // Init CDR
+            $CDR = new $this->CDRS->CDR_class($this->CDRS, $CDRStructure);
+            $CDR->normalize();
+
+            // Build Rate dictionary containing normalized CDR fields
+            $RateDictionary=array(
+                                  'id'              => $CDR->id,
+                                  'timestamp'       => $CDR->timestamp,
+                                  'duration'        => $CDR->duration,
+                                  'DestinationId'   => $CDR->DestinationId,
+                                  'traffic'         => $CDR->traffic,
+                                  'BillingPartyId'  => $CDR->BillingPartyId,
+                                  'domain'          => $CDR->domain,
+                                  'gateway'         => $CDR->gateway,
+                                  'RatingTables'    => &$this->CDRS->RatingTables,
+                                  'applicationType' => $CDR->applicationType,
+                                  'aNumber'         => $CDR->aNumber,
+                                  'cNumber'         => $CDR->cNumber,
+                                  'destinationName' => $CDR->destinationName
+                                  );
+
+            $Rate = new Rate(&$CDR);
+            $Rate->calculate($RateDictionary);
+
+            if (strlen($Rate->price)) {
+            	$RateReturn=$Rate->price;
+                if (strlen($Rate->rateInfo)) {
+                	$RateReturn.="\n".trim($Rate->rateInfo);
+                }
+            } else {
+            	$RateReturn="0";
+            }
+
+			syslog(LOG_NOTICE, "Price=$Rate->price");
+
+            return $RateReturn;
+
+        } else if ($NetFields['action'] == "getbalance") {
+            if (!$NetFields['from']) {
+                dprint("Missing From parameter.");
+                $log=sprintf ("Error: Missing From parameter");
+                    syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+
+        	$log=sprintf ("Customer        : %s",$NetFields['from']);
+				syslog(LOG_NOTICE, $log);
+            $log=sprintf ("Balance         : %s",$this->balance[$NetFields['from']]);
+				syslog(LOG_NOTICE, $log);
+
+			if (!$this->balance[$NetFields['from']]) {
+                $balance="0.00";
+            } else {
+            	$balance=number_format($this->balance[$NetFields['from']],4,".","");
+            }
+            return $balance;
+
+        } else if ($NetFields['action'] == "showprepaidaccounts") {
+            return trim($this->showPrepaidAccounts($NetFields['filter']));
+        } else if ($NetFields['action'] == "showcustomers") {
+            return trim($this->CDRS->RatingTables->showCustomers($NetFields['filter']));
+        } else if ($NetFields['action'] == "showprofiles") {
+            return trim($this->CDRS->RatingTables->showProfiles());
+        } else if ($NetFields['action'] == "showrates") {
+            return trim($this->CDRS->RatingTables->showRates());
+        } else if ($NetFields['action'] == "version") {
+            $version_file=$this->CDRS->CDRTool['Path']."/version";
+            $version="CDRTool version ".trim(file_get_contents($version_file));
+            return $version;
+
+        } else if ($NetFields['action'] == "help") {
+            return $this->showHelp();
+        } else if ($NetFields['action'] == "reloadratingtables") {
+            return $this->reloadRatingTables();
+        } else if ($NetFields['action'] == "reloadcustomers") {
+            if ($NetFields['customer'] && $NetFields['type']) {
+                $_customerFilter=array('customer'=>$NetFields['customer'],
+                                      'type'=>$NetFields['type']);
+            }
+            return $this->reloadCustomers($_customerFilter);
+
+        } else if ($NetFields['action'] == "reloadprepaidaccounts") {
+            return $this->reloadPrepaidAccounts($NetFields['account']);
+        } else if ($NetFields['action'] == "showmemory") {
+            $return = sprintf ("%s destinations\n%s customers\n%s PSTN profiles\n%s PSTN rates\n%s NGN profiles\n%s NGN rates\n%s holidays\n%s prepaid accounts\n%s sessions\n%s sessions last minute\n%s sessions last hour\n%s sessions last day",
+            $this->CDRS->destinationsCount,
+            count($this->CDRS->RatingTables->customers),
+            count($this->CDRS->RatingTables->profiles),
+            $this->CDRS->RatingTables->ratesCount,
+            count($this->CDRS->RatingTables->profilesNGN),
+            count($this->CDRS->RatingTables->ratesNGN),
+            count($this->CDRS->RatingTables->holidays),
+            count($this->balance),
+            count($this->sessionCounter),
+            count($this->lastMinuteSessionCounter),
+            count($this->lastHourSessionCounter),
+            count($this->lastDaySessionCounter)
+            );
+
+            return $return;
+
+
+        } else {
+            dprint("Invalid request. ");
+            $log=sprintf ("Error: Invalid request");
+                syslog(LOG_NOTICE, $log);
+            return 0;
+        }
+    }
+}
+
+// class that connects to NGN-Pro to block/unblock accounts
+
+class NGNProSip extends SOAP_Client {
+    function NGNProSip($SOAPURL) {
+        $this->SOAP_Client($SOAPURL, 0);
+    }
+
+    function &addToGroup($sipId, $group) {
+        return $this->call("addToGroup", 
+                        $v = array("sipId"=>$sipId, "group"=>$group), 
+                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
+                            'soapaction'=>'',
+                            'style'=>'rpc',
+                            'use'=>'encoded' ));
+    }
+    function &removeFromGroup($sipId, $group) {
+        return $this->call("removeFromGroup", 
+                        $v = array("sipId"=>$sipId, "group"=>$group), 
+                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
+                            'soapaction'=>'',
+                            'style'=>'rpc',
+                            'use'=>'encoded' ));
+    }
+}
+
+function reloadRatingEngineTables () {
+    global $RatingEngine;
+    if ($RatingEngine["socketIP"] && $RatingEngine["socketPort"] &&
+        $fp = fsockopen ($RatingEngine["socketIP"], $RatingEngine["socketPort"], $errno, $errstr, 2)) {
+        fputs($fp, "ReloadRatingTables\n");
+        fclose($fp);
+        return 1;
+    }
+    return 0;
+}
+
+?>

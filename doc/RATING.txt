@@ -1,0 +1,444 @@
+CDRTool rating engine
+---------------------
+
+CDRTool provides on-the-fly rating of CDRs from multiple data-sources like
+OpenSER, Asterisk or Cisco gateways based on an easy to build rating plan,
+which can be imported from external data sources.
+
+A Call Detail Record (a CDR) is one record from Radius radacct table. The
+CDR record contains all information related to a SIP session, like duration,
+calling and called party.
+
+The rating engine calculates the Price of the call, which is applied in
+real-time to the web output and saved to the database containing the CDRs.
+
+Based on exceptions, different rates may be applied per caller party
+identified by the source IP address of the gateway, SIP subscriber or SIP
+domain. The rates are linked with profiles corresponding with different time
+of the day, day of the week or holidays. Each profile has its own rate
+values. For rating calls, which span multiple profiles, the right rate is
+selected and applied for the call duration within each profile. Each
+customer may be assigned its own dedicated rating plans destination id and
+names.
+
+Chained profiles are possible to enable exception based rating. Multiple
+customers may share a common rate list while some destinations may be rated
+differently, only the differences must be provisioned.
+
+Multiple time zones are supported for multiple billing parties hosted on the
+same platform.
+
+Rating is applied only after the call has ended. CDRTool considers that a
+call has ended when there is a stop time. In case of missing BYEs, CDRTool
+relies on the fact that MediaProxy will update the CDR with the proper stop
+time information based on the last moment the media stream passed through
+the media proxy.
+
+Against fraud, one may enforce limits for post-paid customers, an external
+scripts may build statistics based on customer usage, check customer quota
+in external data-sources and block customers in the SIP Proxy. This will not
+stop in real-time ongoing calls for customers exceeding their quota but
+provides in practice a perfect protection against fraudulent usage. See
+script scripts/SER/quotaCheck.php for example.
+
+PSTN rating
+-----------
+
+1. Lookup the call rate based on time (peak/of-peak, day of week, holiday) 
+
+2. Calculate the call Price based on duration and destination id (country codes).
+   In global.inc there are several variables that affect how the price is
+   calculated. These settings are global per CDRTool installation.
+
+   $PRICING=array( 
+           "priceDenominator"   	 => 10000, // Rates units
+           "priceDecimalDigits" 	 => 4,     // Decimal information
+           "minimumDurationCharged"      => 0,     // Rate a minimum of X seconds
+           "durationPeriodRated" 	 => 60     // Rate is per 60 seconds
+           "trafficSizeRated"            => 1024   // Default we rate per 1 MB 
+            );
+
+   Pricing formula
+   ---------------
+
+   Price =
+	 connectCost/priceDenominator+
+         durationRate*durationForRating/durationPeriodRated/priceDenominator+
+         trafficRate/priceDenominator*(inputTraffic+outputTraffic)/8+
+         applicationRate/priceDenominator
+
+3. Save the calculated Price and DestinationId for each non zero price
+   CDRs. Having the price stored in database, it is possible to build
+   statistics to display consolidated revenues per country code or network.
+   	
+   Update the normalized A number and C number of each CDR.
+ 
+
+Time of the day rating 
+----------------------
+
+1. Lookup the billing Profile in cdrtool.billing_customers table in the
+   following order: subscriber,domain,gateway (based on $this->dayofweek):
+
+   - profile_name1 matches week days [1-5]
+   - profile_name1_alt matches week days [1-5] if no rates for profile_name1
+   are found
+   - profile_name2 matches week-ends [6-0]
+   - profile_name2_alt matches week-ends [6-0] if no rates for profile_name2
+   are found
+   - profile_name2 matches also holidays from billing_holidays table
+   
+   Note
+   ----
+   in CDRTool, the week starts with 0 (Sunday) and ends with 6 (Saturday)
+
+2. Using the profile_name found, lookup the rate_name based
+   on $this->hourofday in cdrtool.billing_profiles table
+
+   If no rate_name is found for the given profiles a second set of profiles
+   are used, profile_name1_alt and profile_name2_alt.
+
+   - the day may be split in maximum 4 periods
+   - the days starts with hour 0 and ends with hour 24
+   - rate_name1 defines the first interval after hour 0
+   - rate_name2 defines the first interval after rate_name1
+   - rate_name3 defines the first interval after rate_name2
+   - rate_name4 defines the first interval after rate_name3
+
+   When the hour matches an interval use the rate_nameX found to lookup the
+   rate in billing_rates, if no record is found use the rate called
+   'default'
+
+3. Lookup in the cdrtool.billing_rates table the record having same name
+   found at point 2 and having billing_rates.destination = $this->destinationId
+
+   - return an array with all the rating values and the duration rated
+
+  Note
+  ----
+  No rate will be returned if no destination Id is found. Make sure each
+  possible destination has a corresponding Id and name in destinations table.
+
+4. If the duration rated at point 3 is less than total call duration, apply
+   point 3 again for the remaining call duration in next profile.  A maximum
+   of 10 spans (different rates depending of time of day, day of the week)
+   can be calculated using this mechanism.
+
+
+NGN rating flow
+---------------
+
+NGN rating support rating of data traffic based on application type. 
+
+1. Lookup the billing Profile in cdrtool.billing_customers table in the
+   following order: subscriber,domain,gateway:
+
+   - profileNGN
+
+2. Using the profile found, lookup the rate based
+   on application type in cdrtool.billing_profilesNGN table
+
+3. Lookup in the cdrtool.billing_ratesNGN table the record having same name
+   found at point 2. 
+
+   - return an array with all the rating values and the duration rated
+
+
+Importing/exporting of rating files
+------------------------------------
+
+There are different data files needed for rating CDRs. The data files are
+imported into corresponding MySQL tables. The files must be uploaded to
+/var/www/CDRTool/csv directory.  To load the files into the database run
+the following command:
+
+/var/www/CDRTool/scripts/importRatingTables.php
+
+Sample csv files are found in the setup directory. The CSV field order
+is described in setup/*.csv sample files. The first element on each
+line specifies the operation will be performed with the current record.
+The operation can be 2 (update/insert), 1 (insert) or 3 (delete). 
+
+The updates are performed based on a unique key present in each table:
+
+billing_customers   - cust_idx (gateway,domain,subscriber)
+destinations        - cust_dest_idx (gateway,domain,subscriber,dest_id)
+billing_profiles    - profile_idx (name,hour1,hour2,hour3,hour4)
+billing_rates       - rate_idx (name,destination)
+billing_ratesNGN    - rate_idx (name);
+billing_profilesNGN - profile_idx (name,application);
+
+The content of the rating tables can be exported in the Rating tables page.
+
+
+Rating database tables
+----------------------
+
+To see the tables structures use describe table_name after connecting to
+cdrtool database. Run show tables and describe table_name:
+ 
+billing_customers
++-------------------+
+| Field             |
++-------------------+
+| id                |
+| gateway           |
+| domain            |
+| subscriber        |
+| profile_name1     |
+| profile_name1_alt |
+| profile_name2     |
+| profile_name2_alt |
+| profileNGN        |
+| timezone          |
++-------------------+
+
+billing_profiles
++------------+
+| Field      |
++------------+
+| id         |
+| gateway    |
+| domain     |
+| subscriber |
+| name       |
+| rate_name1 |
+| hour1      |
+| rate_name2 |
+| hour2      |
+| rate_name3 |
+| hour3      |
+| rate_name4 |
+| hour4      |
++------------+
+
+billing_profilesNGN
++-------------+
+| Field       |
++-------------+
+| id          |
+| gateway     |
+| domain      |
+| subscriber  |
+| name        |
+| rate        |
+| application |
++-------------+
+
+billing_rates
++-----------------+
+| Field           |
++-----------------+
+| id              |
+| gateway         |
+| domain          |
+| subscriber      |
+| name            |
+| destination     |
+| durationRate    |
+| trafficRate     |
+| applicationRate |
+| connectCost     |
++-----------------+
+
+billing_ratesNGN
++-------------+
+| Field       |
++-------------+
+| id          |
+| gateway     |
+| domain      |
+| subscriber  |
+| name        |
+| TrafficRate |
+| ConnectCost |
++-------------+
+
+destinations
++------------+
+| Field      |
++------------+
+| id         |
+| gateway    |
+| domain     |
+| subscriber |
+| dest_id    |
+| dest_name  |
+| asr        |
++------------+
+
+billing_holidays
++-------+
+| Field |
++-------+
+| day   |
++-------+
+
+prepaid
++------------------+
+| Field            |
++------------------+
+| id               |
+| account          |
+| disabled         |
+| balance          |
+| balance_previous |
+| change_date      |
+| expires          |
+| call_lock        |
+| call_in_progress |
+| last_call_price  |
++------------------+
+
+
+Rating tables management
+------------------------
+
+The rating tables can be edited from the web, follow Rating tables link. One
+may insert/update/delete records or apply changes on selections. For example
+is possible to increase with XX units the rate for a specific destination.
+
+Numeric fields support mathematical operators [+-*/], one may update
+using absolute or relative values the fields in the rating tables.
+
+The rates may be copied in bulk and start quickly working with a fresh
+new rating table. Select in the Rates PSTN table by filtering on rate
+name. A new button appears which allows the copy of all selected rates
+into a new set. The rates are copied under the old rate id with _N
+suffix where N is the next available number for which same rate id does
+not exist.
+
+The content of the rating tables can be exported into comma separated
+files. The CSV format has the same structure as the import file, is
+fairly easy to modify an exported batch file into an external
+application and load it back into CDRTool.
+
+
+Performance
+-----------
+
+Rating is part of the normalization process which happens in real-time every
+time a query is executed in the web interface. On 2GHz CPU the rating speed
+is ~ 200 calls/second for a 60000 rates table. It is advisable to keep the
+number of rating records to a minimum.
+
+To improve the performance a scheduled task normalize and rate the calls
+every 5 minutes (see crontabs directory for a sample script).
+
+
+How to reload rating tables
+---------------------------
+
+From version 3.2 onwards the rating tables are no longer loaded into the
+memory during each normalization. The network rating engine is contacted for
+rating calls. The rating engine is a daemon, which loads all rating tables
+and remains active in the server memory. Reload of rating tables is possible
+without stopping the daemon by connecting to it and issuing the reload
+command.
+
+There are two ways of reloading the rating tables:
+
+a. Each change executed in the WEB interface for rate management may update
+the rating tables. If there is a change made to the database the link
+'Reload rating tables' appears in red color on web page. Click on the link to
+execute the reload.
+
+b. Telnet to the IP address and port number specified for the Rating engine in
+global.inc. Type help to see the list of commands available. Locate the
+reload rates command and execute it followed by an enter. You may see the
+result of the command in syslog. The results displayed by syslog will show
+how many entries have been reloaded from the rating table.
+
+
+Troubleshooting
+---------------
+
+To examine the rate information for a rated call click on the Id field on
+the leftmost column. (Java script support in browser is required). A blue
+are will open under the CDR containing more information about the SIP
+session. 
+
+If you see no price in the CDR or no rating information appears in the call
+details it means that either no destination was found in the destinations
+table or no rate has been associated with that destination. Make sure that
+for each entry in the destinations table there is a corespondent entry in
+the rates table. CDRTool rating engine can send warning emails if it finds
+missing entries in the rating tables if the system where CDRTool runs is
+properly configured to send emails and the e-mail notification addresses are
+set in global.inc:
+ 
+$CDRTool['provider']['toEmail']   ="support@example.com";
+$CDRTool['provider']['bccEmail'] ="cdrtool@example.com";
+
+
+Re-rating calls
+---------------
+
+Sometimes is useful the change the rates for calls that have been already
+normalized and rated, for example after changing the rating table you wish
+to apply the changes retroactively for the last month. To re-rate the CDRs
+based on different tables do the following:
+
+1. Add new files (like rates.csv, profiles.csv or customers.csv in  
+csv directory) or edit the rating tables using the WEB interface
+
+2. Import the rating csv files using command (use full path of the import script)
+
+   /var/www/prj/CDRTool/scripts/importRatingTables.php
+
+3. Renormalize the calls to be re-rated by either selecting ReNormalize
+   check-box in the search screen or by changing the Normalized field in the
+   CDR MySQL table (e.g. radacct):
+
+   Examples: 
+
+   a) Re-rate calls for this month (2004-12) SIP domain example.com:	
+   UPDATE radacct set Normalized = '0' where Realm = 'example.com'
+   and AcctStartTime >= '2004-12-01' 
+
+   b) Re-rate calls for SIP subscriber sip01@example.com:	
+   UPDATE radacct set Normalized = '0' where UserName = 'sip01@example.com'
+
+4. Apply rating again using command: 
+
+   /var/www/prj/CDRTool/scripts/normalize.php
+
+Holidays must be added as individual days YYYY-MM-DD in table
+billing_holidays. The profile applied for holidays is the same as for
+week-ends.
+
+Sending custom notifications when quota is exceeded
+---------------------------------------------------
+
+Whene quota is exceeded an email notification is sent to the end-user. To
+customize the email message subject, body and other header fields you must
+create some entries in cdrtool.settings table. 
+
+See setup/mysql/custom_notifications.mysql for an example.
+
+
+Known limitations
+------------------
+
+The rating engine cannot calculate rates based on the outbound carriers or
+outbound gateways, the rates can be assigned only per calling party and not
+per called party.
+
+Price discounts must be applied outside CDRTool, in the billing system that
+prints the actual invoices. CDRTool has no possibility to rate only calls
+after X minutes per month for subscriber Y, all calls are rated uniformly.
+
+Notes
+-----
+
+The fields gateway, domain and subscribers from the tables:
+
+billing_profiles
+billing_profilesNGN
+billing_rates
+billing_ratesNGN
+
+are used only for the purpose of displaying them in the web interface of
+CDRTool for login accounts that have access restricted to the corresponding
+gateway, domain or subscribers.
+   

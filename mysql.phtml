@@ -1,0 +1,137 @@
+<?
+include("global.inc");
+
+page_open(array("sess" => "CDRTool_Session", 
+		"auth" => "CDRTool_Auth", 
+		"perm" => "CDRTool_Perm"));
+
+$perm->check("sqlquery");
+
+$db = new DB_CDRTool;
+$db->Halt_On_Error="no";
+if ($action != "Run query") {
+
+$title="SQL client";
+if (is_readable("local/header.phtml")) {
+    include("local/header.phtml");
+} else {
+    include("header.phtml");
+}
+
+print "
+<center>
+";
+$layout = new pageLayoutLocal();
+$layout->showTopMenu($title);
+
+print "
+</center>
+";
+
+## Get a database connection
+$db = new DB_CDRTool;
+
+print "
+<center>
+<p>
+<table cellpadding=5 CELLSPACING=0  border=6  width=100%>
+
+<tr>
+	<td class=cdr valign=middle>
+    <h2>Query examples</h2>
+<p>
+<ul>
+<li>Show database table names: <font color=blue>show tables</font>
+<li>Show fields names of table: <font color=blue>describe [tablename]</font> , replace [tablename] with the actual table name 
+<li>CDR table in the format  <font color=blue>cdrYYYYMM</font>  , YYYY is the year in 4 digits, MM is the month in 2 digits
+<li>Show number of records from a cdr table: <font color=blue>select count(*) from cdr200101</font>
+<li>To limit the number of records of output, at the end of the query add:<br>
+    <font color=blue> limit N,M </font> where <font color=blue>N</font> 
+    is the number of records to be returned, and <font color=blue>,M</font> 
+    is optional and move the result pointer at the M-th records in the 
+    result set  for example:
+    <br>
+    <font color=blue>
+    select sum(duration), a_number from cdr200101 where duration > 0 
+    group by a_number order by duration DESC  limit 10   
+    </font> 
+    <p>
+    will display the top 10 users of the platform.
+</ul>
+<form action=$PHP_SELF method=post>
+<h3>Last 10 queries</h3>
+<select name=lastquery>";
+
+$db->query("select query from lastquery order by date DESC limit 10");
+$i=0;
+while ($db->next_record()) {
+	$i++;
+	$query_db=$db->f('query');
+	$query_db_short=substr($query_db,0,40);
+	print "\n<option value=\"$query_db\">$i. $query_db_short ...";
+}
+$i=0;
+
+if ($action == "Refresh list") {
+	$lastquery="";
+}
+
+print "
+</select>
+<input type=submit name=action value=\"Edit query\">
+<input type=submit name=action value=\"Refresh list\">
+</form>
+
+<form action=$PHP_SELF method=post target=_new>
+<textarea rows=8 cols=50 wrap=virtual name=query1>$lastquery</textarea>
+<p>
+Press <input type=submit name=action value=\"Run query\"> to display the query output into a new window.
+Press <input type=reset name=action value=\"Reset query\"> to clear the query textbox
+</form>
+";
+print "
+</td>
+</tr>
+</table>
+";
+
+$layout->showFooter();
+print "
+</body>
+</html>
+";
+
+} else {
+      Header("Content-type: text/plain");
+	
+	//print "action=$action\n";
+	//print "query1=$query1\n\n";
+	$querysource=addslashes($query1);
+        $query1=stripslashes($query1);
+	//print "query1=$query1\n\n";
+
+	$db->query("insert into lastquery (query,date) values ('$querysource',NOW())");
+	$db->query("$query1");
+	$rows=$db->num_rows(); 
+	$cols=$db->num_fields(); 
+	while($i<$rows) {
+		$db->next_record();
+		$found=$i+1;
+		print "$found,";
+		$j=0;
+		while ($j<$cols) {
+			if ($j>0) {
+				print ",";
+			}
+			$db->p($j);
+			$j++;
+		}
+		print "\n";
+		$i++;
+	}	
+}
+
+page_close();
+
+?>
+

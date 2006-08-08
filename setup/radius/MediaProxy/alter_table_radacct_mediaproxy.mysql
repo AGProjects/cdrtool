@@ -1,0 +1,15 @@
+alter table radacct add Normalized enum('0','1') default '0';
+alter table radacct add index normalize_idx(Normalized);
+
+alter table radacct add column SipUserAgents varchar(255) NOT NULL;
+alter table radacct add column SipApplicationType varchar(255) NOT NULL after SipUserAgents;
+alter table radacct add column SipCodecs varchar(255) NOT NULL after SipApplicationType;
+
+alter table radacct add column MediaInfo varchar(32) default NULL;
+alter table radacct add index MediaInfo_idx(MediaInfo);
+
+update radacct set MediaInfo = '' where AcctStopTime != '0000-00-00 00:00:00';
+update radacct set MediaInfo = 'timeout' where AcctStopTime = '0000-00-00 00:00:00' and AcctSessionTime > 0;
+update radacct set MediaInfo = 'timeout' where AcctStopTime = '0000-00-00 00:00:00' and AcctInputOctets > 0;
+update radacct set MediaInfo = 'timeout' where AcctStopTime = '0000-00-00 00:00:00' and AcctOutputOctets > 0;
+update radacct set MediaInfo = 'timeout' where AcctStopTime = '0000-00-00 00:00:00' and SipCodecs != '';

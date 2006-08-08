@@ -1,0 +1,17 @@
+DirectoryIndex index.html 
+<Files ~ "~$">
+Order allow,deny
+Deny from all
+</Files>
+<Files *.inc>
+Order allow,deny
+Deny from all
+</Files>
+<Files *_lib.*>
+Order allow,deny
+Deny from all
+</Files>
+<Files *.csv>
+Order allow,deny
+Deny from all
+</Files>

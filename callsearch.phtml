@@ -1,0 +1,100 @@
+<?
+include("global.inc");
+set_time_limit(1800);
+page_open(
+    array("sess" => "CDRTool_Session",
+          "auth" => "CDRTool_Auth",
+          "perm" => "CDRTool_Perm"
+          ));
+
+$export      = $_REQUEST['export'];
+$SERVER_NAME = $_SERVER['SERVER_NAME'];
+
+if (!$export) {
+    $title="Call search on $SERVER_NAME";
+    if (is_readable("local/header.phtml")) {
+        include("local/header.phtml");
+    } else {
+        include("header.phtml");
+    }
+} else {
+    Header("Content-type: text/plain");
+    Header("Content-Disposition: inline; filename=CDR.txt");
+    header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+    header("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+    header("Pragma: no-cache");
+}
+
+$perm->check("callsearch");
+
+define_syslog_variables();
+openlog("CDRTool", LOG_PID, LOG_LOCAL0);
+
+$loginname=$auth->auth["uname"];
+
+$cdr_source     = $_REQUEST["cdr_source"];
+$trace          = $_REQUEST["trace"];
+$action         = $_REQUEST["action"];
+
+include("cdrlib.phtml");
+
+if (isset($CDRTool[dataSourcesAllowed])) {
+    while (list($k,$v)=each($CDRTool[dataSourcesAllowed])) {
+        $cdr_source_els[]=array("label"=>$DATASOURCES[$v][name],"value"=>$v);
+    }
+}
+
+if (!$cdr_source) {
+    $cdr_source=$cdr_source_els[0][value];
+}
+
+// corect last day of the month to be valid
+if ($begin_day) {
+    $begin_day=validDay($begin_month,$begin_day,$begin_year);
+}
+if ($end_day) {
+    $end_day=validDay($end_month,$end_day,$end_year);
+}
+
+$CDR_class=$DATASOURCES[$cdr_source]["class"];
+
+if ($CDRS = new $CDR_class($cdr_source)) {
+    if (!$export && !$trace) {
+        $layout = new pageLayoutLocal();
+        if ($CDRTool['filter']['aNumber']) {
+            $layout->showHeader();
+            $layout->showTopMenuSubscriber();
+        } else {
+            $layout->showTopMenu();
+        }
+    }
+
+    if ($action=='edit' || !$action ) {
+
+        if ($CDRTool['filter']['aNumber']) {
+            $CDRS->searchFormSubscriber();
+        } else {
+            $CDRS->searchForm();
+        }
+    
+    } elseif ($action==search) {
+        $CDRS->show();
+    }
+
+    if (!$export && !$trace) {
+        $layout->showFooter();
+    }
+
+} else {
+    print "<p>Error initializing CDRTool datasource $cdr_source";
+}
+
+if (!$export && !$trace) {
+    print "
+    </body>
+    </html>
+    ";
+}
+
+page_close();
+?>

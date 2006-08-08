@@ -1,0 +1,5 @@
+To populate the database needed by the ratingEngine copy these sample files
+to /var/www/CDRTool/csv directory and run the import script:
+
+/var/www/CDRTool/scripts/importRatingTables.php
+

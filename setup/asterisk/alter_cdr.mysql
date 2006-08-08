@@ -1,0 +1,8 @@
+alter table asterisk_cdr add column DestinationId varchar(255) not null;
+alter table asterisk_cdr add column Rate varchar(255) not null;
+alter table asterisk_cdr add column Price double(20, 4) not null;
+alter table asterisk_cdr add column Rate text not null;
+alter table asterisk_cdr add Normalized enum('0','1') default '0';
+alter table asterisk_cdr add column id bigint(20) unsigned NOT NULL auto_increment FIRST, add primary key (id);
+alter table asterisk_cdr add index calldate_idx (calldate); 
+alter table cdr add index normalized_idx(Normalized);

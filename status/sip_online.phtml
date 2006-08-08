@@ -1,0 +1,32 @@
+<?
+include("../global.inc");
+page_open(
+    array("sess" => "CDRTool_Session",
+          "auth" => "CDRTool_Auth",
+          "perm" => "CDRTool_Perm"
+          ));
+$perm->check("admin");
+
+include("../cdrlib.phtml");
+
+$title=$CDRTool['provider']['name']. " - SER Online users";
+include("../header.phtml");
+print "<h2>$title</h2>";
+print "<p>";
+
+if ($_REQUEST['datasource']) {
+	$datasource=$_REQUEST['datasource'];
+} else {
+	$datasource='ser_radius';
+}
+
+if ($DATASOURCES[$datasource]['EnableSIPOnline']) {
+	$online= new SIPonline($datasource);
+	$online->showAll($domain);
+} else {
+	print "<p>Please edit global.inc and enable EnableSIPOnline in SER datasource";
+}
+
+page_close();
+
+?>

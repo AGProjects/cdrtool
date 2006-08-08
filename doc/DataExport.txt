@@ -1,0 +1,31 @@
+Exporting CDRs from CDRTool
+---------------------------
+
+You can export the data in two ways. 
+
+1. Select in the web Export to csv after the query in the results page
+
+2. It is safe to do a query on the MySQL radius.radacct table where Normalized
+= '1' and apply other filter criteria like date and time restrictions. The
+Normalized field set to 1 means that the call has ended, is rated and no
+other applications changes it.
+
+It is however possible to manually reNormalize the calls in case for example
+you changed some rating information and you want to apply the changes to
+previously normalized calls. To avoid this unlikely situation you can put a
+lock on the table cdrtool.normalize_lock. This table is locked during each
+normalization process so that is not possible by two parallel processes to
+change the data.
+
+So in your export program you can do something similar to this pseudo code:
+
+$locker = new CDRTool_DB;
+// lock the database
+$locker->query("lock tables normalize_lock write");
+// select records
+$locker->query("select * from radacct where Normalized ='1' and time >
+'lastmonth'");
+// read records
+$locker->read_records();
+// done remove the lock
+$locker->query("unlock tables");

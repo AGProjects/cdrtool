@@ -1,0 +1,34 @@
+<?
+include("global.inc");
+page_open(array(
+          "sess" => "CDRTool_Session",
+          "auth" => "CDRTool_Auth",
+          "perm" => "CDRTool_Perm")
+          );
+
+require("cdrlib.phtml");
+$callid      = $_REQUEST['callid'];
+$method      = $_REQUEST['method'];
+$status      = $_REQUEST['status'];
+$fromtag     = $_REQUEST['fromtag'];
+$cdr_source  = $_REQUEST['cdr_source'];
+
+if (in_array($cdr_source,$CDRTool[dataSourcesAllowed])) {
+
+    $title="SIP trace: session $callid $method $status";
+    include("header.phtml");
+    
+    $serTrace = new SER_trace($cdr_source);
+    if ($serTrace->initOK) {
+        $serTrace->show($callid,$method,$status,$fromtag);
+    }
+} else {
+    printf ("Error: Invalid datasource '%s' for user '%s'" ,$cdr_source,$auth->auth["uname"]);
+}
+
+print "
+</body>
+</html>
+";
+page_close();
+?>

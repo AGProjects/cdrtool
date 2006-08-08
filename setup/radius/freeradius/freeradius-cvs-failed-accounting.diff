@@ -1,0 +1,227 @@
+Index: man/man5/rlm_sql.5
+===================================================================
+RCS file: /source/radiusd/man/man5/rlm_sql.5,v
+retrieving revision 1.2
+diff -u -r1.2 rlm_sql.5
+--- man/man5/rlm_sql.5	25 Mar 2004 11:31:17 -0000	1.2
++++ man/man5/rlm_sql.5	2 Aug 2004 12:14:40 -0000
+@@ -106,6 +106,8 @@
+ .IP accounting_stop_query_alt
+ The query to be run when receiving an Accounting Stop packet.  If the
+ primary query fails, the alt query is run.
++.IP accounting_failed_query
++The query to be run when receiving an Failed packet.
+ .IP simul_count_query
+ The query to be run to return the number simultaneous sessions for the
+ purposes of limiting Simultaneous Use.
+Index: raddb/mssql.conf
+===================================================================
+RCS file: /source/radiusd/raddb/mssql.conf,v
+retrieving revision 1.6
+diff -u -r1.6 mssql.conf
+--- raddb/mssql.conf	25 Mar 2004 11:31:17 -0000	1.6
++++ raddb/mssql.conf	2 Aug 2004 12:14:40 -0000
+@@ -115,6 +115,7 @@
+ 	# accounting_stop_query_alt	- query for Accounting start packets 
+ 	#                               (alternate in case first query doesn't
+ 	#                                affect any existing rows in the table)
++	# accounting_failed_query	- query for Accounting failed packets 
+ 	#######################################################################
+ 	accounting_onoff_query = "UPDATE ${acct_table1} SET AcctStopTime='%S', AcctSessionTime=unix_timestamp('%S') - unix_timestamp(AcctStartTime), AcctTerminateCause='%{Acct-Terminate-Cause}', AcctStopDelay = %{Acct-Delay-Time} WHERE AcctSessionTime=0 AND AcctStopTime=0 AND NASIPAddress= '%{NAS-IP-Address}' AND AcctStartTime <= '%S'"
+ 
+@@ -134,4 +135,8 @@
+ 	# removed. These fields are processing by a database
+ 	accounting_stop_query_alt = "INSERT into ${acct_table2} (AcctSessionId, AcctUniqueId, UserName, Realm, NASIPAddress, NASPort, NASPortType, AcctStopTime, AcctSessionTime, AcctAuthentic, ConnectInfo_start, ConnectInfo_stop, AcctInputOctets, AcctOutputOctets, CalledStationId, CallingStationId, AcctTerminateCause, ServiceType, FramedProtocol, FramedIPAddress, AcctStartDelay, AcctStopDelay) values('%{Acct-Session-Id}', '%{Acct-Unique-Session-Id}', '%{SQL-User-Name}', '%{Realm}', '%{NAS-IP-Address}', '%{NAS-Port-Id}', '%{NAS-Port-Type}', '%S', '%{Acct-Session-Time}', '%{Acct-Authentic}', '', '%{Connect-Info}', '%{Acct-Input-Octets}', '%{Acct-Output-Octets}', '%{Called-Station-Id}', '%{Calling-Station-Id}', '%{Acct-Terminate-Cause}', '%{Service-Type}', '%{Framed-Protocol}', '%{Framed-IP-Address}', '0', '%{Acct-Delay-Time}')"
+ 
++	# accounting_failed_query: Inserting of RadAcctId and AcctStopTime was 
++	# removed. These fields are processing by a database
++	accounting_failed_query = "INSERT into ${acct_table1} (AcctSessionId, AcctUniqueId, UserName, Realm, NASIPAddress, NASPort, NASPortType, AcctStartTime, AcctSessionTime, AcctAuthentic, ConnectInfo_start, ConnectInfo_stop, AcctInputOctets, AcctOutputOctets, CalledStationId, CallingStationId, AcctTerminateCause, ServiceType, FramedProtocol, FramedIPAddress, AcctStartDelay, AcctStopDelay) values('%{Acct-Session-Id}', '%{Acct-Unique-Session-Id}', '%{SQL-User-Name}', '%{Realm}', '%{NAS-IP-Address}', '%{NAS-Port-Id}', '%{NAS-Port-Type}', '%S', '0', '%{Acct-Authentic}', '%{Connect-Info}', '', '0', '0', '%{Called-Station-Id}', '%{Calling-Station-Id}', '', '%{Service-Type}', '%{Framed-Protocol}', '%{Framed-IP-Address}', '%{Acct-Delay-Time}', '0')"
++
+ }
+Index: raddb/oraclesql.conf
+===================================================================
+RCS file: /source/radiusd/raddb/oraclesql.conf,v
+retrieving revision 1.3
+diff -u -r1.3 oraclesql.conf
+--- raddb/oraclesql.conf	25 Mar 2004 11:31:18 -0000	1.3
++++ raddb/oraclesql.conf	2 Aug 2004 12:14:40 -0000
+@@ -142,6 +142,7 @@
+ 	# accounting_stop_query_alt	- query for Accounting start packets 
+ 	#                               (alternate in case first query doesn't
+ 	#                                affect any existing rows in the table)
++	# accounting_failed_query	- query for Accounting failed packets 
+ 	#######################################################################
+ 	accounting_onoff_query = "UPDATE ${acct_table1} SET AcctStopTime=TO_DATE('%S','yyyy-mm-dd hh24:mi:ss'), AcctSessionTime=((TO_DATE('%S','yyyy-mm-dd hh24:mi:ss') - AcctStartTime)*86400), AcctTerminateCause='%{Acct-Terminate-Cause}', AcctStopDelay = %{Acct-Delay-Time} WHERE AcctSessionTime=0 AND AcctStopTime IS NULL AND NASIPAddress = '%{NAS-IP-Address}' AND AcctStartTime <= TO_DATE('%S','yyyy-mm-dd hh24:mi:ss')"
+ 
+@@ -166,6 +167,8 @@
+ 
+ 	accounting_stop_query_alt = "INSERT into ${acct_table2} (RadAcctId, AcctSessionId, AcctUniqueId, UserName, Realm, NASIPAddress, NASPortId, NASPortType, AcctStartTime, AcctStopTime, AcctSessionTime, AcctAuthentic, ConnectInfo_start, ConnectInfo_stop, AcctInputOctets, AcctOutputOctets, CalledStationId, CallingStationId, AcctTerminateCause, ServiceType, FramedProtocol, FramedIPAddress, AcctStartDelay, AcctStopDelay) values('', '%{Acct-Session-Id}', '%{Acct-Unique-Session-Id}', '%{SQL-User-Name}', '%{Realm}', '%{NAS-IP-Address}', '%{NAS-Port-Id}', '%{NAS-Port-Type}', NULL, TO_DATE('%S','yyyy-mm-dd hh24:mi:ss'), '%{Acct-Session-Time}', '%{Acct-Authentic}', '', '%{Connect-Info}', '%{Acct-Input-Octets}', '%{Acct-Output-Octets}', '%{Called-Station-Id}', '%{Calling-Station-Id}', '%{Acct-Terminate-Cause}', '%{Service-Type}', '%{Framed-Protocol}', '%{Framed-IP-Address}', '0', '%{Acct-Delay-Time}')"
+ 
++	accounting_failed_query = "INSERT into ${acct_table1} (RadAcctId, AcctSessionId, AcctUniqueId, UserName, Realm, NASIPAddress, NASPortId, NASPortType, AcctStartTime, AcctStopTime, AcctSessionTime, AcctAuthentic, ConnectInfo_start, ConnectInfo_stop, AcctInputOctets, AcctOutputOctets, CalledStationId, CallingStationId, AcctTerminateCause, ServiceType, FramedProtocol, FramedIPAddress, AcctStartDelay, AcctStopDelay) values('', '%{Acct-Session-Id}', '%{Acct-Unique-Session-Id}', '%{SQL-User-Name}', '%{Realm}', '%{NAS-IP-Address}', '%{NAS-Port-Id}', '%{NAS-Port-Type}', TO_DATE('%S','yyyy-mm-dd hh24:mi:ss'), NULL, '0', '%{Acct-Authentic}', '%{Connect-Info}', '', '0', '0', '%{Called-Station-Id}', '%{Calling-Station-Id}', '', '%{Service-Type}', '%{Framed-Protocol}', '%{Framed-IP-Address}', '%{Acct-Delay-Time}', '0')"
++
+ 	#######################################################################
+ 	# Simultaneous Use Checking Queries
+ 	#######################################################################
+Index: raddb/pgsql-voip.conf
+===================================================================
+RCS file: /source/radiusd/raddb/pgsql-voip.conf,v
+retrieving revision 1.1
+diff -u -r1.1 pgsql-voip.conf
+--- raddb/pgsql-voip.conf	13 May 2004 20:10:15 -0000	1.1
++++ raddb/pgsql-voip.conf	2 Aug 2004 12:14:40 -0000
+@@ -78,6 +78,7 @@
+ 	# accounting_stop_query_alt	- query for Accounting start packets 
+ 	#                               (alternate in case first query doesn't
+ 	#                                affect any existing rows in the table)
++	# accounting_failed_query	- query for Accounting failed packets 
+ 	#######################################################################
+ 
+ 	# Note: The VoIP accouting does not need Alternate queries in the shipped
+@@ -106,4 +107,13 @@
+ 		strip_dot('%{h323-disconnect-time}'), '%{h323-gw-id}', strip_dot('%{h323-setup-time}'))"
+  
+ 
++	accounting_failed_query = "INSERT into ${acct_table1}%{h323-call-type} \
++		(RadiusServerName, UserName, NASIPAddress, AcctTime, CalledStationId, \
++		CallingStationId, AcctDelayTime, h323gwid, h323callorigin, h323setuptime, H323ConnectTime, callid) \
++		values('${radius_server_name}', '%{SQL-User-Name}', \
++		'%{NAS-IP-Address}', now(), '%{Called-Station-Id}', \
++		'%{Calling-Station-Id}', '%{Acct-Delay-Time:-0}', '%{h323-gw-id}', \
++		'%{h323-call-origin}', strip_dot('%{h323-setup-time}'), strip_dot('%{h323-connect-time}'), pick_id('%{h323-conf-id}', '%{call-id}'))"
++
++
+ }
+Index: raddb/postgresql.conf
+===================================================================
+RCS file: /source/radiusd/raddb/postgresql.conf,v
+retrieving revision 1.18
+diff -u -r1.18 postgresql.conf
+--- raddb/postgresql.conf	29 Jul 2004 15:01:46 -0000	1.18
++++ raddb/postgresql.conf	2 Aug 2004 12:14:40 -0000
+@@ -167,6 +167,7 @@
+ 	# accounting_stop_query_alt	- query for Accounting start packets 
+ 	#                               (alternate in case first query doesn't
+ 	#                                affect any existing rows in the table)
++	# accounting_failed_query	- query for Accounting failed packets 
+ 	#######################################################################
+ 	
+ 	accounting_onoff_query = "UPDATE ${acct_table1} \
+@@ -231,6 +232,14 @@
+ 		'%{Calling-Station-Id}', '%{Acct-Terminate-Cause}', '%{Service-Type}', '%{Framed-Protocol}', \
+ 		NULLIF('%{Framed-IP-Address}', '')::inet, '%{Acct-Delay-Time:-0}')"
+ 
++	accounting_failed_query = "INSERT into ${acct_table1} \
++		(AcctSessionId, AcctUniqueId, UserName, Realm, NASIPAddress, NASPortId, NASPortType, AcctStartTime, AcctAuthentic, \
++		ConnectInfo_start, CalledStationId, CallingStationId, ServiceType, FramedProtocol, FramedIPAddress, AcctStartDelay) \
++		values('%{Acct-Session-Id}', '%{Acct-Unique-Session-Id}', '%{SQL-User-Name}', '%{Realm}', '%{NAS-IP-Address}', \
++		'%{NAS-Port}', '%{NAS-Port-Type}', (now() - '%{Acct-Delay-Time:-0}'::interval), '%{Acct-Authentic}', '%{Connect-Info}', \
++		'%{Called-Station-Id}', '%{Calling-Station-Id}', '%{Service-Type}', '%{Framed-Protocol}', \
++		NULLIF('%{Framed-IP-Address}', '')::inet, '%{Acct-Delay-Time:-0}')"
++
+ 	#######################################################################
+ 	# Group Membership Queries
+ 	#######################################################################
+Index: raddb/sql.conf
+===================================================================
+RCS file: /source/radiusd/raddb/sql.conf,v
+retrieving revision 1.43
+diff -u -r1.43 sql.conf
+--- raddb/sql.conf	23 Jul 2004 08:29:37 -0000	1.43
++++ raddb/sql.conf	2 Aug 2004 12:14:41 -0000
+@@ -157,6 +157,7 @@
+ 	# accounting_stop_query_alt	- query for Accounting start packets 
+ 	#                               (alternate in case first query doesn't
+ 	#                                affect any existing rows in the table)
++	# accounting_failed_query	- query for Accounting failed packets 
+ 	#######################################################################
+ 	accounting_onoff_query = "UPDATE ${acct_table1} SET AcctStopTime='%S', AcctSessionTime=unix_timestamp('%S') - unix_timestamp(AcctStartTime), AcctTerminateCause='%{Acct-Terminate-Cause}', AcctStopDelay = '%{Acct-Delay-Time}' WHERE AcctSessionTime=0 AND AcctStopTime=0 AND NASIPAddress= '%{NAS-IP-Address}' AND AcctStartTime <= '%S'"
+ 
+@@ -179,6 +180,8 @@
+ 
+ 	accounting_stop_query_alt = "INSERT into ${acct_table2} (AcctSessionId, AcctUniqueId, UserName, Realm, NASIPAddress, NASPortId, NASPortType, AcctStartTime, AcctStopTime, AcctSessionTime, AcctAuthentic, ConnectInfo_start, ConnectInfo_stop, AcctInputOctets, AcctOutputOctets, CalledStationId, CallingStationId, AcctTerminateCause, ServiceType, FramedProtocol, FramedIPAddress, AcctStartDelay, AcctStopDelay) values('%{Acct-Session-Id}', '%{Acct-Unique-Session-Id}', '%{SQL-User-Name}', '%{Realm}', '%{NAS-IP-Address}', '%{NAS-Port}', '%{NAS-Port-Type}', DATE_SUB('%S', INTERVAL (%{Acct-Session-Time:-0} + %{Acct-Delay-Time:-0}) SECOND), '%S', '%{Acct-Session-Time}', '%{Acct-Authentic}', '', '%{Connect-Info}', '%{Acct-Input-Octets}', '%{Acct-Output-Octets}', '%{Called-Station-Id}', '%{Calling-Station-Id}', '%{Acct-Terminate-Cause}', '%{Service-Type}', '%{Framed-Protocol}', '%{Framed-IP-Address}', '0', '%{Acct-Delay-Time}')"
+ 
++	accounting_failed_query = "INSERT into ${acct_table1} (AcctSessionId, AcctUniqueId, UserName, Realm, NASIPAddress, NASPortId, NASPortType, AcctStartTime, AcctStopTime, AcctSessionTime, AcctAuthentic, ConnectInfo_start, ConnectInfo_stop, AcctInputOctets, AcctOutputOctets, CalledStationId, CallingStationId, AcctTerminateCause, ServiceType, FramedProtocol, FramedIPAddress, AcctStartDelay, AcctStopDelay) values('%{Acct-Session-Id}', '%{Acct-Unique-Session-Id}', '%{SQL-User-Name}', '%{Realm}', '%{NAS-IP-Address}', '%{NAS-Port}', '%{NAS-Port-Type}', '%S', '0', '0', '%{Acct-Authentic}', '%{Connect-Info}', '', '0', '0', '%{Called-Station-Id}', '%{Calling-Station-Id}', '', '%{Service-Type}', '%{Framed-Protocol}', '%{Framed-IP-Address}', '%{Acct-Delay-Time}', '0')"
++
+ 	#######################################################################
+ 	# Simultaneous Use Checking Queries
+ 	#######################################################################
+Index: src/include/radius.h
+===================================================================
+RCS file: /source/radiusd/src/include/radius.h,v
+retrieving revision 1.66
+diff -u -r1.66 radius.h
+--- src/include/radius.h	30 Apr 2004 18:23:08 -0000	1.66
++++ src/include/radius.h	2 Aug 2004 12:14:41 -0000
+@@ -252,6 +252,7 @@
+ #define PW_STATUS_ALIVE			3
+ #define PW_STATUS_ACCOUNTING_ON		7
+ #define PW_STATUS_ACCOUNTING_OFF	8
++#define PW_STATUS_FAILED		15
+ 
+ /*
+  *  Vendor Private Enterprise Codes
+Index: src/modules/rlm_sql/conf.h
+===================================================================
+RCS file: /source/radiusd/src/modules/rlm_sql/conf.h,v
+retrieving revision 1.20
+diff -u -r1.20 conf.h
+--- src/modules/rlm_sql/conf.h	28 Apr 2004 21:55:16 -0000	1.20
++++ src/modules/rlm_sql/conf.h	2 Aug 2004 12:14:42 -0000
+@@ -37,6 +37,7 @@
+ 	char   *accounting_start_query_alt;
+ 	char   *accounting_stop_query;
+ 	char   *accounting_stop_query_alt;
++	char   *accounting_failed_query;
+ 	char   *simul_count_query;
+ 	char   *simul_verify_query;
+ 	char   *groupmemb_query;
+Index: src/modules/rlm_sql/rlm_sql.c
+===================================================================
+RCS file: /source/radiusd/src/modules/rlm_sql/rlm_sql.c,v
+retrieving revision 1.132
+diff -u -r1.132 rlm_sql.c
+--- src/modules/rlm_sql/rlm_sql.c	30 Jun 2004 12:22:06 -0000	1.132
++++ src/modules/rlm_sql/rlm_sql.c	2 Aug 2004 12:14:43 -0000
+@@ -119,6 +119,8 @@
+ 	 offsetof(SQL_CONFIG,accounting_stop_query), NULL, ""},
+ 	{"accounting_stop_query_alt", PW_TYPE_STRING_PTR,
+ 	 offsetof(SQL_CONFIG,accounting_stop_query_alt), NULL, ""},
++	{"accounting_failed_query", PW_TYPE_STRING_PTR,
++	 offsetof(SQL_CONFIG,accounting_failed_query), NULL, ""},
+ 	{"group_membership_query", PW_TYPE_STRING_PTR,
+ 	 offsetof(SQL_CONFIG,groupmemb_query), NULL, ""},
+ 	{"connect_failure_retry_delay", PW_TYPE_INTEGER,
+@@ -1098,6 +1100,33 @@
+ 			break;
+ 
+ 			/*
++			 * Got accounting failed packet
++			 */
++		case PW_STATUS_FAILED:
++
++			/*
++			 * Set, escape, and check the user attr here
++			 */
++			sql_set_user(inst, request, sqlusername, NULL);
++
++			radius_xlat(querystr, sizeof(querystr), inst->config->accounting_failed_query, request, sql_escape_func);
++			query_log(request, inst, querystr);
++
++			sqlsocket = sql_get_socket(inst);
++			if (sqlsocket == NULL)
++				return(RLM_MODULE_FAIL);
++			if (*querystr) { /* non-empty query */
++				if (rlm_sql_query(sqlsocket, inst, querystr)) {
++					radlog(L_ERR, "rlm_sql (%s): Couldn't insert SQL accounting FAILED record - %s",
++					       inst->config->xlat_name,
++					       (char *)(inst->module->sql_error)(sqlsocket, inst->config));
++					ret = RLM_MODULE_FAIL;
++				}
++				(inst->module->sql_finish_query)(sqlsocket, inst->config);
++			}
++			break;
++
++			/*
+ 			 *	Anything else is ignored.
+ 			 */
+ 		default:

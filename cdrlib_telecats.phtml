@@ -1,0 +1,763 @@
+<?
+
+class CDRS_telecats extends CDRS {
+    var $CDR_class          = "CDR_telecats";
+
+    // mapping between CDRTool fields and database fields
+    var $timestampField     = "timestamp";
+    var $startTimeField     = "inbounddate";
+    var $durationField      = "billingduration";
+    var $aNumberField       = "cli";
+    var $bNumberField       = "access";
+    var $cNumberField       = "number";
+    var $disconnectField    = "release_cause";
+    var $serviceTypeField   = "serviceid";
+    var $rateField          = "rate";
+    var $priceField         = "charge";
+    var $cardNumberField    = "cardid";
+    var $startBalanceField  = "startbalance";
+    var $endBalanceField    = "endbalance";
+    var $destinationIdField = "destinationid";
+
+    function LoadDisconnectCodes() {
+        global $cdr;
+        global $verbose;
+        dprint("CDRS->LoadDisconnectCodes()");
+        $query="select * from isdncause order by cause";
+        dprint("$query");
+        $cdr->query($query);
+        $this->disconnectCodesElements[]=array("label"=>"Any disconnection cause","value"=>"");
+
+        while($cdr->next_record()) {
+
+            $key         = $cdr->f('cause');
+            $value       = $cdr->f('description');
+            $value_print = $value." (".$key.")";
+    
+            $this->disconnectCodesElements[]=array("label"=>$value_print,"value"=>$key);
+            $this->disconnectCodesDescription[$key]=$value;
+            $found++;
+        }
+        dprint("Loaded $found release codes");
+        return 1;
+    }
+
+    function showTableHeader($begin_datetime,$end_datetime) {
+
+        if (!$this->export) {
+            print  "
+            <table border=1 cellspacing=2 width=100% align=center>
+            <tr>
+            <td>
+            <table border=0 cellspacing=2 width=100%>
+            <tr bgcolor=lightgrey>
+            <td>
+            <td><b>Date</b>
+            <td><b>Source (CLI)</b>
+            <td><b>In</b>
+            <td><b>Access DDI (B)</b>
+            <td colspan=2><b>Destination (C)</b>
+            <td><b>Out</b></b>
+            <td><b>Card</b></b>
+            <td><b>Dur</b>
+            <td align=right><b>Rate</b>
+            <td align=right><b>Charge</b>
+            <td align=right><b>Start</b>
+            <td align=right><b>End</b>
+            <td><b>Service</b>
+            <td><b>Release code</b>
+            </tr>
+            ";
+        } else {
+            print  "id,Date,CLI,Access DDI,DestinationId,DesinationName,CardNumber,Duration,Rate,Charge,StartBalance,EndBalance,Service,DisconnectionCode,disconnectionName\n";
+        }
+    }
+
+    function searchForm() {
+        global $sess;
+        global $f;
+        global $perm;
+        global $auth;
+        global $loginname;
+        global $DATASOURCES;
+
+        global $action;
+        global $cdr_source_els;
+        global $service;
+
+        global $group_by;
+        global $order_by;
+        global $release_cause;
+
+        $astazi_day=Date("d"); 		
+        $astazi_mon=Date("M");
+        $astazi_year=Date("Y"); 		
+        $astazi_min=Date("i");
+        $astazi_hour=Date("H"); 
+
+        $query="select serviceid, text from service";
+
+        if ($this->CDRTool["filter"]["service"]) {
+            $query=$query." where ( " .$this->CDRTool["filter"]["service"]." ) ";
+        }
+
+        dprint("$query");
+        $this->CDRdb->query($query);
+        $telecats_service_desc_els[]=array("label"=>"All services","value"=>"");
+
+        while($this->CDRdb->next_record()){
+            $this->services[$this->CDRdb->f('serviceid')]=$this->CDRdb->f('text');
+            $label=$this->CDRdb->f('text')." - ".$this->CDRdb->f('serviceid');
+            $telecats_service_desc_els[]=array("label"=>$label,"value"=>$this->CDRdb->f('serviceid'));
+        }
+
+        $f->add_element(array("name"=>"service",
+                "type"=>"select",
+                "options"=>$telecats_service_desc_els,
+                "size"=>"1"
+                ));
+
+        $f->add_element(array(
+                "type"=>"hidden",
+                "name"=>"action",
+                "value"=>"search"
+                ));
+
+        
+        if ($this->CDRTool["filter"]["aNumber"]) {
+            $order_by_els=array(
+                array("label"=>"Date","value"=>"inbounddate"),
+                array("label"=>"CLI","value"=>"cli"),
+                array("label"=>"Destination","value"=>"number"),
+                array("label"=>"Call duration","value"=>"billingduration"),
+                array("label"=>"Release code","value"=>"release_code"),
+                array("label"=>"Service","value"=>"serviceid")
+                );
+        } else {
+            $order_by_els=array(
+                    array("label"=>"Date","value"=>"inbounddate"),
+                    array("label"=>"CLI","value"=>"cli"),
+                    array("label"=>"Destination","value"=>"number"),
+                    array("label"=>"Call duration","value"=>"billingduration"),
+                    array("label"=>"Release code","value"=>"release_code"),
+                    array("label"=>"Service","value"=>"serviceid"),
+                    array("label"=>"Charge","value"=>"charge")
+                    );
+        }
+
+        $f->add_element(array(	"name"=>"order_by",
+                                "type"=>"select",
+                                "options"=>$order_by_els,
+                                "value"=>$order_by,
+                                "size"=>"1"
+                                ));
+
+        $f->add_element(array(	"name"=>"release_cause",
+                            "type"=>"select",
+                            "options"=>$this->disconnectCodesElements,
+                            "size"=>"1",
+                            "value"=>$release_cause
+
+                    ));
+
+        // Start displaying form
+        
+        $f->start("","POST","","","datasource");
+
+        print "
+        <table cellpadding=5 cellspacing=0 border=6 width=100% align=center>
+        ";
+
+        $this->showDataSources ($f);
+
+        $this->showDateTimeElements ($f);
+
+        if ($this->CDRTool["filter"]["aNumber"]) {
+                $ff[]="a_number";
+                $ff[]="a_number_comp";
+        }
+        if ($limit_cscode) {
+                $ff[]="cscode";
+        }
+        if ($this->CDRTool["filter"]["domain"]) {
+                $ff[]="comp_id";
+        }
+        if (count($ff)) {
+            $f->freeze($ff);
+        }
+        if (!$this->CDRTool["filter"]["aNumber"]) {
+            print "
+            <tr>
+               <td class=cdr  align=left>
+                       <b>
+                       Service
+                       </b>
+               </td>
+               <td class=cdr valign=top>
+               ";
+               $f->show_element("service","");
+               if ($this->CDRTool["filter"]["service"]) {
+                //print $this->CDRTool["filter"]["service"];
+               }
+               print "
+               </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+ 
+ 
+        print "
+        <tr> 
+               <td class=cdr  align=left>
+                       <b>
+                       Prepaid card
+                       </b>
+               </td>
+               <td class=cdr valign=top>
+               ";
+                        $f->show_element("prepaid_card_comp","");
+                        $f->show_element("prepaid_card","");
+               print "
+               </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        
+ 
+        print "
+        <tr> 
+               <td class=cdr  align=left>
+                       <b>
+                       CLI(A number)
+                       </b>
+               </td>
+               <td class=cdr valign=top>
+               ";
+                        $f->show_element("a_number_comp","");
+                        $f->show_element("a_number","");
+               print "
+               </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        
+        print "
+        <tr> 
+               <td class=cdr  align=left>
+                       <b>
+                       Access number(DDI)
+                       </b>
+               </td>
+               <td class=cdr valign=top>
+               ";
+                        $f->show_element("b_number_comp","");
+                        $f->show_element("b_number","");
+        
+               print "
+                       
+               </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        }
+        print "
+        
+        <tr> 
+               <td class=cdr  align=left>
+                       <b>
+                       Destination
+                       </b>
+               </td>
+               <td class=cdr valign=top>   ";
+                        $f->show_element("c_number_comp","");
+                        $f->show_element("c_number","");
+        
+               print "
+                </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        
+        print "
+        <tr> 
+        <td class=cdr  align=left>
+          <b>Call duration</b>
+        </td>
+        <td class=cdr valign=top>   ";
+            $f->show_element("duration","");
+  
+            if (!$this->CDRTool["filter"]["aNumber"]) {
+                $f->show_element("release_cause","");
+            }
+            print "
+        </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+          
+        print "
+        <tr> 
+            <td align=left>
+            <b>Order by</b>
+            </td>
+            <td valign=top>
+            ";
+            $f->show_element("order_by","");
+            $f->show_element("order_type","");
+
+            print " Max results per page ";
+            $f->show_element("maxrowsperpage","");
+            print "
+            </td>
+        </tr>
+        </table>
+        <p>
+        <center>
+        ";
+
+        $f->show_element("submit","");
+        $f->finish();
+
+        print "</center>";
+
+    }
+
+    function show() {
+        global $verbose;
+        global $cdr_source;
+        global $cdr;
+        global $perm;
+
+        global $begin_hour;
+        global $begin_min;
+        global $begin_month;
+        global $begin_day;
+        global $begin_year;
+        global $begin_datetime;
+        global $end_hour;
+        global $end_min;
+        global $end_month;
+        global $end_day;
+        global $end_year;
+        global $end_datetime;
+
+        global $a_number;
+        global $a_number_comp;
+        global $b_number;
+        global $b_number_comp;
+        global $c_number;
+        global $c_number_comp;
+
+        global $service;
+        global $prepaid_card;
+        global $prepaid_card_comp;
+
+        global $release_cause;
+        global $duration;
+        global $action;
+
+        global $order_by;
+        global $order_type;
+        global $group_by;
+
+        global $PHP_SELF;
+
+        $next=$this->next;
+
+        if (!$order_by) {
+            $order_by="timestamp";
+        }
+        if (!$order_type) {
+            $order_type="DESC";
+        }
+
+        if (!$this->export) {
+            $begin_datetime=mktime($begin_hour, $begin_min, 0, $begin_month,$begin_day,$begin_year);
+            $end_datetime=mktime($end_hour, $end_min, 0, $end_month,$end_day,$end_year);
+            $begin_datetime_url=urlencode($begin_datetime);                                                                                                 
+            $end_datetime_url=urlencode($end_datetime);
+        
+            $b=mktime($begin_hour, $begin_min, 0, $begin_month,$begin_day,$begin_year);
+            $e=mktime($end_hour, $end_min, 0, $end_month,$end_day,$end_year);
+        
+            $begin_mon=Date("M",$b);
+            $end_mon  =Date("M",$e);
+            $begin_date="$begin_mon $begin_day $begin_year $begin_hour:$begin_min";
+            $end_date="$end_mon $end_day $end_year $end_hour:$end_min";
+        
+        } else {
+            $begin_date=Date("M d Y H:i",$begin_datetime);
+            $end_date=Date("M d Y H:i",$end_datetime);
+        }
+
+        // build an url to be able to log and refine the query
+        $this->url="?cdr_source=$cdr_source";
+        $this->url=$this->url."&order_by=$order_by&order_type=$order_type";
+        $this->url=$this->url."&begin_datetime=$begin_datetime_url";
+        $this->url=$this->url."&end_datetime=$end_datetime_url";
+        
+        if (strlen($release_cause)>0) {
+            $where = "$where"." and $this->disconnectField = $release_cause";
+            $this->url=$this->url."&release_cause=$release_cause";
+        }
+        
+        if ($this->CDRTool["filter"]["aNumber"]) {
+             // force user to see only records with his a_number
+             $a_number=$this->CDRTool["filter"]["aNumber"];
+             $a_number_comp="equal";
+        }
+
+        if ($service) {
+            $where = "$where"." and serviceid = $service";
+            $url=$url."&service=$service";
+        }
+
+        if ($prepaid_card) {
+            if ($prepaid_card_comp=="begin") {
+                $where = "$where"." and $this->cardNumberField like '$prepaid_card%'";
+            } elseif ($prepaid_card_comp=="equal") {
+                $where = "$where"." and $this->cardNumberField = '$prepaid_card'";
+            } elseif ($prepaid_card_comp=="contain") {
+                $where = "$where"." and $this->cardNumberField like '%$prepaid_card%'";
+            }
+            $prepaid_card_encoded=urlencode($prepaid_card);
+            $this->url=$this->url."&prepaid_card=$prepaid_card_encoded&prepaid_card_comp=$prepaid_card_comp";
+        }
+
+        if ($a_number_comp == "empty") {
+            $where = $where." and $this->aNumberField = ''";
+        } else {
+            if ($a_number) {
+                if (!$a_number_comp) {
+                    $a_number_comp="equal";
+                }
+                $a_number_encoded=urlencode($a_number);
+                $this->url="$this->url"."&a_number=$a_number_encoded";
+                if ($a_number_comp=="begin") {
+                    $where = $where." and $this->aNumberField like '$a_number%' ";
+                } elseif ($a_number_comp=="contain") {
+                    $where = $where." and $this->aNumberField like '%$a_number%' ";
+                } elseif ($a_number_comp=="equal") {
+                    $where = $where." and ( $this->aNumberField = '$a_number' or $this->bNumberField = '$a_number')";
+                }
+                $this->url=$this->url."&a_number_comp=$a_number_comp";
+            }
+        }
+
+        if ($dest_id) {
+            $where = "$where"." and $this->destinationIdField = '$dest_id'";
+            $this->url="$this->url"."&dest_id=$dest_id";
+        }
+
+        # restriction for comp_form
+        if ($this->CDRTool["filter"]["domain"]) {
+            if ($comp_id != $this->CDRTool["filter"]["domain"]) {
+                print "<center>
+                <font color=blue>Search for data belonging to comp id
+                $comp_id is not allowed. </font>
+                </center>
+                ";
+            } 
+            // set the compid to the imposed comp id
+            $comp_id=$this->CDRTool["filter"]["domain"];
+        }
+
+        if ($comp_id) {
+            $comps=explode(" ",$comp_id);
+            $z=1;
+            foreach ($comps as $c) {
+                $comp_w=$comp_w." comp_id = '$c'";
+                if ($z < count($comps)) {
+                        $comp_w=$comp_w." or ";
+                }
+                $z++;
+            }
+            $where = "$where"." and ($comp_w)";
+            $comp_id_encoded=urlencode($comp_id);
+            $this->url="$this->url"."&comp_id=$comp_id_encoded";
+        }
+        
+        if ($b_number) {
+            if ($b_number_comp=="begin") {
+                $where = "$where"." and $this->bNumberField like '$b_number%'";
+            } elseif ($b_number_comp=="equal") {
+                $where = "$where"." and $this->bNumberField = '$b_number'";
+            } elseif ($b_number_comp=="contain") {
+                $where = "$where"." and $this->bNumberField like '%$b_number%'";
+            }
+            $b_number_encoded=urlencode($b_number);
+            $this->url=$this->url."&b_number=$b_number_encoded&b_number_comp=$b_number_comp";
+        }
+        
+        if (strlen($c_number)) {
+            # Trim content of dest_form - allow only digits
+            if ($c_number_comp=="begin") {
+                $where = "$where"." and $this->cNumberField like '$c_number%'";
+            } elseif ($c_number_comp=="equal") {
+                $where = "$where"." and $this->cNumberField = '$c_number'";
+            } elseif ($c_number_comp=="contain") {
+                $where = $where." and $this->cNumberField like '%$c_number%'";
+            } else {
+                $where = "$where"." and $this->cNumberField like '%$c_number%'";
+            }
+            $c_number_encoded=urlencode($c_number);
+            $this->url=$this->url."&c_number=$c_number_encoded&c_number_comp=$c_number_comp";
+        }
+        
+        if ($duration) {
+            if (preg_match("/\d+/",$duration) ) {
+                $where = $where." and ($this->durationField > 0 and $this->durationField $duration) ";
+            } elseif ($duration == "zero") {
+                $where = "$where"." and $this->durationField = 0";
+            } elseif ($duration == "nonzero") {
+                $where = "$where"." and $this->durationField > 0";
+            }
+
+            $duration_enc=urlencode($duration);
+            $this->url="$this->url"."&duration=$duration_enc";
+        }
+
+
+        $this->url="$this->url"."&maxrowsperpage=$this->maxrowsperpage";
+
+        $url_calls = $this->scriptFile.$this->url."&action=search";
+
+        if ($group_by) {
+            $this->url="$this->url"."&group_by=$group_by";
+        }
+
+        $this->url_edit	    = $this->scriptFile.$this->url."&action=edit";
+        $this->url_run	    = $this->scriptFile.$this->url."&action=search";
+        $this->url_export	= $PHP_SELF.$this->url."&action=search&export=1";
+
+        $query = "select count(*) as records from cdr_base
+        $use_sybase_index
+        where inbounddate >= '$begin_date'
+        and inbounddate <= '$end_date'"
+        . $where;
+        
+        dprint("$query");
+        
+        if ($this->CDRdb->query($query)) {
+             $this->CDRdb->next_record();
+             if ($group_by) {
+                $rows=$this->CDRdb->num_rows();
+             } else {
+                $rows = $this->CDRdb->f('records');
+             }
+        } else {
+            print "$this->CDRdb->Error";
+            $rows = 0;
+        }
+        
+        flush();
+
+        $this->rows=$rows;
+
+        if ($this->CDRTool[filter][aNumber]) {
+            $this->showResultsMenuSubscriber();
+        } else {
+            $this->showResultsMenu();
+        }
+
+        if (!$next) {
+            $i=0;
+            $next=0;
+        } else {
+            $i=$next;
+        }
+        $j=0;
+        $z=0;
+        
+        if  ($rows>0)  {
+            $this->$rows=$rows;
+
+            if  ($rows  >  $this->maxrowsperpage)  {
+                $maxrows=$this->maxrowsperpage+$next;
+                if  ($maxrows  >  $rows)  {
+                    $maxrows=$rows;
+                    $prev_rows=$maxrows;
+                }
+            } else {
+                $maxrows=$rows;
+            }
+
+            $query="select * from cdr_base
+            $use_sybase_index
+            where inbounddate >= '$begin_date'
+            and inbounddate <= '$end_date'
+            $where order  by  $order_by $order_type
+            ";
+        
+            dprint($query);
+            
+            $this->CDRdb->query($query);
+
+            $this->showTableHeader($begin_datetime,$end_datetime);
+            
+            while  ($i<$maxrows)  {
+               global $found;
+               $found=$i+1;
+               $this->CDRdb->next_record();											
+
+               $CDRfields[$this->durationField]      = $this->CDRdb->f($this->durationField);
+               $CDRfields[$this->startTimeField]     = $this->CDRdb->f($this->startTimeField);
+               $CDRfields[$this->aNumberField]  	 = $this->CDRdb->f($this->aNumberField);
+               $CDRfields[$this->bNumberField]       = $this->CDRdb->f($this->bNumberField);
+               $CDRfields[$this->cNumberField]   	 = $this->CDRdb->f($this->cNumberField);
+               $CDRfields[$this->cNumberField]   	 = $this->CDRdb->f($this->cNumberField);
+               $CDRfields[$this->serviceTypeField]   = $this->CDRdb->f($this->serviceTypeField);
+               $CDRfields[$this->disconnectField]    = $this->CDRdb->f($this->disconnectField);
+               $CDRfields[$this->cardNumberField]    = $this->CDRdb->f($this->cardNumberField);
+               $CDRfields[$this->rateField]	         = $this->CDRdb->f($this->rateField)/100/2.20371;
+               $CDRfields[$this->priceField]	     = $this->CDRdb->f($this->priceField)/100/2.20371;
+               $CDRfields[$this->startBalanceField]	 = $this->CDRdb->f($this->startBalanceField)/100/2.20371;
+               $CDRfields[$this->endBalanceField]	 = $this->CDRdb->f($this->endBalanceField)/100/2.20371;
+               $CDRfields[$this->destinationIdField] = $this->CDRdb->f($this->destinationIdField);
+
+               $CDR = new $this->CDR_class($this,$CDRfields);
+               $CDR->show();
+
+               $i++;
+            }
+
+            if (!$this->export) {
+                print "
+                </table>
+                </td>
+                </tr>
+                </table>
+                ";
+            }
+
+            dprint("$query");
+            $this->showPagination($next,$maxrows);
+
+        }
+
+    }
+}
+
+class CDR_telecats extends CDR {
+
+    var $timestampField     = "timestamp";
+    var $startTimeField     = "inbounddate";
+    var $durationField      = "billingduration";
+    var $aNumberField       = "cli";
+    var $bNumberField       = "access";
+    var $cNumberField       = "number";
+    var $disconnectField    = "release_cause";
+    var $serviceTypeField   = "serviceid";
+    var $rateField          = "rate";
+    var $priceField         = "charge";
+    var $cardNumberField    = "cardid";
+    var $startBalanceField  = "startbalance";
+    var $endBalanceField    = "endbalance";
+    var $destinationIdField = "destinationid";
+
+    function CDR_telecats(&$parent, $CDRfields) {
+
+        global $verbose;
+        $this->CDRS = & $parent;
+
+        $this->startTime       = $CDRfields[$this->startTimeField];
+        $this->duration        = $CDRfields[$this->durationField];
+        $this->aNumber         = $CDRfields[$this->aNumberField];
+        $this->bNumber         = $CDRfields[$this->bNumberField];
+        $this->cNumber         = $CDRfields[$this->cNumberField];
+        $this->disconnect      = $CDRfields[$this->disconnectField];
+        $this->serviceType     = $CDRfields[$this->serviceTypeField];
+        $this->rate            = $CDRfields[$this->rateField];
+        $this->price           = $CDRfields[$this->priceField];
+        $this->startBalance    = $CDRfields[$this->startBalanceField];
+        $this->endBalance      = $CDRfields[$this->endBalanceField];
+        $this->cardNumber      = $CDRfields[$this->cardNumberField];
+        $this->destinationId   = $CDRfields[$this->destinationIdField];
+
+        $this->destinationName=trim($this->CDRS->destinations[$this->destinationId]);
+        $this->durationPrint=sec2hms($this->duration);
+        $this->disconnectPrint=$this->NormalizeDisconnect($this->disconnect);
+
+        $this->ratePrint         = number_format($this->rate,"2",".","")."&euro;";
+        $this->pricePrint        = number_format($this->price,"2",".","")."&euro;";
+        $this->startBalancePrint = number_format($this->startBalance,"2",".","")."&euro;";
+        $this->endBalancePrint   = number_format($this->endBalance,"2",".","")."&euro;";
+        $this->serviceTypePrint  = $this->CDRS->services[$this->serviceType];
+
+        $this->traceIn();
+        $this->traceOut();
+
+        if (!$this->id) {
+            return 0;
+        }
+    }
+
+    function NormalizeDisconnect() {
+        $causePrint=$this->CDRS->disconnectCodesDescription[$this->disconnect];
+        return $causePrint;
+    }
+
+    function show() {
+        global $verbose;
+        global $found;
+        global $PHP_SELF;
+
+        $rr=floor($found/2);
+        $mod=$found-$rr*2;
+
+        if ($mod ==0) {
+            $inout_color="lightgrey";
+        } else {
+            $inout_color="white";
+        }
+
+        if (!$this->CDRS->export) {
+            print  "
+            <tr bgcolor=$inout_color>
+            <td><b>$found</b></td>
+            <td>$this->startTime</td>
+            <td>$this->aNumber</td>
+            <td>$this->traceIn</td>
+            <td>$this->bNumber</td>
+            <td>$this->cNumber
+            <td>$this->destinationName $this->destinationId</td>
+            <td>$this->traceOut</td>
+            <td>$this->cardNumber</td>
+            <td>$this->durationPrint</td>
+            <td align=right>$this->ratePrint</td>
+            <td align=right>$this->pricePrint</td>
+            <td align=right>$this->startBalancePrint</td>
+            <td align=right>$this->endBalancePrint</td>
+            <td>$this->serviceType</td>
+            <td>$this->disconnectPrint ($this->disconnect)</td>
+            </tr>
+            ";
+        } else {
+             print "$found";
+             print ",$this->startTime";
+             print ",$this->aNumber";
+             print ",$this->bNumber";
+             print ",$this->cNumber";
+             print ",$this->destinationId";
+             print ",$this->destinationName";
+             print ",$this->cardNumber";
+             print ",$this->duration";
+             print ",$this->rate";
+             print ",$this->price";
+             print ",$this->startBalance";
+             print ",$this->endBalance";
+             print ",$this->serviceTypePrint";
+             print ",$this->disconnect";
+             print ",$this->disconnectPrint";
+             print "\n";
+        }
+    }
+}
+
+?>

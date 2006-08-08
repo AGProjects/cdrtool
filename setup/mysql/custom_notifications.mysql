@@ -1,0 +1,4 @@
+
+LOCK TABLES `settings` WRITE;
+INSERT INTO `settings` VALUES (NULL,'voice.example.com','providerName',NULL,NULL,'CAIW Diensten B.V.',NULL,NULL,'notifications'),(NULL,'voice.example.com','quotaSubject',NULL,NULL,'Bellimiet overschreden',NULL,NULL,'notifications'),(NULL,'voice.example.com','fromEmail',NULL,NULL,'info@example.com',NULL,NULL,'notifications'),(NULL,'voice.example.com','bccEmail',NULL,NULL,'productbeheer@office.example.com',NULL,NULL,'notifications'),(NULL,'voice.example.com','quotaBody',NULL,NULL,'Geachte abonnee,\n\nHierbij informeren wij u dat uw digitale telefonie abonnement het bellimiet heeft overschreden.\n\nU kunt uw bellimiet verhogen door op werkdagen tussen 09.00 - 17.00 contact\nop te nemen met ons gratis informatienummer 0800-5223666.\n\nMet vriendelijke groet,\n\nCAIW Diensten B.V.\n\nN.B. Dit is een geautomatiseerd bericht. U kunt deze email niet beantwoorden.',NULL,NULL,'notifications');
+UNLOCK TABLES;

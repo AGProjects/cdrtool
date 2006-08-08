@@ -1,0 +1,265 @@
+<?
+###########################################
+# System and web paths
+$CDRTool['tld']    = "/CDRTool";
+$CDRTool['Path']   = "/var/www/CDRTool";
+$_PHPLIB['libdir'] = $CDRTool['Path']. "/phplib/";
+include($_PHPLIB["libdir"] . "prepend.php3");
+$global_local    = $CDRTool['Path']."/global.inc.local";
+
+ini_set('register_globals','on');
+ini_set('max_execution_time','120');
+ini_set('memory_limit','64M');
+
+###########################################
+# PHP Error reporting
+$errorReporting = (E_ALL & ~E_NOTICE);
+//$errorReporting = 1;		// uncomment to see PHP warnings and errors 
+error_reporting($errorReporting);
+
+###########################################
+# Default pagination 
+if (!$maxrowsperpage) $maxrowsperpage=25;
+
+###########################################
+# Service provider information 
+$CDRTool['provider']['name']                    = "SIP provider";
+$CDRTool['provider']['service']                 = "SIP service";
+$CDRTool['provider']['timezone']                = "Europe/Amsterdam";
+$CDRTool['provider']['fromEmail']               = "support@example.com";
+$CDRTool['provider']['toEmail']                 = "support@example.com";
+$CDRTool['provider']['sampleLoginSubscriber']   = "317100000@example.com";
+$CDRTool['provider']['sampleLoginDomain']       = "317100001@subdomain.example.com";
+
+$CDRTool_company=$CDRTool['provider']['name'];
+###########################################
+# SMS one time passwords 
+# You can egister an account at www.simplewire.com
+# useful to send temporary password to GSM phones
+
+$simplewire_ID 		= "471-XXX-471-XXXXX";
+$simplewire_Password 	= "DDDDD";
+
+###########################################
+# needed by scripts/ratingEngine.php daemon
+# Where the rating engine can be contacted to obtain price information for each call
+$RatingEngine=array("socketIP"=>"127.0.0.1",
+                     "socketPort"=>"9024",
+                     "CDRS_class"=>"ser_radius");
+
+###########################################
+# SOAP server for SER prepaid and last calls
+# (experimental, not very well tested)
+$SOAPServer=array("cdr_source"        =>"ser_radius",
+                  "location"          =>"https://provider.com/CDRTool/SOAP/server.php",
+                  "wsdl"              =>"https://provider.com/CDRTool/SOAP/WSDL/",
+                  "DB_ser"    	      =>"DB_ser",
+                  "UserNameField"     =>"UserName",
+                  "CanonicalURIField" =>"CanonicalURI"
+                  );
+
+###########################################
+# Rating engine settings
+$CDRTool['rating']=array(
+                "priceDenominator"   	 => 10000, // e.g. 1 Eur = 10000 units
+	        "priceDecimalDigits" 	 => 4,     // how many digits to round the prices to
+                "minimumDurationCharged" => 0,     // if you want to rate a minimimum number of seconds for each call
+                "durationPeriodRated" 	 => 60,    // the prices from the rating table are calculated per this period
+                "trafficSizeRated"       => 1024,  // same as above but for data traffic
+                "reportMissingRates"     => 0	   // send email notifications if rates are missing from the ratingEngine
+                );
+
+###########################################
+# Normalize engine settings
+
+$CDRTool['normalize']['defaultCountryCode']      = "31";
+$CDRTool['normalize']['CountryNumberLength']     = "9";
+# Carrier selection codes, strip first digits
+# and allocate custom Billing Party
+$CDRTool['normalize']['CS_CODES']= array("1684" => array ("name"       =>"test@Call",
+                                                      "BillingPartyId" =>"call@example.com",
+                                                      "BillingDomain"  =>"example.com",
+                                                      "minimumLength"  =>"9"
+                                                      )
+											    );
+
+###########################################
+# Import settings
+$CDRTool['import']['stripFromDestination']   = "1";
+
+###########################################
+# Anti-fraud settings
+# create group quota in SER and deny calls to users in this group
+$UserQuota["default"]["traffic"]  = 5000;              // MBytes
+$UserQuota["default"]["cost"]     = 1000;              // Euro
+
+###########################################
+# web interface password guessing protection
+$max_login_attempts=5;
+
+###########################################
+# CDRTool datasources
+# you must define all connections to MySQL database here
+
+class DB_CDRTool extends DB_Sql {
+  var $Host     = "db-log";
+  var $Database = "cdrtool";
+  var $User     = "cdradmin";
+  var $Password = "ndd18vv";
+  var $Halt_On_Error ="no";
+}
+
+class DB_Locker extends DB_Sql {
+  var $Host     = "db-log";
+  var $Database = "cdrtool";
+  var $User     = "locker";
+  var $Password = "ndd18vv";
+  var $Halt_On_Error ="yes";
+}
+
+class DB_radius extends DB_Sql {
+  var $Host     = "db-log";
+  var $Database = "radius";
+  var $User     = "radius";
+  var $Password = "ndd18vv";
+  var $Halt_On_Error ="no";
+}
+
+class DB_ser extends DB_Sql {
+  var $Host     = "db-log";
+  var $Database = "ser";
+  var $User     = "ser";
+  var $Password = "ndd18vv";
+  var $Halt_On_Error ="no";
+}
+
+class DB_cisco extends DB_Sql {
+  var $Host     = "db-log.example.com";
+  var $Database = "radius";
+  var $User     = "radius";
+  var $Password = "ndd18vv";
+  var $Halt_On_Error ="no";
+}
+
+$cdr        = new DB_CDRTool;
+$ser_db     = new DB_ser;
+
+# To allow users to login using a custom procedure. See DomainAuth from phplib/local.inc as example
+class DomainAuthLocal extends DomainAuth {
+}
+
+class PageLayoutLocal extends PageLayout {
+}
+
+$DATASOURCES=array(
+"unknown"=>array(
+                    "class"              => "CDRS_unknown"		// do not delete this datasource
+                    ),
+"ser_radius"=>array(
+                    "name"               => "OpenSER",
+                    "class"              => "CDRS_ser_radius",
+                    "table"              => "radacct",
+                    "table_missed"       => "radacct_missed",
+                    "db_class"           => "DB_radius",
+                    "db_class_readonly"  => "DB_radius",    // use replicated databases to spread the reads
+                    "db_class_siponline" => "DB_ser", 	    // location of openser location table	
+                    "rateField"          => "Rate",
+                    "rating"             => "1",
+                    "priceField"         => "Price",
+                    "normalize0SecCalls" => "1",
+                    "DestinationIdField" => "DestinationId",
+                    "normalizedField"    => "Normalized",
+                    "BillingPartyIdField"=> "UserName",
+                    "AccountsDBClass"	 => "DB_ser",
+                    "intAccessCode"      => "00",		
+                    "sipTraceDataSource" => "sip_trace",
+                    "traceOutURL"        => array(
+                                            "voipgw01.example.com"=>"asterisk",
+                                            "voipgw02.example.com"=>"cisco"
+                    			    		),
+                    "UserQuotaClass"     => "SERQuota",
+                    "UserQuotaTable"     => "user_quota",
+                    "UserQuotaVerbose"   => "",
+                    "UserQuotaNotify"    => "0",	// send e-mail notifications when quota is exceeded
+                    "MinPstnNumLen"      => "9",
+                    "EnableSIPOnline"    => "0",	// display online SIP users		
+                    "EnableNetworkRating"=> "1",
+                    "SOAPUsername"       => "",    // used by Multimedia Service Platform
+                    "SOAPPassword"       => "",    // used by Multimedia Service Platform
+                    "SOAPAdmin"          => false, // used by Multimedia Service Platform
+                    "SOAPURL"            => "",    // used by Multimedia Service Platform
+                    "domainTranslation"  => array(
+                                                  "gw02.domain.com"      => "pstn.domain.com" // translate Realm
+                                                  ),
+                    "SourceIPRealmTranslation"  => array(
+                                                  "10.0.0.1"      => "gateway.example.com" // translate Realm for sessions originating from IP address 10.0.0.1
+                                                  ),
+                    "RotateTables"	=> "Ym",
+                    "RotateThisMonth"	=> 0,
+                    "purgeCDRsAfter"    => 120 // how many days to keep old CDRs
+                    ),
+"cisco"     =>array("name"               => "Cisco gateway",
+                    "class"              => "CDRS_cisco",
+                    "db_class"           => "DB_cisco",
+                    "table"              => "radacct",
+                    "rateField"          => "Rate",
+                    "rating"             => "1",
+                    "priceField"         => "Price",
+                    "DestinationIdField" => "DestinationId",
+                    "normalizedField"    => "Normalized",
+                    "normalize0SecCalls" => "1",
+                    "traceInURL"         => array(
+                                            "10.0.0.2"=>"ser_radius",
+                                            "Asterisk"=>"asterisk"
+                    			    		),
+                    "traceOutURL"        => array(
+                                            "10.0.0.2"=>"ser_radius",
+                                            "ISDN 1"=>"ipnxcdr"
+                    			    		),
+                    "purgeCDRsAfter"    => 180 // how many days to keep the CDRs
+                    ),
+"asterisk"  =>array("name"               => "Asterisk server",
+                    "class"              => "CDRS_asterisk",
+                    "table"              => "asterisk_cdr",
+                    "db_class"           => "DB_radius",
+                    "rateField"          => "Rate",
+                    "rating"             => "1",
+                    "priceField"         => "Price",
+                    "DestinationIdField" => "DestinationId",
+                    "normalizedField"    => "Normalized",
+                    "normalize0SecCalls" => "1",
+                    "contexts" 		 => array(
+                                            "SIP"=>array("WEBName"=>"SIP Provider 1"),
+                                            "PSTN"=>array("WEBName"=>"PSTN 2 ENUM")
+                                      		),
+                    "traceInURL"         => array(
+                                            "SIP"=>"ser_radius"
+                    			    		),
+                    "traceOutURL"        => array(
+                                            "SIP"=>"ser_radius"
+                    			    		),
+                    "purgeCDRsAfter"    => 180 // how many days to keep the CDRs
+                                                        
+                    ),
+"sip_trace"   =>array(
+                    "name"               => "SIP trace",
+                    "db_class"           => "DB_ser",
+                    "table"              => "sip_trace",
+                    "purgeRecordsAfter"  => "7"
+                    )
+);
+
+// load other CDRTool libraries
+$CDRToolModules=array("ser","cisco","asterisk","custom","rating");
+
+$tz=$CDRTool['provider']['timezone'];
+putenv("TZ=$tz");
+
+if ($REMOTE_ADDR=="10.0.0.1") {
+    // display debug information only from this host 
+    //$verbose=1;
+} else {
+    // prevent set of verbose via post/get
+    unset($verbose);
+}
+?>

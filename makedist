@@ -1,0 +1,41 @@
+#!/bin/sh
+
+if [ ! -f cdrlib.phtml ]; then
+    echo "Run this program inside the CDRTool directory"
+    exit 1
+fi
+
+style=""
+pkgignore=".pkgignorelite"
+
+if [ $# -eq 1 -a "$1" = "full" ]; then
+    style="_full"
+    pkgignore=".pkgignore"
+fi
+
+dirname=`basename $PWD`
+basedir=`dirname  $PWD`
+
+version=`cat version`
+
+archive="CDRTool-$version$style.tar.gz"
+
+if [ "$dirname" != "CDRTool" ]; then
+    create=1
+else
+    create=0
+fi
+
+if [ $create -eq 1 ]; then
+   (cd ../; ln -s "$dirname" CDRTool)
+fi
+
+echo "Creating $archive"
+
+GZIP=--best
+tar --exclude-from=$pkgignore --directory ../ -zchf "$archive" CDRTool
+
+if [ $create -eq 1 ]; then
+   rm ../CDRTool
+fi
+

@@ -1,0 +1,22 @@
+Using CDRTool
+-------------
+
+Point the web browser to http[s]://IPwhereCDRToolisInstalled/CDRTool/
+
+Fill in the username and password. A default account has been created 
+during installation. The default administraion account is admin with
+password admin. You may also login using the SIP credentials for SER
+subscriber table.
+
+- Upload rating files (see the sample .csv files) 
+- Select data-sources the user may access with his account
+- Search and group output by user/domain etc...  
+- Click on the Id filed to display more information for each CDR
+- Click on the SIP Session ID to access the SIP messages
+- Export results to CSV format to external system (like MS Excel)
+- Save query criteria for later reference
+- Add names to queries or query results 
+- Mail queries or results to other accounts 
+- Add new CDRTool users in the Accounts page
+- Setup a SOAP client to read last calls for a user
+- Provision prepaid accounts in Rating tables

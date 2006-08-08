@@ -1,0 +1,878 @@
+4.6-1
+ - Make CDRTool Debian package
+ - Migrate changelog to debian/changelog
+
+4.5.9
+- Added filter for listing the query log, users with admin right may 
+  select and edit all queries
+- Added a new index in the log table (see setup/mysql/alter_tables.mysql)
+
+4.5.8
+- Added Realm translation based on SourceIP
+- Show group by on the search interface for subscribers
+
+4.5.7 
+- Moved php parameters setup in global.inc (no need to change php.ini anymore)
+- Added a sample dictionary.ser 
+- Added mail account settings in Account management
+
+4.5.6
+- Fixed location of lock file for quota check script
+- Added example for setup of openser.cfg and update INSTALL documentation to
+describe how to setup quota and OpenSER accounting
+- Skip TLS CA checks in blockAccountRemote() SOAP function
+
+4.5.5
+- Moved normalization, rotateTables and quotaCheck locks in /var/lock
+- Reverse order of columns in mysql patch file setup/radius/OpenSER/radacct-patch.mysql
+- Show trace in collapsible tables for better overview
+  
+4.5.4
+- Added separate datasource for sip_trace
+- Allow sip_online to use custom OpenSER database 
+  and location table 
+- Released MediaProxy accounting component
+- Changed Price to double(20,4) default 0.0
+
+4.5.3
+- Show also zero prices and how they were calculated 
+- Fixed auto-reconnect to mysql server 5, 
+   rebuild MySQL connection if errno 2006 or 2013 is received 
+   from mysql client library
+- Added Siemens 3610, Cirpack and Aastra pictures
+- Fixed bulk copy of rating tables 
+- Add selection by one way media
+
+4.5.2
+- Added Diverted 435 SIP status code
+- Trim sip: and sips: from SIP URIs during INSERT
+- Avoid loading billing_profiles with invalid hours
+- Added showRates and showProfiles in ratingEngine
+  
+4.5.1
+- Improved query speed when purging old CDRs
+- Added scripts/purgeTables.php script and purgeCDRsAfter in DATASOURCES
+  to automatically purge old CDRs on a daily basis	 
+- Added new entry in setup/cron/CDRTool
+
+4.5
+- Remove URI scheme during normalization, all database fields contain now
+  user@domain
+  must update radacct table based on setup/mysql/alter_tables.mysql   
+- Define readonly datasource to share database reads between machines
+  added db_class_readonly to DATASOURCES defs
+- Display date interval available in current CDR table
+- sip_trace module available in OpenSER CVS head
+
+4.4.4
+- ratingengine commands and parameters are now case insensitive
+- Added incremental load of customers in ratingEngine
+- Save CallerID in SipRpid column (it was SipRpidHeader) 
+- Removed unused SipRpidHeader
+- Decode encoded chars in Radius packets
+
+4.4.3
+- Added rotateTable function to archieve CDRs to monthly tables
+- Added purgeTable function to deleted rotated CDRs
+- Use per row delete low_priority on sip_trace table to avoid table locks 
+- Added Voipster logo in SIP trace
+- Update Rating documentation
+
+4.4.2
+- Added description for SIP Canonical URI used for rating purposes
+- Moved sip_online page to /status/sip_online.phtml
+
+4.4.1
+- Reload prepaid accounts incremental
+- Fixed parsing of first parameter received by network ratingEngine
+
+4.4 
+- CDRTool is available under GPL license.
+
+4.3.3
+- Fixed double empty line returned from network ratingEngine, which caused
+  bad logging of rate info
+- Detect and log possible double attributes received by the network 
+  ratingEngine
+- Use radacct.CanonicalURI field when searching dialed destinations,
+  CanonicalURI	contains the logical destination after all internal 
+  lookups performed by OpenSER (ENUM, alises or call forwarding)
+- Load SER accounts on demand and cache them  instead loading all accounts
+  on each web page reload, for 50K accounts it becomes too slow
+- Show only list of defined data_source from the list of allowed data_sources  
+- Use delimiter parsed by the NomalizeNumber function instead of @
+
+4.3
+- Round prices to 4 decimals
+- Lowercase SIP accounts during normalization
+- Improved display for subscriber screen
+- Dump more memory info from RatingEngine
+
+4.3.1
+- Fixed TraceIn and TraceOut to use rotated CDR tables
+- Fixed display of memory usage of ratingEngine
+- Enlarge asterisk_cdr.rate column
+
+4.3
+- Added Presence and IM methods (set applicationType during 
+  normalization based on SIP method)
+- Unified OpenSER and FreeRadius dictionary
+- Defined SIP applications (Audio/Video/Text/Presence)
+- Display To header in destination for Presence methods
+- Filter CDRs by method=Invite in SOAP getlastcalls() requests
+- Added Voipster Zoep icon
+
+4.2 (January 7, 2006)
+- Migrated from SER to OpenSER
+- Added Radius table auto-rotation (radacctYYYYMM)
+- Added FromHeader, Contact and UserAgent fields
+- Calculate the E164 destinationId from CanonicalURI
+- Display QoS information from AVM Fritz box
+  (radacct.RTPStatistics and X-RTP-STAT) 
+- Added tables to store prepaid cards
+- Display localized stop time
+
+4.1.4
+- Add timeline on top of sip trace
+- Added more indexes on sip_trace
+
+4.1.3
+- Added index and search on SIP Realm
+- Add a nicer web background, mac style
+- Overwrite body of notification for quota exceeded with entry from 
+  database
+- Changed settings.var_value column to text
+- Replace __NAME__ with SIP subscriber fullname in quota notifications
+- Translate Realm (the SIP domain) during Normalization if 
+  domainTranslation is defined in SER datasource
+- Apply rating only after domain has been normalized
+
+4.1.2
+- Skip sip trace with traced_user column set
+
+4.1.1
+- Added MediaTimeout field in search criteria
+- Dump some call statistics in syslog
+
+4.1
+- MediaProxy and CallControl work now together to detect or terminate calls
+  and reset Normalized field after updating CDR
+- Removed IP traffic check for detection of unNormalized calls, 
+- Removed DelayTime field skiped from OpenSER 1.0
+- Added MediaInfo field in Radacct, the field stores the reason the call was
+  terminated by MediaProxy (like timeout)
+- Use SOAP calls to remotely deblock accounts blocked by quota
+- Update NGN-Pro SIP client to use auth in SOAP header
+- Detect possible loops in recursive rating engine
+- Fixed a bug that caused empty prices for some calls
+- Avoid multiple instances of the normalize process
+- Avoid multiple instances of the SER quota check process
+  on script exit
+- Log quota check activities to syslog
+- Improved speed of quota check process
+
+4.0.1
+- Renamed MediaProxy KBIn to CallerIn and KBOut to CalledOut 
+- Update prepaid docs
+- Added normalized index for CISCO and Asterisk data-sources
+
+4.0 (October 30, 2005)
+- Rating code available for non-comercial use
+- Added doc/PREPAID-API for interface between SER call control
+  module and CDRTool rating engine
+- Replaced in network rating engine END with \n one one line
+- Replaced 0 with Failure and 1 with OK in RatingEngine prepaid answers
+- Added index on radacct.normalized
+- Improved normalization speed
+
+3.3.6
+- Run optimize table after purging sip traces
+- Display in trace if packet is to be loose routed
+- Fixed e-mail notifications for quota exceeded
+- Update import of SER radius files
+
+3.3.5 (September 23, 2005)
+- Small fixes in tracing IPNX datasource  
+- Added the complete asterisk mysql schema
+- Small fixes when grouping results in SER datasource
+- Added missing indexes to asterisk_cdr table
+- Allow aliases of dns zone owners to access CDRTool for those zones
+- Add note about missing staless SER responses and the URL on the 
+  SIP trace window 
+
+3.3.4
+- Added indexes for BillingId, DestinationId and SourceIP
+- Fixed passing of BillingId and Source IP from group by to 
+  individual calls
+
+3.3.3
+- Added maxSessionTime and destination in prepaid status information
+- Fixed endless loop when connection to network rating engine has died
+- More compact syslog logging
+- Log per session rating information to syslog
+- Save tech prefix in radacct.BillingId field
+
+3.3.2
+- Add domain filter in all Rating tables
+- Added gateway,domain,subscriber in all rating tables and cvs import
+  functions, syntax of CSV import files changed all csv files must begin
+  with: Operation,Gateway,Domain,Subscriber,....
+- removed unused columns from prepaid
+- Fixed reNormalization of calls when selecting only Unnormalized calls
+- Allow search and group by source IP address of the SIP UA
+- Added ShowMemory to RatingEngine (how many rates/destinations are loaded)
+
+3.3.1
+- Simplify SOAP CallHistory (moved missed calls in received calls)
+  Removed ongoing calls
+- Moved SER quota from ser.user_quota into ser.subscriber.quota  
+
+3.3.0
+- Add Toggle visibility of rating information in Asterisk datasource
+- Don't use anymore SERSync for blocking quota accounts, write directly 
+  into ser.grp table and optional call the NGNPro addToGroup SOAP function
+  to update a remote database
+- Added filter afterDate in CallStatistics SOAP function
+- Return raw values from CDRHistory, is up to the front-end to 
+  format the values
+- Match account with = in place of sql 'like' in SOAP statistics
+- Added script to reset monthly quotas in SER (in scripts/SER directory)
+- Updated crontabs with quota reset script (must run in first day of the month) 
+- Read destination from SIPTranslated URI instead of CanonicalURI (in SOAP
+  functions)
+- Update soap function to return CDRs based on Canonical URI
+ 
+3.2.9
+- Small fixes in SER quota checks, improved logging and custom e-mail
+  notifications
+- Added prepaid documentation
+- Customize purge trace after X day in ser_acc datasource
+
+3.2.8
+- Small fixes in sending notifications to users blocked because of quota
+- Fixed filtering  on usernameS used by rerun query from log
+- Fixed delete selection in Rating tabless
+
+3.2.7
+- Allow different from, to, bcc email addresses for notifications
+  of user quota exceeded. The notifications can be stoired in the settings
+  tables. Sample entries are in inserted in the settings table.
+- Fixed detection of BillingPartyId of forwarded calls when using 
+  the Network rating engine
+- ratingEngine: use RemoteAddressNormalized for detection if 
+  a number is PSTN or not
+- Fixed normalization of prepaid requests to remove the tech prefixes defined 
+  in CS_CODES array
+- Return SOAP exception for GetPrepaidAccountInfo() if prepaid account 
+  does not exist.
+- Return none or locked for MaxSessionTime()
+
+3.2.6
+- Added function to display prepaid accounts and their balance
+- Automatically reload Prepaid accounts after add/deleten or 
+  change balance using SOAP requests
+
+3.2.5 (July 9, 2005) 
+SOAP engine
+------------
+- Added OngoingCalls function
+- Improved check on input parameters  
+- Added a domain filter for CDRTool SOAP enabled accounts
+- Prevent multiple wrong authentication attempts
+- Log exceptions to syslog
+- Added a filter for last calls (date, duration, calls)
+- Return DestinationId in placed calls
+- Added filters to GetCallHistory function
+- Normalized LastMissedCalls URIs in responses
+- Skip SER locations with negative expiration time
+- Check account and domain filter when adding balance via SOAP requests
+
+Call control (Prepaid)
+----------------------
+- Fixed the Return of Prepaid MaxSessionTime 
+- Reload Prepaid accounts when calling reloadRatingTables
+- Added folders for storage of the extra SER modules
+
+Other fixes
+-----------
+- Set Asterisk username to unknown if not present in the CDR 
+  The username field is required for the rating process
+- Return to the same page after reload rating tables
+- Fixed prepaid bugs related to calculating max session time
+  for multiple time spans
+- SQL connections, the default halt on error is set to no
+- Added possibility to manage rates having a domain filter 
+  enforced during login
+
+3.2.3
+- Change Price column to a decimal value
+- Do not display in the web prices = 0
+- Added support for mailing to admin about broken rates
+- Use dedicated lock column for call lock in prepaid 
+- Added Prepaid account unique index
+- MaxSessionTime returns -1 if Prepaid account is not defined
+- Lock prepaid account only if MaxSessionTime > 0
+- Always unlock account on DebitBalance 
+
+3.2.2
+- Added AddPrepaidAccount and DeletePrepaidAccount SOAP functions
+- Increase the maximum size of Username aNumber cNumber form elements
+- Fixed network bandwidth loging in rating info
+
+3.2.1
+- Rate based on the normalized SIP Translated URI, this catches changed 
+  SIP Translated URIs when carrier select code is used but striped during
+  normalization
+- Fixed subscriber call search web screens 
+- Subscribers with multiple accounts may select calls of individual 
+  accounts
+- Fixed rating for Asterisk (use cNumberNormalized)
+
+3.2
+Rating engine
+-------------
+The rating engine has been separated from CDRTool web pages.
+- On the fly rating can be set to obtain rating information from the network
+  rating engine. This is faster then loading mysql tables at each web page
+  reload. To enable network rating set "EnableNetworkRating"=> "1" in
+  global.inc for each datasource. If network rating is not available, 
+  the rating will fall back to the old method (load tables in memory)
+- Lock database only if there are un-normalized calls
+- Added control to reload rating engine tables and display engine status
+- Added new operations for the web management of rating tables
+   - Allow deletion of selections
+   - Rates can be copied under a new name
+   - Require confirmation when deleting/copying
+- Added alternatives profiles for customers. This way one can setup rates
+  based on exceptions. For example a customer may have a dedicated rate
+  table where only a few destinations have different price, the rest of the
+  destinations are charged from a default profile
+  billing_customers table has changed (see alter_tables.mysql)
+- The customers.csv file may contain another 2 columns for alternative
+  rating profiles 
+- Apply rating only for calls with duration > 0
+
+Normalization process
+---------------------
+- Normalize also SipRPIDHeader
+- Allow selection of un-normalized calls (SER data-source)
+- Cisco datasource treats H323RemoteAddress as $this->gateway 
+  For ISDN trunks remote gateway is identified by CiscoIP-ISDN-X
+  where X is the E1 number. This combined key can have dedicated rates 
+  in Rating tables.
+
+Prepaid engine
+--------------
+- Add more information field to prepaid table (see alter_tables.mysql) 
+- Read prepaid account information from database in place of network socket 
+- Add provisioning of prepaid accounts from SOAP and Rating tables web
+  management
+
+Other
+-----
+- See alter_tables.mysql for the changes required for the database.
+- Added logging to syslog for all important operations
+
+3.1.1
+- Allow A number filter to contain more than one address (accounts)
+- Clean up ser_acc datasource
+- Added missing png files for User Agents in sip trace
+- Fixed missing price info when logged in as subscribers
+
+3.1.0 (May 21, 2005)
+- Network rating function names are now case insensitive
+- Log to syslog the summary of reloadRatingTables()
+- Log SOAP requests and CRON jobs (normalization) to syslog
+- PrepaidEngine setting changed to RatingEngine because it does more than
+  prepaid  (last missed, last placed, last received calls)
+- Rating engine daemon renamed to scripts/ratingEngine.php
+- Rating tables are automatically reloaded by RatingEngine after CSV rates
+  file import
+- Added SOAP function GetSERLocations()
+- Fixed return of SOAP exceptions (disable SOAP backtrace)
+- Added Debian packaging
+- Added sip_online.phtml to display SER user locations per domain
+- Added index radacct.canon_idx (CanonicalURI)
+- Fixed calculation of total number of SIP sessions in account summary
+- Added index for callid in ser.sip_trace table
+- Added a new SOAP function to return all last calls plus summary for a user
+- Fixed SOAP WSDL to return fault if database query failed
+- Added comments for functions in the SOAP/WSDL file
+ 
+3.0.4
+- Added network functions to reload rating tables and list prepaid accounts
+- Protection against BYEs from the future :-)
+- Allow . in login accounts
+ 
+3.0.3
+- Billing per gateway looks now at the Souce IP of the SIP packet
+- Changed syntax of Prepaid requests (for the prepaid daemon)
+ 
+3.0.2 (May 1, 2005)
+- Added a test SOAP client to test the SOAP server, it displays the version
+- Dynamically generate WSDL with server address read from global.inc
+- Improved INSTALL documentation, added a separate USAGE.txt file
+- Prepaid engine functions have now better named parameters 
+- The rating plans set per gateway for SER datasources relate to the remote IP
+  address of the SIP gateway and no longer to the SER proxy that generated
+  to CDR
+- save datasource in log
+  
+3.0.1
+- Rating engine improvement (better memory allocation)
+- Add syslog logging to prepaid daemon
+
+3.0
+- Added SER Prepaid functionality in scripts/SER/prepaid.php
+  It is a daemon that makes rating functions available via 
+  the network to a B2BUA (MaxSessionDuration, UpdateCredit, ShowPrice)
+- Added SOAP engine for remote queries or Prepaid updates
+- Relocate rating functions for better code readability
+- E-mail possible errors that may appear during rating to system administrator
+
+2.6.3
+- Fixed normalization of SIP usernames having format @XXX.XXX.XXX.XXX. 
+  The @ is stripped.
+
+2.6.2
+- Add script to Purge old SER traces (setup/crontabs/CDRTool) 
+  default is purge traces older than 30 days
+
+2.6.1
+- Register a clean up function to ensure tables are unlocked if the scripts fails
+  This avoids dead-lock  caused by a failed normalization process
+- Addslashes to form elements entered into MySQL queries  
+- Handle SIP destinations with missing username or hostname
+
+2.6
+- Added new fields SourceIP, SourcePort, CanonicalURI, DelayTime
+  BillingId per CDR which can be retrieved from external database
+- Renamed destinationId to DestinationId (change global.inc) 
+- Calculate destinationId only from SIPtranslated URI (for PSTN calls that
+  end up on IP after ENUM lookups)
+- Added Status code '492'=>'CrossReferencedURI' for internal server loops 
+  in ENUM/aliase lookups
+- Show ISDN release name in IPNX data-source
+- Preserve user rights in Run query from log
+- Add notify to co-workers in Log to share queries by e-mail
+- Use BillingParty in place of CallingStationId for SER quota check
+  (this covers forwarded calls)
+
+2.5.9
+- Allow optional definition of table holding missed calls
+  in global.inc "table_missed"       => "radacct_missed",
+- Generate random SIPtoTag in freeradius for failed calls to allow same
+  radacct table to hold both succesfull and zero second calls still
+  preserving unique index
+
+2.5.8
+- Include rating_lib.phtml file only if present 
+- Allow group by Month and YEAR in SER datasource
+- Display error msg if cannot init SER trace class because of 
+  missconfigured global.inc 
+- Show time line in SER trace, read $SIPProxies from global.inc 
+  to identify packets sent from Proxy
+
+2.5.7
+- Moved SER trace code in table ser.sip_trace (SER patch required)
+- Improve tracing of SER calls (show both incomming and outgoing)
+- Fixed export of IP network traffic (removed commas) 
+  Moved sip trace settings into ser_acc Data Dource
+- Renamed some variables in the Rating class for better code readability
+- Fixed export of IP network traffic (removed commas)
+
+2.5.6
+- Removed display of recipient of One Time Password
+- Moved trace functions for IPNX and SER in different classes
+- Show link to SIP trace from collapsed SER CDR (if trace enabled in
+  global.inc)
+
+2.5.5 (January 15, 2005)
+- Added pop-ups for SER DS with description of Start time, Caller info and
+  call status, more compact table design that fits 1024/768 screens
+- Show SIP status with different colors 
+- Show verbose SER call information when click on call id
+- When Refine search load the search form always in the top frame  
+- Fixed login of SER domain owners to allow statistics
+- Show Destination names as description when group by DestId 
+  
+2.5.4
+- Added list of excluded destinations useful to isolate
+  national/international traffic when making statistics
+- Added SIP status and SIP status class selection for SER DS
+
+2.5.3
+- Removed obsolete rate function in Asterisk DS
+- Show price field when  exporting results from Asterisk DS
+- Removed commas from exported fields in CVS
+- Added search/group by SIP Status in SER data source
+
+2.5.2
+- Fix in auth problem with empty One Time Passwords
+- Added SIP status search and group by
+
+2.5.1
+- Fixed path detection in stand-alone scripts
+- Added Radius import for Cisco data-source
+
+2.5
+- Rewrite CDRTool to be PHP safer 
+  It is not required anymore to have register_globals = On
+
+2.4.1
+- Separate Web view and Export in different functions
+  Note: if provider has local/* files they might need adjustment
+
+2.4 (December 27, 2004)
+- Pass full query criteria to Normalization function. This allows 
+  normalization and reNormalization functions to focus only on the 
+  requested data in the web
+- Added unNormalize function to be able to rerate calls from the web
+  
+2.3.2
+- Rating tables 
+   - Enable rating batch imports with per records operation (add,delete,update)
+   - Rating tables are not emptied during import anymore. 
+   - Added export from MySQL to CSV files
+   - Enforce a unique index in each rating table (see alter_tables.mysql)
+- Rating can now be set per remote gateway (Cisco data-source)
+- Removed duplicate definitions of CDR fields in CDR class, inherit them from parent
+
+2.2
+- Added script to import radius radacct files into database 
+  scripts/SER/importRadius.php
+- Renamed SER quota script to scripts/SER/quotaCheck.php (change crontabs)
+- Don't report missing rates for rates set to zero
+- Added different mysql patches for CISCO and SER radacct tables
+
+2.1.3
+- Save RPID from SER in radacct.SipRPID column, added search and group by RPID
+
+2.1.2.1
+- Call "unlock tables" if Normalize function returns early
+
+2.1.2
+- Removed double update query for rating_tables
+- Asterisk data-source has no StopTime field 
+  (normalization of * ongoing calls fixed)
+
+2.1.1
+- Add group by SIP application type (audio/video)
+- Fix bug related to normalization of calls already in progress
+- Removed double update query for rating_tables
+
+2.1.0 (November 29, 2004)
+- Optimize normalization process
+- Show setup help and intro text if CDRTool is not 
+  setup yet (for new installations)
+  
+2.0.7
+- More flexibility for installation customization
+  Different layouts for admin or subscribers
+
+2.0.6
+- Normalize BillingPartyID based on custom prefix
+
+2.0.5
+-Optimization of sql fetch
+
+2.0.4
+- Ported some statistics features from SER to Asterisk datasource
+- When searching for domain mathc only calling party
+- Increase the script timeout (for long exports)
+
+2.0.3
+- Patch SER to support forwarded calls 
+  radacct.UserName holds now the party that initiated the redirection
+- Removed unnecessary forwarding fields from radacct table
+  SIPAccount and Forwarded
+- Fix accounting of duration of failed calls that are finally forwarded
+  succesfully 
+   
+2.0.1
+- Added page for management of rating tables
+
+2.0  (November 11-th, 2004)
+
+New features 
+1. SER user quotas
+  - scripts/SER-block.php (the script)
+  - setup/crontabs/CDRTool (the cron job for the script)
+  - setup/mysql/create_ser_quota.mysql (mysql scheme for ser database)
+2. Timezone support for multiple billing-parties
+  - CDRTool may assign different peak/ofpeak hours or display time depending 
+    on the party that does the billing (subscriber,domain,gateway)
+  - Multiple resellers from different timezones on the same CDRTool installation 
+    can share the same rating engine
+  - Timezone of billing party must be specified in customers.csv 
+    If not specified a default platform-wide timezone from global.inc is used 
+3. Application based rating (SIP video) 
+ 
+Database Field renaming
+  - Got rid of H323 radacct fields and replaced them with SIP equivalents
+  - Changed SER SQL scheme for radius in sql.conf
+  - Use alter_tables.mysql script to change existing tables
+
+1.6.1
+- Allow customization of CDRTool by creating custom library file where
+  new CDRS classes can be spawn out of existing ones (ser, asterisk, cisco)
+  create cdrlib_custom.phtml which is automatically included from global.inc
+- Fixed attempts to normalized calls still in progress (update radacct with
+  AcctStopTime or check mediaproxy traffic statistics). Check
+  setup/radius/SER/sql.conf for failed query
+
+1.6
+New major rating features added:
+- Implemented rating of diverted calls 
+- Destination list may be specified per subscriber, domain, gateway
+  (coresponding to rating engine per subscriber, domain, gateway)
+  Format of destinations.csv fields has changed to:
+  Ops,Gateway,Domain,Subscriber,DestinationPrefix,DestinationName
+- Add BillingPartyId and RemotePartyId for SER datasource
+- Allow stripping of custom prefixes from destinations
+There are several (non disruptive) changes in the database scheme
+
+1.5.3
+- Add SER username in export from SER data-source
+
+1.5.2
+- Added string digits parameter in rate import function
+
+1.5.1
+- Improved verboseness when import rating information
+- Added function to import csv files $CDRS->importCSVFiles()
+
+1.5.0
+- Disabled rating functionality if $CDRS->rating not set (per datasource)
+
+1.4.8
+- Setup files update with latest table formats
+
+1.4.7
+- Show SIP medthod in SER CDRs
+
+1.4.6 
+- Fixed display of decimal numbers in price/rate indication
+
+1.4.5
+- Added capability to search for Codec Type and User agents
+
+1.4.4
+- Added filter per compid and Carrier Select code (IPNX data-source)
+- Fixed bugs related to filter editing in accounts
+- Initalize rates array to get rid of empty rates warnings
+- Hide Submit button until if change data-source until frame is reloaded
+
+1.4.3
+- Added ASR for SER calls (percenatge of failed/good calls)
+- Trace individual calls when group statistics by Codec type 
+- Fix order by when jumping from statistics to individula calls 
+
+1.4.2
+- Renamed H323 variable to SIP in SER datasource
+- Pass fromTag to ser_acc to find the right call
+
+1.4.1
+- Trace to SIP messages from missed_calls data source if 
+  SIP Status is Client-Error 4XX
+- Show all SIP messages when clicking on method link in 
+  ser_acc data source
+- Added extra SIP statuses from RFC 2543 (422, 202, 489, 490, 580)
+
+1.4.0 August 2, 2004
+Work on linking WEB output to remote CDRTools
+- Added SER trace downstream per gateway
+- Added IPNX trace downstream and upstream per Carrier number
+- Added trace downstream and upstream for CISCO datasource
+  specified per ISDN card number or IP gateway
+- Search also H323RemoteAddress in SER call search. This is needed in 
+  order to match called destination als for redirected calls
+- Remove leading zeros when tracing to other data-sources
+- Remove default filter on H323ConfID <> 'n/a' for SER Datasource
+- Show zero second calls for SER datasource and their failure reason
+- Show Q931 log in separate browser window 
+- Added SIP related fields in SER radacct table:
+  
+  SipMethod, 
+  SipResponse-Code,
+  SipToTag, 
+  SipFromTag, 
+  SipTranslatedRequestURI
+
+  Is possible now to trace calls from:
+  SIP PROXY <-> VoIP Gateway <-> Class 4 PSTN Switch   
+  at CDR level and down to the  SIP/Q931 trace level
+  See changes in global.inc.in
+  
+1.3.0
+- Split CDRlib library in independent datasource library files
+
+1.2.8 
+- Removed rate from DB option as is too slow
+
+1.2.7
+- Display full rating information when hovering above Price field
+- Added Rate information suport in Asterisk
+- Fixed rating calls that span multiple time periods to contain 
+  only one connectCost per call
+
+1.2.6.1
+- Fixed log of username when doing trace to other data-source
+- Add checkbox to show rating information in SER Data-Source
+
+1.2.6
+- Show applicationType under Codec type
+- Show call stopTime in web and CSV export (SER data-source)
+- Save DATASOURCE showRate property in variable $CDR->showRate
+- Save CDR->traffic and CDR->aplicationType in rate info field
+- Display clearly how Rating spans multiple time profiles
+                                        
+
+1.2.5.8
+- Display Datetime in set_trace window
+- Hide Date interval for which CDRS are displayed if 
+  searching one Call by ID
+- Display local time in ser_acc, set SER to log locatime and not GMT time 
+  There is a global variable in the acc module:
+  int db_localtime = 0;
+- Make all URIs lowercase during normalization
+- Add description in Groub by for IPNX DS
+- Add group by company id (customer) in IPNX DS
+  
+
+1.2.5.7
+- Add property for SER_acc data-source to decide whether is for
+  direct or missed call. 
+- Added example of ser_missed calls datasource def in global.in.in
+
+1.2.5.6
+- Accounts page did not load main menu
+
+1.2.5.5
+ - Hide "unknown" data-source in Account data-source rights
+
+1.2.5.4
+ - Fixed search by username (asterisk_cdr.src) in * data-source
+ 
+1.2.5.3
+ - Fixed a rating problem introduced by 1.2.5.2. 
+ - Change Rate column to text as it could not fit all info in 255 chars
+    alter table radacct change column Rate Rate text not null;
+
+1.2.5.2
+ - Better description of Rate infromation save din Rate field
+ - Add search by Radius Session ID AcctSessionId in radacct table 
+ - unnormalize call if passing &call_id=xxx&unnormalize=1 in URL
+ - Fixed wrong normalization of numbers not beginning with 0 (if they
+   looked like PSTN numbers)
+ - Skip date filter when searching a specific call id
+ - Reset all calculated fields (Price,DestinationId, Rate) when
+   unnormalizing calls
+
+1.2.5.1 
+ - minor html changes
+
+1.2.5 July 6th, 2004
+- Set CDRTool "company name" in global.inc
+- Update license information in login page
+- Fixed display of HTML messages after HTTP headers were already 
+  sent in logout page
+- Fixed PHPLIB bug related to calling session->freeze() more than once
+  inside a 1 second time frame while nothing has changed in the session.
+  session->freeze() is called by both page_open() and page_close()
+- Add property of data-source to display Rate information in WEB
+
+1.2.4
+- Save Rate information in radacct table column Rate
+- Patch radacct table to add Rate column
+
+1.2.3
+- Added storage for normalized fields for Asterisk data-source
+  Statistics based on Destination Id with consolidated pricing are possible
+- Do sanity checks before trying to save normalized values to database.
+- Added mysql script to patch default asterisk cdr table
+- Added README how to configure asterisk mysql CDR storage
+- Added ASR statistics for Asterisk
+
+1.2.2
+- Better Urldecode/encode between statistics and call search.
+- Fix selection of empty DestinationId
+
+1.2.1
+- Normalize only non zero second calls
+- Mark redirected SER calls as Redirected (added field to store this to
+  radacct)
+
+1.2
+- Improved Normalize mechanism to perform normalization for all CDR fields
+  used for accounting
+- Provide generic script normalize.php to Normalize all data-sources supporting this
+  feature. This script may run from cron and will normalize all caller and
+  callee fields, will rate the calls and will save the values in the CDR
+  table.
+- rate.php remove as its function was taken over by normalize.php
+
+1.1.2
+- Added Q931 trace for IPNX data-source
+- Hide number of found records for non SQL data-sources.
+- Improve anti-fraud login mechanism to reset itself after predefined time
+  (2 minutes between wrong logins)
+- Make statistics based on Hour of DAY, Day of Month etc...
+- Add Call-Id form element for SER and CISCO data-source
+- Added script to block SER users exceeding predefined quota
+  Quota can be specified in Minute, Calls or Network traffic
+
+1.1.1
+- Save o-ori in H323RemoteAddress in order to rate  
+  also calls redirected by User to PSTN
+- Improve Normalize function to handle [;=:] in SIP address
+- Save normalized entities in radacct with each call to rate function
+- Order SIP messages by Date DESC for SIP traces
+- Display better optimazed for 1024/768 screens
+
+1.1.0
+- Show description of group by field in place of mysql field name
+- Fixed bugs in Asterisk statistics
+
+1.0.9
+- Added href=sip:user@domain link for SIP URIs to dial from Browser
+- Added SER missed calls data-source
+
+1.0.8
+- Added function to import Destinations from csv/destinations.csv
+- Added ASR field (Average Success Rate) to destination table.
+- Added apache access list for csv directory
+- Added lobal Normalize functions for both VoIP or E164 numbers
+
+1.0.7
+- Don't rate 0 second calls.
+- Add generic NormalizeNumber(function) in CDRS class.
+- Moved Normalizing code from CDR to CDRS.
+
+1.0.6
+- Use quoted_printable_decode in place of manual parse of =XX
+
+1.0.5
+Save To-tag and From-tag in radacct
+Sip-To-Tag -> H323ConfID
+Sip-From-Tag -> H323CallOrigin
+
+Rebuild unique radius session id
+alter table radacct add unique
+sess_id(AcctSessionId,AcctUniqueId(32),H323ConfID(64),H323CallOrigin(64)) ;
+
+1.0.4 
+- Saved rewrite URI from SER (the real destination)
+- RadiusHeader:Sip-Translated-Request-URI ->Mysql field: radacct.H323RemoteAddress
+
+1.0.3
+- CDRs generated by some user agents (like Grandstream) do not contain unique
+  CallId and Unique Ids. There is no way to fix this in radius but to save the 
+  failed accounting queries to a second table with no unique indexes.
+- Display SER CallId in SER Messages data-source
+- Added Telecats Prepaid Platform datasource
+  
+1.0.2
+- Added Statistics by User-Agent and Codec type for SER datasource
+- Provide warnings for Destinations withour Rates
+- Fixed unicity of SER caller ID in radius configuration

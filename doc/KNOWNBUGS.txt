@@ -1,0 +1,4 @@
+- Rating engine daemon does not release completely the terminal
+- ratingEngine may crash if Halt on Error variable is set set to yes in the DB
+  class. The parameter is now set to No in phplib
+ 

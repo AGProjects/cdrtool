@@ -1,0 +1,131 @@
+<?
+
+if (is_readable("../header.phtml")) {
+	include("../header.phtml");
+} elseif (is_readable("header.phtml")) {
+	include("header.phtml");
+}
+
+?>
+<script language="javascript" src="md5.js"></script>
+<script language="javascript">
+
+  function doChallengeResponse() {
+    str = document.login.username.value + ":" +
+          MD5(document.login.password.value) + ":" +
+          document.login.challenge.value;
+
+    document.login.response.value = MD5(str);
+    document.login.password.value = "";
+    document.login.submit();
+  }
+
+</script>
+<script language="JavaScript">
+<!--
+  if (document.forms[0][0].value != '') {
+      document.forms[0][1].focus();
+  } else {
+      document.forms[0][0].focus();
+  }
+// -->
+</script>
+
+
+<center>
+<br>
+<form action="<?php print $this->url() ?>" method=post>
+    <h1>Login</h1>
+
+<table align="center" cellspacing=0 cellpadding=2 width=60% border=5>
+
+<tr>
+	<td colspan=2>
+	<p>Please identify yourself with username and password.
+    <p>
+If you make use of <b>O</b>ne <b>T</b>ime <b>P</b>asswords:
+
+	<ul class=s>
+		<li>Fill in your username
+        <li>Press the Send OTP button
+        <li>Collect the password
+        <li>Fill it in the password field
+        <li>Press the Login Now button to login
+    </ul>
+
+	</td>
+</tr>
+<tr valign=middle align=left>
+
+  <td>Username:</td>
+  <td>
+	<input type="text" name="username" value="<?php if (isset($this->auth["uname"])) print $this->auth["uname"] ?>" size=20 maxlength=32></td>
+ </tr>
+ <tr valign=middle align=left>
+  <td>Password:</td>
+  <td>
+	<input type="password" name="password" size=20 maxlength=32></td>
+ </tr>
+
+ <tr valign=middle align=left>
+  <td>Prepaid</td>
+  <td>
+  <input type="checkbox" name="prepaid_login" value=1>
+  </td>
+</tr>
+<tr>
+  <td valign=center align=center>
+	&nbsp;
+  </td>
+  <td align=left>
+  <input onClick="doChallengeResponse(); return false;" type="submit" name="submitbtn" value="Login now">
+  <input type="submit" name="sendotp" value="Send OTP">
+</td>
+
+ </tr>
+
+</table>
+
+ <?php global $username, $otp_error; if ( isset($username) ): ?>
+ <!-- failed login code -->
+
+ <p>
+<?  
+if (!$sendotp || $username) {
+	print "
+	 <table>
+	  <tr>
+	   <td colspan=2><font color=red><b>Either your username or your password are invalid.<br>
+       <br> $otp_error</b></font></td>
+	  </tr>
+	 </table>
+	";
+	
+	$spam= new DB_CDRTool;
+	$new_stamp=time();
+	if (!$spam_rows) {
+        	$query="insert into spam (ip,tries,stamp) 
+			values ('$REMOTE_ADDR','0','$new_stamp')
+			";
+	} else {
+		
+        	$query="update spam set 
+			tries = tries +1,
+			stamp = '$new_stamp'
+			where ip =  '$REMOTE_ADDR'
+			";
+	}			
+	if (!$spam->query("$query")) {
+		# send mail to administrator with the error
+	} 
+} # end if sending OTP
+else {
+		print "Please fill in your One Time Password!";
+}
+?>
+
+ <?php endif ?>
+</table>
+</form>
+</body>
+</html>

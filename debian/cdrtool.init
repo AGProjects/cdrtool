@@ -1,0 +1,67 @@
+#! /bin/sh
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+CDRTOOL_PATH=/var/www/CDRTool
+DAEMON=$CDRTOOL_PATH/scripts/ratingEngine.php
+NAME=ratingEngine
+DESC=ratingEngine
+RUN_ratingEngine=no
+
+test -x $DAEMON || exit 0
+
+# Include cdrtool defaults if available
+if [ -f /etc/default/cdrtool ] ; then
+	. /etc/default/cdrtool
+fi
+
+if [ "$RUN_ratingEngine" != "yes" ]; then
+    echo "CDRTool is not yet configured. Edit /etc/default/cdrtool first."
+    exit 0
+fi
+
+set -e
+
+start() {
+    echo -n "Starting $DESC: $NAME"
+    start-stop-daemon --start --background --quiet --pidfile /var/run/$NAME.pid \
+		--exec $DAEMON -- $DAEMON_OPTS
+    echo "."
+}
+
+stop () {
+    echo -n "Stopping $DESC: $NAME"
+    start-stop-daemon --stop --quiet --oknodo --signal 15 --pidfile /var/run/$NAME.pid
+    echo "."
+}
+
+reload () {
+    echo -n "Reloading CDRTool rating tables:"
+    echo
+    $CDRTOOL_PATH/scripts/reloadRatingTables.php && true
+}
+
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        #sleep 1
+        start
+        ;;
+    reload)
+        reload
+        ;;
+  *)
+	N=/etc/init.d/$NAME
+	# echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
+	echo "Usage: $N {start|stop|restart|reload}" >&2
+	exit 1
+	;;
+esac
+
+exit 0

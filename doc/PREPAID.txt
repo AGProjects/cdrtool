@@ -1,0 +1,87 @@
+DESCRIPTION
+-----------
+
+SIP prepaid functionality is achieved by:
+
+1. An external call control module (not provided by CDRTool) that maintains
+call status and terminates calls by sending BYEs to both SIP end-points. The
+call control module communicates with both the SIP Proxy and CDRTool using
+an API described below. 
+
+2. SOAP/XML provisioning interface - manages the creation and crediting of
+prepaid accounts from external systems (remote web front-ends). The prepaid
+accounts can be also managed in the Rating tables web interface.
+
+3. Rating engine - provides session locking, calculates maximum session time
+based on user balance and destination using the same algorithm as the
+postpaid engine and debits the subscriber balance.
+
+See doc/PrepaidEngine.pdf for a detailed call flow.
+
+Prepaid API
+-----------
+
+CDRTool prepaid engine is used to compute session times based on user credit
+and destination rates and debit the balance when the call has ended. The
+prepaid engine is accessible over a TCP socket.
+
+Call control module sends commands based on the syntax described below, to
+the CDRTool prepaid engine that handles the prepaid accounts. A command is a
+line of text containing a keyword, which is the command itself followed by a
+number of parameters separated by space. The command ends with an enter in
+unix style: '\n' For each such request there will be a reply on one or more
+lines, containing information that depends on the command that was sent. A
+reply ends when a double end of line (\n) is received: \n\n (this is needed
+because there are commands that require multiline responses). How the
+information contained in a reply is to be interpreted depends on the command
+itself and is described below.
+
+
+1. Asking for the call time limit
+   ------------------------------
+
+To request the maximum time for a session, the following request must be
+sent to CDRTool prepaid engine:
+
+MaxSessionTime From=sip:123@example.com To=sip:0031650222@example.com Duration=7200 Lock=1\n
+
+Duration is a limit imposed to the time allowed, in case you want to limit
+the call time to a maximum duration. This will be a top limit for the call's
+time, even if the user could talk more than that based on his current
+balance. The SIP proxy may limits all calls to 7200 seconds for example. 
+Lock specifies if the account is to be locked or not (i.e. don't allow the
+same user make multiple calls at the same time). This is used because
+sometimes we only need to peek at the time but not actually start a call and
+lock the user. When the call starts the account should always be locked. To
+may actually be sip:number@domain;param=value so you must extract the
+username part which is the number From is a sip URI which can be "full name"
+
+Call control expects a reply like below:
+
+value\n\n
+
+value is the numeric time in seconds, or one of the keywords Locked or None
+(None meaning it's not a prepaid account and it doesn't have any limitation,
+or it's a free destination, like a 0800... number).  There is no empty line
+before value (response starts with value on the first line and then it has 2
+enters unix style as described).
+
+2. Debiting the balance when the conversation ends
+   -----------------------------------------------
+
+To debit money from the user account when the conversation ends, the Call
+control module must send the following command:
+
+DebitBalance From=sip:123@example.com To=sip:0031650222 Duration=59
+
+Same notes about the From and To fields as above apply.
+
+and expects in return:
+
+value\n\n
+
+where value is one of: OK (success), Failed (failure), NotPrepaid (account
+is not prepaid - this case is not considered a failure)
+
+There are cases where we call DebitBalance with a 0 duration. This is valid
+and should unlock the account but leave the credit untouched.

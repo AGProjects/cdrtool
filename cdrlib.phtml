@@ -1,0 +1,1560 @@
+<?
+class CDRS {
+
+    var $db_class           = "DB_cdrtool";
+    var $CDR_class          = "CDR";
+    var $MinPstnNumLen      = "9";
+    var $intAccessCode      = "00";
+	var $RatingEngineSocket = false;
+    var $maxrowsperpage 	= 25;
+
+    var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
+                                      'callId'          => 'AcctSessionId',
+                                      'username'        => 'UserName',
+                                      'domain'	        => 'Realm',
+                                      'gateway'         => 'NASIPAddress',
+                                      'duration'        => 'AcctSessionTime',
+                                      'startTime'       => 'AcctStartTime',
+                                      'stopTime'        => 'AcctStopTime',
+                                      'inputTraffic'    => 'AcctInputOctets',
+                                      'outputTraffic'   => 'AcctOutputOctets',
+                                      'aNumber'  	    => 'CallingStationId',
+                                      'cNumber'   	    => 'CalledStationId',
+                                      'timestamp'	    => 'timestamp',
+                                      'BillingPartyId'  => 'UserName',
+                                      'price'           => 'Price',
+                                      'DestinationId'   => 'DestinationId'
+                                      );
+
+    function _readCDRNormalizationFieldsFromDB() {
+        foreach (array_keys($this->CDRNormalizationFields) as $field) {
+            $mysqlField=$this->CDRNormalizationFields[$field];
+            $CDRStructure[$mysqlField] = $this->CDRdb->f($mysqlField);
+        }
+
+        return $CDRStructure;
+    }
+
+    function _readCDRFieldsFromDB() {
+        foreach (array_keys($this->CDRFields) as $field) {
+            $mysqlField=$this->CDRFields[$field];
+            $CDRStructure[$mysqlField] = $this->CDRdb->f($mysqlField);
+        }
+        return $CDRStructure;
+    }
+
+    function CDRS($cdr_source) {
+
+        global $CDRTool;
+        global $DATASOURCES;
+        global $ratingEnabled;
+
+        $PHP_SELF=$_SERVER["PHP_SELF"];
+
+        if (!$cdr_source || !$DATASOURCES[$cdr_source]) {
+            dprint("Fatal error instantiating CDRS class: cdr_source not defined");
+            return 0;
+        }
+
+        #dprint_r($DATASOURCES[$cdr_source]);
+
+        $this->cdr_source      = $cdr_source;
+        $this->CDRTool         = $CDRTool;
+        $this->DATASOURCES     = $DATASOURCES;
+
+        if ($this->DATASOURCES[$this->cdr_source]['rating'] && $ratingEnabled) {
+        	$this->ratingEnabled   = 1;
+        }
+
+        $_dbClass            = $this->DATASOURCES[$cdr_source]['db_class'];
+        $_dbClass_readonly   = $this->DATASOURCES[$cdr_source]['db_class_readonly'];
+        $_Table              = $this->DATASOURCES[$cdr_source]['table'];
+        $_Table_missed       = $this->DATASOURCES[$cdr_source]['table_missed'];
+        $_DestinationIdField = $this->DATASOURCES[$cdr_source]['DestinationIdField'];
+        $_normalizedField    = $this->DATASOURCES[$cdr_source]['normalizedField'];
+        $_rating   		     = $this->DATASOURCES[$cdr_source]['rating'];
+
+        $_AccountsDBClass    = $this->DATASOURCES[$cdr_source]['AccountsDBClass'];
+        $_UserQuotaTable     = $this->DATASOURCES[$cdr_source]['UserQuotaTable'];
+        $_intAccessCode      = $this->DATASOURCES[$cdr_source]['intAccessCode'];
+
+        $_BillingIdField    = $this->DATASOURCES[$cdr_source]['BillingIdField'];
+        $_MinPstnNumLen     = $this->DATASOURCES[$cdr_source]['MinPstnNumLen'];
+
+        if ($_dbClass) {
+            dprint ("CDRS will be read/write from/to database class $_dbClass ");
+            $this->db_class=$_dbClass;
+            $this->db_class_quota=$_dbClass;
+        }
+
+        if ($_dbClass_readonly && $_dbClass_readonly != $_dbClass) {
+            dprint ("CDRS can also be read from database class $_dbClass_readonly ");
+            $this->db_class_readonly=$_dbClass_readonly;
+            $this->db_class_quota   =$_dbClass_readonly;
+        }
+
+        // init db
+        $this->cdrtool  = new DB_CDRTool();
+        $this->CDRdb    = new $this->db_class;
+        $this->CDRdb1   = new $this->db_class;
+
+		if ($_intAccessCode)  $this->intAccessCode  = $_intAccessCode;
+        if ($_UserQuotaTable) $this->UserQuotaTable = $_UserQuotaTable;
+        if ($_MinPstnNumLen)  $this->MinPstnNumLen  = $_MinPstnNumLen;
+
+        if ($_AccountsDBClass) {
+            $this->AccountsDBClass  = $_AccountsDBClass;
+            $this->AccountsDB       = new $this->AccountsDBClass;
+        }
+
+        if ($_Table) {
+            dprint ("CDRS will be read from table $_Table ");
+            $this->table=$_Table;
+        }
+
+        // Enable table autorotate after update sql.conf and mediaproxy to log in radacctYYYYMM
+        /*
+        if ($this->DATASOURCES[$datasource][RotateTables]) {
+        	$this->table=$this->table.Date($this->DATASOURCES[$datasource][RotateTables]);
+        }
+        */
+
+        if ($_Table_missed) {
+            dprint ("Missed CDRS will be read from table $_Table_missed ");
+            $this->table_missed=$_Table_missed;
+        }
+
+        $this->LoadDestinations();
+        $this->LoadDomains();
+        $this->LoadAccounts();
+
+        if ($_rating) {
+            //dprint ("CDRS will have rating enabled");
+
+            $_showRate 	   = $this->DATASOURCES[$cdr_source]['showRate'];
+            $_rateField    = $this->DATASOURCES[$cdr_source]['rateField'];
+            $_priceField   = $this->DATASOURCES[$cdr_source]['priceField'];
+
+            $this->rating = $this->DATASOURCES[$cdr_source]['rating'];
+            if ($_rateField) {
+                //dprint ("CDRS will have rate information stored in field $_rateField");
+                $this->rateField=$_rateField;
+            }
+
+            if ($_priceField) {
+                //dprint ("CDRS will have price stored in field $_priceField");
+                $this->priceField=$_priceField;
+            }
+
+            if ($_showRate) {
+                //dprint ("CDRS will be showing rating information");
+                $this->showRate=$_showRate;
+            }
+        }
+
+        if ($_DestinationIdField) {
+            //dprint ("CDRS will have DestinationId stored in field $_DestinationIdField");
+            $this->DestinationIdField=$_DestinationIdField;
+        }
+
+        if ($_normalizedField) {
+            //dprint ("CDRS will be marked as normalized in field $_normalizedField");
+            $this->normalizedField=$_normalizedField;
+        }
+
+        if ($_BillingIdField) $this->BillingIdField = $_BillingIdField;
+
+        $this->missed_calls      = $this->DATASOURCES[$cdr_source]['missed_calls'];
+        $this->traceInURL		 = $this->DATASOURCES[$cdr_source]['traceInURL'];
+        $this->traceOutURL		 = $this->DATASOURCES[$cdr_source]['traceOutURL'];
+        $this->missedCallsURL    = $this->DATASOURCES[$cdr_source]['missedCallsURL'];
+        $this->protocolTraceURL  = $this->DATASOURCES[$cdr_source]['protocolTraceURL'];
+
+        $spath=explode("/",$PHP_SELF);
+        $last=count($spath)-1;
+        $this->scriptFile=$spath[$last];
+
+        $this->LoadDisconnectCodes();
+
+        $maxrowsperpage = $_REQUEST["maxrowsperpage"];
+        $next           = $_REQUEST["next"];
+        $export         = $_REQUEST["export"];
+        $trace          = $_REQUEST["trace"];
+
+        if ($export) {
+            $this->maxrowsperpage=10000000;
+        } else {
+            if ($maxrowsperpage) {
+                $this->maxrowsperpage = $maxrowsperpage;
+            } else {
+                $this->maxrowsperpage = "25";
+            }
+        }
+
+        $this->export         = $export;
+        $this->trace          = $trace;
+        $this->next           = $next;
+        $this->cdr_source     = $cdr_source;
+
+        foreach (array_keys($this->CDRFields) as $field) {
+            $mysqlField=$this->CDRFields[$field];
+            $_field=$field."Field";
+            $this->$_field=$mysqlField;
+        }
+
+        if (is_array($this->CDRTool['normalize']['CS_CODES'])) {
+		    $this->CS_CODES=array_keys($this->CDRTool['normalize']['CS_CODES']);
+        }
+
+		$this->getCDRtables();
+
+        $this->initOK=1;
+    }
+
+    // dummy functions used by SER
+    function LoadDomains() {
+    }
+
+    function LoadAccounts() {
+    }
+
+    function LoadDestinations() {
+        #dprint("CDRS->LoadDestinations()");
+        $query="select * from destinations";
+        if ($this->CDRTool['filter']['aNumber']) {
+            $faNumber=$this->CDRTool['filter']['aNumber'];
+            $query .= " where subscriber = '$faNumber' or
+            (subscriber = '' and domain = '' and gateway = '') ";
+        } else if ($this->CDRTool['filter']['domain']) {
+            $fdomain=$this->CDRTool['filter']['domain'];
+            $query .= " where domain = '$fdomain' or
+            (subscriber = '' and domain = '' and gateway = '') ";
+        } else if ($this->CDRTool['filter']['gateway']) {
+            $fgateway=$this->CDRTool['filter']['gateway'];
+            $query .= " where gateway = '$fgateway' or
+            (subscriber = '' and domain = '' and gateway = '') ";
+        }
+
+        #dprint($query);
+        $this->cdrtool->query($query);
+
+        $i=0;
+        while($this->cdrtool->next_record()) {
+            $i++;
+            $gateway    = $this->cdrtool->Record['gateway'];
+            $domain     = $this->cdrtool->Record['domain'];
+            $subscriber = $this->cdrtool->Record['subscriber'];
+            $id         = $this->cdrtool->Record['dest_id'];
+            $name       = $this->cdrtool->Record['dest_name'];
+            $name_print = $this->cdrtool->Record['dest_name']." (".$id.")";
+
+            if ($subscriber) {
+                $_destinations[$subscriber][$id]=$name;
+                continue;
+            }
+
+            if ($domain) {
+                $_destinations[$domain][$id]=$name;
+                continue;
+            }
+
+            if ($gateway) {
+                $_destinations[$gateway][$id]=$name;
+                continue;
+            }
+
+            $_destinations["default"][$id]=$name;
+
+        }
+
+  		$this->destinations=$_destinations;
+        $this->destinationsCount=$i;
+        if (is_array($this->destinations)) {
+			foreach ($this->destinations as $key => $val) {
+        		$this->destinations_length[$key] = max(array_map(strlen, array_keys($val)));
+	        }
+        }
+
+        dprint("Loaded $i destinations");
+        return $i;
+    }
+
+    function LoadDisconnectCodes() {
+    }
+
+    function initForm() {
+    }
+
+    function searchForm() {
+    }
+
+    function showTableHeader($begin_datetime,$end_datetime) {
+    }
+
+    function showTableHeaderStatistics($begin_datetime,$end_datetime) {
+    }
+
+    function showResultsMenu($hide_rows="") {
+        global $loginname;
+
+        $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
+
+        dprint("CDRS->showResultsMenu()");
+        dprint("loginname = $loginname");
+
+        if (!$this->export) {
+            print "
+            <form action=log.phtml method=post>
+            <table border=0 align=center>
+            <tr>
+            <td><a href=\"$this->url_edit\" target=top>Refine search</a>
+            | <a href=\"$this->url_run\">Refresh</a>
+            </td>
+            ";
+
+            $log_query="insert into log
+            (date,login,ip,url,results,rerun,reedit,datasource)
+            values
+            (NOW(),'$loginname','$REMOTE_ADDR','$this->url','$this->rows','$this->url_run','$this->url_edit','$this->cdr_source')";
+            
+            if ($this->cdrtool->query($log_query)) {
+                $this->cdrtool->query("select LAST_INSERT_ID() as lid");
+                $this->cdrtool->next_record();
+                $current_log=$this->cdrtool->f('lid');
+            }
+
+            if ($this->rows) {
+                print "<td> | <a href=\"$this->url_export\" target=_new>Export results to file</a></td>";
+            }
+            print "
+            <td valign=middle>
+            | Save a description for this query:
+            </td>
+            <td valign=middle>
+            <input type=text name=log_description value=\"$old_description\">
+            <input type=hidden name=current_log value=$current_log>
+            <input type=hidden name=task value=edit>
+            <input type=submit value=Save>
+            </td>
+            </form>
+            ";
+
+            print "
+            </tr>
+            </table>
+            ";
+            if (!$hide_rows) {
+                print "
+                <table width=100%>
+                <tr>
+                <td align=center>
+                ";
+                if ($this->rows == 0) {
+                    print "No records found.";
+                } else {
+                    print "$this->rows records found. ";
+                }         
+                print "</td>
+                </tr>
+                </table>
+                ";
+            }
+        }
+    }
+
+    function showResultsMenuSubscriber($hide_rows="") {
+        global $loginname;
+
+        $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
+        dprint("CDRS->showResultsMenu()");
+        dprint("loginname = $loginname");
+
+        if (!$this->export) {
+            print "
+            <form action=log.phtml method=post>
+            <table border=0 align=center>
+            <tr>
+            <td>
+            <td>
+            <a href=\"$this->url_edit\">Refine search</a>
+            | <a href=\"$this->url_run\">Refresh</a>
+            </td>
+            ";
+            $log_query="insert into log
+            (date,login,ip,url,results,rerun,reedit,datasource)
+            values
+            (NOW(),'$loginname','$REMOTE_ADDR','$this->url','$this->rows','$this->url_run','$this->url_edit','$this->cdr_source')";
+            
+            if ($this->cdrtool->query($log_query)) {
+                $this->cdrtool->query("select LAST_INSERT_ID() as lid");
+                $this->cdrtool->next_record();
+                $current_log=$this->cdrtool->f('lid');
+            }
+    
+            if (!$this->CDRTool['filter']['aNumber']) {
+
+                if ($this->rows) {
+                    print " | <a href=\"$this->url_export\" target=_new>Export results to file</a>";
+                }
+                print "
+                </td>
+                <td valign=middle>
+                | Save a description for this query:
+                </td>
+                <td valign=middle>
+                <input type=text name=log_description value=\"$old_description\">
+                <input type=hidden name=current_log value=$current_log>
+                <input type=hidden name=task value=edit>
+                <input type=submit value=Save>
+                </td>
+                </form>
+                ";
+            }
+
+            print "
+            </tr>
+            </table>
+            ";
+            if (!$hide_rows) {
+                print "
+                <table width=100%>
+                <tr>
+                <td align=center>
+                ";
+                if ($this->rows == 0) {
+                    print "No records found.";
+                } else {
+                    print "$this->rows records found. ";
+                }         
+                print "</td>
+                </tr>
+                </table>
+                ";
+            }
+        }
+    }
+
+    function showDateTimeElements($f) {
+        print "
+        <tr>
+            <td valign=middle align=left>
+            <b>Start time</b>
+            </td>
+            <td>
+            ";
+            print "Date: ";
+            $f->show_element("begin_year","");
+            print "-";
+            $f->show_element("begin_month","");
+            print "-";
+            $f->show_element("begin_day","");
+            print " Time: ";
+            $f->show_element("begin_hour","");
+            print ":";
+            $f->show_element("begin_min","");
+            print "
+            </td>
+        </tr>
+        <tr>
+        </tr>
+        <tr>
+            <td valign=middle align=left>
+            <b>Stop time</b>
+            </td>
+            <td>
+             ";
+             print "Date: ";
+             $f->show_element("end_year","");
+             print "-";
+             $f->show_element("end_month","");
+             print "-";
+             $f->show_element("end_day","");
+             print " Time: ";
+             $f->show_element("end_hour","");
+             print ":";
+             $f->show_element("end_min","");
+             print "
+             </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+    }
+
+    function showDataSources ($f) {
+        print "
+        <tr>
+        <td class=cdr valign=middle  align=left>
+        <b>Data source</b>
+        </td>
+        <td valign=middle>";
+        $f->show_element("cdr_source","");
+        if (count($this->tables) > 0) {
+            print " Table: ";
+        	$this->f->show_element("cdr_table","");
+        }
+
+        print "
+        </td>
+        </tr>
+        <tr>
+        ";
+    }
+
+    function showPagination($next,$maxrows) {
+        $PHP_SELF=$_SERVER["PHP_SELF"];
+
+        dprint("CDRS->showPagination($next)");
+
+        if (!$this->export) {
+            print "
+            <p>
+            <table border=0 align=center>
+            <tr>
+            <td>
+            ";
+            if  ($next!=0  ) {
+                $show_next=$this->maxrowsperpage-$next;
+                if  ($show_next < 0)  {
+                    $mod_show_next  =  $show_next-2*$show_next;
+                }
+                $url_prev=$PHP_SELF.$this->url."&action=search&next=$mod_show_next";
+                print "<a href=\"$url_prev\">Previous</a> ";
+            }
+            
+            print "
+            </td>
+            <td>
+            ";
+            if ($this->rows>$this->maxrowsperpage && $this->rows!=$maxrows)  {
+                $show_next = $this->maxrowsperpage + $this->next;
+                $url_next  = $PHP_SELF.$this->url."&action=search&next=$show_next";
+                print "<a href=\"$url_next\">Next</a>";
+            }
+            print "
+            </td>
+            </tr>
+            </table>
+            ";
+        }
+    }
+
+    function show() {
+    }
+
+    function dump() {
+    }
+
+    function unNormalize($where="") {
+        if (!$where) $where=" (1=1) ";
+
+        dprint ("CDRS->UnNormalize($where)");
+
+        if (!$this->normalizedField) {
+            dprint("No normalizedField defined for this data source");
+            return 0;
+        }
+
+        $query="update $this->table set $this->normalizedField = '0' where $where ";
+
+        dprint ($query);
+        $c=0;
+
+        if ($this->CDRdb->query($query)) {
+            $c=$this->CDRdb->affected_rows();
+        }
+
+        dprint("unNormalized $c calls");
+
+        return $c;
+    }
+
+    function getUnNormalized($where="") {
+        dprint("<b>getUnNormalizeCDRS</b>($where)");
+        $ReNormalize = $_REQUEST["ReNormalize"];
+
+        if (!$where) $where=" (1=1) ";
+
+        if ($ReNormalize) {
+			$this->unNormalize($where);
+        }
+
+        if (!$where) $where=" (1=1) ";
+
+        if (!$this->normalizedField) {
+            dprint("No normalizedField defined for this data source");
+            return 0;
+        }
+
+        $query="select count(*) as c from $this->table
+        where $where and $this->normalizedField = '0' ";
+
+        // normalize if call has ended
+        if ($this->stopTimeField) {
+            $query=$query." and $this->stopTimeField > '0000-00-00 00:00:00' ";
+        } else {
+        	if (!$this->DATASOURCES[$this->cdr_source][normalize0SecCalls]) {
+            	$query=$query." and $this->durationField > 0 ";
+        	}
+        }
+
+        dprint ($query);
+
+        if ($this->CDRdb->query($query)) {
+            $this->CDRdb->next_record();
+            $c=$this->CDRdb->f('c');
+        }
+
+        dprint("$c unNormalized calls");
+        return $c;
+
+    }
+
+    function NormalizeCDRS($where="") {
+        dprint("<b>NormalizeCDRS</b>($where)");
+        $b=time();
+
+        if (!$where) $where=" (1=1) ";
+
+        if (!$this->normalizedField) {
+            dprint("No normalizedField defined for this data source");
+            return 0;
+        }
+
+        $query="select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
+        from $this->table where $where and $this->normalizedField = '0'  ";
+
+        // normalize if call has ended
+        if ($this->stopTimeField) {
+            $query=$query." and $this->stopTimeField > '0000-00-00 00:00:00' ";
+        } else {
+        	if (!$this->DATASOURCES[$this->cdr_source][normalize0SecCalls]) {
+            	$query=$query." and $this->durationField > 0 ";
+        	}
+        }
+
+        $results[total]=0;
+        $results[success]=0;
+        $results[failure]=0;
+
+        dprint($query);
+        $this->CDRdb->query($query);
+        $results[total]=$this->CDRdb->num_rows();
+
+        if ($results[total]>0) {
+            syslog(LOG_NOTICE, "Lock db ($this->cdr_source) $results[total] CDRs");
+            $locker = new DB_Locker();
+            register_shutdown_function("unLockTables",$locker);
+            $locker->query("lock tables normalize_lock write");
+
+        	if ($this->ratingEnabled) {
+                // The rating table will be used in each instance of
+                // CDR structure but we load the rating related data once
+				global $RatingEngine;
+				if ($this->DATASOURCES[$this->cdr_source][EnableNetworkRating] && $RatingEngine["socketIP"] && $RatingEngine["socketPort"] ) {
+
+        			$fp = fsockopen ($RatingEngine["socketIP"], $RatingEngine["socketPort"], $errno, $errstr, 2);
+                    if ($fp) {
+                        $this->RatingEngineSocket = $fp;
+                    } else {
+                    	$target=$RatingEngine["socketIP"].":".$RatingEngine["socketPort"];
+                        print "<p>";
+                        print "<font color=red>Cannot connect to rating engine $target: $errstr ($errno). </font>";
+                        syslog(LOG_NOTICE, "Error: Cannot connect to rating engine $errstr ($errno)");
+
+                        // continue loading of rating tables
+                        $this->RatingTables = new RatingTables();
+                        $this->RatingTables->LoadRatingTables();
+                    }
+                } else {
+                    // network rating engine not available, load all rates in memory
+                    $this->RatingTables = new RatingTables();
+                    $this->RatingTables->LoadRatingTables();
+                }
+            } else {
+                dprint ("Rating engine is not available");
+            }
+
+        } else {
+            return 0;
+        }
+
+        dprint("Found $results[total] unNormalized calls");
+        dprint();
+        while ($this->CDRdb->next_record()) {
+
+            dprint("-------");
+			$Structure=$this->_readCDRNormalizationFieldsFromDB();
+            $found++;
+
+			if (count($Structure) < 6 ) {
+                dprint("Invalid CDR structure. ");
+                continue;
+            }
+
+            $CDR = new $this->CDR_class(&$this, &$Structure);
+
+            if ($CDR->normalize("Save")) {
+                $results[success]++;
+            } else {
+                $results[failed]++;
+            }
+
+            if ($results[total] > 1000) {
+                if ($found > $progress*$results[total]/100) {
+                    $progress++;
+                    if ($progress%10==0) {
+                        print "$progress% ";
+                    }
+                    flush();
+                }
+            }
+        }
+
+        if ($this->ratingEnabled && count($this->brokenRates) >0 ) {
+            dprint ("Missing rates:");
+            dprint_r($this->brokenRates);
+            if ($this->CDRTool[rating][reportMissingRates]) {
+                if (count($this->brokenRates)) {
+                    foreach (array_keys($this->brokenRates) as $dest) {
+                        $missingRatesBodytext=$missingRatesBodytext."\nDestination id $dest (".$this->brokenRates[$dest]." calls)";
+                    }
+                    $to=$this->CDRTool[provider][toEmail];
+                    $from=$this->CDRTool[provider][fromEmail];
+     
+                    dprint ("Mailing operator about missing rates");
+                    mail($to, "Missing CDRTool rates",$missingRatesBodytext, "From: $from");
+                }
+            }
+        }
+
+        if ($results[total]>0) {
+	        $e=time();
+    	    $d=$e-$b;
+
+            $locker->query("unlock tables");
+            syslog(LOG_NOTICE, "Unlock db ($this->cdr_source) after $d seconds");
+    
+            if ($this->RatingEngineSocket) {
+                fclose($this->RatingEngineSocket);
+            }
+        }
+
+        return $results;
+    }
+
+    function E164Format($Number) {
+        // this function retuns the full E164 format for a PSTN number
+        // without leading zero or +
+        // E164 = Country Code + Network Code + Subscriber Number
+
+        $len=$this->MinPstnNumLen-2;
+        $_regexp_international = "/^".$this->intAccessCode."([1-9][0-9]{".$len.",})\$/";
+        $_regexp_national      = "/^0([1-9][0-9]{".$len.",})\$/";
+
+        if (preg_match($_regexp_international,$Number,$m)) {
+            $E164=$m[1];
+        } else if (preg_match($_regexp_national,$Number,$m)) {
+            $E164=$this->CDRTool['normalize'][defaultCountryCode].$m[1];
+        }
+
+        return $E164;
+    }
+
+    function NormalizeNumber($Number,$type="destination",$subscriber="",$domain="",$gateway="") {
+        dprint("CDRS->NormalizeNumber($Number,type=$type,subscriber=$subscriber,domain=$domain,gateway=$gateway)");
+
+        $this->CSCODE="";
+
+        $Number=strtolower(quoted_printable_decode($Number));
+
+        if ($pos = strpos($Number, "@")) {
+            // this is a SIP URI
+            $NumberStack['username']  = substr($Number,0,$pos);
+            if (strlen($NumberStack['username']) < 1) {
+            	$NumberStack['username'] = "unknown";
+            }
+            $NumberStack['domain']    = substr($Number,$pos+1);
+            $NumberStack['delimiter'] = "@";
+
+        	$pos = strpos($NumberStack['username'], ":");
+        	if ($pos) {
+            	$NumberStack['protocol'] = substr($NumberStack['username'],0,$pos+1);
+            	$NumberStack['username'] = substr($NumberStack['username'],$pos+1);
+            }
+
+            if (preg_match("/^(.*)[=:;]/U",$NumberStack['domain'],$p)){
+                $NumberStack['domain']    = $p[1];
+		    }
+
+        } else if (preg_match("/^([a-z0-9]+:)(.*)$/i",$Number,$m)) {
+        	$oct=preg_split("/\./",$m[2]);
+    		if(sizeof($oct)==4) {
+	            // This is SIP address with no username
+                $NumberStack['username']  = "";
+                $NumberStack['domain']    = $m[2];
+            } else {
+	            // This is SIP address with no domain
+                $NumberStack['username']  = $m[2];
+                $NumberStack['domain']    = "";
+            }
+            $NumberStack['protocol']  = $m[1];
+            $NumberStack['delimiter'] = "";
+        } else {
+            // This is a simple address like a phone number
+            $NumberStack['protocol']  = "";
+            $NumberStack['username']  = $Number;
+            $NumberStack['delimiter'] = "";
+            $NumberStack['domain']    = "";
+        }
+
+        if (preg_match("/^(.*)[=:;]/U",$NumberStack['domain'],$p)){
+            $NumberStack['domain']    = $p[1];
+        }
+
+        if ($type=="destination" && preg_match("/^(\d+)$/",$NumberStack['username'],$m)) {
+            // strip custom prefix from destination
+            $usernameLength=strlen($NumberStack['username']);
+            if (is_array($this->CS_CODES)) {
+                foreach ($this->CS_CODES as $strip_prefix) {
+                    $prefixLength = strlen($strip_prefix);
+                    $restLength   = $usernameLength-$prefixLength;
+                    if ($restLength > 0 and preg_match("/^$strip_prefix(.*)$/",$NumberStack['username'],$m)) {
+                        dprint("Found CS_CODE prefix $strip_prefix in destination ($m[1])");
+                        $NumberStack['username']=$m[1];
+                        $this->CSCODE=$strip_prefix;
+                        break;
+                    }
+                }
+            }
+
+            $NumberStack[E164]=$this->E164Format($NumberStack['username']);;
+        }
+
+        if ($type=="destination" && $NumberStack[E164]) {
+            // lookup destination id for the E164 number
+            $dst_struct                    = $this->getDestinationId($NumberStack[E164],$subscriber,$domain,$gateway);
+            $NumberStack[DestinationId]    = $dst_struct[0];
+            $NumberStack[destinationName]  = $dst_struct[1];
+
+            $NumberStack[NumberPrint]  = "+".$NumberStack[E164];
+
+            $NumberStack[Normalized]   = $this->intAccessCode.
+                                         $NumberStack[E164].
+                                         $NumberStack['delimiter'].
+                                         $NumberStack['domain'];
+
+        } else {
+            $NumberStack[NumberPrint]  = $NumberStack['username'].
+                                         $NumberStack['delimiter'].
+                                         $NumberStack['domain'];
+
+            $NumberStack[Normalized]   = $NumberStack['username'].
+                                         $NumberStack['delimiter'].
+                                         $NumberStack['domain'];
+
+        }
+
+        return $NumberStack;
+
+    }
+
+    function getDestinationId($number,$subscriber="",$domain="",$gateway="") {
+        dprint("getDestinationId($number,$subscriber,$domain,$gateway)");
+        if (!$number) {
+            dprint("Missing destination number.");
+        }
+        if (is_numeric($number)){
+            return $this->GetCountryCodeForNumber($number,$subscriber,$domain,$gateway);
+        }
+    }
+
+    function GetCountryCodeForNumber($number,$subscriber,$domain,$gateway) {
+        if ($this->destinations[$subscriber]) {
+            $codes = $this->destinations[$subscriber];
+        	$maxLength = $this->destinations_length[$subscriber];
+            $fCustomer="subscriber=$subscriber";
+        } elseif ($this->destinations[$domain]) {
+            $codes = $this->destinations[$domain];
+        	$maxLength = $this->destinations_length[$domain];
+            $fCustomer="domain=$domain";
+        } elseif ($this->destinations[$gateway]) {
+            $codes = $this->destinations[$gateway];
+        	$maxLength = $this->destinations_length[$gateway];
+            $fCustomer="gateway=$gateway";
+        } else {
+            $codes = $this->destinations["default"];
+        	$maxLength = $this->destinations_length["default"];
+            $fCustomer="default";
+        }
+
+        dprint("Found destinations for customer=$fCustomer");
+        //dprint_r($this->destinations[$domain]);
+
+        if (!$number)
+            return false;
+    
+        if (count($codes)>0) {
+            $length = min(strlen($number), $maxLength);
+            for ($i=$length; $i>0; $i--) {
+                $buf = substr($number, 0, $i);
+                if ($codes[$buf]) {
+                    $dest_name=$codes[$buf];
+                    $ret=array($buf,$dest_name);
+                    return $ret;
+                }
+            }
+        }
+        return false;
+    }
+
+    function import($file) {
+    }
+
+    function RadiusRecordRead($fp) {
+    	$keepreading=1;
+
+        while ($keepreading) {
+            $contents = fgets($fp, 8192);
+            if (preg_match("/^$/",$contents)) {
+                $keepreading=0;
+            } else {
+            	$record[]=$contents;
+            }
+        }
+        return $record;
+    }
+
+    function RadiusRecordParse($record) {
+    	unset($radiusParsed);
+        if (!is_array($record)) {
+            dprint("This record is not an array. \n");
+            return 0;
+        }
+
+        foreach ($record as $line) {
+            $line=trim($line);
+            foreach (array_keys($this->radiusAttributes) as $attribute) {
+                if (preg_match("/$attribute = (.*)$/",$line,$m)) {
+                    $value=preg_replace("/\"/","",trim($m[1]));
+                    /*
+                    $els=explode("=",$value);
+                    if (count($els) == 2) {
+                        $value=$els[1];
+                    }
+                    */
+                	$radiusParsed[$attribute]= $value;
+                }
+            }
+        }
+        return $radiusParsed;
+    }
+
+    function getCDRtables() {
+        if (!is_object($this->CDRdb)) return 0;
+        $_tables=$this->CDRdb->table_names();
+        $t=count($_tables);
+
+		if ($this->table) {
+        	$this->tables[]=$this->table;
+        }
+
+        while ($t <> 0 ) {
+            $_table=$_tables[$t]["table_name"];
+            $pattern=$this->table."\\d{6}";
+            if (preg_match("/^$pattern$/",$_table,$m)) {
+                if ($list_t >24) break;
+                $this->tables[]=$_table;
+                $list_t++;
+            }
+            $t--;
+        }
+        //dprint_r($this->tables);
+    }
+
+    function rotateTable($month) {
+
+        // create a new table tableYYYYMM and copy data from main table into it
+        // if no month is supplied, the default is the previous month
+
+		$createTableFile=$this->CDRTool['Path'].$this->createTableFile;
+
+		if (!$this->createTableFile || !is_readable($createTableFile)) {
+        	$log=sprintf("Error: cannot locate mysql creation file\n");
+        	syslog(LOG_NOTICE,$log);
+            print $log;
+        	return 0;;
+        }
+
+		$lockFile="/var/lock/CDRTool_".$this->cdr_source."_rotateTable.lock";
+
+		$f=fopen($lockFile,"w");
+		if (flock($f, LOCK_EX + LOCK_NB, $w)) {
+    		if ($w) {
+        		$log=sprintf("Another CDRTool rotate table is in progress. Aborting.\n");
+        		syslog(LOG_NOTICE,$log);
+                print $log;
+        		return 0;;
+    		}
+		} else {
+        	$log=sprintf("Another CDRTool rotate table is in progress. Aborting.\n");
+        	syslog(LOG_NOTICE,$log);
+            print $log;
+        	return 0;;
+		}
+
+		$b=time();
+
+		if ($month) {
+        	if (!preg_match("/^(\d{4})(\d{2})$/",$month,$m)) {
+    			print "Error: Month must be in YYYYMM format\n";
+        		return 0;
+            } else {
+                if ($m[2]>12) {
+    			    print "Error: Month must be in YYYYMM format\n";
+                    return 0;
+                }
+                $lastMonth=$month;
+                $startSQL=$m[1]."-".$m[2]."-01";
+                $stopSQL =date('Y-m-01', mktime(0, 0, 0, $m[2]+1, "01", $m[1]));
+            }
+		} else {
+			$lastMonth=date('Ym', mktime(0, 0, 0, date("m")-1, "01", date("Y")));
+
+            $startSQL= date('Y-m-01', mktime(0, 0, 0, date("m")-1, "01", date("Y")));
+            $stopSQL = date('Y-m-01', mktime(0, 0, 0, date("m"), "01", date("Y")));
+        }
+
+        $query=sprintf("select count(*) as c from %s
+                    where %s >='%s'
+                    and %s < '%s'",
+                    $this->table,
+                    $this->CDRFields['startTime'],$startSQL,
+                    $this->CDRFields['startTime'],$stopSQL);
+
+		if ($this->CDRdb->query($query)) {
+            $this->CDRdb->next_record();
+            $num_rows_mainTable=$this->CDRdb->f('c');
+		    $log=sprintf ("Table %s has %d records in %s\n",$this->table,$num_rows_mainTable,$lastMonth);
+        	syslog(LOG_NOTICE,$log);
+            print $log;
+		} else {
+    	    $log=sprintf ("Error: %s (%s)\n",$this->table,$this->CDRdb->Error);
+        	syslog(LOG_NOTICE,$log);
+            print $log;
+            return 0;
+		}
+
+		$tableNew=$this->table.$lastMonth;
+
+		$query=sprintf("select count(*) as c from %s",$tableNew);
+
+		if (!$this->CDRdb->query($query)) {
+
+    		$tableTmp=$tableNew."_tmp";
+    		$this->CDRdb->query("drop table if exists $tableTmp");
+
+			$table=$this->table;
+
+    		if ($query=file_get_contents($createTableFile)) {
+        		$query=preg_replace("/CREATE TABLE.*$table.*/","CREATE TABLE $tableTmp (",$query);
+				if ($this->CDRdb->query($query)) {
+
+            		$query=sprintf("insert into %s
+                    select * from %s
+            		where %s >='%s'
+                    and %s < '%s'",
+            		$tableTmp,
+                    $this->table,
+                    $this->CDRFields['startTime'],$startSQL,
+                    $this->CDRFields['startTime'],$stopSQL);
+
+                    if ($this->CDRdb->query($query)) {
+						$e=time();
+						$d=$e-$b;
+                        $rps=0;
+                        if ($this->CDRdb->affected_rows() && $d) $rps=$this->CDRdb->affected_rows()/$d;
+
+    	            	$log=printf ("Copied %d CDRs into table %s in %d s @ %.0f rps\n",$this->CDRdb->affected_rows(),$tableTmp,$d,$rps);
+        				syslog(LOG_NOTICE,$log);
+                        print $log;
+
+                        $query="rename table $tableTmp to $tableNew";
+
+                		if (!$this->CDRdb->query($query)) {
+                    		printf ("Error renaming table %s to %s: %s\n",$tableTmp,$tableNew,$this->CDRdb->Error);
+                        	return 0;
+	                	}
+            		} else {
+                		printf ("Error copying records in table %s: %s\n",$tableNew,$this->CDRdb->Error);
+                		return 0;
+            		}
+        		} else {
+            		printf ("Error creating table %s: %s\n",$tableTmp,$this->CDRdb->Error);
+                    return 0;
+        		}
+    		}
+		} else {
+			$this->CDRdb->next_record();
+            $num_rows_lastMonth=$this->CDRdb->f('c');
+
+            $log=sprintf ("Table %s has %d records\n",$tableNew,$num_rows_lastMonth);
+        	syslog(LOG_NOTICE,$log);
+            print $log;
+
+            if ($num_rows_mainTable != $num_rows_lastMonth) {
+			    $log=sprintf ("Error: %d != %d\n",$num_rows_mainTable,$num_rows_lastMonth);
+        		syslog(LOG_NOTICE,$log);
+                print $log;
+                return 0;
+            }
+		}
+        return 1;
+	}
+
+    function purgeTable($month) {
+        // delete records for a given month with minimal locking of database
+        // this function is useful after archive of CDR data
+        $begin=time();
+
+        if ($month) {
+        	if (!preg_match("/^(\d{4})(\d{2})$/",$month,$m)) {
+            	print "Error: Month must be in YYYYMM format\n";
+            	return 0;
+            } else {
+        		$beginDate=$m[1]."-".$m[2]."-01";
+        		$endDate=date('Y-m-d', mktime(0, 0, 0, $m[2]+1, '01', $m[1]));
+            }
+        } else if (is_int($this->DATASOURCES[$this->cdr_source]['purgeCDRsAfter'])) {
+        	$beginDate="1970-01-01";
+        	$endDate=date('Y-m-d', mktime(0, 0, 0, Date('m'), Date('d')-$this->DATASOURCES[$this->cdr_source]['purgeCDRsAfter'], Date('Y')));
+        } else {
+            return 0;
+        }
+
+        $query=sprintf("select min(%s) as min,max(%s) as max from %s where %s >= '%s' and %s < '%s' ",
+        $this->CDRFields['id'],$this->CDRFields['id'],$this->table,$this->CDRFields['startTime'],$beginDate,$this->CDRFields['startTime'],$endDate);
+
+        dprint($query);
+
+        if (!$this->CDRdb->query($query)) {
+            printf ("Error: %s",$this->CDRdb->Error);
+            return 0;
+        }
+
+        $this->CDRdb->next_record();
+        $min=$this->CDRdb->f('min');
+        $max=$this->CDRdb->f('max');
+
+        if (!$min || !$max) {
+            $log=sprintf("No CDRs found in %s between %s and %s\n",$this->table,$beginDate,$endDate);
+            print $log;
+        	syslog(LOG_NOTICE,$log);
+            return 0;
+        }
+
+        $deleted=0;
+        $i=$min;
+        $interval=100;
+
+        $rows2delete=$max-$min;
+        $found = 0;
+
+        print "$rows2delete CDRs will be deleted between $min and $max, $interval at a time\n";
+
+        while ($i <= $max) {
+            $found=$found+$interval;
+            
+            if ($i + $interval < $max) {
+                $top=$i;
+            } else {
+                $top=$max;
+            }
+
+            $query=sprintf("delete low_priority from %s
+                            where %s <= '%d' and %s >= '%d'",
+                            $this->table,
+                            $this->CDRFields['id'],
+                            $top,
+                            $this->CDRFields['id'],
+                            $min);
+
+            if ($this->CDRdb->query($query)) {
+                $deleted=$deleted+$this->CDRdb->affected_rows();
+            } else {
+        		$log=sprintf("Error: %s (%s)",$this->CDRdb->Error,$this->CDRdb->Errno);
+        		syslog(LOG_NOTICE,$log);
+                print $log;
+                return 0;
+            }
+
+            if ($found > $progress*$rows2delete/100) {
+                $progress++;
+                if ($progress%10==0) {
+                    print "$progress% ";
+                    flush();
+                }
+            }
+
+            print ".";
+            flush();
+
+            $i=$i+$interval;
+
+        }
+
+        print "\n";
+
+        $end	  = time();
+        $duration = $end-$begin;
+        $rps=0;
+
+        if ($deleted && $duration) $rps=$deleted/$duration;
+
+        $log=sprintf("%s CDRs of month %s deleted from %s in %d s @ %.0f rps\n",$deleted,$month,$this->table,$duration,$rps);
+        print $log;
+        syslog(LOG_NOTICE,$log);
+        return 1;
+    }
+}
+
+class CDRS_unknown extends CDRS {
+    function searchForm() {
+        return;
+    }
+}
+
+class CDR {
+
+    // we need two db descriptors to update a CDR
+    // within same result set
+    var $idField              = "RadAcctId";
+    var $callIdField          = "AcctSessionId";
+    var $usernameField        = "UserName";
+    var $domainField          = "Realm";
+    var $gatewayField         = "NASIPAddress";
+    var $gatewayPortField     = "CiscoNASPort";
+    var $timestampField       = "timestamp";
+    var $portIdField          = "NASPortId";
+    var $portTypeField        = "NASPortType";
+    var $startTimeField       = "AcctStartTime";
+    var $stopTimeField        = "AcctStopTime";
+    var $durationField        = "AcctSessionTime";
+    var $inputTrafficField    = "AcctInputOctets";
+    var $outputTrafficField   = "AcctOutputOctets";
+    var $serviceTypeField     = "ServiceType";
+    var $protocolField        = "FramedProtocol";
+    var $cNumberField         = "CalledStationId";
+    var $aNumberField         = "CallingStationId";
+    var $disconnectField      = "H323DisconnectCause";
+
+    var $traceIn = "";
+    var $traceOut= "";
+
+    function CDR() {
+    }
+
+    function NormalizeDisconnect() {
+		$causePrint=$this->CDRS->disconnectCodesDescription[$this->disconnect]." (".$this->disconnect.")";
+        return $causePrint;
+    }
+
+    function traceOut () {
+    }
+
+    function traceIn () {
+    }
+
+    function show() {
+    }
+
+    function normalize($save="") {
+
+        dprint("<b>CDR->normalize($save)</b>");
+
+        if ($this->CDRS->CSCODE && $CarrierInfo = $this->CDRS->CDRTool['normalize'][CS_CODES][$this->CDRS->CSCODE]) {
+            // We found a carrier so we set the BillingId
+            $this->BillingId          = $CarrierInfo[BillingPartyId];
+        }
+
+        if ($save) {
+            $table=&$this->CDRS->table;
+            $query="update $table set ";
+
+            if ($this->CDRS->normalizedField) {
+                $Field=$this->CDRS->normalizedField;
+                if ($updatedFields) $query = $query.", ";
+                $updatedFields++;
+                $query = $query." $Field = '1' ";
+                $updatedFields++;
+            }
+
+            if ($this->CDRS->DestinationIdField) {
+                $Field=$this->CDRS->DestinationIdField;
+                if ($updatedFields) $query = $query.", ";
+                $updatedFields++;
+                $query=$query." $Field  = '".addslashes($this->DestinationId)."' ";
+            }
+
+			if ($this->usernameNormalized && $this->usernameNormalized!=$this->username) {
+                $Field=$this->CDRS->usernameField;
+                if ($updatedFields) $query = $query.", ";
+                $updatedFields++;
+                $query=$query." $Field = '".addslashes($this->usernameNormalized)."' ";
+            }
+
+            if ($this->aNumberNormalized && $this->aNumberNormalized!=$this->aNumber) {
+                $Field=$this->CDRS->aNumberField;
+                if ($updatedFields) $query = $query.", ";
+                $updatedFields++;
+                $query=$query." $Field = '".addslashes($this->aNumberNormalized)."' ";
+                $this->aNumber=$this->aNumberNormalized;
+            }
+
+            if ($this->CDRS->applicationTypeField && $this->applicationTypeNormalized) {
+                $Field=$this->CDRS->applicationTypeField;
+                if ($updatedFields) $query = $query.", ";
+                $updatedFields++;
+                $query=$query." $Field = '".addslashes($this->applicationTypeNormalized)."' ";
+                $this->applicationType=$this->applicationTypeNormalized;
+            }
+
+            if ($this->domainNormalized && $this->domainNormalized != $this->domain) {
+                $Field=$this->CDRS->domainField;
+                if ($updatedFields) $query = $query.", ";
+                $updatedFields++;
+                $query=$query." $Field = '".addslashes($this->domainNormalized)."' ";
+                $this->domainNumber=$this->domainNormalized;
+            }
+
+            if ($this->cNumberNormalized && $this->cNumberNormalized!=$this->cNumber) {
+                $Field=$this->CDRS->cNumberField;
+                if ($updatedFields) $query = $query.", ";
+                $updatedFields++;
+                $query=$query." $Field = '".addslashes($this->cNumberNormalized)."' ";
+                $this->cNumber=$this->cNumberNormalized;
+            }
+
+            if ($this->CDRS->CustomerNameField && $this->CustomerName) {
+                $Field=$this->CDRS->CustomerNameField;
+                if ($updatedFields) $query = $query.", ";
+                $updatedFields++;
+                $query=$query." $Field = '".addslashes($this->CustomerName)."' ";
+            }
+
+            if ($this->CDRS->CustomerIdField && $this->CustomerId) {
+                $Field=$this->CDRS->CustomerIdField;
+                if ($updatedFields) $query = $query.", ";
+                $updatedFields++;
+                $query=$query." $Field = '".addslashes($this->CustomerId)."' ";
+            }
+
+            if ($this->CDRS->BillingIdField && $this->BillingId) {
+                $Field=$this->CDRS->BillingIdField;
+                if ($updatedFields) $query = $query.", ";
+                $updatedFields++;
+                $query=$query." $Field = '".addslashes($this->BillingId)."' ";
+            }
+
+            if ($this->CDRS->RemoteAddressField && $this->RemoteAddressNormalized && $this->RemoteAddressNormalized!= $this->RemoteAddress) {
+                $Field=$this->CDRS->RemoteAddressField;
+                if ($updatedFields) $query = $query.", ";
+                $updatedFields++;
+                $query=$query." $Field = '".addslashes($this->RemoteAddressNormalized)."' ";
+            }
+
+            if ($this->CDRS->CanonicalURIField && $this->CanonicalURINormalized && $this->CanonicalURINormalized!= $this->CanonicalURI) {
+                $Field=$this->CDRS->CanonicalURIField;
+                if ($updatedFields) $query = $query.", ";
+                $updatedFields++;
+                $query=$query." $Field = '".addslashes($this->CanonicalURINormalized)."' ";
+            }
+
+            if ($this->CDRS->ratingEnabled && $this->duration) {
+                $Rate = new Rate(&$this);
+
+                if ($this->CDRS->RatingEngineSocket && $this->NetworkRateDictionary) {
+                	dprint("Get rates from network");
+
+                    // get pricing from network rating engine
+					$Rate->getRateFromNetwork(&$this->NetworkRateDictionary,&$this->CDRS->RatingEngineSocket);
+			        dprint_r($this->NetworkRateDictionary);
+
+                } else {
+                	dprint("Get rates from MySQL tables loaded in memory");
+
+                    // get pricing from mysql tables loaded in memeory
+                    $RateDictionary=array(
+                                          'id'              => $this->id,
+                                          'timestamp'       => $this->timestamp,
+                                          'duration'        => $this->duration,
+                                          'DestinationId'   => $this->DestinationId,
+                                          'inputTraffic'    => $this->inputTraffic,
+                                          'outputTraffic'   => $this->outputTraffic,
+                                          'BillingPartyId'  => $this->BillingPartyId,
+                                          'domain'          => $this->domain,
+                                          'gateway'         => $this->gateway,
+                                          'RatingTables'    => &$this->CDRS->RatingTables,
+                                          'applicationType' => $this->applicationType,
+                                          'aNumber'         => $this->aNumber,
+                                          'cNumber'         => $this->cNumber,
+                                          'destinationName' => $this->destinationName
+                                          );
+    
+                    $Rate->calculate(&$RateDictionary);
+                }
+
+                /*
+                dprint_r($Rate->price);
+                dprint_r($Rate->pricePrint);
+                dprint_r($Rate->rateInfo);
+                */
+
+                if ($this->CDRS->priceField) {
+                    if (!$Rate->price) $Rate->pricePrint="";
+
+                	$this->pricePrint = $Rate->pricePrint;
+                    $Field=$this->CDRS->priceField;
+                    if ($updatedFields) $query = $query.", ";
+                    $updatedFields++;
+                    $query=$query." $Field = '".addslashes($this->pricePrint)."' ";
+    
+                    if ($this->CDRS->rateField ) {
+                        $this->rateInfo   = $Rate->rateInfo;
+                        $Field=$this->CDRS->rateField;
+                        if ($updatedFields) $query = $query.", ";
+                        $updatedFields++;
+                        $query=$query." $Field = '".addslashes($this->rateInfo)."' ";
+                	}
+                }
+            }
+
+            $query=$query." where $this->idField = '$this->id'";
+
+            dprint($query);
+
+            if (!$this->id) {
+                dprint ("Call has no unique id");
+                return 0;
+            }
+
+            if ($updatedFields) {
+                if ($this->CDRS->CDRdb1->query($query)) {
+                    return 1;
+                } else {
+                    $Error=$this->CDRS->CDRdb1->Error;
+                    print _("Error: $Error");
+                    return 0;
+                }
+            }
+        } else {
+            if ($this->CDRS->BillingPartyIdField && $CarrierInfo['BillingPartyId']) {
+            	$this->domain = $CarrierInfo[BillingDomain];
+            }
+
+			if ($this->usernameNormalized && $this->usernameNormalized!=$this->username) {
+            	$this->username=$this->usernameNormalized;
+            }
+
+            if ($this->aNumberNormalized && $this->aNumberNormalized!=$this->aNumber) {
+            	$this->aNumber=$this->aNumberNormalized;
+            }
+
+            if ($this->domainNormalized && $this->domainNormalized != $this->domain) {
+                $this->domainNumber=$this->domainNormalized;
+            }
+
+            if ($this->cNumberNormalized && $this->cNumberNormalized!=$this->cNumber) {
+                $this->cNumber=$this->cNumberNormalized;
+            }
+
+            if ($this->CDRS->RemoteAddressField && $this->RemoteAddressNormalized && $this->RemoteAddressNormalized!= $this->RemoteAddress) {
+                $this->RemoteAddress=$this->RemoteAddressNormalized;
+            }
+        }
+        return 1;
+    }
+}
+
+function getLocalTime($timezone,$timestamp) {
+    //dprint("<b>getLocalTime($timezone,$timestamp)</b>");
+	global $CDRTool;
+
+    if (!$timezone || $timezone==$CDRTool[provider][timezone]) {
+    	return date("Y-m-d H:i:s", $timestamp);
+    }
+
+    putenv("TZ=$timezone");
+    $startTimeLocal=date("Y-m-d H:i:s", $timestamp);
+    $timezone=$CDRTool[provider][timezone];
+    putenv("TZ=$timezone");
+    return $startTimeLocal;
+}
+
+function sec2hms ($duration) {
+    // return seconds in HH:MM:SS format
+    $sum1=$duration;
+    $duration_print="";
+
+    $duration_hour=floor($sum1/3600);
+    
+    if ($duration_hour > 0) {
+        $sum1=$sum1-($duration_hour*3600);
+        $duration_print="$duration_hour:";
+    }
+    
+    $duration_min=floor($sum1/60);
+    
+    if ($duration_min > 0) {
+        $sum1=$sum1-($duration_min*60);
+        if ($duration_min < 10) {
+            $duration_min="0"."$duration_min";
+        }
+        $duration_print="$duration_print"."$duration_min:";
+    } else {
+        $duration_print="$duration_print"."00:";
+    }
+
+    if ($sum1< 10 ) {
+        $duration_sec="0"."$sum1";
+    } else {
+        $duration_sec=$sum1;
+    } 
+    
+    $duration_print="$duration_print"."$duration_sec";		
+    return $duration_print;
+}
+
+function unLockTables ($dbid) {
+	$dbid->query("unlock tables");
+}
+
+function validDay($month,$day,$year) {
+    if (!$month || !$year) {
+        return $day;
+    }
+    while (1) {
+    	if (!checkdate($month,$day,$year) && $day) {
+            $day--;
+            next;
+        } else {
+            break;
+        }
+    }
+    return $day;
+}
+
+$ratingLibFile=$CDRTool['Path']."/rating_lib.phtml";
+if (is_readable($ratingLibFile)) {
+	require_once($ratingLibFile);
+}
+
+// include CDRTool modules defined in global.inc
+foreach ($CDRToolModules as $module) {
+    $module_filename=$CDRTool['Path']."/cdrlib_".$module.".phtml";
+    if (is_readable($module_filename)) include($module_filename);
+    $module_filename=$CDRTool['Path']."/local/cdrlib_".$module.".phtml";
+    if (is_readable($module_filename)) include($module_filename);
+}
+
+?>

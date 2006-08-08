@@ -1,0 +1,352 @@
+update log  set reedit = SUBSTRING(reedit,10);
+update log  set rerun = SUBSTRING(rerun,10);
+alter table auth_user change column only_customer domainFilter varchar(255) not null;
+alter table auth_user change column only_cscode codeFilter varchar(255) not null;
+alter table auth_user change column only_cli aNumberFilter  varchar(255) not null;
+alter table auth_user change column only_after_date afterDateFilter varchar(255) not null;
+alter table auth_user drop column only_cardservice;
+alter table auth_user drop column only_cardclass;
+
+alter table active_sessions add column count bigint(20) unsigned NOT NULL default '0' after changed;
+alter table radacct change column Rate Rate text not null;
+
+alter table radacct add column SipMethod varchar(50) not null after H323ConfID; 
+alter table radacct add column SipResponseCode smallint unsigned not null after SipMethod;
+alter table radacct add column SipToTag varchar(255) not null after SipResponseCode;
+alter table radacct add column SipFromTag varchar(255) not null after SipToTag;
+alter table radacct add column SipTranslatedRequestURI varchar(255) NOT NULL after SipFromTag;
+
+INSERT INTO sip_status VALUES (422,'SessionTimerTooSmall','Client-Error');
+INSERT INTO sip_status VALUES (202,'Accepted','Success');
+INSERT INTO sip_status VALUES (489,'UnknownEvent','Client-Error');
+INSERT INTO sip_status VALUES (490,'RequestUpdated','Client-Error');
+INSERT INTO sip_status VALUES (580,'PreconditionFailure','Server-Error');
+INSERT INTO sip_status VALUES (421,'ExtensionRequired','Client-Error');
+
+# v 1.4.4
+alter table auth_user change column display_card compidFilter varchar(255) not null;
+alter table auth_user add column serviceFilter varchar(255) not null after codeFilter;
+alter table auth_user change column codeFilter cscodeFilter varchar(255) not null;
+
+# v 1.5.3
+alter table radacct add column RemotePartyId varchar(255) not null ;
+alter table radacct add column BillingPartyId varchar(255) not null ;
+alter table radacct add column SIPAccount varchar(255) not null ;
+
+# v 1.6
+alter table cdrtool.destinations add column gateway varchar(50) not null after id;
+alter table cdrtool.destinations add column domain varchar(50) not null after gateway;
+alter table cdrtool.destinations add column subscriber varchar(50) not null after domain;
+alter table cdrtool.billing_customers add column profileNGN varchar(10) not null;
+
+CREATE TABLE cdrtool.billing_profilesNGN (
+  id bigint(20) unsigned NOT NULL auto_increment,
+  name varchar(25) NOT NULL default '',
+  rate varchar(25) NOT NULL default '',
+  application varchar(255) NOT NULL,
+  PRIMARY KEY  (id),
+  KEY name_idx (name)
+) TYPE=MyISAM;
+
+CREATE TABLE cdrtool.billing_ratesNGN (
+  id bigint(20) unsigned NOT NULL auto_increment,
+  name varchar(25) NOT NULL default '',
+  TrafficRate varchar(25) NOT NULL default '',
+  ConnectCost varchar(255) NOT NULL,
+  PRIMARY KEY  (id),
+  KEY name_idx (name)
+) TYPE=MyISAM;
+
+# v 1.7
+CREATE TABLE ser.user_quota (  
+  id int(10) unsigned NOT NULL auto_increment,
+  username varchar(64) NOT NULL default '',
+  domain varchar(128) NOT NULL default '',
+  notify_address varchar(255) NOT NULL default '',
+  notified smallint unsigned not null,
+  cost varchar(128) NOT NULL default '',
+  traffic varchar(128) NOT NULL,
+  PRIMARY KEY  (id),
+  INDEX sipuser (username, domain)
+);
+
+alter table radacct add index caller_idx (CallingStationId);
+alter table radacct add index called_idx (CalledStationId); 
+
+alter table radacct add column SipUserAgents varchar(255) NOT NULL after SipTranslatedRequestURI;
+alter table radacct add column SipApplicationType varchar(255) NOT NULL after SipUserAgents;
+alter table radacct add column SipCodecs varchar(255) NOT NULL after SipApplicationType;
+
+update radacct set SipToTag = H323ConfID;
+update radacct set SipFromTag = H323CallOrigin;
+update radacct set SipTranslatedRequestURI = H323RemoteAddress;
+update radacct set SipMethod = H323CallType;
+update radacct set SipResponseCode = H323DisconnectCause;
+update radacct set SipCodecs = FramedProtocol;
+update radacct set UserName= CONCAT(UserName,'@',Realm) where UserName not like '%@%';
+update radacct set SipUserAgents = NASPortType;
+
+alter table radacct drop column BillingPartyId;
+alter table radacct drop column RemotePartyId;
+
+alter table radacct change column SipToTag SipToTag varchar(128) not null;
+alter table radacct change column SipFromTag SipFromTag varchar(128) not null;
+
+alter table radacct drop index sess_id;
+alter table radacct add unique sess_id(AcctSessionId(128),SipFromTag,SipToTag)
+alter table radacct drop column H323GWID;
+alter table radacct drop column H323CallOrigin;
+alter table radacct drop column H323CallType;
+alter table radacct drop column H323SetupTime;
+alter table radacct drop column H323ConnectTime;
+alter table radacct drop column H323DisconnectTime;
+alter table radacct drop column H323DisconnectCause;
+alter table radacct drop column H323RemoteAddress;
+alter table radacct drop column H323VoiceQuality;
+alter table radacct drop column H323ConfID;
+
+alter table cdrtool.billing_customers add column timezone varchar(128) not null;
+
+2.0.2
+alter table radacct drop column Redirected;
+
+2.0.3
+Add to sql.conf
+accounting_stop_query_alt  = "UPDATE ${acct_table1} SET AcctStopTime = '%S',AcctSessionTime=unix_timestamp('%S') - unix_timestamp(AcctStartTime),AcctTerminateCause = '%{SIP-Response-Code}', AcctStopDelay ='%{Acct-Delay-Time}', ConnectInfo_stop = '%{Connect-Info}' WHEREAcctSessionId = '%{Acct-Session-Id}' AND (SipToTag = 'n/a'  AND (SipFromTag= '%{Sip-From-Tag}' OR SipFromTag = '%{Sip-To-Tag}')) AND NASIPAddress ='%{NAS-IP-Address}'"
+
+2.1.3
+alter table radacct add column SipRPID varchar(25) not null after SipCodecs;
+
+2.2
+insert into sip_status values ('430','Quota exceeded','Client-Error');
+
+2.3
+alter table billing_customers add unique cust_idx (gateway,domain,subscriber);
+alter table destinations add unique cust_dest_idx (gateway,domain,subscriber,dest_id);
+alter table billing_profiles add unique profile_idx (name,hour1,hour2,hour3,hour4);
+alter table billing_rates add unique rate_idx (name,destination);
+alter table billing_ratesNGN add unique rate_idx (name);
+alter table billing_profilesNGN add unique profile_idx (name,application);
+
+2.5.3
+insert into sip_status values ('477','SendingError','Client-Error'); 
+insert into sip_status values ('478','UnresolvableNextHopAddress','Client-Error');
+insert into sip_status values ('479','UnparseableURI ','Client-Error');
+
+2.5.5
+insert into sip_status values ('434','User not online','Client-Error');
+
+2.5.9
+update sip_status set description = 'Canceled' where code = '487';
+update sip_status set description = 'Busy' where code = '486';
+update sip_status set description = 'TemporarilyUnavailable' where code = '480';
+update sip_status set description = 'NotAcceptable' where code = '488';
+update sip_status set description = 'Timeout' where code = '408';
+update sip_status set description = 'NotOnline' where code = '434';
+
+2.6.0
+alter table radacct add column SipRPIDHeader varchar(255) not null after SipRPID;
+alter table radacct add column SourceIP varchar(255) not null;
+alter table radacct add column SourcePort varchar(255) not null;
+alter table radacct add column CanonicalURI varchar(255) not null;
+alter table radacct add column DelayTime varchar(5) not null;
+alter table radacct add column BillingId varchar(255) not null;
+
+insert into sip_status VALUES ('492','CrossReferencedURI','Client-Error');
+alter table sip_status add column isdn_cause smallint(5) unsigned not null;
+update sip_status set isdn_cause = '57' where code = 401;
+update sip_status set isdn_cause = '21' where code = 402;
+update sip_status set isdn_cause = '57' where code = 403;
+update sip_status set isdn_cause = '1' where code = 404;
+update sip_status set isdn_cause = '127' where code = 405;
+update sip_status set isdn_cause = '127' where code = 406;
+update sip_status set isdn_cause = '21' where code = 407;
+update sip_status set isdn_cause = '10' where code = 408;
+update sip_status set isdn_cause = '41' where code = 409;
+update sip_status set isdn_cause = '1' where code = 410;
+update sip_status set isdn_cause = '127' where code = 413;
+update sip_status set isdn_cause = '127' where code = 414;
+update sip_status set isdn_cause = '79' where code = 415;
+update sip_status set isdn_cause = '127' where code = 420;
+update sip_status set isdn_cause = '127' where code = 422;
+update sip_status set isdn_cause = '18' where code = 480;
+update sip_status set isdn_cause = '127' where code = 481;
+update sip_status set isdn_cause = '127' where code = 482;
+update sip_status set isdn_cause = '127' where code = 483;
+update sip_status set isdn_cause = '28' where code = 484;
+update sip_status set isdn_cause = '1' where code = 485;
+update sip_status set isdn_cause = '17' where code = 486;
+update sip_status set isdn_cause = '127' where code = 487;
+update sip_status set isdn_cause = '127' where code = 488;
+update sip_status set isdn_cause = '41' where code = 500;
+update sip_status set isdn_cause = '79' where code = 501;
+update sip_status set isdn_cause = '38' where code = 502;
+update sip_status set isdn_cause = '63' where code = 503;
+update sip_status set isdn_cause = '102' where code = 504;
+update sip_status set isdn_cause = '127' where code = 505;
+update sip_status set isdn_cause = '47' where code = 580;
+update sip_status set isdn_cause = '17' where code = 600;
+update sip_status set isdn_cause = '21' where code = 603;
+update sip_status set isdn_cause = '1' where code = 604;
+update sip_status set isdn_cause = '58' where code = 606;
+
+3.0
+CREATE TABLE prepaid (  
+  id int(10) unsigned NOT NULL auto_increment,
+  account varchar(255) NOT NULL default '',
+  balance decimal(10,4) not NULL default '0.0000',
+  balance_previous decimal(10,4) not NULL,
+  change_date datetime not null, 
+  PRIMARY KEY  (id),
+  INDEX acc_id (account)
+);
+
+3.0.3
+alter table cdrtool.log add column datasource varchar(255) not null;
+update cdrtool.log set datasource = SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING_INDEX(rerun, '?','-1'),'&','1'),'=','-1') ;
+
+3.1.2
+alter table radius.radacct add index canon_idx (CanonicalURI); 
+alter table ser.sip_trace add index call_id(callid);
+alter table prepaid add column last_call_price decimal(10,4)  not null;
+alter table prepaid add column expires date not null after change_date;
+alter table prepaid add column disabled char(1) not null after expires;
+alter table prepaid add column call_in_progress datetime not null after disabled;
+alter table billing_customers add column profile_name1_alt varchar(10) not null after profile_name1;
+alter table billing_customers add column profile_name2_alt varchar(10) not null after profile_name2;
+
+3.2
+insert into settings (var_name,var_description,var_value) values
+('reloadRating','Rating tables have changed','');
+
+3.2.2
+alter table radacct change column Price Price double(20, 4);
+
+3.2.4
+alter table prepaid add column call_lock enum ('0','1') default '0' after disabled;
+alter table prepaid change column disabled disabled enum ('0','1') default '0' after account;
+alter table prepaid drop index acc_id;
+alter table prepaid add unique index acc_id(account);
+
+3.2.7
+alter table cdrtool.settings add column billing_party varchar(255) not null after id;
+insert into cdrtool.settings (billing_party,var_name,var_value) values ('domain.com','providerName','Provider Name');
+insert into cdrtool.settings (billing_party,var_name,var_value) values ('domain.com','fromEmail','support@example.com');
+
+3.3.2
+alter table cdrtool.billing_rates add column gateway varchar(50) NOT NULL default '' after id;
+alter table cdrtool.billing_rates add column domain varchar(50) NOT NULL default ''  after gateway;
+alter table cdrtool.billing_rates add column subscriber varchar(50) NOT NULL default '' after domain;
+alter table cdrtool.billing_profiles add column gateway varchar(50) NOT NULL default '' after id;
+alter table cdrtool.billing_profiles add column domain varchar(50) NOT NULL default ''  after gateway;
+alter table cdrtool.billing_profiles add column subscriber varchar(50) NOT NULL default '' after domain;
+alter table cdrtool.billing_ratesNGN add column gateway varchar(50) NOT NULL default '' after id;
+alter table cdrtool.billing_ratesNGN add column domain varchar(50) NOT NULL default ''  after gateway;
+alter table cdrtool.billing_ratesNGN add column subscriber varchar(50) NOT NULL default '' after domain;
+alter table cdrtool.billing_profilesNGN add column gateway varchar(50) NOT NULL default '' after id;
+alter table cdrtool.billing_profilesNGN add column domain varchar(50) NOT NULL default ''  after gateway;
+alter table cdrtool.billing_profilesNGN add column subscriber varchar(50) NOT NULL default '' after domain;
+
+alter table cdrtool.destinations drop column asr;
+
+alter table cdrtool.prepaid drop column disabled;
+alter table cdrtool.prepaid drop column balance_previous;
+alter table cdrtool.prepaid drop column expires;
+alter table cdrtool.prepaid add column maxsessiontime bigint unsigned not null;
+alter table cdrtool.prepaid add column destination varchar(50) not null;
+
+3.3.4
+alter table radacct drop index FramedIPAddress;
+alter table radacct add index source_ip_idx (SourceIP);
+alter table radacct add index billing_id_idx (BillingId); 
+alter table radacct add index dest_id_idx (DestinationId);
+alter table radacct drop column CiscoNASPort;
+
+3.3.5
+alter table asterisk_cdr add index calldate_idx (calldate); 
+alter table asterisk_cdr add index clid_idx (clid); 
+alter table asterisk_cdr add index src_idx (src); 
+alter table asterisk_cdr add index dst_idx (dst);
+alter table asterisk_cdr add index channel_idx (channel); 
+alter table asterisk_cdr add index dstchannel_idx (dstchannel); 
+
+3.3.6
+alter table radacct add index sip_req_uri_idx (SipTranslatedRequestURI);
+alter table radacct add index sip_req_uri_idx (SIPAccount);
+
+3.4.0
+alter table radacct add index normalize_idx(Normalized);
+
+4.0.3
+alter table radacct add column MediaInfo varchar(32) default NULL;
+alter table radacct add index MediaInfo_idx(MediaInfo);
+update radacct set MediaInfo = '' where AcctStopTime != '0000-00-00 00:00:00';
+update radacct set MediaInfo = 'timeout' where AcctStopTime = '0000-00-00 00:00:00' and AcctSessionTime > 0;
+update radacct set MediaInfo = 'timeout' where AcctStopTime = '0000-00-00 00:00:00' and AcctInputOctets > 0;
+update radacct set MediaInfo = 'timeout' where AcctStopTime = '0000-00-00 00:00:00' and AcctOutputOctets > 0;
+update radacct set MediaInfo = 'timeout' where AcctStopTime = '0000-00-00 00:00:00' and SipCodecs != '';
+
+4.1.2
+alter table radacct add index Realm_idx(Realm);
+
+4.1.3
+alter table settings change column var_value var_value text not null;
+
+4.1.2
+alter table radacct add column RTPStatistics text not null after MediaInfo;
+
+4.2
+CREATE TABLE `prepaid_history` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `username` varchar(64) NOT NULL default '',
+  `domain` varchar(64) NOT NULL default '',
+  `action` varchar(255) NOT NULL default '',
+  `number` varchar(255) NOT NULL default '',
+  `value` float(10,2) NOT NULL default '0.00',
+  `balance` float(10,2) NOT NULL default '0.00',
+  `date` datetime default NULL,
+  PRIMARY KEY  (`id`),
+  KEY `acct_id` (`username`,`domain`)
+);
+
+CREATE TABLE `prepaid_cards` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `batch` varchar(255) NOT NULL default '',
+  `number` bigint(20) unsigned NOT NULL default '0',
+  `value` smallint(5) unsigned NOT NULL default '0',
+  `blocked` enum('0','1') NOT NULL default '0',
+  `date_active` date NOT NULL default '0000-00-00',
+  `date_batch` date NOT NULL default '0000-00-00',
+  `service` varchar(255) NOT NULL default 'sip',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `card_idx` (`number`),
+  KEY `nr_id` (`number`)
+);
+
+alter table radacct 
+add column FromHeader varchar(128) not null, 
+add column UserAgent varchar(128) not null, 
+add column Contact varchar(128) not null;
+
+4.3
+update radacct set SIPApplicationType = 'audio' where SIPApplicationType='';
+
+4.3.1
+alter table asterisk_cdr change column Rate Rate text not null;
+
+4.4.5
+update radacct set 
+CalledStationId         = trim(leading 'sip:' from trim(leading 'sips:' from CalledStationId)), 
+CallingStationId        = trim(leading 'sip:' from trim(leading 'sips:' from CallingStationId)), 
+CanonicalURI            = trim(leading 'sip:' from trim(leading 'sips:' from CanonicalURI)), 
+SipTranslatedRequestURI = trim(leading 'sip:' from trim(leading 'sips:' from SipTranslatedRequestURI))
+where Normalized = 1  and CalledStationId like 'sip:%';
+
+4.4.6
+INSERT INTO sip_status VALUES (435,'Diverted','Client-Error','0');
+
+4.5.9
+alter table log add index login_idx(login);
+
+4.6-4
+update sip_status set description = 'NotAcceptableMedia' where code = 488;

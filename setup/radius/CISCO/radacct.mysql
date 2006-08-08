@@ -1,0 +1,63 @@
+-- MySQL dump 9.10
+--
+-- Host: db-log.budgetphone.nl    Database: radius
+-- ------------------------------------------------------
+-- Server version	3.23.24-beta-log
+
+--
+-- Table structure for table `radacct`
+--
+
+CREATE TABLE `radacct` (
+  RadAcctId bigint(21) NOT NULL auto_increment,
+  AcctSessionId varchar(255) DEFAULT '' NOT NULL,
+  AcctUniqueId varchar(255) DEFAULT '' NOT NULL,
+  UserName varchar(64) DEFAULT '' NOT NULL,
+  Realm varchar(64) DEFAULT '',
+  NASIPAddress varchar(15) DEFAULT '' NOT NULL,
+  CiscoNASPort varchar(255) DEFAULT '' NOT NULL,
+  NASPortId varchar(50) DEFAULT '' NOT NULL,
+  NASPortType varchar(32),
+  AcctStartTime datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+  AcctStopTime datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+  AcctSessionTime int(12),
+  AcctAuthentic varchar(32),
+  ConnectInfo_start varchar(32),
+  ConnectInfo_stop varchar(32),
+  AcctInputOctets bigint(12),
+  AcctOutputOctets bigint(12),
+  CalledStationId varchar(50) DEFAULT '' NOT NULL,
+  CallingStationId varchar(50) DEFAULT '' NOT NULL,
+  AcctTerminateCause varchar(32) DEFAULT '' NOT NULL,
+  ServiceType varchar(32),
+  FramedProtocol varchar(32),
+  FramedIPAddress varchar(15) DEFAULT '' NOT NULL,
+  AcctStartDelay int(12),
+  AcctStopDelay int(12),
+  H323GWID varchar(255) DEFAULT '' NOT NULL,
+  H323CallOrigin varchar(255) DEFAULT '' NOT NULL,
+  H323CallType varchar(64) DEFAULT '' NOT NULL,
+  H323SetupTime text DEFAULT '' NOT NULL,
+  H323ConnectTime text DEFAULT '' NOT NULL,
+  H323DisconnectTime text DEFAULT '' NOT NULL,
+  H323DisconnectCause char(2) DEFAULT '' NOT NULL,
+  H323RemoteAddress varchar(255) DEFAULT '' NOT NULL,
+  H323VoiceQuality decimal(2,0),
+  H323ConfID varchar(35) DEFAULT '' NOT NULL,
+  Timestamp bigint(20) DEFAULT '0' NOT NULL,
+  DestinationId varchar(255) DEFAULT '' NOT NULL,
+  Rate text DEFAULT '' NOT NULL,
+  Price double(20, 4) NOT NULL,
+  Normalized enum('0','1') DEFAULT '0',
+  PRIMARY KEY (RadAcctId),
+  KEY UserName (UserName),
+  KEY caller_idx (CallingStationId),
+  KEY called_idx (CalledStationId),
+  KEY AcctSessionId (AcctSessionId),
+  KEY AcctUniqueId (AcctUniqueId),
+  KEY AcctStartTime (AcctStartTime),
+  KEY AcctStopTime (AcctStopTime),
+  KEY NASIPAddress (NASIPAddress),
+  KEY Normalized_idx (Normalized)
+);
+

@@ -1,0 +1,74 @@
+<?
+$errorReporting = (E_ALL & ~E_NOTICE);
+$errorReporting = 1;
+error_reporting($errorReporting);
+
+include("global.inc");
+
+if ($DATASOURCES) {
+    page_open(array(
+             "sess" => "CDRTool_Session",
+             "auth" => "CDRTool_Auth",
+             "perm" => "CDRTool_Perm")
+             );
+    
+    $title="Legal notice";
+
+    if (is_readable("local/header.phtml")) {
+        include("local/header.phtml");
+    } else {
+        include("header.phtml");
+    }
+    
+    $loginname=$auth->auth["uname"];
+    $layout = new pageLayoutLocal();
+    $layout->showHeader();
+    $layout->showLegalNotice();
+    $layout->showFooter();
+    page_close();
+
+} else {
+    $errorReporting = (E_ALL & ~E_NOTICE);
+    $errorReporting = 1;
+    error_reporting($errorReporting);
+
+    $Setup = new SETUP ();
+    $Setup->showIntro();
+}
+
+class SETUP {
+    function showIntro() {
+        print "
+        <html>
+        <head>
+        <title>CDRTool setup</title>
+        </head>
+        <body>
+        <h2>CDRTool setup</h2>
+        CDRTool has not been setup on this machine yet.
+        <p>
+        For detailed installation instructions read <a href=doc/INSTALL.txt>doc/INSTALL.txt</a>
+        <p>
+        Quick setup: copy the sample configuration file:
+        <p>
+        cp setup/global.inc.in global.inc
+        <p>
+        and edit global.inc to reflect your platform setup.
+        This is the content of the current sample configuration file:
+        ";
+        print "<pre>";
+        $fp=fopen("setup/global.inc.in",r);
+        while ($buffer = fgets($fp,1024)) {
+            if (!preg_match("/(<\?)|(\?>)/",$buffer)) {
+                print "$buffer";
+            }
+        }
+        print "</pre>";
+    }
+}
+
+print "
+</body>
+</html>
+";
+?>

@@ -1,0 +1,359 @@
+CDRTool installation
+
+Create CDRTool database
+-----------------------
+
+Edit setup/setup_mysql.sh, change the default password from
+file setup/create_users.mysql and run
+
+/var/www/CDRtool/setup/mysql/setup_mysql.sh password hostname
+
+A new MySQL database "cdrtool" will be created. A default web user
+admin/admin is added, you may use this initial account to login in the
+web interface.
+
+PHP setup and Apache setup
+--------------------------
+
+Install PHP and dependencies. Example for Debian systems and php4:
+
+apt-get install apache mysql-client mod_ssl
+apt-get install php4 php4-mysql php4-cli php4-cgi php4-curl php-pear php-soap 
+
+Enable php-mysql module in /etc/php/*/php.ini:
+
+extension=mysql.so
+
+Enable php in apache web server. Configuration example for apache on
+Debian systems:
+
+/etc/apache/httpd.conf 
+
+DirectoryIndex index.phtml index.php index.html index.htm index.shtml index.cgi
+AddType application/x-httpd-php .php
+AddType application/x-httpd-php .phtml
+
+/etc/apache/modules.conf 
+LoadModule php4_module /usr/lib/apache/1.3/libphp4.so
+
+Change AllowOverride None  to
+    AllowOverride All 
+
+
+Installing CDRTool software
+---------------------------
+
+tar zxvf CDRTool-XXX.tgz  under your web root directory 
+(/var/www on Debian systems)
+
+Files will be decompressed into ./CDRTool directory
+
+
+Create an initial configuration
+-------------------------------
+
+cd CDRTool
+cp setup/global.inc.in global.inc 
+
+Edit global.inc and setup your variables to match your system.
+
+For each different datasource you must instantiate a new class
+extending one of the existing classes (ser, asterisk or cisco).
+
+global.inc.in contains a more elaborate example for setting up datasources
+
+
+High availability
+-----------------  
+
+Setup heartbeat and MySQL replication.
+
+
+CRON setup
+----------
+
+Some operations must be scheduled to run periodically by cron. Such
+operations are the scripts that block fraudulous accounts in OpenSER,
+normalization of call detail records, purge of old traces or generate PDF
+specifications
+
+See CDRTool/setup/crontabs/ directory for these scripts.
+
+
+RADIUS setup
+------------
+
+CDRTool works with Free Radius server from www.freeradius.org
+
+apt-get install freeradius freeradius-mysql 
+Create the database for radius tables on MySQL server
+
+mysqladmin -u root create radius
+
+Create RADIUS tables
+
+The paths might differ depending on freeradius installation
+
+cp /usr/share/doc/freeradius/examples/db_mysql.sql.gz .
+gunzip db_mysql.sql.gz 
+mysql -u root radius < /usr/share/doc/freeradius/examples/db_mysql.sql
+
+Patch radacct table for storage of CISCO VSA and rating. Apply a patch to
+the default radacct table. This will add fields necessary to store Vendor
+Specific Atributes from Cisco or OpenSER.
+
+It is not possible to mix call details records from CISCO and OpenSER
+in the same radius table. You need to created multiple radius server
+profiles and save the CDRs into dedicated tables.
+
+Modify the default radacct table for OpenSER by running:
+
+/var/www/CDRTool/setup/radius/OpenSER/radacct-patch.sh
+
+and for CISCO by running:
+
+/var/www/CDRTool/setup/radius/CISCO/radacct-patch.sh 
+
+
+cp /var/www/CDRTool/setup/radius/OpenSER/sql.conf /etc/freeradius/sql.conf  
+
+Edit the database connection details in sql.conf and restart freeradius 
+
+Add RADIUS clients in sql.conf
+
+Each device sending RADIUS accounting requests must be added to /etc/radddb/clients.conf
+
+Examples:
+
+client 10.0.0.0/8 {
+        secret=DssUET01
+        nastype=other
+        shortname=localnet
+}
+
+
+Enable MySQL accounting in FreeRadius server. Edit radius.conf "sql" must be uncommented
+or added if missing.   
+
+# accounting { 
+	acct_unique 
+	detail 
+	sql 
+	unix 
+	radutmp 
+	}
+
+Copy setup/radius/OpenSER/dictionary.ser to /etc/freeradius
+
+
+OpenSER/SER setup
+----------------- 
+
+CDRTool version >4.3 have been tested only against OpenSER 1.0 and above.
+
+Enable MySQL storage for subscribers and accounting and Radius accounting.
+For SIP Tracing you need OpenSER siptrace module. To enable quota you must
+add an extra column in the subscriber table:
+
+alter table openser.subscriber add column quota int not null;
+
+Entries required in openser.cfg:
+
+loadmodule "acc.so"
+
+modparam("acc", "failed_transaction_flag", 1)
+modparam("acc", "report_cancels",     0)
+modparam("acc", "report_ack",         0)
+modparam("acc", "early_media",        0)
+
+modparam("acc", "log_level",          1)
+modparam("acc", "log_flag",           1)
+modparam("acc", "log_missed_flag",    1)
+
+modparam("acc", "radius_config",      "/etc/openser/radius/client.conf")
+modparam("acc", "radius_flag",        1)
+modparam("acc", "radius_missed_flag", 1)
+modparam("acc", "radius_extra",       "Sip-RPid=$avp(s:rpid); \
+                                       Source-IP=$si; \
+                                       Source-Port=$sp; \
+                                       Canonical-URI=$avp($can_uri); \
+                                       Billing-Party=$avp($billing_party); \
+                                       Divert-Reason=$avp(s:divert_reason); \
+                                       X-RTP-Stat=$avp(s:rtp_statistics); \
+                                       From-Header=$hdr(from); \
+                                       User-Agent=$hdr(user-agent); \
+                                       Contact=$hdr(contact); \
+                                       Event=$hdr(event)")
+
+Then of course you must enable accounting in various parts of the routing
+script by setting the accounting flag.
+
+Copy setup/radius/OpenSER/dictionary.ser to /etc/openset/radius/
+
+
+Rating engine daemon
+--------------------
+
+Can be used as a rating engine for prepaid applications. It provides access
+to the rating tables and stays in memory (running as a daemon) to avoid
+reading the rating table at every request. The rating tables can be reload
+without restarting the software.
+
+See the information in the head of the scripts/ratingEngine.php daemon for
+how to enable prepaid or other rating functionality. For prepaid, an
+external B2BUA is required (like the call_control module), CDRTool provides
+only the rating and update balance functions.
+
+Set the IP and port where the rating engine listens to and the OpenSER
+datasource in global.inc:
+
+$RatingEngine=array("socketIP"   => "10.0.0.135",
+                     "socketPort" => "9024",
+                     "CDRS_class" => "ser_radius");
+
+The MSQL schema for prepaid accounts: setup/mysql/create_prepaid.mysql
+The network engine has no security features, it must run over a protected
+network. 
+
+
+SOAP engine
+-----------
+
+The SOAP engine can be used by an external provisioning system to access
+information available in CDRTool (like prepaid accounts).
+
+Depends on php-pear, pear components and SOAP client/server from
+http://pear.php.net/package/SOAP. Once installed, use the pear command to
+install SOAP dependencies:
+
+pear upgrade-all
+pear install HTTP_Request Net_Socket Net_URL
+  
+The rating and other CDRTool functions (like provisioning of prepaid
+accounts or checking the balance) are available by using SOAP calls. The
+SOAP calls are translated into requests for the rating engine (which must be
+up and running, see previous section).
+
+The SOAP functionality including a WSDL file for creating a SOAP
+client is available in SOAP/WSDL/ directory.
+
+The SOAP server supports authorization, the SOAP clients must connect using
+an account that has soap_client right assigned into the CDRTool accounts
+page. The SOAP server uses the Apache web server for transport, it can work
+with both HTTP and HTTPS. The servers logs all network requests to syslog.
+ 
+Define in global.inc the SOAP server URL where the client should connect to:
+
+$SOAPServer=array("cdr_source"=>"ser_radius",
+                  "location"  =>"https://example.com/CDRTool/SOAP/server.php",
+                  "wsdl"      =>"https://example.com/CDRTool/SOAP/WSDL/"
+                  );
+
+A test SOAP client is available in SOAP/client.php. It connects to the server and
+displays the CDRTool server version.
+
+To prevent a bug in PEAR SOAP server add the following last line in
+function SOAP_ServerErrorHandler from SOAP/Server.php
+
+function SOAP_ServerErrorHandler($errno, $errmsg, $filename,$linenum, $vars) {
+    ....
+
+    unset($soap_server_fault->backtrace);
+}
+
+Interaction between rating engine and SOAP:
+
+Function            Provisioning            B2BUA            RatingEngine        SOAP/XML
+----------------------------------------------------------------------------------------
+MaxSessionTime                                <-----------------> 
+
+DeductBalance                                 <-----------------> 
+
+AddBalance                ----------------------------------------------------------->
+                                                                   <------------------                        		
+
+CheckBalance              ----------------------------------------------------------->
+                                                                   <------------------                        		
+
+ShowAccounts              ----------------------------------------------------------->
+                                                                   <------------------                        		
+
+LastMissedCalls           -----------------------------------------------------------> 
+LastPlacedCalls           -----------------------------------------------------------> 
+LastReceivedCalls         -----------------------------------------------------------> 
+OpenSERLocations          -----------------------------------------------------------> 
+
+
+
+MediaProxy setup
+----------------
+
+MediaProy can log into CDRTool the IP bandwidth utilization, the codecs and
+the User Agents. MediaProxy logs this information into the database used by
+the Radiusserver, the radacct table.
+
+The MediaProxy can also correct the session duration of CDRs for which no
+BYE messages have been received. 
+
+The following information is logged: 
+
+- InputOctets and OutputOctets
+- CodecType (like GSM or G711)
+- ApplicationType (text/audio/video)
+- User Agent(s)
+- Media IP source and IP destination
+
+
+Asterisk setup
+--------------
+
+Download from cvs the asterisk-addons and patch asterisk to store CDRs in
+MySQL.
+
+See setup/asterisk for more information.
+
+
+Cisco setup
+-----------
+
+Use the CISCO CLI, enter enable mode and configuration from terminal:
+
+>enable
+config terminal
+aaa new-model
+aaa group server radius aaa.router
+server RADIUS_SERVER_IP auth-port 1812 acct-port 1813
+aaa accounting connection h323 start-stop group radius
+gw-accounting h323
+gw-accounting h323 vsa
+gw-accounting voip
+
+
+Manual CDR uploads
+------------------
+
+If MySQL is down you will miss CDRs written by RADIUS. These CDRs can be
+reload manually from radius accounting files using the supplied upload
+scripts in scripts directory (IPNX, OpenSER and CISCO import scripts available).
+
+
+Q931 Release codes for Cisco
+----------------------------
+
+In CDRTool CISCO hexadecimal release codes are automatically mapped to Q931
+release codes.
+
+
+Rating engine
+-------------
+
+See RATING file.
+
+
+Monitoring
+----------
+
+Monit can check if the rating engine stopped working and restart it. A
+sample configuration file for monit is available in setup/monit/monitrc.
+Edit the IP address and hostname where the rating engine runs and copy
+/var/www/CDRTool/setup/monit/monitrc /etc/monit/monit.d/cdrtool

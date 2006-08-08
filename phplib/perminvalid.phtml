@@ -1,0 +1,26 @@
+<?
+#include ("../header.phtml");
+?>
+
+<center>
+<table width=80%>
+<td>
+<font face="Arial, Helvetica" size=-1>
+<br>
+  <h1>Permission denied</h1>
+
+  To access this page, the following permissions are required: 
+  <b><?php print $must_have ?></b>.<br>
+  
+  I won't let you access this page, because you have these permissions:
+  <b><?php print $does_have ?></b>.<p>
+<br>
+</font>
+
+</td>
+</table>
+<font face="Arial, Helvetica" size=-1>
+</font>
+</center>
+ </body>
+</html>

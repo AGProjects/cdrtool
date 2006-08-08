@@ -1,0 +1,25 @@
+-- MySQL dump 9.11
+--
+-- Host: db-log    Database: ser
+-- ------------------------------------------------------
+-- Server version	4.0.24_Debian-2-log
+
+--
+-- Table structure for table `sip_trace`
+--
+
+CREATE TABLE `sip_trace` (
+  `id` bigint(20) NOT NULL auto_increment,
+  `date` datetime NOT NULL default '0000-00-00 00:00:00',
+  `callid` varchar(254) NOT NULL default '',
+  `msg` text NOT NULL,
+  `method` varchar(50) NOT NULL default '',
+  `status` varchar(254) NOT NULL default '',
+  `fromip` varchar(50) NOT NULL default '',
+  `toip` varchar(50) NOT NULL default '',
+  `fromtag` varchar(64) NOT NULL default '',
+  `direction` varchar(4) NOT NULL default '',
+  PRIMARY KEY  (`id`),
+  KEY `call_id` (`callid`)
+) TYPE=MyISAM;
+

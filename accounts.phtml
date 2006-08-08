@@ -1,0 +1,313 @@
+<?
+include("global.inc");
+page_open(array("sess" => "CDRTool_Session",
+                   "auth" => "CDRTool_Auth",
+                   "perm" => "CDRTool_Perm")
+          );
+
+$loginname=$auth->auth["uname"];
+
+$action          = $_REQUEST['action'];
+$next            = $_REQUEST['next'];
+$PHP_SELF        = $_SERVER['PHP_SELF'];
+$search_text     = $_REQUEST['search_text'];
+
+$username        = $_REQUEST['username'];
+$password        = $_REQUEST['password'];
+$name            = $_REQUEST['name'];
+$organization    = $_REQUEST['organization'];
+$tel             = $_REQUEST['tel'];
+$email           = $_REQUEST['email'];
+$expire          = $_REQUEST['expire'];
+
+$gatewayFilter   = $_REQUEST['gatewayFilter'];
+$domainFilter    = $_REQUEST['domainFilter'];
+$serviceFilter   = $_REQUEST['serviceFilter'];
+$compidFilter    = $_REQUEST['compidFilter'];
+$aNumberFilter   = $_REQUEST['aNumberFilter'];
+$cscodeFilter    = $_REQUEST['cscodeFilter'];
+$afterDateFilter = $_REQUEST['afterDateFilter'];
+
+$perms           = $_REQUEST['perms'];
+$sources         = $_REQUEST['sources'];
+$delete          = $_REQUEST['delete'];
+
+$id              = $_REQUEST['id'];
+$uid             = $_REQUEST['uid'];
+$check           = $_REQUEST['check'];
+$mailsettings    = $_REQUEST['mailsettings'];
+
+$title           = "Accounts";
+
+if (is_readable("local/header.phtml")) {
+    include("local/header.phtml");
+} else {
+    include("header.phtml");
+}
+include("accounts_lib.phtml");
+
+$layout = new pageLayoutLocal();
+$layout->showTopMenu($title);
+
+if ($action == "edit" && $id) {
+    print "<center><table width=100%><tr><td>";
+
+    print "<h3>Edit account</h3>";
+    print "<p><a href=accounts.phtml>Accounts</a>";
+    print "</td></tr></table></center>";
+
+    $uid=$auth->auth["uid"];
+    if (!$perm->have_perm("admin")) {
+        $id=$uid;
+    }
+    if ($check || $delete) {
+    	if (!$password) $password=random_passwd_gen();
+
+        if ($err = $f->validate()) {
+            print "<p>
+            <font color=red>$err</font>
+            <p>";
+            $perms = implode($perms,",");
+            $sources = implode($sources,",");
+
+            showForm($id);
+        } else {
+            $perms_text      = implode($perms,",");
+            $sources_text    = implode($sources,",");
+
+            if ($delete && $perm->have_perm("admin")) {
+                $query="delete from auth_user";
+            } else {
+                //print "<p>Updating user";
+                $query=sprintf("update auth_user set
+                username     = '%s',
+                password     = '%s',
+                name         = '%s',
+                organization = '%s',
+                tel          = '%s',
+                email        = '%s'
+                ",
+                addslashes($username),
+                addslashes($password),
+                addslashes($name),
+                addslashes($organization),
+                addslashes($tel),
+                addslashes($email)
+                );
+
+                if ($perm->have_perm("admin")) {
+                    $query.=sprintf(",
+                    perms           = '%s',
+                    sources         = '%s',
+                    expire          = '%s',
+                    gatewayFilter   = '%s',
+                    domainFilter    = '%s',
+                    serviceFilter   = '%s',
+                    compidFilter    = '%s',
+                    aNumberFilter   = '%s',
+                    cscodeFilter    = '%s',
+                    afterDateFilter = '%s'
+                    ",
+                	addslashes($perms_text),
+	                addslashes($sources_text),
+    	            addslashes($expire),
+        	        addslashes($gatewayFilter),
+                    addslashes($domainFilter),
+                    addslashes($serviceFilter),
+                    addslashes($compidFilter),
+                    addslashes($aNumberFilter),
+                    addslashes($cscodeFilter),
+                    addslashes($afterDateFilter)
+
+                    );
+                }
+            }
+
+            $query=$query." where user_id = '$id'";
+
+            dprint($query);
+
+            if (!$cdr->query($query)) {
+                print "<p>Failed to update user $id";
+                print "The error is $cdr->Error";
+            }  else {
+                if ($delete) {
+                    print "<p>User <b>$name</b> deleted";
+                } else {
+                    print "<p>User <b>$name</b> updated";
+                    if ($mailsettings) {
+                        if ($_SERVER['HTTPS']=="on") {
+                            $protocolURL="https://";
+                        } else {
+                            $protocolURL="http://";
+                        }
+                        $body.=sprintf("The following CDRTool login account has been created for you:\n\n");
+                        $body.=sprintf("Username: %s\n",$username);
+                        $body.=sprintf("Password: %s\n",$password);
+                        $body.=sprintf("URL: %s%s%s\n\n",$protocolURL,$_SERVER['HTTP_HOST'],$CDRTool['tld']);
+                    	$from=sprintf("From: %s",$CDRTool['provider']['fromEmail']);
+                    	mail($email,"CDRTool login account", $body, $from);
+                    }
+                }
+
+                accountList();
+            }
+        }
+
+    } else {
+        $query="select * from auth_user";
+        if (!$perm->have_perm("admin")) {
+            $query.=sprintf(" where user_id = '%s'",$uid);
+            $id=$uid;
+        } else {
+            $query.=sprintf(" where user_id = '%s'",$id);
+        }
+
+        dprint($query);
+        $cdr->query($query);
+        $cdr->next_record();
+        
+        $username	      = $cdr->f('username');
+        $name		      = $cdr->f('name');
+        $email		      = $cdr->f('email');
+        $tel		      = $cdr->f('tel');
+        $password	      = $cdr->f('password');
+        $organization	  = $cdr->f('organization');
+        $perms		      = $cdr->f('perms');
+        $sources		  = $cdr->f('sources');
+        $expire		      = $cdr->f('expire');
+        $aNumberFilter    = $cdr->f('aNumberFilter');
+        $gatewayFilter    = $cdr->f('gatewayFilter');
+        $domainFilter     = $cdr->f('domainFilter');
+        $serviceFilter    = $cdr->f('serviceFilter');
+        $compidFilter     = $cdr->f('compidFilter');
+        $cscodeFilter     = $cdr->f('cscodeFilter');
+        $afterDateFilter  = $cdr->f('afterDateFilter');
+        showForm($id);
+    }
+
+
+} elseif ($action=="insert" && $perm->have_perm("admin")) {
+    print "<center><table width=100%><tr><td>";
+
+    print "<h3>Add account</h3>";
+    print "<p><a href=accounts.phtml>Accounts</a>";
+    $uid=$auth->auth["uid"];
+
+ 	if (!$password) $password=random_passwd_gen();
+
+    if ($check) {
+    	if ($perms) $perms   = implode($perms,",");
+        if ($sources) $sources = implode($sources,",");
+
+        if ($err = $f->validate()) {
+            print "<p><font color=red>$err</font>
+            <p>";
+            showForm();
+        } else {
+            //print "<p>Adding user";
+            $hash_secret = "ffdsdsd__ky...";
+            $user_id=md5(uniqid($hash_secret));
+            $query=sprintf("insert into auth_user
+            (user_id,
+            username,
+            password,
+            name,
+            organization,
+            tel,
+            email,
+            perms,
+            sources,
+            expire,
+            domainFilter,
+            aNumberFilter,
+            serviceFilter,
+            compidFilter,
+            cscodeFilter,
+            gatewayFilter,
+            afterDateFilter
+            ) values (
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s'
+            )",
+            addslashes($user_id),
+            addslashes($username),
+            addslashes($password),
+            addslashes($name),
+            addslashes($organization),
+            addslashes($tel),
+            addslashes($email),
+            addslashes($perms),
+	        addslashes($sources),
+    	    addslashes($expire),
+            addslashes($domainFilter),
+            addslashes($aNumberFilter),
+            addslashes($serviceFilter),
+            addslashes($compidFilter),
+            addslashes($cscodeFilter),
+        	addslashes($gatewayFilter),
+            addslashes($afterDateFilter)
+            );
+
+            dprint($query);
+
+            if (!$cdr->query($query)) {
+                printf("<p>Failed to add user: %s(%s) %s",$cdr->Error,$cdr->Errno,$query);
+
+            } else {
+                print "<p>User <b>$name</b> created";
+                if ($mailsettings) {
+                	if ($_SERVER['HTTPS']=="on") {
+			            $protocolURL="https://";
+        			} else {
+            			$protocolURL="http://";
+        			}
+                    $body.=sprintf("The following CDRTool login account has been created for you:\n\n");
+                    $body.=sprintf("Username: %s\n",$username);
+                    $body.=sprintf("Password: %s\n",$password);
+                    $body.=sprintf("URL: %s%s%s\n\n",$protocolURL,$_SERVER['HTTP_HOST'],$CDRTool['tld']);
+                    $from=sprintf("From: %s",$CDRTool['provider']['fromEmail']);
+                    mail($email,"CDRTool login account", $body, $from);
+                }
+            }
+        }
+
+    } else {
+        showForm();
+    }
+    print "</td></tr></table></center>";
+
+
+} else {
+        print "<center>
+        <table width=100%>
+        <tr><td>";
+        print "<h3>Account list</h3>";
+        if ($perm->have_perm("admin")) {
+        print "<p><a href=$PHP_SELF?action=insert>Add account</a>";
+        }
+        print "</td></tr></table></center>";
+		accountList();
+}
+
+$layout->showFooter();
+page_close();
+?>
+</body>
+</html>
+

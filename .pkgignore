@@ -1,0 +1,14 @@
+CVS
+.cvs*
+.#*
+.pkgignore*
+.DS_Store
+*.pyc
+*.pyo
+*~
+*.stats
+global.inc
+makedist
+CDRTool-*.tar.gz
+CDRTool-*.tgz
+TODO

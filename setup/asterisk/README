@@ -1,0 +1,16 @@
+   cvs -d:pserver:anoncvs@cvs.digium.com:/usr/cvsroot co asterisk-addons
+
+   cd ../asterisk-addons
+   - Add a line into asterisk-addons/Makefile reading:
+     CFLAGS+=-DMYSQL_LOGUNIQUEID
+   - edit cdr_addon_mysql.c and replace the line reading
+       AST_MUTEX_DEFINE_STATIC(mysql_lock);
+     with
+       static ast_mutex_t  mysql_lock   = AST_MUTEX_INITIALIZER;
+   - change the asterisk table name from cdr to asterisk_cdr in 
+     cdr_addon_mysql.c
+
+   chmod 644 cdr_addon_mysql.so
+   cp cdr_addon_mysql.so /usr/lib/asterisk/modules/
+   restart Asterisk
+   

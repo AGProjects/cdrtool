@@ -1,0 +1,409 @@
+-- MySQL dump 10.9
+--
+-- Host: db-log    Database: cdrtool
+-- ------------------------------------------------------
+-- Server version	4.0.24_Debian-2-log
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `active_sessions`
+--
+
+DROP TABLE IF EXISTS `active_sessions`;
+CREATE TABLE `active_sessions` (
+  `sid` varchar(32) NOT NULL default '',
+  `name` varchar(32) NOT NULL default '',
+  `val` text,
+  `changed` varchar(14) NOT NULL default '',
+  `count` bigint(20) unsigned NOT NULL default '0',
+  PRIMARY KEY  (`name`,`sid`),
+  KEY `changed` (`changed`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `active_sessions_split`
+--
+
+DROP TABLE IF EXISTS `active_sessions_split`;
+CREATE TABLE `active_sessions_split` (
+  `ct_sid` varchar(32) NOT NULL default '',
+  `ct_name` varchar(32) NOT NULL default '',
+  `ct_pos` varchar(6) NOT NULL default '',
+  `ct_val` text,
+  `ct_changed` varchar(14) NOT NULL default '',
+  PRIMARY KEY  (`ct_name`,`ct_sid`,`ct_pos`),
+  KEY `ct_changed` (`ct_changed`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `asterisk_cdr`
+--
+
+DROP TABLE IF EXISTS `asterisk_cdr`;
+CREATE TABLE `asterisk_cdr` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `calldate` datetime NOT NULL default '0000-00-00 00:00:00',
+  `clid` varchar(45) NOT NULL default '',
+  `src` varchar(45) NOT NULL default '',
+  `dst` varchar(45) NOT NULL default '',
+  `dcontext` varchar(45) NOT NULL default '',
+  `channel` varchar(45) NOT NULL default '',
+  `dstchannel` varchar(45) NOT NULL default '',
+  `lastapp` varchar(45) NOT NULL default '',
+  `lastdata` varchar(45) NOT NULL default '',
+  `duration` int(11) NOT NULL default '0',
+  `billsec` int(11) NOT NULL default '0',
+  `disposition` int(11) NOT NULL default '0',
+  `amaflags` int(11) NOT NULL default '0',
+  `accountcode` varchar(45) NOT NULL default '',
+  `uniqueid` varchar(45) NOT NULL default '',
+  `DestinationId` varchar(255) NOT NULL default '',
+  `Price` varchar(255) NOT NULL default '',
+  `Rate` varchar(255) NOT NULL default '',
+  `Normalized` enum('0','1') default '0',
+  PRIMARY KEY  (`id`),
+  KEY `calldate_idx` (`calldate`),
+  KEY `clid_idx` (`clid`),
+  KEY `src_idx` (`src`),
+  KEY `dst_idx` (`dst`),
+  KEY `channel_idx` (`channel`),
+  KEY `dstchannel_idx` (`dstchannel`),
+  KEY `normalized_idx` (`Normalized`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `auth_user`
+--
+
+DROP TABLE IF EXISTS `auth_user`;
+CREATE TABLE `auth_user` (
+  `user_id` varchar(32) NOT NULL default '',
+  `username` varchar(32) NOT NULL default '',
+  `password` varchar(32) NOT NULL default '',
+  `perms` varchar(255) default NULL,
+  `expire` date NOT NULL default '0000-00-00',
+  `organization` varchar(255) NOT NULL default '',
+  `name` varchar(50) NOT NULL default '',
+  `tel` varchar(50) NOT NULL default '',
+  `email` varchar(50) NOT NULL default '',
+  `display_cli` char(1) NOT NULL default '',
+  `compidFilter` varchar(255) NOT NULL default '',
+  `domainFilter` varchar(255) NOT NULL default '',
+  `gatewayFilter` varchar(255) NOT NULL default '',
+  `cscodeFilter` varchar(255) NOT NULL default '',
+  `serviceFilter` varchar(255) NOT NULL default '',
+  `aNumberFilter` varchar(255) NOT NULL default '',
+  `afterDateFilter` varchar(255) NOT NULL default '',
+  `sources` varchar(255) NOT NULL default '',
+  `otp_enable` enum('0','1') NOT NULL default '0',
+  `otp_rcpt` varchar(255) NOT NULL default '',
+  `otp_expire` datetime NOT NULL default '0000-00-00 00:00:00',
+  `otp_passwd` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`user_id`),
+  UNIQUE KEY `k_username` (`username`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `billing_customers`
+--
+
+DROP TABLE IF EXISTS `billing_customers`;
+CREATE TABLE `billing_customers` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `gateway` varchar(50) NOT NULL default '',
+  `domain` varchar(50) NOT NULL default '',
+  `subscriber` varchar(50) NOT NULL default '',
+  `profile_name1` varchar(10) NOT NULL default '',
+  `profile_name1_alt` varchar(10) NOT NULL default '',
+  `profile_name2` varchar(10) NOT NULL default '',
+  `profile_name2_alt` varchar(10) NOT NULL default '',
+  `profileNGN` varchar(10) NOT NULL default '',
+  `timezone` varchar(128) NOT NULL default '',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `cust_idx` (`gateway`,`domain`,`subscriber`),
+  KEY `subsc_idx` (`gateway`,`domain`,`subscriber`),
+  KEY `gatedom_idx` (`gateway`,`domain`),
+  KEY `gate_idx` (`gateway`),
+  KEY `sub_idx` (`subscriber`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `billing_holidays`
+--
+
+DROP TABLE IF EXISTS `billing_holidays`;
+CREATE TABLE `billing_holidays` (
+  `day` date NOT NULL default '0000-00-00',
+  UNIQUE KEY `day_idx` (`day`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `billing_profiles`
+--
+
+DROP TABLE IF EXISTS `billing_profiles`;
+CREATE TABLE `billing_profiles` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `gateway` varchar(50) NOT NULL default '',
+  `domain` varchar(50) NOT NULL default '',
+  `subscriber` varchar(50) NOT NULL default '',
+  `name` varchar(25) NOT NULL default '',
+  `rate_name1` varchar(25) NOT NULL default '',
+  `hour1` smallint(5) unsigned NOT NULL default '0',
+  `rate_name2` varchar(25) NOT NULL default '',
+  `hour2` smallint(5) unsigned NOT NULL default '0',
+  `rate_name3` varchar(25) NOT NULL default '',
+  `hour3` smallint(5) unsigned NOT NULL default '0',
+  `rate_name4` varchar(25) NOT NULL default '',
+  `hour4` smallint(5) unsigned NOT NULL default '0',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `profile_idx` (`name`,`hour1`,`hour2`,`hour3`,`hour4`),
+  KEY `name_idx` (`name`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `billing_profilesNGN`
+--
+
+DROP TABLE IF EXISTS `billing_profilesNGN`;
+CREATE TABLE `billing_profilesNGN` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `gateway` varchar(50) NOT NULL default '',
+  `domain` varchar(50) NOT NULL default '',
+  `subscriber` varchar(50) NOT NULL default '',
+  `name` varchar(25) NOT NULL default '',
+  `rate` varchar(25) NOT NULL default '',
+  `application` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `profile_idx` (`name`,`application`),
+  KEY `name_idx` (`name`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `billing_rates`
+--
+
+DROP TABLE IF EXISTS `billing_rates`;
+CREATE TABLE `billing_rates` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `gateway` varchar(50) NOT NULL default '',
+  `domain` varchar(50) NOT NULL default '',
+  `subscriber` varchar(50) NOT NULL default '',
+  `name` varchar(250) NOT NULL default '',
+  `destination` varchar(25) NOT NULL default '',
+  `durationRate` varchar(25) NOT NULL default '',
+  `trafficRate` varchar(25) NOT NULL default '',
+  `applicationRate` varchar(25) NOT NULL default '',
+  `connectCost` varchar(25) NOT NULL default '',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `rate_idx` (`name`,`destination`),
+  KEY `name_idx` (`name`),
+  KEY `dest_idx` (`destination`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `billing_ratesNGN`
+--
+
+DROP TABLE IF EXISTS `billing_ratesNGN`;
+CREATE TABLE `billing_ratesNGN` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `gateway` varchar(50) NOT NULL default '',
+  `domain` varchar(50) NOT NULL default '',
+  `subscriber` varchar(50) NOT NULL default '',
+  `name` varchar(25) NOT NULL default '',
+  `TrafficRate` varchar(25) NOT NULL default '',
+  `ConnectCost` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `rate_idx` (`name`),
+  KEY `name_idx` (`name`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `db_sequence`
+--
+
+DROP TABLE IF EXISTS `db_sequence`;
+CREATE TABLE `db_sequence` (
+  `seq_name` varchar(127) NOT NULL default '',
+  `nextid` int(10) unsigned NOT NULL default '0',
+  PRIMARY KEY  (`seq_name`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `destinations`
+--
+
+DROP TABLE IF EXISTS `destinations`;
+CREATE TABLE `destinations` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `gateway` varchar(50) NOT NULL default '',
+  `domain` varchar(50) NOT NULL default '',
+  `subscriber` varchar(50) NOT NULL default '',
+  `dest_id` varchar(25) NOT NULL default '',
+  `dest_name` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `cust_dest_idx` (`gateway`,`domain`,`subscriber`,`dest_id`),
+  KEY `dest_idx` (`dest_id`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `isdncause`
+--
+
+DROP TABLE IF EXISTS `isdncause`;
+CREATE TABLE `isdncause` (
+  `cause` int(11) NOT NULL default '0',
+  `description` varchar(255) NOT NULL default ''
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `lastquery`
+--
+
+DROP TABLE IF EXISTS `lastquery`;
+CREATE TABLE `lastquery` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `date` datetime NOT NULL default '0000-00-00 00:00:00',
+  `query` text,
+  PRIMARY KEY  (`id`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `log`
+--
+
+DROP TABLE IF EXISTS `log`;
+CREATE TABLE `log` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `date` datetime NOT NULL default '0000-00-00 00:00:00',
+  `login` varchar(32) NOT NULL default '',
+  `ip` varchar(32) NOT NULL default '',
+  `url` text NOT NULL,
+  `reedit` text NOT NULL,
+  `rerun` text NOT NULL,
+  `results` int(10) unsigned default NULL,
+  `description` text,
+  `datasource` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`id`),
+  KEY `log_date` (`date`),
+  KEY `login_idx` (`login`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `normalize_lock`
+--
+
+DROP TABLE IF EXISTS `normalize_lock`;
+CREATE TABLE `normalize_lock` (
+  `notused` char(1) default NULL
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `prepaid`
+--
+
+DROP TABLE IF EXISTS `prepaid`;
+CREATE TABLE `prepaid` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `account` varchar(255) NOT NULL default '',
+  `balance` decimal(10,4) NOT NULL default '0.0000',
+  `change_date` datetime NOT NULL default '0000-00-00 00:00:00',
+  `call_lock` enum('0','1') default '0',
+  `call_in_progress` datetime NOT NULL default '0000-00-00 00:00:00',
+  `last_call_price` decimal(10,4) NOT NULL default '0.0000',
+  `maxsessiontime` bigint(20) unsigned NOT NULL default '0',
+  `destination` varchar(50) NOT NULL default '',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `acc_id` (`account`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `prepaid_cards`
+--
+
+DROP TABLE IF EXISTS `prepaid_cards`;
+CREATE TABLE `prepaid_cards` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `batch` varchar(255) NOT NULL default '',
+  `number` bigint(20) unsigned NOT NULL default '0',
+  `value` smallint(5) unsigned NOT NULL default '0',
+  `blocked` enum('0','1') NOT NULL default '0',
+  `date_active` date NOT NULL default '0000-00-00',
+  `date_batch` date NOT NULL default '0000-00-00',
+  `service` varchar(255) NOT NULL default 'sip',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `card_idx` (`number`),
+  KEY `nr_id` (`number`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `prepaid_history`
+--
+
+DROP TABLE IF EXISTS `prepaid_history`;
+CREATE TABLE `prepaid_history` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `username` varchar(64) NOT NULL default '',
+  `domain` varchar(64) NOT NULL default '',
+  `action` varchar(255) NOT NULL default '',
+  `number` varchar(255) NOT NULL default '',
+  `value` float(10,2) NOT NULL default '0.00',
+  `balance` float(10,2) NOT NULL default '0.00',
+  `date` datetime default NULL,
+  PRIMARY KEY  (`id`),
+  KEY `acct_id` (`username`,`domain`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `settings`
+--
+
+DROP TABLE IF EXISTS `settings`;
+CREATE TABLE `settings` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `billing_party` varchar(255) NOT NULL default '',
+  `var_name` varchar(255) default NULL,
+  `var_description` varchar(255) default NULL,
+  `var_type` varchar(255) default NULL,
+  `var_value` text NOT NULL,
+  `var_read_only` char(1) default NULL,
+  `var_defaults` varchar(255) default NULL,
+  `var_module` varchar(255) default NULL,
+  PRIMARY KEY  (`id`),
+  KEY `name` (`var_name`)
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `sip_status`
+--
+
+DROP TABLE IF EXISTS `sip_status`;
+CREATE TABLE `sip_status` (
+  `code` smallint(5) unsigned NOT NULL default '0',
+  `description` varchar(255) NOT NULL default '',
+  `code_type` varchar(255) NOT NULL default '',
+  `isdn_cause` smallint(5) unsigned NOT NULL default '0'
+) TYPE=MyISAM;
+
+--
+-- Table structure for table `spam`
+--
+
+DROP TABLE IF EXISTS `spam`;
+CREATE TABLE `spam` (
+  `ip` varchar(64) NOT NULL default '',
+  `tries` smallint(5) unsigned NOT NULL default '0',
+  `login` varchar(255) default NULL,
+  `stamp` int(10) unsigned NOT NULL default '0',
+  UNIQUE KEY `spam_ip` (`ip`)
+) TYPE=MyISAM;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+

@@ -1,0 +1,2633 @@
+<?
+class CDRS_ipnxcdr extends CDRS {
+    var $CDR_class          = "CDR_ipnxcdr";
+
+    // mapping between CDRTool fields and database fields
+    var $CDRFields=array('id'   	           => 'id',
+                         'callId'              => 'id',
+                         'duration'            => 'duration',
+                         'startDate'           => 'date',
+                         'startTime'           => 'time',
+                         'aNumber'  	       => 'a_number',
+                         'username'            => 'a_number',
+                         'domain'	           => 'comp_id',
+                         'bNumber'   	       => 'b_number',
+                         'cNumber'   	       => 'c_number',
+                         'timestamp'	       => 'timestamp',
+                         'serviceType'         => 'cscode',
+                         'disconnect'          => 'release',
+                         'gateway'             => 'switch_unit',
+                         'carrierOut'          => 'carrier_out',
+                         'carrierIn'           => 'carrier_in',
+                         'channelIn'           => 'inbound_line',
+                         'channelOut'          => 'outbound_line',
+                         'portId'              => 'NASPortId',
+                         'portType'            => 'NASPortType',
+                         'destinationId'       => 'dest_id',
+                         'rate'                => 'rate',
+                         'price'               => 'cost'
+                         );
+
+    var $GROUPBY=array(
+        "a_number"    => "Source (A number)",
+        "b_number"    => "DDI (Access number)",
+        "comp_id"     => "Company Id (Customer)",
+        "cscode"      => "Carrier select code",
+        "switch_unit" => "Switch (Gateway)",
+        "carrier_out" => "Oubound carrier",
+        "carrier_in"  => "Inbound carrier",
+        "dest_id"     => "Destination Id (Country code)",
+        "release"     => "Disconnection (ISDN release cause)"
+        );
+
+    function LoadDisconnectCodes() {
+        global $cdr;
+        dprint("CDRS->LoadDisconnectCodes()");
+        $query="select * from isdncause order by cause";
+        dprint("$query");
+        $cdr->query($query);
+        $this->disconnectCodesElements[]=array("label"=>"Any disconnection cause","value"=>"");
+
+        while($cdr->next_record()) {
+
+            $key         = $cdr->f('cause');
+            $value       = $cdr->f('description');
+            $value_print = $value." (".$key.")";
+    
+            $this->disconnectCodesElements[]=array("label"=>$value_print,"value"=>$key);
+            $this->disconnectCodesDescription[$key]=$value;
+            $found++;
+        }
+        dprint("Loaded $found release codes");
+        return 1;
+    }
+
+    function showTableHeaderStatistics($begin_datetime,$end_datetime) {
+        $group_byPrint=$this->GROUPBY[$this->group_by];
+        if (!$this->export) {
+            if (preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$begin_datetime) && preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$end_datetime)) {
+                $begin_datetime_print=Date("Y-m-d H:i",$begin_datetime);
+                $end_datetime_print=Date("Y-m-d H:i",$end_datetime);
+                print  "
+                <p>From $begin_datetime_print to $end_datetime_print
+                ";
+            }
+            print "
+            <table border=1 cellspacing=2 width=100% align=center>
+            <tr>
+            <td>
+            <table border=0 cellspacing=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td></td>
+                <td>			<b>Calls</b></td>
+                <td align=right><b>Seconds</b></td>
+                <td align=right><b>Minutes</b></td>
+                <td align=right><b>Hours</b></td>
+                <td align=right><b>Price</b></td>
+                <td align=center colspan=2><b>Success</b></td>
+                <td align=center colspan=2><b>Failure</b></td>
+                <td>			<b>$group_byPrint</b></td>
+                <td>			<b>Description</b></td>
+                <td>			<b>Action</b></td>
+            </tr>
+            ";
+            print "</tr>";
+        } else {
+            print  "id,Calls,Seconds,Minutes,Hours,Price,Success(%),Success(calls),Failure(%),Failure(calls),$group_byPrint,Description\n";
+        }
+
+    }
+
+    function showTableHeader($begin_datetime,$end_datetime) {
+
+        if (!$this->export) {
+            print  "
+            <table border=1 cellspacing=2 width=100% align=center>
+            <tr>
+            <td>
+            <table border=0 cellspacing=2 width=100%>
+            <tr bgcolor=lightgrey>
+            <td>
+            <td><b>Date</b>
+            <td><b>CSCODE</b>
+            <td><b>Source (CLI)</b>
+            <td><b>In</b>
+            <td><b>DDI (B)</b>
+            <td colspan=2><b>Destination (C)</b>
+            <td><b>Out</b></b>
+            <td><b>Dur</b>
+            <td align=right><b>Rate</b>
+            <td align=right><b>Price</b>
+            <td><b>Compid</b>
+            ";
+
+            if (!$this->CDRTool['filter']['aNumber'] && !$this->CDRTool['filter']['compid']) {
+                  print "
+                  <td><b>Switch</b>
+                  <td colspan=2><b>CarIn</b>
+                  <td colspan=2><b>CarOut</b>
+                  ";
+            }
+
+            if (!$this->CDRTool['filter']['aNumber']) {
+                print "<td><b>Release code</b>";
+            }
+            print "
+            </tr>
+            ";
+        } else {
+            print  "id,StartTime,A_Number";
+            print ",B_Number,C_Number,DestinationId,DestinationName,Duration,Rate,Price,CompanyId";
+            if (!$this->CDRTool['filter']['aNumber'] && !$this->CDRTool['filter']['compid']) {
+                print ",Switch,CarrierIn,ChannelIn,Carrier_out,ChannelOut";
+            }
+            if (!$this->CDRTool['filter']['aNumber']) {
+                    print ",DisconnectionCode,DisconnectionName";
+            }
+            print "\n";
+        }
+    }
+
+    function showExportHeader() {
+
+        print  "id,StartTime,A_Number,B_Number,C_Number,DestinationId,DestinationName,Duration,Rate,Price,CompanyId";
+        if (!$this->CDRTool['filter']['aNumber'] && !$this->CDRTool['filter']['compid']) {
+            print ",Switch,CarrierIn,ChannelIn,Carrier_out,ChannelOut";
+        }
+        if (!$this->CDRTool['filter']['aNumber']) {
+            print ",DisconnectionCode,DisconnectionName";
+        }
+        print "\n";
+    }
+
+    function initForm() {
+
+        // form els added below must have global vars
+        global $a_number;
+        global $a_number_comp;
+        global $b_number;
+        global $b_number_comp;
+        global $c_number;
+        global $c_number_comp;
+        global $DestinationId;
+
+        global $cdr_table;
+        global $switch_unit;
+        global $cscode;
+        global $comp_id;
+        global $carrier_in;
+        global $carrier_out;
+        global $release_cause;
+
+        global $duration;
+
+        global $order_by;
+        global $order_type;
+        global $group_by;
+
+        global $end_min;
+        global $end_hour;
+        global $end_day;
+        global $end_month;
+        global $end_year;
+
+        global $begin_min;
+        global $begin_hour;
+        global $begin_day;
+        global $begin_month;
+        global $begin_year;
+
+        global $maxrowsperpage;
+        global $action;
+
+        $cdr_source     = $_REQUEST["cdr_source"];
+        
+        $action         = "search";
+        $trace          = $_REQUEST["trace"];
+        
+        $begin_datetime = $_REQUEST["begin_datetime"];
+        $end_datetime   = $_REQUEST["end_datetime"];
+        
+        $call_id =        $_REQUEST["call_id"];
+        
+        $a_number =       $_REQUEST["a_number"];
+        $a_number_comp =  $_REQUEST["a_number_comp"];
+        $b_number =       $_REQUEST["b_number"];
+        $b_number_comp =  $_REQUEST["b_number_comp"];
+        $c_number =       $_REQUEST["c_number"];
+        $c_number_comp =  $_REQUEST["c_number_comp"];
+        $DestinationId =  $_REQUEST["DestinationId"];
+        
+        $cdr_table      = $_REQUEST["cdr_table"];
+        $switch_unit    = $_REQUEST["switch_unit"];
+        $cscode         = $_REQUEST["cscode"];
+        $comp_id        = $_REQUEST["comp_id"];
+        $carrier_in     = $_REQUEST["carrier_in"];
+        $carrier_out    = $_REQUEST["carrier_out"];
+
+        $release_cause =  $_REQUEST["release_cause"];
+        $duration =       $_REQUEST["duration"];
+        
+        $order_by =       $_REQUEST["order_by"];
+        $order_type =     $_REQUEST["order_type"];
+        
+        $group_by =       $_REQUEST["group_by"];
+        $maxrowsperpage = $_REQUEST["maxrowsperpage"];
+
+        if ($this->CDRTool['filter']['aNumber']) {
+            $a_number=$this->CDRTool['filter']['aNumber'];
+        }
+        
+        if (!$maxrowsperpage) {
+            $maxrowsperpage=50;
+        }
+
+        $this->f = new form;
+        
+        if (isset($this->CDRTool['dataSourcesAllowed'])) {
+            while (list($k,$v)=each($this->CDRTool['dataSourcesAllowed'])) {
+                $cdr_source_els[]=array("label"=>$this->DATASOURCES[$v]['name'],"value"=>$v);
+            }
+        }
+        
+        if (!$cdr_source) {
+            $cdr_source=$cdr_source_els[0]['value'];
+        }
+
+        $this->f->add_element(array("name"=>"cdr_source",
+                                    "type"=>"select",
+                                    "options"=>$cdr_source_els,
+                                    "size"=>"1",
+                                    "extrahtml"=>"onChange=\"document.datasource.submit.disabled = true; location.href = 'callsearch.phtml?cdr_source=' + this.options[this.selectedIndex].value\"",
+                                    "value"=>"$cdr_source"
+                              )
+                       );
+        
+        if ($begin_datetime) {
+            dprint("begin_datetime=$begin_datetime");
+            preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$begin_datetime", $parts);
+            $begin_year	=date(Y,$begin_datetime);
+            $begin_month=date(m,$begin_datetime);
+            $begin_day 	=date(d,$begin_datetime);
+            $begin_hour	=date(H,$begin_datetime);
+            $begin_min 	=date(i,$begin_datetime);
+        } else {
+            $begin_day      = $_REQUEST["begin_day"];
+            $begin_month    = $_REQUEST["begin_month"];
+            $begin_year     = $_REQUEST["begin_year"];
+            $begin_hour     = $_REQUEST["begin_hour"];
+            $begin_min      = $_REQUEST["begin_min"];
+        }
+        
+        if ($end_datetime) {
+            dprint("end_datetime=$end_datetime");
+            preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$end_datetime", $parts);
+            $end_year	=date(Y,$end_datetime);
+            $end_month 	=date(m,$end_datetime);
+            $end_day 	=date(d,$end_datetime);
+            $end_hour	=date(H,$end_datetime);
+            $end_min 	=date(i,$end_datetime);
+        }  else {
+            $end_day        = $_REQUEST["end_day"];
+            $end_month      = $_REQUEST["end_month"];
+            $end_year       = $_REQUEST["end_year"];
+            $end_hour       = $_REQUEST["end_hour"];
+            $end_min        = $_REQUEST["end_min"];
+        }
+        
+        $default_year	=Date("Y");
+        $default_month	=Date("m");
+        $default_day	=Date("d");
+        $default_hour	=Date(H,time());
+        
+        if ($default_hour > 1) {
+            $default_hour=$default_hour-1;
+        }
+        
+        $default_hour=preg_replace("/^(\d)$/","0$1",$default_hour);
+        $default_min	=Date("i");
+        
+        if ($default_min > 10) {
+            $default_min=$default_min-10;
+            $default_min=preg_replace("/^(\d)$/","0$1",$default_min);
+        }
+
+        if (!$begin_hour)  $begin_hour  = $default_hour;
+        if (!$begin_min)   $begin_min   = $default_min;
+        if (!$begin_day)   $begin_day   = $default_day;
+        if (!$begin_month) $begin_month = $default_month;
+        if (!$begin_year)  $begin_year  = $default_year;
+
+        if (!$end_hour)  $end_hour  = 23;
+        if (!$end_min)   $end_min   = 55;
+        if (!$end_day)   $end_day   = $default_day;
+        if (!$end_month) $end_month = $default_month;
+        if (!$end_year)  $end_year  = $default_year;
+
+        $m=0;
+        while ($m<24) {
+            if ($m<10) { $v="0".$m; } else { $v=$m; }
+            $hours_els[]=array("label"=>$v,"value"=>$v);
+            $m++;
+        }
+
+        $this->f->add_element(array(
+                    "name"=>"begin_hour",
+                    "type"=>"select",
+                    "options"=>$hours_els,
+                    "size"=>"1"
+                    ));
+        $this->f->add_element(array(	"name"=>"end_hour",
+                    "type"=>"select",
+                    "options"=>$hours_els,
+                    "size"=>"1",
+                    "value"=>"23"
+                    ));
+        $m=0;
+        while ($m<60) {
+            if ($m<10) { $v="0".$m; } else { $v=$m; }
+            $min_els[]=array("label"=>$v,"value"=>$v);
+            $m++;
+        }
+
+        $this->f->add_element(array(	"name"=>"begin_min",
+                    "type"=>"select",
+                    "options"=>$min_els,
+                    "size"=>"1"
+                    ));
+        $this->f->add_element(array(
+                    "name"=>"end_min",
+                    "type"=>"select",
+                    "options"=>$min_els,
+                    "size"=>"1"
+                    ));
+
+        $m=0;
+        while ($m<32) {
+            if ($m<10) { $v="0".$m; } else { $v=$m; }
+            $days_els[]=array("label"=>$v,"value"=>$v);
+            $m++;
+        }
+
+        $this->f->add_element(array(	"name"=>"begin_day",
+                                "type"=>"select",
+                                "options"=>$days_els,
+                                "size"=>"1"
+        
+                    ));
+        $this->f->add_element(array(	"name"=>"end_day",
+                                "type"=>"select",
+                                "options"=>$days_els,
+                                "size"=>"1"
+        
+                    ));
+
+        $m=0;
+        while ($m<13) {
+            if ($m<10) { $v="0".$m; } else { $v=$m; }
+            $month_els[]=array("label"=>$v,"value"=>$v);
+            $m++;
+        }
+        
+        
+        $this->f->add_element(array(	"name"=>"begin_month",
+                                "type"=>"select",
+                                "options"=>$month_els,
+                                "size"=>"1"
+                    ));
+        
+        $this->f->add_element(array(	"name"=>"end_month",
+                                "type"=>"select",
+                                "options"=>$month_els,
+                                "size"=>"1"
+                    ));
+        
+        $thisYear=date("Y",time());
+        $y=$thisYear;
+        while ($y>$thisYear-6) {
+            $year_els[]=array("label"=>$y,"value"=>$y);
+            $y--;
+        }
+        $this->f->add_element(array(	"name"=>"begin_year",
+                                "type"=>"select",
+                                "options"=>$year_els,
+                                "size"=>"1"
+        
+                    ));
+        $this->f->add_element(array(	"name"=>"end_year",
+                                "type"=>"select",
+                                "options"=>$year_els,
+                                "size"=>"1"
+                    ));
+
+        $this->f->add_element(array(	"name"=>"call_id",
+                                "type"=>"text",
+                                "size"=>"50",
+                                "maxlength"=>"100"
+                    ));
+        
+        $this->f->add_element(array(	"name"=>"a_number",
+                                "type"=>"text",
+                                "size"=>"25",
+                                "maxlength"=>"25"
+                    ));
+        $this->f->add_element(array(	"name"=>"UserName",
+                                "type"=>"text",
+                                "size"=>"25",
+                                "maxlength"=>"25"
+                    ));
+        $this->f->add_element(array(	"name"=>"c_number",
+                                "type"=>"text",
+                                "size"=>"25",
+                                "maxlength"=>"25"
+                    ));
+        
+        if (!$CDRTool['filter']['aNumber']) {
+            $durations_els = array(
+                array("label"=>"All calls","value"=>""),
+                array("label"=>"0 seconds call","value"=>"zero"),
+                array("label"=>"non 0 seconds","value"=>"nonzero"),
+                array("label"=>"non 0 seconds with 0 price","value"=>"zeroprice"),
+                array("label"=>"less than 5 seconds","value"=>"< 5"),
+                array("label"=>"more than 5 seconds","value"=>"> 5"),
+                array("label"=>"less than 60 seconds","value"=>"< 60"),
+                array("label"=>"greater than 1 hour","value"=>"> 3600"),
+                array("label"=>"greater than 5 hours","value"=>"> 18000")
+                );
+        } else {
+            $durations_els = array(
+                array("label"=>"Succesfull calls","value"=>"nonzero")
+                );
+        }
+        
+        $this->f->add_element(array(	"name"=>"duration",
+                                "type"=>"select",
+                                "options"=>$durations_els,
+                                "value"=>"All",
+                                "size"=>"1"
+                    ));
+        
+        $comp_ops_els = array(
+                array("label"=>"Begins with","value"=>"begin"),
+                array("label"=>"Contains","value"=>"contain"),
+                array("label"=>"Is empty","value"=>"empty"),
+                array("label"=>"Equal","value"=>"equal")
+                );
+
+        $this->f->add_element(array(	"name"=>"a_number_comp",
+                                "type"=>"select",
+                                "options"=>$comp_ops_els,
+                                "value"=>"begin",
+                                "size"=>"1"
+                    ));
+        $this->f->add_element(array(	"name"=>"c_number_comp",
+                                "type"=>"select",
+                                "options"=>$comp_ops_els,
+                                "value"=>"begin",
+                                "size"=>"1"
+                    ));
+        $this->f->add_element(array(	"name"=>"UserName_comp",
+                                "type"=>"select",
+                                "options"=>$comp_ops_els,
+                                "value"=>"begin",
+                                "size"=>"1"
+                    ));
+        $this->f->add_element(array("type"=>"submit",
+                              "name"=>"submit",
+                              "value"=>"Search"
+                    ));
+        
+        $max_els=array(
+                array("label"=>"5","value"=>"5"),
+                        array("label"=>"10","value"=>"10"),
+                        array("label"=>"25","value"=>"25"),
+                        array("label"=>"50","value"=>"50"),
+                        array("label"=>"100","value"=>"100"),
+                        array("label"=>"500","value"=>"500")
+                );
+        
+        
+        $this->f->add_element(array(	"name"=>"maxrowsperpage",
+                                "type"=>"select",
+                                "options"=>$max_els,
+                                "size"=>"1",
+                                "value"=>"25"
+                    ));
+        
+        $order_type_els=array(
+                        array("label"=>"Descending","value"=>"DESC"),
+                        array("label"=>"Ascending","value"=>"ASC")
+                        );
+        
+        $this->f->add_element(array(	"name"=>"order_type",
+                                "type"=>"select",
+                                "options"=>$order_type_els,
+                                "size"=>"1"
+                    ));
+        
+        $this->f->add_element(array("type"=>"hidden",
+                              "name"=>"action",
+                              "value"=>$action,
+                ));
+        $this->f->add_element(array(	"name"=>"prepaid_card",
+                                "type"=>"text",
+                                "size"=>"15",
+                                "maxlength"=>"25"
+                    ));
+        $this->f->add_element(array(	"name"=>"prepaid_card_comp",
+                                "type"=>"select",
+                                "options"=>$comp_ops_els,
+                                "value"=>"begin",
+                                "size"=>"1"
+                    ));
+        $this->f->add_element(array(	"name"=>"b_number",
+                                "type"=>"text",
+                                "size"=>"25",
+                                "maxlength"=>"25"
+                    ));
+        
+        $this->f->add_element(array(	"name"=>"b_number_comp",
+                                "type"=>"select",
+                                "options"=>$comp_ops_els,
+                                "value"=>"begin",
+                                "size"=>"1"
+                    ));
+        $carrier_ops_els=array(
+                        array("label"=>"Or","value"=>"Or"),
+                        array("label"=>"And","value"=>"And")
+                );
+        
+        $this->f->add_element(array(	"name"=>"carrier_ops",
+                                "type"=>"select",
+                                "options"=>$carrier_ops_els,
+                                "size"=>"1"
+                    ));
+        
+        if (count($this->tables) > 1) {
+            foreach ($this->tables as $_table) {
+                $cdr_table_els[]=array("label"=>substr($_table,3),"value"=>$_table);
+            }
+        }
+    
+        $this->f->add_element(array(  "name"=>"cdr_table",
+                                "type"=>"select",
+                                "options"=>$cdr_table_els,
+                                "size"=>"1",
+                                "value"=>$cdr_table
+                                ));
+    
+        if ($this->DATASOURCES[$this->cdr_source][switch_units]) {
+            $switch_unit_els[]=array("label"=>"All switches","value"=>"");
+
+            while (list($k,$v)=each($this->DATASOURCES[$this->cdr_source][switch_units])) {
+                $switch_unit_els[]=array("label"=>$v[WEBName]." (".$k.")","value"=>$k);
+            }
+
+            $this->f->add_element(array(
+                                "name"=>"switch_unit",
+                                "type"=>"select",
+                                "options"=>$switch_unit_els,
+                                "size"=>"1",
+                                "value"=>$switch_unit
+                                ));
+        } else {
+            $this->f->add_element(array(	"name"=>"switch_unit",
+                        "type"=>"text",
+                        "size"=>"10",
+                        "maxlength"=>"10"
+			));
+        }
+
+        if ($this->DATASOURCES[$this->cdr_source][cscodes]) {
+
+            $cscode_els[]=array("label"=>"All codes","value"=>"");
+            while (list($k,$v)=each($this->DATASOURCES[$this->cdr_source][cscodes])) {
+                $cscode_els[]=array("label"=>$v[WEBName]." (".$k.")","value"=>$k);
+            }
+
+            $this->f->add_element(array(
+                                "name"=>"cscode",
+                                "type"=>"select",
+                                "options"=>$cscode_els,
+                                "size"=>"1",
+                                "value"=>$cscode
+                                ));
+
+        } else {
+            $this->f->add_element(array(	"name"=>"cscode",
+                                    "type"=>"text",
+                                    "size"=>"10",
+                                    "maxlength"=>"10",
+                                    "value"=>"$cscode",
+                        ));
+        }
+
+        if ($this->DATASOURCES[$this->cdr_source][carriersIn]) {
+
+            $carriersIn_els[]=array("label"=>"All inbound carriers","value"=>"");
+            while (list($k,$v)=each($this->DATASOURCES[$this->cdr_source][carriersIn])) {
+                $carriersIn_els[]=array("label"=>$v[WEBName]." (".$k.")","value"=>$k);
+            }
+
+            $this->f->add_element(array(
+                                "name"=>"carrier_in",
+                                "type"=>"select",
+                                "options"=>$carriersIn_els,
+                                "size"=>"1",
+                                "value"=>$carrier_in
+                                ));
+
+        } else {
+            $this->f->add_element(array(	"name"=>"carrier_in",
+                                    "type"=>"text",
+                                    "size"=>"3",
+                                    "maxlength"=>"25"
+                        ));
+        }
+
+        if ($this->DATASOURCES[$this->cdr_source][carriersOut]) {
+
+            $carriersOut_els[]=array("label"=>"All outbound carriers","value"=>"");
+            while (list($k,$v)=each($this->DATASOURCES[$this->cdr_source][carriersOut])) {
+                $carriersOut_els[]=array("label"=>$v[WEBName]." (".$k.")","value"=>$k);
+            }
+
+            $this->f->add_element(array(
+                                "name"=>"carrier_out",
+                                "type"=>"select",
+                                "options"=>$carriersOut_els,
+                                "size"=>"1",
+                                "value"=>$carrier_out
+                                ));
+
+        } else {
+            $this->f->add_element(array(	"name"=>"carrier_out",
+                                    "type"=>"text",
+                                    "size"=>"3",
+                                    "maxlength"=>"25"
+                        ));
+        }
+
+        $this->f->add_element(array(
+                "type"=>"hidden",
+                "name"=>"action",
+                "value"=>"search"
+                ));
+
+        if ($this->CDRTool['filter']['aNumber']) {
+            $order_by_els=array(
+            array("label"=>"Date","value"=>"timestamp"),
+            array("label"=>"CLI","value"=>"a_number"),
+            array("label"=>"Access number","value"=>"b_number"),
+            array("label"=>"Destination","value"=>"c_number"),
+            array("label"=>"Call duration","value"=>"duration"),
+            array("label"=>"Price","value"=>"cost")
+            );
+        } else {
+            $order_by_els=array(
+            array("label"=>"Date","value"=>"timestamp"),
+            array("label"=>"CLI","value"=>"a_number"),
+            array("label"=>"Access number (DDI)","value"=>"b_number"),
+            array("label"=>"Destination","value"=>"c_number"),
+            array("label"=>"Call duration","value"=>"duration"),
+            array("label"=>"Release code","value"=>"release"),
+            array("label"=>"Price","value"=>"cost"),
+            array("label"=>"Failures(%)","value"=>"zeroP"),
+            array("label"=>"Success(%)","value"=>"nonzeroP")
+
+            );
+        }
+
+        $this->f->add_element(array(	"name"=>"order_by",
+                                "type"=>"select",
+                                "options"=>$order_by_els,
+                                "value"=>$order_by,
+                                "size"=>"1"
+                                ));
+
+        $group_by_els[]=array("label"=>"","value"=>"");
+        while (list($k,$v)=each($this->GROUPBY)) {
+            $group_by_els[]=array("label"=>$v,"value"=>$k);
+        }
+
+        if ($this->DATASOURCES[$this->cdr_source][cscodes]) {
+            $group_by_els[]=array("label"=>"Carrier select code","value"=>"cscode");
+        }
+
+        $this->f->add_element(array(	"name"=>"comp_id",
+                                "type"=>"text",
+                                "size"=>"10",
+                                "maxlength"=>"25",
+                                "value"=>"$comp_id"
+                    ));
+
+        $this->f->add_element(array(	"name"=>"group_by",
+                                "type"=>"select",
+                                "options"=>$group_by_els,
+                                "value"=>$group_by,
+                                "size"=>"1"
+                                ));
+
+        $this->f->add_element(array(	"name"=>"release_cause",
+                            "type"=>"select",
+                            "options"=>$this->disconnectCodesElements,
+                            "size"=>"1",
+                            "value"=>$release_cause
+
+                    ));
+
+        $this->f->load_defaults();
+    }
+
+    function searchForm() {
+
+        global $perm;
+
+        $this->initForm();
+        // Start displaying form
+        
+        $this->f->start("","POST","","","datasource");
+
+        if ($this->CDRTool['filter']['aNumber']) {
+                $ff[]="a_number";
+                $ff[]="a_number_comp";
+        }
+        if ($this->CDRTool[filter][cscode]) {
+                dprint ("Filter by CS code enabled");
+                $ff[]="cscode";
+        }
+        if ($this->CDRTool['filter']['compid']) {
+                $ff[]="comp_id";
+        }
+        if (count($ff)) {
+            $this->f->freeze($ff);
+        }
+
+        print "
+        <table cellpadding=5 cellspacing=0 border=6 width=100% align=center>
+        ";
+
+        $this->showDataSources($this->f);
+
+        print "
+        <tr>
+            <td valign=middle align=left>
+            <b>Switch</b>
+            </td>
+            <td>
+             ";
+
+        if (!$this->CDRTool['filter']['aNumber'] && !$this->CDRTool['filter']['compid']) {
+            $this->f->show_element("switch_unit","");
+        }
+               print "
+               CS code:
+                   ";
+                $this->f->show_element("cscode","");
+
+             print "
+             </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+
+        $this->showDateTimeElements ($this->f);
+
+        if (!$this->CDRTool['filter']['aNumber']) {
+            print "
+            <tr> 
+               <td align=left>
+               <b>Company id</b>
+               </td>
+               <td valign=top>
+               ";
+               $this->f->show_element("comp_id","");
+                print "
+                </td>
+            </tr>
+            <tr>
+            </tr>
+            ";
+        }
+        if (!$limit_cscode && !$this->CDRTool['filter']['aNumber']) {
+            print "
+            <tr> 
+               <td align=left>
+               <b>Carriers</b>
+               </td>
+               <td valign=top> 
+               Incomming ";
+               $this->f->show_element("carrier_in","");
+               print " Outgoing ";
+               $this->f->show_element("carrier_out","");
+               print "
+               </td>
+            </tr>
+            <tr>
+            </tr>
+            ";
+        }
+        print "
+        <tr> 
+            <td align=left>
+            <b>
+            Source (A number)
+            </b>
+            </td>
+            <td valign=top>
+            ";
+            $this->f->show_element("a_number_comp","");
+            $this->f->show_element("a_number","");
+            print "
+            </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        
+        print "
+        <tr> 
+            <td align=left>
+            <b>
+            Access number(DDI)
+            </b>
+            </td>
+            <td valign=top>
+            ";
+            $this->f->show_element("b_number_comp","");
+            $this->f->show_element("b_number","");
+            print "
+            </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        print "
+        <tr>
+               <td align=left>
+               <b>
+               Destination
+               </b>
+               </td>
+               <td valign=top>   ";
+               $this->f->show_element("c_number_comp","");
+               $this->f->show_element("c_number","");
+               print "
+               </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        
+        print "
+        <tr> 
+               <td align=left>
+               <b>Call duration</b>
+               </td>
+               <td valign=top>   ";
+               $this->f->show_element("duration","");
+               if (!$this->CDRTool['filter']['aNumber']) {
+                   $this->f->show_element("release_cause","");
+               }
+               print "
+               </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+
+        print "
+        <tr> 
+            <td align=left>
+            <b>Order by</b>
+            </td>
+            <td valign=top>
+            ";
+            $this->f->show_element("order_by","");
+            $this->f->show_element("order_type","");
+
+            if ($perm->have_perm("statistics")) {
+               print " Group by ";
+               $this->f->show_element("group_by","");
+            }
+
+            print " Max results per page ";
+            $this->f->show_element("maxrowsperpage","");
+            print "
+            </td>
+        </tr>
+        </table>
+        <p>
+        ";
+        print "<center>";
+        $this->f->show_element("submit","");
+        $this->f->finish();
+        print "</center>";
+
+    }
+
+    function show() {
+        global $perm;
+
+        $begin_hour =     $_REQUEST["begin_hour"];
+        $begin_min =      $_REQUEST["begin_min"];
+        $begin_month =    $_REQUEST["begin_month"];
+        $begin_day =      $_REQUEST["begin_day"];
+        $begin_year =     $_REQUEST["begin_year"];
+        $begin_datetime = $_REQUEST["begin_datetime"];
+
+        $end_hour =       $_REQUEST["end_hour"];
+        $end_min =        $_REQUEST["end_min"];
+        $end_month =      $_REQUEST["end_month"];
+        $end_day =        $_REQUEST["end_day"];
+        $end_year =       $_REQUEST["end_year"];
+        $end_datetime =   $_REQUEST["end_datetime"];
+
+        $call_id =        $_REQUEST["call_id"];
+        $unnormalize =    $_REQUEST["unnormalize"];
+
+        $a_number =       $_REQUEST["a_number"];
+        $a_number_comp =  $_REQUEST["a_number_comp"];
+        $b_number =       $_REQUEST["b_number"];
+        $b_number_comp =  $_REQUEST["b_number_comp"];
+        $c_number =       $_REQUEST["c_number"];
+        $c_number_comp =  $_REQUEST["c_number_comp"];
+        $DestinationId =  $_REQUEST["DestinationId"];
+
+        $cdr_table      = $_REQUEST["cdr_table"];
+        $switch_unit    = $_REQUEST["switch_unit"];
+        $cscode         = $_REQUEST["cscode"];
+        $comp_id        = $_REQUEST["comp_id"];
+        $carrier_in     = $_REQUEST["carrier_in"];
+        $carrier_out    = $_REQUEST["carrier_out"];
+
+        $release_cause =  $_REQUEST["release_cause"];
+
+        $duration =       $_REQUEST["duration"];
+        $action =         $_REQUEST["action"];
+
+        $order_by =       $_REQUEST["order_by"];
+        $order_type =     $_REQUEST["order_type"];
+
+        $group_by =       $_REQUEST["group_by"];
+
+        if (!$order_by) {
+            $order_by="timestamp";
+        }
+        if (!$order_type) {
+            $order_type="DESC";
+        }
+
+        if (!$this->export) {
+            if (!$begin_datetime) {
+                $begin_datetime=mktime($begin_hour, $begin_min, 0, $begin_month,$begin_day,$begin_year);
+            }
+            if (!$end_datetime) {
+                $end_datetime=mktime($end_hour, $end_min, 0, $end_month,$end_day,$end_year);
+            }
+            $begin_datetime_url=urlencode($begin_datetime);
+            $end_datetime_url=urlencode($end_datetime);       
+        }
+
+        // build an url to be able to log and refine the query
+        $this->url="?cdr_table=$cdr_table";
+        $this->url=$this->url."&cdr_source=$this->cdr_source";
+        $this->url=$this->url."&order_by=$order_by&order_type=$order_type";
+        $this->url=$this->url."&begin_datetime=$begin_datetime_url";
+        $this->url=$this->url."&end_datetime=$end_datetime_url";
+        $where = " timestamp >= '$begin_datetime' and timestamp <= '$end_datetime' ";
+        
+        if (strlen($release_cause)>0) {
+            $where = "$where"." and $this->disconnectField = '$release_cause'";
+            $this->url=$this->url."&release_cause=$release_cause";
+        }
+        
+        if ($this->CDRTool['filter']['aNumber']) {
+             // force user to see only records with his a_number
+             $a_number=$this->CDRTool['filter']['aNumber'];
+             $a_number_comp="equal";
+        }
+        
+        if ($a_number_comp == "empty") {
+            $where .= " and $this->aNumberField = ''";
+        } else {
+            if ($a_number) {
+                if (!$a_number_comp) {
+                    $a_number_comp="equal";
+                }
+                $a_number_encoded=urlencode($a_number);
+                $this->url="$this->url"."&a_number=$a_number_encoded";
+                if ($a_number_comp=="begin") {
+                    $where .= " and $this->aNumberField like '$a_number%' ";
+                } elseif ($a_number_comp=="contain") {
+                    $where .= " and $this->aNumberField like '%$a_number%' ";
+                } elseif ($a_number_comp=="equal") {
+                    $where .= " and ( $this->aNumberField = '$a_number' or $this->bNumberField = '$a_number')";
+                }
+                $this->url=$this->url."&a_number_comp=$a_number_comp";
+            }
+        }
+
+        if ($DestinationId) {
+            $where = "$where"." and $this->destinationIdField = '$DestinationId'";
+            $this->url="$this->url"."&DestinationId=$DestinationId";
+        }
+
+        # restriction for comp_form
+        if ($this->CDRTool['filter']['compid']) {
+            if ($comp_id != $this->CDRTool['filter']['compid']) {
+                print "<center>
+                <font color=blue>
+                Search for data belonging to comp id $comp_id is not allowed. </font>
+                </center>
+                ";
+            } 
+            // set the compid to the imposed comp id
+            $comp_id=$this->CDRTool['filter']['compid'];
+        }
+
+        if ($comp_id) {
+            $comps=explode(" ",$comp_id);
+            $z=1;
+            foreach ($comps as $c) {
+                $comp_w=$comp_w." comp_id = '$c'";
+                if ($z < count($comps)) {
+                        $comp_w=$comp_w." or ";
+                }
+                $z++;
+            }
+            $where = "$where"." and ($comp_w)";
+            $comp_id_encoded=urlencode($comp_id);
+            $this->url="$this->url"."&comp_id=$comp_id_encoded";
+        }
+
+        dprint ("where = $where");
+        # restriction for codeFilter (carrier selection)
+        if ($this->CDRTool[filter][cscode]) {
+            if ($this->CDRTool[filter][cscode] != $cscode) {
+                print "
+                <center>
+                <font color=blue>Search for data belonging to
+                cscode $cscode is not allowed.</font>
+                </center>
+                ";
+            } 
+            $cscode=$this->CDRTool[filter][cscode];
+        }
+        
+        if ($cscode) {
+            # Trim content of comp_form - allow only alpha numeric character
+            $cscode_form=preg_replace("/[^\d\w]/s","",$cscode_form);
+            $where = "$where"." and cscode = '$cscode'";
+            $this->url="$this->url"."&cscode=$cscode";
+        }
+        
+        if ($carrier_in) {
+            $carrier_in_encoded=urlencode($carrier_in);
+            $where = "$where"." and carrier_in = '$carrier_in'";
+            $this->url="$this->url"."&carrier_in=$carrier_in_encoded";
+        }
+        
+        if ($carrier_out) {
+            $carrier_out_encoded=urlencode($carrier_out);
+            $where = "$where"." and carrier_out = '$carrier_out'";
+            $this->url="$this->url"."&carrier_out=$carrier_out_encoded";
+        }
+        if ($switch_unit) {
+            $where = "$where"." and switch_unit = '$switch_unit'";
+            $this->url="$this->url"."&switch_unit=$switch_unit";
+        }
+        
+        if ($b_number) {
+            if ($b_number_comp=="begin") {
+                $where = "$where"." and $this->bNumberField like '$b_number%'";
+            } elseif ($b_number_comp=="equal") {
+                $where = "$where"." and $this->bNumberField = '$b_number'";
+            } elseif ($b_number_comp=="contain") {
+                $where = "$where"." and $this->bNumberField like '%$b_number%'";
+            }
+            $b_number_encoded=urlencode($b_number);
+            $this->url=$this->url."&b_number=$b_number_encoded&b_number_comp=$b_number_comp";
+        }
+        
+        if (strlen($c_number)) {
+            # Trim content of dest_form - allow only digits
+            if ($c_number_comp=="begin") {
+                $where = "$where"." and $this->cNumberField like '$c_number%'";
+            } elseif ($c_number_comp=="equal") {
+                $where = "$where"." and $this->cNumberField = '$c_number'";
+            } elseif ($c_number_comp=="contain") {
+                $where .= " and $this->cNumberField like '%$c_number%'";
+            } else {
+                $where = "$where"." and $this->cNumberField like '%$c_number%'";
+            }
+            $c_number_encoded=urlencode($c_number);
+            $this->url=$this->url."&c_number=$c_number_encoded&c_number_comp=$c_number_comp";
+        }
+        
+        if ($duration) {
+            if (preg_match("/\d+/",$duration) ) {
+                $where .= " and ($this->durationField > 0 and $this->durationField $duration) ";
+            } elseif ($duration == "zero") {
+                $where = "$where"." and $this->durationField = 0";
+            } elseif ($duration == "nonzero") {
+                $where = "$where"." and $this->durationField > 0";
+            }
+
+            $duration_enc=urlencode($duration);
+            $this->url="$this->url"."&duration=$duration_enc";
+        }
+
+
+        $this->url="$this->url"."&maxrowsperpage=$this->maxrowsperpage";
+
+        $url_calls = $this->scriptFile.$this->url."&action=search";
+
+        if ($group_by) {
+            $this->url="$this->url"."&group_by=$group_by";
+        }
+
+        $this->url_edit	    = $this->scriptFile.$this->url."&action=edit";
+        $this->url_run	    = $this->scriptFile.$this->url."&action=search";
+        $this->url_export	= $_SERVER['PHP_SELF'].$this->url."&action=search&export=1";
+
+        if ($group_by) {
+
+            if (!$perm->have_perm("statistics")) {
+                print "<p><font color=red>You do not have the right for statistics.</font>";
+                return 0 ;
+            }
+
+            $this->group_by=$group_by;
+            $query= "select $group_by from $cdr_table where $where group by $group_by ";
+        } else {
+            $query = "select count(*) as records from $cdr_table where"."$where";
+        }
+        
+        dprint("$query");
+        
+        if ($this->CDRdb->query($query)) {
+             $this->CDRdb->next_record();
+             if ($group_by) {
+                $rows=$this->CDRdb->num_rows();
+             } else {
+                $rows = $this->CDRdb->f('records');
+             }
+        } else {
+            print "$this->CDRdb->Error";
+            $rows = 0;
+        }
+        
+        dprint("$query");
+        flush();
+
+        $this->rows=$rows;
+
+        if ($this->CDRTool['filter']['aNumber']) {
+            $this->showResultsMenuSubscriber();
+        } else {
+            $this->showResultsMenu();
+        }
+
+        if (!$this->next) {
+            $i=0;
+            $this->next=0;
+        } else {
+            $i=$this->next;
+        }
+        $j=0;
+        $z=0;
+        
+        if  ($rows>0)  {
+            $this->$rows=$rows;
+
+            if  ($rows  >  $this->maxrowsperpage)  {
+                $maxrows=$this->maxrowsperpage+$this->next;
+                if  ($maxrows  >  $rows)  {
+                    $maxrows=$rows;
+                    $prev_rows=$maxrows;
+                }
+            } else {
+                $maxrows=$rows;
+            }
+
+            if ($group_by) {
+
+                if (
+                    $order_by == $this->durationField ||
+                    $order_by == $this->priceField ||
+                    $order_by == $this->DestinationIdField ||
+                    $order_by == "zeroP" ||
+                    $order_by == "nonzeroP"
+                    ) 	{
+                        $order_by1=$order_by;
+                }  else {
+                        $order_by1="calls";
+                }
+                
+                $query= "select
+                    sum(cost)/10000 as cost, sum($this->durationField) as $this->durationField,
+                    SEC_TO_TIME(sum($this->durationField)) as hours,
+                    count($group_by)        as calls,
+                    sum($this->priceField)  as price,
+                    SUM($this->durationField = '0') as zero,
+                    SUM($this->durationField > '0') as nonzero,
+                    ";
+                    if ($order_by=="zeroP" || $order_by=="nonzeroP") {
+                        $query=$query."
+                        SUM($this->durationField = '0')/count($group_by)*100 as zeroP,
+                        SUM($this->durationField > '0')/count($group_by)*100 as nonzeroP,
+                        ";
+                    }
+                    $query=$query."
+                    $group_by as group_by
+                    from
+                    $cdr_table
+                    where 
+                    $where
+                    group by $group_by
+                    order by $order_by1 $order_type
+                    limit $i,$this->maxrowsperpage
+                    ";
+
+                    dprint($query);
+                    $this->CDRdb->query($query);
+    
+                    $this->showTableHeaderStatistics($begin_datetime,$end_datetime);
+    
+                    while ($i<$maxrows)  {
+                    
+                        $found=$i+1;
+                        $this->CDRdb->next_record();											
+
+                        $seconds    	   	     =$this->CDRdb->f($this->durationField);
+                        $seconds_print 	   	     =number_format($this->CDRdb->f($this->durationField),0);
+                        $minutes	   	         =number_format($this->CDRdb->f($this->durationField)/60,0,"","");
+                        $minutes_print	   	     =number_format($this->CDRdb->f($this->durationField)/60,0);
+                        $hours      	     	 =$this->CDRdb->f('hours');
+                        $calls		     		 =$this->CDRdb->f('calls');
+                        $price      	     	 =$this->CDRdb->f('price')/10000;
+                        $mygroup		      	 =$this->CDRdb->f('group_by');
+                        $zero		             =$this->CDRdb->f('zero');
+                        $nonzero	             =$this->CDRdb->f('nonzero');
+                        $success		         =number_format($nonzero/$calls*100,2,".","");
+                        $failure		         =number_format($zero/$calls*100,2,".","");
+
+                        $mygroup_enc=urlencode($mygroup);
+            
+                        $rr=floor($found/2);
+                        $mod=$found-$rr*2;
+                    
+                        if ($mod ==0) {
+                            $inout_color="lightgrey";
+                        } else {
+                            $inout_color="white";
+                        }
+    
+                        if ($group_by == $this->disconnectField) {
+                            $description=$this->disconnectCodesDescription[$mygroup];
+                        } else if ($group_by==$this->destinationIdField) {
+                            $description=$this->destinations[$mygroup];
+                        } else {
+                            $description="";
+                        }
+                        if ($group_by==$this->aNumberField) {
+                            $traceField="a_number";
+                        } else if ($group_by==$this->cNumberField) {
+                            $traceField="c_number";
+                        } else if ($group_by==$this->disconnectField) {
+                            $traceField="release_cause";
+                        } else {
+                            $traceField=$group_by;
+                        }
+
+                        if (!$this->export) {
+                            print  "
+                            <tr bgcolor=$inout_color>
+                            <td><b>$found</b></td>
+                            <td align=right>$calls</td>
+                            <td align=right>$seconds_print</td>
+                            <td align=right>$minutes_print</td>
+                            <td align=right>$hours</td>
+                            <td align=right>$price</td>
+                            <td align=right>$success%
+                            <td align=right>($nonzero calls)</td>
+                            <td align=right>$failure%</td>
+                            <td align=right>($zero calls)</td>
+                            <td>$mygroup
+                            <td>$description</td>
+                            <td><a href=$url_calls&$traceField=$mygroup_enc target=_new>Display calls </a>
+                            </td>
+                            </tr>
+                            ";
+                        } else {
+                             print "$found,$calls,$seconds,$minutes,$hours,$price,$success,$nonzero,$failure,$zero,$mygroup,$description\n";
+                        }
+                        $i++;
+                     }
+
+                     if (!$this->export) {
+                        print "
+                        </table>
+                        </td>
+                        </tr>
+                        </table>
+                        ";
+                      }
+
+            } else {
+                if ($order_by=="zero" || $order_by=="nonzero") {
+                    $order_by="timestamp";
+                }
+
+                $query = "select * from $cdr_table where ".
+                         "$where ".
+                         "order  by  $order_by $order_type ".
+                         "limit $i,$this->maxrowsperpage";
+                dprint($query);
+                
+                $this->CDRdb->query($query);
+
+                if (!$this->export) {
+                    $this->showTableHeader($begin_datetime,$end_datetime);
+                } else {
+                    $this->showExportHeader;
+                }
+
+                while  ($i<$maxrows)  {
+                   global $found;
+                   $found=$i+1;
+                   $this->CDRdb->next_record();											
+
+   				   $Structure=$this->_readCDRFieldsFromDB();
+                   $CDR = new $this->CDR_class($this, $Structure);
+
+                   if (!$this->export) {
+                       $CDR->show();
+                   } else {
+                       $CDR->export();
+                   }
+    
+                   $i++;
+                }
+    
+                if (!$this->export) {
+                    print "
+                    </table>
+                    </td>
+                    </tr>
+                    </table>
+                    ";
+                }
+            }
+
+            $this->showPagination($this->next,$maxrows);
+
+        }
+
+    }
+
+    function getCDRtables() {
+        $tables=$this->CDRdb->table_names();
+        $t=count($tables);
+
+        while ($t <> 0 ) {
+            $table=$tables[$t]["table_name"];
+            if (preg_match("/^cdr(\d{4})(\d{2})$/",$table,$m)) {
+                $list_t++;
+                if ($list_t >11) {
+                    break;
+                }
+                $this->tables[]=$table;
+            }
+            $t--;
+        }
+
+    }
+
+}
+
+class CDR_ipnxcdr extends CDR {
+
+    function CDR_ipnxcdr(&$parent, $CDRfields) {
+
+        $this->CDRS = & $parent;
+
+        foreach (array_keys($this->CDRS->CDRFields) as $field) {
+        	$key=$this->CDRS->CDRFields[$field];
+            $this->$field = $CDRfields[$key];
+            $mysqlField = $this->CDRS->CDRFields[$field];
+            $_field = $field."Field";
+            $this->$_field=$mysqlField;
+        }
+
+        $this->rate            = $this->rate/10000;
+        $this->price           = $this->price/10000;
+
+        $this->destinationName = trim($this->CDRS->destinations['default'][$this->destinationId]);
+        $this->durationPrint   = sec2hms($this->duration);
+        $this->disconnectPrint = $this->NormalizeDisconnect($this->disconnect);
+
+        $this->traceIn();
+        $this->traceOut();
+
+        if (!$this->id) {
+            return 0;
+        }
+    }
+
+    function NormalizeDisconnect() {
+        $causePrint=$this->CDRS->disconnectCodesDescription[$this->disconnect];
+        return $causePrint;
+    }
+
+    function traceOut () {
+        if (!$this->CDRS->traceOutURL[$this->carrierOut]) {
+            return;
+        }
+
+    	$datasource=$this->CDRS->traceOutURL[$this->carrierOut];
+        global $DATASOURCES;
+
+    	if (!$datasource || !$DATASOURCES[$datasource]) {
+            return;
+        }
+
+        $tplus     = $this->timestamp+$this->duration+300;
+        $tmin      = $this->timestamp-300;
+        $cdr_table = $DATASOURCES[$datasource][table];
+		$c_number  = preg_replace("/^(0+)/","",$this->cNumber);
+
+		if (Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp)) == Date($DATASOURCES[$datasource][RotateTables],time()) ) {
+        	if ($DATASOURCES[$datasource][RotateThisMonth]) {
+            	$cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time());
+            }
+        } else if ($DATASOURCES[$datasource][RotateTables]) {
+            $cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp));
+        }
+
+        $this->traceOut=
+                        "<a href=callsearch.phtml".
+        				"?cdr_source=$datasource".
+                        "&cdr_table=$cdr_table".
+                        "&trace=1".
+                        "&action=search".
+                        "&c_number=$c_number".
+                        "&c_number_comp=contain".
+                        "&begin_datetime=$tmin".
+                        "&end_datetime=$tplus".
+                        " target=bottom>".
+                        "Out".
+                        "</a>";
+
+    }
+
+    function traceIn () {
+
+        $begin_datetime = $this->timestamp-600;
+        $end_datetime   = $this->timestamp+$this->duration+600;
+
+        if ($this->aNumber) {
+            $trace_url=$trace_url."&a_number=$this->aNumber";
+        }
+        if ($this->bNumber) {
+            $trace_url=$trace_url."&b_number=$this->bNumber";
+        }
+
+        if ($this->cNumber) {
+            $c_number_strip=preg_replace("/^0+(.*)$/","$1",$this->cNumber);
+            $trace_url=$trace_url."&string=$c_number_strip";
+        }
+
+        if ($this->CDRS->protocolTraceURL) {
+        	$switch_ip=$this->CDRS->DATASOURCES[$this->CDRS->cdr_source][switch_units][$this->gateway][IP];
+            $this->channelIn="<a href=callsearch.phtml?cdr_source=".$this->CDRS->protocolTraceURL."&trace=1&action=search".
+            "&switch_unit=$switch_ip&begin_datetime=$begin_datetime&end_datetime=$end_datetime"
+            .$trace_url.
+            " target=ipnxlog>".$this->channelIn."</a>";
+        }
+
+        if (!$this->CDRS->traceInURL[$this->carrierIn]) {
+            return;
+        }
+
+        $datasource=$this->CDRS->traceInURL[$this->carrierIn];
+        global $DATASOURCES;
+
+    	if (!$datasource || !$DATASOURCES[$datasource]) {
+            return;
+        }
+
+        $tplus     = $this->timestamp+$this->duration+300;
+        $tmin      = $this->timestamp-300;
+        $cdr_table = $DATASOURCES[$datasource][table];
+		$c_number  = preg_replace("/^(0+)/","",$this->cNumber);
+
+		if (Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp)) == Date($DATASOURCES[$datasource][RotateTables],time()) ) {
+        	if ($DATASOURCES[$datasource][RotateThisMonth]) {
+            	$cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time());
+            }
+        } else if ($DATASOURCES[$datasource][RotateTables]) {
+            $cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp));
+        }
+
+        $this->traceIn=
+                        "<a href=callsearch.phtml".
+        				"?cdr_source=$datasource".
+                        "&cdr_table=$cdr_table".
+                        "&trace=1".
+                        "&action=search".
+                        "&c_number=$c_number".
+                        "&c_number_comp=contain".
+                        "&begin_datetime=$tmin".
+                        "&end_datetime=$tplus".
+                        " target=bottom>".
+                        "In".
+                        "</a>";
+
+    }
+
+    function show() {
+
+        global $found;
+
+        $rr=floor($found/2);
+        $mod=$found-$rr*2;
+
+        if ($mod ==0) {
+            $inout_color="lightgrey";
+        } else {
+            $inout_color="white";
+        }
+
+        if (!$this->duration) {
+            $this->durationHTML="<font color=red>".$this->durationPrint."</font>";
+        } else {
+            $this->durationHTML=$this->durationPrint;
+        }
+
+        print  "
+        <tr bgcolor=$inout_color>
+        <td><b>$found</b></td>
+        <td>$this->startDate $this->startTime</td>
+        <td>$this->serviceType</td>
+        <td>$this->aNumber</td>
+        <td>$this->traceIn</td>
+        <td>$this->bNumber</td>
+        <td>$this->cNumber
+        <td>$this->destinationName $this->destinationId</td>
+        <td>$this->traceOut</td>
+        <td>$this->durationHTML</td>
+        <td>$this->rate</td>
+        <td>$this->price</td>
+        <td>$this->domain</td>
+        ";
+        if (!$this->CDRTool['filter']['aNumber'] && !$this->CDRTool['filter']['compid']) {
+            print "
+            <td>$this->gateway</td>
+            <td>$this->carrierIn</td>
+            <td>$this->channelIn</td>
+            <td>$this->carrierOut</td>
+            <td>$this->channelOut</td>
+            ";
+        }
+        if (!$this->CDRTool['filter']['aNumber']) {
+            print "<td>$this->disconnectPrint ($this->disconnect)</td>";
+        }
+        print "
+        </tr>
+        ";
+    }
+
+    function export() {
+
+        global $found;
+
+        print "$found";
+        print ",$this->startTime";
+        print ",$this->aNumber";
+        print ",$this->bNumber";
+        print ",$this->cNumber";
+        print ",$this->destinationId";
+        print ",$this->destinationName";
+        print ",$this->duration";
+        print ",$this->rate";
+        print ",$this->price";
+        print ",$this->domain";
+        if (!$this->CDRTool['filter']['aNumber'] && !$this->CDRTool['filter']['compid']) {
+            print ",$this->gateway";
+            print ",$this->carrierIn";
+            print ",$this->channelIn";
+            print ",$this->carrierOut";
+            print ",$this->channelOut";
+        }
+        if (!$this->CDRTool['filter']['aNumber']) {
+           print ",$this->disconnect";
+           print ",$this->disconnectPrint";
+        }
+        print "\n";
+    }
+}
+
+
+class CDRS_ipnxlog extends CDRS {
+
+	var $CDRFields=array();
+
+    function LoadDisconnectCodes() {
+        global $cdr;
+        dprint("CDRS->LoadDisconnectCodes()");
+        $query="select * from isdncause order by cause";
+        dprint("$query");
+        $cdr->query($query);
+        $this->disconnectCodesElements[]=array("label"=>"Any disconnection cause","value"=>"");
+
+        while($cdr->next_record()) {
+
+            $key         = $cdr->f('cause');
+            $value       = $cdr->f('description');
+            $value_print = $value." (".$key.")";
+    
+            $this->disconnectCodesElements[]=array("label"=>$value_print,"value"=>$key);
+            $this->disconnectCodesDescription[$key]=$value;
+            $found++;
+        }
+        dprint("Loaded $found release codes");
+        return 1;
+    }
+
+    function show(){
+        $begin_hour =     $_REQUEST["begin_hour"];
+        $begin_min =      $_REQUEST["begin_min"];
+        $begin_day =      $_REQUEST["begin_day"];
+        $begin_datetime = $_REQUEST["begin_datetime"];
+
+        $end_hour =       $_REQUEST["end_hour"];
+        $end_min =        $_REQUEST["end_min"];
+        $end_day =        $_REQUEST["end_day"];
+        $end_datetime =   $_REQUEST["end_datetime"];
+
+        $call_id =        $_REQUEST["call_id"];
+        $unnormalize =    $_REQUEST["unnormalize"];
+
+        $a_number =       $_REQUEST["a_number"];
+        $a_number_comp =  $_REQUEST["a_number_comp"];
+        $b_number =       $_REQUEST["b_number"];
+        $b_number_comp =  $_REQUEST["b_number_comp"];
+        $c_number =       $_REQUEST["c_number"];
+        $c_number_comp =  $_REQUEST["c_number_comp"];
+        $string        =  $_REQUEST["string"];
+
+        $cdr_table      = $_REQUEST["cdr_table"];
+        $switch_unit    = $_REQUEST["switch_unit"];
+        $cscode         = $_REQUEST["cscode"];
+        $comp_id        = $_REQUEST["comp_id"];
+        $carrier_in     = $_REQUEST["carrier_in"];
+        $carrier_out    = $_REQUEST["carrier_out"];
+
+        $release_cause =  $_REQUEST["release_cause"];
+
+        $duration =       $_REQUEST["duration"];
+        $action =         $_REQUEST["action"];
+
+        $order_by =       $_REQUEST["order_by"];
+        $order_type =     $_REQUEST["order_type"];
+
+        $group_by =       $_REQUEST["group_by"];
+
+        if ($datetime) {
+            $search_arround=1;
+             $hour =Date('H',$datetime);
+             $min  =Date('i',$datetime);
+             $begin_datetime=$datetime-120;
+             $end_datetime=$datetime+120;
+        }
+
+        if (!$begin_datetime) {
+           $begin_datetime=mktime($begin_hour, $begin_min, 0, Date('m'),$begin_day,Date('Y'));
+        } else {
+           $begin_year =Date('Y',$begin_datetime);
+           $begin_month=Date('m',$begin_datetime);
+           $begin_day  =Date('d',$begin_datetime);
+           $begin_hour =Date('H',$begin_datetime);
+           $begin_min  =Date('i',$begin_datetime);
+        }
+    
+        if (!$end_datetime) {
+           $end_datetime=mktime($end_hour, $end_min, 0, Date('m'),$begin_day,Date('Y'));
+        } else {
+           $end_year =Date('Y',$end_datetime);
+           $end_month=Date('m',$end_datetime);
+           $end_day  =Date('d',$end_datetime);
+           $end_hour =Date('H',$end_datetime);
+           $end_min  =Date('i',$end_datetime);
+        }
+    
+        $begin_datetime_url=urlencode($begin_datetime);
+        $end_datetime_url=urlencode($end_datetime);       
+
+        // build an url to be able to log and refine the query
+        $this->url="?cdr_table=$cdr_table";
+        $this->url=$this->url."&cdr_source=$this->cdr_source";
+        $this->url=$this->url."&begin_datetime=$begin_datetime_url";
+        $this->url=$this->url."&end_datetime=$end_datetime_url";
+    
+        if ($release_cause) {
+           $inxcause=1512+$release_cause;
+           $this->url="$this->url"."&release_cause=$release_cause";
+           $arg=$arg." -scause=$inxcause";
+        }
+        
+        if ($a_number_comp != "empty") {
+           if ($a_number) {
+               $a_number_encoded=urlencode($a_number);
+               $this->url="$this->url"."&a_number=$a_number_encoded";
+               $arg=$arg." -p$a_number";
+           }
+        }
+    
+        if ($comp_id) {
+            $comp_id_encoded=urlencode($comp_id);
+            $this->url="$this->url"."&comp_id=$comp_id_encoded";
+            $arg=$arg." -c$comp_id";
+        }
+        
+        if ($carrier_out) {
+            $carrier_out_encoded=urlencode($carrier_out);
+            $this->url="$this->url"."&carrier_out=$carrier_out_encoded";
+            $arg=$arg." -C$carrier_out";
+        }
+        
+        if ($b_number) {
+            $b_number_encoded=urlencode($b_number);
+            $this->url=$this->url."&b_number=$b_number_encoded&b_number_comp=$b_number_comp";
+            $arg=$arg." -d$b_number";
+        }
+        
+        if ($c_number) {
+             $c_number_encoded=urlencode($c_number);
+             $arg=$arg." -n$c_number";
+             $this->url=$this->url."&c_number=$c_number_encoded&c_number_comp=$c_number_comp";
+        }
+
+        if ($string) {
+            $string_encoded=urlencode($string);
+            $this->url=$this->url."&string=$string_encoded";
+            $arg=$arg." -s\"$string\"";
+        }
+        
+        if ($duration) {
+            if ($duration == "zero") {
+               $arg=$arg." -Z";
+            } elseif ($duration == "nonzero") {
+               $arg=$arg." -z";
+            } 
+            $this->url="$this->url"."&duration=$duration";
+        }
+
+        if ($switch_unit) {
+           $this->url="$this->url"."&switch_unit=$switch_unit";
+        }
+
+        $this->url		   =$this->url."&maxrowsperpage=$this->maxrowsperpage";
+        $this->url_edit   = $this->scriptFile.$this->url."&action=edit";
+        $this->url_run	   = $this->scriptFile.$this->url."&action=search";
+        $this->url_export = $_SERVER["PHP_SELF"].$this->url."&action=search&export=1";
+         
+        if ($this->CDRTool['filter']['aNumber']) {
+            $this->showResultsMenuSubscriber(hiderows);
+        } else {
+            $this->showResultsMenu(hiderows);
+        }
+
+        if (!$search_arround) {
+           $period=" -m".$begin_hour.$begin_min." -M".$end_hour.$end_min;
+        } else {
+            $period=" -t".$hour.$min;
+        }
+
+        if ($switch_unit) {
+             $switch_ip=$this->DATASOURCES[$this->cdr_source][switch_units][$switch_unit][IP];
+             if (!$switch_ip) {
+                $switch_ip=$switch_unit;
+             }
+             $cmd="ssh adigeo@amin21 getlog -r$switch_ip $arg".$period." log".$begin_day;
+         } else {
+             $cmd="ssh adigeo@amin21 getlog $arg"." -m$begin_hour".$begin_min." -M$end_hour".$end_min." log$begin_day";
+         }
+     
+         print _("<p>Executing $cmd");
+         print "<pre>";
+         flush();
+
+         if (!$ph = popen("$cmd", "r")) {
+            print "<p>Error connecting to IPNX switch\n";
+            return 0;
+         } else {
+            print "Connection OK\n";
+         }
+
+         while(!feof($ph)) {
+            $read = trim(fgets($ph, 2048));
+            if (preg_match("/all\s+received/",$read)) {
+                print "<hr>";
+                $read_enc=urlencode($read);
+                $tracec7ie_link="<a href=\"javascript:void(null);\" onClick=\"return window.open('ipnx-c7ie.phtml?c7ie=$read_enc', 'C7IE',
+                'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=380')\">Trace</a>";
+                print "<b>$read</b> $tracec7ie_link\n";
+            } elseif (preg_match("/^(.*lcause=)(\d+)(.*)/",$read,$m)) {
+                $isdncausefrominxcause=$m[2]-1512;
+                $isdnc=$release_descr[$isdncausefrominxcause];
+                $release_name=$this->disconnectCodesDescription[$isdncausefrominxcause];
+                $line_print=$m[1].$m[2]." ($isdncausefrominxcause - $release_name)".$m[3];
+                print "$line_print\n";
+            } elseif (preg_match("/Error/",$read)) {
+                print "<font color=red>$read</font>\n";
+            } else {
+                print "$read\n";
+     
+            }
+         }
+         pclose($ph);
+         print "</pre>";
+    }
+
+    function initForm() {
+        // form els added below must have global vars
+        global $a_number;
+        global $a_number_comp;
+        global $b_number;
+        global $b_number_comp;
+        global $c_number;
+        global $c_number_comp;
+
+        global $cdr_table;
+        global $switch_unit;
+        global $cscode;
+        global $comp_id;
+        global $carrier_in;
+        global $carrier_out;
+        global $release_cause;
+        global $string;
+
+        global $duration;
+
+        global $end_min;
+        global $end_hour;
+        global $end_day;
+        global $end_month;
+        global $end_year;
+
+        global $begin_min;
+        global $begin_hour;
+        global $begin_day;
+        global $begin_month;
+        global $begin_year;
+
+        global $action;
+
+        $cdr_source     = $_REQUEST["cdr_source"];
+        
+        $action         = "search";
+        $trace          = $_REQUEST["trace"];
+        
+        $begin_datetime = $_REQUEST["begin_datetime"];
+        $end_datetime   = $_REQUEST["end_datetime"];
+        
+        $call_id =        $_REQUEST["call_id"];
+        
+        $a_number =       $_REQUEST["a_number"];
+        $a_number_comp =  $_REQUEST["a_number_comp"];
+        $b_number =       $_REQUEST["b_number"];
+        $b_number_comp =  $_REQUEST["b_number_comp"];
+        $c_number =       $_REQUEST["c_number"];
+        $c_number_comp =  $_REQUEST["c_number_comp"];
+        
+        $cdr_table      = $_REQUEST["cdr_table"];
+        $switch_unit    = $_REQUEST["switch_unit"];
+        $cscode         = $_REQUEST["cscode"];
+        $comp_id        = $_REQUEST["comp_id"];
+        $carrier_in     = $_REQUEST["carrier_in"];
+        $carrier_out    = $_REQUEST["carrier_out"];
+        $string         = $_REQUEST["string"];
+
+        $release_cause =  $_REQUEST["release_cause"];
+        $duration =       $_REQUEST["duration"];
+        
+        $order_by =       $_REQUEST["order_by"];
+        $order_type =     $_REQUEST["order_type"];
+        
+        $maxrowsperpage = $_REQUEST["maxrowsperpage"];
+
+        if ($this->CDRTool['filter']['aNumber']) {
+            $a_number=$this->CDRTool['filter']['aNumber'];
+        }
+        
+        if (!$maxrowsperpage) {
+            $maxrowsperpage=50;
+        }
+
+        $this->f = new form;
+        
+        if (isset($this->CDRTool['dataSourcesAllowed'])) {
+            while (list($k,$v)=each($this->CDRTool['dataSourcesAllowed'])) {
+                $cdr_source_els[]=array("label"=>$this->DATASOURCES[$v]['name'],"value"=>$v);
+            }
+        }
+        
+        if (!$cdr_source) {
+            $cdr_source=$cdr_source_els[0]['value'];
+        }
+
+        $this->f->add_element(array("name"=>"cdr_source",
+                                    "type"=>"select",
+                                    "options"=>$cdr_source_els,
+                                    "size"=>"1",
+                                    "extrahtml"=>"onChange=\"document.datasource.submit.disabled = true; location.href = 'callsearch.phtml?cdr_source=' + this.options[this.selectedIndex].value\"",
+                                    "value"=>"$cdr_source"
+                              )
+                       );
+
+        if ($begin_datetime) {
+            dprint("begin_datetime=$begin_datetime");
+            preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$begin_datetime", $parts);
+            $begin_year	=date(Y,$begin_datetime);
+            $begin_month=date(m,$begin_datetime);
+            $begin_day 	=date(d,$begin_datetime);
+            $begin_hour	=date(H,$begin_datetime);
+            $begin_min 	=date(i,$begin_datetime);
+        } else {
+            $begin_day      = $_REQUEST["begin_day"];
+            $begin_month    = $_REQUEST["begin_month"];
+            $begin_year     = $_REQUEST["begin_year"];
+            $begin_hour     = $_REQUEST["begin_hour"];
+            $begin_min      = $_REQUEST["begin_min"];
+        }
+        
+        if ($end_datetime) {
+            dprint("end_datetime=$end_datetime");
+            preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$end_datetime", $parts);
+            $end_year	=date(Y,$end_datetime);
+            $end_month 	=date(m,$end_datetime);
+            $end_day 	=date(d,$end_datetime);
+            $end_hour	=date(H,$end_datetime);
+            $end_min 	=date(i,$end_datetime);
+        }  else {
+            $end_day        = $_REQUEST["end_day"];
+            $end_month      = $_REQUEST["end_month"];
+            $end_year       = $_REQUEST["end_year"];
+            $end_hour       = $_REQUEST["end_hour"];
+            $end_min        = $_REQUEST["end_min"];
+        }
+        
+        $default_year	=Date("Y");
+        $default_month	=Date("m");
+        $default_day	=Date("d");
+        $default_hour	=Date(H,time());
+        
+        if ($default_hour > 1) {
+            $default_hour=$default_hour-1;
+        }
+        
+        $default_hour=preg_replace("/^(\d)$/","0$1",$default_hour);
+        $default_min	=Date("i");
+        
+        if ($default_min > 10) {
+            $default_min=$default_min-10;
+            $default_min=preg_replace("/^(\d)$/","0$1",$default_min);
+        }
+
+        if (!$begin_hour)  $begin_hour  = $default_hour;
+        if (!$begin_min)   $begin_min   = $default_min;
+        if (!$begin_day)   $begin_day   = $default_day;
+        if (!$begin_month) $begin_month = $default_month;
+        if (!$begin_year)  $begin_year  = $default_year;
+
+        if (!$end_hour)  $end_hour  = 23;
+        if (!$end_min)   $end_min   = 55;
+        if (!$end_day)   $end_day   = $default_day;
+        if (!$end_month) $end_month = $default_month;
+        if (!$end_year)  $end_year  = $default_year;
+
+        $m=0;
+        while ($m<24) {
+            if ($m<10) { $v="0".$m; } else { $v=$m; }
+            $hours_els[]=array("label"=>$v,"value"=>$v);
+            $m++;
+        }
+
+        $this->f->add_element(array(
+                    "name"=>"begin_hour",
+                    "type"=>"select",
+                    "options"=>$hours_els,
+                    "size"=>"1"
+                    ));
+        $this->f->add_element(array(	"name"=>"end_hour",
+                    "type"=>"select",
+                    "options"=>$hours_els,
+                    "size"=>"1",
+                    "value"=>"23"
+                    ));
+        $m=0;
+        while ($m<60) {
+            if ($m<10) { $v="0".$m; } else { $v=$m; }
+            $min_els[]=array("label"=>$v,"value"=>$v);
+            $m++;
+        }
+
+        $this->f->add_element(array(	"name"=>"begin_min",
+                    "type"=>"select",
+                    "options"=>$min_els,
+                    "size"=>"1"
+                    ));
+        $this->f->add_element(array(
+                    "name"=>"end_min",
+                    "type"=>"select",
+                    "options"=>$min_els,
+                    "size"=>"1"
+                    ));
+
+        $m=0;
+        while ($m<32) {
+            if ($m<10) { $v="0".$m; } else { $v=$m; }
+            $days_els[]=array("label"=>$v,"value"=>$v);
+            $m++;
+        }
+
+        $this->f->add_element(array(	"name"=>"begin_day",
+                                "type"=>"select",
+                                "options"=>$days_els,
+                                "size"=>"1"
+        
+                    ));
+        $this->f->add_element(array(	"name"=>"end_day",
+                                "type"=>"select",
+                                "options"=>$days_els,
+                                "size"=>"1"
+        
+                    ));
+
+        $this->f->add_element(array(	"name"=>"call_id",
+                                "type"=>"text",
+                                "size"=>"50",
+                                "maxlength"=>"100"
+                    ));
+        
+        $this->f->add_element(array(	"name"=>"a_number",
+                                "type"=>"text",
+                                "size"=>"25",
+                                "maxlength"=>"25"
+                    ));
+        $this->f->add_element(array(	"name"=>"b_number",
+                                "type"=>"text",
+                                "size"=>"25",
+                                "maxlength"=>"25"
+                    ));
+        
+        $this->f->add_element(array(	"name"=>"c_number",
+                                "type"=>"text",
+                                "size"=>"25",
+                                "maxlength"=>"25"
+                    ));
+        
+        if (!$CDRTool['filter']['aNumber']) {
+            $durations_els = array(
+                array("label"=>"All calls","value"=>""),
+                array("label"=>"0 seconds call","value"=>"zero"),
+                array("label"=>"non 0 seconds","value"=>"nonzero"),
+                array("label"=>"non 0 seconds with 0 price","value"=>"zeroprice"),
+                array("label"=>"less than 5 seconds","value"=>"< 5"),
+                array("label"=>"more than 5 seconds","value"=>"> 5"),
+                array("label"=>"less than 60 seconds","value"=>"< 60"),
+                array("label"=>"greater than 1 hour","value"=>"> 3600"),
+                array("label"=>"greater than 5 hours","value"=>"> 18000")
+                );
+        } else {
+            $durations_els = array(
+                array("label"=>"Succesfull calls","value"=>"nonzero")
+                );
+        }
+        
+        $this->f->add_element(array(	"name"=>"duration",
+                                "type"=>"select",
+                                "options"=>$durations_els,
+                                "value"=>"All",
+                                "size"=>"1"
+                    ));
+        
+        if ($this->DATASOURCES[$this->cdr_source][switch_units]) {
+            $switch_unit_els[]=array("label"=>"All switches","value"=>"");
+
+            while (list($k,$v)=each($this->DATASOURCES[$this->cdr_source][switch_units])) {
+                $switch_unit_els[]=array("label"=>$v[WEBName]." (".$k.")","value"=>$k);
+            }
+
+            $this->f->add_element(array(
+                                "name"=>"switch_unit",
+                                "type"=>"select",
+                                "options"=>$switch_unit_els,
+                                "size"=>"1",
+                                "value"=>$switch_unit
+                                ));
+        } else {
+            $this->f->add_element(array(	"name"=>"switch_unit",
+                        "type"=>"text",
+                        "size"=>"10",
+                        "maxlength"=>"10"
+			));
+        }
+
+        if ($this->DATASOURCES[$this->cdr_source][carriersOut]) {
+
+            $carriersOut_els[]=array("label"=>"All outbound carriers","value"=>"");
+            while (list($k,$v)=each($this->DATASOURCES[$this->cdr_source][carriersOut])) {
+                $carriersOut_els[]=array("label"=>$v[WEBName]." (".$k.")","value"=>$k);
+            }
+
+            $this->f->add_element(array(
+                                "name"=>"carrier_out",
+                                "type"=>"select",
+                                "options"=>$carriersOut_els,
+                                "size"=>"1",
+                                "value"=>$carrier_out
+                                ));
+
+        } else {
+            $this->f->add_element(array(	"name"=>"carrier_out",
+                                    "type"=>"text",
+                                    "size"=>"3",
+                                    "maxlength"=>"25"
+                        ));
+        }
+
+        $this->f->add_element(array(
+                "type"=>"hidden",
+                "name"=>"action",
+                "value"=>"search"
+                ));
+        $durations_els = array(
+		array("label"=>"All calls","value"=>""),
+		array("label"=>"0 seconds call","value"=>"zero"),
+		array("label"=>"non 0 seconds","value"=>"nonzero")
+		);
+
+        $this->f->add_element(array(	"name"=>"duration",
+			            "type"=>"select",
+                        "options"=>$durations_els,
+                        "value"=>"All",
+                        "size"=>"1"
+			));
+
+        $this->f->add_element(array(	"name"=>"string",
+                    "type"=>"text",
+                    "size"=>"25",
+                    "maxlength"=>"25"
+                    ));
+        $this->f->add_element(array(	"name"=>"comp_id",
+                                "type"=>"text",
+                                "size"=>"10",
+                                "maxlength"=>"25",
+                                "value"=>"$comp_id"
+                    ));
+
+        $this->f->add_element(array("type"=>"submit",
+                              "name"=>"submit",
+                              "value"=>"Search"
+                    ));
+        
+
+        $this->f->load_defaults();
+
+    }
+
+    function searchForm() {
+        $this->initForm();
+        $this->f->start("","POST","","","datasource");
+
+        print "
+        <table cellpadding=5 cellspacing=0 border=6 width=100% align=center>
+        ";
+
+        $this->showDataSources ($this->f);
+    
+        print "
+        </td>
+        </tr>
+        <tr>
+        <td class=cdr valign=middle align=left>
+        <b>Date and time</b>
+        
+        </td>
+        <td class=cdr>
+        Day";
+        $this->f->show_element("begin_day","");
+
+        print " from ";
+
+        $this->f->show_element("begin_hour","");
+        $this->f->show_element("begin_min","");
+        print "to ";
+        $this->f->show_element("end_hour","");
+        $this->f->show_element("end_min","");
+        print "
+        </td>
+        </tr>
+        ";
+    
+        print "
+        <tr> 
+        <td class=cdr  align=left>
+        <b>Switch</b>
+        </td>
+        <td class=cdr valign=top>
+        ";
+        $this->f->show_element("switch_unit","");
+        print "
+        </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        print "
+        <tr> 
+        <td class=cdr  align=left>
+        <b>String</b>
+        </td>
+        <td class=cdr valign=top>
+        ";
+        $this->f->show_element("string","");
+        print "
+        </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        
+        print "
+        <tr> 
+        <td class=cdr  align=left>
+        <b>Carrier out</b>
+        </td>
+        <td class=cdr valign=top> 
+        ";
+        $this->f->show_element("carrier_out","");
+        print "
+        </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        print "
+        <tr> 
+        <td class=cdr  align=left>
+        <b>Company id</b>
+        </td>
+        <td class=cdr valign=top>
+        ";
+        $this->f->show_element("comp_id","");
+        print "
+        </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+    
+        print "
+        <tr> 
+        <td class=cdr  align=left>
+        <b>
+        CLI(A number)
+        </b>
+        </td>
+        <td class=cdr valign=top>
+        ";
+        $this->f->show_element("a_number","");
+        print "
+        </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        print "
+        <tr> 
+        <td class=cdr  align=left>
+        <b>
+        Access number(DDI)
+        </b>
+        </td>
+        <td class=cdr valign=top>
+        ";
+        $this->f->show_element("b_number","");
+        
+        print "
+        
+        </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        
+        print "
+        <tr> 
+        <td class=cdr  align=left>
+        <b>
+        Destination
+        </b>
+        </td>
+        <td class=cdr valign=top>   ";
+        $this->f->show_element("c_number","");
+        print "
+        </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        
+        print "
+        <tr> 
+        <td class=cdr  align=left>
+        <b>Call duration</b>
+        </td>
+        <td class=cdr valign=top>   ";
+        $this->f->show_element("duration","");
+        $this->f->show_element("release_cause","");
+        print "
+        </td>
+        </tr>
+        <tr>
+        </tr>
+        ";
+        print "
+        </table>
+        <p>
+        ";
+        print "<center>";
+        $this->f->show_element("submit","");
+        $this->f->finish();
+        print "</center>";
+    }
+}
+
+class IPNX_trace {
+    function trace($read) {
+        if (preg_match("/^(.*\d+):\s.*all\s+received.*C7IE=(.*)\s(.*)/",$read,$m)) {
+            unset($call_description);
+            $call_id=$m[1];
+            $word1=$m[2];
+            $word2=$m[3];
+            flush();
+      
+            preg_match("/(\w\w)(\w\w)(\w\w)(\w\w)/",$word1,$m);
+            $out1="";
+            $w1b1=$m[4];
+            $w1b2=$m[3];
+            $w1b3=$m[2];
+            $w1b4=$m[1];
+            preg_match("/(\w\w)(\w\w)(\w\w)(\w\w)/",$word2,$m);
+            $out2="";
+            $w2b5=$m[4];
+            $w2b6=$m[3];
+            $w2b7=$m[2];
+            $w2b8=$m[1];
+            $call_description=$call_description."\n$call_id: $w2b8$w2b7$w2b6$w2b5$w1b4$w1b3$w1b2$w1b1     Name      Value";
+     
+             #  byte 1
+             #    bit 0-7 : caller category
+             #        0A : normal user
+             #	  of : payphone
+            $call_description=$call_description."\n$call_id:  | | | | | | | + Caller category";
+     
+            if ($w1b1 == "0A") {
+                    $call_description=$call_description." <b>Normal user (no payphone)</b>"; 
+            } else {
+                    $call_description=$call_description." <b>Call from  payphone</b>";
+            }
+     
+            # byte 2
+            # bit 0-6 : B-Bnumber nature of address indicator
+            #            02 : unknown
+            #            03 : national
+            #            04 : international
+            # bit 7   : INN indicator
+            #            00 : routing to internal network allowed
+            #            80 : routing to internal network not allowed
+     
+            $call_description=$call_description."\n$call_id:  | | | | | | +-- B-number nature of address indicator ";
+            if ($w1b2 == "03") {
+                    $call_description=$call_description." <b>National</b>";
+            } elseif ($w1b2 == "04" ) {
+                    $call_description=$call_description." <b>International</b>";
+            } elseif ($w1b2 == "02" ) {
+                    $call_description=$call_description." <b>Unknown</b>";
+            } 
+            $call_description=$call_description." <b>origin</b>";
+            preg_match("/(\w)(\w)/",$w1b3,$m);
+            $out1=$this->bin($m[1]).$this->bin($m[2]);
+     
+            preg_match("/(\d)(\d)(\d\d)(\d\d)(\d\d)/",$out1,$m);
+            $call_description=$call_description."\n$call_id:  | | | | | +---- unpack $w1b3 to $m[1]$m[2]$m[3]$m[4]$m[5]" ;
+            $call_description=$call_description."\n$call_id:  | | | | | +---- CLI presentation 5->$m[5] " ;
+            if ($m[5] == "00") {
+                    $call_description=$call_description." <b>Allowed</b>";
+            } elseif ($m[5] == "01" ) {
+                    $call_description=$call_description." <b>Restricted</b>";
+            } elseif ($m[5] == "02" ) {
+                    $call_description=$call_description." <b>No CLI</b>";
+            }
+            #	     bit 2-3 : CLI screening indicator
+            #                 04 : user provided
+            #                 0C : network provided
+     
+            $call_description=$call_description." \n$call_id:  | | | | | +---- CLI screening indicator 4->$m[4]" ;
+            if ($m[4] == "01" ) {
+                    $call_description=$call_description." <b>User provided</b>";
+            } elseif ($m[4] == "11" ) {
+                    $call_description=$call_description." <b>Network provided</b>";
+            }
+            # bit 4-5 : satellite indicator
+            #             00 : no satellite
+            #             10 : one satellite
+            #             20 : two satellites
+    
+            $call_description=$call_description." \n$call_id:  | | | | | +---- Satelite indicator 3->$m[3]" ;
+    
+            if ($m[3] == "00" ) {
+                    $call_description=$call_description." <b>No satellite</b>";
+            } elseif ($m[3] == "10") {
+                    $call_description=$call_description." <b>One satellite</b>"; 
+            } elseif ($m[3] == "20" ) {
+                    $call_description=$call_description." <b>Two satellites</b>";
+            }
+            #     bit 6   : overlap indicator
+            #                 00 : B-number complete (enbloc mode)
+            #                 40 : B-number incomplete (overlap mode)
+     
+     
+            $call_description=$call_description." \n$call_id:  | | | | | +---- Overlap indicator 2->$m[2]" ;
+            if ($m[2] == "00" ) {
+                    $call_description=$call_description." <b>B-number complete (enbloc mode)</b>";
+            } else {
+                    $call_description=$call_description." <b>B-number incomplete (overlap mode)</b>";
+            }
+     
+            #bit 7   : outgoing echo indicator
+            #   00 : outgoing echo canceller not included
+            #   80 : outgoing echo canceller included
+     
+            $call_description=$call_description." \n$call_id:  | | | | | +---- Outgoing echo indicator 1->$m[1]" ;
+            if ($m[1] == "00" ) {
+                    $call_description=$call_description." <b>Outgoing echo canceller not included</b>";
+            } else {
+                    $call_description=$call_description." <b>Outgoing echo canceller included</b>";
+            }
+     
+            #byte 4
+            # bit 0-7 : Transmit medium requirement
+            #     00 : speech
+            #     02 : 64 kb/s unrestricted
+            #     03 : 3.1 Khz audio
+            #     06 : 64 kb/s unrestricted preferred
+    
+            $call_description=$call_description." \n$call_id:  | | | | +------ Transmit medium requirement TMR" ;
+            if ($w1b4 == "00") {
+                    $call_description=$call_description." <b>Speech</b>";
+            } elseif ($w1b4 == "02" ) {
+                    $call_description=$call_description." <b>64kb/s unrestricted</b>";
+            } elseif ($w1b4 == "03" ) {
+                    $call_description=$call_description."  <b>3.1 Khz audio</b>";
+            } elseif ($w1b4 == "06" ) {
+                    $call_description=$call_description." <b>64kb/s unrestricted preferred</b>";
+            }
+     
+     
+            #   byte 5
+            #     bit 0-6 : A-number nature of address indicator
+            #                 02 : unknown
+            #                 03 : national
+            #                 04 : international
+            $call_description=$call_description." \n$call_id:  | | | +-------- A-number nature of address indicator" ; 
+            if ($w2b5 == "02" ) {
+                    $call_description=$call_description." </b>Unknown</b>";
+            } elseif ($w2b5 == "03")  {
+                    $call_description=$call_description." <b>National</b>";
+            } elseif ($w2b5 == "04") {
+                    $call_description=$call_description." <b>International</b>";
+            }
+            #byte 6 (forward call indicator byte 1)
+            #    bit 0   : national/international call indicator
+            #                00 : call to be treated as a national call
+            #                01 : call to be treated as an international call
+            #    bit 1-2 : end-to-end method indicator
+            #                00 : no end-to-end method available
+            #                02 : pass along method available
+            #                04 : SCCP method available
+            #                06 : pass along and SCCP method available
+            #    bit 3   : interworking indicator
+            #                00 : no interworking encountered
+            #                08 : interworking encountered
+            #    bit 4   : end-to-end information indicator
+            #                00 : no end-to-end information available
+            #                10 : end-to-end information available
+            #    bit 5   : ISUP indicator
+            #                00 : ISUP not used all the way
+            #                20 : ISUP used all the way
+            #    bit 6-7 : ISUP preference indicator
+            #                00 : ISUP preferred all the way
+            #                40 : ISUP not required all the way
+            #                80 : ISUP required all the way
+            preg_match("/(\w)(\w)/",$w2b6,$m);
+            $out3=$this->bin($m[1]).$this->bin($m[2]);
+            preg_match("/(\w\w)(\w)(\w)(\w)(\w\w)(\w)/",$out3,$m);
+            $call_description=$call_description."\n$call_id:  | | +---------- unpack $w2b6 to $m[1]$m[2]$m[3]$m[4]$m[5]$m[6]" ;
+            $call_description=$call_description."\n$call_id:  | | +---------- National/international call indicator 6->$m[6]  " ;
+            if ($m[6] == "0" ) {
+                    $call_description=$call_description." <b>Call to be treated as a national call</b>";
+            } else {
+                    $call_description=$call_description." <b>Call to be treated as an international call</b>";
+            }
+            $call_description=$call_description."\n$call_id:  | | +---------- End-to-end method indicator 5->$m[5]" ;
+            if ($m[5] == "00" ) {
+                    $call_description=$call_description." <b>No end-to-end method available</b>";
+            } elseif ($m[5] == "01") {
+                    $call_description=$call_description." <b>Pass along method available</b>";
+            } elseif ($m[5] == "10") {
+                    $call_description=$call_description." <b>SCCP method available</b>";
+            } elseif ($m[5] == "11") {
+                    $call_description=$call_description." <b>Pass along and SCCP method available</b>";
+            }
+            $call_description=$call_description."\n$call_id:  | | +---------- Interworking indicator 4->$m[4]" ;
+            if ($m[4] == "0" ) {
+                    $call_description=$call_description." <b>No interworking encountered</b>";
+            } else {
+                    $call_description=$call_description." <b>Interworking encountered</b>";
+            }
+            $call_description=$call_description."\n$call_id:  | | +---------- End-to-end information indicator 3->$m[3]" ;
+            if ($m[3] == "0" ) {
+                    $call_description=$call_description." <b>No end-to-end information available</b>";
+            } else {
+                    $call_description=$call_description." <b>End-to-end information available</b>";
+            }
+            $call_description=$call_description."\n$call_id:  | | +---------- ISUP indicator 2->$m[2]" ;
+            if ($m[2] == "0" ) {
+                    $call_description=$call_description." <b>ISUP not used all the way</b>";
+            } else {
+                    $call_description=$call_description." <b>ISUP used all the way</b>";
+            }
+            $call_description=$call_description."\n$call_id:  | | +---------- ISUP preference indicator  1->$m[1]" ;
+            if ($m[1] == "00" ) {
+                    $call_description=$call_description." <b>ISUP preferred all the way</b>";
+            } elseif ($m[1] == "01") {
+                    $call_description=$call_description." <b>ISUP not required all the way</b>";
+            } elseif ($m[1] == "10") {
+                    $call_description=$call_description." <b>ISUP required all the way</b>";
+            }
+            
+            preg_match("/(\w)(\w)/",$w2b7,$m);
+            $out2=$this->bin($m[1]).$this->bin($m[2]);
+            if (preg_match("/(.*)(\d\d)(\d)$/",$out2,$m) ) {
+                $call_description=$call_description."\n$call_id:  | +------------ unpack $w2b7 to $m[1]$m[2]$m[3]:" ;
+                $call_description=$call_description."\n$call_id:  | +------------ ISDN access indicator 3->$m[3]" ;
+                #     bit 0   : ISDN access indicator
+                #         00 : originating access non-ISDN
+                #         01 : originating access ISDN
+                if ($m[3] == "0" ) {
+                        $call_description=$call_description." <b>Originating access non-ISDN</b>";
+                } else {
+                        $call_description=$call_description." <b>Originating access ISDN</b>";
+                }
+       
+                $call_description=$call_description."\n$call_id:  +-------------- SCCP method indicator" ;
+                #bit 1-2 : SCCP method indicator
+                #         00 : no indication
+                #         02 : connectionless method available
+                #         04 : connection oriented method available
+                #         06 : connectionless and connection oriented method 
+                if ($m[2] == "00" ) {
+                        $call_description=$call_description." <b>No indication</b>";
+                } elseif ($m[2] == "01") {
+                        $call_description=$call_description." <b>Connectionless method available</b>";
+                } elseif ($m[2] == "10") {
+                        $call_description=$call_description." <b>Connection oriented method available</b>";
+                } elseif ($m[2] == "11") {
+                        $call_description=$call_description." <b>Connectionless and connection oriented method</b>";
+                }
+     
+            }
+            $txt="$read\n$call_description\n";
+            return "$txt";
+        }
+    }
+
+    function bin($input) {
+        $n = hexdec($input);
+        $s = '';
+        $len = strlen(sprintf("%x", $n))*4;
+        for ($i=0; $i<$len; $i++) {
+            $s = sprintf("%d", ($n & 1)) . $s;
+            $n = $n>>1;
+        }
+        return $s;
+    }
+}
+?>
