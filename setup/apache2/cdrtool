@@ -1,5 +1,5 @@
 <Directory /var/www/CDRTool>
-        DirectoryIndex index.phtml index.htm index.shtml index.cgi index.php index.phtml
+        DirectoryIndex index.phtml index.html
 	<Files ~ "~$">
 	Order allow,deny
 	Deny from all
@@ -13,6 +13,10 @@
 	Deny from all
 	</Files>
 	<Files *.csv>
+	Order allow,deny
+	Deny from all
+	</Files>
+	<Files _darcs>
 	Order allow,deny
 	Deny from all
 	</Files>

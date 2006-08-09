@@ -27,6 +27,7 @@ set -e
 
 case "$1" in
     configure)
+        find /var/www/CDRTool/scripts/ -name \*.php -exec chmod +x {} \;
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
