@@ -2,9 +2,10 @@ cdrtool (4.6-6) unstable; urgency=low
 
   * Migrate from CVS to darcs version control
   * Set executable flag for php scripts after installation
-  * Hide _darcs directory in apache 
+  * Hide _darcs directory in apache
+  * Log the loading of prepaid accounts during start-up
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed,  9 Aug 2006 10:56:24 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 10 Aug 2006 15:57:20 +0200
 
 cdrtool (4.6-5) unstable; urgency=low
 

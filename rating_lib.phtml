@@ -2754,7 +2754,7 @@ class RatingEngine {
 
         if ($account) $query.=sprintf(" where account = '%s' ",addslashes($account));
 
-        dprint($query);
+        print($query);
         if (!$this->db->query($query)) return 0;
 
         if ($account) {
@@ -2778,20 +2778,19 @@ class RatingEngine {
         		$this->balance=array();
             }
         	$log=sprintf("Loaded %d prepaid accounts",count($this->balance));
+      		syslog(LOG_NOTICE, $log);
             return 1;
         }
     }
 
     function reloadRatingTables () {
         $b=time();
-    	$i=$this->CDRS->LoadDestinations();
-        syslog(LOG_NOTICE, "Loaded $i destinations");
-        $this->CDRS->RatingTables->LoadRatingTables();
 
-        // reload Prepaid accounts
+        $i=$this->CDRS->LoadDestinations();
+        syslog(LOG_NOTICE, "Loaded $i destinations");
+
+        $this->CDRS->RatingTables->LoadRatingTables();
         $this->loadPrepaidAccounts();
-        $c=count($this->balance);
-        syslog(LOG_NOTICE, "Loaded $c prepaid accounts");
 
         $e=time();
         $d=$e-$b;

@@ -92,7 +92,7 @@ $CDRS->RatingTables->LoadRatingTables();
 
 // Init RatingEngine engine
 $RatingEngine = new RatingEngine($CDRS);
-$RatingEngine->LoadPrepaidAccounts();
+$RatingEngine->loadPrepaidAccounts();
 
 // Start main loop here
 while (true) { 
