@@ -2754,7 +2754,7 @@ class RatingEngine {
 
         if ($account) $query.=sprintf(" where account = '%s' ",addslashes($account));
 
-        print($query);
+        dprint($query);
         if (!$this->db->query($query)) return 0;
 
         if ($account) {
