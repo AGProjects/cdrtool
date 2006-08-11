@@ -314,29 +314,19 @@ fairly easy to modify an exported batch file into an external
 application and load it back into CDRTool.
 
 
-Performance
------------
+Reloading rating tables
+------------------------
 
-Rating is part of the normalization process which happens in real-time every
-time a query is executed in the web interface. On 2GHz CPU the rating speed
-is ~ 200 calls/second for a 60000 rates table. It is advisable to keep the
-number of rating records to a minimum.
+From cdrtool version >=3.2  the rating tables are no longer loaded into the
+from database into memory during each normalization. The network rating
+engine is contacted for rating all calls. The rating engine is a daemon,
+which loads all rating tables and remains active in the server memory.
+Reload of rating tables is possible without stopping the daemon by
+connecting to it and issuing the reload command. The init.d script can alos
+be used fro reloading the rating engine with the current values from the
+rating database.
 
-To improve the performance a scheduled task normalize and rate the calls
-every 5 minutes (see crontabs directory for a sample script).
-
-
-How to reload rating tables
----------------------------
-
-From version 3.2 onwards the rating tables are no longer loaded into the
-memory during each normalization. The network rating engine is contacted for
-rating calls. The rating engine is a daemon, which loads all rating tables
-and remains active in the server memory. Reload of rating tables is possible
-without stopping the daemon by connecting to it and issuing the reload
-command.
-
-There are two ways of reloading the rating tables:
+There are 3 ways of reloading the rating tables:
 
 a. Each change executed in the WEB interface for rate management may update
 the rating tables. If there is a change made to the database the link
@@ -348,6 +338,8 @@ global.inc. Type help to see the list of commands available. Locate the
 reload rates command and execute it followed by an enter. You may see the
 result of the command in syslog. The results displayed by syslog will show
 how many entries have been reloaded from the rating table.
+
+c. Run /etc/init.d/cdrtool reload command
 
 
 Troubleshooting
@@ -384,7 +376,7 @@ csv directory) or edit the rating tables using the WEB interface
 
 2. Import the rating csv files using command (use full path of the import script)
 
-   /var/www/prj/CDRTool/scripts/importRatingTables.php
+   /var/www/CDRTool/scripts/importRatingTables.php
 
 3. Renormalize the calls to be re-rated by either selecting ReNormalize
    check-box in the search screen or by changing the Normalized field in the
@@ -401,7 +393,14 @@ csv directory) or edit the rating tables using the WEB interface
 
 4. Apply rating again using command: 
 
-   /var/www/prj/CDRTool/scripts/normalize.php
+   /var/www/CDRTool/scripts/normalize.php
+
+Warning:
+
+Renormalization process can take long time durring which your database
+(radacct tablea) may be locked. Perform this operation only during low
+traffic periods.
+
 
 Holidays must be added as individual days YYYY-MM-DD in table
 billing_holidays. The profile applied for holidays is the same as for
@@ -439,6 +438,47 @@ billing_rates
 billing_ratesNGN
 
 are used only for the purpose of displaying them in the web interface of
-CDRTool for login accounts that have access restricted to the corresponding
+CDRTool for login accounts that have restricted access to the corresponding
 gateway, domain or subscribers.
    
+
+Performance
+-----------
+
+Rating is part of the normalization process that happens every time a query
+is executed in the web interface or when the rating engine is contacted by
+the SIP Proxy or User Agent that performs the prepaid application.
+
+The following tests have been performed between two machines with 3 GHz CPU
+and 1 GB memory located on the same LAN having a round trip time of 0.2 ms.
+
+The rating tables have been populated durring the tests with:
+
+Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 8135 destinations
+Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 6 profilesPSTN
+Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 16277 ratesPSTN
+Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 2 profilesNGN
+Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 4 holidays
+Aug 11 11:25:44 sip03 CDRTool[4945]: Loaded 7273 prepaid accounts
+
+
+Tests results for the postpaid application:
+
+Clients		Rating command			Execution speed
+----------------------------------------------------------------
+1		ShowPrice			390/s per client 
+5 		ShowPrice 			100/s per client
+10		ShowPrice 			60/s per client
+
+
+Tests results for the prepaid application
+
+Clients		Rating command			Execution speed
+----------------------------------------------------------------
+1		MaxSessionTime/DebitBalance	250/s per client
+5		MaxSessionTime/DebitBalance	80/s per client
+10		MaxSessionTime/DebitBalance	40/s per client
+
+Client means either a SIP Proxy entity or a CDRTool server, which performs
+the normalization process.
+ 
