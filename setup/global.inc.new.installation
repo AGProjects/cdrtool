@@ -1,0 +1,216 @@
+<?
+
+# 1. Change all hostnames and passwords according to the particular installation
+# 2. Copy this file to /var/www/CDRTool/global.inc
+
+###########################################
+# System and web paths
+$CDRTool['tld']    = "/CDRTool";
+$CDRTool['Path']   = "/var/www/CDRTool";
+$_PHPLIB['libdir'] = $CDRTool['Path']. "/phplib/";
+include($_PHPLIB["libdir"] . "prepend.php3");
+$global_local    = $CDRTool['Path']."/global.inc.local";
+
+###########################################
+# PHP Error reporting
+$errorReporting = (E_ALL & ~E_NOTICE);
+$errorReporting = 1; 	// comment this out to enable PHP warnings
+error_reporting($errorReporting);
+
+###########################################
+# Default pagination 
+if (!$maxrowsperpage) $maxrowsperpage=25;
+
+###########################################
+# Service provider information 
+$CDRTool['provider']['name']                  = "Provider name";
+$CDRTool['provider']['service']               = "SIP service";
+$CDRTool['provider']['timezone']              = "Europe/Amsterdam";
+$CDRTool['provider']['fromEmail']             = "support@example.com";
+$CDRTool['provider']['toEmail']               = "support@example.com";
+$CDRTool['provider']['sampleLoginSubscriber'] = "number@example.com";
+$CDRTool['provider']['sampleLoginDomain']     = "example.com";
+
+###########################################
+# SMS one time passwords - register and account at www.simplewire.com
+$simplewire_ID 		= "471-XXX-471-XXXXX";
+$simplewire_Password 	= "DDDDD";
+
+###########################################
+$RatingEngine=array("socketIP"   => "cdrtool.example.com",
+                    "socketPort" => "9024",
+                    "CDRS_class" => "ser_radius");
+
+###########################################
+# SOAP server for prepaid and last calls
+$SOAPServer=array("cdr_source"        => "ser_radius",
+                  "location"          => "https://cdrtool.example.com/CDRTool/SOAP/server.php",
+                  "wsdl"              => "https://cdrtool.example.com/CDRTool/SOAP/WSDL/",
+                  "DB_ser"            => "DB_ser",
+                  "UserNameField"     => "UserName",
+                  "CanonicalURIField" => "CanonicalURI"
+                  );
+
+###########################################
+# Rating engine settings
+$CDRTool['rating']=array(
+                "priceDenominator"   	 => 10000,
+	        "priceDecimalDigits" 	 => 4,
+                "minimumDurationCharged" => 0,
+                "durationPeriodRated" 	 => 60,
+                "trafficSizeRated"       => 1024,
+                "reportMissingRates"     => 0
+               );
+
+###########################################
+# Normalize engine settings
+
+$CDRTool['normalize']['defaultCountryCode']      = "31";
+$CDRTool['normalize']['CountryNumberLength']     = "9";
+# Carrier selection codes, strip first digits
+# and allocate custom Billing Party
+$CDRTool['normalize']['CS_CODES']= array("1684" => array ("name"       => "test@Call",
+                                                      "BillingPartyId" => "call@example.com",
+                                                      "BillingDomain"  => "example.com",
+                                                      "minimumLength"  => "9"
+                                                      )
+											    );
+
+###########################################
+# Import settings
+$CDRTool['import']['stripFromDestination']   = "1";
+
+###########################################
+# Anti-fraud settings
+# create group quota in SER and deny calls to users in this group
+$UserQuota["default"]["traffic"]  = 5000;              // MBytes
+$UserQuota["default"]["cost"]     = 1000;              // Euro
+
+# web interface password guessing protection
+$max_login_attempts=5;
+
+###########################################
+# CDRTool data sources
+
+class DB_CDRTool extends DB_Sql {
+  var $Host     = "cdrtool.example.com";
+  var $Database = "cdrtool";
+  var $User     = "cdradmin";
+  var $Password = "password";
+  var $Halt_On_Error ="no";
+}
+
+class DB_Locker extends DB_Sql {
+  var $Host     = "cdrtool.example.com";
+  var $Database = "cdrtool";
+  var $User     = "locker";
+  var $Password = "password";
+  var $Halt_On_Error ="yes";
+}
+
+class DB_radius extends DB_Sql {
+  var $Host     = "cdrtool.example.com";
+  var $Database = "radius";
+  var $User     = "radius";
+  var $Password = "password";
+  var $Halt_On_Error ="no";
+}
+
+class DB_ser extends DB_Sql {
+  var $Host     = "cdrtool.example.com";
+  var $Database = "openser";
+  var $User     = "openser";
+  var $Password = "password";
+  var $Halt_On_Error ="no";
+}
+
+$cdr        = new DB_CDRTool;
+$ser_db     = new DB_ser;
+
+class DomainAuthLocal extends DomainAuth {	// defined in phplib/local.inc
+}
+
+class PageLayoutLocal extends PageLayout {      // defined in phplib/local.inc
+}
+
+$DATASOURCES=array(
+"unknown"=>array(
+                    "class"              => "CDRS_unknown" // leave it here
+                    ),
+"ser_radius"=>array(
+                    "name"               => "OpenSER",
+                    "class"              => "CDRS_ser_radius",
+                    "table"              => "radacct",
+                    "table_missed"       => "radacct_missed",
+                    "db_class"           => "DB_radius",
+                    "db_class_readonly"  => "DB_radius",
+                    "db_class_siponline" => "DB_ser", 
+                    "rateField"          => "Rate",
+                    "rating"             => "1",
+                    "priceField"         => "Price",
+                    "normalize0SecCalls" => "1",
+                    "DestinationIdField" => "DestinationId",
+                    "normalizedField"    => "Normalized",
+                    "BillingPartyIdField"=> "UserName",
+                    "AccountsDBClass"	 => "DB_ser",
+                    "intAccessCode"      => "00",
+                    "sipTraceDataSource" => "sip_trace",
+                    "traceOutURL"        => array(
+                                            "voicemail.example.com"=>"asterisk",
+                                            "pstn.example.com"=>"cisco"
+                    			    ),
+                    "UserQuotaClass"     => "SERQuota",
+                    "UserQuotaTable"     => "user_quota",
+                    "UserQuotaVerbose"   => "",
+                    "UserQuotaNotify"    => "0",
+                    "MinPstnNumLen"      => "9",
+                    "EnableSIPOnline"    => "0",
+                    "EnableNetworkRating"=> "1",
+                    "domainTranslation"  => array(
+                                                  "gw02.example.com"      => "pstn.example.com"
+                                            ),
+                    "EnableSIPOnline"    => 1,
+                    "RotateTables"	 => "Ym",
+                    "RotateThisMonth"	 => 0,
+                    "purgeCDRsAfter"     => 120 // how many days to keep the CDRs
+                    ),
+"asterisk_vm"  =>array("name"            => "Voicemail server",
+                    "class"              => "CDRS_asterisk",
+                    "table"              => "asterisk_cdr",
+                    "db_class"           => "DB_radius",
+                    "rateField"          => "Rate",
+                    "rating"             => "1",
+                    "priceField"         => "Price",
+                    "DestinationIdField" => "DestinationId",
+                    "normalizedField"    => "Normalized",
+                    "normalize0SecCalls" => "1",
+                    "contexts" 		 => array(
+                                            "SIP"=>array("WEBName"=>"OpenSER"),
+                                            ),
+                    "traceInURL"         => array(
+                                            "SIP"=>"ser_radius"
+                    			    		),
+                    "traceOutURL"        => array(),
+                    "purgeCDRsAfter"    => 180 // how many days to keep the CDRs
+                    ),
+"sip_trace"   =>array(
+                    "name"               => "SIP trace",
+                    "db_class"           => "DB_ser",
+                    "table"              => "sip_trace",
+                    "purgeRecordsAfter"  => "7"
+                    )
+);
+
+// load CDRTool libraries 
+$CDRToolModules=array("ser","asterisk","custom","rating");
+
+$tz=$CDRTool['provider']['timezone'];
+putenv("TZ=$tz");
+
+if ($REMOTE_ADDR=="10.0.0.1") {
+    //$verbose=1;
+} else {
+    // prevent set of verbose via post/get
+    unset($verbose);
+}
+?>
