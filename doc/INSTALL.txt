@@ -1,4 +1,22 @@
 CDRTool installation
+--------------------
+
+Obtain the software from http://cdrtool.ag-projects.com
+
+The software is available as tar archive or as a debian package.
+
+Installing from the tar archive:
+
+Change directory to your web root (/var/www on Debian systems)
+
+tar zxvf cdrtool*.tgz 
+
+Installing from the debian package:
+
+dpkg -i cdrtool*.deb
+
+The files will be located under /var/www/CDRTool directory
+
 
 Create CDRTool database
 -----------------------
@@ -11,6 +29,7 @@ file setup/create_users.mysql and run
 A new MySQL database "cdrtool" will be created. A default web user
 admin/admin is added, you may use this initial account to login in the
 web interface.
+
 
 PHP setup and Apache setup
 --------------------------
@@ -40,19 +59,11 @@ Change AllowOverride None  to
     AllowOverride All 
 
 
-Installing CDRTool software
+
+Create a configuration file
 ---------------------------
 
-tar zxvf CDRTool-XXX.tgz  under your web root directory 
-(/var/www on Debian systems)
-
-Files will be decompressed into ./CDRTool directory
-
-
-Create an initial configuration
--------------------------------
-
-cd CDRTool
+cd /var/www/CDRTool
 cp setup/global.inc.in global.inc 
 
 Edit global.inc and setup your variables to match your system.
@@ -74,16 +85,17 @@ CRON setup
 
 Some operations must be scheduled to run periodically by cron. Such
 operations are the scripts that block fraudulous accounts in OpenSER,
-normalization of call detail records, purge of old traces or generate PDF
-specifications
+normalize the call detail records, purge the old SIP traces.
 
-See CDRTool/setup/crontabs/ directory for these scripts.
+The sample cron file is in /var/www/CDRTool/setup/crontabs/ 
+
+Note. This is done automatically if you install the debian package.
 
 
 RADIUS setup
 ------------
 
-CDRTool works with Free Radius server from www.freeradius.org
+CDRTool works with FreeRadius server from http://www.freeradius.org
 
 apt-get install freeradius freeradius-mysql 
 Create the database for radius tables on MySQL server
@@ -114,7 +126,6 @@ and for CISCO by running:
 
 /var/www/CDRTool/setup/radius/CISCO/radacct-patch.sh 
 
-
 cp /var/www/CDRTool/setup/radius/OpenSER/sql.conf /etc/freeradius/sql.conf  
 
 Edit the database connection details in sql.conf and restart freeradius 
@@ -143,11 +154,12 @@ or added if missing.
 	radutmp 
 	}
 
-Copy setup/radius/OpenSER/dictionary.ser to /etc/freeradius
+Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/freeradius
 
 
-OpenSER/SER setup
------------------ 
+
+OpenSER setup
+------------- 
 
 CDRTool version >4.3 have been tested only against OpenSER 1.0 and above.
 
@@ -185,19 +197,20 @@ modparam("acc", "radius_extra",       "Sip-RPid=$avp(s:rpid); \
                                        Contact=$hdr(contact); \
                                        Event=$hdr(event)")
 
-Then of course you must enable accounting in various parts of the routing
-script by setting the accounting flag.
+Further, you must enable accounting in various parts of the routing script
+by setting the accounting flag.
 
-Copy setup/radius/OpenSER/dictionary.ser to /etc/openset/radius/
+Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/openset/radius/
 
 
 Rating engine daemon
 --------------------
 
-Can be used as a rating engine for prepaid applications. It provides access
-to the rating tables and stays in memory (running as a daemon) to avoid
-reading the rating table at every request. The rating tables can be reload
-without restarting the software.
+It is used as a rating engine for prepaid applications and as price
+caluclator for postpaid traffic. It provides access to the rating tables and
+stays in memory (running as a daemon) to avoid reading the rating table at
+every request. The rating tables can be reloaded without restarting the
+software.
 
 See the information in the head of the scripts/ratingEngine.php daemon for
 how to enable prepaid or other rating functionality. For prepaid, an
@@ -222,13 +235,6 @@ SOAP engine
 The SOAP engine can be used by an external provisioning system to access
 information available in CDRTool (like prepaid accounts).
 
-Depends on php-pear, pear components and SOAP client/server from
-http://pear.php.net/package/SOAP. Once installed, use the pear command to
-install SOAP dependencies:
-
-pear upgrade-all
-pear install HTTP_Request Net_Socket Net_URL
-  
 The rating and other CDRTool functions (like provisioning of prepaid
 accounts or checking the balance) are available by using SOAP calls. The
 SOAP calls are translated into requests for the rating engine (which must be
@@ -292,8 +298,8 @@ MediaProy can log into CDRTool the IP bandwidth utilization, the codecs and
 the User Agents. MediaProxy logs this information into the database used by
 the Radiusserver, the radacct table.
 
-The MediaProxy can also correct the session duration of CDRs for which no
-BYE messages have been received. 
+MediaProxy can also correct the session duration of CDRs for which no BYE
+messages have been received.
 
 The following information is logged: 
 
@@ -310,7 +316,7 @@ Asterisk setup
 Download from cvs the asterisk-addons and patch asterisk to store CDRs in
 MySQL.
 
-See setup/asterisk for more information.
+See /var/www/CDRTool/setup/asterisk for more information.
 
 
 Cisco setup
@@ -357,3 +363,4 @@ Monit can check if the rating engine stopped working and restart it. A
 sample configuration file for monit is available in setup/monit/monitrc.
 Edit the IP address and hostname where the rating engine runs and copy
 /var/www/CDRTool/setup/monit/monitrc /etc/monit/monit.d/cdrtool
+
