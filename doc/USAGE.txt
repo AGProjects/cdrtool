@@ -3,10 +3,11 @@ Using CDRTool
 
 Point the web browser to http[s]://IPwhereCDRToolisInstalled/CDRTool/
 
-Fill in the username and password. A default account has been created 
-during installation. The default administraion account is admin with
-password admin. You may also login using the SIP credentials for SER
-subscriber table.
+Fill in the username and password. A default account has been created during
+the installation. The default administraion account is admin with password
+admin. 
+
+You may also login using the SIP credentials for SER subscriber table.
 
 - Upload rating files (see the sample .csv files) 
 - Select data-sources the user may access with his account

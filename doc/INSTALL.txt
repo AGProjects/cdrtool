@@ -20,15 +20,18 @@ The files will be instaklled under /var/www/CDRTool directory.
 Create CDRTool database
 -----------------------
 
-You need root access from the machine where CDRTool runs, otherwise copy the
-files required by setup/setup_mysql.sh to the MySQL machine and run the
-script locally.
+You need MySQL root access from the machine where CDRTool runs, otherwise
+copy the files required by setup/setup_mysql.sh to the MySQL machine and run
+the script locally.
 
-Change the MySQL password of cdrtool user from file setup/create_users.mysql
+Change the MySQL password of the cdrtool user from file
+setup/create_users.mysql
 
 Then run the database setup script:
 
 /var/www/CDRtool/setup/mysql/setup_mysql.sh password hostname
+
+The script performs the following: 
 
 1. It adds to the MySQL server a user for cdrtool software
 2. It creates a new MySQL database "cdrtool" 
@@ -41,8 +44,9 @@ PHP setup and Apache setup
 --------------------------
 
 Install PHP and dependencies. If you have chosen to install the debian
-package the dependencies will be resolved during installation. Example for
-Debian systems and php4:
+package, the dependencies will be resolved during installation. 
+
+Example for Debian systems and php4:
 
 apt-get install apache mysql-client mod_ssl
 apt-get install php4 php4-mysql php4-cli php4-cgi php4-curl php-pear php-soap 
