@@ -1,25 +1,31 @@
 <?
+#
+# 1. Change all hostnames and passwords according to the installation
+# 2. Copy this file to /var/www/CDRTool/global.inc
+#
+
+ini_set('max_execution_time','120');
+ini_set('memory_limit','64M');
+
 ###########################################
 # System and web paths
+
 $CDRTool['tld']    = "/CDRTool";
 $CDRTool['Path']   = "/var/www/CDRTool";
 $_PHPLIB['libdir'] = $CDRTool['Path']. "/phplib/";
 include($_PHPLIB["libdir"] . "prepend.php3");
 $global_local    = $CDRTool['Path']."/global.inc.local";
 
-ini_set('register_globals','on');
-ini_set('max_execution_time','120');
-ini_set('memory_limit','64M');
-
 ###########################################
 # PHP Error reporting
+
 $errorReporting = (E_ALL & ~E_NOTICE);
-//$errorReporting = 1;		// uncomment to see PHP warnings and errors 
+$errorReporting = 1; 	// comment this out to enable PHP warnings
 error_reporting($errorReporting);
 
 ###########################################
 # Default pagination 
-if (!$maxrowsperpage) $maxrowsperpage=25;
+$maxrowsperpage=25;
 
 ###########################################
 # Service provider information 
@@ -40,11 +46,11 @@ $simplewire_ID 		= "471-XXX-471-XXXXX";
 $simplewire_Password 	= "DDDDD";
 
 ###########################################
-# needed by scripts/ratingEngine.php daemon
-# Where the rating engine can be contacted to obtain price information for each call
-$RatingEngine=array("socketIP"=>"127.0.0.1",
-                     "socketPort"=>"9024",
-                     "CDRS_class"=>"ser_radius");
+# Where the rating engine listens for network requests:
+
+$RatingEngine=array("socketIP"   => "IP.address.of.the.private.interface.of.cdrtool.example.com",
+                    "socketPort" => "9024",
+                    "CDRS_class" => "ser_radius");
 
 ###########################################
 # SOAP server for SER prepaid and last calls
