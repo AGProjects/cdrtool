@@ -51,13 +51,13 @@ class SETUP {
         <p>
         Quick setup: copy the sample configuration file:
         <p>
-        cp setup/global.inc.in global.inc
+        cp setup/global.inc.new.installation global.inc
         <p>
         and edit global.inc to reflect your platform setup.
         This is the content of the current sample configuration file:
         ";
         print "<pre>";
-        $fp=fopen("setup/global.inc.in",r);
+        $fp=fopen("setup/global.inc.new.installation",r);
         while ($buffer = fgets($fp,1024)) {
             if (!preg_match("/(<\?)|(\?>)/",$buffer)) {
                 print "$buffer";
