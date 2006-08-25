@@ -1,13 +1,13 @@
 cdrtool (4.6-7) unstable; urgency=low
 
-  * Update sample configuration for new installations 
+  * Update sample configuration for new installations
   * Update documentation of rating engine
   * Perform speeds test for the postpaid and prepaid applications
-    (results are available in the rating engine documentation) 
-  * Removed Event-Timestamp from dictionary.ser, it is present now 
+    (results are available in the rating engine documentation)
+  * Removed Event-Timestamp from dictionary.ser, it is present now
     in freeradius standard distribution
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 25 Aug 2006 10:08:09 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 25 Aug 2006 10:38:45 +0200
 
 cdrtool (4.6-6) unstable; urgency=low
 

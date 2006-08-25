@@ -1,4 +1,11 @@
 <?
+###########################################
+# Default pagination 
+if (!$maxrowsperpage) $maxrowsperpage=25;
+
+$tz=$CDRTool['provider']['timezone'];
+putenv("TZ=$tz");
+
 class CDRS {
 
     var $db_class           = "DB_cdrtool";

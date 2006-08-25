@@ -84,17 +84,13 @@ $CDRTool['normalize']['CS_CODES']= array("1684" => array ("name"       =>"test@C
 
 ###########################################
 # Import settings
-$CDRTool['import']['stripFromDestination']   = "1";
+$CDRTool['import']['stripFromDestination']   = "0";
 
 ###########################################
 # Anti-fraud settings
 # create group quota in SER and deny calls to users in this group
 $UserQuota["default"]["traffic"]  = 5000;              // MBytes
 $UserQuota["default"]["cost"]     = 1000;              // Euro
-
-###########################################
-# web interface password guessing protection
-$max_login_attempts=5;
 
 ###########################################
 # CDRTool datasources
@@ -139,9 +135,6 @@ class DB_cisco extends DB_Sql {
   var $Password = "ndd18vv";
   var $Halt_On_Error ="no";
 }
-
-$cdr        = new DB_CDRTool;
-$ser_db     = new DB_ser;
 
 # To allow users to login using a custom procedure. See DomainAuth from phplib/local.inc as example
 class DomainAuthLocal extends DomainAuth {
