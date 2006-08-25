@@ -35,7 +35,7 @@ $CDRTool['provider']['sampleLoginDomain']     = "example.com";
 ###########################################
 # Where the rating engine listens for network requests:
 
-$RatingEngine=array("socketIP"   => "cdrtool.example.com",
+$RatingEngine=array("socketIP"   => "IP.address.of.the.private.interface.of.cdrtool.example.com",
                     "socketPort" => "9024",
                     "CDRS_class" => "ser_radius");
 

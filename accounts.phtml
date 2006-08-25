@@ -39,6 +39,8 @@ $mailsettings    = $_REQUEST['mailsettings'];
 
 $title           = "Accounts";
 
+$db        		 = new DB_CDRTool;
+
 if (is_readable("local/header.phtml")) {
     include("local/header.phtml");
 } else {
@@ -127,9 +129,9 @@ if ($action == "edit" && $id) {
 
             dprint($query);
 
-            if (!$cdr->query($query)) {
+            if (!$db->query($query)) {
                 print "<p>Failed to update user $id";
-                print "The error is $cdr->Error";
+                print "The error is $db->Error";
             }  else {
                 if ($delete) {
                     print "<p>User <b>$name</b> deleted";
@@ -164,25 +166,25 @@ if ($action == "edit" && $id) {
         }
 
         dprint($query);
-        $cdr->query($query);
-        $cdr->next_record();
+        $db->query($query);
+        $db->next_record();
         
-        $username	      = $cdr->f('username');
-        $name		      = $cdr->f('name');
-        $email		      = $cdr->f('email');
-        $tel		      = $cdr->f('tel');
-        $password	      = $cdr->f('password');
-        $organization	  = $cdr->f('organization');
-        $perms		      = $cdr->f('perms');
-        $sources		  = $cdr->f('sources');
-        $expire		      = $cdr->f('expire');
-        $aNumberFilter    = $cdr->f('aNumberFilter');
-        $gatewayFilter    = $cdr->f('gatewayFilter');
-        $domainFilter     = $cdr->f('domainFilter');
-        $serviceFilter    = $cdr->f('serviceFilter');
-        $compidFilter     = $cdr->f('compidFilter');
-        $cscodeFilter     = $cdr->f('cscodeFilter');
-        $afterDateFilter  = $cdr->f('afterDateFilter');
+        $username	      = $db->f('username');
+        $name		      = $db->f('name');
+        $email		      = $db->f('email');
+        $tel		      = $db->f('tel');
+        $password	      = $db->f('password');
+        $organization	  = $db->f('organization');
+        $perms		      = $db->f('perms');
+        $sources		  = $db->f('sources');
+        $expire		      = $db->f('expire');
+        $aNumberFilter    = $db->f('aNumberFilter');
+        $gatewayFilter    = $db->f('gatewayFilter');
+        $domainFilter     = $db->f('domainFilter');
+        $serviceFilter    = $db->f('serviceFilter');
+        $compidFilter     = $db->f('compidFilter');
+        $cscodeFilter     = $db->f('cscodeFilter');
+        $afterDateFilter  = $db->f('afterDateFilter');
         showForm($id);
     }
 
@@ -266,8 +268,8 @@ if ($action == "edit" && $id) {
 
             dprint($query);
 
-            if (!$cdr->query($query)) {
-                printf("<p>Failed to add user: %s(%s) %s",$cdr->Error,$cdr->Errno,$query);
+            if (!$db->query($query)) {
+                printf("<p>Failed to add user: %s(%s) %s",$db->Error,$db->Errno,$query);
 
             } else {
                 print "<p>User <b>$name</b> created";

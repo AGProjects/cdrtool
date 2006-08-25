@@ -8,7 +8,6 @@ page_open(
 $loginname=$auth->auth["uname"];
 
 $title           = "Logs";
-$cdr             = new DB_CDRTool;
 $search_text     = $_REQUEST['search_text'];
 $task            = $_REQUEST['task'];
 $current_log     = $_REQUEST['current_log'];
@@ -16,6 +15,8 @@ $log_description = $_REQUEST['log_description'];
 $next            = $_REQUEST['next'];
 $maxrowsperpage  = 20;
 $PHP_SELF        = $_SERVER['PHP_SELF'];
+
+$db              = new DB_CDRTool;
 
 if (is_readable("local/header.phtml")) {
 	include("local/header.phtml");
@@ -46,12 +47,12 @@ print "
 if ($perm->have_perm(admin)) {
 	$query="select * from auth_user where perms like '%admin%'";
     dprint($query);
-    $cdr->query($query);
-    while ($cdr->next_record()) {
-    	$Collegues[$cdr->f('email')] =$cdr->f('name');
-        if ($loginname == $cdr->f('username')) {
-            $myEmailAddress=$cdr->f('email');
-            $myName=$cdr->f('name');
+    $db->query($query);
+    while ($db->next_record()) {
+    	$Collegues[$db->f('email')] =$db->f('name');
+        if ($loginname == $db->f('username')) {
+            $myEmailAddress=$db->f('email');
+            $myName=$db->f('name');
         }
     }
 } else {
@@ -71,7 +72,7 @@ if ($current_log ) {
 		}
 
         dprint($query);
-        $cdr->query($query);
+        $db->query($query);
 
     } else if ($task == "mailLog" && $recipient) {
         $query=sprintf("select * from log where id = %d",$current_log);
@@ -81,10 +82,10 @@ if ($current_log ) {
 		}
 
         dprint($query);
-        $cdr->query($query);
-        $cdr->next_record();
-        $rerun         	=$cdr->f('rerun');
-	    $description    =$cdr->f('description');
+        $db->query($query);
+        $db->next_record();
+        $rerun         	=$db->f('rerun');
+	    $description    =$db->f('description');
 
         if ($_SERVER['HTTPS']=="on") {
             $protocolURL="https://";
@@ -125,9 +126,9 @@ $query = "select count(*) as records from log where ". $where;
 
 dprint($query);
 
-if ($cdr->query($query)) {
-    $cdr->next_record();
-    $rows = $cdr->f('records');
+if ($db->query($query)) {
+    $db->next_record();
+    $rows = $db->f('records');
 } else {
     $rows = 0;
 }
@@ -157,7 +158,7 @@ if  ($rows>0)  {
 
     dprint($query);
     
-    $cdr->query($query);
+    $db->query($query);
 
     print "<center><p>Found $rows records. </center>
            <table class=border cellspacing=1 width=100% align=center>
@@ -179,18 +180,18 @@ if  ($rows>0)  {
 	while  ($i<$maxrows)  {
             
         $found=$i+1;
-        $cdr->next_record();											
+        $db->next_record();											
 
-        $current_log    =$cdr->f('id');
-       	$log_date		=$cdr->f('date');
-       	$login		    =$cdr->f('login');
-       	$ip	         	=$cdr->f('ip');
-       	$url         	=$cdr->f('url');
-        $reedit         =$cdr->f('reedit');
-        $rerun         	=$cdr->f('rerun');
-       	$results        =$cdr->f('results');
-	    $description    =$cdr->f('description');
-        $datasource     =$cdr->f('datasource');
+        $current_log    =$db->f('id');
+       	$log_date		=$db->f('date');
+       	$login		    =$db->f('login');
+       	$ip	         	=$db->f('ip');
+       	$url         	=$db->f('url');
+        $reedit         =$db->f('reedit');
+        $rerun         	=$db->f('rerun');
+       	$results        =$db->f('results');
+	    $description    =$db->f('description');
+        $datasource     =$db->f('datasource');
 
         if (!$reedit || !$rerun) {
             if (preg_match("/do_search/", $url)) {

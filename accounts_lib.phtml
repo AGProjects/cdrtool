@@ -447,17 +447,19 @@ function showForm($id="") {
 }
 
 function accountList() {
-    global $cdr,$auth, $perm, $verbose, $search_text;
+    global $auth, $perm, $verbose, $search_text;
     $uid=$auth->auth["uid"];
-    
+
+    $db        = new DB_CDRTool;
+
     $query="select * from auth_user";
     if (!$perm->have_perm("admin")) {
             $query=$query. " where user_id = '$uid'";
     }
     $query=$query." order by name asc";
-    $cdr->query($query);
+    $db->query($query);
     dprint($query);
-    $rows=$cdr->num_rows();
+    $rows=$db->num_rows();
     print "
     <p>
     <center>
@@ -481,18 +483,18 @@ function accountList() {
      print "
      </tr>
      ";
-    while($cdr->next_record()) {
-        $id_db          =$cdr->f('user_id');
-        $name		    =$cdr->f('name');
-        $username	    =$cdr->f('username');
-        $email		    =$cdr->f('email');
-        $organization 	=$cdr->f('organization');
-        $password	    =$cdr->f('password');
-        $tel		    =$cdr->f('tel');
-        $domainFilter 	=$cdr->f('domainFilter');
-        $aNumberFilter 	=$cdr->f('aNumberFilter');
-        $expire     	=$cdr->f('expire');
-        $sources	    =preg_replace ("/,/",", ",$cdr->f('sources'));
+    while($db->next_record()) {
+        $id_db          =$db->f('user_id');
+        $name		    =$db->f('name');
+        $username	    =$db->f('username');
+        $email		    =$db->f('email');
+        $organization 	=$db->f('organization');
+        $password	    =$db->f('password');
+        $tel		    =$db->f('tel');
+        $domainFilter 	=$db->f('domainFilter');
+        $aNumberFilter 	=$db->f('aNumberFilter');
+        $expire     	=$db->f('expire');
+        $sources	    =preg_replace ("/,/",", ",$db->f('sources'));
 
         if (date('Y-m-d') > $expire) {
         	$bgcolor="orange";

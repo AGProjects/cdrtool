@@ -41,17 +41,16 @@ class CDRS_ipnxcdr extends CDRS {
         );
 
     function LoadDisconnectCodes() {
-        global $cdr;
         dprint("CDRS->LoadDisconnectCodes()");
         $query="select * from isdncause order by cause";
         dprint("$query");
-        $cdr->query($query);
+        $this->cdrtool->query($query);
         $this->disconnectCodesElements[]=array("label"=>"Any disconnection cause","value"=>"");
 
-        while($cdr->next_record()) {
+        while($this->cdrtool->next_record()) {
 
-            $key         = $cdr->f('cause');
-            $value       = $cdr->f('description');
+            $key         = $this->cdrtool->f('cause');
+            $value       = $this->cdrtool->f('description');
             $value_print = $value." (".$key.")";
     
             $this->disconnectCodesElements[]=array("label"=>$value_print,"value"=>$key);
@@ -1636,17 +1635,16 @@ class CDRS_ipnxlog extends CDRS {
 	var $CDRFields=array();
 
     function LoadDisconnectCodes() {
-        global $cdr;
         dprint("CDRS->LoadDisconnectCodes()");
         $query="select * from isdncause order by cause";
         dprint("$query");
-        $cdr->query($query);
+        $this->cdrtool->query($query);
         $this->disconnectCodesElements[]=array("label"=>"Any disconnection cause","value"=>"");
 
-        while($cdr->next_record()) {
+        while($this->cdrtool->next_record()) {
 
-            $key         = $cdr->f('cause');
-            $value       = $cdr->f('description');
+            $key         = $this->cdrtool->f('cause');
+            $value       = $this->cdrtool->f('description');
             $value_print = $value." (".$key.")";
     
             $this->disconnectCodesElements[]=array("label"=>$value_print,"value"=>$key);
