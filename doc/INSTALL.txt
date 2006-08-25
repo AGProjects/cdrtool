@@ -20,9 +20,9 @@ The files will be instaklled under /var/www/CDRTool directory.
 Create CDRTool database
 -----------------------
 
-You need MySQL root access from the machine where CDRTool runs, otherwise
-copy the files required by setup/setup_mysql.sh to the MySQL machine and run
-the script locally.
+You need MySQL root access with GRANT priviledges from the machine where
+CDRTool runs, otherwise copy the files required by setup/setup_mysql.sh to
+the MySQL machine and run the script locally.
 
 Change the MySQL password of the cdrtool user from file
 setup/create_users.mysql
@@ -70,6 +70,32 @@ LoadModule php4_module /usr/lib/apache/1.3/libphp4.so
 
 Change AllowOverride None  to
     AllowOverride All 
+
+Create a virtual host fro cdrtool. Example for apache2:
+
+Create a file called cdrtool.example.com (replace it with the proper name)
+under /etc/apache2/sites-enabled directory
+
+<VirtualHost cdrtool.example.com:80>
+
+   ServerName          cdr1a-test.caiw.net
+   DocumentRoot        /var/www/
+   CustomLog           /var/log/apache2/cdrtool-access.log combined
+   ErrorLog            /var/log/apache2/cdrtool-errors.log
+   #SSLEngine           On
+   #SSLCertificateFile    /etc/apache2/ssl.crt/snakeoil-rsa.crt
+   #SSLCertificateKeyFile /etc/apache2/ssl.key/snakeoil-rsa.key
+   SetEnvIf User-Agent ".*MSIE.*"      nokeepalive ssl-unclean-shutdown
+
+</VirtualHost>
+
+Then enable the virtual site using:
+
+a2ensite cdrtool.example.com
+
+You may enable ssl using "a2enmod ssl" command. If you use ssl you must also
+generate a site certificate using the instructions provided by apache2
+software.
 
 
 Create a configuration file

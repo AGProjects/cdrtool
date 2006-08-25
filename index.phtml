@@ -47,15 +47,20 @@ class SETUP {
         <h2>CDRTool setup</h2>
         CDRTool has not been setup on this machine yet.
         <p>
-        For detailed installation instructions read <a href=doc/INSTALL.txt>doc/INSTALL.txt</a>
+
+	You must first setup php, apache and to create the cdrtool database.
+	Detailed installation instructions are available in <a href=doc/INSTALL.txt>doc/INSTALL.txt</a>
+
         <p>
-        Quick setup: copy the sample configuration file:
+        Once the database is available, create the cdrtool configuration
+        file by copying the sample configuration file:
         <p>
         cp setup/global.inc.new.installation global.inc
         <p>
-        and edit global.inc to reflect your platform setup.
+        Then edit the configuration file global.inc to reflect your platform setup.
         This is the content of the current sample configuration file:
         ";
+
         print "<pre>";
         $fp=fopen("setup/global.inc.new.installation",r);
         while ($buffer = fgets($fp,1024)) {
