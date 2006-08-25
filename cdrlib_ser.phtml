@@ -299,7 +299,12 @@ class CDRS_ser_radius extends CDRS {
         	if (preg_match("/^.*(\d{6})$/",$_table,$m)) {
             	$cdr_table_els[]=array("label"=>$m[1],"value"=>$_table);
             } else {
-                $label=sprintf("Current (%s - %s)",$dataStart,$dataEnd);
+                if (!$dataStart) {
+                	$label=sprintf("Current table (No records available)");
+                } else {
+                	$label=sprintf("Current table (%s - %s)",$dataStart,$dataEnd);
+                }
+
             	$cdr_table_els[]=array("label"=>$label,"value"=>$_table);
             }
         }
