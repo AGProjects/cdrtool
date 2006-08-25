@@ -112,6 +112,39 @@ extending one of the existing classes (ser, asterisk or cisco).
 global.inc.in contains a more elaborate example for setting up 
 datasources
 
+Enable rating engine
+--------------------
+
+It is used as a rating engine for prepaid applications and as price
+caluclator for postpaid traffic. It provides access to the rating tables and
+stays in memory (running as a daemon) to avoid reading the rating table at
+every request. The rating tables can be reloaded without restarting the
+software.
+
+See the information in the head of the scripts/ratingEngine.php daemon for
+how to enable prepaid or other rating functionality. For prepaid, an
+external B2BUA is required (like the call_control module), CDRTool provides
+only the rating and update balance functions.
+
+Set the IP and port where the rating engine listens to and the OpenSER
+datasource in global.inc:
+
+$RatingEngine=array("socketIP"   => "10.0.0.135",
+                     "socketPort" => "9024",
+                     "CDRS_class" => "ser_radius");
+
+The MSQL schema for prepaid accounts: setup/mysql/create_prepaid.mysql
+The network engine has no security features, it must run over a protected
+network. 
+
+Edit /etc/default/cdrtool and set 
+
+RUN_ratingEngine=yes
+
+Then restart the rating engine:
+
+/etc/init.d/cdrtool restart
+
 
 High availability
 -----------------  
@@ -196,7 +229,6 @@ or added if missing.
 Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/freeradius
 
 
-
 OpenSER setup
 ------------- 
 
@@ -242,30 +274,6 @@ by setting the accounting flag.
 Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/openset/radius/
 
 
-Rating engine daemon
---------------------
-
-It is used as a rating engine for prepaid applications and as price
-caluclator for postpaid traffic. It provides access to the rating tables and
-stays in memory (running as a daemon) to avoid reading the rating table at
-every request. The rating tables can be reloaded without restarting the
-software.
-
-See the information in the head of the scripts/ratingEngine.php daemon for
-how to enable prepaid or other rating functionality. For prepaid, an
-external B2BUA is required (like the call_control module), CDRTool provides
-only the rating and update balance functions.
-
-Set the IP and port where the rating engine listens to and the OpenSER
-datasource in global.inc:
-
-$RatingEngine=array("socketIP"   => "10.0.0.135",
-                     "socketPort" => "9024",
-                     "CDRS_class" => "ser_radius");
-
-The MSQL schema for prepaid accounts: setup/mysql/create_prepaid.mysql
-The network engine has no security features, it must run over a protected
-network. 
 
 
 SOAP engine
