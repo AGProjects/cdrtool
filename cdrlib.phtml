@@ -76,7 +76,6 @@ class CDRS {
         $_dbClass            = $this->DATASOURCES[$cdr_source]['db_class'];
         $_dbClass_readonly   = $this->DATASOURCES[$cdr_source]['db_class_readonly'];
         $_Table              = $this->DATASOURCES[$cdr_source]['table'];
-        $_Table_missed       = $this->DATASOURCES[$cdr_source]['table_missed'];
         $_DestinationIdField = $this->DATASOURCES[$cdr_source]['DestinationIdField'];
         $_normalizedField    = $this->DATASOURCES[$cdr_source]['normalizedField'];
         $_rating   		     = $this->DATASOURCES[$cdr_source]['rating'];
@@ -125,11 +124,6 @@ class CDRS {
         	$this->table=$this->table.Date($this->DATASOURCES[$datasource][RotateTables]);
         }
         */
-
-        if ($_Table_missed) {
-            dprint ("Missed CDRS will be read from table $_Table_missed ");
-            $this->table_missed=$_Table_missed;
-        }
 
         $this->LoadDestinations();
         $this->LoadDomains();

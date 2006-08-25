@@ -7,8 +7,9 @@ cdrtool (4.6-7) unstable; urgency=low
   * Removed Event-Timestamp from dictionary.ser, it is present now
     in freeradius standard distribution
   * Simplify default configuration
+  * Remove unused declaration of table_missed
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 25 Aug 2006 10:56:09 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 25 Aug 2006 11:02:11 +0200
 
 cdrtool (4.6-6) unstable; urgency=low
 

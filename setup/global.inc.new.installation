@@ -104,7 +104,6 @@ $DATASOURCES=array(
                     "name"               => "OpenSER",
                     "class"              => "CDRS_ser_radius",
                     "table"              => "radacct",
-                    "table_missed"       => "radacct_missed",
                     "db_class"           => "DB_radius",
                     "db_class_readonly"  => "DB_radius",
                     "db_class_siponline" => "DB_ser", 
