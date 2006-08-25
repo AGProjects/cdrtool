@@ -1,9 +1,8 @@
 CDRTool installation
 --------------------
 
-Obtain the software from http://cdrtool.ag-projects.com
-
-The software is available as tar archive or as a debian package.
+Obtain the software from http://cdrtool.ag-projects.com. The software is
+available as tar archive or as a debian package. 
 
 Installing from the tar archive:
 
@@ -15,26 +14,35 @@ Installing from the debian package:
 
 dpkg -i cdrtool*.deb
 
-The files will be located under /var/www/CDRTool directory
+The files will be instaklled under /var/www/CDRTool directory.
 
 
 Create CDRTool database
 -----------------------
 
-Edit setup/setup_mysql.sh, change the default password from
-file setup/create_users.mysql and run
+You need root access from the machine where CDRTool runs, otherwise copy the
+files required by setup/setup_mysql.sh to the MySQL machine and run the
+script locally.
+
+Change the MySQL password of cdrtool user from file setup/create_users.mysql
+
+Then run the database setup script:
 
 /var/www/CDRtool/setup/mysql/setup_mysql.sh password hostname
 
-A new MySQL database "cdrtool" will be created. A default web user
-admin/admin is added, you may use this initial account to login in the
-web interface.
+1. It adds to the MySQL server a user for cdrtool software
+2. It creates a new MySQL database "cdrtool" 
+3. It creates a default web user admin/admin, you may use 
+   this initial account to login in the web interface
+4. It populates the cdrtool database with initial values
 
 
 PHP setup and Apache setup
 --------------------------
 
-Install PHP and dependencies. Example for Debian systems and php4:
+Install PHP and dependencies. If you have chosen to install the debian
+package the dependencies will be resolved during installation. Example for
+Debian systems and php4:
 
 apt-get install apache mysql-client mod_ssl
 apt-get install php4 php4-mysql php4-cli php4-cgi php4-curl php-pear php-soap 
@@ -52,26 +60,27 @@ DirectoryIndex index.phtml index.php index.html index.htm index.shtml index.cgi
 AddType application/x-httpd-php .php
 AddType application/x-httpd-php .phtml
 
-/etc/apache/modules.conf 
+Make sure php4 is loaded in /etc/apache/modules.conf 
+
 LoadModule php4_module /usr/lib/apache/1.3/libphp4.so
 
 Change AllowOverride None  to
     AllowOverride All 
 
 
-
 Create a configuration file
 ---------------------------
 
 cd /var/www/CDRTool
-cp setup/global.inc.in global.inc 
+cp setup/global.inc.new.installation global.inc 
 
 Edit global.inc and setup your variables to match your system.
 
 For each different datasource you must instantiate a new class
 extending one of the existing classes (ser, asterisk or cisco).
 
-global.inc.in contains a more elaborate example for setting up datasources
+global.inc.in contains a more elaborate example for setting up 
+datasources
 
 
 High availability
