@@ -3,11 +3,6 @@ grant ALL ON cdrtool.* TO cdradmin@localhost IDENTIFIED by "ndd18vv";
 grant ALL ON cdrtool.* TO cdradmin@'192.168.%' IDENTIFIED by "ndd18vv";
 grant ALL ON cdrtool.* TO cdradmin@'10.%' IDENTIFIED by "ndd18vv";
 
-# Access to Free-Radius database
-grant ALL ON radius.*  TO radius@localhost IDENTIFIED by "ndd18vv";
-grant ALL ON radius.*  TO radius@'192.168.%' IDENTIFIED by "ndd18vv";
-grant ALL ON radius.*  TO radius@'10.%' IDENTIFIED by "ndd18vv";
-
 # SQL user required to limit concurent normalization processes
 grant ALL ON cdrtool.* TO locker@'localhost' identified by 'lockadm18';
 grant ALL ON cdrtool.* TO locker@'192.168.%' identified by 'lockadm18';
