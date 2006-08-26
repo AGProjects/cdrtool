@@ -9,8 +9,9 @@ cdrtool (4.6-7) unstable; urgency=low
   * Simplify default configuration
   * Remove unused declaration of table_missed
   * Replaced $cdr with $this->cdrtool and removed it from global.inc
+  * Allocate more memory at starttime from local.inc
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 25 Aug 2006 13:26:10 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 25 Aug 2006 14:01:21 +0200
 
 cdrtool (4.6-6) unstable; urgency=low
 
