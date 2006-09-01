@@ -29,6 +29,7 @@ install: build
 	dh_installdirs
 	mkdir -p debian/cdrtool/var/www/CDRTool
 	mkdir -p debian/cdrtool/var/www/CDRTool/local
+	mkdir -p debian/cdrtool/var/www/CDRTool/local/images
 	mkdir -p debian/cdrtool/var/www/CDRTool/csv
 	cp -a doc debian/cdrtool/usr/share/doc/cdrtool
 	cp -a setup/global.inc.in  debian/cdrtool/usr/share/doc/cdrtool/
