@@ -1,4 +1,9 @@
 <?php
+
+ini_set('register_globals','on');
+ini_set('max_execution_time','120');
+ini_set('memory_limit','64M');
+
 /*
  * Session Management for PHP3
  *
@@ -32,4 +37,5 @@ require($_PHPLIB["libdir"] . "oohforms.inc");
 require($_PHPLIB["libdir"] . "local.inc");     /* Required, contains your local configuration. */
 
 require($_PHPLIB["libdir"] . "page.inc");      /* Required, contains the page management functions. */
+
 ?>

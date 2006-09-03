@@ -26,7 +26,6 @@
 	<Limit PUT GET POST HEAD>
 	order deny,allow
 	deny from all
-	allow from 127.0.0.1 localhost 
 	</Limit>
 </Directory>
 
@@ -36,8 +35,7 @@
 
 <Directory /var/www/CDRTool/csv>
 	<Limit PUT GET POST HEAD>
-	order allow,deny
-	allow from 127.0.0.1
+	order deny,allow
 	deny from all
 	</Limit>
 </Directory>

@@ -88,7 +88,6 @@ class Session {
   ## one may provide the new session id as a parameter (not recommended).
 
   function get_id($id = "") {
-    global $HTTP_COOKIE_VARS, $HTTP_GET_VARS, $HTTP_POST_VARS, $QUERY_STRING;
     $newid=true;
  
     $this->name = $this->cookiename==""?$this->classname:$this->cookiename;
@@ -97,11 +96,11 @@ class Session {
       $newid=false;
       switch ($this->mode) {
         case "get":
-          if ("" == ($id = isset($HTTP_GET_VARS[$this->name]) ? $HTTP_GET_VARS[$this->name] : ""))
-            $id = isset($HTTP_POST_VARS[$this->name]) ? $HTTP_POST_VARS[$this->name] : "";
+          if ("" == ($id = isset($_GET[$this->name]) ? $_GET[$this->name] : ""))
+            $id = isset($_POST[$this->name]) ? $_POST[$this->name] : "";
         break;
         case "cookie":
-          $id = isset($HTTP_COOKIE_VARS[$this->name]) ? $HTTP_COOKIE_VARS[$this->name] : "";
+          $id = isset($_COOKIE[$this->name]) ? $_COOKIE[$this->name] : "";
         break;
         default:
           die("This has not been coded yet.");
@@ -124,10 +123,10 @@ class Session {
         }
       break;
       case "get":
-        if ( isset($QUERY_STRING) ) {
-          $QUERY_STRING = ereg_replace(
+        if ( isset($_SERVER['QUERY_STRING']) ) {
+          $_SERVER['QUERY_STRING'] = ereg_replace(
             "(^|&)".quotemeta(urlencode($this->name))."=".$id."(&|$)",
-            "\\1", $QUERY_STRING);
+            "\\1", $_SERVER['QUERY_STRING']);
         }
       break;
       default:
@@ -143,7 +142,6 @@ class Session {
   ## Stop using the current session id (unset cookie, ...) and
   ## abandon a session.
   function put_id() {
-    global $HTTP_COOKIE_VARS;
  
     $this->name = $this->cookiename==""?$this->classname:$this->cookiename;
  
@@ -158,7 +156,7 @@ class Session {
  
       default:
             SetCookie($this->name, "", 0, "/", $this->cookie_domain);
-            $HTTP_COOKIE_VARS[$this->name] = "";
+            $_COOKIE[$this->name] = "";
       break;
     }
   }
@@ -199,11 +197,8 @@ class Session {
   }
 
   function self_url() {
-    $PHP_SELF     = $_SERVER["PHP_SELF"];
-    $QUERY_STRING = $_SERVER["QUERY_STRING"];
-
-    return $this->url($PHP_SELF.
-           ((isset($QUERY_STRING) && ("" != $QUERY_STRING)) ? "?".$QUERY_STRING : ""));
+    return $this->url($_SERVER['PHP_SELF'].
+           ((isset($_SERVER['QUERY_STRING']) && ("" != $_SERVER['QUERY_STRING'])) ? "?".$_SERVER['QUERY_STRING'] : ""));
   }
 
   function pself_url() {
@@ -216,10 +211,8 @@ class Session {
   }
 
   function add_query($qarray) {
-    $PHP_SELF     = $_SERVER["PHP_SELF"];
-    $QUERY_STRING = $_SERVER["QUERY_STRING"];
 
-    if ((isset($QUERY_STRING) && ("" != $QUERY_STRING))
+    if ((isset($_SERVER['QUERY_STRING']) && ("" != $_SERVER['QUERY_STRING']))
      || ($this->mode == "get")) {
       $sep_char = "&";
     } else {
@@ -347,15 +340,15 @@ class Session {
   ## Variable precedence functions
   ##
   function reimport_get_vars() {
-    $this->reimport_any_vars("HTTP_GET_VARS");
+    $this->reimport_any_vars("_GET");
   }
 
   function reimport_post_vars() {
-    $this->reimport_any_vars("HTTP_POST_VARS");
+    $this->reimport_any_vars("_POST");
   }
 
   function reimport_cookie_vars() {
-    $this->reimport_any_vars("HTTP_COOKIE_VARS");
+    $this->reimport_any_vars("_COOKIE");
   }
 
   function reimport_any_vars($arrayname) {
@@ -385,24 +378,23 @@ class Session {
   }
 
   function release_token(){ 
-    global $HTTP_COOKIE_VARS, $HTTP_GET_VARS, $HTTP_HOST, $HTTPS;
     if (   isset($this->fallback_mode)
     && ( "get" == $this->fallback_mode ) 
     && ( "cookie" == $this->mode )
-    && ( ! isset($HTTP_COOKIE_VARS[$this->name]) ) ) {
-      if ( isset($HTTP_GET_VARS[$this->name]) ) {
+    && ( ! isset($_COOKIE[$this->name]) ) ) {
+      if ( isset($_GET[$this->name]) ) {
         $this->mode = $this->fallback_mode;
       } else {
         header("Status: 302 Moved Temporarily");
         $this->get_id($sid);
 	$this->mode = $this->fallback_mode;
-        if( isset($HTTPS) && $HTTPS == 'on' ){
+        if( isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ){
         ## You will need to fix suexec as well, if you use Apache and CGI PHP
           $PROTOCOL='https';
         } else {
           $PROTOCOL='http';
         }
-        header("Location: ". $PROTOCOL. "://".$HTTP_HOST.$this->self_url());
+        header("Location: ". $PROTOCOL. "://".$_SERVER['HTTP_HOST'].$this->self_url());
         exit;
       }
     }

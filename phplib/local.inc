@@ -1,8 +1,4 @@
 <?
-ini_set('register_globals','on');
-ini_set('max_execution_time','120');
-ini_set('memory_limit','64M');
-
 class CDRTool_CT_Sql extends CT_Sql {
   var $database_class = "DB_CDRTool";          ## Which database to connect...
   var $database_table = "active_sessions";     ## and find our session data in this table.
@@ -38,7 +34,6 @@ class CDRTool_Auth extends Auth {
     global $sess;
     global $_PHPLIB;
     global $max_login_attempts;
-    global $CDRTool;
 
     $username    = $_POST["username"];
     $sendotp     = $_POST["sendotp"];
