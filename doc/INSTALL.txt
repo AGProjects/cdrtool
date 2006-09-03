@@ -71,7 +71,7 @@ LoadModule php4_module /usr/lib/apache/1.3/libphp4.so
 Change AllowOverride None  to
     AllowOverride All 
 
-Create a virtual host fro cdrtool. Example for apache2:
+Create a virtual host for cdrtool. Example for apache2:
 
 Create a file called cdrtool.example.com (replace it with the proper name)
 under /etc/apache2/sites-enabled directory
