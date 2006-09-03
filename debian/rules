@@ -46,7 +46,6 @@ install: build
 	cp -a version debian/cdrtool/var/www/CDRTool/	
 	cp *.phtml debian/cdrtool/var/www/CDRTool/
 	cp *.php debian/cdrtool/var/www/CDRTool/
-	cp setup/apache2/cdrtool.example.com debian/cdrtool/etc/apache2/conf.d
 
 # Build architecture-independent files here.
 binary-indep: build install

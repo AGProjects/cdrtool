@@ -78,14 +78,20 @@ under /etc/apache2/sites-enabled directory
 
 <VirtualHost cdrtool.example.com:80>
 
-   ServerName          cdr1a-test.caiw.net
+   ServerName          cdrtool.example.com
    DocumentRoot        /var/www/
    CustomLog           /var/log/apache2/cdrtool-access.log combined
    ErrorLog            /var/log/apache2/cdrtool-errors.log
-   #SSLEngine           On
-   #SSLCertificateFile    /etc/apache2/ssl.crt/snakeoil-rsa.crt
-   #SSLCertificateKeyFile /etc/apache2/ssl.key/snakeoil-rsa.key
    SetEnvIf User-Agent ".*MSIE.*"      nokeepalive ssl-unclean-shutdown
+
+   # To enable SSL:
+   # a2enmode ssl
+   # add Listen 443 to ports.conf file
+   # generate site certificates
+
+   # SSLEngine           On
+   # SSLCertificateFile    /etc/apache2/ssl/snakeoil-rsa.crt
+   # SSLCertificateKeyFile /etc/apache2/ssl/snakeoil-rsa.key
 
 </VirtualHost>
 
