@@ -285,6 +285,10 @@ Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/openset/radius
 SOAP engine
 -----------
 
+Note: Depends on the SOAP library from http://pear.php.net/package/SOAP. On Debian
+systems, this dependency is automatically installed but if CDRTool is installed
+from the tar archive you must download and install manually this SOAP library.
+
 The SOAP engine can be used by an external provisioning system to access
 information available in CDRTool (like prepaid accounts).
 
