@@ -1,0 +1,380 @@
+<?
+class SIPstatistics {
+    var $SipEnabledZones = array();
+	var $online          = array();
+
+    function SIPstatistics () {
+        global $CDRTool;
+
+    	$this->mrtgcfg_file    = $CDRTool['Path']."/status/usage/sip_statistics.mrtg";
+        $this->harvest_file    = "/tmp/CDRTool-sip-statistics.txt";
+        $this->mrtgcfg_dir     = $CDRTool['Path']."/status/usage";
+        $this->index_file      = $CDRTool['Path']."/status/usage/index.html";
+
+        $this->harvest_script  = $CDRTool['Path']."/scripts/harvestStatistics.php";
+        $this->generateMrtgDataScript     = $CDRTool['Path']."/scripts/generateMrtgData.php";
+        $this->generateMrtgConfigScript   = $CDRTool['Path']."/scripts/generateMrtgConfig.php";
+
+        $this->db        = new DB_cdrtool();
+        $this->ser_db    = new DB_ser();
+        $this->online_db = new DB_siponline();
+
+        $path = dirname(realpath($_SERVER['PHP_SELF']));
+        include($path."/../status/config/media_servers.php");
+
+        $this->mediaServers=$servers;
+	}
+
+
+    function getSipEnabledZones () {
+        global $CDRTool;
+
+        $query="select domain from domain";
+        dprint($query);
+
+        if (!$this->ser_db->query($query)) return 0;
+        if (!$this->ser_db->num_rows()) return 0;
+
+        while ($this->ser_db->next_record()) {
+            $zName=$this->ser_db->f('domain');
+
+            if (is_array($CDRTool['statistics']['zoneFilter']) && !in_array($zName,$CDRTool['statistics']['zoneFilter'])) continue;
+
+            if (!$seen[$zName]) {
+            	$this->SipEnabledZones[$zName] = $zName;
+                $this->statistics[$zName] =
+                               array( 'online_users' => '0',
+				                      'sessions'     => '0',
+				                      'traffic'      => '0',
+				                      'caller'       => '0',
+				                      'called'       => '0'
+                                      );
+            	$seen[$zName]++;
+        	}
+        }
+
+        //print_r($this->SipEnabledZones);
+        //dprint_r($this->statistics);
+
+    }
+
+    function generateHTMLUsageIndexPage () {
+        global $CDRTool;
+		$this->getSipEnabledZones();
+
+        if (!$handle = fopen($this->index_file, 'w+')) {
+        	echo "Error opening {$this->index_file}.\n";
+            return 0;
+        }
+        
+        // printing cfg header
+
+		$title=$CDRTool['provider']['name']." SIP statistics";
+
+        fwrite($handle,"
+
+            <!DOCTYPE html PUBLIC '-//W3C//DTD HTML 4.0 Transitional//EN'>
+            <HTML>
+            <HEAD>
+                <TITLE>$title</TITLE>
+                <META HTTP-EQUIV='Refresh' CONTENT='300'>
+                <META HTTP-EQUIV='Cache-Control' content='no-cache'>
+                <META HTTP-EQUIV='Pragma' CONTENT='no-cache'>
+                <META HTTP-EQUIV='Expires' CONTENT='Thu, 16 Dec 2004 16:08:32 GMT'>
+            </HEAD>
+            
+            <BODY bgcolor='#ffffff' text='#000000' link='#000000' vlink='#000000' alink='#000000'>
+            
+            <DIV align='left'><font size='5' face=verdana><B>$title</B></font></DIV>
+            
+            <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=10>
+            ");
+            
+    	while(list($key,$value) = each($this->SipEnabledZones)) {
+            $block=sprintf("<TR>
+            <TD><DIV align='center'><B> Online Users for  </B></DIV>
+            <DIV><A HREF='%s_users.html'><IMG BORDER=0 ALT='%s_users Traffic Graph' SRC='%s_users-day.png'></A>
+            <SMALL><!--#flastmod file='%s_users.html' --></SMALL></DIV>
+            </TD><TD><DIV align='center'><B> Active Sessions for %s </B></DIV>
+            <DIV><A HREF='%s_sessions.html'><IMG BORDER=0 ALT='%s_sessions Traffic Graph' SRC='%s_sessions-day.png'></A>
+            <SMALL><!--#flastmod file='%s_sessions.html' --></SMALL></DIV>
+            </TD><TD><DIV align='center'><B> IP Traffic for %s </B></DIV>
+            <DIV><A HREF='%s_traffic.html'><IMG BORDER=0 ALT='%s_traffic Traffic Graph' SRC='%s_traffic-day.png'></A>
+            <SMALL><!--#flastmod file='%s_traffic.html' --></SMALL></DIV>
+            </TD></TR>
+            <TR>",
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key
+            );
+
+
+        	fwrite($handle,$block);
+		}
+
+      	fwrite($handle,"
+		</TABLE>
+		</BODY>
+		</HTML>"
+        );
+        fclose($handle);
+    }
+
+
+    function generateMrtgConfigFile () {
+        $this->getSipEnabledZones();
+        
+        if (!$handle = fopen($this->mrtgcfg_file, 'w+')) {
+        	echo "Error opening {$this->mrtgcfg_file}.\n";
+            return 0;
+        }
+        
+        // printing cfg header
+
+        fwrite($handle,"
+### Global Config Options
+WorkDir: {$this->mrtgcfg_dir}
+IconDir: {$this->mrtgcfg_dir}/images
+Refresh: 300
+#WriteExpires: Yes
+        ");
+        
+        while(list($key,$value) = each($this->SipEnabledZones)) {
+        	fwrite($handle,"\n\n
+## {$key}
+
+Target[{$key}_users]: `{$this->generateMrtgDataScript} {$key} users`
+Options[{$key}_users]: growright, gauge, nobanner
+BodyTag[{$key}_users]: <BODY LEFTMARGIN=\"1\" TOPMARGIN=\"1\">
+#PNGTitle[{$key}_users]: <center>Online Users for {$key}</center>
+MaxBytes[{$key}_users]: 1250000
+Title[{$key}_users]: Online Users for {$key}
+ShortLegend[{$key}_users]: U
+XSize[{$key}_users]: 300
+YSize[{$key}_users]: 75
+Ylegend[{$key}_users]: Users
+Legend1[{$key}_users]: Online Users
+LegendI[{$key}_users]:   Online Users
+LegendO[{$key}_users]: 
+PageTop[{$key}_users]: <H1> Online Users for {$key} </H1>
+
+Target[{$key}_sessions]: `{$this->generateMrtgDataScript} {$key} sessions`
+Options[{$key}_sessions]: growright, nobanner, gauge
+BodyTag[{$key}_sessions]: <BODY LEFTMARGIN=\"1\" TOPMARGIN=\"1\">
+MaxBytes[{$key}_sessions]: 1250000
+Title[{$key}_sessions]: Sessions Statistics for {$key}
+ShortLegend[{$key}_sessions]: Ses
+XSize[{$key}_sessions]: 300
+YSize[{$key}_sessions]: 75
+Ylegend[{$key}_sessions]: Sessions
+Legend1[{$key}_sessions]: Active Sessions
+LegendI[{$key}_sessions]:   Active Sessions
+LegendO[{$key}_sessions]:   
+PageTop[{$key}_sessions]: <H1> Active Sessions for {$key} </H1>
+
+Target[{$key}_traffic]: `{$this->generateMrtgDataScript} {$key} traffic`
+Options[{$key}_traffic]: gauge, growright, bits, nobanner
+BodyTag[{$key}_traffic]: <BODY LEFTMARGIN=\"1\" TOPMARGIN=\"1\">
+#PNGTitle[{$key}_traffic]: {$key} traffic
+MaxBytes[{$key}_traffic]: 1250000
+Title[{$key}_traffic]: IP traffic for {$key}
+XSize[{$key}_traffic]: 300
+YSize[{$key}_traffic]: 75
+Legend1[{$key}_traffic]: Caller Traffic in Bits per Second
+Legend2[{$key}_traffic]: Called Traffic in Bits per Second
+LegendI[{$key}_traffic]:   caller
+LegendO[{$key}_traffic]:   called
+PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
+
+        ");
+        
+        }
+        
+        fclose($handle);
+	}
+
+    function generateMrtgData($domain,$dataType) {
+    	$value1=0;
+        $value2=0;
+
+    	$lines=explode("\n",file_get_contents($this->harvest_file));
+        foreach ($lines as $line) {
+            if (preg_match("/^$domain\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/",$line,$m)) {
+                if ($dataType == 'sessions') {
+                	$value1 = $m[2];
+                    $value2 = $m[2];
+                } else if ($dataType == 'traffic') {
+                	$value1 = $m[3];
+                    $value2 = $m[4];
+                } else if ($dataType == 'users') {
+                	$value1 = $m[1];
+                    $value2 = $m[1];
+                }
+            }
+        }
+
+        printf ("%d\n%d\n0\n0\n\n",$value1,$value2);
+    }
+
+    function getSIPOnlineUsers() {
+        $query="select count(*) as c, domain
+        from location group by domain";
+
+        dprint($query);
+        if (!$this->online_db->query($query)) return 0;
+        if (!$this->online_db->num_rows()) return 0;
+
+        while ($this->online_db->next_record()) {
+            $this->online[$this->online_db->f('domain')]=$this->online_db->f('c');
+        }
+
+        //dprint_r($this->online);
+
+	}
+
+    function harvestStatistics() {
+        if (!$handle = fopen($this->harvest_file, 'w+')) {
+        	echo "Error opening $this->harvest_file\n";
+        	return 0;
+        }
+
+        fwrite($handle,"domains\t\t\tonline_users\tsessions\tcaller\tcalled\n\n");
+
+		$this->getSipEnabledZones();
+        $this->getSIPOnlineUsers();
+
+        $domains=array_keys($this->SipEnabledZones);
+
+        ksort($domains);
+
+        foreach($domains as $_domain) {
+
+        	foreach (array_keys($this->online) as $_domain_online) {
+                if ($_domain == $_domain_online) {
+                    // update online users in big stats array
+                    $this->statistics[$_domain]['online_users']=$this->online[$_domain];
+                }
+            }
+        }
+
+        foreach($this->mediaServers as $server) {
+            $this->statistics = $this->getrtpsessions($server, "25060", $this->statistics);
+        }
+        
+        while(list($key, $usage) = each($this->statistics)) {
+        	if ($usage['online_users'] >= 1) {
+        		fwrite($handle,"{$key}\t\t{$usage['online_users']}\t\t{$usage['sessions']}\t\t{$usage['caller']}\t{$usage['called']}\n");
+            }
+        }
+        
+        fclose($handle);
+    }
+
+
+    function getrtpsessions($ip, $port, $_domains) {
+        if ($fp = fsockopen ($ip, $port, $errno, $errstr, "5") ) {
+            fputs($fp, "status\n");
+            $proxy      = array('status' => 'Ok');
+            $crtSession = 'None';
+            while (!feof($fp)) {
+                $line = fgets($fp, 2048);
+                $elements = explode(" ", $line);
+    
+                if ($elements[0] == 'proxy' && count($elements)==3) {
+                    $proxy['sessionCount'] = $elements[1];
+                    $traffic = explode("/", $elements[2]);
+                    $proxy['traffic'] = array('caller'  => $traffic[0],
+                                              'called'  => $traffic[1],
+                                              'relayed' => $traffic[2]);
+                    $proxy['sessions'] = array();
+                } else if ($elements[0]=='session' && count($elements)==7) {
+                        $crtSession = $elements[1];
+                        $info = array('from' => $elements[2],
+                                      'to'   => $elements[3],
+                                      'fromAgent' => "'".$elements[4]."'",
+                                      'toAgent'   => "'".$elements[5]."'",
+                                      'duration'  => $elements[6],
+                                      'streams'   => array());
+                        $proxy['sessions'][$crtSession] = $info;
+                        list($caller, $caller_domain) = explode("@", $proxy['sessions'][$crtSession]['from']);
+                        list($called, $called_domain) = explode("@", $proxy['sessions'][$crtSession]['to']);
+                        $_domains[$caller_domain]['sessions'] += 1;
+                        if($caller_domain != $called_domain) $_domains[$called_domain]['sessions'] += 1;
+                } else if ($elements[0] == 'stream' && count($elements)==9) {
+                       $stream = array('caller'   => $elements[1],
+                                       'called'   => $elements[2],
+                                       'via'      => $elements[3],
+                                       'bytes'    => explode("/", $elements[4]),
+                                       'status'   => $elements[5],
+                                       'codec'    => $elements[6],
+                                       'type'     => $elements[7],
+                                       'idletime' => $elements[8]);
+                       $proxy['sessions'][$crtSession]['streams'][] = $stream;
+    //		   if ($caller_domain == $called_domain) {
+                           $_domains[$caller_domain]['caller'] += floor($proxy['sessions'][$crtSession]['streams'][0]['bytes'][0]/$proxy['sessions'][$crtSession]['duration']);
+                           $_domains[$called_domain]['called'] += floor($proxy['sessions'][$crtSession]['streams'][0]['bytes'][1]/$proxy['sessions'][$crtSession]['duration']);
+                           $_domains[$caller_domain]['traffic'] += $proxy['sessions'][$crtSession]['streams'][0]['bytes'][0];
+                           $_domains[$called_domain]['traffic'] += $proxy['sessions'][$crtSession]['streams'][0]['bytes'][1];
+    //		   } else {
+    //			$_domains[$caller_domain]['caller'] += $proxy['sessions'][$crtSession]['streams'][0]['bytes'][0];
+    //			$_domains[$caller_domain]['called'] += $proxy['sessions'][$crtSession]['streams'][0]['bytes'][1];
+    //			$_domains[$called_domain]['caller'] += $proxy['sessions'][$crtSession]['streams'][0]['bytes'][1];
+    //			$_domains[$called_domain]['called'] += $proxy['sessions'][$crtSession]['streams'][0]['bytes'][0];
+    //			$_domains[$caller_domain]['traffic'] += $_domains[$caller_domain]['caller'] + $_domains[$caller_domain]['called'];
+    //			$_domains[$called_domain]['traffic'] += $_domains[$called_domain]['caller'] + $_domains[$called_domain]['called'];
+    //		    }
+                }
+            }
+            return $_domains;
+         }
+    }
+
+    function normalizeBytes($bytes) {
+        $mb = $bytes/1024/1024.0;
+        $kb = $bytes/1024.0;
+        if ($mb >= 0.95) {
+            return sprintf("%.2fM", $mb);
+        } else if ($kb >= 1) {
+            return sprintf("%.2fk", $kb);
+        } else {
+            return sprintf("%d", $bytes);
+        }
+    }
+    
+    function normalizeTraffic($traffic) {
+        // input is in bytes/second
+        $traffic = $traffic * 8;
+        $mb = $traffic/1024/1024.0;
+        $kb = $traffic/1024.0;
+        if ($mb >= 0.95) {
+            return sprintf("%.2fMbps", $mb);
+        } else if ($kb >= 1) {
+            return sprintf("%.2fkbps",$kb);
+        } else {
+            return sprintf("%dbps",$traffic);
+        }
+    }
+
+    function buildStatistics() {
+
+    	system($this->generateMrtgConfigScript);
+        system($this->harvest_script);
+        system("mrtg $this->mrtgcfg_file");
+
+    }
+}
+
+?>
