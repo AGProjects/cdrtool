@@ -243,8 +243,8 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         }
 
         //dprint_r($this->online);
-
 	}
+
 
     function harvestStatistics() {
         if (!$handle = fopen($this->harvest_file, 'w+')) {
@@ -376,6 +376,97 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         system("mrtg $this->mrtgcfg_file");
 
     }
+
+    function getOnlineTrend() {
+    	$ips_old=array();
+        $ips_new=array();
+
+		$query="select count(*) as c from location";
+    	$this->online_db->query($query);
+        $this->online_db->next_record();
+        $count_new=$this->online_db->f('c');
+
+        printf ("%d Contacts new registerd\n",$count_new);
+
+		$query="select count(*) as c from count_contacts";
+    	$this->online_db->query($query);
+        $this->online_db->next_record();
+        $count_old=$this->online_db->f('c');
+
+        printf ("%d Contacts old registerd\n",$count_old);
+
+		$query="select * from online_ips";
+
+        dprint($query);
+    	$this->online_db->query($query);
+        while ($this->online_db->next_record()) {
+			$els=explode(";",$this->online_db->f('ip'));
+            $ips_old[]=$els[0];
+        }
+        sort($ips_old);
+
+        printf ("%d IPs old registerd\n",count($ips_old));
+
+		$query="select distinct(SUBSTRING_INDEX(SUBSTRING_INDEX(contact, '@',-1),':',1))
+        as ip from location";
+        dprint($query);
+        $this->online_db->query($query);
+        while ($this->online_db->next_record()) {
+			$els=explode(";",$this->online_db->f('ip'));
+            $ips_new[]=$els[0];
+        }
+        sort($ips_new);
+
+        printf ("%d IPs new registerd\n",count($ips_new));
+
+        $left=array_diff($ips_old,$ips_new);
+        $join=array_diff($ips_new,$ips_old);
+
+        sort($left);
+        sort($join);
+
+        if (count($join)) {
+        	printf ("%d IPs joined: ",count($join));
+            foreach ($join as $var) print "$var ";
+            print "\n";
+        }
+
+
+        if (count($left)) {
+        	printf ("%d IPs left: ",count($left));
+            foreach ($left as $var) print "$var ";
+            print "\n";
+        }
+
+        //print_r($left);
+
+        $query="drop table if exists online_ips";
+        dprint($query);
+
+        $this->online_db->query($query);
+
+        $query="create table online_ips
+        select distinct(SUBSTRING_INDEX(SUBSTRING_INDEX(contact, '@',-1),':',1))
+        as ip from location";
+        dprint($query);
+
+        $this->online_db->query($query);
+
+        $query="drop table if exists count_contacts";
+        dprint($query);
+
+        $this->online_db->query($query);
+
+        $query="create table count_contacts
+        select count(*)a as c from location";
+        dprint($query);
+
+        $this->online_db->query($query);
+
+        //dprint_r($this->online);
+	}
+
+
 }
 
 ?>

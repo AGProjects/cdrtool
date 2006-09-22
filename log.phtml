@@ -173,7 +173,7 @@ if  ($rows>0)  {
            <td class=cdr> <b>Edit</td>
            <td class=cdr> <b>Res</td>
            <td class=cdr> <b>Description  </td>
-           <td class=cdr> <b>Notify</td>
+           <td class=cdr> <b>Notify support</td>
            </tr>
 	";
 
@@ -250,20 +250,29 @@ if  ($rows>0)  {
             </td>
 			</form>
             <td class=cdr valign=center>
-            <form method=post>
-            <select name=recipient>
             ";
-                foreach(array_keys($Collegues) as $col) {
-                    print "<option value=\"$col\">$Collegues[$col]";
-                }
+            if (strlen($description)) {
+                print "
+                <form method=post>
+                <select name=recipient>
+                ";
+                    foreach(array_keys($Collegues) as $col) {
+                        print "<option value=\"$col\">$Collegues[$col]";
+                    }
+    
+                print "
+                </select>
+                <input type=hidden name=current_log value=\"$current_log\">
+                <input type=hidden name=task value=mailLog>
+                <input type=hidden name=next value=$next>
+                <input type=hidden name=search_text value=\"$search_text\">
+                ";
 
+            	 print "<input type=submit value=Mail>";
+            } else {
+                print "Save first the description";
+            }
             print "
-            </select>
-            <input type=hidden name=current_log value=\"$current_log\">
-            <input type=hidden name=task value=mailLog>
-            <input type=hidden name=next value=$next>
-            <input type=hidden name=search_text value=\"$search_text\">
-            <input type=submit value=Mail>
             </td>
 			</form>
             <td class=cdr valign=center>
