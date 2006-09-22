@@ -92,7 +92,7 @@ class SIPstatistics {
             
     	while(list($key,$value) = each($this->SipEnabledZones)) {
             $block=sprintf("<TR>
-            <TD><DIV align='center'><B> Online Users for  </B></DIV>
+            <TD><DIV align='center'><B> Online Users for %s </B></DIV>
             <DIV><A HREF='%s_users.html'><IMG BORDER=0 ALT='%s_users Traffic Graph' SRC='%s_users-day.png'></A>
             <SMALL><!--#flastmod file='%s_users.html' --></SMALL></DIV>
             </TD><TD><DIV align='center'><B> Active Sessions for %s </B></DIV>
@@ -103,6 +103,7 @@ class SIPstatistics {
             <SMALL><!--#flastmod file='%s_traffic.html' --></SMALL></DIV>
             </TD></TR>
             <TR>",
+            $key,
             $key,
             $key,
             $key,
