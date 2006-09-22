@@ -88,6 +88,8 @@ $CDRTool['normalize']['CS_CODES']= array("1684" => array ("name"       =>"test@C
                                                       )
 											    );
 
+$CDRTool['statistics']['zoneFilter']=array("example1.com","example2.com");
+
 ###########################################
 # Import settings
 $CDRTool['import']['stripFromDestination']   = "0";
