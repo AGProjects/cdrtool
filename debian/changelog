@@ -1,8 +1,9 @@
 cdrtool (4.7-0) unstable; urgency=low
 
   * Added graphical statistics for sip online users and mediaproxy usage
+  * Hide Send mail button if CDR query has no description
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 22 Sep 2006 13:17:58 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 22 Sep 2006 17:42:00 +0200
 
 cdrtool (4.6-9) unstable; urgency=low
 

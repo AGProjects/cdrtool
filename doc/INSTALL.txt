@@ -29,7 +29,7 @@ setup/create_users.mysql
 
 Then run the database setup script:
 
-/var/www/CDRtool/setup/mysql/setup_mysql.sh password hostname
+/var/www/CDRtool/setup/mysql/setup_mysql.sh <password> <dbserver>
 
 The script performs the following: 
 
@@ -48,9 +48,6 @@ package, the dependencies will be resolved during installation.
 
 Example for Debian systems and php4:
 
-apt-get install apache mysql-client mod_ssl
-apt-get install php4 php4-mysql php4-cli php4-cgi php4-curl php-pear php-soap 
-
 Enable php-mysql module in /etc/php/*/php.ini:
 
 extension=mysql.so
@@ -64,17 +61,20 @@ DirectoryIndex index.phtml index.php index.html index.htm index.shtml index.cgi
 AddType application/x-httpd-php .php
 AddType application/x-httpd-php .phtml
 
-Make sure php4 is loaded in /etc/apache/modules.conf 
+Make sure php module is insbale in apache configuration. For apache this is
+done in /etc/apache/modules.conf: 
 
 LoadModule php4_module /usr/lib/apache/1.3/libphp4.so
 
 Change AllowOverride None  to
     AllowOverride All 
 
+For apache2 us a2enmode php command.
+
 Create a virtual host for cdrtool. Example for apache2:
 
-Create a file called cdrtool.example.com (replace it with the proper name)
-under /etc/apache2/sites-enabled directory
+cp setup/apache2/sites-available/cdrtool.example.com /etc/apache2/sites-enabled 
+cp setup/apache2/conf.d/cdrtool /etc/apache2/conf.d/
 
 <VirtualHost cdrtool.example.com:80>
 
@@ -95,7 +95,7 @@ under /etc/apache2/sites-enabled directory
 
 </VirtualHost>
 
-Then enable the virtual site using:
+Enable the virtual site using:
 
 a2ensite cdrtool.example.com
 
@@ -135,7 +135,7 @@ only the rating and update balance functions.
 Set the IP and port where the rating engine listens to and the OpenSER
 datasource in global.inc:
 
-$RatingEngine=array("socketIP"   => "10.0.0.135",
+$RatingEngine=array("socketIP"   =>  "IP.address.of.the.private.interface.of.cdrtool.example.com",
                      "socketPort" => "9024",
                      "CDRS_class" => "ser_radius");
 
@@ -278,8 +278,6 @@ Further, you must enable accounting in various parts of the routing script
 by setting the accounting flag.
 
 Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/openset/radius/
-
-
 
 
 SOAP engine
