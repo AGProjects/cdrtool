@@ -2283,6 +2283,19 @@ class SERQuota {
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
         }
 
+        if ($this->CDRTool['memcached_server']) {
+            $mc=new Memcache;
+
+            list($memcache_host,$memcache_port)=explode(":",$this->CDRTool['memcached_server']);
+
+            if ($mc->connect($memcache_host,$memcache_port)) {
+                $log=sprintf ("Connected to memcache %s:%d version %s",$memcache_host,$memcache_port, $mc->getVersion());
+                syslog(LOG_NOTICE, $log);
+                $this->mc = &$mc;
+            } else {
+                $log=sprintf ("Error: cannot connect to memcache %s:%d",$memcache_host,$memcache_port);
+            }
+        }
     }
 
     function LoadUserQuotas() {
@@ -2373,6 +2386,8 @@ class SERQuota {
         	$check_month=$month."-01 00:00";
         }
 
+        $this->startTime=$check_month;
+
         $this->LoadUserQuotas();
 
         $query="select $this->BillingPartyIdField, count(*) as calls,
@@ -2393,6 +2408,9 @@ class SERQuota {
 		syslog(LOG_NOTICE, $log);
 
         dprint_r($this->SERDomains);
+
+        $j=0;
+
         while($this->CDRquotaDB->next_record()) {
             $account = $this->CDRquotaDB->f($this->BillingPartyIdField);
         	list($username,$domain)=explode("@",$account);
@@ -2416,8 +2434,57 @@ class SERQuota {
             $this->SERAccounts[$account]['usage']['cost']     = $this->SERAccounts[$account]['usage']['cost']     + $cost;
             $this->SERAccounts[$account]['usage']['traffic']  = $this->SERAccounts[$account]['usage']['traffic']  + $traffic;
 
+            $j++;
+
+        }
+
+        $this->saveUsage2Memcache();
+
+    }
+
+    function saveUsage2Memcache() {
+
+        if (!is_object($this->mc)) return;
+
+        print "Saving usage information into memcache\n";
+
+        $saved_keys=0;
+        $failed_keys=0;
+
+        foreach (array_keys($this->SERAccounts) as $_key) {
+
+			if (!$this->SERAccounts[$_key]['usage']['calls']) continue;
+
+            $mc_value=sprintf("calls=%d duration=%d price=%0.4f traffic=%0.2f startTime=%s",
+            $this->SERAccounts[$_key]['usage']['calls'],
+            $this->SERAccounts[$_key]['usage']['duration'],
+            $this->SERAccounts[$_key]['usage']['price'],
+            $this->SERAccounts[$_key]['usage']['traffic'],
+            $this->startDate
+            );
+
+            $mc_key=sprintf("mu:%s",trim($_key));
+
+            if ($this->mc->set($mc_key,$mc_value,0,2592000)) {  // expire in 30 days
+                $saved_keys++;
+            } else {
+                $failed_keys++;
+            }
+        }
+
+        if ($saved_keys) {
+            $log=sprintf("Saved %d monthly usage keys into memcache server\n",$saved_keys);
+            print $log;
+		  	syslog(LOG_NOTICE, $log);
+        }
+
+        if ($failed_keys) {
+            $log=sprintf("Error: failed to saved %d keys into memcache server\n",$failed_keys);
+            print $log;
+		  	syslog(LOG_NOTICE, $log);
         }
     }
+
 
     function checkQuota($notify) {
         dprint("checkQuota($notify)");
