@@ -2218,6 +2218,9 @@ class RatingTables {
 }
 
 class SERQuota {
+	var $memcached_keyprefix="mu:";
+	var $previousCheckpoint=0;
+
     function SERQuota(&$parent) {
 
     	global $DATASOURCES;
@@ -2289,11 +2292,14 @@ class SERQuota {
             list($memcache_host,$memcache_port)=explode(":",$this->CDRTool['memcached_server']);
 
             if ($mc->connect($memcache_host,$memcache_port)) {
-                $log=sprintf ("Connected to memcache %s:%d version %s",$memcache_host,$memcache_port, $mc->getVersion());
+                $log=sprintf ("Connected to memcache %s:%d version %s\n",$memcache_host,$memcache_port, $mc->getVersion());
                 syslog(LOG_NOTICE, $log);
+                print $log;
                 $this->mc = &$mc;
             } else {
-                $log=sprintf ("Error: cannot connect to memcache %s:%d",$memcache_host,$memcache_port);
+                $log=sprintf ("Error: cannot connect to memcache %s:%d\n",$memcache_host,$memcache_port);
+                syslog(LOG_NOTICE, $log);
+                print $log;
             }
         }
     }
@@ -2361,6 +2367,8 @@ class SERQuota {
             }
         }
 
+		$this->deleteMemcacheCheckpoint();
+
 		if (count($blockedAccounts) >0 ) {
             $this->unBlockRemoteAccounts($blockedAccounts);
 
@@ -2382,28 +2390,46 @@ class SERQuota {
 
 		if (!$month) {
         	$check_month=Date("Y-m-01 00:00",time());
+        	$this->startTime=Date("Y-m-01_00:00",time());;
         } else {
         	$check_month=$month."-01 00:00";
+        	$this->startTime=$month."-01_00:00";
         }
-
-        $this->startTime=$check_month;
 
         $this->LoadUserQuotas();
 
-        $query="select $this->BillingPartyIdField, count(*) as calls,
+        $this->getCheckpoint();
+
+        if ($this->previousCheckpoint) {
+            printf ("Select CDRs from cached checkpoint %s\n",$this->previousCheckpoint);
+            $this->lastCheckpoint=$this->previousCheckpoint;
+        } else {
+			$this->lastCheckpoint=0;
+        }
+        $b=time();
+
+
+        $query=sprintf("select %s, count(*) as calls,
         sum(AcctSessionTime) as duration, sum(Price) as cost,
-        sum(AcctInputOctets+AcctOutputOctets)/2 as traffic
-        from $this->table
-        where AcctStartTime >= '$check_month'
-        and AcctStartTime < DATE_ADD('$check_month', INTERVAL 1 month)
-        group by $this->BillingPartyIdField";
+        sum(AcctInputOctets + AcctOutputOctets)/2 as traffic
+        from %s
+        where AcctStartTime >= '%s'
+        and RadacctId < %d
+        and RadacctId >= %d
+        group by %s\n",
+        addslashes($this->BillingPartyIdField),
+        addslashes($this->table),
+        addslashes($check_month),
+        $this->currentCheckpoint,
+        $this->lastCheckpoint,
+        addslashes($this->BillingPartyIdField)
+        );
 
         dprint($query);
         $this->CDRquotaDB->query($query);
 
-
         $rows=$this->CDRquotaDB->num_rows();
-		$log=sprintf ("%d SIP accounts have traffic in %s, db=%s\n",$rows,Date("Y-m",time()),$this->db_class_quota);
+		$log=sprintf ("%d SIP accounts have traffic in %s after check point %d, db=%s\n",$rows,Date("Y-m",time()),$this->lastCheckpoint,$this->db_class_quota);
         print $log;
 		syslog(LOG_NOTICE, $log);
 
@@ -2413,7 +2439,40 @@ class SERQuota {
 
         while($this->CDRquotaDB->next_record()) {
             $account = $this->CDRquotaDB->f($this->BillingPartyIdField);
-        	list($username,$domain)=explode("@",$account);
+
+            if (is_object($this->mc) && $this->previousCheckpoint) {
+
+                // init account with usage from memcache
+
+                $mc_key=sprintf("%s%s",$this->memcached_keyprefix,$account);
+
+                if ($previousUsage = $this->mc->get($mc_key)) {
+                    //printf ("%s: usage from memcache: %s\n",$account, $previousUsage);
+    
+                    $previousUsage=preg_replace("/=\s{1,}/","= ",$previousUsage);
+                    $previousUsage=preg_replace("/\s{1,}=/","= ",$previousUsage);
+                    $previousUsage=preg_replace("/\s+/"," ",$previousUsage);
+    
+                    $_els=explode(" ",trim($previousUsage));
+    
+                    dprint_r($_els);
+    
+                    $t=0;
+                    while ($t < count($_els)) {
+                        $_dict  = explode("=",$_els[$t]);
+                        $_key   = strtolower(trim($_dict[0]));
+                        $_value = strtolower(trim($_dict[1]));
+
+                        if (!$_key) continue;
+                        //printf ("%s: %s=%s\n",$account,$_key,$_value);
+
+                        $this->SERAccounts[$account]['usage'][$_key]=$_value;
+                        $t++;
+                    }
+                }
+            }
+
+            list($username,$domain)=explode("@",$account);
 
             if (preg_match("/^(.*)[=:;]/U",$domain,$p)){
                 $domain = $p[1];
@@ -2442,11 +2501,34 @@ class SERQuota {
 
     }
 
+    function getCheckpoint() {
+
+        if (is_object($this->mc)) $this->previousCheckpoint=$this->mc->get('mu_checkpoint');
+
+        $query=sprintf("select max(radacctid) as currentCheckpoint from %s",$this->table);
+
+        dprint($query);
+        $this->CDRquotaDB->query($query);
+        $this->CDRquotaDB->next_record();
+
+		$this->currentCheckpoint = $this->CDRquotaDB->f('currentCheckpoint');
+    }
+
+    function deleteMemcacheCheckpoint() {
+        if (!is_object($this->mc)) return 0;
+
+        $this->mc->delete('mu_checkpoint');
+
+        $log=sprintf("Delete checkpoint key mu_checkpoint\n",$this->currentCheckpoint);
+        print $log;
+		syslog(LOG_NOTICE, $log);
+
+        return 1;
+    }
+
     function saveUsage2Memcache() {
 
         if (!is_object($this->mc)) return;
-
-        print "Saving usage information into memcache\n";
 
         $saved_keys=0;
         $failed_keys=0;
@@ -2455,17 +2537,17 @@ class SERQuota {
 
 			if (!$this->SERAccounts[$_key]['usage']['calls']) continue;
 
-            $mc_value=sprintf("calls=%d duration=%d price=%0.4f traffic=%0.2f startTime=%s",
+            $mc_value=sprintf("calls=%d duration=%d price=%0.4f traffic=%0.2f",
             $this->SERAccounts[$_key]['usage']['calls'],
             $this->SERAccounts[$_key]['usage']['duration'],
             $this->SERAccounts[$_key]['usage']['price'],
-            $this->SERAccounts[$_key]['usage']['traffic'],
-            $this->startDate
+            $this->SERAccounts[$_key]['usage']['traffic']
             );
 
-            $mc_key=sprintf("mu:%s",trim($_key));
+            $mc_key=sprintf("%s%s",$this->memcached_keyprefix,trim($_key));
 
             if ($this->mc->set($mc_key,$mc_value,0,2592000)) {  // expire in 30 days
+                //printf ("Set %s to: %s\n",$mc_key,$mc_value);
                 $saved_keys++;
             } else {
                 $failed_keys++;
@@ -2473,18 +2555,29 @@ class SERQuota {
         }
 
         if ($saved_keys) {
-            $log=sprintf("Saved %d monthly usage keys into memcache server\n",$saved_keys);
+            $log=sprintf("Saved %d keys in memcache\n",$saved_keys);
             print $log;
 		  	syslog(LOG_NOTICE, $log);
         }
 
         if ($failed_keys) {
-            $log=sprintf("Error: failed to saved %d keys into memcache server\n",$failed_keys);
+            $log=sprintf("Error: failed to saved %d keys in memcache\n",$failed_keys);
             print $log;
 		  	syslog(LOG_NOTICE, $log);
         }
-    }
 
+		if ($this->currentCheckpoint != $this->previousCheckpoint ) {
+            if (!$this->mc->set('mu_checkpoint',$this->currentCheckpoint,0,0)) {
+                $log=sprintf("Error: failed to save checkpoint %s in memcache\n",$this->currentCheckpoint);
+                print $log;
+                syslog(LOG_NOTICE, $log);
+            } else {
+                $log=sprintf("Saved checkpoint %s in memcache\n",$this->currentCheckpoint);
+                print $log;
+                syslog(LOG_NOTICE, $log);
+            }
+        }
+    }
 
     function checkQuota($notify) {
         dprint("checkQuota($notify)");
