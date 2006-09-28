@@ -71,6 +71,22 @@ class CDRS {
         $this->CDRTool         = $CDRTool;
         $this->DATASOURCES     = $DATASOURCES;
 
+        if ($this->CDRTool['memcached_server']) {
+            $mc=new Memcache;
+
+            list($memcache_host,$memcache_port)=explode(":",$this->CDRTool['memcached_server']);
+
+            if ($mc->pconnect($memcache_host,$memcache_port)) {
+                $this->mc = &$mc;
+                $_log=sprintf ("Connected to memcache %s:%d version %s\n",$memcache_host,$memcache_port, $this->mc->getVersion());
+            } else {
+                $_log=sprintf ("Connection to memcache %s:%d failed\n",$memcache_host,$memcache_port);
+            }
+
+        }
+
+        dprint($_log);
+
         if ($this->DATASOURCES[$this->cdr_source]['rating'] && $ratingEnabled) {
         	$this->ratingEnabled   = 1;
         }
@@ -211,22 +227,6 @@ class CDRS {
 
 		$this->getCDRtables();
 
-        if ($this->CDRTool['memcached_server']) {
-            $mc=new Memcache;
-
-            list($memcache_host,$memcache_port)=explode(":",$this->CDRTool['memcached_server']);
-
-            if ($mc->pconnect($memcache_host,$memcache_port)) {
-                $this->mc = &$mc;
-                $_log=sprintf ("Connected to memcache %s:%d version %s\n",$memcache_host,$memcache_port, $this->mc->getVersion());
-            } else {
-                $_log=sprintf ("Connection to memcache %s:%d failed\n",$memcache_host,$memcache_port);
-            }
-
-        }
-
-        dprint($_log);
-
         $this->initOK=1;
     }
 
@@ -238,64 +238,100 @@ class CDRS {
     }
 
     function LoadDestinations() {
-        #dprint("CDRS->LoadDestinations()");
-        $query="select * from destinations";
-        if ($this->CDRTool['filter']['aNumber']) {
-            $faNumber=$this->CDRTool['filter']['aNumber'];
-            $query .= " where subscriber = '$faNumber' or
-            (subscriber = '' and domain = '' and gateway = '') ";
-        } else if ($this->CDRTool['filter']['domain']) {
-            $fdomain=$this->CDRTool['filter']['domain'];
-            $query .= " where domain = '$fdomain' or
-            (subscriber = '' and domain = '' and gateway = '') ";
-        } else if ($this->CDRTool['filter']['gateway']) {
-            $fgateway=$this->CDRTool['filter']['gateway'];
-            $query .= " where gateway = '$fgateway' or
-            (subscriber = '' and domain = '' and gateway = '') ";
+        dprint("CDRS->LoadDestinations()\n");
+
+		$_destinations=array();
+        $this->destinationsCount=0;
+
+
+        if (is_object($this->mc) && $mc_destinations=$this->mc->get('destinations')) {
+        	$_dests=explode("\n",$mc_destinations);
+            foreach ($_dests as $_dest)  {
+                if (!strlen($_dest)) continue;
+                $this->destinationsCount++;
+            	$_els=explode("=",$_dest) ;
+                $_els_parts=explode(";",$_els[0]);
+                $_destinations[$_els_parts[0]][$_els_parts[1]]=$_els[1];
+            }
+
+        } else {
+
+            $query="select * from destinations";
+            if ($this->CDRTool['filter']['aNumber']) {
+                $faNumber=$this->CDRTool['filter']['aNumber'];
+                $query .= " where subscriber = '$faNumber' or
+                (subscriber = '' and domain = '' and gateway = '') ";
+            } else if ($this->CDRTool['filter']['domain']) {
+                $fdomain=$this->CDRTool['filter']['domain'];
+                $query .= " where domain = '$fdomain' or
+                (subscriber = '' and domain = '' and gateway = '') ";
+            } else if ($this->CDRTool['filter']['gateway']) {
+                $fgateway=$this->CDRTool['filter']['gateway'];
+                $query .= " where gateway = '$fgateway' or
+                (subscriber = '' and domain = '' and gateway = '') ";
+            }
+    
+            dprint($query);
+            $this->cdrtool->query($query);
+    
+
+            $mc_value_destinations = "\n";
+
+            while($this->cdrtool->next_record()) {
+                $this->destinationsCount++;
+
+                $gateway    = trim($this->cdrtool->Record['gateway']);
+                $domain     = trim($this->cdrtool->Record['domain']);
+                $subscriber = trim($this->cdrtool->Record['subscriber']);
+                $id         = trim($this->cdrtool->Record['dest_id']);
+                $name       = trim($this->cdrtool->Record['dest_name']);
+                $name_print = $this->cdrtool->Record['dest_name']." (".$id.")";
+    
+    
+                if ($subscriber) {
+                    $_destinations[$subscriber][$id]=$name;
+                    if (is_object($this->mc)) $mc_value_destinations.=$subscriber.";".$id."=".$name."\n";
+                    continue;
+                }
+    
+                if ($domain) {
+                    $_destinations[$domain][$id]=$name;
+                    if (is_object($this->mc)) $mc_value_destinations.=$domain.";".$id."=".$name."\n";
+                    continue;
+                }
+    
+                if ($gateway) {
+                    $_destinations[$gateway][$id]=$name;
+                    if (is_object($this->mc)) $mc_value_destinations.=$gateway.";".$id."=".$name."\n";
+                    continue;
+                }
+                if ($id) {
+                	$_destinations["default"][$id]=$name;
+                	if (is_object($this->mc)) $mc_value_destinations.="default;".$id."=".$name."\n";
+                }
+            }
+
+            if (is_object($this->mc)) {
+            	if ($this->mc->set('destinations',$mc_value_destinations,0,0)) {
+                	$log=sprintf("Saved %d destinations in memcache",count($_destinations));
+                    print $log;
+            		syslog(LOG_NOTICE, $log);
+                }
+            }
         }
 
-        #dprint($query);
-        $this->cdrtool->query($query);
+        $this->destinations=&$_destinations;
 
-        $i=0;
-        while($this->cdrtool->next_record()) {
-            $i++;
-            $gateway    = $this->cdrtool->Record['gateway'];
-            $domain     = $this->cdrtool->Record['domain'];
-            $subscriber = $this->cdrtool->Record['subscriber'];
-            $id         = $this->cdrtool->Record['dest_id'];
-            $name       = $this->cdrtool->Record['dest_name'];
-            $name_print = $this->cdrtool->Record['dest_name']." (".$id.")";
-
-            if ($subscriber) {
-                $_destinations[$subscriber][$id]=$name;
-                continue;
-            }
-
-            if ($domain) {
-                $_destinations[$domain][$id]=$name;
-                continue;
-            }
-
-            if ($gateway) {
-                $_destinations[$gateway][$id]=$name;
-                continue;
-            }
-
-            $_destinations["default"][$id]=$name;
-
-        }
-
-  		$this->destinations=$_destinations;
-        $this->destinationsCount=$i;
         if (is_array($this->destinations)) {
 			foreach ($this->destinations as $key => $val) {
         		$this->destinations_length[$key] = max(array_map(strlen, array_keys($val)));
 	        }
         }
 
-        dprint("Loaded $i destinations");
-        return $i;
+        dprint("Loaded $this->destinationsCount destinations\n");
+        //dprint_r($this->destinations);
+
+        return $this->destinationsCount;
     }
 
     function LoadDisconnectCodes() {

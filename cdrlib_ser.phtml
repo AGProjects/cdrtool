@@ -1875,7 +1875,7 @@ class CDRS_ser_radius extends CDRS {
             $query=$query ." where username = '$els[0]' and domain = '$els[1]' ";
         }
 
-        print($query);
+        dprint($query);
 
         if (!$this->AccountsDB->query($query) || !$this->AccountsDB->num_rows()) {
             return 0;
@@ -1883,9 +1883,7 @@ class CDRS_ser_radius extends CDRS {
 
 		$this->AccountsDB->next_record();
 
-        $this->SERAccounts[$account]=array("timezone"=>$this->AccountsDB->f('timezone'),
-         								   "rpid"    =>$this->AccountsDB->f('rpid')
-                                           );
+        $this->SERAccounts[$account]=array("timezone"=>$this->AccountsDB->f('timezone'));
 
         return 1;
     }
@@ -2260,8 +2258,6 @@ class CDR_ser_radius extends CDR {
 
 		$this->BillingPartyId=strtolower($this->BillingPartyId);
 
-		$this->CDRS->LoadAccounts($this->BillingPartyId);
-
         if (!$this->domain) {
             $_els=explode("@",$this->BillingPartyId);
             if (count($_els)==2) $this->domain=$_els[1];
@@ -2270,9 +2266,7 @@ class CDR_ser_radius extends CDR {
         $this->traffic            = 2*($this->inputTraffic+$this->outputTraffic);
         $this->BillingId          = $this->CDRS->SERAccounts[$this->BillingPartyId][BillingId];
 
-        $this->startTimeLocal     = getLocalTime($this->CDRS->SERAccounts[$this->BillingPartyId][timezone],$this->timestamp);
         $_timestamp_stop=$this->timestamp+$this->duration;
-        $this->stopTimeLocal     = getLocalTime($this->CDRS->SERAccounts[$this->BillingPartyId][timezone],$_timestamp_stop);
 
         $this->dayofweek       = date("w",$this->timestamp);
         $this->hourofday       = date("G",$this->timestamp);
@@ -2566,16 +2560,6 @@ class CDR_ser_radius extends CDR {
         $CallInfoVerbose.= "
         <tr>
             <td></td>
-        	<td>Start time (caller): </td>
-            <td>$this->startTimeLocal $timezone_print</td>
-        </tr>
-        <tr>
-            <td></td>
-        	<td>Stop time (caller): </td>
-            <td>$this->stopTimeLocal $timezone_print</td>
-        </tr>
-        <tr>
-            <td></td>
         	<td>Start time (proxy): </td>
             <td>$this->startTime $providerTimezone</td>
         </tr>
@@ -2855,16 +2839,12 @@ class CDR_ser_radius extends CDR {
         }
 
         if (!$this->CDRS->export) {
-            if ($this->CDRS->SERAccounts[$this->BillingPartyId][timezone]) {
-                $timezone_print=$this->CDRS->SERAccounts[$this->BillingPartyId][timezone];
-            } else {
-                $timezone_print=$this->CDRS->CDRTool[provider][timezone];
-            }
+            $timezone_print=$this->CDRS->CDRTool[provider][timezone];
 
             print "
             <tr bgcolor=$inout_color>
             <td valign=top>$found</td>
-            <td valign=top>$this->startTimeLocal $timezone_print</td>
+            <td valign=top>$this->startTime $timezone_print</td>
             <td valign=top><nobr>$this->aNumberPrint</nobr></td>
             <td valign=top><nobr>$this->cNumberPrint</nobr></td>
             <td valign=top><nobr>$this->destinationPrint $this->destinationName</td>

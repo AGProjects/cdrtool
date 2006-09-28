@@ -2875,6 +2875,8 @@ class RatingEngine {
     function reloadRatingTables () {
         $b=time();
 
+        if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete('destinations');
+
         $i=$this->CDRS->LoadDestinations();
         syslog(LOG_NOTICE, "Loaded $i destinations");
 
