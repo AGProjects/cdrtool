@@ -1,17 +1,19 @@
 cdrtool (4.7-0) unstable; urgency=low
 
-  * Added graphical statistics for SIP online users and MediaProxy usage
-  * Hide Send mail button if CDR query has no description
-  * Checking user quota is now much faster by reusing incremental learned data.
+  * Improved the speed of normalization and quota processes with a factor > 10
     This requires the installation of a memcached server and setup of
-    global.inc to point to the memcached server
+    global.inc to point to the memcached server (default is 127.0.0.1:11212)
   * Added memcached to cdrtool startup script and /etc/default/cdrtool
   * A new database table cdrtool.memcached has been created to store data in mysql
     when a memcached server is not available (see setup/mysql/alter_tables.mysql)
-  * Added a new cron script scripts/buildStatistics.php
-  * Cache users and domains loaded from database into memcache for 60 minutes
+  * Added graphical statistics for SIP online subscriber and MediaProxy usage
+    Added a new cron script scripts/buildStatistics.php
+  * Hide Sendmail button if CDR query has no description
+  * Quota checks is now much faster by reusing incremental learned data
+  * Cache SIP subscribers and domains into memcache
+  * Cache destinations into memcache
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 28 Sep 2006 21:32:05 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 28 Sep 2006 23:17:37 +0200
 
 cdrtool (4.6-9) unstable; urgency=low
 
