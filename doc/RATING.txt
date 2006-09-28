@@ -52,9 +52,9 @@ mysql to avoid loading the database with queries. The usage data will be
 reused and incrementally updated during normalization process thus ofloading
 the server from scanning the whole table at each quota check interval.
 
- 
-PSTN rating
------------
+Memcached can be downloaded from http://www.danga.com/memcached
+
+PSTN rating -----------
 
 1. Lookup the call rate based on time (peak/of-peak, day of week, holiday) 
 

@@ -6,6 +6,9 @@ DAEMON=$CDRTOOL_PATH/scripts/ratingEngine.php
 NAME=ratingEngine
 DESC=ratingEngine
 RUN_ratingEngine=no
+MEMCACHED_MEMORY=64
+MEMCACHED_PORT=11212
+MEMCACHED_PID_FILE=/var/run/memcached_cdrtool.pid
 
 test -x $DAEMON || exit 0
 
@@ -22,16 +25,26 @@ fi
 set -e
 
 start() {
-    echo -n "Starting $DESC: $NAME"
+    echo -n "Starting CDRTool $DESC"
     start-stop-daemon --start --background --quiet --pidfile /var/run/$NAME.pid \
 		--exec $DAEMON -- $DAEMON_OPTS
     echo "."
+    if [ "$START_MEMCACHED" != "no" ]; then     
+        echo -n "Starting memcached with $MEMCACHED_MEMORY MB of memory on port $MEMCACHED_PORT"
+        memcached -m $MEMCACHED_MEMORY -p $MEMCACHED_PORT -l 127.0.0.1 -u root -d -P $MEMCACHED_PID_FILE 
+        echo "."
+    fi
 }
 
 stop () {
-    echo -n "Stopping $DESC: $NAME"
+    echo -n "Stopping CDRTool $DESC"
     start-stop-daemon --stop --quiet --oknodo --signal 15 --pidfile /var/run/$NAME.pid
     echo "."
+    if [ "$START_MEMCACHED" != "no" ]; then     
+        echo -n "Stopping memcached"
+        start-stop-daemon --stop --quiet --oknodo --signal 15 --pidfile $MEMCACHED_PID_FILE
+        echo "."
+    fi     
 }
 
 reload () {
@@ -39,7 +52,6 @@ reload () {
     echo
     $CDRTOOL_PATH/scripts/reloadRatingTables.php && true
 }
-
 
 case "$1" in
     start)

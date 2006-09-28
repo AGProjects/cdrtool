@@ -74,6 +74,8 @@ $CDRTool['rating']=array(
                 "reportMissingRates"     => 0	   // send email notifications if rates are missing from the ratingEngine
                 );
 
+$CDRTool['memcached_server']  = "127.0.0.1:11212";
+
 ###########################################
 # Normalize engine settings
 
@@ -99,10 +101,6 @@ $CDRTool['import']['stripFromDestination']   = "0";
 # create group quota in SER and deny calls to users in this group
 $UserQuota["default"]["traffic"]  = 5000;              // MBytes
 $UserQuota["default"]["cost"]     = 1000;              // Euro
-
-$CDRTool['memcached_server']  = "localhost:11211"; // where to save monthly usage information
-						   // the usage information is saved under the key: mu:user@domain
-							
 
 ###########################################
 # CDRTool datasources
