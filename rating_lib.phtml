@@ -2288,11 +2288,6 @@ class SERQuota {
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
         }
 
-        if ($this->CDRTool['memcached_server']) {
-            $this->mc=&$this->CDRS->mc;
-            $log=sprintf ("Connected to memcache %s version %s\n",$this->CDRTool['memcached_server'], $this->mc->getVersion());
-            print $log;
-        }
     }
 
     function LoadUserQuotas() {
@@ -2302,7 +2297,7 @@ class SERQuota {
             return 0;
         }
 
-		if ($this->mc && $mc_value = $this->mc->get('subscribers_with_quota')) {
+		if ($this->CDRS->mc && $mc_value = $this->CDRS->mc->get('subscribers_with_quota')) {
             $_accounts_tmp=explode("\n",$mc_value);
             foreach ($_accounts_tmp  as $_account_tmp) {
                 $_avps=explode(":",$_account_tmp);
@@ -2359,8 +2354,8 @@ class SERQuota {
                 );
             }
 
-	        if (is_object($this->mc)) {
-                $this->mc->set('subscribers_with_quota',$mc_value,MEMCACHE_COMPRESSED,3600);
+	        if (is_object($this->CDRS->mc)) {
+                $this->CDRS->mc->set('subscribers_with_quota',$mc_value,MEMCACHE_COMPRESSED,3600);
                 $log=sprintf("Saved %d accounts with quota in memcached\n",count($_accounts));
                 print $log;
                 syslog(LOG_NOTICE,$log);
@@ -2507,7 +2502,7 @@ class SERQuota {
 
         $toNotify=array();
 
-		if (!is_object($this->mc)) {
+		if (!is_object($this->CDRS->mc)) {
         	$this->getMonthlyUsage();
         }
 
@@ -2516,7 +2511,7 @@ class SERQuota {
 
             list($username,$domain)=explode("@",$account);
 
-			if (is_object($this->mc)) $this->SERAccounts[$account]['usage']=$this->CDRS->getMonthlyUsage($account);
+			if (is_object($this->CDRS->mc)) $this->SERAccounts[$account]['usage']=$this->CDRS->getMonthlyUsage($account);
 
             if ($reason=$this->checkLimit($account,$this->SERAccounts[$account]['usage'])) {
                 $exceeding_accounts++;
@@ -2562,7 +2557,7 @@ class SERQuota {
         if ($blocked_now) {
         	$line=sprintf("%6d accounts have been blocked now\n",$blocked_now);
             $email_body=$email_body.$line;
-            if (is_object($this->mc)) $this->mc->delete('subscribers_with_quota');
+            if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete('subscribers_with_quota');
         }
         
         if ($blockedAccountsNow) {

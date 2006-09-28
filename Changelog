@@ -1,3 +1,5 @@
+This file has been moved to debian/changelog
+
 4.6-1
  - Make CDRTool Debian package
  - Migrate changelog to debian/changelog
