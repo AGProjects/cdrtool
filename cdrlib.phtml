@@ -217,10 +217,14 @@ class CDRS {
 
             if ($mc->pconnect($memcache_host,$memcache_port)) {
                 $this->mc = &$mc;
-                //$log=sprintf ("Connected to memcache %s:%d version %s\n",$memcache_host,$memcache_port, $this->mc->getVersion());
-                //print $log;
+                $_log=sprintf ("Connected to memcache %s:%d version %s\n",$memcache_host,$memcache_port, $this->mc->getVersion());
+            } else {
+                $_log=sprintf ("Connection to memcache %s:%d failed\n",$memcache_host,$memcache_port);
             }
+
         }
+
+        dprint($_log);
 
         $this->initOK=1;
     }
@@ -754,6 +758,7 @@ class CDRS {
             }
         }
 
+        $results['cached_keys']=$this->status;
         return $results;
     }
 
@@ -1310,6 +1315,8 @@ class CDRS {
 		$_status=array('saved_keys'=>$saved_keys,
                        'failed_keys'=>$failed_keys
                        );
+
+        $this->status=$_status;
 
         return $_status;
     }
