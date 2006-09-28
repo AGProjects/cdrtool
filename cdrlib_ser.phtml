@@ -2166,7 +2166,7 @@ class CDRS_ser_radius extends CDRS {
                 }
             }
         } else {
-	        $query=sprintf("delete from memcached where key like '%s%s'",
+	        $query=sprintf("delete from memcached where `key` like '%s%s'",
             $this->memcached_keyprefix,"%");
     	    dprint($query);
         	$this->cdrtool->query($query);
