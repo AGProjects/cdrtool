@@ -1019,9 +1019,9 @@ class CDRS_cisco extends CDRS {
         if ($rows>0)  {
             if ($UnNormalizedCalls=$this->getUnNormalized($where)) {
                 dprint("Normalize calls");
-                $normalizedCalls=$this->NormalizeCDRS($where);
-                if (!$this->export && $normalizedCalls[success] ) {
-                    print "<p> Found $normalizedCalls[success] CDRs for normalization. ";
+                $this->NormalizeCDRS($where);
+                if (!$this->export && $this->status['normalized'] ) {
+                    printf ("<p> Found %d CDRs for normalization. ",$this->status['normalized']);
                 }
             }
 

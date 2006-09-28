@@ -1483,17 +1483,16 @@ class CDRS_ser_radius extends CDRS {
 
             if ($UnNormalizedCalls=$this->getUnNormalized($where)) {
                 dprint("Normalize calls");
-                $normalizedCalls=$this->NormalizeCDRS($where);
-                if (!$this->export && $normalizedCalls[success] ) {
-                    print "<p>";
-                    printf ("Found %d CDRs for normalization. ",$normalizedCalls['success']);
-                    if ($normalizedCalls['cached_keys']['saved_keys']) {
+                $this->NormalizeCDRS($where);
+                if (!$this->export && $this->status['normalized'] ) {
+                    printf ("<p> Found %d CDRs for normalization. ",$this->status['normalized']);
+                    if ($this->status['cached_keys']['saved_keys']) {
                     	if (is_object($this->mc)) {
                         	$cached_place="memory";
                         } else {
                         	$cached_place="database";
                         }
-                        printf ("Cached usage for %d user in %s. ",$normalizedCalls['cached_keys']['saved_keys'],$cached_place);
+                        printf ("Cached usage for %d users in %s. ",$this->status['cached_keys']['saved_keys'],$cached_place);
                     }
                 }
             }
@@ -1511,7 +1510,7 @@ class CDRS_ser_radius extends CDRS {
             if ($duration == "unnormalized") {
                 // if display un normalized calls we must substract
                 // the amount of calls normalized above
-                $maxrows=$maxrows-$normalizedCalls[success];
+                $maxrows=$maxrows-$this->status['normalized'];
             }
         
             if ($group_by) {

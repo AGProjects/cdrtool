@@ -8,13 +8,14 @@ putenv("TZ=$tz");
 
 class CDRS {
 
-    var $db_class           = "DB_cdrtool";
-    var $CDR_class          = "CDR";
-    var $MinPstnNumLen      = "9";
-    var $intAccessCode      = "00";
-	var $RatingEngineSocket = false;
-    var $maxrowsperpage 	= 25;
-	var $memcached_keyprefix="mu:";
+    var $db_class            = "DB_cdrtool";
+    var $CDR_class           = "CDR";
+    var $MinPstnNumLen       = "9";
+    var $intAccessCode       = "00";
+	var $RatingEngineSocket  = false;
+    var $maxrowsperpage 	 = 25;
+	var $memcached_keyprefix = "mu:";
+	var $status              = array();
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
@@ -651,16 +652,17 @@ class CDRS {
         	}
         }
 
-        $results[total]=0;
-        $results[success]=0;
-        $results[failure]=0;
+        $this->status['cdr_to_normalize']=0;
+        $this->status['normalized']=0;
+        $this->status['normalize_failures']=0;
 
         dprint($query);
         $this->CDRdb->query($query);
-        $results[total]=$this->CDRdb->num_rows();
+        $this->status['cdr_to_normalize']=$this->CDRdb->num_rows();
 
-        if ($results[total]>0) {
-            syslog(LOG_NOTICE, "Lock db ($this->cdr_source) $results[total] CDRs");
+        if ($this->status['cdr_to_normalize']>0) {
+            $log=sprintf("Lock db (%s) %d  CDRs",$this->cdr_source,$this->status['cdr_to_normalize']);
+            syslog(LOG_NOTICE, $log);
             $locker = new DB_Locker();
             register_shutdown_function("unLockTables",$locker);
             $locker->query("lock tables normalize_lock write");
@@ -697,8 +699,6 @@ class CDRS {
             return 0;
         }
 
-        dprint("Found $results[total] unNormalized calls");
-        dprint();
         while ($this->CDRdb->next_record()) {
 
             dprint("-------");
@@ -713,13 +713,13 @@ class CDRS {
             $CDR = new $this->CDR_class(&$this, &$Structure);
 
             if ($CDR->normalize("Save")) {
-                $results[success]++;
+                $this->status['normalized']++;
             } else {
-                $results[failed]++;
+                $this->status['normalize_failures']++;
             }
 
-            if ($results[total] > 1000) {
-                if ($found > $progress*$results[total]/100) {
+            if ($this->status['cdr_to_normalize'] > 1000) {
+                if ($found > $progress*$this->status['cdr_to_normalize']/100) {
                     $progress++;
                     if ($progress%10==0) {
                         print "$progress% ";
@@ -746,7 +746,7 @@ class CDRS {
             }
         }
 
-        if ($results[total]>0) {
+        if ($this->status['cdr_to_normalize']>0) {
 	        $e=time();
     	    $d=$e-$b;
 
@@ -1312,13 +1312,10 @@ class CDRS {
             }
         }
 
-		$_status=array('saved_keys'=>$saved_keys,
-                       'failed_keys'=>$failed_keys
-                       );
+        $this->status['cached_keys']['saved_keys']  = $this->status['cached_keys']['saved_keys']  + $saved_keys;
+        $this->status['cached_keys']['failed_keys'] = $this->status['cached_keys']['failed_keys'] + $failed_keys;
 
-        $this->status=$_status;
-
-        return $_status;
+        return 1;
     }
 
     function deleteMonthlyUsage () {
