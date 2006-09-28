@@ -2302,47 +2302,74 @@ class SERQuota {
             return 0;
         }
 
-		if (!$this->UserQuotaTable) {
-            print("Info: No table defined for SER account quota.\n");
-            return 0;
+		if ($this->mc && $mc_value = $this->mc->get('subscribers_with_quota')) {
+            $_accounts_tmp=explode("\n",$mc_value);
+            foreach ($_accounts_tmp  as $_account_tmp) {
+                $_avps=explode(":",$_account_tmp);
+                $_properties = explode(";",$_avps[1]);
+                foreach ($_properties as $_property) {
+                    $_els=explode("=",$_property);
+                	$_accounts[$_avps[0]][$_els[0]]=$_els[1];
+                }
+            }
+        } else {
+            $query="select * from subscriber where quota > 0";
+    
+            dprint($query);
+    
+            if (!$this->AccountsDB->query($query)) {
+                return 0;
+            }
+    
+            $rows=$this->AccountsDB->num_rows();
+    
+            $log=sprintf ("%d SIP accounts have quota enabled\n",$rows);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+    
+            while($this->AccountsDB->next_record()) {
+    
+                $account = $this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
+                $full_name = $this->AccountsDB->f('first_name')." ".$this->AccountsDB->f('last_name');
+    
+                $_accounts[$account]=array('quota'    => array('cost'=>$this->AccountsDB->f('quota')),
+                                           'email'    => $this->AccountsDB->f('email_address'),
+                                           'fullname' => $full_name
+                                           );
+            }
+    
+            $query = "select * from grp where grp = 'quota'";
+    
+            dprint($query);
+            $this->AccountsDB->query($query);
+    
+            while($this->AccountsDB->next_record()) {
+                $account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
+                $_accounts[$account]['block_by_quota']= 1;
+            }
+    
+            foreach (array_keys($_accounts) as $account) {
+                if (!strlen($account)) continue;
+                $mc_value.= sprintf("%s:quota=%s;email=%s;fn=%s;block_by_quota=%d\n",
+                $account,
+                $_accounts[$account]['quota']['cost'],
+                $_accounts[$account]['email'],
+                $_accounts[$account]['fullname'],
+                $_accounts[$account]['block_by_quota']
+                );
+            }
+
+	        if (is_object($this->mc)) {
+                $this->mc->set('subscribers_with_quota',$mc_value,MEMCACHE_COMPRESSED,3600);
+                $log=sprintf("Saved %d accounts with quota in memcached\n",count($_accounts));
+                print $log;
+                syslog(LOG_NOTICE,$log);
+            }
         }
 
-        $query="select * from subscriber where quota > 0";
+        $this->SERAccounts = $_accounts;
 
-        dprint($query);
-
-        if (!$this->AccountsDB->query($query)) {
-            return 0;
-        }
-
-		$rows=$this->AccountsDB->num_rows();
-
-		$log=sprintf ("%d SIP accounts have quota enabled\n",$rows);
-        print $log;
-		syslog(LOG_NOTICE, $log);
-
-        while($this->AccountsDB->next_record()) {
-
-            $account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
-            $this->SERAccounts[$account][groups]=array();
-            $this->SERAccounts[$account]['quota']['cost'] = $this->AccountsDB->f('quota');
-            $this->SERAccounts[$account]['email_address'] = $this->AccountsDB->f('email_address');
-            $this->SERAccounts[$account]['fullname']      = $this->AccountsDB->f('first_name')." ".$this->AccountsDB->f('last_name');
-        }
-
-        $query="select * from grp";
-
-        dprint($query);
-        $this->AccountsDB->query($query);
-
-        while($this->AccountsDB->next_record()) {
-            $account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
-            $this->SERAccounts[$account][groups][] = $this->AccountsDB->f('grp');
-        }
-
-        $this->OK=1;
-
- 		return $rows;
+ 		return count($this->SERAccounts);
     }
 
     function ResetUserQuotas() {
@@ -2390,7 +2417,6 @@ class SERQuota {
 
             $this->SERAccounts[$account]['usage']=$_usage;
         }
-
     }
 
     function getDatabaseUsage($month="") {
@@ -2485,6 +2511,7 @@ class SERQuota {
         	$this->getMonthlyUsage();
         }
 
+		$_checks=0;
         foreach (array_keys($this->SERAccounts) as $account) {
 
             list($username,$domain)=explode("@",$account);
@@ -2494,7 +2521,7 @@ class SERQuota {
             if ($reason=$this->checkLimit($account,$this->SERAccounts[$account]['usage'])) {
                 $exceeding_accounts++;
 
-                if (!in_array("quota",$this->SERAccounts[$account][groups])) {
+                if (!$this->SERAccounts[$account]['block_by_quota']) {
 
                     if (!$seen_title) {
                         $line=sprintf ("%40s %6s %8s %8s %13s %s\n","User","Calls","Price","Minutes","Traffic","Reason");
@@ -2512,7 +2539,7 @@ class SERQuota {
 		  			syslog(LOG_NOTICE, "Quota exceeded for $account: $reason");
 
                     if ($this->blockAccount($account)) {
-                    	if ($notify && $this->SERAccounts[$account]['email_address']) {
+                    	if ($notify && $this->SERAccounts[$account]['email']) {
                         	$toNotify[]=$account;
                         }
                     	$blocked_now++;
@@ -2523,6 +2550,7 @@ class SERQuota {
                     $blocked_previous++;
                 }
             }
+            $_checks++;
         }
         
         if ($exceeding_accounts) {
@@ -2534,6 +2562,7 @@ class SERQuota {
         if ($blocked_now) {
         	$line=sprintf("%6d accounts have been blocked now\n",$blocked_now);
             $email_body=$email_body.$line;
+            if (is_object($this->mc)) $this->mc->delete('subscribers_with_quota');
         }
         
         if ($blockedAccountsNow) {
@@ -2584,8 +2613,8 @@ class SERQuota {
         $maxcost    = "";
         $maxtraffic = "";
     
-        if ($this->SERAccounts[$account]['quota']['cost']) {
-            $maxcost = $this->SERAccounts[$account]['quota']['cost'];
+        if ($this->SERAccounts[$account]['quota']) {
+            $maxcost = $this->SERAccounts[$account]['quota'];
         } elseif  ($UserQuota['default']['cost']) {
             $maxcost = $UserQuota['default']['cost'];
         }
@@ -2594,8 +2623,8 @@ class SERQuota {
             return "Maximum cost exceeded ($usage[cost] > $maxcost)";
         }
     
-        if ($this->SERAccounts[$account]['quota']['traffic']) {
-            $maxtraffic = $this->SERAccounts[$account]['quota']['traffic'];
+        if ($this->SERAccounts[$account]['quota_traffic']) {
+            $maxtraffic = $this->SERAccounts[$account]['quota_traffic'];
         } elseif  ($UserQuota['default']['traffic']) {
             $maxtraffic = $UserQuota['default']['traffic'];
         }
@@ -2652,7 +2681,7 @@ class SERQuota {
             $subject=preg_replace("/__ACCOUNT__/",$account,$subject);
         }
 
-		$toEmail=$this->SERAccounts[$account]['email_address'];
+		$toEmail=$this->SERAccounts[$account]['email'];
 
         if (!$toEmail || !$fromEmail) {
             dprint("missing from or rcpt");

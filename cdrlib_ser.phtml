@@ -1812,32 +1812,45 @@ class CDRS_ser_radius extends CDRS {
 
     function LoadDomains() {
 
+        $mc_value="";
+
         if (!$this->AccountsDBClass) {
             dprint("Info: No database defined for SER accounts");
             return 0;
         }
 
-        $query="select * from domain";
-        if ($this->CDRTool['filter']['aNumber']) {
-            $els=explode("@",$this->CDRTool['filter']['aNumber']);
-            $query=$query ." where domain = '$els[1]' ";
-        } else if ($this->CDRTool['filter']['domain']) {
-            $fdomain=$this->CDRTool['filter']['domain'];
-            $query=$query ." where domain = '$fdomain' ";
+        if ($this->mc && $mc_value = $this->mc->get('sip_domains')) {
+            $this->localDomains=explode(" ",$mc_value);
+            $log=sprintf("Loaded %d domains from memcached\n",count($this->localDomains));
+            //print $log;
+            syslog(LOG_NOTICE,$log);
+        } else {
+            $query="select * from domain";
+            if ($this->CDRTool['filter']['aNumber']) {
+                $els=explode("@",$this->CDRTool['filter']['aNumber']);
+                $query=$query ." where domain = '$els[1]' ";
+            } else if ($this->CDRTool['filter']['domain']) {
+                $fdomain=$this->CDRTool['filter']['domain'];
+                $query=$query ." where domain = '$fdomain' ";
+            }
+    
+            if (!$this->AccountsDB->query($query)) {
+                return 0;
+            }
+    
+            while($this->AccountsDB->next_record()) {
+                $mc_value.=$this->AccountsDB->f('domain')." ";
+            }
+
+            $this->localDomains=explode(" ",$mc_value);
+
+            if ($this->mc && $this->mc->set('sip_domains',$mc_value,MEMCACHE_COMPRESSED,3600)) {
+                $log=sprintf("Saved %d domains in memcached\n",count($this->localDomains));
+                //print $log;
+                syslog(LOG_NOTICE,$log);
+            }
         }
-
-        if (!$this->AccountsDB->query($query)) {
-            return 0;
-        }
-
-		$rows=$this->AccountsDB->num_rows();
-      	dprint("Loaded $rows domains");
-
-        while($this->AccountsDB->next_record()) {
-            $this->localDomains[]=$this->AccountsDB->f('domain');
-        }
-
-        return $rows;
+        return count($this->localDomains);
     }
 
     function LoadAccounts($account='') {
@@ -1862,7 +1875,7 @@ class CDRS_ser_radius extends CDRS {
             $query=$query ." where username = '$els[0]' and domain = '$els[1]' ";
         }
 
-        dprint($query);
+        print($query);
 
         if (!$this->AccountsDB->query($query) || !$this->AccountsDB->num_rows()) {
             return 0;
