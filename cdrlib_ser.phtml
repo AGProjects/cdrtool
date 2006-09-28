@@ -2165,16 +2165,18 @@ class CDRS_ser_radius extends CDRS {
                     $deleted_keys++;
                 }
             }
-        } else {
-	        $query=sprintf("delete from memcached where `key` like '%s%s'",
-            $this->memcached_keyprefix,"%");
-    	    dprint($query);
-        	$this->cdrtool->query($query);
-            $deleted_keys=$this->cdrtool->affected_rows();
+        	printf("Deleted %d memcached keys\n",$deleted_keys);
+
         }
 
-        printf("Deleted %d keys\n",$deleted_keys);
-        return $deleted_keys;
+        $query=sprintf("delete from memcached where `key` like '%s%s'",
+        $this->memcached_keyprefix,"%");
+    	dprint($query);
+        $this->cdrtool->query($query);
+
+        printf("Deleted %d mysql keys\n",$this->cdrtool->affected_rows());
+
+        return 1;
     }
 }
 

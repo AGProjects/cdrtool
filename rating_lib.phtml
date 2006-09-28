@@ -2289,19 +2289,9 @@ class SERQuota {
         }
 
         if ($this->CDRTool['memcached_server']) {
-            $mc=new Memcache;
-
-            list($memcache_host,$memcache_port)=explode(":",$this->CDRTool['memcached_server']);
-
-            if ($mc->pconnect($memcache_host,$memcache_port)) {
-                $log=sprintf ("Connected to memcache %s:%d version %s\n",$memcache_host,$memcache_port, $mc->getVersion());
-                print $log;
-                $this->mc = &$mc;
-            } else {
-                $log=sprintf ("Error: cannot connect to memcache %s:%d\n",$memcache_host,$memcache_port);
-                syslog(LOG_NOTICE, $log);
-                print $log;
-            }
+            $this->mc=&$this->CDRS->mc;
+            $log=sprintf ("Connected to memcache %s version %s\n",$this->CDRTool['memcached_server'], $this->mc->getVersion());
+            print $log;
         }
     }
 
@@ -2487,14 +2477,13 @@ class SERQuota {
         dprint("checkQuota($notify)");
         global $UserQuota;
 
-        // $this->getDatabaseUsage();
-        // above is done my the normalization process now
-
         $this->LoadUserQuotas();
 
         $toNotify=array();
 
-		if (!is_object($this->mc)) $this->getMonthlyUsage();
+		if (!is_object($this->mc)) {
+        	$this->getMonthlyUsage();
+        }
 
         foreach (array_keys($this->SERAccounts) as $account) {
 

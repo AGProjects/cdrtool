@@ -217,8 +217,8 @@ class CDRS {
 
             if ($mc->pconnect($memcache_host,$memcache_port)) {
                 $this->mc = &$mc;
-                $log=sprintf ("Connected to memcache %s:%d version %s\n",$memcache_host,$memcache_port, $this->mc->getVersion());
-                print $log;
+                //$log=sprintf ("Connected to memcache %s:%d version %s\n",$memcache_host,$memcache_port, $this->mc->getVersion());
+                //print $log;
             }
         }
 
@@ -1232,8 +1232,7 @@ class CDRS {
     }
 
     function getMonthlyUsage($account) {
-        // retruns array with usage information saved with saveMonthlyUsage
-
+        // retuns array with usage information saved with saveMonthlyUsage
         $_usage=array();
 
         $mc_key=sprintf("%s%s",$this->memcached_keyprefix,$account);
@@ -1241,6 +1240,7 @@ class CDRS {
         if (is_object($this->mc)) {
             // use memcache server
             $previousUsage = $this->mc->get($mc_key);
+
         } else {
         	// use MySQL server
             $query=sprintf("select value from memcached where `key` ='%s'",$mc_key);
@@ -1321,8 +1321,6 @@ class CDRS {
 
         if (!$usage) return ;
 
-        $usage=preg_replace("/=\s{1,}/","= ",$usage);
-        $usage=preg_replace("/\s{1,}=/","= ",$usage);
         $usage=preg_replace("/\s+/"," ",$usage);
 
         $_els=explode(" ",trim($usage));
@@ -1343,9 +1341,7 @@ class CDRS {
 
         return $_usage;
      }
-
 }
-
 
 class CDRS_unknown extends CDRS {
     function searchForm() {
