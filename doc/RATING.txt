@@ -34,13 +34,25 @@ relies on the fact that MediaProxy will update the CDR with the proper stop
 time information based on the last moment the media stream passed through
 the media proxy.
 
+Fraud prevention
+-----------------
+
 Against fraud, one may enforce limits for post-paid customers, an external
 scripts may build statistics based on customer usage, check customer quota
 in external data-sources and block customers in the SIP Proxy. This will not
 stop in real-time ongoing calls for customers exceeding their quota but
-provides in practice a perfect protection against fraudulent usage. See
-script scripts/SER/quotaCheck.php for example.
+provides in practice a perfect protection against fraudulent usage. 
 
+See the script scripts/SER/quotaCheck.php which is called from cron every 5
+minutes. To speed up the quota checking processs, which normally requires a
+full scan of the CDR table at each run, from version 4.7-0 onwards the
+actual usage per user is stored in a memcache server or a mysql table
+depending on the setup. It is preferably to use memcache server in place of
+mysql to avoid loading the database with queries. The usage data will be
+reused and incrementally updated during normalization process thus ofloading
+the server from scanning the whole table at each quota check interval.
+
+ 
 PSTN rating
 -----------
 
@@ -395,12 +407,15 @@ csv directory) or edit the rating tables using the WEB interface
 
    /var/www/CDRTool/scripts/normalize.php
 
-Warning:
+Warnings:
 
 Renormalization process can take long time durring which your database
 (radacct tablea) may be locked. Perform this operation only during low
 traffic periods.
 
+After renormalization, the monthly usage information used by the quota
+system will be out of date. You must reinit the actual usage based on the
+new rating information by running once the script scripts/SER/quotaInit.php
 
 Holidays must be added as individual days YYYY-MM-DD in table
 billing_holidays. The profile applied for holidays is the same as for
