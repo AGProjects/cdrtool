@@ -2,13 +2,13 @@ cdrtool (4.7-0) unstable; urgency=low
 
   * Added graphical statistics for sip online users and mediaproxy usage
   * Hide Send mail button if CDR query has no description
-  * Checking user quotas is now much faster by reusing incremental learned data.
+  * Checking user quota is now much faster by reusing incremental learned data.
     This change requires the installation of a memcached server
   * A new database table cdrtool.memcached has been created to store data in mysql
     when a memcached server is not available (see setup/mysql/alter_tables.mysql)
-  * Added a new cron script scripts/buildStatistics.php
+  * Added a new cron script scripts/buildStatistics.php. 
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 28 Sep 2006 14:04:30 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 28 Sep 2006 14:39:44 +0200
 
 cdrtool (4.6-9) unstable; urgency=low
 
