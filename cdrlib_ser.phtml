@@ -1827,7 +1827,7 @@ class CDRS_ser_radius extends CDRS {
       	dprint("Loaded $rows domains");
 
         while($this->AccountsDB->next_record()) {
-            $this->SERDomains[]=$this->AccountsDB->f('domain');
+            $this->localDomains[]=$this->AccountsDB->f('domain');
         }
 
         return $rows;
@@ -1843,7 +1843,7 @@ class CDRS_ser_radius extends CDRS {
 
 		list($_user,$_domain)=explode("@",$account);
 
-		if (!is_array($this->SERDomains) || !in_array($_domain,$this->SERDomains)) return 0;
+		if (!is_array($this->localDomains) || !in_array($_domain,$this->localDomains)) return 0;
 
         $query=sprintf("select * from subscriber
         where username= '%s' and domain ='%s'",
@@ -2142,6 +2142,39 @@ class CDRS_ser_radius extends CDRS {
         	$importSpeed=number_format($totalPackets/$d,0,"","");
             print "Import speed: $importSpeed packets / second\n";
         }
+    }
+
+    function deleteMonthlyUsage () {
+
+    	$deleted_keys=0;
+
+        if (!$this->AccountsDBClass) {
+            print("Info: No database defined for SER accounts.\n");
+            return 0;
+        }
+
+        if (is_object($this->mc)) {
+
+	        $query="select * from subscriber";
+    	    dprint($query);
+        	$this->AccountsDB->query($query);;
+
+            while($this->AccountsDB->next_record()) {
+                $mc_key=$this->memcached_keyprefix.$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');;
+                if ($this->mc->delete($mc_key)) {
+                    $deleted_keys++;
+                }
+            }
+        } else {
+	        $query=sprintf("delete from memcached where key like '%s%s'",
+            $this->memcached_keyprefix,"%");
+    	    dprint($query);
+        	$this->cdrtool->query($query);
+            $deleted_keys=$this->cdrtool->affected_rows();
+        }
+
+        printf("Deleted %d keys\n",$deleted_keys);
+        return $deleted_keys;
     }
 }
 
@@ -2840,6 +2873,11 @@ class CDR_ser_radius extends CDR {
                 }
             }
         }
+    }
+
+    function isCallerLocal() {
+        if (in_array($this->domain,$this->CDRS->localDomains)) return 1;
+        return 0;
     }
 }
 

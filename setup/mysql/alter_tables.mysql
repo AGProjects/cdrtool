@@ -350,3 +350,11 @@ alter table log add index login_idx(login);
 
 4.6-4
 update sip_status set description = 'NotAcceptableMedia' where code = 488;
+
+4.7-0
+DROP TABLE IF EXISTS `memcached`;
+CREATE TABLE `memcached` (
+  `key` varchar(255) NOT NULL,
+  `value` text NOT NULL,
+  PRIMARY KEY  (`key`)
+) TYPE=MyISAM;

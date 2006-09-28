@@ -1,4 +1,9 @@
 #!/usr/bin/php
+
+# this script deblocks all SIP subscriber blocked by the
+# quota system and removes any previous stored usage
+# information for the curent calendar month
+
 <?
 define_syslog_variables();
 openlog("CDRTool", LOG_PID, LOG_LOCAL0);
@@ -15,8 +20,8 @@ $SERQuota_class = $DATASOURCES[$cdr_source]["UserQuotaClass"];
 if (!$SERQuota_class) $SERQuota_class="SERQuota";
 
 $Quota = new $SERQuota_class($CDRS);
-$reset=$Quota->ResetUserQuotas();
 
-syslog(LOG_NOTICE, "Quota reset for $reset accounts");
+$Quota->ResetUserQuotas();
+$CDRS->deleteMontlyUsage();
 
 ?>
