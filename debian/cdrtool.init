@@ -29,6 +29,15 @@ start() {
     start-stop-daemon --start --background --quiet --pidfile /var/run/$NAME.pid \
 		--exec $DAEMON -- $DAEMON_OPTS
     echo "."
+}
+
+stop () {
+    echo -n "Stopping CDRTool $DESC"
+    start-stop-daemon --stop --quiet --oknodo --signal 15 --pidfile /var/run/$NAME.pid
+    echo "."
+}
+
+startmemcache () {
     if [ "$START_MEMCACHED" != "no" ]; then     
         echo -n "Starting memcached with $MEMCACHED_MEMORY MB of memory on port $MEMCACHED_PORT"
         memcached -m $MEMCACHED_MEMORY -p $MEMCACHED_PORT -l 127.0.0.1 -u root -d -P $MEMCACHED_PID_FILE 
@@ -36,10 +45,7 @@ start() {
     fi
 }
 
-stop () {
-    echo -n "Stopping CDRTool $DESC"
-    start-stop-daemon --stop --quiet --oknodo --signal 15 --pidfile /var/run/$NAME.pid
-    echo "."
+stopmemcache () {
     if [ "$START_MEMCACHED" != "no" ]; then     
         echo -n "Stopping memcached"
         start-stop-daemon --stop --quiet --oknodo --signal 15 --pidfile $MEMCACHED_PID_FILE
@@ -51,14 +57,26 @@ reload () {
     echo -n "Reloading CDRTool rating tables:"
     echo
     $CDRTOOL_PATH/scripts/reloadRatingTables.php && true
+    if [ "$START_MEMCACHED" != "no" ]; then     
+        echo -n "Rebuilding monthy usage information into memcache:"
+        echo
+        $CDRTOOL_PATH/scripts/SER/quotaInit.php && true
+    fi
 }
 
 case "$1" in
     start)
         start
+        startmemcache
         ;;
     stop)
         stop
+        ;;
+    startmemcache)
+        startmemcache
+        ;;
+    stopmemcache)
+        stopmemcache
         ;;
     restart)
         stop
@@ -70,7 +88,7 @@ case "$1" in
         ;;
   *)
 	N=/etc/init.d/$NAME
-	echo "Usage: $N {start|stop|restart|reload}" >&2
+	echo "Usage: $N {start|stop|restart|startmemcache|stopmemcache|reload}" >&2
 	exit 1
 	;;
 esac

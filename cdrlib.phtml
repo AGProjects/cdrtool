@@ -312,7 +312,7 @@ class CDRS {
 
             if (is_object($this->mc)) {
             	if ($this->mc->set('destinations',$mc_value_destinations,0,0)) {
-                	$log=sprintf("Saved %d destinations in memcache",count($_destinations));
+                	$log=sprintf("Saved %d destinations in memcache",$this->destinationsCount);
                     print $log;
             		syslog(LOG_NOTICE, $log);
                 }

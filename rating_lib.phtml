@@ -2904,6 +2904,16 @@ class RatingEngine {
         return 1;
     }
 
+    function reloadDomains () {
+		if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete('sip_domains');
+        return 1;
+    }
+
+    function reloadSipAccountsWithQuota () {
+		if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete('subscribers_with_quota');
+        return 1;
+    }
+
     function reloadPrepaidAccounts($account='') {
         return $this->loadPrepaidAccounts($account);
     }
@@ -3061,7 +3071,9 @@ class RatingEngine {
         "ShowProfiles\n".
         "ReloadPrepaidAccounts Account=abc@example.com\n".
         "ShowPrepaidAccounts Filter=123@example.com\n".
-        "ShowMemory";
+        "ShowMemory\n".
+        "ReloadSipAccountsWithQuota\n".
+        "ReloadDomains";
         return $help;
     }
 
@@ -3598,6 +3610,10 @@ class RatingEngine {
             return $this->showHelp();
         } else if ($NetFields['action'] == "reloadratingtables") {
             return $this->reloadRatingTables();
+        } else if ($NetFields['action'] == "reloadsipaccountswithquota") {
+            return $this->reloadSipAccountsWithQuota();
+        } else if ($NetFields['action'] == "reloaddomains") {
+            return $this->CDRS->LoadDomains();
         } else if ($NetFields['action'] == "reloadcustomers") {
             if ($NetFields['customer'] && $NetFields['type']) {
                 $_customerFilter=array('customer'=>$NetFields['customer'],
