@@ -1821,7 +1821,7 @@ class CDRS_ser_radius extends CDRS {
 
         if ($this->mc && $mc_value = $this->mc->get('sip_domains')) {
             $this->localDomains=explode(" ",$mc_value);
-            //$log=sprintf("Loaded %d domains from memcached\n",count($this->localDomains));
+            //$log=sprintf("Loaded %d domains from memcache\n",count($this->localDomains));
             //print $log;
             //syslog(LOG_NOTICE,$log);
         } else {
@@ -1845,7 +1845,7 @@ class CDRS_ser_radius extends CDRS {
             $this->localDomains=explode(" ",$mc_value);
 
             if ($this->mc && $this->mc->set('sip_domains',$mc_value,MEMCACHE_COMPRESSED,3600)) {
-                $log=sprintf("Saved %d domains in memcached\n",count($this->localDomains));
+                $log=sprintf("Saved %d domains in memcache\n",count($this->localDomains));
                 //print $log;
                 syslog(LOG_NOTICE,$log);
             }
@@ -2178,21 +2178,29 @@ class CDRS_ser_radius extends CDRS {
         	$this->AccountsDB->query($query);;
 
             while($this->AccountsDB->next_record()) {
-                $mc_key=$this->memcached_keyprefix.$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');;
+                $mc_key=$this->memcache_keyprefix.$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');;
                 if ($this->mc->delete($mc_key)) {
                     $deleted_keys++;
                 }
             }
-        	printf("Deleted %d memcached keys\n",$deleted_keys);
+            if ($deleted_keys) {
+        		$log=sprintf("Deleted %d memcache keys\n",$deleted_keys);
+                print $log;
+				syslog(LOG_NOTICE, $log);
+            }
 
         }
 
-        $query=sprintf("delete from memcached where `key` like '%s%s'",
-        $this->memcached_keyprefix,"%");
+        $query=sprintf("delete from memcache where `key` like '%s%s'",
+        $this->memcache_keyprefix,"%");
     	dprint($query);
         $this->cdrtool->query($query);
 
-        printf("Deleted %d mysql keys\n",$this->cdrtool->affected_rows());
+		if ($this->cdrtool->affected_rows()) {
+        	$log=sprintf("Deleted %d mysql keys\n",$this->cdrtool->affected_rows());
+            print $log;
+			syslog(LOG_NOTICE, $log);
+        }
 
         return 1;
     }

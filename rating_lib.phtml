@@ -2363,7 +2363,7 @@ class SERQuota {
 
 	        if (is_object($this->CDRS->mc)) {
                 $this->CDRS->mc->set('subscribers_with_quota',$mc_value,MEMCACHE_COMPRESSED,3600);
-                $log=sprintf("Saved %d accounts with quota in memcached\n",count($_accounts));
+                $log=sprintf("Saved %d accounts with quota in memcache\n",count($_accounts));
                 print $log;
                 syslog(LOG_NOTICE,$log);
             }
@@ -2397,15 +2397,17 @@ class SERQuota {
             $this->AccountsDB->query($query);
         }
 
-        $log=sprintf ("Reset %d users blocked by quota\n",count($blockedAccounts));
-		print $log;
-		syslog(LOG_NOTICE, $log);
+		if  (count($blockedAccounts)) {
+    	    $log=sprintf ("Reset %d users blocked by quota\n",count($blockedAccounts));
+			print $log;
+			syslog(LOG_NOTICE, $log);
+        }
 
     }
 
     function getMonthlyUsage() {
-        $query=sprintf("select * from memcached where `key` like '%s%s'",
-        $this->CDRS->memcached_keyprefix,"%"
+        $query=sprintf("select * from memcache where `key` like '%s%s'",
+        $this->CDRS->memcache_keyprefix,"%"
         );
 
         dprint($query);
@@ -2414,7 +2416,7 @@ class SERQuota {
 
         while($this->db->next_record()) {
 
-            $account = substr($this->db->f('key'),strlen($this->CDRS->memcached_keyprefix));
+            $account = substr($this->db->f('key'),strlen($this->CDRS->memcache_keyprefix));
 			$_usage  = $this->CDRS->parseMonthlyUsage($this->db->f('value'));
 
             $this->SERAccounts[$account]['usage']=$_usage;
@@ -2482,19 +2484,16 @@ class SERQuota {
 
         }
 
-        $_status = $this->CDRS->saveMonthlyUsage(&$this->SERAccounts);
+        $this->CDRS->saveMonthlyUsage(&$this->SERAccounts);
 
-		$saved_keys  = $_status['saved_keys'];
-        $failed_keys = $_status['failed_keys'];
-
-        if ($saved_keys) {
-            $log=sprintf("Saved %d keys\n",$saved_keys);
+        if ($this->CDRS->status['cached_keys']['saved_keys']) {
+            $log=sprintf("Saved %d keys\n",$this->CDRS->status['cached_keys']['saved_keys']);
             print $log;
 		  	syslog(LOG_NOTICE, $log);
         }
 
-        if ($failed_keys) {
-            $log=sprintf("Error: failed to save %d keys\n",$failed_keys);
+        if ($this->CDRS->status['cached_keys']['failed_keys']) {
+            $log=sprintf("Error: failed to save %d keys\n",$this->CDRS->status['cached_keys']['failed_keys']);
             print $log;
 		  	syslog(LOG_NOTICE, $log);
         }

@@ -14,7 +14,7 @@ class CDRS {
     var $intAccessCode       = "00";
 	var $RatingEngineSocket  = false;
     var $maxrowsperpage 	 = 25;
-	var $memcached_keyprefix = "mu:";
+	var $memcache_keyprefix = "mu:";
 	var $status              = array();
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
@@ -57,6 +57,7 @@ class CDRS {
         global $CDRTool;
         global $DATASOURCES;
         global $ratingEnabled;
+        global $memcache_server;
 
         $PHP_SELF=$_SERVER["PHP_SELF"];
 
@@ -71,10 +72,10 @@ class CDRS {
         $this->CDRTool         = $CDRTool;
         $this->DATASOURCES     = $DATASOURCES;
 
-        if ($this->CDRTool['memcached_server']) {
+        if ($memcache_server) {
             $mc=new Memcache;
 
-            list($memcache_host,$memcache_port)=explode(":",$this->CDRTool['memcached_server']);
+            list($memcache_host,$memcache_port)=explode(":",$memcache_server);
 
             if ($mc->pconnect($memcache_host,$memcache_port)) {
                 $this->mc = &$mc;
@@ -1273,7 +1274,7 @@ class CDRS {
         // retuns array with usage information saved with saveMonthlyUsage
         $_usage=array();
 
-        $mc_key=sprintf("%s%s",$this->memcached_keyprefix,$account);
+        $mc_key=sprintf("%s%s",$this->memcache_keyprefix,$account);
 
         if (is_object($this->mc)) {
             // use memcache server
@@ -1281,7 +1282,7 @@ class CDRS {
 
         } else {
         	// use MySQL server
-            $query=sprintf("select value from memcached where `key` ='%s'",$mc_key);
+            $query=sprintf("select value from memcache where `key` ='%s'",$mc_key);
             dprint($query);
             if ($this->cdrtool->query($query) && $this->cdrtool->num_rows()) {
                 $this->cdrtool->next_record();
@@ -1313,7 +1314,7 @@ class CDRS {
             $accounts[$_key]['usage']['traffic']
             );
 
-            $mc_key=sprintf("%s%s",$this->memcached_keyprefix,trim($_key));
+            $mc_key=sprintf("%s%s",$this->memcache_keyprefix,trim($_key));
 
         	if (is_object($this->mc)) {
                 // use memcache server
@@ -1326,11 +1327,11 @@ class CDRS {
 
             } else {
                 // use MySQL storage
-                $query=sprintf("delete from memcached where `key` = '%s'",$mc_key);
+                $query=sprintf("delete from memcache where `key` = '%s'",$mc_key);
                 dprint($query);
                 $this->cdrtool->query($query);
 
-                $query=sprintf("insert into memcached (`key`,`value`) values ('%s','%s')\n",
+                $query=sprintf("insert into memcache (`key`,`value`) values ('%s','%s')\n",
                 addslashes($mc_key),
                 addslashes($mc_value)
                 );
