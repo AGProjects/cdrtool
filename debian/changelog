@@ -12,8 +12,9 @@ cdrtool (4.7-0) unstable; urgency=low
   * Quota checks is now much faster by reusing incremental learned data
   * Cache SIP subscribers and domains into memcache
   * Cache destinations into memcache
+  * Calls can be rated if the duration is greater than a minimum duration
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 28 Sep 2006 23:17:37 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 29 Sep 2006 08:59:04 +0200
 
 cdrtool (4.6-9) unstable; urgency=low
 
