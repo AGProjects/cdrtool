@@ -43,8 +43,15 @@ $CDRS           = new $CDR_class($cdr_source);
 
 $SERQuota_class = $DATASOURCES[$cdr_source]["UserQuotaClass"];
 if (!$SERQuota_class) $SERQuota_class="SERQuota";
-
 $Quota = new $SERQuota_class($CDRS);
+
+if (is_object($CDRS->mc) && !$CDRS->mc->get('quotaCheckInit')) {
+    $Quota->ResetUserQuotas();
+	$CDRS->deleteMonthlyUsage();
+	$Quota->getDatabaseUsage();
+    $CDRS->mc->set('quotaCheckInit','1',0,0);
+}
+
 $Quota->checkQuota($DATASOURCES[$cdr_source]['UserQuotaNotify']);
 
 function deleteQuotaCheckLockfile($lockFile) {

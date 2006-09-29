@@ -2402,13 +2402,11 @@ class SERQuota {
 			print $log;
 			syslog(LOG_NOTICE, $log);
         }
-
     }
 
     function getMonthlyUsage() {
         $query=sprintf("select * from memcache where `key` like '%s%s'",
-        $this->CDRS->memcache_keyprefix,"%"
-        );
+        $this->CDRS->memcache_keyprefix,"%");
 
         dprint($query);
 

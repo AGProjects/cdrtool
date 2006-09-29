@@ -616,6 +616,9 @@ class CDRS {
 
         if ($this->CDRdb->query($query)) {
             $c=$this->CDRdb->affected_rows();
+            if ($c && is_object($this->mc)) {
+                $this->mc->delete('quotaCheckInit');
+            }
         }
 
         dprint("unNormalized $c calls");

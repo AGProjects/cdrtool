@@ -14,7 +14,7 @@ cdrtool (4.7-0) unstable; urgency=low
   * Cache destinations into memcache
   * Calls can be rated if the duration is greater than a minimum duration
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 29 Sep 2006 08:59:04 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 29 Sep 2006 18:18:58 +0200
 
 cdrtool (4.6-9) unstable; urgency=low
 

@@ -48,7 +48,6 @@ if (!$SERQuota_class) $SERQuota_class="SERQuota";
 
 $Quota = new $SERQuota_class($CDRS);
 $Quota->ResetUserQuotas();
-
 $CDRS->deleteMonthlyUsage();
 $Quota->getDatabaseUsage();
 
