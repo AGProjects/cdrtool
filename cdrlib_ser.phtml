@@ -1821,9 +1821,9 @@ class CDRS_ser_radius extends CDRS {
 
         if ($this->mc && $mc_value = $this->mc->get('sip_domains')) {
             $this->localDomains=explode(" ",$mc_value);
-            $log=sprintf("Loaded %d domains from memcached\n",count($this->localDomains));
+            //$log=sprintf("Loaded %d domains from memcached\n",count($this->localDomains));
             //print $log;
-            syslog(LOG_NOTICE,$log);
+            //syslog(LOG_NOTICE,$log);
         } else {
             $query="select * from domain";
             if ($this->CDRTool['filter']['aNumber']) {

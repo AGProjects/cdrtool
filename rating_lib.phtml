@@ -9,6 +9,7 @@ class Rate {
     var $minimumDurationCharged = 0;     // 0 to cancel it
     var $durationPeriodRated    = 60;    // in seconds
     var $trafficSizeRated       = 1024;  // in KBytes, default 1MByte
+	var $minimumDuration        = 0;      // minimum duration to rate, if call is shorter the price is zero
 
     function Rate(&$parent) {
         $this->CDRS = &$parent->CDRS;
@@ -31,6 +32,10 @@ class Rate {
 
         if ($this->CDRS->CDRTool[rating][trafficSizeRated]) {
             $this->trafficSizeRated=$this->CDRS->CDRTool[rating][trafficSizeRated];
+        }
+
+        if ($this->CDRS->CDRTool[rating][minimumDuration]) {
+            $this->minimumDuration=$this->CDRS->CDRTool[rating][minimumDuration];
         }
 
         $this->fromEmail = $this->CDRS->CDRTool[provider][fromEmail];
@@ -115,6 +120,8 @@ class Rate {
 
     function calculate(&$dictionary) {
         dprint("<b>Rate->calculate(&dictionary)</b>");
+
+		if ($this->duration > $this->minimumDuration) return 0;
 
         //dprint_r($dictionary);
 

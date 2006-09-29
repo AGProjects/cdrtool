@@ -71,7 +71,8 @@ $CDRTool['rating']=array(
                 "minimumDurationCharged" => 0,     // if you want to rate a minimimum number of seconds for each call
                 "durationPeriodRated" 	 => 60,    // the prices from the rating table are calculated per this period
                 "trafficSizeRated"       => 1024,  // same as above but for data traffic
-                "reportMissingRates"     => 0	   // send email notifications if rates are missing from the ratingEngine
+                "reportMissingRates"     => 0,	   // send email notifications if rates are missing from the ratingEngine
+                "minimumDuration"        => 0      // minimum duration to rate, if call duration is shorter the price is zero
                 );
 
 $CDRTool['memcached_server']  = "127.0.0.1:11212";

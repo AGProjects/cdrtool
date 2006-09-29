@@ -83,9 +83,9 @@ class CDRS {
                 $_log=sprintf ("Connection to memcache %s:%d failed\n",$memcache_host,$memcache_port);
             }
 
+        	dprint($_log);
         }
 
-        dprint($_log);
 
         if ($this->DATASOURCES[$this->cdr_source]['rating'] && $ratingEnabled) {
         	$this->ratingEnabled   = 1;
@@ -242,7 +242,6 @@ class CDRS {
 
 		$_destinations=array();
         $this->destinationsCount=0;
-
 
         if (is_object($this->mc) && $mc_destinations=$this->mc->get('destinations')) {
         	$_dests=explode("\n",$mc_destinations);
