@@ -63,7 +63,8 @@ function deleteQuotaCheckLockfile($lockFile) {
 
 $e=time();
 $d=$e-$b;
-$log=sprintf("Runtime: %d seconds\n",$d);
-syslog(LOG_NOTICE,"Runtime: $d seconds");
-//print $log;
+if ($d) {
+	$log=sprintf("Runtime: %d seconds\n",$d);
+	syslog(LOG_NOTICE,"Runtime: $d seconds");
+}
 ?>

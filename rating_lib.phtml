@@ -2551,6 +2551,9 @@ class SERQuota {
             $line=sprintf("%6d accounts have exceeded their traffic limits\n",$exceeding_accounts);
             print $line;
             $email_body=$email_body.$line;
+        } else {
+	  		$log=sprintf("No accounts exceeded their quota since the last run\n");
+  			syslog(LOG_NOTICE, $log);
         }
         
         if ($blocked_now) {
