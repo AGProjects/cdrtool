@@ -2433,16 +2433,26 @@ class SERQuota {
 
         $this->LoadUserQuotas();
 
+        $j=0;
+        $domains_sql="";
+		foreach ($this->localDomains as $_domain) {
+            if ($j>0) $domains_sql.=",";
+            $domains_sql.="'".addslashes($_domain)."'";
+            $j++;
+        }
+
         $query=sprintf("select %s, count(*) as calls,
         sum(AcctSessionTime) as duration, sum(Price) as cost,
         sum(AcctInputOctets + AcctOutputOctets)/2 as traffic
         from %s
         where AcctStartTime >= '%s'
         and Normalized = '1'
+        and Realm in (%s)
         group by %s\n",
         addslashes($this->BillingPartyIdField),
         addslashes($this->table),
         addslashes($this->startTime),
+        $domains_sql,
         addslashes($this->BillingPartyIdField)
         );
 
@@ -2455,30 +2465,15 @@ class SERQuota {
 		syslog(LOG_NOTICE, $log);
 
         $j=0;
-
         while($this->CDRquotaDB->next_record()) {
             $account = $this->CDRquotaDB->f($this->BillingPartyIdField);
 
             list($username,$domain)=explode("@",$account);
 
-            if (preg_match("/^(.*)[=:;]/U",$domain,$p)){
-                $domain = $p[1];
-		    }
-
-            if (!in_array($domain,$this->localDomains)) {
-                // skip remote accounts
-                continue;
-            }
-
-            $calls            = $this->CDRquotaDB->f('calls');
-            $cost             = $this->CDRquotaDB->f('cost');
-            $duration         = $this->CDRquotaDB->f('duration');
-            $traffic          = $this->CDRquotaDB->f('traffic');
-
-            $this->SERAccounts[$account]['usage']['calls']    = $this->SERAccounts[$account]['usage']['calls']    + $calls;
-            $this->SERAccounts[$account]['usage']['duration'] = $this->SERAccounts[$account]['usage']['duration'] + $duration;
-            $this->SERAccounts[$account]['usage']['cost']     = $this->SERAccounts[$account]['usage']['cost']     + $cost;
-            $this->SERAccounts[$account]['usage']['traffic']  = $this->SERAccounts[$account]['usage']['traffic']  + $traffic;
+            $this->SERAccounts[$account]['usage']['calls']    = $this->SERAccounts[$account]['usage']['calls']    + $this->CDRquotaDB->f('calls');
+            $this->SERAccounts[$account]['usage']['duration'] = $this->SERAccounts[$account]['usage']['duration'] + $this->CDRquotaDB->f('duration');
+            $this->SERAccounts[$account]['usage']['cost']     = $this->SERAccounts[$account]['usage']['cost']     + $this->CDRquotaDB->f('cost');
+            $this->SERAccounts[$account]['usage']['traffic']  = $this->SERAccounts[$account]['usage']['traffic']  + $this->CDRquotaDB->f('traffic');
 
             $j++;
 

@@ -1,11 +1,11 @@
 cdrtool (4.7-0) unstable; urgency=low
 
   * Improved the speed of normalization and quota processes with a factor > 10
-    This requires the installation of a memcached server and setup of
-    global.inc to point to the memcached server (default is 127.0.0.1:11212)
-  * Added memcached to cdrtool startup script and /etc/default/cdrtool
-  * A new database table cdrtool.memcached has been created to store data in mysql
-    when a memcached server is not available (see setup/mysql/alter_tables.mysql)
+    This requires the installation of a memcache server and setup of
+    global.inc to point to the memcache server (default is 127.0.0.1:11212)
+  * Added memcache to cdrtool startup script and /etc/default/cdrtool
+  * A new database table cdrtool.memcache has been created to store data in mysql
+    when a memcache server is not available (see setup/mysql/alter_tables.mysql)
   * Added graphical statistics for SIP online subscriber and MediaProxy usage
     Added a new cron script scripts/buildStatistics.php
   * Hide Sendmail button if CDR query has no description
