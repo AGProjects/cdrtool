@@ -2334,9 +2334,9 @@ class SERQuota {
                 $account = $this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
                 $full_name = $this->AccountsDB->f('first_name')." ".$this->AccountsDB->f('last_name');
     
-                $_accounts[$account]=array('quota'    => array('cost'=>$this->AccountsDB->f('quota')),
+                $_accounts[$account]=array('quota'    => $this->AccountsDB->f('quota'),
                                            'email'    => $this->AccountsDB->f('email_address'),
-                                           'fullname' => $full_name
+                                           'fn' => $full_name
                                            );
             }
     
@@ -2354,9 +2354,9 @@ class SERQuota {
                 if (!strlen($account)) continue;
                 $mc_value.= sprintf("%s:quota=%s;email=%s;fn=%s;block_by_quota=%d\n",
                 $account,
-                $_accounts[$account]['quota']['cost'],
+                $_accounts[$account]['quota'],
                 $_accounts[$account]['email'],
-                $_accounts[$account]['fullname'],
+                $_accounts[$account]['fn'],
                 $_accounts[$account]['block_by_quota']
                 );
             }
@@ -2669,7 +2669,7 @@ class SERQuota {
             $subject=$this->notificationAddresses[$domain]['quotaSubject'];
         }
 
-        $body=preg_replace("/__NAME__/",$this->SERAccounts[$account]['fullname'],$body);
+        $body=preg_replace("/__NAME__/",$this->SERAccounts[$account]['fn'],$body);
         $body=preg_replace("/__ACCOUNT__/",$account,$body);
 
         $providerName=$this->notificationAddresses[$domain]['providerName'];
@@ -2702,7 +2702,7 @@ class SERQuota {
 
     	mail($toEmail,$subject,$body, $extraHeaders);
 
-  		$log_msg=sprintf("Quota exceeded for $account. Notified To:%s From:%s Bcc:%s\n",$toEmail,$fromEmail,$bccEmail);
+  		$log_msg=sprintf("Quota exceeded for $account. Notified To:%s From:%s\n",$toEmail,$fromEmail);
   		syslog(LOG_NOTICE, $log_msg);
         print $log_msg;
 
@@ -2909,7 +2909,11 @@ class RatingEngine {
     }
 
     function reloadSipAccountsWithQuota () {
-		if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete('subscribers_with_quota');
+		if (is_object($this->CDRS->mc)) {
+        	if ($this->CDRS->mc->delete('subscribers_with_quota')) {
+            	syslog(LOG_NOTICE, "Deleted subscribers_with_quota key from memcache");
+            }
+        }
         return 1;
     }
 
