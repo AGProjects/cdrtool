@@ -1,7 +1,7 @@
 set alert support@example.com
 
-check host hostname.local-ratingEngine with address 10.0.0.1
+check host hostname.local-ratingEngine with address 127.0.0.1
         if failed port 9024 then start
         start program = "/etc/init.d/cdrtool start"
         stop program = "/etc/init.d/cdrtool stop"
-        if 5 restarts within 5 cycles then timeout
+        if 5 restarts within 3 cycles then timeout
