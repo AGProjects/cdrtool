@@ -3,6 +3,7 @@
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 CDRTOOL_PATH=/var/www/CDRTool
 DAEMON=$CDRTOOL_PATH/scripts/ratingEngine.php
+MEMCACHE_DAEMON=/usr/bin/memcached
 NAME=ratingEngine
 DESC=ratingEngine
 RUN_ratingEngine=no
@@ -42,7 +43,8 @@ stop () {
 startmemcache () {
     if [ "$START_MEMCACHE" != "no" ]; then     
         echo -n "Starting memcached with $MEMCACHE_MEMORY MB of memory on $MEMCACHE_IP:$MEMCACHE_PORT"
-        memcached -m $MEMCACHE_MEMORY -p $MEMCACHE_PORT -l $MEMCACHE_IP -u root -d -P $MEMCACHE_PID_FILE 
+        start-stop-daemon --start --background --quiet --pidfile $MEMCACHE_PID_FILE \
+        --exec $MEMCACHE_DAEMON -- -m $MEMCACHE_MEMORY -p $MEMCACHE_PORT -l $MEMCACHE_IP -u root -d -P $MEMCACHE_PID_FILE
         echo "."
     fi
 }
@@ -68,6 +70,7 @@ case "$1" in
         ;;
     stop)
         stop
+        stopmemcache
         ;;
     startmemcache)
         startmemcache
