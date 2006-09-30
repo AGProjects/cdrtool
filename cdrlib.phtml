@@ -616,8 +616,11 @@ class CDRS {
 
         if ($this->CDRdb->query($query)) {
             $c=$this->CDRdb->affected_rows();
-            if ($c && is_object($this->mc)) {
-                $this->mc->delete('quotaCheckInit');
+            if ($c) {
+            	if (is_object($this->mc)) $this->mc->delete('quotaCheckInit');
+                $query=sprintf("delete from memcache where `key`= 'quotaCheckInit'");
+	            dprint($query);
+            	$this->cdrtool->query($query);
             }
         }
 
@@ -1273,8 +1276,8 @@ class CDRS {
         return 1;
     }
 
-    function getMonthlyUsage($account) {
-        // retuns array with usage information saved with saveMonthlyUsage
+    function getMonthlyUsageFromCache($account) {
+        // retuns array with usage information saved with cacheMonthlyUsage
         $_usage=array();
 
         $mc_key=sprintf("%s%s",$this->memcache_keyprefix,$account);
@@ -1290,7 +1293,6 @@ class CDRS {
             if ($this->cdrtool->query($query) && $this->cdrtool->num_rows()) {
                 $this->cdrtool->next_record();
             	$previousUsage=$this->cdrtool->f('value');
-
             }
         }
 
@@ -1301,7 +1303,7 @@ class CDRS {
         return $_usage;
     }
 
-    function saveMonthlyUsage($accounts=array()) {
+    function cacheMonthlyUsage($accounts=array()) {
 
         $saved_keys=0;
         $failed_keys=0;
@@ -1355,9 +1357,6 @@ class CDRS {
         return 1;
     }
 
-    function deleteMonthlyUsage () {
-    }
-
     function parseMonthlyUsage($usage) {
 
         if (!$usage) return ;
@@ -1375,7 +1374,7 @@ class CDRS {
             $_value = strtolower(trim($_dict[1]));
 
             if (!$_key) continue;
-            //printf ("%s: %s=%s\n",$account,$_key,$_value);
+
             $_usage[$_key]=$_value;
             $t++;
         }
@@ -1614,7 +1613,7 @@ class CDR {
                                                              "traffic"  => $_traffic
                                                              );
     
-                        $this->saveMonthlyUsage($_usage);
+                        $this->cacheMonthlyUsage($_usage);
                     }
 
                     return 1;
@@ -1652,13 +1651,13 @@ class CDR {
         return 1;
     }
 
-    function saveMonthlyUsage($accounts) {
+    function cacheMonthlyUsage($accounts) {
 
         if (!$this->isCallerLocal() || !is_array($accounts)) return ;
 
         foreach (array_keys($accounts) as $_account) {
 
-            $_usage = $this->CDRS->getMonthlyUsage($_account);
+            $_usage = $this->CDRS->getMonthlyUsageFromCache($_account);
 
         	$accounts[$_account]['usage']['calls']    =  $accounts[$_account]['usage']['calls']    + $_usage['calls'];
             $accounts[$_account]['usage']['duration'] =  $accounts[$_account]['usage']['duration'] + $_usage['duration'];
@@ -1667,7 +1666,7 @@ class CDR {
 
         }
 
-        $this->CDRS->saveMonthlyUsage($accounts);
+        $this->CDRS->cacheMonthlyUsage($accounts);
     }
 
 

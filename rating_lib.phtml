@@ -2244,8 +2244,8 @@ class SERQuota {
 
         $parent->LoadDomains();
 
-        $this->localDomains      = &$parent->localDomains;
-		$this->cdr_source      = &$parent->cdr_source;
+        $this->localDomains        = &$parent->localDomains;
+		$this->cdr_source          = &$parent->cdr_source;
         $this->BillingPartyIdField = &$parent->CDRFields['BillingPartyId'];
 
         $this->db = new DB_cdrtool;
@@ -2279,7 +2279,7 @@ class SERQuota {
 
 			$this->NGNProURL=$DATASOURCES[$this->cdr_source]['SOAPURL'];
 
-    		syslog(LOG_NOTICE, "SOAP/XML URL: $this->NGNProURL");
+    		//syslog(LOG_NOTICE, "SOAP/XML URL: $this->NGNProURL");
 
             $this->SOAPlogin=array(
                                    "username"    =>$DATASOURCES[$this->cdr_source]['SOAPUsername'],
@@ -2404,7 +2404,7 @@ class SERQuota {
         }
     }
 
-    function getMonthlyUsage() {
+    function getMonthlyUsageFromCache() {
         $query=sprintf("select * from memcache where `key` like '%s%s'",
         $this->CDRS->memcache_keyprefix,"%");
 
@@ -2421,7 +2421,7 @@ class SERQuota {
         }
     }
 
-    function getDatabaseUsage($month="") {
+    function initMonthlyUsageFromDatabase($month="") {
 
 		if (!$month) {
         	$this->startTime=Date("Y-m-01 00:00",time());
@@ -2477,7 +2477,7 @@ class SERQuota {
 
         }
 
-        $this->CDRS->saveMonthlyUsage(&$this->SERAccounts);
+        $this->CDRS->cacheMonthlyUsage(&$this->SERAccounts);
 
         if ($this->CDRS->status['cached_keys']['saved_keys']) {
             $log=sprintf("Saved %d keys\n",$this->CDRS->status['cached_keys']['saved_keys']);
@@ -2497,12 +2497,13 @@ class SERQuota {
         dprint("checkQuota($notify)");
         global $UserQuota;
 
+        $this->cacheMonthlyUsage();
         $this->LoadUserQuotas();
 
         $toNotify=array();
 
 		if (!is_object($this->CDRS->mc)) {
-        	$this->getMonthlyUsage();
+        	$this->getMonthlyUsageFromCache();
         }
 
 		$_checks=0;
@@ -2510,7 +2511,7 @@ class SERQuota {
 
             list($username,$domain)=explode("@",$account);
 
-			if (is_object($this->CDRS->mc)) $this->SERAccounts[$account]['usage']=$this->CDRS->getMonthlyUsage($account);
+			if (is_object($this->CDRS->mc)) $this->SERAccounts[$account]['usage']=$this->CDRS->getMonthlyUsageFromCache($account);
 
             if ($reason=$this->checkLimit($account,$this->SERAccounts[$account]['usage'])) {
                 $exceeding_accounts++;
@@ -2810,6 +2811,129 @@ class SERQuota {
                 syslog(LOG_NOTICE, $log);
             }
         }
+    }
+
+    function saveQuotaInitFlag() {
+    	if (is_object($this->CDRS->mc)) {
+            if ($this->CDRS->mc->set('quotaCheckInit','1',0,0)) {
+                return 1;
+            } else {
+                return 0;
+            }
+        } else {
+            $query=sprintf("delete from memcache where `key`= 'quotaCheckInit'");
+            dprint($query);
+            if (!$this->db->query($query)) return 0;
+
+            $query=sprintf("insert into memcache (`key`,`value`) values ('quotaCheckInit','1')");
+
+            dprint($query);
+            if ($this->db->query($query) && $this->db->affected_rows()) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    function deleteQuotaInitFlag() {
+    	if (is_object($this->CDRS->mc)) {
+            if (!$this->CDRS->mc->delete('quotaCheckInit')) {
+                return 0;
+            }
+        }
+
+        $query=sprintf("delete from memcache where `key`= 'quotaCheckInit'");
+        dprint($query);
+        if (!$this->db->query($query)) return 0;
+
+        return 1;
+    }
+
+    function cacheMonthlyUsage() {
+    	if (is_object($this->CDRS->mc)) {
+			if (!$this->CDRS->mc->get('quotaCheckInit')) {
+
+                $this->ResetUserQuotas();
+				$this->deleteMonthlyUsageFromCache();
+				$this->initMonthlyUsageFromDatabase();
+
+                if ($this->saveQuotaInitFlag()) {
+                    return 1;
+                } else {
+		        	$log=sprintf ("Error: failed to save key quotaCheckInit in memcache");
+	    		    syslog(LOG_NOTICE, $log);
+		            return 0;
+                }
+    		}
+		} else {
+		    $query="select * from memcache where `key` = 'quotaCheckInit'";
+            dprint($query);
+            if ($this->db->query($query)) {
+                if (!$this->db->num_rows()) {
+    
+                    $this->ResetUserQuotas();
+                    $this->deleteMonthlyUsageFromCache();
+                    $this->initMonthlyUsageFromDatabase();
+    
+                    if ($this->saveQuotaInitFlag()) {
+                        return 1;
+                    } else {
+                        $log=sprintf ("Error: failed to save key quotaCheckInit in memcache");
+                        syslog(LOG_NOTICE, $log);
+                        return 0;
+                    }
+                }
+
+            } else {
+                $log=sprintf ("Error: failed to query for key quotaCheckInit in mysql");
+                syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+		}
+        return 1;
+    }
+
+    function deleteMonthlyUsageFromCache () {
+
+    	$deleted_keys=0;
+
+        if (!$this->AccountsDBClass) {
+            print("Info: No database defined for SER accounts.\n");
+            return 0;
+        }
+
+        if (is_object($this->mc)) {
+
+	        $query="select * from subscriber";
+    	    dprint($query);
+        	$this->AccountsDB->query($query);;
+
+            while($this->AccountsDB->next_record()) {
+                $mc_key=$this->CDRS->memcache_keyprefix.$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');;
+                if ($this->CDRS->mc->delete($mc_key)) {
+                    $deleted_keys++;
+                }
+            }
+            if ($deleted_keys) {
+        		$log=sprintf("Deleted %d memcache keys\n",$deleted_keys);
+                print $log;
+				syslog(LOG_NOTICE, $log);
+            }
+        }
+
+        $query=sprintf("delete from memcache where `key` like '%s%s'",
+        $this->CDRS->memcache_keyprefix,"%");
+    	dprint($query);
+        $this->db->query($query);
+
+		if ($this->db->affected_rows()) {
+        	$log=sprintf("Deleted %d mysql keys\n",$this->db->affected_rows());
+            print $log;
+			syslog(LOG_NOTICE, $log);
+        }
+
+        return 1;
     }
 }
 

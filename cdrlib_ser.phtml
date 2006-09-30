@@ -2161,49 +2161,6 @@ class CDRS_ser_radius extends CDRS {
             print "Import speed: $importSpeed packets / second\n";
         }
     }
-
-    function deleteMonthlyUsage () {
-
-    	$deleted_keys=0;
-
-        if (!$this->AccountsDBClass) {
-            print("Info: No database defined for SER accounts.\n");
-            return 0;
-        }
-
-        if (is_object($this->mc)) {
-
-	        $query="select * from subscriber";
-    	    dprint($query);
-        	$this->AccountsDB->query($query);;
-
-            while($this->AccountsDB->next_record()) {
-                $mc_key=$this->memcache_keyprefix.$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');;
-                if ($this->mc->delete($mc_key)) {
-                    $deleted_keys++;
-                }
-            }
-            if ($deleted_keys) {
-        		$log=sprintf("Deleted %d memcache keys\n",$deleted_keys);
-                print $log;
-				syslog(LOG_NOTICE, $log);
-            }
-
-        }
-
-        $query=sprintf("delete from memcache where `key` like '%s%s'",
-        $this->memcache_keyprefix,"%");
-    	dprint($query);
-        $this->cdrtool->query($query);
-
-		if ($this->cdrtool->affected_rows()) {
-        	$log=sprintf("Deleted %d mysql keys\n",$this->cdrtool->affected_rows());
-            print $log;
-			syslog(LOG_NOTICE, $log);
-        }
-
-        return 1;
-    }
 }
 
 class CDR_ser_radius extends CDR {

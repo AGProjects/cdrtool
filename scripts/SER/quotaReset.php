@@ -19,9 +19,6 @@ $SERQuota_class = $DATASOURCES[$cdr_source]["UserQuotaClass"];
 if (!$SERQuota_class) $SERQuota_class="SERQuota";
 
 $Quota = new $SERQuota_class($CDRS);
-$Quota->ResetUserQuotas();
-$CDRS->deleteMonthlyUsage();
-
-if (is_object($CDRS->mc)) $CDRS->mc->delete('quotaCheckInit');
+$Quota->deleteQuotaInitFlag();
 
 ?>
