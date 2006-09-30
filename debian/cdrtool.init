@@ -84,12 +84,15 @@ case "$1" in
         #sleep 1
         start
         ;;
+    force-reload)
+        reload
+        ;;
     reload)
         reload
         ;;
   *)
 	N=/etc/init.d/$NAME
-	echo "Usage: $N {start|stop|restart|reload|startmemcache|stopmemcache|restartmemcache}" >&2
+	echo "Usage: $N {start|stop|restart|reload|force-reload|startmemcache|stopmemcache|restartmemcache}" >&2
 	exit 1
 	;;
 esac
