@@ -2404,7 +2404,7 @@ class SERQuota {
         }
     }
 
-    function getMonthlyUsageFromCache() {
+    function getMonthlyUsageFromDatabaseCache() {
         $query=sprintf("select * from memcache where `key` like '%s%s'",
         $this->CDRS->memcache_keyprefix,"%");
 
@@ -2503,7 +2503,7 @@ class SERQuota {
         $toNotify=array();
 
 		if (!is_object($this->CDRS->mc)) {
-        	$this->getMonthlyUsageFromCache();
+        	$this->getMonthlyUsageFromDatabaseCache();
         }
 
 		$_checks=0;

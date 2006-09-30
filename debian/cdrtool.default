@@ -1,6 +1,6 @@
 # To enable rating engine first configure /var/www/CDRTool/global.inc
 RUN_ratingEngine=no
-START_MEMCACHE=yes
+START_MEMCACHE=no
 MEMCACHE_MEMORY=64
 MEMCACHE_IP=127.0.0.1
 MEMCACHE_PORT=11212
