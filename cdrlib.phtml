@@ -106,22 +106,33 @@ class CDRS {
         $_BillingIdField    = $this->DATASOURCES[$cdr_source]['BillingIdField'];
         $_MinPstnNumLen     = $this->DATASOURCES[$cdr_source]['MinPstnNumLen'];
 
-        if ($_dbClass) {
-            dprint ("CDRS will be read/write from/to database class $_dbClass ");
-            $this->db_class=$_dbClass;
-            $this->db_class_quota=$_dbClass;
-        }
+        if ($_dbClass) $this->db_class=$_dbClass;
 
         if ($_dbClass_readonly && $_dbClass_readonly != $_dbClass) {
             dprint ("CDRS can also be read from database class $_dbClass_readonly ");
-            $this->db_class_readonly=$_dbClass_readonly;
-            $this->db_class_quota   =$_dbClass_readonly;
+            if ($_dbClass_readonly) {
+                if (is_array($_dbClass_readonly)) {
+                    // select a random connection from the pool
+                    $_idx=array_rand($_dbClass_readonly);
+                    $this->db_class_readonly=$_dbClass_readonly[$_idx];
+            	} else {
+                    // select the only one class as string
+            		$this->db_class_readonly=$_dbClass_readonly;
+            	}
+            }
         }
+
+        if (!$this->db_class_readonly) $this->db_class_readonly=$_dbClass;
+
+        //printf ("CDRS will be written to database %s. ", $this->db_class);
+        //printf ("CDRS will be read from database %s. ",$this->db_class_readonly);
 
         // init db
         $this->cdrtool  = new DB_CDRTool();
         $this->CDRdb    = new $this->db_class;
         $this->CDRdb1   = new $this->db_class;
+
+        $this->CDRdb_readonly     = new $this->db_class_readonly;
 
 		if ($_intAccessCode)  $this->intAccessCode  = $_intAccessCode;
         if ($_UserQuotaTable) $this->UserQuotaTable = $_UserQuotaTable;
