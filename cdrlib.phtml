@@ -1330,11 +1330,14 @@ class CDRS {
             $accounts[$_key]['usage']['traffic']
             );
 
+
             $mc_key=sprintf("%s%s",$this->memcache_keyprefix,trim($_key));
 
         	if (is_object($this->mc)) {
                 // use memcache server
-                if ($this->mc->set($mc_key,$mc_value,0,2592000)) {  // expire in 30 days
+				$mc_expire=time()+31*24*3600;  // 31 days
+
+                if ($this->mc->set($mc_key,$mc_value,0,$mc_expire)) {  // expire in 30 days
                     //printf ("Set %s to: %s\n",$mc_key,$mc_value);
                     $saved_keys++;
                 } else {
