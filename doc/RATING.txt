@@ -22,7 +22,7 @@ customer may be assigned its own dedicated rating plans destination id and
 names.
 
 Chained profiles are possible to enable exception based rating. Multiple
-customers may share a common rate list while some destinations may be rated
+customers may share a common rate list, while some destinations may be rated
 differently, only the differences must be provisioned.
 
 Multiple time zones are supported for multiple billing parties hosted on the
@@ -43,7 +43,7 @@ in external data-sources and block customers in the SIP Proxy. This will not
 stop in real-time ongoing calls for customers exceeding their quota but
 provides in practice a perfect protection against fraudulent usage. 
 
-See the script scripts/SER/quotaCheck.php which is called from cron every 5
+See the script scripts/SER/quotaCheck.php, which is called from cron every 5
 minutes. To speed up the quota checking processs, which normally requires a
 full scan of the CDR table at each run, from version 4.7-0 onwards the
 actual usage per user is stored in a memcache server or a mysql table
@@ -52,9 +52,23 @@ mysql to avoid loading the database with queries. The usage data will be
 reused and incrementally updated during normalization process thus ofloading
 the server from scanning the whole table at each quota check interval.
 
-Memcached can be downloaded from http://www.danga.com/memcached
+To start/stop memcache use /etc/init.d/cdrtool command.
 
-PSTN rating -----------
+Memcached can be manually downloaded from http://www.danga.com/memcached or
+is automatically installed during debian package installation.
+
+To enable the use of memcached define the following setting in global.inc:
+
+$memcache_server  = "Private.IP.Address.Of.CDRTool.machine:11212";
+
+Beware that memcached server has no built in security, for this reason is
+advisable to configure it to listen only to a private network interface.
+
+PSTN rating 
+-----------
+
+The following steps are taken to rate the calls terminated to PSTN. The
+steps are performed during the normalization process.
 
 1. Lookup the call rate based on time (peak/of-peak, day of week, holiday) 
 
@@ -67,17 +81,20 @@ PSTN rating -----------
            "priceDecimalDigits" 	 => 4,     // Decimal information
            "minimumDurationCharged"      => 0,     // Rate a minimum of X seconds
            "durationPeriodRated" 	 => 60     // Rate is per 60 seconds
-           "trafficSizeRated"            => 1024   // Default we rate per 1 MB 
+           "trafficSizeRated"            => 1024,  // Default we rate per 1 MB 
+           "reportMissingRates"          => 0      // Send emails to administrator in case of missing rates
             );
 
    Pricing formula
    ---------------
-
+   if durationForRating > minimumDurationCharged then
    Price =
 	 connectCost/priceDenominator+
          durationRate*durationForRating/durationPeriodRated/priceDenominator+
          trafficRate/priceDenominator*(inputTraffic+outputTraffic)/8+
          applicationRate/priceDenominator
+   else 
+   Price = 0 	
 
 3. Save the calculated Price and DestinationId for each non zero price
    CDRs. Having the price stored in database, it is possible to build
@@ -157,7 +174,7 @@ NGN rating support rating of data traffic based on application type.
 
 
 Importing/exporting of rating files
-------------------------------------
+-----------------------------------
 
 There are different data files needed for rating CDRs. The data files are
 imported into corresponding MySQL tables. The files must be uploaded to
@@ -306,9 +323,10 @@ prepaid
 Rating tables management
 ------------------------
 
-The rating tables can be edited from the web, follow Rating tables link. One
-may insert/update/delete records or apply changes on selections. For example
-is possible to increase with XX units the rate for a specific destination.
+The rating tables can be edited from the web, click on Rating tables link.
+One may insert/update/delete records or apply changes on selections. For
+example it is possible to increase with XX units the rate for a specific
+destination.
 
 Numeric fields support mathematical operators [+-*/], one may update
 using absolute or relative values the fields in the rating tables.
@@ -345,11 +363,11 @@ the rating tables. If there is a change made to the database the link
 'Reload rating tables' appears in red color on web page. Click on the link to
 execute the reload.
 
-b. Telnet to the IP address and port number specified for the Rating engine in
-global.inc. Type help to see the list of commands available. Locate the
-reload rates command and execute it followed by an enter. You may see the
-result of the command in syslog. The results displayed by syslog will show
-how many entries have been reloaded from the rating table.
+b. Telnet to the IP address and port number specified for the Rating engine
+in global.inc. Type help to see the list of commands available. Locate the
+reload rates command and execute it followed by \n. You may see the result
+of the command in syslog. The results displayed by syslog will show how many
+entries have been reloaded from the rating table.
 
 c. Run /etc/init.d/cdrtool reload command
 
@@ -371,15 +389,15 @@ missing entries in the rating tables if the system where CDRTool runs is
 properly configured to send emails and the e-mail notification addresses are
 set in global.inc:
  
-$CDRTool['provider']['toEmail']   ="support@example.com";
-$CDRTool['provider']['bccEmail'] ="cdrtool@example.com";
+$CDRTool['provider']['toEmail']  = "support@example.com";
+$CDRTool['provider']['bccEmail'] = "cdrtool@example.com";
 
 
 Re-rating calls
 ---------------
 
 Sometimes is useful the change the rates for calls that have been already
-normalized and rated, for example after changing the rating table you wish
+normalized and rated, for example after changing the rating tables you wish
 to apply the changes retroactively for the last month. To re-rate the CDRs
 based on different tables do the following:
 
@@ -390,7 +408,7 @@ csv directory) or edit the rating tables using the WEB interface
 
    /var/www/CDRTool/scripts/importRatingTables.php
 
-3. Renormalize the calls to be re-rated by either selecting ReNormalize
+3. Re-normalize the calls to be re-rated by either selecting ReNormalize
    check-box in the search screen or by changing the Normalized field in the
    CDR MySQL table (e.g. radacct):
 
@@ -407,19 +425,20 @@ csv directory) or edit the rating tables using the WEB interface
 
    /var/www/CDRTool/scripts/normalize.php
 
-Warnings:
+Warning:
 
-Renormalization process can take long time durring which your database
-(radacct tablea) may be locked. Perform this operation only during low
+Renormalization process can take long time during which your database
+(radacct table) will be locked. Perform this operation only during low
 traffic periods.
 
 After renormalization, the monthly usage information used by the quota
-system will be out of date. You must reinit the actual usage based on the
-new rating information by running once the script scripts/SER/quotaInit.php
+system will be out of date. At the next run of the quotaCheck script, a full
+table scan will be performed.
 
 Holidays must be added as individual days YYYY-MM-DD in table
 billing_holidays. The profile applied for holidays is the same as for
 week-ends.
+
 
 Sending custom notifications when quota is exceeded
 ---------------------------------------------------
@@ -441,6 +460,7 @@ per called party.
 Price discounts must be applied outside CDRTool, in the billing system that
 prints the actual invoices. CDRTool has no possibility to rate only calls
 after X minutes per month for subscriber Y, all calls are rated uniformly.
+
 
 Notes
 -----
@@ -496,4 +516,3 @@ Clients		Rating command			Execution speed
 
 Client means either a SIP Proxy entity or a CDRTool server, which performs
 the normalization process.
- 

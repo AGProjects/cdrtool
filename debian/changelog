@@ -1,8 +1,9 @@
 cdrtool (4.7-1) unstable; urgency=low
 
   * Renamed database class used by quota check system
+  * Updated rating documentation 
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu,  5 Oct 2006 19:42:27 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 11 Oct 2006 09:27:28 +0200
 
 cdrtool (4.7-0) unstable; urgency=low
 

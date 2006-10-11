@@ -118,14 +118,15 @@ extending one of the existing classes (ser, asterisk or cisco).
 global.inc.in contains a more elaborate example for setting up 
 datasources
 
+
 Enable rating engine
 --------------------
 
-It is used as a rating engine for prepaid applications and as price
-caluclator for postpaid traffic. It provides access to the rating tables and
-stays in memory (running as a daemon) to avoid reading the rating table at
-every request. The rating tables can be reloaded without restarting the
-software.
+The rating engine is used for prepaid applications and as price calculator
+for postpaid traffic. It provides access to the rating tables and stays in
+memory (running as a daemon) to avoid reading the rating tables at every
+rating request. The rating tables can be reloaded without restarting the
+rating engine.
 
 See the information in the head of the scripts/ratingEngine.php daemon for
 how to enable prepaid or other rating functionality. For prepaid, an
