@@ -420,3 +420,29 @@ sample configuration file for monit is available in setup/monit/monitrc.
 Edit the IP address and hostname where the rating engine runs and copy
 /var/www/CDRTool/setup/monit/monitrc /etc/monit/monit.d/cdrtool
 
+Graphical statistics
+--------------------
+
+CDRTool can build graphical statistics of the number of SIP online users
+from OpenSER and simultaneous media streams and IP traffic from MediaProxy.
+
+Define DB_siponline as a new database class in globa.inc. Example:
+
+class DB_siponline extends DB_Sql {
+  var $Host     = "db";
+  var $Database = "openser";
+  var $User     = "openser";
+  var $Password = "password";
+  var $Halt_On_Error ="no";
+}
+
+Define all media proxy servers in
+/var/www/CDRTool/status/config/media_servers.php
+
+Run /var/www/CDRTool/scripts/buildStatistics.php script. Check
+/tmp/CDRTool-sip-statistics.txt file to see the output
+
+Run /var/www/CDRTool/scripts/generateHTMLUsageIndexFile.php to generate
+/var/www/CDRTool/status/usage/index.html index page
+
+Visit the Usage page link from the main menu
