@@ -1,3 +1,9 @@
+cdrtool (4.7-2) unstable; urgency=low
+
+  * Added monthly usage caches for SIP domains and platform total in and out
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 13 Oct 2006 12:45:25 +0200
+
 cdrtool (4.7-1) unstable; urgency=low
 
   * Renamed database class used by quota check system

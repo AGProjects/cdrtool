@@ -1492,7 +1492,7 @@ class CDRS_ser_radius extends CDRS {
                         } else {
                         	$cached_place="database";
                         }
-                        printf ("Cached usage for %d users in %s. ",$this->status['cached_keys']['saved_keys'],$cached_place);
+                        printf ("Cached usage for %d entities in %s. ",$this->status['cached_keys']['saved_keys'],$cached_place);
                     }
                 }
             }
@@ -1812,8 +1812,6 @@ class CDRS_ser_radius extends CDRS {
 
     function LoadDomains() {
 
-        $mc_value="";
-
         if (!$this->AccountsDBClass) {
             dprint("Info: No database defined for SER accounts");
             return 0;
@@ -1825,6 +1823,8 @@ class CDRS_ser_radius extends CDRS {
             //print $log;
             //syslog(LOG_NOTICE,$log);
         } else {
+        	$mc_value="";
+
             $query="select * from domain";
             if ($this->CDRTool['filter']['aNumber']) {
                 $els=explode("@",$this->CDRTool['filter']['aNumber']);
@@ -1844,12 +1844,13 @@ class CDRS_ser_radius extends CDRS {
 
             $this->localDomains=explode(" ",$mc_value);
 
-            if ($this->mc && $this->mc->set('sip_domains',$mc_value,MEMCACHE_COMPRESSED,3600)) {
+            if ($this->mc && $this->mc->set('sip_domains',$mc_value,0,3600)) {
                 $log=sprintf("Saved %d domains in memcache\n",count($this->localDomains));
                 //print $log;
                 syslog(LOG_NOTICE,$log);
             }
         }
+
         return count($this->localDomains);
     }
 

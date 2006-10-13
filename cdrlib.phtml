@@ -1504,6 +1504,7 @@ class CDR {
                 $updatedFields++;
                 $query=$query." $Field = '".addslashes($this->domainNormalized)."' ";
                 $this->domainNumber=$this->domainNormalized;
+                $this->domain=$this->domainNormalized;
             }
 
             if ($this->cNumberNormalized && $this->cNumberNormalized!=$this->cNumber) {
@@ -1626,9 +1627,19 @@ class CDR {
                                                              "cost"     => $Rate->price,
                                                              "traffic"  => $_traffic
                                                              );
-    
-                        $this->cacheMonthlyUsage($_usage);
+                        $_usage[$this->domain]['usage']= $_usage[$this->BillingPartyId]['usage'];
+                        $_usage['platform_out']['usage']= $_usage[$this->BillingPartyId]['usage'];
+
+                    } else {
+                        $_usage['platform_in']['usage']=array("calls"    => 1,
+                                                             "duration" => $this->duration,
+                                                             "cost"     => $Rate->price,
+                                                             "traffic"  => $_traffic
+                                                             );
+
                     }
+
+                    $this->cacheMonthlyUsage($_usage);
 
                     return 1;
                 } else {
@@ -1667,17 +1678,21 @@ class CDR {
 
     function cacheMonthlyUsage($accounts) {
 
-        if (!$this->isCallerLocal() || !is_array($accounts)) return ;
+        if (!is_array($accounts)) return ;
 
         foreach (array_keys($accounts) as $_account) {
 
-            $_usage = $this->CDRS->getMonthlyUsageFromCache($_account);
+        	if ($this->isCallerLocal() || $_account == 'platform_in' || $_account == 'platform_in') {
 
-        	$accounts[$_account]['usage']['calls']    =  $accounts[$_account]['usage']['calls']    + $_usage['calls'];
-            $accounts[$_account]['usage']['duration'] =  $accounts[$_account]['usage']['duration'] + $_usage['duration'];
-            $accounts[$_account]['usage']['cost']     =  $accounts[$_account]['usage']['cost']     + $_usage['cost'];
-            $accounts[$_account]['usage']['traffic']  =  $accounts[$_account]['usage']['traffic']  + $_usage['traffic'];
+	            $_usage = $this->CDRS->getMonthlyUsageFromCache($_account);
 
+    	    	$accounts[$_account]['usage']['calls']    =  $accounts[$_account]['usage']['calls']    + $_usage['calls'];
+        	    $accounts[$_account]['usage']['duration'] =  $accounts[$_account]['usage']['duration'] + $_usage['duration'];
+            	$accounts[$_account]['usage']['cost']     =  $accounts[$_account]['usage']['cost']     + $_usage['cost'];
+	            $accounts[$_account]['usage']['traffic']  =  $accounts[$_account]['usage']['traffic']  + $_usage['traffic'];
+            } else {
+                return ;
+            }
         }
 
         $this->CDRS->cacheMonthlyUsage($accounts);

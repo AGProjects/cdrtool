@@ -2465,12 +2465,32 @@ class SERQuota {
         while($this->CDRdb_readonly->next_record()) {
             $account = $this->CDRdb_readonly->f($this->BillingPartyIdField);
 
-            list($username,$domain)=explode("@",$account);
 
             $this->SERAccounts[$account]['usage']['calls']    = $this->SERAccounts[$account]['usage']['calls']    + $this->CDRdb_readonly->f('calls');
             $this->SERAccounts[$account]['usage']['duration'] = $this->SERAccounts[$account]['usage']['duration'] + $this->CDRdb_readonly->f('duration');
             $this->SERAccounts[$account]['usage']['cost']     = $this->SERAccounts[$account]['usage']['cost']     + $this->CDRdb_readonly->f('cost');
             $this->SERAccounts[$account]['usage']['traffic']  = $this->SERAccounts[$account]['usage']['traffic']  + $this->CDRdb_readonly->f('traffic');
+
+            if (list($username,$domain)=explode("@",$account)) {
+                $this->SERAccounts[$domain]['usage']['calls']    = $this->SERAccounts[$domain]['usage']['calls']    + $this->CDRdb_readonly->f('calls');
+                $this->SERAccounts[$domain]['usage']['duration'] = $this->SERAccounts[$domain]['usage']['duration'] + $this->CDRdb_readonly->f('duration');
+                $this->SERAccounts[$domain]['usage']['cost']     = $this->SERAccounts[$domain]['usage']['cost']     + $this->CDRdb_readonly->f('cost');
+                $this->SERAccounts[$domain]['usage']['traffic']  = $this->SERAccounts[$domain]['usage']['traffic']  + $this->CDRdb_readonly->f('traffic');
+            } else {
+                $domain=$account;
+            }
+
+        	if (in_array($domain,$this->CDRS->localDomains)) {
+                $this->SERAccounts['platform_out']['usage']['calls']    = $this->SERAccounts['platform_out']['usage']['calls']    + $this->CDRdb_readonly->f('calls');
+                $this->SERAccounts['platform_out']['usage']['duration'] = $this->SERAccounts['platform_out']['usage']['duration'] + $this->CDRdb_readonly->f('duration');
+                $this->SERAccounts['platform_out']['usage']['cost']     = $this->SERAccounts['platform_out']['usage']['cost']     + $this->CDRdb_readonly->f('cost');
+                $this->SERAccounts['platform_out']['usage']['traffic']  = $this->SERAccounts['platform_out']['usage']['traffic']  + $this->CDRdb_readonly->f('traffic');
+            } else {
+                $this->SERAccounts['platform_in']['usage']['calls']    = $this->SERAccounts['platform_in']['usage']['calls']    + $this->CDRdb_readonly->f('calls');
+                $this->SERAccounts['platform_in']['usage']['duration'] = $this->SERAccounts['platform_in']['usage']['duration'] + $this->CDRdb_readonly->f('duration');
+                $this->SERAccounts['platform_in']['usage']['cost']     = $this->SERAccounts['platform_in']['usage']['cost']     + $this->CDRdb_readonly->f('cost');
+                $this->SERAccounts['platform_in']['usage']['traffic']  = $this->SERAccounts['platform_in']['usage']['traffic']  + $this->CDRdb_readonly->f('traffic');
+            }
 
             $j++;
 
@@ -2864,7 +2884,7 @@ class SERQuota {
 	    		    syslog(LOG_NOTICE, $log);
 		            return 0;
                 }
-    		}
+            }
 		} else {
 		    $query="select * from memcache where `key` = 'quotaCheckInit'";
             dprint($query);
