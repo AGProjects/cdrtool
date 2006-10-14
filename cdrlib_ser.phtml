@@ -4213,11 +4213,11 @@ class SER_trace {
         <a name=#top>
         <table cellpadding=0 border=0 width=100%>";
 
-        $colspan=1+count($column);
+        $colspan=2+count($column);
 
         print "<tr bgcolor=lightgrey>
         <td><b>Packet</b></td>
-        <td><b>Time</b></td>
+        <td><b>Date and time</b></td>
         ";
         foreach (array_keys($column) as $_key) {
             printf ("<td class=border><b>%s</h3></b>",$_key);
@@ -4244,6 +4244,24 @@ class SER_trace {
             $timeline=$timestamp-$begin_timestamp;
 
             if ($msg) {
+                $SIPclass=substr($status,0,1);
+        
+                if ($SIPclass=="6") {
+                    $status_color="<font color=red>";
+                } else if ($SIPclass=="5" ) {
+                    $status_color="<font color=red>";
+                } else if ($SIPclass=="4" ) {
+                    $status_color="<font color=blue>";
+                } else if ($SIPclass=="3" ) {
+                    $status_color="<font color=green>";
+                } else if ($SIPclass=="2" ) {
+                    $status_color="<font color=green>";
+                } else if ($SIPclass=="1" ) {
+                    $status_color="<font color=\"#cc6600\">";
+                } else  {
+                    $status_color="<font color=black>";
+                }
+
                 $_lines=explode("\n",$msg);
 
                 if (preg_match("/^(.*) SIP/",$_lines[0],$m)) {
@@ -4263,18 +4281,19 @@ class SER_trace {
 
                 print "
                 <tr>
-        		<td class=border align=right>$i/$rows</td>
-                <td colspan=$_span class=border>$date</td>
+        		<td class=border align=right>$i/$rows&nbsp;</td>
+                <td colspan=$_span class=border> $date</td>
                 ";
                 print "
                 <td class=border onClick=\"return toggleVisibility('row$i')\">
                 <a name=\"packet$i\">
-                $_lines[0]
+                $status_color $_lines[0] 
                 ";
 
                 if ($direction == "out") {
-                	print " to <font color=#5060E0>$toip</font>";
+                	print " to $toip";
                 }
+                print "</font>";
 
                 print "
                 </a>
@@ -4293,8 +4312,10 @@ class SER_trace {
                     }
                 }
 
+				$trace_span=count($column);
                 print "
                 <tr>
+                <td colspan=2></td>
                 <td colspan=$colspan>
                 ";
 
@@ -4320,23 +4341,6 @@ class SER_trace {
             
                 $msg=nl2br(htmlentities($msg));
                 //$msg=htmlentities($msg);
-                $SIPclass=substr($status,0,1);
-        
-                if ($SIPclass=="6") {
-                    $status_color="<font color=red>";
-                } else if ($SIPclass=="5" ) {
-                    $status_color="<font color=red>";
-                } else if ($SIPclass=="4" ) {
-                    $status_color="<font color=blue>";
-                } else if ($SIPclass=="3" ) {
-                    $status_color="<font color=green>";
-                } else if ($SIPclass=="2" ) {
-                    $status_color="<font color=green>";
-                } else if ($SIPclass=="1" ) {
-                    $status_color="<font color=\"#cc6600\">";
-                } else  {
-                    $status_color="<font color=black>";
-                }
 
                 print "
                 </td>
