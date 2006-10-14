@@ -4145,33 +4145,22 @@ class SER_trace {
 
 		$fullURL=$protocolURL.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 
-        print "<p>
-        <a name=#top>
-        <table cellpadding=0 border=0>";
-
         if ($this->db->num_rows()) {
 	        print "
-    	    <tr>
-        	<td colspan=3>
-	        <a href=$fullURL>URL for this trace</a>
-        	</td>
-	        </tr>
+	        <p><a href=$fullURL>CDRTool trace for SIP session $callid</a>
     	    ";
 
         } else {
-            print "<tr>
-            <td colspan=3>SIP trace for session id $callid is not available anymore.
-            <p>SIP traces are available for the last $this->purgeRecordsAfter days.
-            </td>
-            </tr>
-            </table>";
+            print "<p>
+            SIP trace for session id $callid is not available.
+            ";
             return;
         }
 
-        print "<tr><td colspan=3><p></td></tr>";
+
+		$tableColumns=0;
 
         while ($this->db->next_record()) {
-
             $trace_array[]=array (
                                   'id'        => $this->db->f('id'),
                                   'method'    => $this->db->f('method'),
@@ -4183,12 +4172,16 @@ class SER_trace {
                                   'direction' => $this->db->f('direction'),
                                   'timestamp' => $this->db->f('timestamp')
                                   );
+
+            if (strlen($this->db->f('fromip')) && !$column[$this->db->f('fromip')]) {
+                $column[$this->db->f('fromip')]=$tableColumns+1;
+                $tableColumns++;
+            }
         }
 
         $i=0;
         print "
-        <tr>
-        <td colspan=3 align=left>
+        <p>
         ";
 
         foreach ($trace_array as $_trace) {
@@ -4216,11 +4209,20 @@ class SER_trace {
         }
 
         print "
-        </td>
-        </tr>
-        ";
+        <p>
+        <a name=#top>
+        <table cellpadding=0 border=0 width=100%>";
 
-        print "<tr><td colspan=3><p></td></tr>";
+        $colspan=1+count($column);
+
+        print "<tr bgcolor=lightgrey>
+        <td><b>Packet</b></td>
+        <td><b>Time</b></td>
+        ";
+        foreach (array_keys($column) as $_key) {
+            printf ("<td class=border><b>%s</h3></b>",$_key);
+        }
+        print "</tr>";
 
         $i=0;
 
@@ -4247,27 +4249,35 @@ class SER_trace {
                 if (preg_match("/^(.*) SIP/",$_lines[0],$m)) {
                     $_lines[0]=$m[1];
                 } else if (preg_match("/^SIP\/2\.0 (.*)/",$_lines[0],$m)) {
-                    $_lines[0]="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$m[1];
+                    $_lines[0]=$m[1];
                 }
 
-				$time=substr($date,10);
+				if ($direction == "out") $fromip="127.0.0.1";
+
+                $_span=1;
+                $t=1;
+                while ($t < $column[$fromip]) {
+                    $_span++;
+                    $t++;
+                }
 
                 print "
                 <tr>
-                <td bgcolor=lightgrey colspan=2 onClick=\"return toggleVisibility('row$i')\">
+        		<td class=border align=right>$i/$rows</td>
+                <td colspan=$_span class=border>$date</td>
+                ";
+                print "
+                <td class=border onClick=\"return toggleVisibility('row$i')\">
                 <a name=\"packet$i\">
-                $time : $_lines[0]
+                $_lines[0]
                 ";
 
                 if ($direction == "out") {
                 	print " to <font color=#5060E0>$toip</font>";
-                } else {
-                	print " from <font color=#1A9C1A>$fromip</font>";
                 }
 
                 print "
                 </a>
-                 Packet $i/$rows
                 </td>
                 </tr>
                 ";
@@ -4285,7 +4295,7 @@ class SER_trace {
 
                 print "
                 <tr>
-                <td colspan=3>
+                <td colspan=$colspan>
                 ";
 
                 print "
