@@ -2,8 +2,10 @@ cdrtool (4.7-2) unstable; urgency=low
 
   * Added monthly usage caches for SIP domains and platform total in and out
   * Improve display of SIP traces
+  * Added new screenshots
+  * Removed _darcs directory from the debian package
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 14 Oct 2006 16:02:18 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 14 Oct 2006 16:55:25 +0200
 
 cdrtool (4.7-1) unstable; urgency=low
 
