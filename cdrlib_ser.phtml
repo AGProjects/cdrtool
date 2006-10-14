@@ -4254,6 +4254,9 @@ class SER_trace {
                     $_lines[0]=$m[1];
                 }
 
+                $_els=explode(";",$_lines[0]);
+
+
 				if ($direction == "out") $fromip="127.0.0.1";
 
                 $_span=1;
@@ -4281,7 +4284,7 @@ class SER_trace {
                 print "
                 <td class=border onClick=\"return toggleVisibility('row$i')\">
                 <a name=\"packet$i\">
-                $status_color $_lines[0] 
+                $status_color $_els[0]
                 ";
 
                 if ($direction == "out") {
