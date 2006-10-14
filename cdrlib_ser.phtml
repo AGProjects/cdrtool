@@ -2472,7 +2472,7 @@ class CDR_ser_radius extends CDR {
             $fromtag_enc  = urlencode($this->SipFromTag);
 
         	$this->callIdPrint="&nbsp;<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$accDS&callid=$callid_enc&fromtag=$fromtag_enc', 'Trace',
-            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=850,height=500')\">$this->callId</a> &nbsp;";
+            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">$this->callId</a> &nbsp;";
         } else {
             $this->callIdPrint=$this->callId;
         }
@@ -4147,7 +4147,14 @@ class SER_trace {
 
         if ($this->db->num_rows()) {
 	        print "
-	        <p><a href=$fullURL>CDRTool trace for SIP session $callid</a>
+            <h2>CDRTool trace for SIP session $callid</h2>
+
+            <table border=0 width=100%>
+            <tr>
+            <td><a href=$fullURL>URL for this trace</a></td>
+            <td align=right>Click on the SIP message to see the trace</a>
+            </tr>
+            </table>
     	    ";
 
         } else {
@@ -4184,30 +4191,6 @@ class SER_trace {
         <p>
         ";
 
-        foreach ($trace_array as $_trace) {
-            $i++;
-
-            $method      = $_trace['method'];
-            $status      = $_trace['status'];
-            $timestamp   = $_trace['timestamp'];
-            $direction   = $_trace['direction'];
-
-            if ($i==1) $begin_timestamp = $timestamp;
-            $timeline=$timestamp-$begin_timestamp;
-
-            if ($i > 1) print "| ";
-            if ($timeline > 0 && $timeline != $timeline_prev) printf ("+%ss ",$timeline);
-
-            if ($status) {
-            	print "<a href=\"#packet$i\">$status</a> $direction";
-            } else {
-            	print "<a href=\"#packet$i\">$method</a> $direction";
-            }
-
-            $method_prev = $method;
-            $timeline_prev = $timeline;
-        }
-
         print "
         <p>
         <a name=#top>
@@ -4216,6 +4199,7 @@ class SER_trace {
         $colspan=2+count($column);
 
         print "<tr bgcolor=lightgrey>
+        <td></td>
         <td><b>Packet</b></td>
         <td><b>Date and time</b></td>
         ";
@@ -4281,8 +4265,18 @@ class SER_trace {
 
                 print "
                 <tr>
-        		<td class=border align=right>$i/$rows&nbsp;</td>
-                <td colspan=$_span class=border> $date</td>
+                <td>
+                ";
+
+                if (!$_seen_timeline[$timeline]) {
+                	printf ("%s+%ds </font>",$status_color,$timeline);
+                    $_seen_timeline[$timeline]++;
+                }
+
+                print "
+                </td>
+        		<td class=border align=right>$status_color$i/$rows&nbsp;</font></td>
+                <td colspan=$_span class=border>$status_color$date</font></td>
                 ";
                 print "
                 <td class=border onClick=\"return toggleVisibility('row$i')\">
@@ -4315,7 +4309,7 @@ class SER_trace {
 				$trace_span=count($column);
                 print "
                 <tr>
-                <td colspan=2></td>
+                <td colspan=3></td>
                 <td colspan=$colspan>
                 ";
 
