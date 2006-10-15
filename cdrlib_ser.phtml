@@ -4168,6 +4168,7 @@ class SER_trace {
 		$tableColumns=0;
 
         while ($this->db->next_record()) {
+
             $trace_array[]=array (
                                   'id'        => $this->db->f('id'),
                                   'method'    => $this->db->f('method'),
@@ -4254,6 +4255,33 @@ class SER_trace {
                     $_lines[0]=$m[1];
                 }
 
+
+                unset($media);
+                unset($diversions);
+
+                $j=0;
+                $t=0;
+                foreach ($_lines as $_line) {
+                	if (preg_match("/^(Diversion:).*;(.*)$/",$_line,$m)) {
+                        $diversions[]=$m[1].$m[2];
+                	}
+
+                    if (preg_match("/^c=IN \w+ ([\d|\w\.]+)/i",$_line,$m)) {
+                        $media['ip']=$m[1];
+                    }
+
+                    if (preg_match("/^m=(\w+) (\d+) /i",$_line,$m)) {
+                        $t++;
+                        $media['streams'][$t]=$m[1].":".$media['ip'].":".$m[2];
+
+                    }
+                    if (preg_match("/^a=alt:1/i",$_line,$m)) {
+                        $media['streams'][$t]=$media['streams'][$t]." ICE";
+                    }
+                    $j++;
+
+                }
+
                 $_els=explode(";",$_lines[0]);
 
 
@@ -4290,6 +4318,19 @@ class SER_trace {
                 if ($direction == "out") {
                 	print " to $toip";
                 }
+
+                if (is_array($diversions)) {
+                	foreach ($diversions as $_diversion) {
+                    	print "<br><b>$_diversion</b>";
+                    }
+                }
+
+                if (is_array($media['streams'])) {
+                    foreach ($media['streams'] as $_stream) {
+                        print "<br><b>$_stream</b>";
+                    }
+                }
+
                 print "</font>";
 
                 print "
