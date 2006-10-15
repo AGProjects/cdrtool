@@ -715,11 +715,16 @@ class pageLayout {
         "You may NOT rent, lease, sell, lend or sublicense this or parts of this ".
         "software to others without prior permission from AG Projects. ";
 
+        /*
+        
         if ($CDRTool[filter][aNumber]) {
             $next_page="callsearch.phtml";
         } else {
             $next_page="frames.phtml";
         }
+        */
+        $next_page="callsearch.phtml";
+        
         $loginName=$CDRTool[loginName];
 		$this->hasAGProjectslogo=1;
 

@@ -4199,7 +4199,7 @@ class SER_trace {
         $colspan=2+count($column);
 
         print "<tr bgcolor=lightgrey>
-        <td></td>
+        <td bgcolor=white></td>
         <td><b>Packet</b></td>
         <td><b>Date and time</b></td>
         ";
@@ -4271,7 +4271,7 @@ class SER_trace {
                 <td>
                 ";
 
-                if (!$_seen_timeline[$timeline]) {
+                if ($timeline && !$_seen_timeline[$timeline]) {
                 	printf ("%s+%ds </font>",$status_color,$timeline);
                     $_seen_timeline[$timeline]++;
                 }

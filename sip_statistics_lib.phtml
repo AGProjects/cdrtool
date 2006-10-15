@@ -17,7 +17,12 @@ class SIPstatistics {
 
         $this->db        = new DB_cdrtool();
         $this->ser_db    = new DB_ser();
-        $this->online_db = new DB_siponline();
+
+        if (is_object('DB_siponline')) {
+        	$this->online_db = new DB_siponline();
+        } else {
+        	$this->online_db = new DB_ser();
+        }
 
         $path = dirname(realpath($_SERVER['PHP_SELF']));
         include($path."/../status/config/media_servers.php");
