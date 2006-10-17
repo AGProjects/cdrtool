@@ -4200,7 +4200,7 @@ class SER_trace {
         $colspan=2+count($column);
 
         print "<tr bgcolor=lightgrey>
-        <td bgcolor=white></td>
+        <td></td>
         <td><b>Packet</b></td>
         <td><b>Date and time</b></td>
         ";
@@ -4318,7 +4318,7 @@ class SER_trace {
                 ";
 
                 if ($direction == "out") {
-                	print " to $toip";
+                	print "<br>Destination: $toip";
                 }
 
                 if (is_array($diversions)) {
