@@ -18,7 +18,7 @@ class SIPstatistics {
         $this->db        = new DB_cdrtool();
         $this->ser_db    = new DB_ser();
 
-        if (is_object('DB_siponline')) {
+        if (class_exists('DB_siponline')) {
         	$this->online_db = new DB_siponline();
         } else {
         	$this->online_db = new DB_ser();
@@ -29,7 +29,6 @@ class SIPstatistics {
 
         $this->mediaServers=$servers;
 	}
-
 
     function getSipEnabledZones () {
         global $CDRTool;
@@ -247,7 +246,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
             $this->online[$this->online_db->f('domain')]=$this->online_db->f('c');
         }
 
-        //dprint_r($this->online);
+        dprint_r($this->online);
 	}
 
 

@@ -4195,7 +4195,7 @@ class SER_trace {
         print "
         <p>
         <a name=#top>
-        <table cellpadding=0 border=0 width=100%>";
+        <table cellpadding=0 cellspacing=0 border=0 width=100%>";
 
         $colspan=2+count($column);
 
@@ -4255,7 +4255,6 @@ class SER_trace {
                     $_lines[0]=$m[1];
                 }
 
-
                 unset($media);
                 unset($diversions);
 
@@ -4294,8 +4293,12 @@ class SER_trace {
                     $t++;
                 }
 
+
+                $_rest_span=count($column)-$_span;
+			    $_line_span=count($column)+2;
+
                 print "
-                <tr>
+                <tr onClick=\"return toggleVisibility('row$i')\">
                 <td>
                 ";
 
@@ -4306,11 +4309,11 @@ class SER_trace {
 
                 print "
                 </td>
-        		<td class=border align=right>$status_color$i/$rows&nbsp;</font></td>
-                <td colspan=$_span class=border>$status_color$date</font></td>
+        		<td class=bbot align=right>$status_color$i/$rows&nbsp;</font></td>
+                <td class=bbot colspan=$_span><nobr>$status_color$date</nobr></font></td>
                 ";
                 print "
-                <td class=border onClick=\"return toggleVisibility('row$i')\">
+                <td class=bbot colspan=$_rest_span>
                 <a name=\"packet$i\">
                 $status_color $_els[0]
                 ";
@@ -4351,6 +4354,7 @@ class SER_trace {
                 }
 
 				$trace_span=count($column);
+
                 print "
                 <tr>
                 <td colspan=3></td>
