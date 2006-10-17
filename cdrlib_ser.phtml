@@ -4147,7 +4147,7 @@ class SER_trace {
 
         if ($this->db->num_rows()) {
 	        print "
-            <h2>CDRTool trace for SIP session $callid</h2>
+            <h3>SIP session trace $callid</h3>
 
             <table border=0 width=100%>
             <tr>
@@ -4205,7 +4205,8 @@ class SER_trace {
         <td><b>Date and time</b></td>
         ";
         foreach (array_keys($column) as $_key) {
-            printf ("<td class=border><b>%s</h3></b>",$_key);
+            if ($_key=='127.0.0.1') $_key='SIP Proxy';
+            printf ("<td class=border align=center><b>%s</h3></b>",$_key);
         }
         print "</tr>";
 
@@ -4309,11 +4310,9 @@ class SER_trace {
 
                 print "
                 </td>
-        		<td class=bbot align=right>$status_color$i/$rows&nbsp;</font></td>
-                <td class=bbot colspan=$_span><nobr>$status_color$date</nobr></font></td>
-                ";
-                print "
-                <td class=bbot colspan=$_rest_span>
+        		<td align=right class=border>$status_color$i/$rows&nbsp;</font></td>
+                <td colspan=$_span class=border><nobr>$status_color$date</nobr></font></td>
+                <td class=border>
                 <a name=\"packet$i\">
                 $status_color $_els[0]
                 ";
