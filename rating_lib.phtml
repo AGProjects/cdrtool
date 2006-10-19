@@ -2528,6 +2528,9 @@ class SERQuota {
 		$_checks=0;
         foreach (array_keys($this->SERAccounts) as $account) {
 
+            // skip generic domains and platform total usage
+            if ($account=='platform_in' || $account=='platform_out' || in_array($account,$this->CDRS->localDomains)) continue;
+
             list($username,$domain)=explode("@",$account);
 
 			if (is_object($this->CDRS->mc)) $this->SERAccounts[$account]['usage']=$this->CDRS->getMonthlyUsageFromCache($account);
