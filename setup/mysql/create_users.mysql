@@ -1,9 +1,8 @@
-# Access to main cdrtool database
-grant ALL ON cdrtool.* TO cdradmin@localhost IDENTIFIED by "ndd18vv";
-grant ALL ON cdrtool.* TO cdradmin@'192.168.%' IDENTIFIED by "ndd18vv";
-grant ALL ON cdrtool.* TO cdradmin@'10.%' IDENTIFIED by "ndd18vv";
+# Access to cdrtool database
+# Replace PASSWORD and PRIVATE_IP_NETWORK with real values
 
-# SQL user required to limit concurent normalization processes
-grant ALL ON cdrtool.* TO locker@'localhost' identified by 'lockadm18';
-grant ALL ON cdrtool.* TO locker@'192.168.%' identified by 'lockadm18';
-grant ALL ON cdrtool.* TO locker@'10.%' identified by 'lockadm18';
+GRANT ALL ON cdrtool.* TO cdradmin@'localhost.localdomain' IDENTIFIED by 'PASSWORD';         
+GRANT ALL ON cdrtool.* TO cdradmin@'PRIVATE_IP_NETWORK.%' IDENTIFIED by 'PASSWORD'; 
+
+GRANT ALL ON cdrtool.* TO locker@'localhost.localdomain' IDENTIFIED by 'lockadm18'; 
+GRANT ALL ON cdrtool.* TO locker@'PRIVATE_IP_NETWORK.%' IDENTIFIED by 'lockadm18';
