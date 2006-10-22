@@ -785,4 +785,9 @@ class pageLayout {
         ";
     }
 }
+
+function unLockTables ($dbid) {
+	$dbid->query("unlock tables");
+}
+
 ?>

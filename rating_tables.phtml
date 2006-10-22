@@ -66,9 +66,7 @@ $loginname=$auth->auth["uname"];
 $RatingTables=new RatingTables();
 $tables=$RatingTables->tables;
 
-if (!$table) {
-    $table="destinations";
-}
+if (!$table) $table="destinations";
 
 $whereDomainFilter = " (1=1) ";
 if ($CDRTool['filter']['domain']) {
@@ -138,8 +136,44 @@ if ($action =="update" && $table) {
 
 		$query = $query." where id = '".$id."' and $whereDomainFilter";
 		dprint($query);
+
+        if ($table=="prepaid") {
+			register_shutdown_function("unLockTables",$db);
+
+        	if ($db->query("lock table prepaid write")) {
+        		$query_q=sprintf("select * from prepaid where account = '%s'",addslashes($account));
+	            dprint($query_q);
+    	    	if ($db->query($query_q) && $db->num_rows()) {
+                    $db->next_record();
+                	$old_balance=$db->f('balance');
+                }
+
+        		$db->query("unlock tables");
+            }
+        }
+
         if ($db->query($query)) {
-        	if ($db->affected_rows()) $db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+        	if ($db->affected_rows()) {
+            	$db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+                if ($table=="prepaid") {
+                    list($username,$domain)=explode("@",$account);
+
+                    $value=$balance-$old_balance;
+
+                    if (floatval($balance) != floatval($old_balance))  {
+                        $query=sprintf("insert into prepaid_history (username,domain,action,number,value,balance,date)
+                        values ('%s','%s','Set balance','Manual update by %s','%s','%s',NOW())",
+                        addslashes($username),
+                        addslashes($domain),
+                        addslashes($loginname),
+                        addslashes($value),
+                        addslashes($balance)
+                        );
+                        dprint($query);
+        				$db->query($query);
+                    }
+                }
+            }
         } else {
             printf ("<font color=red>Database error: %s</font>",$db->Error);
         }

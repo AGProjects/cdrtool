@@ -1753,10 +1753,6 @@ function sec2hms ($duration) {
     return $duration_print;
 }
 
-function unLockTables ($dbid) {
-	$dbid->query("unlock tables");
-}
-
 function validDay($month,$day,$year) {
     if (!$month || !$year) {
         return $day;

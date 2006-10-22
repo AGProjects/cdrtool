@@ -6,8 +6,9 @@ cdrtool (4.7-2) unstable; urgency=low
   * Removed _darcs directory from the debian package
   * Use DB_ser database class if DB_online not defined
   * Add checks to mysql database creation script
+  * Log balance updates from the web in prepaid_history table
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 22 Oct 2006 12:45:11 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 22 Oct 2006 14:57:35 +0200
 
 cdrtool (4.7-1) unstable; urgency=low
 
