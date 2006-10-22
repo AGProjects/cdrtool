@@ -2324,7 +2324,7 @@ class SERQuota {
     
             $rows=$this->AccountsDB->num_rows();
     
-            $log=sprintf ("%d SIP accounts have quota enabled\n",$rows);
+            $log=sprintf ("%d SIP accounts have monthly quota enabled\n",$rows);
             print $log;
             syslog(LOG_NOTICE, $log);
     
@@ -2553,7 +2553,7 @@ class SERQuota {
                     $email_body    = $email_body.$line;
                     print $line;
 
-		  			syslog(LOG_NOTICE, "Quota exceeded for $account: $reason");
+		  			syslog(LOG_NOTICE, "Monthly quota exceeded for $account: $reason");
 
                     if ($this->blockAccount($account)) {
                     	if ($notify && $this->SERAccounts[$account]['email']) {
@@ -2575,7 +2575,7 @@ class SERQuota {
             print $line;
             $email_body=$email_body.$line;
         } else {
-	  		$log=sprintf("No accounts exceeded their quota since the last run\n");
+	  		$log=sprintf("No accounts exceeded their montly quota since the last run\n");
   			syslog(LOG_NOTICE, $log);
         }
         
@@ -2667,13 +2667,20 @@ class SERQuota {
             return 0;
         }
 
-        $body="Your SIP account $account has been temporarily blocked \n".
-        "because your quota has been exceeded. To deblock your account \n".
-        "please contact $providerName.\n\n".
-        "N.B. This is an automatically generated message. Do not reply to it.\n";
+        $providerName=$this->notificationAddresses[$domain]['providerName'];
 
-        $fromEmail=$this->CDRTool[provider][fromEmail];
-        $bccEmail=$this->CDRTool[provider][bccEmail];
+        if (!strlen($providerName))  $providerName="your SIP service provider";
+
+        $body=sprintf("Dear __NAME__,\n\n".
+        "Your SIP account %s has been temporarily blocked\n".
+        "because your monthly quota has been exceeded.\n\n".
+        "To unblock your account you may contact %s.\n\n".
+        "N.B. This is an automatically generated message. Do not reply to it.\n",
+        $account,
+        $providerName);
+
+        $fromEmail = $this->CDRTool[provider][fromEmail];
+        $bccEmail  = $this->CDRTool[provider][bccEmail];
         $seen_bcc[$bccEmail]++;
 
         if (strlen($this->notificationAddresses[$domain]['fromEmail'])) {
@@ -2691,12 +2698,8 @@ class SERQuota {
         $body=preg_replace("/__NAME__/",$this->SERAccounts[$account]['fn'],$body);
         $body=preg_replace("/__ACCOUNT__/",$account,$body);
 
-        $providerName=$this->notificationAddresses[$domain]['providerName'];
-
-        if (!strlen($providerName))  $providerName="your SIP service provider";
-
         if (!strlen($subject)) {
-            $subject=sprintf("SIP account %s: quota exceeded",$account);
+            $subject=sprintf("Monthly quota exceeded for SIP account %s",$account);
         } else {
             $subject=preg_replace("/__ACCOUNT__/",$account,$subject);
         }
@@ -2704,7 +2707,7 @@ class SERQuota {
 		$toEmail=$this->SERAccounts[$account]['email'];
 
         if (!$toEmail || !$fromEmail) {
-            dprint("missing from or rcpt");
+            dprint("missing From or Rcpt");
             return 0;
         }
 
@@ -2717,11 +2720,11 @@ class SERQuota {
         	$bccEmail.=$this->notificationAddresses[$domain][bccEmail];
         }
 
-        if ($bccEmail) $extraHeaders= $extraHeaders."\r\nBCC: ".$bccEmail;
+        if ($bccEmail) $extraHeaders = $extraHeaders."\r\nBCC: ".$bccEmail;
 
     	mail($toEmail,$subject,$body, $extraHeaders);
 
-  		$log_msg=sprintf("Quota exceeded for $account. Notified To:%s From:%s\n",$toEmail,$fromEmail);
+  		$log_msg=sprintf("Monthly quota exceeded for %s. Notified To:%s From:%s\n",$account, $toEmail,$fromEmail);
   		syslog(LOG_NOTICE, $log_msg);
         print $log_msg;
 
@@ -2732,18 +2735,24 @@ class SERQuota {
 
       	$this->blockAccountRemote($account);
     
-        $query="delete from grp
-        where username = '$username'
-        and   domain   = '$domain'
-        and   grp      = 'quota' ";
+        $query=sprintf("delete from grp
+        where username = '%s'
+        and   domain   = '%s'
+        and   grp      = 'quota'",
+        addslashes($username),
+        addslashes($domain)
+        );
 
         dprint($query);
         $this->AccountsDB->query($query);
 
-        $query="insert into grp
+        $query=sprintf("insert into grp
         (username,domain,grp,last_modified)
         values
-        ('$username','$domain','quota',NOW())";
+        ('%s','%s','quota',NOW())",
+        addslashes($username),
+        addslashes($domain)
+        );
 
         dprint($query);
 
