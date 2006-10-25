@@ -1,40 +1,25 @@
 #
-# $Id: dictionary.ser,v 1.2 2006-08-05 14:58:31 adigeo Exp $
-#
 # SIP RADIUS attributes
 #
 # Schulzrinne indicates attributes according to
 # draft-schulzrinne-sipping-radius-accounting-00
 #
-# Sterman indicates attributes according to
-# draft-sterman-aaa-sip-00
-#
 # Proprietary indicates an attribute that hasn't
 # been standardized
 #
-# Check out http://www.iana.org/assignments/radius-types
-# for up-to-date list of standard RADIUS attributes
-# and values
-#
-
 #
 # NOTE: All standard (IANA registered) attributes are 
-#       commented out except those that are missing in 
-#       the default dictionary of the radiusclient-ng 
-#       library.
+#       defined in the default dictionary of the 
+#       radiusclient-ng library.
 #
 
+### Take standard attributes from the radiusclient-ng dictionaries ###
 
-#### Attributes ###
-ATTRIBUTE User-Name		         1 string     # RFC2865, acc, auth_radius, avp_radius, group_radius, uri_radius
-ATTRIBUTE NAS-IP-Address                 4  ipaddr
-ATTRIBUTE NAS-Port                       5  integer
-ATTRIBUTE Service-Type		         6  integer    # RFC2865, acc, auth_radius, avp_radius, group_radius, uri_radius
-ATTRIBUTE Called-Station-Id             30  string     # RFC2865, acc
-ATTRIBUTE Calling-Station-Id            31  string     # RFC2865, acc
-ATTRIBUTE Acct-Status-Type              40  integer    # RFC2865, acc
-ATTRIBUTE Acct-Delay-Time               41  integer
-ATTRIBUTE Acct-Session-Id               44  string     # RFC2865, acc
+$INCLUDE		/etc/radiusclient-ng/dictionary
+
+
+
+### SIP Attributes ###
 ATTRIBUTE Sip-Method                   101  integer    # Schulzrinne, acc
 ATTRIBUTE Sip-Response-Code            102  integer    # Schulzrinne, acc
 ATTRIBUTE Sip-Cseq                     103  string     # Schulzrinne, acc
@@ -42,60 +27,47 @@ ATTRIBUTE Sip-To-Tag                   104  string     # Schulzrinne, acc
 ATTRIBUTE Sip-From-Tag                 105  string     # Schulzrinne, acc
 ATTRIBUTE Sip-Branch-ID                106  string
 ATTRIBUTE Sip-Translated-Request-URI   107  string     # Proprietary, acc
-
-# Added by adigeo from ser 8.14
-ATTRIBUTE Sip-Source-IP-Address        108  ipaddr
-ATTRIBUTE Sip-Source-Port              109  integer
-ATTRIBUTE Sip-User-ID                  110  string
-ATTRIBUTE Sip-User-Realm               111  string
-ATTRIBUTE Sip-User-Nonce               112  string
-ATTRIBUTE Sip-User-Method              113  string
-ATTRIBUTE Sip-User-Digest-URI          114  string
-ATTRIBUTE Sip-User-Nonce-Count         115  string
-ATTRIBUTE Sip-User-QOP                 116  string
-ATTRIBUTE Sip-User-Opaque              117  string
-ATTRIBUTE Sip-User-Response            118  string
-ATTRIBUTE Sip-User-CNonce              119  string
-
-ATTRIBUTE Digest-Response              206  string     # Sterman, auth_radius
-ATTRIBUTE Digest-Attributes            207  string
 ATTRIBUTE Sip-Uri-User                 208  string     # Proprietary, auth_radius
 ATTRIBUTE Sip-Group                    211  string     # Proprietary, group_radius
 ATTRIBUTE Sip-Rpid                     213  string     # Proprietary, auth_radius
 ATTRIBUTE Billing-Party                218  string
-
 ATTRIBUTE SIP-AVP                      225  string     # Proprietary, avp_radius
-ATTRIBUTE Digest-Realm                1063  string     # Sterman, auth_radius
-ATTRIBUTE Digest-Nonce                1064  string     # Sterman, auth_radius
-ATTRIBUTE Digest-Method               1065  string     # Sterman, auth_radius
-ATTRIBUTE Digest-URI                  1066  string     # Sterman, auth_radius
-ATTRIBUTE Digest-QOP                  1067  string     # Sterman, auth_radius
-ATTRIBUTE Digest-Algorithm            1068  string     # Sterman, auth_radius
-ATTRIBUTE Digest-Body-Digest          1069  string     # Sterman, auth_radius
-ATTRIBUTE Digest-CNonce               1070  string     # Sterman, auth_radius
-ATTRIBUTE Digest-Nonce-Count          1071  string     # Sterman, auth_radius
-ATTRIBUTE Digest-User-Name            1072  string     # Sterman, auth_radius
 
-#       SIP types
-VALUE           Sip-Method              Other                   0
-VALUE           Sip-Method              Invite                  1
-VALUE           Sip-Method              Cancel                  2
-VALUE           Sip-Method              Ack                     4
-VALUE           Sip-Method              Bye                     8
-VALUE           Sip-Method              Message                 256
-VALUE           Sip-Method              Notify                  1024
-VALUE           Sip-Method              Subscribe               512
-VALUE           Sip-Method              Publish                 8192
+### Sip-Method Values ###
+VALUE Sip-Method         Undefined      0
+VALUE Sip-Method         Invite         1
+VALUE Sip-Method         Cancel         2
+VALUE Sip-Method         Ack            4
+VALUE Sip-Method         Bye            8
+VALUE Sip-Method         Info           16
+VALUE Sip-Method         Options        32
+VALUE Sip-Method         Update         64
+VALUE Sip-Method         Register       128
+VALUE Sip-Method         Message        256
+VALUE Sip-Method         Subscribe      512
+VALUE Sip-Method         Notify         1024
+VALUE Sip-Method         Prack          2048
+VALUE Sip-Method         Refer          4096
+VALUE Sip-Method         Publish        8192
+VALUE Sip-Method         Other          16384
 
-VALUE           Sip-Response-Code       Other                   0
-VALUE           Sip-Response-Code       Invite                  1
-VALUE           Sip-Response-Code       Cancel                  2
-VALUE           Sip-Response-Code       Ack                     4
-VALUE           Sip-Response-Code       Bye                     8
-VALUE           Sip-Response-Code       Message                 256
-VALUE           Sip-Response-Code       Subscribe               512
-VALUE           Sip-Response-Code       Notify                  1024
-VALUE           Sip-Response-Code       Publish                 8192
+### Sip-Response-Code Values ###
+VALUE Sip-Response-Code  Undefined      0
+VALUE Sip-Response-Code  Invite         1
+VALUE Sip-Response-Code  Cancel         2
+VALUE Sip-Response-Code  Ack            4
+VALUE Sip-Response-Code  Bye            8
+VALUE Sip-Response-Code  Info           16
+VALUE Sip-Response-Code  Options        32
+VALUE Sip-Response-Code  Update         64
+VALUE Sip-Response-Code  Register       128
+VALUE Sip-Response-Code  Message        256
+VALUE Sip-Response-Code  Subscribe      512
+VALUE Sip-Response-Code  Notify         1024
+VALUE Sip-Response-Code  Prack          2048
+VALUE Sip-Response-Code  Refer          4096
+VALUE Sip-Response-Code  Publish        8192
+VALUE Sip-Response-Code  Other          16384
 
 ### Acct-Status-Type Values ###
 VALUE Acct-Status-Type     Start             1         # RFC2866, acc
@@ -109,16 +81,16 @@ VALUE Service-Type         Sip-Session      15         # Schulzrinne, acc, auth_
 VALUE Service-Type         SIP-Caller-AVPs  30         # Proprietary, avp_radius
 VALUE Service-Type         SIP-Callee-AVPs  31         # Proprietary, avp_radius
 
-# Added by AG Projects
+### Attributes added by AG Projects ###
 ATTRIBUTE       Source-IP              214     string
 ATTRIBUTE       Source-Port            215     string
 ATTRIBUTE       Canonical-URI          216     string
 ATTRIBUTE       Delay-Time             217     string
 ATTRIBUTE       Divert-Reason          219     string
-# X-RTP-Stat provides QoS information from AVM SIP devices
-# for more information see http://www.avm.de/de/Presse/Informationen/2005/pdf/Iptelorg_QoS-Spec.pdf
 ATTRIBUTE       X-RTP-Stat             220     string
 ATTRIBUTE       From-Header            221     string
 ATTRIBUTE       User-Agent             222     string
 ATTRIBUTE       Contact                223     string
 ATTRIBUTE       Event                  224     string
+ATTRIBUTE       Event-Timestamp        230     string
+
