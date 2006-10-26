@@ -1,7 +1,16 @@
+cdrtool (4.7-3) unstable; urgency=low
+
+  * Increased default memcache and php memory to 128MB
+  * Fixed statistics to work with domains that have no online users
+  * Corrected wrong example of memcache location in sample configuration file
+  * Added style.css file to debian package
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 26 Oct 2006 12:20:57 +0200
+
 cdrtool (4.7-2) unstable; urgency=low
 
   * Added monthly usage caches for SIP domains and platform total in and out
-  * Improve display of SIP traces
+  * Improved display of SIP traces
   * Added new screenshots
   * Removed _darcs directory from the debian package
   * Use DB_ser database class if DB_online not defined
