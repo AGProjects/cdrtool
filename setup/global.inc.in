@@ -75,7 +75,7 @@ $CDRTool['rating']=array(
                 "minimumDuration"        => 0      // minimum duration to rate, if call duration is shorter the price is zero
                 );
 
-$memcached_server  = "127.0.0.1:11212";
+$memcache_server  = "127.0.0.1:11212";
 
 ###########################################
 # Normalize engine settings

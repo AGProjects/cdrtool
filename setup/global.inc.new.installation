@@ -39,7 +39,7 @@ $RatingEngine=array("socketIP"   => "IP.address.of.the.private.interface.of.cdrt
                     "socketPort" => "9024",
                     "CDRS_class" => "ser_radius");
 
-$memcached_server  = "127.0.0.1:11212";
+$memcache_server  = "127.0.0.1:11212";
 
 ###########################################
 # Normalize engine settings
