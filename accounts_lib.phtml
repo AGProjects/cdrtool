@@ -16,7 +16,7 @@ $f = new form;
 
 $f->add_element(array(	"name"=>"username",
 			"type"=>"text",
-			"size"=>"20",
+			"size"=>"25",
 			"length_e"=>"2",
 			"minlength"=>"2",
 			"maxlength"=>"25",
@@ -25,10 +25,10 @@ $f->add_element(array(	"name"=>"username",
 			));
 $f->add_element(array(	"name"=>"password",
                 "type"=>"text",
-                "size"=>"10",
+                "size"=>"25",
                 "minlength"=>"5",
-                "maxlength"=>"10",
-                "pass"=>0,
+                "maxlength"=>"25",
+                "pass"=>1,
                 "valid_regex"=>"^[a-zA-Z0-9|_|-]*$",
                 "valid_e"=>"Password: Letters, digits _ - only - minim 5 characters",
                 "value"=>"$password"

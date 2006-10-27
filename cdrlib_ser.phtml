@@ -144,7 +144,7 @@ class CDRS_ser_radius extends CDRS {
         <td>
         <table border=0 cellspacing=2 width=100%>
         <tr bgcolor=lightgrey>
-        <td>
+        <td>Index</td>
         <td><b>Start time</b></td>
         <td><b>Application</b></td>
         <td><b>SIP caller</b></td>
@@ -1752,6 +1752,8 @@ class CDRS_ser_radius extends CDRS {
                  }
         
             } else {
+                printf ("Click on Index and Session for the full SIP trace. ");
+
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
                     $order_by="timestamp";
                 }
@@ -2487,28 +2489,28 @@ class CDR_ser_radius extends CDR {
         </tr>
         <tr>
         	<td width=10></td>
-            <td>SIP Session: </td>
+            <td>Session: </td>
             <td>$this->callIdPrint</td>
         </tr>
         <tr>
         	<td></td>
-            <td>SIP Method:</td>
+            <td>Method:</td>
             <td>$this->SipMethod from <i>$this->SourceIP:$this->SourcePort</i>
             </td>
         </tr>
 		<tr>
             <td></td>
-        	<td>SIP From:</td>
+        	<td>From:</td>
             <td>$this->aNumber</td>
         </tr>
 		<tr>
             <td></td>
-        	<td>SIP Domain</td>
+        	<td>Domain:</td>
             <td>$this->domain</td>
         </tr>
 		<tr>
             <td></td>
-        	<td>SIP To:</td>
+        	<td>To:</td>
             <td>$this->cNumber</td>
         </tr>
         ";
@@ -2517,7 +2519,7 @@ class CDR_ser_radius extends CDR {
         	$CallInfoVerbose .= "
         	<tr>
             <td></td>
-        	<td>PSTN Caller ID:  </td>
+        	<td>Caller ID:  </td>
             <td>$this->SipRPID</td>
             </tr>
             ";
@@ -2526,7 +2528,7 @@ class CDR_ser_radius extends CDR {
         $CallInfoVerbose.= "
         <tr>
             <td></td>
-        	<td>Start time (proxy): </td>
+        	<td>Start time: </td>
             <td>$this->startTime $providerTimezone</td>
         </tr>
         ";
@@ -2534,12 +2536,12 @@ class CDR_ser_radius extends CDR {
             $CallInfoVerbose.= "
             <tr>
                 <td></td>
-                <td>Stop time (proxy): </td>
+                <td>Stop time: </td>
                 <td>$this->stopTime $providerTimezone</td>
             </tr>
             <tr>
                 <td></td>
-                <td>Session duration:</td>
+                <td>Duration:</td>
                 <td>$this->durationPrint</td>
             </tr>
             ";
@@ -2557,7 +2559,7 @@ class CDR_ser_radius extends CDR {
         $CallInfoVerbose.= "
         <tr>
             <td></td>
-        	<td>SIP Canonical URI:   </td>
+        	<td>Canonical URI:   </td>
             <td>$CanonicalURIPrint</td>
         </tr>
         ";
@@ -2566,7 +2568,7 @@ class CDR_ser_radius extends CDR {
 		$CallInfoVerbose.= "
         <tr>
             <td></td>
-        	<td>Next SIP hop:</td>
+        	<td>Next hop:</td>
             <td>$this->RemoteAddress </td>
         </tr>
         ";
@@ -2575,7 +2577,7 @@ class CDR_ser_radius extends CDR {
             $CallInfoVerbose.= "
             <tr>
                 <td></td>
-                <td>Destination name: </td>
+                <td>Destination: </td>
                 <td>$this->destinationName ($this->DestinationId)</td>
             </tr>
             ";

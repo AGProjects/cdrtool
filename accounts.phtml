@@ -143,10 +143,14 @@ if ($action == "edit" && $id) {
                         } else {
                             $protocolURL="http://";
                         }
-                        $body.=sprintf("The following CDRTool login account has been created for you:\n\n");
+
+                        $body.=sprintf("The following login account for CDRTool has been created for you:\n\n");
                         $body.=sprintf("Username: %s\n",$username);
                         $body.=sprintf("Password: %s\n",$password);
                         $body.=sprintf("URL: %s%s%s\n\n",$protocolURL,$_SERVER['HTTP_HOST'],$CDRTool['tld']);
+                        $body.=sprintf("You may use your CDRTool account to access call detail records and \n");
+                        $body.=sprintf("traces from OpenSER, MediaProxy and Asterisk servers.\n");
+
                     	$from=sprintf("From: %s",$CDRTool['provider']['fromEmail']);
                     	mail($email,"CDRTool login account", $body, $from);
                     }
@@ -279,10 +283,14 @@ if ($action == "edit" && $id) {
         			} else {
             			$protocolURL="http://";
         			}
-                    $body.=sprintf("The following CDRTool login account has been created for you:\n\n");
+
+                    $body.=sprintf("The following login account for CDRTool has been created for you:\n\n");
                     $body.=sprintf("Username: %s\n",$username);
                     $body.=sprintf("Password: %s\n",$password);
                     $body.=sprintf("URL: %s%s%s\n\n",$protocolURL,$_SERVER['HTTP_HOST'],$CDRTool['tld']);
+                    $body.=sprintf("You may use your CDRTool account to access call detail records and \n");
+                    $body.=sprintf("traces from OpenSER, MediaProxy and Asterisk servers.\n");
+
                     $from=sprintf("From: %s",$CDRTool['provider']['fromEmail']);
                     mail($email,"CDRTool login account", $body, $from);
                 }
