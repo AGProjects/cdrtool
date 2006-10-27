@@ -1466,6 +1466,8 @@ class CDRS_ser_radius extends CDRS {
         }
         $j=0;
         $z=0;
+
+		if (!$this->export) print "<p>";
         
         if ($rows>0)  {
             
@@ -1485,7 +1487,7 @@ class CDRS_ser_radius extends CDRS {
                 dprint("Normalize calls");
                 $this->NormalizeCDRS($where);
                 if (!$this->export && $this->status['normalized'] ) {
-                    printf ("<p> Found %d CDRs for normalization. ",$this->status['normalized']);
+                    printf ("Found %d CDRs for normalization. ",$this->status['normalized']);
                     if ($this->status['cached_keys']['saved_keys']) {
                     	if (is_object($this->mc)) {
                         	$cached_place="memory";
