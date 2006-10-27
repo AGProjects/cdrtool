@@ -1,3 +1,9 @@
+cdrtool (4.7-4) unstable; urgency=low
+
+  * Fixed debian package deps to install by default php5-memcache
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 27 Oct 2006 09:56:52 +0200
+
 cdrtool (4.7-3) unstable; urgency=low
 
   * Increased default memcache and php memory to 128MB
