@@ -15,9 +15,7 @@
 
 ### Take standard attributes from the radiusclient-ng dictionaries ###
 
-$INCLUDE		/etc/radiusclient-ng/dictionary
-
-
+#$INCLUDE		/etc/radiusclient-ng/dictionary
 
 ### SIP Attributes ###
 ATTRIBUTE Sip-Method                   101  integer    # Schulzrinne, acc
@@ -92,5 +90,5 @@ ATTRIBUTE       From-Header            221     string
 ATTRIBUTE       User-Agent             222     string
 ATTRIBUTE       Contact                223     string
 ATTRIBUTE       Event                  224     string
-ATTRIBUTE       Event-Timestamp        230     string
+#ATTRIBUTE       Event-Timestamp        230     string
 
