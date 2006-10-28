@@ -108,42 +108,42 @@ $UserQuota["default"]["cost"]     = 1000;              // Euro
 # you must define all connections to MySQL database here
 
 class DB_CDRTool extends DB_Sql {
-  var $Host     = "db-log";
+  var $Host     = "sipdb";
   var $Database = "cdrtool";
   var $User     = "cdradmin";
-  var $Password = "ndd18vv";
+  var $Password = "PASSWORD";
   var $Halt_On_Error ="no";
 }
 
 class DB_Locker extends DB_Sql {
-  var $Host     = "db-log";
+  var $Host     = "sipdb";
   var $Database = "cdrtool";
   var $User     = "locker";
-  var $Password = "ndd18vv";
+  var $Password = "PASSWORD";
   var $Halt_On_Error ="yes";
 }
 
 class DB_radius extends DB_Sql {
-  var $Host     = "db-log";
+  var $Host     = "sipdb";
   var $Database = "radius";
   var $User     = "radius";
-  var $Password = "ndd18vv";
+  var $Password = "PASSWORD";
   var $Halt_On_Error ="no";
 }
 
 class DB_ser extends DB_Sql {
-  var $Host     = "db-log";
+  var $Host     = "sipdb";
   var $Database = "ser";
   var $User     = "ser";
-  var $Password = "ndd18vv";
+  var $Password = "PASSWORD";
   var $Halt_On_Error ="no";
 }
 
 class DB_cisco extends DB_Sql {
-  var $Host     = "db-log.example.com";
+  var $Host     = "sipdb";
   var $Database = "radius";
   var $User     = "radius";
-  var $Password = "ndd18vv";
+  var $Password = "PASSWORD";
   var $Halt_On_Error ="no";
 }
 
@@ -176,7 +176,7 @@ $DATASOURCES=array(
                     "intAccessCode"      => "00",		
                     "sipTraceDataSource" => "sip_trace",
                     "traceOutURL"        => array(
-                                            "voipgw01.example.com"=>"asterisk",
+                                            "sipvm.example.com"=>"asterisk",
                                             "voipgw02.example.com"=>"cisco"
                     			    		),
                     "UserQuotaClass"     => "SERQuota",

@@ -1,6 +1,6 @@
-<VirtualHost cdrtool.example.com:80>
+<VirtualHost sipcdr.example.com:443>
 
-   ServerName          cdrtool.example.com
+   ServerName          sipcdr.example.com
    DocumentRoot        /var/www/
    CustomLog           /var/log/apache2/cdrtool-access.log combined
    ErrorLog            /var/log/apache2/cdrtool-errors.log
@@ -11,9 +11,9 @@
    # add Listen 443 to ports.conf file
    # generate site certificates
 
-   # SSLEngine           On
-   # SSLCertificateFile    /etc/apache2/ssl/snakeoil-rsa.crt
-   # SSLCertificateKeyFile /etc/apache2/ssl/snakeoil-rsa.key
+   SSLEngine           On
+   SSLCertificateFile    /etc/apache2/ssl/snakeoil-rsa.crt
+   SSLCertificateKeyFile /etc/apache2/ssl/snakeoil-rsa.key
 
    # RewriteEngine is required for Multimedia Service Platform
    #

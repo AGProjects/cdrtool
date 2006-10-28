@@ -59,34 +59,34 @@ $UserQuota["default"]["cost"]     = 1000;              // Euro
 # CDRTool datasources
 
 class DB_CDRTool extends DB_Sql {
-  var $Host     = "database.example.com";
+  var $Host     = "sipdb";
   var $Database = "cdrtool";
   var $User     = "cdradmin";
-  var $Password = "ndd18vv";
+  var $Password = "PASSWORD";
   var $Halt_On_Error ="no";
 }
 
 class DB_Locker extends DB_Sql {
-  var $Host     = "database.example.com";
+  var $Host     = "sipdb";
   var $Database = "cdrtool";
   var $User     = "locker";
-  var $Password = "ndd18vv";
-  var $Halt_On_Error ="yes";
+  var $Password = "PASSWORD";
+  var $Halt_On_Error ="no";
 }
 
 class DB_radius extends DB_Sql {
-  var $Host     = "database.example.com";
+  var $Host     = "sipdb";
   var $Database = "radius";
   var $User     = "radius";
-  var $Password = "password";
+  var $Password = "PASSWORD";
   var $Halt_On_Error ="no";
 }
 
 class DB_ser extends DB_Sql {
-  var $Host     = "database.example.com";
+  var $Host     = "sipdb";
   var $Database = "openser";
   var $User     = "openser";
-  var $Password = "password";
+  var $Password = "PASSWORD";
   var $Halt_On_Error ="no";
 }
 
@@ -119,7 +119,7 @@ $DATASOURCES=array(
                     "intAccessCode"      => "00",
                     "sipTraceDataSource" => "sip_trace",
                     "traceOutURL"        => array(
-                                            "voicemail.example.com"=>"asterisk",
+                                            "sipvm.example.com"=>"asterisk",
                                             "pstn.example.com"=>"cisco"
                     			    ),
                     "UserQuotaClass"     => "SERQuota",
