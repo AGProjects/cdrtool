@@ -1,10 +1,10 @@
 cdrtool (4.7-4) unstable; urgency=low
 
   * Fixed debian package deps to install by default php5-memcache
-  * Allow login passwords greater than 10 charaters
+  * Allow login passwords greater than 10 characters
   * Minor HTML changes in OpenSER CDR display
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 27 Oct 2006 10:22:41 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 27 Oct 2006 17:05:02 +0200
 
 cdrtool (4.7-3) unstable; urgency=low
 
