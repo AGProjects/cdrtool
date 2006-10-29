@@ -1754,7 +1754,9 @@ class CDRS_ser_radius extends CDRS {
                  }
         
             } else {
-                printf ("Click on Index and Session for the full SIP trace. ");
+                if (!$this->export && !$this->CDRTool['filter']['aNumber']) {
+                	printf ("Click on Index and Session for the full SIP trace. ");
+                }
 
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
                     $order_by="timestamp";
