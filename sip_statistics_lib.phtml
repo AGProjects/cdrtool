@@ -110,7 +110,42 @@ class SIPstatistics {
             
             <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=10>
             ");
-            
+
+            $key="total";
+
+            $block=sprintf("<TR>
+            <TD><DIV align='center'><B> Online Users for %s </B></DIV>
+            <DIV><A HREF='%s_users.html'><IMG BORDER=0 ALT='%s_users Traffic Graph' SRC='%s_users-day.png'></A>
+            <SMALL><!--#flastmod file='%s_users.html' --></SMALL></DIV>
+            </TD><TD><DIV align='center'><B> Active Sessions for %s </B></DIV>
+            <DIV><A HREF='%s_sessions.html'><IMG BORDER=0 ALT='%s_sessions Traffic Graph' SRC='%s_sessions-day.png'></A>
+            <SMALL><!--#flastmod file='%s_sessions.html' --></SMALL></DIV>
+            </TD><TD><DIV align='center'><B> IP Traffic for %s </B></DIV>
+            <DIV><A HREF='%s_traffic.html'><IMG BORDER=0 ALT='%s_traffic Traffic Graph' SRC='%s_traffic-day.png'></A>
+            <SMALL><!--#flastmod file='%s_traffic.html' --></SMALL></DIV>
+            </TD></TR>
+            <TR>",
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key,
+            $key
+            );
+
+        	fwrite($handle,$block);
+
     	while(list($key,$value) = each($this->SipEnabledZones)) {
             $block=sprintf("<TR>
             <TD><DIV align='center'><B> Online Users for %s </B></DIV>
@@ -143,7 +178,6 @@ class SIPstatistics {
             $key
             );
 
-
         	fwrite($handle,$block);
 		}
 
@@ -173,8 +207,11 @@ IconDir: {$this->mrtgcfg_dir}/images
 Refresh: 300
 #WriteExpires: Yes
         ");
-        
-        while(list($key,$value) = each($this->SipEnabledZones)) {
+
+        $_zones=$this->SipEnabledZones;
+        $_zones['total']='total';
+
+        while(list($key,$value) = each($_zones)) {
         	fwrite($handle,"\n\n
 ## {$key}
 
