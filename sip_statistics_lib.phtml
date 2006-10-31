@@ -74,16 +74,6 @@ class SIPstatistics {
             }
         }
 
-        // always add a zone called total, which cummulates statistics
-        $this->SipEnabledZones['total'] = 'total';
-        $this->statistics['total'] =
-                       array( 'online_users' => '0',
-                              'sessions'     => '0',
-                              'traffic'      => '0',
-                              'caller'       => '0',
-                              'called'       => '0'
-                              );
-
         //print_r($this->SipEnabledZones);
         //dprint_r($this->statistics);
 
