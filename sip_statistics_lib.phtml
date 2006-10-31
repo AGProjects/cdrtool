@@ -278,31 +278,46 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         foreach($this->mediaServers as $server) {
             $this->statistics = $this->getrtpsessions($server, "25060", $this->statistics);
         }
-        
+
+        $totals=array();
+
         while(list($key, $usage) = each($this->statistics)) {
         	if ($usage['online_users']) {
                 $online_users=$usage['online_users'];
+                $totals['online_users']+=$usage['online_users'];
             } else {
                 $online_users=0;
             }
         	if ($usage['sessions']) {
                 $sessions=$usage['sessions'];
+                $totals['sessions']+=$usage['sessions'];
             } else {
                 $sessions=0;
             }
         	if ($usage['caller']) {
                 $caller=$usage['caller'];
+                $totals['caller']+=$usage['caller'];
             } else {
                 $caller=0;
             }
         	if ($usage['called']) {
                 $called=$usage['called'];
+                $totals['called']+=$usage['called'];
             } else {
                 $called=0;
             }
 
         	fwrite($handle,"{$key}\t\t{$online_users}\t\t{$sessions}\t\t{$caller}\t{$called}\n");
         }
+
+		$total_text=sprintf("Total\t\t%d\t\t%d\t\t%s\t%s\n",
+        $totals['online_users'],
+        $totals['sessions'],
+        $totals['caller'],
+        $totals['called']
+        );
+
+        fwrite($handle,$total_text);
         
         fclose($handle);
     }
@@ -314,9 +329,10 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
             $proxy      = array('status' => 'Ok');
             $crtSession = 'None';
             while (!feof($fp)) {
+                $j++;
                 $line = fgets($fp, 2048);
                 $elements = explode(" ", $line);
-    
+
                 if ($elements[0] == 'proxy' && count($elements)==3) {
                     $proxy['sessionCount'] = $elements[1];
                     $traffic = explode("/", $elements[2]);
@@ -338,12 +354,8 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
                         $caller_domain_els=explode(":",$caller_domain);
                         $caller_domain=$caller_domain_els[0];
 
-                        list($called, $called_domain) = explode("@", $proxy['sessions'][$crtSession]['to']);
-                        $called_domain_els=explode(":",$called_domain);
-                        $called_domain=$called_domain_els[0];
-
                         $_domains[$caller_domain]['sessions'] += 1;
-                        if($caller_domain != $called_domain) $_domains[$called_domain]['sessions'] += 1;
+
                 } else if ($elements[0] == 'stream' && count($elements)==9 && $proxy['sessions'][$crtSession]['duration'] > 0) {
                        $stream = array('caller'   => $elements[1],
                                        'called'   => $elements[2],
@@ -356,9 +368,9 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
                        $proxy['sessions'][$crtSession]['streams'][] = $stream;
 
                        $_domains[$caller_domain]['caller'] += floor($proxy['sessions'][$crtSession]['streams'][0]['bytes'][0]/$proxy['sessions'][$crtSession]['duration']);
-                       $_domains[$called_domain]['called'] += floor($proxy['sessions'][$crtSession]['streams'][0]['bytes'][1]/$proxy['sessions'][$crtSession]['duration']);
+                       $_domains[$caller_domain]['called'] += floor($proxy['sessions'][$crtSession]['streams'][0]['bytes'][1]/$proxy['sessions'][$crtSession]['duration']);
                        $_domains[$caller_domain]['traffic'] += $proxy['sessions'][$crtSession]['streams'][0]['bytes'][0];
-                       $_domains[$called_domain]['traffic'] += $proxy['sessions'][$crtSession]['streams'][0]['bytes'][1];
+                       $_domains[$caller_domain]['traffic'] += $proxy['sessions'][$crtSession]['streams'][0]['bytes'][1];
                 }
             }
             return $_domains;
