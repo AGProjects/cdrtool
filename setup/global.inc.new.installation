@@ -47,7 +47,6 @@ $memcache_server  = "127.0.0.1:11212";
 $CDRTool['normalize']['defaultCountryCode']      = "31";
 $CDRTool['normalize']['CountryNumberLength']     = "9";
 
-
 ###########################################
 # Anti-fraud settings
 # create group quota in SER and deny calls to users in this group

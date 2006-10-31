@@ -97,6 +97,16 @@ $CDRTool['statistics']['zoneFilter']=array("example1.com","example2.com");
 # Import settings
 $CDRTool['import']['stripFromDestination']   = "0";
 
+# usage statistics
+# filter local SIP domains if many do not have traffic  
+$CDRTool['statistics']['zoneFilter']=array("example1.com",
+                                           "example2.com"
+                                           );
+                                           
+# useful to add external domains to the statistics                                           
+$CDRTool['statistics']['extraZones']=array("anonymous.invalid",
+                                           "example4.com"
+                                           );
 ###########################################
 # Anti-fraud settings
 # create group quota in SER and deny calls to users in this group

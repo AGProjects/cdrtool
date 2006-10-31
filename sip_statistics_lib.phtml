@@ -57,6 +57,33 @@ class SIPstatistics {
         	}
         }
 
+        if (is_array($CDRTool['statistics']['extraZones'])) {
+            foreach ($CDRTool['statistics']['extraZones'] as $zName) {
+    
+                if (!$seen[$zName]) {
+                    $this->SipEnabledZones[$zName] = $zName;
+                    $this->statistics[$zName] =
+                                   array( 'online_users' => '0',
+                                          'sessions'     => '0',
+                                          'traffic'      => '0',
+                                          'caller'       => '0',
+                                          'called'       => '0'
+                                          );
+                    $seen[$zName]++;
+                }
+            }
+        }
+
+        // always add a zone called total, which cummulates statistics
+        $this->SipEnabledZones['total'] = 'total';
+        $this->statistics['total'] =
+                       array( 'online_users' => '0',
+                              'sessions'     => '0',
+                              'traffic'      => '0',
+                              'caller'       => '0',
+                              'called'       => '0'
+                              );
+
         //print_r($this->SipEnabledZones);
         //dprint_r($this->statistics);
 
@@ -310,7 +337,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         	fwrite($handle,"{$key}\t\t{$online_users}\t\t{$sessions}\t\t{$caller}\t{$called}\n");
         }
 
-		$total_text=sprintf("Total\t\t%d\t\t%d\t\t%s\t%s\n",
+		$total_text=sprintf("total\t\t%d\t\t%d\t\t%s\t%s\n",
         $totals['online_users'],
         $totals['sessions'],
         $totals['caller'],
