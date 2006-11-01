@@ -2934,11 +2934,11 @@ class SERQuota {
             return 0;
         }
 
-        if (is_object($this->mc)) {
+        if (is_object($this->CDRS->mc)) {
 
 	        $query="select * from subscriber";
     	    dprint($query);
-        	$this->AccountsDB->query($query);;
+        	$this->AccountsDB->query($query);
 
             while($this->AccountsDB->next_record()) {
                 $mc_key=$this->CDRS->memcache_keyprefix.$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');;
@@ -2946,6 +2946,19 @@ class SERQuota {
                     $deleted_keys++;
                 }
             }
+
+            # delete domains usage
+			foreach ($this->CDRS->localDomains as $_domain) {
+                $mc_key=$this->CDRS->memcache_keyprefix.$_domain;
+                if ($this->CDRS->mc->delete($mc_key)) {
+                    $deleted_keys++;
+                }
+            }
+
+            # delete platform usage
+            if ($this->CDRS->mc->delete("mu:platform_out")) $deleted_keys++;
+            if ($this->CDRS->mc->delete("mu:platform_in")) $deleted_keys++;
+
             if ($deleted_keys) {
         		$log=sprintf("Deleted %d memcache keys\n",$deleted_keys);
                 print $log;
