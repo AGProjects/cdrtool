@@ -146,7 +146,7 @@ class CDRS_ser_radius extends CDRS {
         <tr bgcolor=lightgrey>
         <td>Index</td>
         <td><b>Start time</b></td>
-        <td><b>Application</b></td>
+        <td><b>SIP Proxy</b></td>
         <td><b>SIP caller</b></td>
         <td><b>In</b></td>
         <td><b>SIP destination</b></td>
@@ -2715,7 +2715,8 @@ class CDR_ser_radius extends CDR {
         <tr bgcolor=$inout_color>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
         <td valign=top><nobr>$this->startTime</nobr></td>
-        <td valign=top>$this->applicationTypePrint $this->SipMethod</td>
+        <td valign=top>$this->SipProxyServer</td>
+        <!-- <td valign=top>$this->applicationTypePrint $this->SipMethod</td> -->
         <td valign=top><nobr>$this->aNumberPrint</td>
         <td valign=top>$this->traceIn</td>
         <td valign=top><nobr>$this->destinationPrint</nobr>";

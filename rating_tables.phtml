@@ -17,14 +17,16 @@ $table_fname=array(
  "prepaid"   	       => "prepaid.csv"
  );
 
-$export      = $_REQUEST['export'];
-$table       = $_REQUEST['table'];
-$action      = $_REQUEST['action'];
-$subaction   = $_REQUEST['subaction'];
-$next        = $_REQUEST['next'];
-$PHP_SELF    = $_SERVER['PHP_SELF'];
-$id          = $_REQUEST['id'];
-$search_text = $_REQUEST['search_text'];
+
+$export             = $_REQUEST['export'];
+$table              = $_REQUEST['table'];
+$action             = $_REQUEST['action'];
+$subaction          = $_REQUEST['subaction'];
+$next               = $_REQUEST['next'];
+$PHP_SELF           = $_SERVER['PHP_SELF'];
+$id                 = $_REQUEST['id'];
+$search_text        = $_REQUEST['search_text'];
+$ReloadRatingTables = $_REQUEST['ReloadRatingTables'];
 
 global $CDRTool;
 
