@@ -2296,14 +2296,14 @@ class SERQuota {
 
     }
 
-    function LoadUserQuotas() {
+    function LoadSubscribers() {
 
         if (!$this->AccountsDBClass) {
             print("Info: No database defined for SER accounts.\n");
             return 0;
         }
 
-		if ($this->CDRS->mc && $mc_value = $this->CDRS->mc->get('subscribers_with_quota')) {
+		if ($this->CDRS->mc && $mc_value = $this->CDRS->mc->get('subscribers')) {
             $_accounts_tmp=explode("\n",$mc_value);
             foreach ($_accounts_tmp  as $_account_tmp) {
                 $_avps=explode(":",$_account_tmp);
@@ -2314,7 +2314,7 @@ class SERQuota {
                 }
             }
         } else {
-            $query="select * from subscriber where quota > 0";
+            $query="select * from subscriber";
     
             dprint($query);
     
@@ -2324,7 +2324,6 @@ class SERQuota {
     
             $rows=$this->AccountsDB->num_rows();
     
-            $log=sprintf ("%d SIP accounts have monthly quota enabled\n",$rows);
             print $log;
             syslog(LOG_NOTICE, $log);
     
@@ -2348,7 +2347,9 @@ class SERQuota {
                 $account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
                 $_accounts[$account]['block_by_quota']= 1;
             }
-    
+
+    		$accounts_with_quota_enabled=0;
+
             foreach (array_keys($_accounts) as $account) {
                 if (!strlen($account)) continue;
                 $mc_value.= sprintf("%s:quota=%s;email=%s;fn=%s;block_by_quota=%d\n",
@@ -2358,17 +2359,23 @@ class SERQuota {
                 $_accounts[$account]['fn'],
                 $_accounts[$account]['block_by_quota']
                 );
+
+				if ($_accounts[$account]['quota']) $accounts_with_quota_enabled++;
             }
 
+            $log=sprintf ("%d subscribers have monthly quota enabled\n",$accounts_with_quota_enabled);
+
 	        if (is_object($this->CDRS->mc)) {
-                $this->CDRS->mc->set('subscribers_with_quota',$mc_value,MEMCACHE_COMPRESSED,3600);
-                $log=sprintf("Saved %d accounts with quota in memcache\n",count($_accounts));
+                $this->CDRS->mc->set('subscribers',$mc_value,MEMCACHE_COMPRESSED,3600);
+                $log=sprintf("Saved %d subscribers in cache\n",count($_accounts));
                 print $log;
                 syslog(LOG_NOTICE,$log);
             }
         }
 
-        $this->SERAccounts = $_accounts;
+        $this->SERAccounts = &$_accounts;
+
+        $this->subscribers = array_keys(&$this->SERAccounts);
 
  		return count($this->SERAccounts);
     }
@@ -2428,7 +2435,7 @@ class SERQuota {
         	$this->startTime=$month."-01 00:00";
         }
 
-        $this->LoadUserQuotas();
+        $this->LoadSubscribers();
 
         $j=0;
         $domains_sql="";
@@ -2458,58 +2465,49 @@ class SERQuota {
         $this->CDRdb_readonly->query($query);
 
         $rows=$this->CDRdb_readonly->num_rows();
-		$log=sprintf ("%d SIP accounts have traffic in %s\n",$rows,Date("Y-m",time()));
+		$log=sprintf ("%d callers generated traffic in %s\n",$rows,Date("Y-m",time()));
         print $log;
 		syslog(LOG_NOTICE, $log);
 
         $j=0;
         while($this->CDRdb_readonly->next_record()) {
-            $account = $this->CDRdb_readonly->f($this->BillingPartyIdField);
 
-            $this->SERAccounts[$account]['usage']['calls']    = $this->SERAccounts[$account]['usage']['calls']    + $this->CDRdb_readonly->f('calls');
-            $this->SERAccounts[$account]['usage']['duration'] = $this->SERAccounts[$account]['usage']['duration'] + $this->CDRdb_readonly->f('duration');
-            $this->SERAccounts[$account]['usage']['cost']     = $this->SERAccounts[$account]['usage']['cost']     + $this->CDRdb_readonly->f('cost');
-            $this->SERAccounts[$account]['usage']['traffic']  = $this->SERAccounts[$account]['usage']['traffic']  + $this->CDRdb_readonly->f('traffic');
-
-            if (list($username,$domain)=explode("@",$account)) {
-                $this->SERAccounts[$domain]['usage']['calls']    = $this->SERAccounts[$domain]['usage']['calls']    + $this->CDRdb_readonly->f('calls');
-                $this->SERAccounts[$domain]['usage']['duration'] = $this->SERAccounts[$domain]['usage']['duration'] + $this->CDRdb_readonly->f('duration');
-                $this->SERAccounts[$domain]['usage']['cost']     = $this->SERAccounts[$domain]['usage']['cost']     + $this->CDRdb_readonly->f('cost');
-                $this->SERAccounts[$domain]['usage']['traffic']  = $this->SERAccounts[$domain]['usage']['traffic']  + $this->CDRdb_readonly->f('traffic');
-            } else {
-                $domain=$account;
-            }
-
-        	if (in_array($domain,$this->CDRS->localDomains)) {
-                $this->SERAccounts['platform_out']['usage']['calls']    = $this->SERAccounts['platform_out']['usage']['calls']    + $this->CDRdb_readonly->f('calls');
-                $this->SERAccounts['platform_out']['usage']['duration'] = $this->SERAccounts['platform_out']['usage']['duration'] + $this->CDRdb_readonly->f('duration');
-                $this->SERAccounts['platform_out']['usage']['cost']     = $this->SERAccounts['platform_out']['usage']['cost']     + $this->CDRdb_readonly->f('cost');
-                $this->SERAccounts['platform_out']['usage']['traffic']  = $this->SERAccounts['platform_out']['usage']['traffic']  + $this->CDRdb_readonly->f('traffic');
-            } else {
-                $this->SERAccounts['platform_in']['usage']['calls']    = $this->SERAccounts['platform_in']['usage']['calls']    + $this->CDRdb_readonly->f('calls');
-                $this->SERAccounts['platform_in']['usage']['duration'] = $this->SERAccounts['platform_in']['usage']['duration'] + $this->CDRdb_readonly->f('duration');
-                $this->SERAccounts['platform_in']['usage']['cost']     = $this->SERAccounts['platform_in']['usage']['cost']     + $this->CDRdb_readonly->f('cost');
-                $this->SERAccounts['platform_in']['usage']['traffic']  = $this->SERAccounts['platform_in']['usage']['traffic']  + $this->CDRdb_readonly->f('traffic');
-            }
+            $this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]['usage']['calls']    = $this->CDRdb_readonly->f('calls');
+            $this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]['usage']['duration'] = $this->CDRdb_readonly->f('duration');
+            $this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]['usage']['cost']     = $this->CDRdb_readonly->f('cost');
+            $this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]['usage']['traffic']  = $this->CDRdb_readonly->f('traffic');
 
             $j++;
 
         }
+    }
 
-        $this->CDRS->cacheMonthlyUsage(&$this->SERAccounts);
+    function initMonthlyUsageFromCache () {
 
-        if ($this->CDRS->status['cached_keys']['saved_keys']) {
-            $log=sprintf("Saved %d keys\n",$this->CDRS->status['cached_keys']['saved_keys']);
-            print $log;
-		  	syslog(LOG_NOTICE, $log);
+        if (!$this->AccountsDBClass) {
+            print("Info: No database defined for SER accounts.\n");
+            return 0;
         }
 
-        if ($this->CDRS->status['cached_keys']['failed_keys']) {
-            $log=sprintf("Error: failed to save %d keys\n",$this->CDRS->status['cached_keys']['failed_keys']);
-            print $log;
-		  	syslog(LOG_NOTICE, $log);
-        }
+		$this->cachedUsage=array();
 
+        if (is_object($this->CDRS->mc)) {
+
+	        $query="select * from subscriber";
+    	    dprint($query);
+        	$this->AccountsDB->query($query);
+
+            while($this->AccountsDB->next_record()) {
+                $_account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');;
+	        	$this->cachedUsage[$_account]['usage'] = $this->CDRS->getMonthlyUsageFromCache($_account);
+            }
+
+			foreach ($this->CDRS->localDomains as $_domain) {
+	        	$this->cachedUsage[$_domain]['usage'] = $this->CDRS->getMonthlyUsageFromCache($_domain);
+            }
+
+        }
+        return 1;
     }
 
     function checkQuota($notify) {
@@ -2517,7 +2515,7 @@ class SERQuota {
         global $UserQuota;
 
         $this->cacheMonthlyUsage();
-        $this->LoadUserQuotas();
+        $this->LoadSubscribers();
 
         $toNotify=array();
 
@@ -2528,8 +2526,7 @@ class SERQuota {
 		$_checks=0;
         foreach (array_keys($this->SERAccounts) as $account) {
 
-            // skip generic domains and platform total usage
-            if ($account=='platform_in' || $account=='platform_out' || in_array($account,$this->CDRS->localDomains)) continue;
+            if (!$account['quota']) continue;
 
             list($username,$domain)=explode("@",$account);
 
@@ -2582,7 +2579,7 @@ class SERQuota {
         if ($blocked_now) {
         	$line=sprintf("%6d accounts have been blocked now\n",$blocked_now);
             $email_body=$email_body.$line;
-            if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete('subscribers_with_quota');
+            if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete('subscribers');
         }
         
         if ($blockedAccountsNow) {
@@ -2886,8 +2883,24 @@ class SERQuota {
 			if (!$this->CDRS->mc->get('quotaCheckInit')) {
 
                 $this->ResetUserQuotas();
-				$this->deleteMonthlyUsageFromCache();
+
+                $this->deleteMonthlyUsageFromCache();
+
 				$this->initMonthlyUsageFromDatabase();
+
+                $this->CDRS->cacheMonthlyUsage(&$this->SERAccounts);
+        
+                if ($this->CDRS->status['cached_keys']['saved_keys']) {
+                    $log=sprintf("Saved %d usage keys in cache\n",$this->CDRS->status['cached_keys']['saved_keys']);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
+                }
+        
+                if ($this->CDRS->status['cached_keys']['failed_keys']) {
+                    $log=sprintf("Error: failed to save %d usage keys\n",$this->CDRS->status['cached_keys']['failed_keys']);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
+                }
 
                 if ($this->saveQuotaInitFlag()) {
                     return 1;
@@ -2904,9 +2917,23 @@ class SERQuota {
                 if (!$this->db->num_rows()) {
     
                     $this->ResetUserQuotas();
+
                     $this->deleteMonthlyUsageFromCache();
+
                     $this->initMonthlyUsageFromDatabase();
-    
+
+                    if ($this->CDRS->status['cached_keys']['saved_keys']) {
+                        $log=sprintf("Saved %d keys\n",$this->CDRS->status['cached_keys']['saved_keys']);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
+                    }
+            
+                    if ($this->CDRS->status['cached_keys']['failed_keys']) {
+                        $log=sprintf("Error: failed to save %d keys\n",$this->CDRS->status['cached_keys']['failed_keys']);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
+                    }
+
                     if ($this->saveQuotaInitFlag()) {
                         return 1;
                     } else {
@@ -2947,20 +2974,8 @@ class SERQuota {
                 }
             }
 
-            # delete domains usage
-			foreach ($this->CDRS->localDomains as $_domain) {
-                $mc_key=$this->CDRS->memcache_keyprefix.$_domain;
-                if ($this->CDRS->mc->delete($mc_key)) {
-                    $deleted_keys++;
-                }
-            }
-
-            # delete platform usage
-            if ($this->CDRS->mc->delete("mu:platform_out")) $deleted_keys++;
-            if ($this->CDRS->mc->delete("mu:platform_in")) $deleted_keys++;
-
             if ($deleted_keys) {
-        		$log=sprintf("Deleted %d memcache keys\n",$deleted_keys);
+        		$log=sprintf("Deleted %d keys from cache\n",$deleted_keys);
                 print $log;
 				syslog(LOG_NOTICE, $log);
             }
@@ -2979,6 +2994,23 @@ class SERQuota {
 
         return 1;
     }
+
+    function compareUsage() {
+    	$this->initMonthlyUsageFromCache();
+		$this->initMonthlyUsageFromDatabase();
+
+        foreach (array_keys($this->cachedUsage) as $_key) {
+            if ($this->SERAccounts[$_key]['usage']['calls'] && $this->SERAccounts[$_key]['usage']['calls'] != $this->cachedUsage[$_key]['usage']['calls']) {
+               $errorMargin=($this->cachedUsage[$_key]['usage']['calls']/$this->SERAccounts[$_key]['usage']['calls']-1)*100;
+               printf ("%50s Database=%10d Cached=%10d Error=%.4f%s\n",$_key,$this->SERAccounts[$_key]['usage']['calls'],$this->cachedUsage[$_key]['usage']['calls'],$errorMargin,"%");
+               $errors++;
+            }
+        }
+
+        if (!$errors) print "Cached usage is up to date with database usage.\n";
+
+    }
+
 }
 
 class RatingEngine {
@@ -3074,8 +3106,8 @@ class RatingEngine {
 
     function reloadSipAccountsWithQuota () {
 		if (is_object($this->CDRS->mc)) {
-        	if ($this->CDRS->mc->delete('subscribers_with_quota')) {
-            	syslog(LOG_NOTICE, "Deleted subscribers_with_quota key from memcache");
+        	if ($this->CDRS->mc->delete('subscribers')) {
+            	syslog(LOG_NOTICE, "Deleted subscribers key from memcache");
             }
         }
         return 1;

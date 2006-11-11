@@ -790,4 +790,7 @@ function unLockTables ($dbid) {
 	$dbid->query("unlock tables");
 }
 
+function changeLanguage() {
+}
+
 ?>

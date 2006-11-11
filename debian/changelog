@@ -1,3 +1,9 @@
+cdrtool (4.7-6) unstable; urgency=low
+
+  * Fixed a bug in quotaCheck process
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 11 Nov 2006 11:51:17 +0100
+
 cdrtool (4.7-5) unstable; urgency=low
 
   * Fixed Reload of rating tables

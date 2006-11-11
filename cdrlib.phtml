@@ -1620,25 +1620,12 @@ class CDR {
 
             if ($updatedFields) {
                 if ($this->CDRS->CDRdb1->query($query)) {
-                    if ($this->isCallerLocal()) {
-                        $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
-                        $_usage[$this->BillingPartyId]['usage']=array("calls"    => 1,
-                                                             "duration" => $this->duration,
-                                                             "cost"     => $Rate->price,
-                                                             "traffic"  => $_traffic
-                                                             );
-                        $_usage[$this->domain]['usage']= $_usage[$this->BillingPartyId]['usage'];
-                        $_usage['platform_out']['usage']= $_usage[$this->BillingPartyId]['usage'];
-
-                    } else {
-                        $_usage['platform_in']['usage']=array("calls"    => 1,
-                                                             "duration" => $this->duration,
-                                                             "cost"     => $Rate->price,
-                                                             "traffic"  => $_traffic
-                                                             );
-
-                    }
-
+                    $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
+                    $_usage[$this->BillingPartyId]['usage']=array("calls"    => 1,
+                                                                  "duration" => $this->duration,
+                                                                  "cost"     => $Rate->price,
+                                                                  "traffic"  => $_traffic
+                                                                 );
                     $this->cacheMonthlyUsage($_usage);
 
                     return 1;
