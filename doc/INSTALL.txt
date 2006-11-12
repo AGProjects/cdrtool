@@ -266,19 +266,28 @@ modparam("acc", "radius_missed_flag", 1)
 modparam("acc", "radius_extra",       "Sip-RPid=$avp(s:rpid); \
                                        Source-IP=$si; \
                                        Source-Port=$sp; \
-                                       Canonical-URI=$avp($can_uri); \
-                                       Billing-Party=$avp($billing_party); \
-                                       Divert-Reason=$avp(s:divert_reason); \
                                        X-RTP-Stat=$avp(s:rtp_statistics); \
                                        From-Header=$hdr(from); \
                                        User-Agent=$hdr(user-agent); \
                                        Contact=$hdr(contact); \
-                                       Event=$hdr(event)")
+                                       Event=$hdr(event); \
+                                       SIP-Proxy=$avp(s:sip-proxy)")
 
 Further, you must enable accounting in various parts of the routing script
-by setting the accounting flag.
+by setting the accounting flag and saving the AVP containing the proxy IP
+address..
 
-Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/openset/radius/
+route {
+       ...
+       setflag(ACCOUNTING_FLAG);
+       avp_write("SER_IP","$avp(s:sip-proxy)");
+       ...
+}
+
+Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/openser/radius/
+and uncomment the line:
+
+$INCLUDE               /etc/radiusclient-ng/dictionary
 
 
 SOAP engine

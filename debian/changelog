@@ -1,8 +1,11 @@
 cdrtool (4.7-6) unstable; urgency=low
 
   * Fixed a bug in quotaCheck process
+  * Log the real SIP-Proxy IP in radacct in place of NAS-IP-Address
+    Requires update of Freeradius server configuration (sql.conf and 
+    dictionary.ser) and OpenSER configuration.
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 11 Nov 2006 11:51:17 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 12 Nov 2006 12:39:51 +0100
 
 cdrtool (4.7-5) unstable; urgency=low
 

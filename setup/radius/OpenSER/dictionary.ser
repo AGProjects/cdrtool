@@ -91,4 +91,4 @@ ATTRIBUTE       User-Agent             222     string
 ATTRIBUTE       Contact                223     string
 ATTRIBUTE       Event                  224     string
 #ATTRIBUTE       Event-Timestamp        230     string
-
+ATTRIBUTE       SIP-Proxy              231     string
