@@ -1,17 +1,16 @@
 #!/usr/bin/php
 <?
-# This script blocks accounts in SER
+# This script blocks accounts in OpenSER
 # based on platform wide or user specified quota
-# - quota can be specified for cost or IP traffic in table
-#   ser.quota_user (see setup/create_quota_user.mysql)
+# - quota can be specified in openser.subscriber.quota
 # - account is blocked by adding SIP account in group quota
-#   and configuring ser.cfg to reject calls from such users
+#   and configuring openser.cfg to reject calls from such users
 # - Blocked Users must be deblocked manualy and their quota
 #   must be changed to a higher value otherwise
 #   subscriber gets blocked again at the next script run
 # - Add this script to cron to run every 5 minutes
-# - Notifications are sent only once to subscribers
-$verbose=1;
+# - Notifications are sent once to subscribers
+#$verbose=1;
 
 $b=time();
 define_syslog_variables();

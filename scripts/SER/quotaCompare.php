@@ -1,7 +1,17 @@
 #!/usr/bin/php
 <?
-# this script resets the quota system 
-# this script must be run once at the beginning of the calendar month
+# Due to the fact that the monthly usage information is stored in
+# a network cache, it is possible to have syncronization problems 
+# caused by network connectivity problmes or other causes
+
+# This script can be used to detect differences between real 
+# CDR usage and cached usage
+
+# Warning!
+# 
+# By running this script the CDR table will be read, 
+# which may cause slow database response to other applications
+
 
 define_syslog_variables();
 openlog("CDRTool", LOG_PID, LOG_LOCAL0);
@@ -18,6 +28,6 @@ $SERQuota_class = $DATASOURCES[$cdr_source]["UserQuotaClass"];
 if (!$SERQuota_class) $SERQuota_class="SERQuota";
 
 $Quota = new $SERQuota_class($CDRS);
-$Quota->deleteQuotaInitFlag();
+$Quota->compareUsage();
 
 ?>

@@ -1,5 +1,12 @@
 #!/usr/bin/php
 <?
+
+# this script creates monthly tables radacctYYYYMM
+# and copies CDR data from radacct table into it 
+
+# this script must run daily during a window of low traffic
+
+
 define_syslog_variables();
 openlog("CDRTool autorotate", LOG_PID, LOG_LOCAL0);
 

@@ -1,11 +1,17 @@
 #!/usr/bin/php
 <?
-# This script import RADIUS records from FREERADIUS generated files
+# This script can import radius records from the detail files
+
 # It accepts two arguments, first argument is the radacct file with
 # the full path, the second argument is an optional timezone against
 # which the timestamps are calculated
 # (defaults to CDRTool[provider][timezone] from global.inc)
 # Example: importRadius.php /tmp/detail-20040221 Europe/Amsterdam
+
+# Warning!
+#
+# This script is experimental and insufficiently untested
+
 
 $path=dirname(realpath($_SERVER['PHP_SELF']));
 include($path."/../../global.inc");

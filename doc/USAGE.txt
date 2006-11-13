@@ -25,9 +25,7 @@ Obtaining cumulative statistics from memcache
 
 Telnet to memcache server address as defined in /etc/default/cdrtool
 
-The following commands retrieve the current monthly usage for each entity:
+The following commands retrieve the current monthly usage for SIP users:
 
 get mu:user@example.com
-get mu:example.com
-get mu:platform_in
-get mu:platform_out
+get mu:platform
