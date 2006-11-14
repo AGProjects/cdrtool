@@ -82,7 +82,8 @@ steps are performed during the normalization process.
            "minimumDurationCharged"      => 0,     // Rate a minimum of X seconds
            "durationPeriodRated" 	 => 60     // Rate is per 60 seconds
            "trafficSizeRated"            => 1024,  // Default we rate per 1 MB 
-           "reportMissingRates"          => 0      // Send emails to administrator in case of missing rates
+           "reportMissingRates"          => 0      // Send emails to administrator in case of missing rates,
+           "minimumDuration"             => 0      // minimum duration to rate, if call duration is shorter the price is zero
             );
 
    Pricing formula
@@ -220,6 +221,8 @@ billing_customers
 | profile_name2_alt |
 | profileNGN        |
 | timezone          |
+| increment         |
+| min_duration      |
 +-------------------+
 
 billing_profiles
