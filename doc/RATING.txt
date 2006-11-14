@@ -519,3 +519,12 @@ Clients		Rating command			Execution speed
 
 Client means either a SIP Proxy entity or a CDRTool server, which performs
 the normalization process.
+
+
+Notes
+-----
+
+The pre-calculated maximum duration of prepaid calls may be affected by
+rating plans with custom time increments and minimum charged durations. Do
+not use minimum durations or custom increments for customers using the
+prepaid application.
