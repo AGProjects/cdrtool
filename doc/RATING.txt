@@ -74,34 +74,48 @@ steps are performed during the normalization process.
 
 2. Calculate the call Price based on duration and destination id (country codes).
    In global.inc there are several variables that affect how the price is
-   calculated. These settings are global per CDRTool installation.
+   calculated.
+   These settings are global per CDRTool installation but some can be overwritten
+   with per customer values in the billing_customers table.
 
    $PRICING=array( 
-           "priceDenominator"   	 => 10000, // Rates units
-           "priceDecimalDigits" 	 => 4,     // Decimal information
-           "minimumDurationCharged"      => 0,     // Rate a minimum of X seconds
-           "durationPeriodRated" 	 => 60     // Rate is per 60 seconds
-           "trafficSizeRated"            => 1024,  // Default we rate per 1 MB 
-           "reportMissingRates"          => 0      // Send emails to administrator in case of missing rates,
-           "minimumDuration"             => 0      // minimum duration to rate, if call duration is shorter the price is zero
+           "priceDenominator"   	 => 10000, // Rates units (global setting)
+           "priceDecimalDigits" 	 => 4,     // Decimal information (global setting)
+           "minimumDurationCharged"  => 0,     // Rate a minimum of X seconds (per customer)
+           "minimumDuration"         => 0,     // Minimum duration to rate, if call duration is shorter the price is zero (per customer)
+           "durationPeriodRated" 	 => 60     // Rate is per 60 seconds (global setting)
+           "trafficSizeRated"        => 1024,  // Default we rate per 1 MB (global setting)
+           "reportMissingRates"      => 0      // Send emails to administrator in case of missing rates
             );
 
    Pricing formula
    ---------------
-   if durationForRating > minimumDurationCharged then
-   Price =
-	 connectCost/priceDenominator+
-         durationRate*durationForRating/durationPeriodRated/priceDenominator+
-         trafficRate/priceDenominator*(inputTraffic+outputTraffic)/8+
-         applicationRate/priceDenominator
-   else 
-   Price = 0 	
 
-3. Save the calculated Price and DestinationId for each non zero price
-   CDRs. Having the price stored in database, it is possible to build
-   statistics to display consolidated revenues per country code or network.
+   if min_duration then
+	   minimumDurationCharged = min_duration
+   else if minimumDurationCharged set in global inc
+	   use minimumDurationCharged from global.inc
+   else
+   	   minimumDurationCharged = call duration
+
+   if increment then
+	   	durationForRating = round to the next increment
+   else
+        durationForRating = call duration
+
+   if durationForRating >= minimumDurationCharged then
+   		Price = connectCost/priceDenominator+
+           durationRate*durationForRating/durationPeriodRated/priceDenominator+
+           trafficRate/priceDenominator*(inputTraffic+outputTraffic)/8+
+           applicationRate/priceDenominator
+   else 
+        Price = 0
+
+3. Save the calculated price and DestinationId for each non zero call
+   in the CDRs. Having the price stored in database, it is possible to build
+   statistics to display consolidated revenues per country code, network or subscriber.
    	
-   Update the normalized A number and C number of each CDR.
+   Update the normalized caller and destination for each CDR.
  
 
 Time of the day rating 
