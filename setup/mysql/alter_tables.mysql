@@ -361,4 +361,4 @@ CREATE TABLE `memcache` (
 
 4.7-6
 alter table billing_customers add column increment smallint unsigned not null;
-alter table billing_customers add column min_duration  smallint unsigned not null;
+alter table billing_customers add column min_duration smallint unsigned not null;
