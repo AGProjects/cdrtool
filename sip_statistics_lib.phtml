@@ -333,7 +333,11 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
             $this->statistics = $this->getrtpsessions($server, "25060", $this->statistics);
         }
 
-        $totals=array();
+        $totals=array('online_users' =>0,
+                      'sessions'     =>0,
+                      'caller'       =>0,
+                      'called'       =>0
+                      );
 
         while(list($key, $usage) = each($this->statistics)) {
         	if ($usage['online_users']) {
