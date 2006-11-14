@@ -157,6 +157,12 @@ class Rate {
         if (!$this->duration) $this->duration = 0;
 		if (!$this->traffic)  $this->traffic  = 0;
 
+		if (preg_match("/video/i",$this->applicationType)) {
+            $this->applicationType="video";
+        } else {
+            $this->applicationType="audio";
+        }
+
         $trafficRate            = 0;
         $applicationRate        = 0;
         $durationRate           = 0;
@@ -195,28 +201,34 @@ class Rate {
             $this->destinationNamePrint=$this->destinationName;
         }
 
-        $this->rateInfo = $this->rateInfo .
-
-        	"         App: PSTN voice\n".
-            " Destination: $this->DestinationId ($this->destinationNamePrint)\n".
-            "    Customer: $this->CustomerProfile\n";
-
         if ($this->increment > 1) {
             // increase the billed duration to the next increment
             $this->duration = $this->increment * ceil($this->duration / $this->increment);
-            $this->rateInfo = $this->rateInfo .
-            "    Increment: $this->increment s\n";
         }
 
         if ($this->min_duration > 1) {
         	$this->minimumDurationCharged = $this->min_duration;
-            $this->rateInfo = $this->rateInfo .
-            " Min duration: $this->min_duration s\n";
         }
 
         if ($this->duration && $this->DestinationId) {
             dprint("Rate PSTN call having $this->duration seconds to $this->cNumber DestinationId=$this->DestinationId ($this->destinationName)");
             unset($IntervalsForPricing);
+
+            $this->rateInfo = $this->rateInfo .
+    
+                "         App: PSTN voice\n".
+                " Destination: $this->DestinationId ($this->destinationNamePrint)\n".
+                "    Customer: $this->CustomerProfile\n";
+    
+            if ($this->increment > 1) {
+                $this->rateInfo = $this->rateInfo .
+                "    Increment: $this->increment s\n";
+            }
+    
+            if ($this->min_duration > 1) {
+                $this->rateInfo = $this->rateInfo .
+                " Min duration: $this->min_duration s\n";
+            }
 
             $i=0;
             $durationRatedTotal=0;
@@ -264,6 +276,10 @@ class Rate {
 		if ($this->duration) {
         	$this->GetProfilesNGN();
             if ($this->allProfiles[profileNGN]) {
+                $this->rateInfo = $this->rateInfo .
+                    "         App: $this->applicationType\n".
+                    "    Customer: $this->CustomerProfile\n";
+
                 dprint("Rate NGN call having $this->duration seconds to $this->cNumber");
                 if ($foundRate             = $this->GetRateNGN()) {
                     $foundRates[]          = $foundRate;
@@ -706,26 +722,20 @@ class Rate {
 
     function GetRateNGN() {
 
-		if (preg_match("/video/i",$this->applicationType)) {
-            $application="video";
-        } else {
-            $application="audio";
-        }
-
         dprint("<b>GetRateNGN($application)</b>");
 
-        $this->rateName=$this->RatingTables->profilesNGN[$this->allProfiles[profileNGN]][$application][rate];
+        $this->rateName=$this->RatingTables->profilesNGN[$this->allProfiles[profileNGN]][$this->applicationType][rate];
 
         if (!$this->rateName) {
-        	dprint("Cound not find any NGN rate for application=\"$application\"");
+        	dprint("Cound not find any NGN rate for application $this->applicationType");
             return 0;
         } else {
-        	dprint("Found NGN rate $this->rateName for application=\"$application\"");
+        	dprint("Found NGN rate $this->rateName for application $this->applicationType");
         }
 
         $rate=array(
                     "customer"      =>$this->CustomerProfile,
-                    "application"   =>"NGN $this->applicationType ($application)",
+                    "application"   =>$this->applicationType,
                     "duration"      =>$this->duration,
                     "profile"       =>$this->allProfiles[profileNGN],
                     "rate"          =>$this->rateName,
