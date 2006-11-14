@@ -32,10 +32,9 @@ $userAgentImages = array("Asterisk"       => "asterisk.png",
                          "-IMVP"          => "innomedia-mta5000.png",
                          "3610\/"         => "siemens-3610.png",
                          "cirpack"        => "cirpack.png",
-                         "Brcm Callctrl"  => "aastra.png",
+                         "Brcm-Callctrl"  => "webstarepx2203.png",
                          "Audiocodes-Sip-Gateway-MP" => "audiocodes-mp124.png",
                          "Nokia"	  => "nokia.png",
-                         "EPX2203"	  => "webstarepx2203.png",
                          "CopperJet"	  => "copperjet16162p.png"
                          );
 
