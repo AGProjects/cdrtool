@@ -183,6 +183,37 @@ class Rate {
         dprint("BillingPartyId: $this->BillingPartyId");
         dprint("Billing domain: $this->domain");
 
+		if (!$this->GetProfiles()) {
+            return 0;
+        }
+
+        $this->trafficKB=number_format($this->traffic/1024,0,"","");
+
+        if (!$this->destinationName) {
+            $this->destinationNamePrint="Internet";
+        } else {
+            $this->destinationNamePrint=$this->destinationName;
+        }
+
+        $this->rateInfo = $this->rateInfo .
+
+        	"         App: PSTN voice\n".
+            " Destination: $this->DestinationId ($this->destinationNamePrint)\n".
+            "    Customer: $this->CustomerProfile\n";
+
+        if ($this->increment > 1) {
+            // increase the billed duration to the next increment
+            $this->duration = $this->increment * ceil($this->duration / $this->increment);
+            $this->rateInfo = $this->rateInfo .
+            "    Increment: $this->increment s\n";
+        }
+
+        if ($this->min_duration > 1) {
+        	$this->minimumDurationCharged = $this->min_duration;
+            $this->rateInfo = $this->rateInfo .
+            " Min duration: $this->min_duration s\n";
+        }
+
         if ($this->duration && $this->DestinationId) {
             dprint("Rate PSTN call having $this->duration seconds to $this->cNumber DestinationId=$this->DestinationId ($this->destinationName)");
             unset($IntervalsForPricing);
@@ -231,9 +262,12 @@ class Rate {
         }
 
 		if ($this->duration) {
-        	dprint("Rate NGN call having $this->duration seconds to $this->cNumber");
-            if ($foundRate             = $this->GetRateNGN()) {
-                $foundRates[]          = $foundRate;
+        	$this->GetProfilesNGN();
+            if ($this->allProfiles[profileNGN]) {
+                dprint("Rate NGN call having $this->duration seconds to $this->cNumber");
+                if ($foundRate             = $this->GetRateNGN()) {
+                    $foundRates[]          = $foundRate;
+                }
             }
         }
 
@@ -244,7 +278,7 @@ class Rate {
         foreach ($foundRates as $thisRate) {
         	$spanPrice=0;
             $span++;
-            if ($j>0) {
+            if ($j > 0) {
                 $payConnect=0;
                 $durationForRating=$thisRate['duration'];
             } else {
@@ -307,20 +341,9 @@ class Rate {
             	$this->price  = $this->price+$connectCostSpan/$this->priceDenominator*$payConnect;
             }
 
-			$this->trafficKB=number_format($this->traffic/1024,0,"","");
-
-            if (!$this->destinationName) {
-                $this->destinationNamePrint="Internet";
-            } else {
-            	$this->destinationNamePrint=$this->destinationName;
-            }
-
             $this->rateInfo = $this->rateInfo .
             "        Span: $span\n".
-            "    Duration: $durationForRating s\n".
-            "        Appl: $thisRate[application] ($this->trafficKB KB)\n".
-            " Destination: $this->DestinationId ($this->destinationNamePrint)\n".
-            "    Customer: $thisRate[customer]\n";
+            "    Duration: $durationForRating s\n";
 
             $this->rateSyslog=$this->rateSyslog."Span=$span Dur=$durationForRating Prefix=$this->DestinationId Name=$this->destinationNamePrint $thisRate[customer]";
 
@@ -382,6 +405,58 @@ class Rate {
         return 1;
     }
 
+    function GetProfiles() {
+
+        /*
+        lookup the profile_name in billing_customers in the following order:
+           subscriber, domain, gateway (based on $dayofweek):
+           - profile1 matches days [1-5] (Work-day)
+           - profile2 matches days [6-0] (Week-end)
+           - week starts with 0 Sunday and ends with 6 Saturday
+
+            Alternatively look for profile1_alt and profile2_alt
+            If no rates are found for destination in the profileX,
+            than lookup rates in profileX_alt
+        */
+
+        if ($this->RatingTables->customers[$this->BillingPartyId]['profile1'] && $this->RatingTables->customers[$this->BillingPartyId]['profile2']) {
+            // Subscriber XXX@domain.com has rating profiles assigned
+            $this->allProfiles     = $this->RatingTables->customers[$this->BillingPartyId];
+            $this->CustomerProfile = "subscriber=$this->BillingPartyId";
+            $this->increment       = $this->RatingTables->customers[$this->BillingPartyId]['increment'];
+            $this->min_duration    = $this->RatingTables->customers[$this->BillingPartyId]['min_duration'];
+
+        } elseif ($this->RatingTables->customers[$this->domain]['profile1'] && $this->RatingTables->customers[$this->domain]['profile2']) {
+            // Domain domain.com has rating profiles assigned
+            $this->allProfiles     = $this->RatingTables->customers[$this->domain];
+            $this->CustomerProfile = "domain=$this->domain";
+            $this->increment       = $this->RatingTables->customers[$this->domain]['increment'];
+            $this->min_duration    = $this->RatingTables->customers[$this->domain]['min_duration'];
+
+        } elseif ($this->RatingTables->customers[$this->gateway]['profile1'] && $this->RatingTables->customers[$this->gateway]['profile2']) {
+            // Gateway (Source IP) has rating profiles assigned
+            $this->allProfiles     = $this->RatingTables->customers[$this->gateway];
+            $this->CustomerProfile = "gateway=$this->gateway";
+            $this->increment       = $this->RatingTables->customers[$this->gateway]['increment'];
+            $this->min_duration    = $this->RatingTables->customers[$this->gateway]['min_duration'];
+
+        } elseif ($this->RatingTables->customers['default']['profile1'] && $this->RatingTables->customers['default']['profile2']) {
+            // Otherwise we use the default profiles
+            $this->allProfiles     = $this->RatingTables->customers['default'];
+            $this->CustomerProfile = "default";
+            $this->increment       = $this->RatingTables->customers['default']['increment'];
+            $this->min_duration    = $this->RatingTables->customers['default']['min_duration'];
+        }
+
+		if ($this->min_duration > 1) $this->minimumDurationCharged = $this->min_duration;
+
+        if (!$this->allProfiles[profile1] || !$this->allProfiles[profile2] ) {
+            dprint("Cannot find billing profiles for $this->BillingPartyId");
+            return 0;
+        }
+
+        return 1;
+    }
 
     function GetRatePSTN($dayofyear,$dayofweek,$hourofday,$durationRatedAlready) {
         dprint("<b>GetRatePSTN(DayOfYear=$dayofyear,DayOfWeek=$dayofweek,HourOfDay=$hourofday,durationRatedAlready=$durationRatedAlready)</b>");
@@ -409,17 +484,7 @@ class Rate {
         Rating logic
         ------------
 
-        1. lookup the profile_name in billing_customers in the following order:
-           subscriber, domain, gateway (based on $dayofweek):
-           - profile1 matches days [1-5] (Work-day)
-           - profile2 matches days [6-0] (Week-end)
-           - week starts with 0 Sunday and ends with 6 Saturday
-
-            Alternatively look for profile1_alt and profile2_alt
-            If no rates are found for destination in the profileX,
-            than lookup rates in profileX_alt
-
-        2. using the profile_name found, lookup the rate_name based
+        1. using the profile_name found, lookup the rate_name based
            on $hourofday in billing_profiles
            - the day may be split in maximum 4 periods
            - each day starts with hour 0 and ends with hour 24
@@ -430,41 +495,12 @@ class Rate {
            When the hour matches an interval use the rate_nameX found
            to lookup the rate in billing_rates
            - if no record is found use the rate called 'default'
-        3. lookup in billing_rates the record having same name found above
+        2. lookup in billing_rates the record having same name found above
            and billing_rates.destination = $this->DestinationId
            - return an array with all the values to
            $this->calculate() function that called us
 
         */
-
-        if ($this->RatingTables->customers[$this->BillingPartyId]['profile1'] && $this->RatingTables->customers[$this->BillingPartyId]['profile2']) {
-            // Subscriber XXX@domain.com has rating profiles assigned
-            $this->allProfiles=$this->RatingTables->customers[$this->BillingPartyId];
-            $this->CustomerProfile="subscriber=$this->BillingPartyId";
-
-        } elseif ($this->RatingTables->customers[$this->domain]['profile1'] && $this->RatingTables->customers[$this->domain]['profile2']) {
-            // Domain domain.com has rating profiles assigned
-            $this->allProfiles=$this->RatingTables->customers[$this->domain];
-            $this->CustomerProfile="domain=$this->domain";
-
-        } elseif ($this->RatingTables->customers[$this->gateway]['profile1'] && $this->RatingTables->customers[$this->gateway]['profile2']) {
-            // Gateway (Source IP) has rating profiles assigned
-            $this->allProfiles=$this->RatingTables->customers[$this->gateway];
-            $this->CustomerProfile="gateway=$this->gateway";
-
-        } elseif ($this->RatingTables->customers['default']['profile1'] && $this->RatingTables->customers['default']['profile2']) {
-            // Otherwise we use the default profiles
-            $this->allProfiles=$this->RatingTables->customers['default'];
-            $this->CustomerProfile="default";
-        }
-
-        if (!$this->allProfiles[profile1] || !$this->allProfiles[profile2] ) {
-            dprint("Cannot find billing profiles for $this->BillingPartyId");
-            return 0;
-        }
-
-        dprint("Found profiles for $this->CustomerProfile");
-        dprint_r($this->allProfiles);
 
         // get work-day or weekend profile
         if ($this->RatingTables->holidays[$dayofyear]) {
@@ -641,18 +677,7 @@ class Rate {
         return $rate;
     }
 
-    function GetRateNGN() {
-
-		if (preg_match("/video/i",$this->applicationType)) {
-            $application="video";
-        } else {
-            $application="audio";
-        }
-
-        dprint("<b>GetRateNGN($application)</b>");
-
-        dprint("Billing domain: $this->domain");
-        dprint("BillingPartyId: $this->BillingPartyId");
+    function GetProfilesNGN() {
 
         if ($this->RatingTables->customers[$this->BillingPartyId][profileNGN]) {
             $this->allProfiles     = $this->RatingTables->customers[$this->BillingPartyId];
@@ -675,6 +700,19 @@ class Rate {
         	dprint("Could not find any NGN profile for $this->aNumber");
             return 0;
         }
+
+        return 1;
+	}
+
+    function GetRateNGN() {
+
+		if (preg_match("/video/i",$this->applicationType)) {
+            $application="video";
+        } else {
+            $application="audio";
+        }
+
+        dprint("<b>GetRateNGN($application)</b>");
 
         $this->rateName=$this->RatingTables->profilesNGN[$this->allProfiles[profileNGN]][$application][rate];
 
@@ -741,6 +779,8 @@ class Rate {
         $i=0;
         $durationRatedTotal=0;
 
+        $this->GetProfiles();
+
         while ($Balance > 0 ) {
             $span++;
 
@@ -757,13 +797,14 @@ class Rate {
             }
 
             $foundRate            = $this->GetRatePSTN($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
+
             dprint_r($foundRate);
 
             $thisRate=$foundRate;
 
-            if ($j>0) {
+            if ($j > 0) {
                 $payConnect=0;
-                $durationForRating=$thisRate['duration'];
+                $durationForRating = $thisRate['duration'];
             } else {
                 $payConnect=1;
                 if ($this->minimumDurationCharged && $this->duration < $this->minimumDurationCharged) {
@@ -785,6 +826,7 @@ class Rate {
                     syslog(LOG_NOTICE,"$Balance <= $setupBalanceRequired");
                     return 0;
                 }
+
                 $Balance = $Balance-$setupBalanceRequired;
 
             } else {
@@ -888,7 +930,7 @@ class RatingTables {
                                                                  "domain"=>array("size"=>15,
                                                                  				 "name"=>"Domain"
                                                                                  ),
-                                                                 "subscriber"=>array("size"=>30,
+                                                                 "subscriber"=>array("size"=>20,
                                                                  				 "name"=>"Subscriber"
                                                                                  ),
                                                                  "profile_name1"=>array("size"=>10,
@@ -908,6 +950,12 @@ class RatingTables {
                                                                                  ),
                                                                  "timezone"     =>array("size"=>20,
                                                                  				 "name"=>"Timezone"
+                                                                                 ),
+                                                                 "increment"     =>array("size"=>3,
+                                                                 				 "name"=>"Incr"
+                                                                                 ),
+                                                                 "min_duration"  =>array("size"=>3,
+                                                                 				 "name"=>"Min"
                                                                                  )
 
                                                  				)
@@ -1389,6 +1437,8 @@ class RatingTables {
             $timezone      = trim($p[7]);
             $profile_name1_alt = trim($p[8]);
             $profile_name2_alt = trim($p[9]);
+            $increment     = trim($p[10]);
+            $min_duration  = trim($p[11]);
 
             if ($ops=="1") {
                 $query="insert into billing_customers
@@ -1401,7 +1451,9 @@ class RatingTables {
                 profileNGN,
                 timezone,
                 profile_name1_alt,
-                profile_name2_alt
+                profile_name2_alt,
+                increment,
+                min_duration
                 ) values (
                 '$gateway',
                 '$domain',
@@ -1411,7 +1463,9 @@ class RatingTables {
                 '$profileNGN',
                 '$timezone',
                 '$profile_name1_alt',
-                '$profile_name2_alt'
+                '$profile_name2_alt',
+                '$increment',
+                '$min_duration'
                 )";
 
                 $this->cdrtool->query($query);
@@ -1445,7 +1499,9 @@ class RatingTables {
                     profile_name1_alt = '$profile_name1_alt',
                     profile_name2_alt = '$profile_name2_alt',
                     profileNGN        = '$profileNGN',
-                    timezone          = '$timezone'
+                    timezone          = '$timezone',
+                    increment         = '$increment',
+                    min_duration      = '$min_duration'
 
                     where gateway     = '$gateway'
                     and domain        = '$domain'
@@ -1467,7 +1523,9 @@ class RatingTables {
                     profileNGN,
                     timezone,
                     profile_name1_alt,
-                    profile_name2_alt
+                    profile_name2_alt,
+                    increment,
+                    min_duration
                     ) values (
                     '$gateway',
                     '$domain',
@@ -1477,7 +1535,9 @@ class RatingTables {
                     '$profileNGN',
                     '$timezone',
                     '$profile_name1_alt',
-                    '$profile_name2_alt'
+                    '$profile_name2_alt',
+                    '$increment',
+                    '$min_duration'
                     )";
 
                     $this->cdrtool->query($query);
@@ -1984,6 +2044,9 @@ class RatingTables {
             $profileNGN   = $this->cdrtool->Record['profileNGN'];
             $timezone     = $this->cdrtool->Record['timezone'];
 
+            $increment    = $this->cdrtool->Record['increment'];
+            $min_duration = $this->cdrtool->Record['min_duration'];
+
             if ($profile1 || $profile2 || $profileNGN) {
                 $i++;
                 if ($subscriber) {
@@ -1997,7 +2060,9 @@ class RatingTables {
 	                        "profile1_alt" => $profile1_alt,
     	                    "profile2_alt" => $profile2_alt,
         	                "profileNGN"   => $profileNGN,
-            	            "timezone"     => $timezone
+            	            "timezone"     => $timezone,
+                            "increment"    => $increment,
+                            "min_duration" => $min_duration
                 	        );
                     }
                     continue;
@@ -2014,7 +2079,9 @@ class RatingTables {
                 	        "profile1_alt" => $profile1_alt,
                     	    "profile2_alt" => $profile2_alt,
                         	"profileNGN"   => $profileNGN,
-	                        "timezone"     => $timezone
+	                        "timezone"     => $timezone,
+                            "increment"    => $increment,
+                            "min_duration" => $min_duration
                         );
                     }
                     continue;
@@ -2031,7 +2098,9 @@ class RatingTables {
                         "profile1_alt" => $profile1_alt,
                         "profile2_alt" => $profile2_alt,
                         "profileNGN"   => $profileNGN,
-                        "timezone"     => $timezone
+                        "timezone"     => $timezone,
+                        "increment"    => $increment,
+                        "min_duration" => $min_duration
                         );
                     }
                     continue;
@@ -2044,7 +2113,9 @@ class RatingTables {
                         "profile1_alt" => $profile1_alt,
                         "profile2_alt" => $profile2_alt,
                         "profileNGN"   => $profileNGN,
-                        "timezone"     => $timezone
+                        "timezone"     => $timezone,
+                        "increment"    => $increment,
+                        "min_duration" => $min_duration
                         );
              }
 

@@ -122,6 +122,8 @@ CREATE TABLE `billing_customers` (
   `profile_name2_alt` varchar(10) NOT NULL default '',
   `profileNGN` varchar(10) NOT NULL default '',
   `timezone` varchar(128) NOT NULL default '',
+  `increment` smallint unsigned not null,       
+  `min_duration`  smallint unsigned not null,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `cust_idx` (`gateway`,`domain`,`subscriber`),
   KEY `subsc_idx` (`gateway`,`domain`,`subscriber`),

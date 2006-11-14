@@ -1,2 +1,2 @@
-Ops,Gateway,Domain,Subscriber,WD Profile,WE Profile,NGN Profile,Timezone
-2,,,,441,442,,Europe/Amsterdam
+Ops,Gateway,Domain,Subscriber,WD Profile,WE Profile,NGN Profile,Timezone,Incr,Min
+2,,,,441,442,,Europe/Amsterdam,0,0

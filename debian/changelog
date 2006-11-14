@@ -1,13 +1,17 @@
 cdrtool (4.7-6) unstable; urgency=low
 
-  * Log the real SIP-Proxy IP in radacct in place of NAS-IP-Address
-    Requires update of Freeradius server configuration (sql.conf and
-    dictionary.ser) and OpenSER configuration
-  * Fixed bugs in quotaCheck process, added quotaCompare.php script 
-    to check sync problems between CDR, usage and cached usage, removed 
-    cache of inbound traffic usage
+  * Log the real SIP-Proxy IP in radacct in place of NAS-IP-Address Requires
+    update of Freeradius server configuration (sql.conf and dictionary.ser)
+    and OpenSER configuration
+  * Added per customer settings to specify minimum charged duration and time
+    increments. For example it is possible to charge a minimum of 30 seconds
+    and round up to every next 10 seconds.  Requires two new columns in
+    billing_customers table (see alter_tables.mysql)
+  * Fixed bugs in quotaCheck process, added quotaCompare.php script to check
+    sync problems between CDR, usage and cached usage, removed cache of
+    inbound traffic usage
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 13 Nov 2006 23:17:59 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 14 Nov 2006 00:59:12 +0100
 
 cdrtool (4.7-5) unstable; urgency=low
 
