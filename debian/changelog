@@ -12,9 +12,12 @@ cdrtool (4.7-6) unstable; urgency=low
     inbound traffic usage
   * Added new SIP UA pictures (Nokia, Scientific-Atlanta Webstar, Ekiga)
   * Fixed errors in building statistics for online totals
-  * Authorized access to the Usage web page
+  * Authorized access to the Usage web page.
+    /var/www/CDRTool/status/usage/index.html must be deleted
+    /var/www/CDRTool/status/usage/index.phtml must be generated using
+    /var/www/CDRTool/scripts/generateHTMLUsageIndexFile.php script 
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 15 Nov 2006 15:44:36 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 15 Nov 2006 15:49:24 +0100
 
 cdrtool (4.7-5) unstable; urgency=low
 
