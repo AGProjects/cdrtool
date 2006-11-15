@@ -9,7 +9,7 @@ class SIPstatistics {
     	$this->mrtgcfg_file    = $CDRTool['Path']."/status/usage/sip_statistics.mrtg";
         $this->harvest_file    = "/tmp/CDRTool-sip-statistics.txt";
         $this->mrtgcfg_dir     = $CDRTool['Path']."/status/usage";
-        $this->index_file      = $CDRTool['Path']."/status/usage/index.html";
+        $this->index_file      = $CDRTool['Path']."/status/usage/index.phtml";
 
         $this->harvest_script  = $CDRTool['Path']."/scripts/harvestStatistics.php";
         $this->generateMrtgDataScript     = $CDRTool['Path']."/scripts/generateMrtgData.php";
@@ -92,9 +92,15 @@ class SIPstatistics {
 
 		$title=$CDRTool['provider']['name']." SIP statistics";
 
-        fwrite($handle,"
-
-            <!DOCTYPE html PUBLIC '-//W3C//DTD HTML 4.0 Transitional//EN'>
+        fwrite($handle,"<?
+            include(\"../../global.inc\");
+            page_open(
+                 array(\"sess\" => \"CDRTool_Session\",
+                       \"auth\" => \"CDRTool_Auth\",
+                       \"perm\" => \"CDRTool_Perm\"
+                       ));
+            \$perm->check(\"statistics\",\"admin\");
+            ?>
             <HTML>
             <HEAD>
                 <TITLE>$title</TITLE>
@@ -113,7 +119,8 @@ class SIPstatistics {
 
             $key="total";
 
-            $block=sprintf("<TR>
+            $block=sprintf("
+            <TR>
             <TD><DIV align='center'><B> Online Users for %s </B></DIV>
             <DIV><A HREF='%s_users.html'><IMG BORDER=0 ALT='%s_users Traffic Graph' SRC='%s_users-day.png'></A>
             <SMALL><!--#flastmod file='%s_users.html' --></SMALL></DIV>
@@ -124,7 +131,8 @@ class SIPstatistics {
             <DIV><A HREF='%s_traffic.html'><IMG BORDER=0 ALT='%s_traffic Traffic Graph' SRC='%s_traffic-day.png'></A>
             <SMALL><!--#flastmod file='%s_traffic.html' --></SMALL></DIV>
             </TD></TR>
-            <TR>",
+            <TR>
+            ",
             $key,
             $key,
             $key,
@@ -144,10 +152,13 @@ class SIPstatistics {
             $key
             );
 
+
         	fwrite($handle,$block);
 
     	while(list($key,$value) = each($this->SipEnabledZones)) {
-            $block=sprintf("<TR>
+            $block=sprintf("
+
+            <TR>
             <TD><DIV align='center'><B> Online Users for %s </B></DIV>
             <DIV><A HREF='%s_users.html'><IMG BORDER=0 ALT='%s_users Traffic Graph' SRC='%s_users-day.png'></A>
             <SMALL><!--#flastmod file='%s_users.html' --></SMALL></DIV>
@@ -158,7 +169,8 @@ class SIPstatistics {
             <DIV><A HREF='%s_traffic.html'><IMG BORDER=0 ALT='%s_traffic Traffic Graph' SRC='%s_traffic-day.png'></A>
             <SMALL><!--#flastmod file='%s_traffic.html' --></SMALL></DIV>
             </TD></TR>
-            <TR>",
+            <TR>
+            ",
             $key,
             $key,
             $key,
@@ -184,8 +196,10 @@ class SIPstatistics {
       	fwrite($handle,"
 		</TABLE>
 		</BODY>
-		</HTML>"
-        );
+		</HTML>
+        <?
+        page_close();
+        ?>");
         fclose($handle);
     }
 

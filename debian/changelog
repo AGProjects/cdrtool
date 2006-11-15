@@ -10,10 +10,11 @@ cdrtool (4.7-6) unstable; urgency=low
   * Fixed bugs in quotaCheck process, added quotaCompare.php script to check
     sync problems between the CDR usage and cached usage, removed cache for
     inbound traffic usage
-  * Added new SIP UA pictures (Nokia, Scientific-Atlanta Webstar)
+  * Added new SIP UA pictures (Nokia, Scientific-Atlanta Webstar, Ekiga)
   * Fixed errors in building statistics for online totals
+  * Authorized access to the Usage web page
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 14 Nov 2006 14:11:46 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 15 Nov 2006 15:44:36 +0100
 
 cdrtool (4.7-5) unstable; urgency=low
 
