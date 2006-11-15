@@ -604,7 +604,7 @@ class pageLayout {
         print "| <a href=accounts.phtml>Accounts</a>";
         
         if ($perm->have_perm("statistics") && $perm->have_perm("admin")) {
-            print "| <a href=status/usage/index.html target=sip_statistics>Usage</a>";
+            print "| <a href=status/usage/index.phtml target=sip_statistics>Usage</a>";
         }
         
         $now_print=Date("Y-m-d H:i:s",time());
