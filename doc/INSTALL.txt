@@ -271,7 +271,7 @@ modparam("acc", "radius_extra",       "Sip-RPid=$avp(s:rpid); \
                                        User-Agent=$hdr(user-agent); \
                                        Contact=$hdr(contact); \
                                        Event=$hdr(event); \
-                                       SIP-Proxy=$avp(s:sip-proxy)")
+                                       SIP-Proxy-IP=$avp(s:sip-proxy)")
 
 Further, you must enable accounting in various parts of the routing script
 by setting the accounting flag and saving the AVP containing the proxy IP

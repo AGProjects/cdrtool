@@ -1,6 +1,6 @@
 cdrtool (4.7-6) unstable; urgency=low
 
-  * Log the real SIP-Proxy IP in radacct in place of NAS-IP-Address. Requires
+  * Log the real SIP-Proxy-IP in radacct in place of NAS-IP-Address. Requires
     update of Freeradius server configuration (sql.conf and dictionary.ser)
     and OpenSER configuration
   * Added per customer settings to specify the minimum charged duration and
@@ -15,9 +15,10 @@ cdrtool (4.7-6) unstable; urgency=low
   * Authorized access to the Usage web page.
     /var/www/CDRTool/status/usage/index.html must be deleted
     /var/www/CDRTool/status/usage/index.phtml must be generated using
-    /var/www/CDRTool/scripts/generateHTMLUsageIndexFile.php script 
+    /var/www/CDRTool/scripts/generateHTMLUsageIndexFile.php script
+  * 
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 15 Nov 2006 15:49:24 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 16 Nov 2006 09:23:00 +0100
 
 cdrtool (4.7-5) unstable; urgency=low
 
