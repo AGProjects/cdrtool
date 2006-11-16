@@ -1490,11 +1490,12 @@ class CDRS_ser_radius extends CDRS {
                     printf ("Found %d CDRs for normalization. ",$this->status['normalized']);
                     if ($this->status['cached_keys']['saved_keys']) {
                     	if (is_object($this->mc)) {
+                        	printf ("Cache use %.0f%s. ",$this->mc_usage,"%");
                         	$cached_place="memory";
                         } else {
                         	$cached_place="database";
                         }
-                        printf ("Cached usage for %d entities in %s. ",$this->status['cached_keys']['saved_keys'],$cached_place);
+                        printf ("Cached usage for %d callers in %s. ",$this->status['cached_keys']['saved_keys'],$cached_place);
                     }
                 }
             }

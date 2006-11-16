@@ -16,9 +16,9 @@ cdrtool (4.7-6) unstable; urgency=low
     /var/www/CDRTool/status/usage/index.html must be deleted
     /var/www/CDRTool/status/usage/index.phtml must be generated using
     /var/www/CDRTool/scripts/generateHTMLUsageIndexFile.php script
-  * 
+  * Show memcache capacity usage
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 16 Nov 2006 09:23:00 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 16 Nov 2006 19:49:50 +0100
 
 cdrtool (4.7-5) unstable; urgency=low
 

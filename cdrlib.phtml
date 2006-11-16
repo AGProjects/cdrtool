@@ -79,7 +79,11 @@ class CDRS {
 
             if ($mc->pconnect($memcache_host,$memcache_port)) {
                 $this->mc = &$mc;
-                $log=sprintf ("Connected to memcache %s:%d version %s\n",$memcache_host,$memcache_port, $this->mc->getVersion());
+                if ($mc_stats=$this->mc->getStats()) {
+                	$this->mc_usage=$mc_stats['bytes']/$mc_stats['limit_maxbytes']*100;
+                }
+                $log=sprintf ("Connected to memcache %s:%d version %s, usage %.0f%s\n",$memcache_host,$memcache_port, $this->mc->getVersion(),$this->mc_usage,"%");
+
             } else {
                 $log=sprintf ("Connection to memcache %s:%d failed\n",$memcache_host,$memcache_port);
             }
