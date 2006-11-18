@@ -1,8 +1,9 @@
 cdrtool (4.7-7) unstable; urgency=low
 
-  * Write sql trace in daily tables (changed sql.conf in freeradius configuration) 
+  * Write sql trace in daily tables (changed sql.conf in freeradius configuration)
+  * Display platform total usage in OpenSER datasource
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 18 Nov 2006 17:35:24 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 18 Nov 2006 20:50:33 +0100
 
 cdrtool (4.7-6) unstable; urgency=low
 

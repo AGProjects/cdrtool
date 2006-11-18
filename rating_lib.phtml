@@ -2519,12 +2519,15 @@ class SERQuota {
         $this->LoadSubscribers();
 
         $j=0;
+
+        /*
         $domains_sql="";
 		foreach ($this->localDomains as $_domain) {
             if ($j>0) $domains_sql.=",";
             $domains_sql.="'".addslashes($_domain)."'";
             $j++;
         }
+        */
 
         $query=sprintf("select %s, count(*) as calls,
         sum(AcctSessionTime) as duration, sum(Price) as cost,
@@ -2551,12 +2554,22 @@ class SERQuota {
 		syslog(LOG_NOTICE, $log);
 
         $j=0;
+
+		$this->SERAccounts['platform_out']=array();
+
         while($this->CDRdb_readonly->next_record()) {
+
+            if (!$this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]) continue;
 
             $this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]['usage']['calls']    = $this->CDRdb_readonly->f('calls');
             $this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]['usage']['duration'] = $this->CDRdb_readonly->f('duration');
             $this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]['usage']['cost']     = $this->CDRdb_readonly->f('cost');
             $this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]['usage']['traffic']  = $this->CDRdb_readonly->f('traffic');
+
+            $this->SERAccounts['platform_out']['usage']['calls']    = $this->SERAccounts['platform_out']['usage']['calls']    + $this->CDRdb_readonly->f('calls');
+            $this->SERAccounts['platform_out']['usage']['duration'] = $this->SERAccounts['platform_out']['usage']['duration'] + $this->CDRdb_readonly->f('duration');
+            $this->SERAccounts['platform_out']['usage']['cost']     = $this->SERAccounts['platform_out']['usage']['cost']     + $this->CDRdb_readonly->f('cost');
+            $this->SERAccounts['platform_out']['usage']['traffic']  = $this->SERAccounts['platform_out']['usage']['traffic']  + $this->CDRdb_readonly->f('traffic');
 
             $j++;
 
@@ -3043,6 +3056,10 @@ class SERQuota {
         }
 
         if (is_object($this->CDRS->mc)) {
+
+            $mc_key=$this->CDRS->memcache_keyprefix."platform_out";;
+
+            if ($this->CDRS->mc->delete($mc_key)) $deleted_keys++;
 
 	        $query="select * from subscriber";
     	    dprint($query);

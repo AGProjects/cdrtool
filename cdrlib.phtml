@@ -550,7 +550,8 @@ class CDRS {
         ";
     }
 
-    function showDataSources ($f) {
+    function showDataSources ($f, $mc) {
+        global $perm;
         print "
         <tr>
         <td class=cdr valign=middle  align=left>
@@ -561,6 +562,13 @@ class CDRS {
         if (count($this->tables) > 0) {
             print " Table: ";
         	$this->f->show_element("cdr_table","");
+        }
+
+        if (is_object($mc) && $perm->have_perm("admin")) {
+            $_usage=$mc->get('mu:platform_out');
+            $_els=$this->parseMonthlyUsage($_usage);
+            $minutes=number_format($_els['duration']/60,0,".",",");
+            printf (" %d calls and %s minutes this month",$_els['calls'],$minutes) ;
         }
 
         print "
@@ -1334,7 +1342,6 @@ class CDRS {
             $accounts[$_key]['usage']['traffic']
             );
 
-
             $mc_key=sprintf("%s%s",$this->memcache_keyprefix,trim($_key));
 
         	if (is_object($this->mc)) {
@@ -1342,7 +1349,6 @@ class CDRS {
 				$mc_expire=time()+31*24*3600;  // 31 days
 
                 if ($this->mc->set($mc_key,$mc_value,0,$mc_expire)) {  // expire in 30 days
-                    //printf ("Set %s to: %s\n",$mc_key,$mc_value);
                     $saved_keys++;
                 } else {
                     $failed_keys++;
@@ -1669,11 +1675,12 @@ class CDR {
 
     function cacheMonthlyUsage($accounts) {
 
+
         if (!is_array($accounts)) return ;
 
         foreach (array_keys($accounts) as $_account) {
 
-        	if ($this->isCallerLocal() || $_account == 'platform_in' || $_account == 'platform_in') {
+        	if ($this->isCallerLocal()) {
 
 	            $_usage = $this->CDRS->getMonthlyUsageFromCache($_account);
 
@@ -1681,6 +1688,15 @@ class CDR {
         	    $accounts[$_account]['usage']['duration'] =  $accounts[$_account]['usage']['duration'] + $_usage['duration'];
             	$accounts[$_account]['usage']['cost']     =  $accounts[$_account]['usage']['cost']     + $_usage['cost'];
 	            $accounts[$_account]['usage']['traffic']  =  $accounts[$_account]['usage']['traffic']  + $_usage['traffic'];
+
+	            $_total_usage = $this->CDRS->getMonthlyUsageFromCache("platform_out");
+
+    	    	$accounts['platform_out']['usage']['calls']    =  $_total_usage['calls']             + $_usage['calls'];
+        	    $accounts['platform_out']['usage']['duration'] =  $_total_usage['duration']          + $_usage['duration'];
+            	$accounts['platform_out']['usage']['cost']     =  $_total_usage['usage']['cost']     + $_usage['cost'];
+	            $accounts['platform_out']['usage']['traffic']  =  $_total_usage['usage']['traffic']  + $_usage['traffic'];
+
+
             } else {
                 return ;
             }

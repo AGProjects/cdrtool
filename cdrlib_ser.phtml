@@ -732,7 +732,7 @@ class CDRS_ser_radius extends CDRS {
 
         print "<table cellpadding=5 CELLSPACING=0 border=6 width=100% align=center>";
 
-        $this->showDataSources ($this->f);
+        $this->showDataSources ($this->f, &$this->mc);
         $this->showDateTimeElements ($this->f);
 
         // freeze some form els
