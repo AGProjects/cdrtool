@@ -550,7 +550,7 @@ class CDRS {
         ";
     }
 
-    function showDataSources ($f, $mc) {
+    function showDataSources ($f) {
         global $perm;
         print "
         <tr>
@@ -563,14 +563,6 @@ class CDRS {
             print " Table: ";
         	$this->f->show_element("cdr_table","");
         }
-
-        if (is_object($mc) && $perm->have_perm("admin")) {
-            $_usage=$mc->get('mu:platform_out');
-            $_els=$this->parseMonthlyUsage($_usage);
-            $minutes=number_format($_els['duration']/60,0,".",",");
-            printf (" %d calls and %s minutes this month",$_els['calls'],$minutes) ;
-        }
-
         print "
         </td>
         </tr>
