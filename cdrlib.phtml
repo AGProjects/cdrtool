@@ -829,7 +829,7 @@ class CDRS {
         if (preg_match($_regexp_international,$Number,$m)) {
             $E164=$m[1];
         } else if (preg_match($_regexp_national,$Number,$m)) {
-            $E164=$this->CDRTool['normalize'][defaultCountryCode].$m[1];
+            $E164=$this->CDRTool['normalize']['defaultCountryCode'].$m[1];
         }
 
         return $E164;
