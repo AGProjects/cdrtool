@@ -4592,19 +4592,21 @@ class SIPonline {
 
         if ($domain) {
             print "
-            <th></td>
-            <th width=120 align=right>User@</td>
-            <th align=left>Domain</td>
-            <th>Contact</td>
-            <th>Phone</td>
-            <th>Expires</td>
-            <th>Remain</td>
+            <th></th>
+            <th width=120 align=right>User@</th>
+            <th align=left>Domain</th>
+            <th></th>
+            <th>SIP UA contact</th>
+            <th>NAT address</th>
+            <th>User Agent</th>
+            <th>Expires</th>
+            <th>Remain</th>
             ";
         } else {
             print "
             <th></td>
-            <th width=120 align=right>Users@</td>
-            <th align=left>Domain</td>
+            <th width=120 align=right>Users@</th>
+            <th align=left>Domain</th>
             ";
         }
         print "
@@ -4703,6 +4705,7 @@ class SIPonline {
             $username   = $this->locationDB->f('username');
             $domain     = $this->locationDB->f('domain');
             $contact    = $this->locationDB->f('contact');
+            $received   = $this->locationDB->f('received');
             $user_agent = $this->locationDB->f('user_agent');
             $expires    = $this->locationDB->f('expires');
             $remain     = $this->locationDB->f('remain');
@@ -4710,18 +4713,27 @@ class SIPonline {
             $contact_print=substr($contact,4);
 
             $c_els=explode(";", $contact);
+            $r_els=explode(";", $received);
+
+            $transport="UDP";
+
+            if ($c_els[1] && preg_match("/transport=(tcp|tls)/i",$c_els[1],$m)) {
+                $transport=strtoupper($m[1]);
+            }
 
 			$sip_account=$username."@".$domain;
 
             print "
             <tr bgcolor=$bgcolor>
-            <td valign=top align=right>$found</td>
-            <td valign=top align=right>$username@</td>
-        	<td valign=top bgcolor=lightyellow>$domain</td>
-            <td valign=top align=right>$c_els[0]</td>
-            <td valign=top>$user_agent</td>
-            <td valign=top>$expires</td>
-            <td valign=top align=right>$remain</td>
+            <td valign=top align=right class=border>$found</td>
+            <td valign=top align=right class=border>$username@</td>
+        	<td valign=top bgcolor=lightyellow class=border>$domain</td>
+            <td valign=top class=border>$transport</td>
+            <td valign=top align=right class=border>$c_els[0]</td>
+            <td valign=top align=right class=border>$r_els[0]</td>
+            <td valign=top class=border>$user_agent</td>
+            <td valign=top class=border>$expires</td>
+            <td valign=top align=right class=border>$remain</td>
             </tr>
             ";
 
