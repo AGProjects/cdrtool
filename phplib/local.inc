@@ -594,18 +594,20 @@ class pageLayout {
         "; 
 
         if ($perm->have_perm("callsearch")) {  
-            print " <a href=callsearch.phtml>Call search</a> ";
+            print " <a href=callsearch.phtml>Search</a> ";
         }
         if ($perm->have_perm("rates")) {
-            print "| <a href=rating_tables.phtml>Rating tables</a>";
+            print "| <a href=rating_tables.phtml>Rating</a>";
         }
         
+        if ($perm->have_perm("statistics")) {
+        	print "| <a href=status/sip_online.phtml target=status>Registrar</a>";
+            print "| <a href=status/media_sessions.phtml target=status>Media</a>";
+            print "| <a href=status/usage/index.phtml target=status>Usage</a>";
+        }
+
         print "| <a href=log.phtml>Log</a>";
         print "| <a href=accounts.phtml>Accounts</a>";
-        
-        if ($perm->have_perm("statistics") && $perm->have_perm("admin")) {
-            print "| <a href=status/usage/index.phtml target=sip_statistics>Usage</a>";
-        }
         
         $now_print=Date("Y-m-d H:i:s",time());
         $tz=getenv('TZ');

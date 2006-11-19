@@ -4533,10 +4533,21 @@ class SER_trace {
 class SIPonline {
 
     function SIPonline ($datasource='ser_radius',$table='location') {
-        global $verbose;
         global $expandAll;
         global $domain;
         global $DATASOURCES;
+		global $CDRTool;
+
+		if (strlen($CDRTool['filter']['domain'])) {
+        	$this->allowedDomains=explode(" ",$CDRTool['filter']['domain']);
+            $allowed_domains_sql="";
+            $j=0;
+            foreach ($this->allowedDomains as $_domain) {
+                if ($j>0) $allowed_domains_sql.=",";
+                $allowed_domains_sql.="'".addslashes($_domain)."'";
+                $j++;
+            }
+        }
 
 		if ($DATASOURCES[$datasource]['db_class_siponline']) {
         	$locationDB_class=$DATASOURCES[$datasource]['db_class_siponline'];
@@ -4547,17 +4558,22 @@ class SIPonline {
         $this->locationDB = new $locationDB_class;
         $this->locationTable = $table;
 
-        $this->verbose   = $verbose;
         $this->expandAll = $expandAll;
 
 		$this->Registered=array();
         $this->countUA=array();
 
         $where = " where (1=1) " ;
+
+        if ($allowed_domains_sql) {
+        	$where.= sprintf("and domain in (%s)",$allowed_domains_sql) ;
+        }
+
         $query=sprintf("select count(*) as c, domain
         from %s %s
         group by domain
         order by domain ASC",$this->locationTable,$where);
+
         dprint($query);
 
         $this->locationDB->query($query);

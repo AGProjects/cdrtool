@@ -1,0 +1,104 @@
+<?
+include("../../global.inc");
+page_open(
+     array("sess" => "CDRTool_Session",
+           "auth" => "CDRTool_Auth",
+           "perm" => "CDRTool_Perm"
+           ));
+
+$perm->check("statistics");
+
+include($path."../../sip_statistics_lib.phtml");
+
+$SIPstatistics=new SIPstatistics ();
+$SIPstatistics->getSipEnabledZones();
+
+global $CDRTool;
+
+if (strlen($CDRTool['filter']['domain'])) {
+    $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
+}
+
+?>
+
+<HTML>
+<HEAD>
+    <TITLE>AG Projects SIP statistics</TITLE>
+    <META HTTP-EQUIV='Refresh' CONTENT='300'>
+    <META HTTP-EQUIV='Cache-Control' content='no-cache'>
+    <META HTTP-EQUIV='Pragma' CONTENT='no-cache'>
+    <META HTTP-EQUIV='Expires' CONTENT='Thu, 16 Dec 2004 16:08:32 GMT'>
+</HEAD>
+
+<BODY bgcolor='#ffffff' text='#000000' link='#000000' vlink='#000000' alink='#000000'>
+
+<DIV align='left'><font size='5' face=verdana><B>AG Projects SIP statistics</B></font></DIV>
+
+<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=10>
+
+<? if ($perm->have_perm('admin')) { ?>
+
+<TR>
+<TD><DIV align='center'><B> Online Users for total </B></DIV>
+<DIV><A HREF='total_users.html'><IMG BORDER=0 ALT='total_users Traffic Graph' SRC='total_users-day.png'></A>
+<SMALL><!--#flastmod file='total_users.html' --></SMALL></DIV>
+</TD><TD><DIV align='center'><B> Active Sessions for total </B></DIV>
+<DIV><A HREF='total_sessions.html'><IMG BORDER=0 ALT='total_sessions Traffic Graph' SRC='total_sessions-day.png'></A>
+<SMALL><!--#flastmod file='total_sessions.html' --></SMALL></DIV>
+</TD><TD><DIV align='center'><B> IP Traffic for total </B></DIV>
+<DIV><A HREF='total_traffic.html'><IMG BORDER=0 ALT='total_traffic Traffic Graph' SRC='total_traffic-day.png'></A>
+<SMALL><!--#flastmod file='total_traffic.html' --></SMALL></DIV>
+</TD></TR>
+<TR>
+
+<?
+}
+if (is_array($allowedDomains))  {
+	$domains=array_intersect($allowedDomains,array_keys($SIPstatistics->SipEnabledZones));
+} else {
+    $domains=array_keys($SIPstatistics->SipEnabledZones);
+}
+
+foreach ($domains as $key) {
+    printf ("
+    <TR>
+    <TD><DIV align='center'><B> Online Users for %s </B></DIV>
+    <DIV><A HREF='%s_users.html'><IMG BORDER=0 ALT='%s_users Traffic Graph' SRC='%s_users-day.png'></A>
+    <SMALL><!--#flastmod file='%s_users.html' --></SMALL></DIV>
+    </TD><TD><DIV align='center'><B> Active Sessions for %s </B></DIV>
+    <DIV><A HREF='%s_sessions.html'><IMG BORDER=0 ALT='%s_sessions Traffic Graph' SRC='%s_sessions-day.png'></A>
+    <SMALL><!--#flastmod file='%s_sessions.html' --></SMALL></DIV>
+    </TD><TD><DIV align='center'><B> IP Traffic for %s </B></DIV>
+    <DIV><A HREF='%s_traffic.html'><IMG BORDER=0 ALT='%s_traffic Traffic Graph' SRC='%s_traffic-day.png'></A>
+    <SMALL><!--#flastmod file='%s_traffic.html' --></SMALL></DIV>
+    </TD></TR>
+    <TR>
+    ",
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key
+    );
+}
+
+?>
+
+</TABLE>
+</BODY>
+</HTML>
+<?
+page_close();
+?>

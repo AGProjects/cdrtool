@@ -5,7 +5,8 @@ page_open(
           "auth" => "CDRTool_Auth",
           "perm" => "CDRTool_Perm"
           ));
-$perm->check("admin");
+
+$perm->check("statistics");
 
 include("../cdrlib.phtml");
 
@@ -19,6 +20,8 @@ if ($_REQUEST['datasource']) {
 } else {
 	$datasource='ser_radius';
 }
+
+$expandAll=$_REQUEST['expandAll'];
 
 if ($DATASOURCES[$datasource]['EnableSIPOnline']) {
 	$online= new SIPonline($datasource);

@@ -24,10 +24,6 @@ class SIPstatistics {
         	$this->online_db = new DB_ser();
         }
 
-        $path = dirname(realpath($_SERVER['PHP_SELF']));
-        include($path."/../status/config/media_servers.php");
-
-        $this->mediaServers=$servers;
 	}
 
     function getSipEnabledZones () {
@@ -99,7 +95,14 @@ class SIPstatistics {
                        \"auth\" => \"CDRTool_Auth\",
                        \"perm\" => \"CDRTool_Perm\"
                        ));
-            \$perm->check(\"statistics\",\"admin\");
+            \$perm->check(\"statistics\");
+
+            global \$CDRTool;
+    
+            if (strlen(\$CDRTool['filter']['domain'])) {
+                \$allowedDomains=explode(' ',\$CDRTool['filter']['domain']);
+            }
+
             ?>
             <HTML>
             <HEAD>
@@ -115,6 +118,9 @@ class SIPstatistics {
             <DIV align='left'><font size='5' face=verdana><B>$title</B></font></DIV>
             
             <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=10>
+
+            <? if (\$perm->have_perm('admin')) { ?>
+
             ");
 
             $key="total";
@@ -132,6 +138,8 @@ class SIPstatistics {
             <SMALL><!--#flastmod file='%s_traffic.html' --></SMALL></DIV>
             </TD></TR>
             <TR>
+            <? } ?>
+
             ",
             $key,
             $key,
@@ -153,11 +161,13 @@ class SIPstatistics {
             );
 
 
+
         	fwrite($handle,$block);
 
     	while(list($key,$value) = each($this->SipEnabledZones)) {
             $block=sprintf("
 
+            <? if (in_array('$key',\$allowedDomains)) { ?>
             <TR>
             <TD><DIV align='center'><B> Online Users for %s </B></DIV>
             <DIV><A HREF='%s_users.html'><IMG BORDER=0 ALT='%s_users Traffic Graph' SRC='%s_users-day.png'></A>
@@ -170,6 +180,7 @@ class SIPstatistics {
             <SMALL><!--#flastmod file='%s_traffic.html' --></SMALL></DIV>
             </TD></TR>
             <TR>
+            <? } ?>
             ",
             $key,
             $key,
@@ -323,6 +334,11 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         	echo "Error opening $this->harvest_file\n";
         	return 0;
         }
+
+        $path = dirname(realpath($_SERVER['PHP_SELF']));
+        include($path."/../status/config/media_servers.php");
+
+        $this->mediaServers=$servers;
 
         fwrite($handle,"domains\t\t\tonline_users\tsessions\tcaller\tcalled\n\n");
 
