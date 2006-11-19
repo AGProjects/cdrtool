@@ -1,15 +1,16 @@
 cdrtool (4.7-7) unstable; urgency=low
 
   * Write sql trace in daily tables (changed sql.conf in freeradius configuration)
-  * Display platform total usage in OpenSER datasource
+  * Display platform total usage in OpenSER datasource (from cache)
   * Show transport protocol in SIP online
   * Fixed show domain details in sip online
   * Filter statistics depending on CDRTool login rights
   * Add links to statistrics screen from main menu
-  * removed /var/www/CDRTool/scripts/generateHTMLUsageIndexFile.php 
-    /var/www/CDRTool/status/usage/index.phtml is generated on the fly 
+  * removed /var/www/CDRTool/scripts/generateHTMLUsageIndexFile.php
+    /var/www/CDRTool/status/usage/index.phtml is generated on the fly
+  * Fixed relative link to style.css
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 19 Nov 2006 13:24:40 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 19 Nov 2006 13:41:15 +0100
 
 cdrtool (4.7-6) unstable; urgency=low
 
