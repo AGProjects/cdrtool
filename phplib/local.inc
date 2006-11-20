@@ -34,6 +34,7 @@ class CDRTool_Auth extends Auth {
     global $sess;
     global $_PHPLIB;
     global $max_login_attempts;
+    global $CDRTool;
 
     $username    = $_POST["username"];
     $sendotp     = $_POST["sendotp"];

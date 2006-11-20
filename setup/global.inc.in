@@ -186,6 +186,7 @@ $DATASOURCES=array(
                     "AccountsDBClass"	 => "DB_ser",
                     "intAccessCode"      => "00",		
                     "sipTraceDataSource" => "sip_trace",
+                    "showUsagefromCache" => "1",
                     "traceOutURL"        => array(
                                             "sipvm.example.com"=>"asterisk",
                                             "voipgw02.example.com"=>"cisco"
