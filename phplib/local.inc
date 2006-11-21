@@ -598,17 +598,17 @@ class pageLayout {
             print " <a href=callsearch.phtml>Search</a> ";
         }
         if ($perm->have_perm("rates")) {
-            print "| <a href=rating_tables.phtml>Rating</a>";
+            print " | <a href=rating_tables.phtml>Rating</a>";
         }
         
         if ($perm->have_perm("statistics")) {
-        	print "| <a href=status/sip_online.phtml target=status>Registrar</a>";
-            print "| <a href=status/media_sessions.phtml target=status>Media</a>";
-            print "| <a href=status/usage/index.phtml target=status>Usage</a>";
+            print " | <a href=status/sip_online.phtml target=status>Registrar</a>";
+            print " | <a href=status/media_sessions.phtml target=status>Media</a>";
+            print " | <a href=status/usage/index.phtml target=status>Usage</a>";
         }
 
-        print "| <a href=log.phtml>Log</a>";
-        print "| <a href=accounts.phtml>Accounts</a>";
+        print " | <a href=log.phtml>Log</a>";
+        print " | <a href=accounts.phtml>Accounts</a>";
         
         $now_print=Date("Y-m-d H:i:s",time());
         $tz=getenv('TZ');
