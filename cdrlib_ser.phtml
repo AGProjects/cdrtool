@@ -4199,7 +4199,8 @@ class SER_trace {
                                'date'      => $this->db->f('date'),
                                'status'    => $this->db->f('status'),
                                'timestamp' => $this->db->f('timestamp'),
-                               'msg'       => $this->db->f('msg')
+                               'msg'       => $this->db->f('msg'),
+                               'md5'       => md5($this->db->f('msg'))
                                );
         }
 
@@ -4208,7 +4209,7 @@ class SER_trace {
             if ($trace_array[$key]['direction'] == 'in') {
 
                 if ($trace_array[$key]['fromip'] == $trace_array[$key]['toip']) {
-                	$trace_array[$key]['arrow_align'] = "center";
+                	$trace_array[$key]['arrow_align'] = "left";
                 	$arrow_direction="loop";
 				} else if ($column[$trace_array[$key]['fromip']] < $column[$trace_array[$key]['toip']]) {
                 	$arrow_direction="right";
@@ -4223,7 +4224,7 @@ class SER_trace {
 
             } else {
                 if ($trace_array[$key]['fromip'] == $trace_array[$key]['toip']) {
-                	$trace_array[$key]['arrow_align'] = "center";
+                	$trace_array[$key]['arrow_align'] = "left";
                 	$arrow_direction="loop";
 				} else if ($column[$trace_array[$key]['fromip']] < $column[$trace_array[$key]['toip']]) {
                 	$trace_array[$key]['arrow_align'] = "left";
@@ -4236,7 +4237,6 @@ class SER_trace {
 				$trace_array[$key]['msg_possition']   = $column[$trace_array[$key]['fromip']];
                 $trace_array[$key]['arrow_possition'] = $column[$trace_array[$key]['toip']];
                 $trace_array[$key]['arrow_direction'] = $arrow_direction;
-
             }
         }
 
@@ -4289,11 +4289,14 @@ class SER_trace {
             $arrow_possition = $trace_array[$key]['arrow_possition'];
             $arrow_direction = $trace_array[$key]['arrow_direction'];
             $arrow_align     = $trace_array[$key]['arrow_align'];
+            $md5             = $trace_array[$key]['md5'];
 
             if ($i==1) $begin_timestamp = $timestamp;
             $timeline=$timestamp-$begin_timestamp;
 
             //if (!$msg) continue;
+
+            if ($arrow_direction=='loop' && $seen_msg[$md5]) continue;
 
             $SIPclass=substr($status,0,1);
     
@@ -4389,7 +4392,7 @@ class SER_trace {
 
             $column_current=1;
             
-            while ( $column_current <= count($column)) {
+            while ($column_current <= count($column)) {
 
                 if ($arrow_possition==$column_current) {
                     if ($direction=='out') {
@@ -4415,7 +4418,7 @@ class SER_trace {
                 if ($arrow_possition==$column_current) {
                 	print "
                     <td class=bbot align=$arrow_align>
-                	<img src=images/$arrow border=0></td>
+                	<img src=images/$arrow border=0 align=left>
                     ";
                 } else {
                 	print "<td class=bbot>
@@ -4432,6 +4435,7 @@ class SER_trace {
                 ";
 
                 $column_current++;
+                if ($arrow_direction=='loop') $seen_msg[$md5]++;
             }
 
             print "</tr>";
