@@ -4177,27 +4177,84 @@ class SER_trace {
         }
 
 
-		$tableColumns=0;
+		$columns=0;
 
         while ($this->db->next_record()) {
 
-            $trace_array[]=array (
+			if (preg_match("/^(udp|tcp|tls):(.*)$/",$this->db->f('toip'),$m)) {
+            	$toip=$m[2];
+            	$protocol=$m[1];
+            }
+
+            if (!$column[$this->db->f('fromip')]) {
+                $column[$this->db->f('fromip')]=$columns+1;
+                $columns++;
+            }
+
+            if (!$column[$toip]) {
+                $column[$toip]=$columns+1;
+                $columns++;
+            }
+            $msg=$this->db->f('msg');
+
+            $trace_array[$this->db->f('id')]=array (
                                   'id'        => $this->db->f('id'),
-                                  'method'    => $this->db->f('method'),
-                                  'msg'       => $this->db->f('msg'),
+                                  'direction' => $this->db->f('direction'),
                                   'fromip'    => $this->db->f('fromip'),
-                                  'toip'      => $this->db->f('toip'),
+                                  'toip'      => $toip,
+                                  'method'    => $this->db->f('method'),
+                                  'protocol'  => $protocol,
                                   'date'      => $this->db->f('date'),
                                   'status'    => $this->db->f('status'),
-                                  'direction' => $this->db->f('direction'),
-                                  'timestamp' => $this->db->f('timestamp')
+                                  'timestamp' => $this->db->f('timestamp'),
+                                  'msg'       => $msg
                                   );
+        }
 
-            if (strlen($this->db->f('fromip')) && !$column[$this->db->f('fromip')]) {
-                $column[$this->db->f('fromip')]=$tableColumns+1;
-                $tableColumns++;
+        foreach (array_keys($trace_array) as $key) {
+
+            if ($trace_array[$key]['direction'] == 'in') {
+
+                if ($trace_array[$key]['fromip'] == $trace_array[$key]['toip']) {
+                	$trace_array[$key]['arrow_align'] = "center";
+                	$arrow_direction="loop";
+				} else if ($column[$trace_array[$key]['fromip']] < $column[$trace_array[$key]['toip']]) {
+                	$arrow_direction="right";
+                	$trace_array[$key]['arrow_align'] = "left";
+                } else {
+                	$arrow_direction="left";
+                	$trace_array[$key]['arrow_align'] = "right";
+                }
+				$trace_array[$key]['msg_possition']   = $column[$trace_array[$key]['toip']];
+                $trace_array[$key]['arrow_possition'] = $column[$trace_array[$key]['fromip']];
+                $trace_array[$key]['arrow_direction'] = $arrow_direction;
+
+            } else {
+                if ($trace_array[$key]['fromip'] == $trace_array[$key]['toip']) {
+                	$trace_array[$key]['arrow_align'] = "center";
+                	$arrow_direction="loop";
+				} else if ($column[$trace_array[$key]['fromip']] < $column[$trace_array[$key]['toip']]) {
+                	$trace_array[$key]['arrow_align'] = "right";
+                	$arrow_direction="right";
+                } else {
+                	$trace_array[$key]['arrow_align'] = "left";
+                	$arrow_direction="left";
+                }
+
+				$trace_array[$key]['msg_possition']   = $column[$trace_array[$key]['fromip']];
+                $trace_array[$key]['arrow_possition'] = $column[$trace_array[$key]['toip']];
+                $trace_array[$key]['arrow_direction'] = $arrow_direction;
+
             }
         }
+
+
+        /*
+        print "<pre>";
+        print_r($column);
+        print_r($trace_array);
+        print "</pre>";
+        */
 
         $i=0;
         print "
@@ -4231,197 +4288,258 @@ class SER_trace {
                     }
                 }
 
-            printf ("<td class=border align=center><b><font color=blue>%s</font><br>%s</h3></b>",$isProxy,$_key);
+            printf ("<td align=center class=border><b><font color=blue>%s</font><br>%s</b></td>",$isProxy,$_key);
         }
 
         print "</tr>";
 
         $i=0;
 
-        foreach ($trace_array as $_trace) {
+        foreach (array_keys($trace_array) as $key) {
 
             $i++;
 
-            $id        = $_trace['id'];
-            $msg       = $_trace['msg'];
-            $fromip    = $_trace['fromip'];
-            $toip      = $_trace['toip'];
-            $date      = substr($_trace['date'],11);
-            $status    = $_trace['status'];
-            $direction = $_trace['direction'];
-            $timestamp = $_trace['timestamp'];
-            $method    = $_trace['method'];
+            $id        = $trace_array[$key]['id'];
+            $msg       = $trace_array[$key]['msg'];
+            $fromip    = $trace_array[$key]['fromip'];
+            $toip      = $trace_array[$key]['toip'];
+            $date      = substr($trace_array[$key]['date'],11);
+            $status    = $trace_array[$key]['status'];
+            $direction = $trace_array[$key]['direction'];
+            $timestamp = $trace_array[$key]['timestamp'];
+            $method    = $trace_array[$key]['method'];
+
+            $msg_possition   = $trace_array[$key]['msg_possition'];
+            $arrow_possition = $trace_array[$key]['arrow_possition'];
+            $arrow_direction = $trace_array[$key]['arrow_direction'];
+            $arrow_align     = $trace_array[$key]['arrow_align'];
 
             if ($i==1) $begin_timestamp = $timestamp;
             $timeline=$timestamp-$begin_timestamp;
 
-            if ($msg) {
-                $SIPclass=substr($status,0,1);
-        
-                if ($SIPclass=="6") {
-                    $status_color="<font color=red>";
-                } else if ($SIPclass=="5" ) {
-                    $status_color="<font color=red>";
-                } else if ($SIPclass=="4" ) {
-                    $status_color="<font color=blue>";
-                } else if ($SIPclass=="3" ) {
-                    $status_color="<font color=green>";
-                } else if ($SIPclass=="2" ) {
-                    $status_color="<font color=green>";
-                } else if ($SIPclass=="1" ) {
-                    $status_color="<font color=\"#cc6600\">";
-                } else  {
-                    $status_color="<font color=black>";
-                }
+            //if (!$msg) continue;
 
-                $_lines=explode("\n",$msg);
-
-                if (preg_match("/^(.*) SIP/",$_lines[0],$m)) {
-                    $_lines[0]=$m[1];
-                } else if (preg_match("/^SIP\/2\.0 (.*)/",$_lines[0],$m)) {
-                    $_lines[0]=$m[1];
-                }
-
-                unset($media);
-                unset($diversions);
-
-                $j=0;
-                $t=0;
-                foreach ($_lines as $_line) {
-                	if (preg_match("/^(Diversion:).*;(.*)$/",$_line,$m)) {
-                        $diversions[]=$m[1].$m[2];
-                	}
-
-                    if (preg_match("/^c=IN \w+ ([\d|\w\.]+)/i",$_line,$m)) {
-                        $media['ip']=$m[1];
-                    }
-
-                    if (preg_match("/^m=(\w+) (\d+) /i",$_line,$m)) {
-                        $t++;
-                        $media['streams'][$t]=$m[1].":".$media['ip'].":".$m[2];
-
-                    }
-                    if (preg_match("/^a=alt:1/i",$_line,$m)) {
-                        $media['streams'][$t]=$media['streams'][$t]." ICE";
-                    }
-                    $j++;
-
-                }
-
-                $_els=explode(";",$_lines[0]);
-
-                $_span=1;
-                $t=1;
-                while ($t < $column[$fromip]) {
-                    $_span++;
-                    $t++;
-                }
-
-
-                $_rest_span=count($column)-$_span;
-			    $_line_span=count($column)+2;
-
-                print "
-                <tr onClick=\"return toggleVisibility('row$i')\">
-                <td>
-                ";
-
-                if ($timeline && !$_seen_timeline[$timeline]) {
-                	printf ("%s+%ds </font>",$status_color,$timeline);
-                    $_seen_timeline[$timeline]++;
-                }
-
-                print "
-                </td>
-        		<td align=right class=border>$status_color$i/$rows&nbsp;</font></td>
-                <td colspan=$_span class=border><nobr>$status_color$date</nobr></font></td>
-                <td class=border><a name=\"packet$i\">
-                $status_color $_els[0]
-                ";
-
-                if ($direction == "out") {
-                	print "<br>Destination: $toip";
-                }
-
-                if (is_array($diversions)) {
-                	foreach ($diversions as $_diversion) {
-                    	print "<br><b>$_diversion</b>";
-                    }
-                }
-
-                if (is_array($media['streams'])) {
-                    foreach ($media['streams'] as $_stream) {
-                        print "<br><b>$_stream</b>";
-                    }
-                }
-
-                print "</font>";
-
-                print "
-                </a>
-                </td>
-                </tr>
-                ";
-
-                if (is_array($this->SIPProxies)) {
-                    $IPels=explode(":",$fromip);
-                    $justIP=$IPels[0];
-                    foreach (array_keys($this->SIPProxies) as $localProxy) {
-                        if ($localProxy==$justIP) {
-                            $direction="out";
-                            break;
-                        }
-                    }
-                }
-
-				$trace_span=count($column);
-
-                print "
-                <tr>
-                <td colspan=3></td>
-                <td colspan=$colspan>
-                ";
-
-                print "
-                <table class=extrainfo id=row$i width=100%>
-                <tr>
-                <td valign=top align=center width=150 class=border>
-                ";
-
-                if ($direction == "out") {
-                    print "
-                    <nobr>
-                    <h1>SIP Proxy</h1></nobr>
-                    ";
-                } else {
-                    $sip_phone_img=getImageForUserAgent($msg);
-                    if ($sip_phone_img) print "<img src=images/$sip_phone_img border=0>";
-                }
-
-                if ($timeline > 0) {
-                    printf ("<p>+%s s<br>(%s)",$timeline,sec2hms($timeline));
-                }
-            
-                $msg=nl2br(htmlentities($msg));
-                //$msg=htmlentities($msg);
-
-                print "
-                </td>
-                <td valign=top class=border colspan=2 width=450>
-                $status_color $msg </font></td>
-                </td>
-                </tr>
-                </table>
-                ";
-
-
-                print "
-                </td>
-                </tr>
-
-                ";
+            $SIPclass=substr($status,0,1);
+    
+            if ($SIPclass=="6") {
+                $status_color="<font color=red>";
+            } else if ($SIPclass=="5" ) {
+                $status_color="<font color=red>";
+            } else if ($SIPclass=="4" ) {
+                $status_color="<font color=blue>";
+            } else if ($SIPclass=="3" ) {
+                $status_color="<font color=green>";
+            } else if ($SIPclass=="2" ) {
+                $status_color="<font color=green>";
+            } else if ($SIPclass=="1" ) {
+                $status_color="<font color=\"#cc6600\">";
+            } else  {
+                $status_color="<font color=black>";
             }
 
+            $_lines=explode("\n",$msg);
+
+            if (preg_match("/^(.*) SIP/",$_lines[0],$m)) {
+                $_lines[0]=$m[1];
+            } else if (preg_match("/^SIP\/2\.0 (.*)/",$_lines[0],$m)) {
+                $_lines[0]=$m[1];
+            }
+
+            unset($media);
+            unset($diversions);
+
+            $j=0;
+            $t=0;
+            foreach ($_lines as $_line) {
+                if (preg_match("/^(Diversion: ).*;(.*)$/",$_line,$m)) {
+                    $diversions[]=$m[1].$m[2];
+                }
+
+                if (preg_match("/^c=IN \w+ ([\d|\w\.]+)/i",$_line,$m)) {
+                    $media['ip']=$m[1];
+                }
+
+                if (preg_match("/^m=(\w+) (\d+) /i",$_line,$m)) {
+                    $t++;
+                    $media['streams'][$t]=$m[1].": ".$media['ip'].":".$m[2];
+
+                }
+                if (preg_match("/^a=alt:1/i",$_line,$m)) {
+                    $media['streams'][$t]=$media['streams'][$t]." ICE";
+                }
+                $j++;
+
+            }
+
+            $_els=explode(";",$_lines[0]);
+
+            $cell_content = "<a name=\"packet$i\">
+            $status_color $_els[0]
+            ";
+
+            if ($direction == "out") {
+                $cell_content.="<br>Destination: $toip";
+            }
+
+            if (is_array($diversions)) {
+                foreach ($diversions as $_diversion) {
+                    $cell_content.="<br><b>$_diversion</b>";
+                }
+            }
+
+            if (is_array($media['streams'])) {
+                foreach ($media['streams'] as $_stream) {
+                    $cell_content.="<br><b>$_stream</b>";
+                }
+            }
+
+            $cell_content.="
+            </font>
+            </a>
+            ";
+
+            print "
+            <tr class=border onClick=\"return toggleVisibility('row$i')\">
+            <td>
+            ";
+
+            if ($timeline && !$_seen_timeline[$timeline]) {
+                printf ("%s+%ds </font>",$status_color,$timeline);
+                $_seen_timeline[$timeline]++;
+            }
+
+            print "
+            </td>
+            <td class=bbot>$status_color$i/$rows&nbsp;</font></td>
+            <td class=bbot><nobr>$status_color$date</nobr></font>
+            </td>
+            ";
+
+            $column_current=1;
+            
+            while ( $column_current <= count($column)) {
+
+                print "<td class=bbot>
+                ";
+
+                if ($msg_possition == $column_current) {
+                    print $cell_content;
+                }
+
+                if ($arrow_possition==$column_current) {
+                    if ($direction=='out') {
+                        if ($arrow_direction == 'left') {
+                            $arrow="green_arrow_left.png";
+                        } else if ($arrow_direction == 'right') {
+                            $arrow="green_arrow_right.png";
+                        } else if ($arrow_direction == 'loop'){
+                            $arrow="LoopArrow.png";
+                        }
+                    } else {
+                        if ($arrow_direction == 'left') {
+                            $arrow="blue_arrow_left.png";
+                        } else if ($arrow_direction == 'right') {
+                            $arrow="blue_arrow_right.png";
+                        } else if ($arrow_direction == 'loop'){
+                            $arrow="LoopArrow.png";
+                        }
+                    }
+
+                    print "
+                    <table width=100%>
+                        <tr>
+                            ";
+                            if ($arrow_align == 'center') {
+                                /*
+                                print "
+                                <td align=left width=100%><img src=images/$arrow border=0></td>
+                                ";
+                                */
+                            } else if ($arrow_align == 'left') {
+                                print "
+                                <td width=50%></td>
+                                <td align=left width=50%><img src=images/$arrow border=0></td>
+                                ";
+                            } else if ($arrow_align == 'right'){
+                                print "
+                                <td align=right width=50%><img src=images/$arrow border=0></td>
+                                <td width=50%></td>
+                                ";
+                            }
+                        print "
+                        </tr>
+                    </table>
+                    ";
+                    
+
+                }
+
+                print "
+                </td>
+                ";
+
+                $column_current++;
+            }
+
+            print "</tr>";
+
+            if (is_array($this->SIPProxies)) {
+                $IPels=explode(":",$fromip);
+                $justIP=$IPels[0];
+                foreach (array_keys($this->SIPProxies) as $localProxy) {
+                    if ($localProxy==$justIP) {
+                        $direction="out";
+                        break;
+                    }
+                }
+            }
+
+            $trace_span=count($column);
+
+            print "
+            <tr>
+            <td colspan=3></td>
+            <td colspan=$colspan>
+            ";
+
+            print "
+            <table class=extrainfo id=row$i width=100%>
+            <tr>
+            <td valign=top align=center width=150 class=border>
+            ";
+
+            if ($direction == "out") {
+                print "
+                <nobr>
+                <h1>SIP Proxy</h1></nobr>
+                ";
+            } else {
+                $sip_phone_img=getImageForUserAgent($msg);
+                if ($sip_phone_img) print "<img src=images/$sip_phone_img border=0>";
+            }
+
+            if ($timeline > 0) {
+                printf ("<p>+%s s<br>(%s)",$timeline,sec2hms($timeline));
+            }
+        
+            $msg=nl2br(htmlentities($msg));
+            //$msg=htmlentities($msg);
+
+            print "
+            </td>
+            <td valign=top class=border colspan=2 width=450>
+            $status_color $msg </font></td>
+            </td>
+            </tr>
+            </table>
+            ";
+
+
+            print "
+            </td>
+            </tr>
+
+            ";
         }
 
         print "

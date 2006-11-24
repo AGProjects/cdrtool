@@ -4,8 +4,9 @@ cdrtool (4.7-8) unstable; urgency=low
   * Fixed relative link to style.css in login screen
   * Show friendly names for SIP Proxy machines in sip trace
   * Fixed filtering of media sessions for login accounts with domain filter
+  * Added arrows to indicate SIP trace packet direction
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 24 Nov 2006 15:17:38 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 24 Nov 2006 18:43:45 +0100
 
 cdrtool (4.7-7) unstable; urgency=low
 
