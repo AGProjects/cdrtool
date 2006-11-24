@@ -258,8 +258,13 @@ $DATASOURCES=array(
                     "name"               => "SIP trace",
                     "db_class"           => "DB_ser",
                     "table"              => "sip_trace",
-                    "purgeRecordsAfter"  => "7"
+                    "purgeRecordsAfter"  => "7",
+                    "SIPProxies"        => array("10.0.0.1"=>"SIP Proxy 1",
+                                                 "10.0.0.2"=>"SIP Proxy 2"
+                                                )
+
                     )
+
 );
 
 // load other CDRTool libraries
