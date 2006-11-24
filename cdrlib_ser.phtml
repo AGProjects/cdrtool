@@ -4129,20 +4129,14 @@ class SER_trace {
 
     function show($callid,$method,$status,$fromtag,$trace_url="") {
 
-        //$traceSortOrder= $_REQUEST['traceSortOrder'];
-
-        if ($traceSortOrder && ($traceSortOrder == "ASC" || $traceSortOrder == "DESC") ) {
-        } else {
-        	$traceSortOrder="ASC";
-        }
         $query="select *,UNIX_TIMESTAMP(date) as timestamp
         from $this->table where callid = '$callid'
         and traced_user = ''";
 
-        if ($status)  $query=$query." and status = '$status' ";
-        if ($method)  $query=$query." and method = '$method'";
+        if ($status)  $query.=" and status = '$status' ";
+        if ($method)  $query.=" and method = '$method'";
 
-        $query=$query. " order by id $traceSortOrder limit 250";
+        $query.=" order by id limit 1000";
 
         dprint($query);
 
@@ -4171,11 +4165,9 @@ class SER_trace {
 
         } else {
             print "<p>
-            SIP trace for session id $callid is not available.
-            ";
+            SIP trace for session id $callid is not available.";
             return;
         }
-
 
 		$columns=0;
 
@@ -4195,20 +4187,20 @@ class SER_trace {
                 $column[$toip]=$columns+1;
                 $columns++;
             }
-            $msg=$this->db->f('msg');
 
-            $trace_array[$this->db->f('id')]=array (
-                                  'id'        => $this->db->f('id'),
-                                  'direction' => $this->db->f('direction'),
-                                  'fromip'    => $this->db->f('fromip'),
-                                  'toip'      => $toip,
-                                  'method'    => $this->db->f('method'),
-                                  'protocol'  => $protocol,
-                                  'date'      => $this->db->f('date'),
-                                  'status'    => $this->db->f('status'),
-                                  'timestamp' => $this->db->f('timestamp'),
-                                  'msg'       => $msg
-                                  );
+            $trace_array[$this->db->f('id')]=
+            			array (
+                               'id'        => $this->db->f('id'),
+                               'direction' => $this->db->f('direction'),
+                               'fromip'    => $this->db->f('fromip'),
+                               'toip'      => $toip,
+                               'method'    => $this->db->f('method'),
+                               'protocol'  => $protocol,
+                               'date'      => $this->db->f('date'),
+                               'status'    => $this->db->f('status'),
+                               'timestamp' => $this->db->f('timestamp'),
+                               'msg'       => $this->db->f('msg')
+                               );
         }
 
         foreach (array_keys($trace_array) as $key) {
@@ -4220,10 +4212,10 @@ class SER_trace {
                 	$arrow_direction="loop";
 				} else if ($column[$trace_array[$key]['fromip']] < $column[$trace_array[$key]['toip']]) {
                 	$arrow_direction="right";
-                	$trace_array[$key]['arrow_align'] = "left";
+                	$trace_array[$key]['arrow_align'] = "right";
                 } else {
                 	$arrow_direction="left";
-                	$trace_array[$key]['arrow_align'] = "right";
+                	$trace_array[$key]['arrow_align'] = "left";
                 }
 				$trace_array[$key]['msg_possition']   = $column[$trace_array[$key]['toip']];
                 $trace_array[$key]['arrow_possition'] = $column[$trace_array[$key]['fromip']];
@@ -4234,10 +4226,10 @@ class SER_trace {
                 	$trace_array[$key]['arrow_align'] = "center";
                 	$arrow_direction="loop";
 				} else if ($column[$trace_array[$key]['fromip']] < $column[$trace_array[$key]['toip']]) {
-                	$trace_array[$key]['arrow_align'] = "right";
+                	$trace_array[$key]['arrow_align'] = "left";
                 	$arrow_direction="right";
                 } else {
-                	$trace_array[$key]['arrow_align'] = "left";
+                	$trace_array[$key]['arrow_align'] = "right";
                 	$arrow_direction="left";
                 }
 
@@ -4248,27 +4240,11 @@ class SER_trace {
             }
         }
 
-
-        /*
-        print "<pre>";
-        print_r($column);
-        print_r($trace_array);
-        print "</pre>";
-        */
-
-        $i=0;
-        print "
-        <p>
-        ";
-
         print "
         <p>
         <a name=#top>
-        <table cellpadding=0 cellspacing=0 border=0 width=100%>";
-
-        $colspan=2+count($column);
-
-        print "<tr bgcolor=lightgrey>
+        <table cellpadding=2 cellspacing=0 border=0 width=100%>
+        <tr bgcolor=lightgrey>
         <td></td>
         <td align=center><b>Id</b></td>
         <td align=center><b>Time</b></td>
@@ -4377,10 +4353,6 @@ class SER_trace {
             $status_color $_els[0]
             ";
 
-            if ($direction == "out") {
-                $cell_content.="<br>Destination: $toip";
-            }
-
             if (is_array($diversions)) {
                 foreach ($diversions as $_diversion) {
                     $cell_content.="<br><b>$_diversion</b>";
@@ -4419,13 +4391,6 @@ class SER_trace {
             
             while ( $column_current <= count($column)) {
 
-                print "<td class=bbot>
-                ";
-
-                if ($msg_possition == $column_current) {
-                    print $cell_content;
-                }
-
                 if ($arrow_possition==$column_current) {
                     if ($direction=='out') {
                         if ($arrow_direction == 'left') {
@@ -4445,34 +4410,22 @@ class SER_trace {
                         }
                     }
 
-                    print "
-                    <table width=100%>
-                        <tr>
-                            ";
-                            if ($arrow_align == 'center') {
-                                /*
-                                print "
-                                <td align=left width=100%><img src=images/$arrow border=0></td>
-                                ";
-                                */
-                            } else if ($arrow_align == 'left') {
-                                print "
-                                <td width=50%></td>
-                                <td align=left width=50%><img src=images/$arrow border=0></td>
-                                ";
-                            } else if ($arrow_align == 'right'){
-                                print "
-                                <td align=right width=50%><img src=images/$arrow border=0></td>
-                                <td width=50%></td>
-                                ";
-                            }
-                        print "
-                        </tr>
-                    </table>
-                    ";
-                    
-
                 }
+
+                if ($arrow_possition==$column_current) {
+                	print "
+                    <td class=bbot align=$arrow_align>
+                	<img src=images/$arrow border=0></td>
+                    ";
+                } else {
+                	print "<td class=bbot>
+                	";
+                }
+
+                if ($msg_possition == $column_current) {
+                    print $cell_content;
+                }
+
 
                 print "
                 </td>
@@ -4494,18 +4447,18 @@ class SER_trace {
                 }
             }
 
-            $trace_span=count($column);
+            $trace_span=count($column)+2;
 
             print "
             <tr>
-            <td colspan=3></td>
-            <td colspan=$colspan>
+            <td></td>
+            <td colspan=$trace_span>
             ";
 
             print "
             <table class=extrainfo id=row$i width=100%>
             <tr>
-            <td valign=top align=center width=150 class=border>
+            <td valign=top align=center class=border>
             ";
 
             if ($direction == "out") {
@@ -4523,22 +4476,19 @@ class SER_trace {
             }
         
             $msg=nl2br(htmlentities($msg));
-            //$msg=htmlentities($msg);
 
             print "
             </td>
-            <td valign=top class=border colspan=2 width=450>
+            <td valign=top class=border colspan=2 width=100%>
             $status_color $msg </font></td>
             </td>
             </tr>
             </table>
             ";
 
-
             print "
             </td>
             </tr>
-
             ";
         }
 
