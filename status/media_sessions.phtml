@@ -128,10 +128,12 @@ function getRTPSessions($ip, $port, $allowedDomains) {
                                   'duration'  => $elements[6],
                                   'streams'   => array());
                     $proxy['sessions'][$crtSession] = $info;
-                    $allowed_sessions[]=$crtSession;
+                    $allowed_session=1;
+                } else {
+                    unset($allowed_session);
                 }
             } else if ($elements[0] == 'stream' && count($elements)==9) {
-                if (!in_array($crtSession,$allowed_sessions)) continue;
+                if (!$allowed_session) continue;
                 $stream = array('caller'   => $elements[1],
                                 'called'   => $elements[2],
                                 'via'      => $elements[3],
@@ -146,6 +148,7 @@ function getRTPSessions($ip, $port, $allowedDomains) {
             }
         }
         fclose($fp);
+        print_r($allowed_sessions);
 
         if (!isset($proxy['version'])) {
             if ($fp = fsockopen ($ip, $port, $errno, $errstr, "2") ) {
