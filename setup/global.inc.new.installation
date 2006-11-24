@@ -134,7 +134,10 @@ $DATASOURCES=array(
                     "EnableSIPOnline"    => 1,
                     "RotateTables"	 => "Ym",
                     "RotateThisMonth"	 => 0,
-                    "purgeCDRsAfter"     => 120 // how many days to keep the CDRs
+                    "purgeCDRsAfter"     => 120, // how many days to keep the CDRs
+                    "SIPProxies"         =>array("11.123.28.150"=>"node01",  // frinedly names in sip trace table
+                                                 "13.49.725.105"=>"node02",
+                                                )
                     ),
 "asterisk_vm"  =>array("name"            => "Voicemail server",
                     "class"              => "CDRS_asterisk",

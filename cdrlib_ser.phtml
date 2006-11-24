@@ -4112,7 +4112,8 @@ class SER_trace {
         min(date) as min,
         max(date) as max
         from $this->table";
-    	$this->db->query($query);
+        dprint($query);
+        $this->db->query($query);
         $this->db->next_record();
         $this->summary=array(
                              "count"     => $this->db->f('c'),
@@ -4120,10 +4121,13 @@ class SER_trace {
                              "endDate"   => $this->db->f('max')
                              );
 
+        if (is_array($DATASOURCES[$cdr_source]['SIPProxies'])) {
+            $this->SIPProxies=$DATASOURCES[$cdr_source]['SIPProxies'];
+        }
+
     }
 
     function show($callid,$method,$status,$fromtag,$trace_url="") {
-		global $SIPProxies;
 
         //$traceSortOrder= $_REQUEST['traceSortOrder'];
 
@@ -4209,13 +4213,27 @@ class SER_trace {
 
         print "<tr bgcolor=lightgrey>
         <td></td>
-        <td><b>Packet</b></td>
-        <td><b>Date and time</b></td>
+        <td align=center><b>Id</b></td>
+        <td align=center><b>Time</b></td>
         ";
+
         foreach (array_keys($column) as $_key) {
-            if ($_key=='127.0.0.1') $_key='SIP Proxy';
-            printf ("<td class=border align=center><b>%s</h3></b>",$_key);
+        	unset($isProxy);
+        	if (is_array($this->SIPProxies)) {
+            	$IPels=explode(":",$_key);
+                $justIP=$IPels[0];
+
+                foreach (array_keys($this->SIPProxies) as $localProxy) {
+                	if ($localProxy==$justIP) {
+                            $isProxy=sprintf("%s",$this->SIPProxies[$localProxy]);
+                            break;
+                        }
+                    }
+                }
+
+            printf ("<td class=border align=center><b><font color=blue>%s</font><br>%s</h3></b>",$isProxy,$_key);
         }
+
         print "</tr>";
 
         $i=0;
@@ -4228,7 +4246,7 @@ class SER_trace {
             $msg       = $_trace['msg'];
             $fromip    = $_trace['fromip'];
             $toip      = $_trace['toip'];
-            $date      = $_trace['date'];
+            $date      = substr($_trace['date'],11);
             $status    = $_trace['status'];
             $direction = $_trace['direction'];
             $timestamp = $_trace['timestamp'];
@@ -4292,9 +4310,6 @@ class SER_trace {
 
                 $_els=explode(";",$_lines[0]);
 
-
-				if ($direction == "out") $fromip="127.0.0.1";
-
                 $_span=1;
                 $t=1;
                 while ($t < $column[$fromip]) {
@@ -4320,8 +4335,7 @@ class SER_trace {
                 </td>
         		<td align=right class=border>$status_color$i/$rows&nbsp;</font></td>
                 <td colspan=$_span class=border><nobr>$status_color$date</nobr></font></td>
-                <td class=border>
-                <a name=\"packet$i\">
+                <td class=border><a name=\"packet$i\">
                 $status_color $_els[0]
                 ";
 
@@ -4349,10 +4363,10 @@ class SER_trace {
                 </tr>
                 ";
 
-                if (is_array($SIPProxies)) {
+                if (is_array($this->SIPProxies)) {
                     $IPels=explode(":",$fromip);
                     $justIP=$IPels[0];
-                    foreach ($SIPProxies as $localProxy) {
+                    foreach (array_keys($this->SIPProxies) as $localProxy) {
                         if ($localProxy==$justIP) {
                             $direction="out";
                             break;
