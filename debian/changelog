@@ -2,12 +2,13 @@ cdrtool (4.7-8) unstable; urgency=low
 
   * Show cached usage only if showUsageFromCache is set in global.inc
   * Fixed relative link to style.css in login screen
-  * Show friendly names for SIP Proxy machines in sip trace
+  * Show friendly names for SIP Proxy machines in sip trace (see setup/global.inc.in)
   * Fixed filtering of media sessions for login accounts with domain filter
   * Added arrows to indicate SIP trace packet direction
   * Show small SIP UA images for incomming messages in SIP trace
+  * Adjust trace to src/dst siptrace module fixes in OpenSER >= 1.1
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 25 Nov 2006 12:38:46 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 25 Nov 2006 12:44:55 +0100
 
 cdrtool (4.7-7) unstable; urgency=low
 
