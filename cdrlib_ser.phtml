@@ -4208,6 +4208,13 @@ class SER_trace {
 
             if ($trace_array[$key]['direction'] == 'in') {
 
+                if (is_array($this->SIPProxies)) {
+                    $thisIP=explode(":",$trace_array[$key]['fromip']);
+                    if (in_array($thisIP[0],array_keys($this->SIPProxies))) {
+                    	$trace_array[$key]['isProxy'] = 1;
+                    }
+                }
+
                 if ($trace_array[$key]['fromip'] == $trace_array[$key]['toip']) {
                 	$trace_array[$key]['arrow_align'] = "left";
                 	$arrow_direction="loop";
@@ -4240,6 +4247,8 @@ class SER_trace {
             }
         }
 
+        //print "<pre>";
+        //print_r($trace_array);
         print "
         <p>
         <a name=#top>
@@ -4284,6 +4293,7 @@ class SER_trace {
             $direction = $trace_array[$key]['direction'];
             $timestamp = $trace_array[$key]['timestamp'];
             $method    = $trace_array[$key]['method'];
+            $isProxy   = $trace_array[$key]['isProxy'];
 
             $msg_possition   = $trace_array[$key]['msg_possition'];
             $arrow_possition = $trace_array[$key]['arrow_possition'];
@@ -4294,9 +4304,11 @@ class SER_trace {
             if ($i==1) $begin_timestamp = $timestamp;
             $timeline=$timestamp-$begin_timestamp;
 
+            $sip_phone_img=getImageForUserAgent($msg);
+
             //if (!$msg) continue;
 
-            if ($arrow_direction=='loop' && $seen_msg[$md5]) continue;
+            if ($seen_msg[$md5]) continue;
 
             $SIPclass=substr($status,0,1);
     
@@ -4346,6 +4358,10 @@ class SER_trace {
                 if (preg_match("/^a=alt:1/i",$_line,$m)) {
                     $media['streams'][$t]=$media['streams'][$t]." ICE";
                 }
+
+                if (preg_match("/^Cseq:\s*\d+\s*(.*)$/i",$_line,$m)) {
+                    $status_for_method=$m[1];
+                }
                 $j++;
 
             }
@@ -4355,6 +4371,8 @@ class SER_trace {
             $cell_content = "<a name=\"packet$i\">
             $status_color $_els[0]
             ";
+
+            if ($status) $cell_content.=" <font color=black>for ".$status_for_method."</font>";
 
             if (is_array($diversions)) {
                 foreach ($diversions as $_diversion) {
@@ -4417,9 +4435,21 @@ class SER_trace {
 
                 if ($arrow_possition==$column_current) {
                 	print "
-                    <td class=bbot align=$arrow_align>
-                	<img src=images/$arrow border=0 align=left>
-                    ";
+                    <td class=bbot align=$arrow_align>";
+
+                    if ($arrow_direction == 'left') {
+                        print "
+                        <img src=images/$arrow border=0>
+                        ";
+                        if (!$isProxy && $direction=='in' && $sip_phone_img && $sip_phone_img!='unknown.png')
+                        print "<img src=status/images/30/$sip_phone_img border=0>";
+                    } else {
+                        if (!$isProxy && $direction=='in' && $sip_phone_img && $sip_phone_img!='unknown.png')
+                        print "<img src=status/images/30/$sip_phone_img border=0>";
+                        print "
+                        <img src=images/$arrow border=0>
+                        ";
+                    }
                 } else {
                 	print "<td class=bbot>
                 	";
@@ -4428,7 +4458,6 @@ class SER_trace {
                 if ($msg_possition == $column_current) {
                     print $cell_content;
                 }
-
 
                 print "
                 </td>
@@ -4471,7 +4500,6 @@ class SER_trace {
                 <h1>SIP Proxy</h1></nobr>
                 ";
             } else {
-                $sip_phone_img=getImageForUserAgent($msg);
                 if ($sip_phone_img) print "<img src=images/$sip_phone_img border=0>";
             }
 
