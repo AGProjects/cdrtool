@@ -602,17 +602,17 @@ class pageLayout {
         }
         
         if ($perm->have_perm("statistics")) {
-            print " | <a href=status/sip_online.phtml target=status>Registrar</a>";
-            print " | <a href=status/media_sessions.phtml target=status>Media</a>";
-            print " | <a href=status/usage/index.phtml target=status>Usage</a>";
+            print " | <a href=status/sip_online.phtml target=siponline>Registrar</a>";
+            print " | <a href=status/media_sessions.phtml target=mediasessions>Media</a>";
+            print " | <a href=status/usage/index.phtml target=usage>Usage</a>";
         }
 
         print " | <a href=log.phtml>Log</a>";
         print " | <a href=accounts.phtml>Accounts</a>";
         
         $now_print=Date("Y-m-d H:i:s",time());
-        $tz=getenv('TZ');
-        print " | $now_print ($tz) | CDRTool $version";
+        $tz=$CDRTool['provider']['timezone'];
+        print " | $now_print ($tz) | CDRTool <a href=doc/changelog target=changelog>$version</a>";
         print "
         </td>
         <td align=right>
