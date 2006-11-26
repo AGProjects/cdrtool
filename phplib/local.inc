@@ -612,12 +612,12 @@ class pageLayout {
         
         $now_print=Date("Y-m-d H:i:s",time());
         $tz=$CDRTool['provider']['timezone'];
-        print " | $now_print ($tz) | CDRTool <a href=doc/changelog target=changelog>$version</a>";
+        print " | $now_print ($tz) ver. <a href=doc/changelog target=changelog>$version</a>";
         print "
         </td>
         <td align=right>
         ";
-        print "Logged in as  <b>$loginname ";
+        print "<b>$loginname ";
         if ($loginName) print "($loginName)";
         print "</b> ";
         print "<a href=logout.phtml target=_top>Logout</a>";
