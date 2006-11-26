@@ -28,20 +28,16 @@ if ($search_text) {
 	$search_text=preg_replace("/[^\d|\w| -\.@_]/s","",$search_text);
 }
 
-print "<center>";
-
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
 
 print "
-<form method=post>
-<p>Search history of the queries
-<font size=-2>
-<input type=text name=search_text value=\"$search_text\">
+<form method=post action=$PHP_SELF>
+<p>
+Search log
+<input type=text size=30 name=search_text value=\"$search_text\">
 <input type=submit value=Search>
-</font>
 </form>
-</center>
 ";
 
 if ($perm->have_perm(admin)) {
@@ -164,9 +160,9 @@ if  ($rows>0)  {
            <table class=border cellspacing=1 width=100% align=center>
            <tr bgcolor=lightgrey>
            <td class=cdr> </td>
-           <td class=cdr> <b>Id</td>
-           <td class=cdr> <b>Date/time</td>
-           <td class=cdr> <b>Login</td>
+           <td class=cdr> <b>Log id</td>
+           <td class=cdr> <b>Date and time</td>
+           <td class=cdr> <b>Account</td>
            <td class=cdr> <b>IP address</td>
            <td class=cdr> <b>Datasource</td>
            <td class=cdr> <b>Rows</td>
@@ -231,18 +227,17 @@ if  ($rows>0)  {
 		<td class=cdr>$ip</td>
         <td class=cdr>$datasource</td>
 		<td class=cdr>$results</td>
+        <form method=post>
         <td class=cdr>";
 
 		if ($display_form == 1) {
             print "
-            <form method=post>
             <input type=text size=20 name=log_description value=\"$description\">
             <input type=hidden name=current_log value=\"$current_log\">
             <input type=hidden name=task value=edit>
             <input type=hidden name=next value=$next>
             <input type=hidden name=search_text value=\"$search_text\">
             <input type=submit value=Save>
-			</form>
             ";
 		} else {
 			print "$description";
@@ -250,6 +245,7 @@ if  ($rows>0)  {
 
         print "
         </td>
+		</form>
         <form method=post>
 
         <td class=cdr>$url_run $url_edit
