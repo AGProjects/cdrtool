@@ -33,10 +33,14 @@ $layout->showTopMenu($title);
 
 print "
 <form method=post action=$PHP_SELF>
-<p>
-Search log
+<table border=0 align=right>
+<tr>
+<td>
 <input type=text size=30 name=search_text value=\"$search_text\">
 <input type=submit value=Search>
+</td>
+</tr>
+</table>
 </form>
 ";
 
@@ -156,7 +160,8 @@ if  ($rows>0)  {
     
     $db->query($query);
 
-    print "<center><p>Found $rows records. </center>
+    print "<br>
+    <center><p>Found $rows records. </center>
            <table class=border cellspacing=1 width=100% align=center>
            <tr bgcolor=lightgrey>
            <td class=cdr> </td>
@@ -164,7 +169,7 @@ if  ($rows>0)  {
            <td class=cdr> <b>Date and time</td>
            <td class=cdr> <b>Account</td>
            <td class=cdr> <b>IP address</td>
-           <td class=cdr> <b>Datasource</td>
+           <td class=cdr> <b>Data source</td>
            <td class=cdr> <b>Rows</td>
            <td class=cdr> <b>Description  </td>
            <td class=cdr> <b>Actions</td>
@@ -232,7 +237,7 @@ if  ($rows>0)  {
 
 		if ($display_form == 1) {
             print "
-            <input type=text size=20 name=log_description value=\"$description\">
+            <input type=text size=25 name=log_description value=\"$description\">
             <input type=hidden name=current_log value=\"$current_log\">
             <input type=hidden name=task value=edit>
             <input type=hidden name=next value=$next>
