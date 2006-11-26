@@ -191,6 +191,11 @@ if  ($rows>0)  {
        	$results        =$db->f('results');
 	    $description    =$db->f('description');
         $datasource     =$db->f('datasource');
+        if ($rerun && $DATASOURCES[$datasource]['name']) {
+        	$datasource_print=$DATASOURCES[$datasource]['name'];
+        } else {
+        	$datasource_print=$datasource;
+        }
 
         if (!$reedit || !$rerun) {
             if (preg_match("/do_search/", $url)) {
@@ -230,7 +235,7 @@ if  ($rows>0)  {
         <td class=cdr>$log_date</td>
 		<td class=cdr>$login</td>
 		<td class=cdr>$ip</td>
-        <td class=cdr>$datasource</td>
+        <td class=cdr>$datasource_print</td>
 		<td class=cdr>$results</td>
         <form method=post>
         <td class=cdr>";

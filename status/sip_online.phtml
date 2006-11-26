@@ -26,6 +26,20 @@ $expandAll=$_REQUEST['expandAll'];
 if ($DATASOURCES[$datasource]['EnableSIPOnline']) {
 	$online= new SIPonline($datasource);
 	$online->showAll($_REQUEST['domain']);
+
+    $REMOTE_ADDR        = $_SERVER['REMOTE_ADDR'];
+    $db =new DB_CDRTool;
+    $loginname=$auth->auth["uname"];
+    
+    $log_query=sprintf("insert into log
+    (date,login,ip,datasource,description)
+    values (NOW(),'%s','%s','Registrar','View online users')",
+    addslashes($loginname),
+    addslashes($REMOTE_ADDR)
+    );
+    dprint($log_query);
+    $db->query($log_query);
+
 } else {
 	print "<p>Please edit global.inc and enable EnableSIPOnline in SER datasource";
 }

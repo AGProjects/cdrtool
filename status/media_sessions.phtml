@@ -438,6 +438,20 @@ if ($perm->have_perm('admin')) {
 	showSummary($servers, $sessions);
 }
 
+$REMOTE_ADDR        = $_SERVER['REMOTE_ADDR'];
+$db =new DB_CDRTool;
+$loginname=$auth->auth["uname"];
+
+$log_query=sprintf("insert into log
+(date,login,ip,datasource,description)
+values (NOW(),'%s','%s','Media sessions','View media sessions')",
+addslashes($loginname),
+addslashes($REMOTE_ADDR)
+);
+
+dprint($log_query);
+$db->query($log_query);
+
 print "
 </body>
 </html>
