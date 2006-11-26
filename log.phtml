@@ -167,13 +167,11 @@ if  ($rows>0)  {
            <td class=cdr> <b>Id</td>
            <td class=cdr> <b>Date/time</td>
            <td class=cdr> <b>Login</td>
+           <td class=cdr> <b>IP address</td>
            <td class=cdr> <b>Datasource</td>
-           <td class=cdr> <b>From</td>
-           <td class=cdr> <b>Run</td>
-           <td class=cdr> <b>Edit</td>
-           <td class=cdr> <b>Res</td>
+           <td class=cdr> <b>Rows</td>
            <td class=cdr> <b>Description  </td>
-           <td class=cdr> <b>Notify support</td>
+           <td class=cdr> <b>Actions</td>
            </tr>
 	";
 
@@ -205,8 +203,8 @@ if  ($rows>0)  {
                 $url_edit="<a href=\"../statistics/$url_edit\">Edit stat</a>";
                 $display_form=1;
             } else {
-                $url_edit="-";
-                $url_run="-";
+                $url_edit="";
+                $url_run="";
                 $display_form=0;
             }
         } else {
@@ -230,59 +228,53 @@ if  ($rows>0)  {
 		<td class=cdr>$current_log</td>
         <td class=cdr>$log_date</td>
 		<td class=cdr>$login</td>
-        <td class=cdr>$datasource</td>
 		<td class=cdr>$ip</td>
-		<td class=cdr>$url_run</td> 
-		<td class=cdr>$url_edit</td>
+        <td class=cdr>$datasource</td>
 		<td class=cdr>$results</td>
-		<td class=cdr>
-		";
+        <td class=cdr>";
 
 		if ($display_form == 1) {
             print "
             <form method=post>
-            <input type=text size=30 name=log_description value=\"$description\">
+            <input type=text size=20 name=log_description value=\"$description\">
             <input type=hidden name=current_log value=\"$current_log\">
             <input type=hidden name=task value=edit>
             <input type=hidden name=next value=$next>
             <input type=hidden name=search_text value=\"$search_text\">
             <input type=submit value=Save>
-            </td>
 			</form>
-            <td class=cdr valign=center>
-            ";
-            if (strlen($description)) {
-                print "
-                <form method=post>
-                <select name=recipient>
-                ";
-                    foreach(array_keys($Collegues) as $col) {
-                        print "<option value=\"$col\">$Collegues[$col]";
-                    }
-    
-                print "
-                </select>
-                <input type=hidden name=current_log value=\"$current_log\">
-                <input type=hidden name=task value=mailLog>
-                <input type=hidden name=next value=$next>
-                <input type=hidden name=search_text value=\"$search_text\">
-                ";
-
-            	 print "<input type=submit value=Mail>";
-            } else {
-                print "Save first the description";
-            }
-            print "
-            </td>
-			</form>
-            <td class=cdr valign=center>
-
             ";
 		} else {
-			print "<font color=red>$description</font>";
+			print "$description";
 		}
-		print "
-		</td>
+
+        print "
+        </td>
+        <form method=post>
+
+        <td class=cdr>$url_run $url_edit
+        ";
+
+        if (strlen($description) && $rerun) {
+            print "
+            <input type=submit value=Notify>
+            <select name=recipient>
+            ";
+                foreach(array_keys($Collegues) as $col) {
+                    print "<option value=\"$col\">$Collegues[$col]";
+                }
+
+            print "
+            </select>
+            <input type=hidden name=current_log value=\"$current_log\">
+            <input type=hidden name=task value=mailLog>
+            <input type=hidden name=next value=$next>
+            <input type=hidden name=search_text value=\"$search_text\">
+            ";
+        }
+        print "
+        </td>
+        </form>
 		</tr>
 
 		";
