@@ -166,7 +166,7 @@ td.sft {
 
 td.bbot { 
   border-bottom: 1px solid #666666;
-  vertical-align: top;
+  vertical-align: middle;
   padding-top: 1px;
   background-color: transparent;
 }

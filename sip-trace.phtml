@@ -1,10 +1,37 @@
 <?
 include("global.inc");
-page_open(array(
+
+if ($_REQUEST['public']) {
+    $db = new DB_CDRTool;
+    $key="callid-".trim($callid).trim($fromtag);
+    $query=sprintf("select * from memcache where `key` = '%s'",addslashes($key));
+    sleep(1);
+    dprint($query);
+    if ($db->query($query)) {
+	    if ($db->num_rows()) {
+    	    $authorize=0;
+    	} else {
+        	$authorize=1;
+	    }
+    } else {
+		$authorize=1;
+    }
+} else {
+	$authorize=1;
+}
+
+if ($authorize==1) {
+	page_open(array(
           "sess" => "CDRTool_Session",
           "auth" => "CDRTool_Auth",
           "perm" => "CDRTool_Perm")
           );
+
+} else {
+	unset($auth);
+	unset($sess);
+	unset($perm);
+}
 
 require("cdrlib.phtml");
 $callid      = $_REQUEST['callid'];
@@ -13,7 +40,7 @@ $status      = $_REQUEST['status'];
 $fromtag     = $_REQUEST['fromtag'];
 $cdr_source  = $_REQUEST['cdr_source'];
 
-if (in_array($cdr_source,$CDRTool[dataSourcesAllowed])) {
+if (!$authorize || in_array($cdr_source,$CDRTool[dataSourcesAllowed])) {
 
     $title="SIP trace: session $callid $method $status";
     include("header.phtml");
@@ -30,5 +57,7 @@ print "
 </body>
 </html>
 ";
-page_close();
+if ($authorize=1) {
+	page_close();
+}
 ?>

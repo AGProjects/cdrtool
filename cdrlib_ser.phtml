@@ -4091,7 +4091,8 @@ class CDR_ser_acc extends CDR {
 
 class SER_trace {
     function SER_trace ($cdr_source) {
-        global $DATASOURCES;
+        global $DATASOURCES, $auth;
+        $this->cdrtool  = new DB_CDRTool();
 
         $this->table = $DATASOURCES[$cdr_source]['table'];
         $db_class    = $DATASOURCES[$cdr_source]['db_class'];
@@ -4099,27 +4100,32 @@ class SER_trace {
 
         if ($db_class && $this->table) {
         	$this->db    = new $db_class;
+
+            $query="select count(*) as c,
+            min(date) as min,
+            max(date) as max
+            from $this->table";
+            dprint($query);
+            if ($this->db->query($query) && $this->db->next_record()) {
+            	$this->summary=array(
+                                 "count"     => $this->db->f('c'),
+                                 "startDate" => $this->db->f('min'),
+                                 "endDate"   => $this->db->f('max')
+                                 );
+            } else {
+                print "<p>Error: database error. ";
+                return 0;
+            }
+
             $this->initOK=1;
+            if (is_object($auth)) {
+                $this->isAuthorized=1;
+            }
+
         } else {
             print "<p>Error: missing database or table definition in $cdr_source datasource). ";
-            print "<pre>";
-            print_r($this);
-            print "</pre>";
             return 0;
         }
-
-        $query="select count(*) as c,
-        min(date) as min,
-        max(date) as max
-        from $this->table";
-        dprint($query);
-        $this->db->query($query);
-        $this->db->next_record();
-        $this->summary=array(
-                             "count"     => $this->db->f('c'),
-                             "startDate" => $this->db->f('min'),
-                             "endDate"   => $this->db->f('max')
-                             );
 
         if (is_array($DATASOURCES[$cdr_source]['SIPProxies'])) {
             $this->SIPProxies=$DATASOURCES[$cdr_source]['SIPProxies'];
@@ -4128,6 +4134,13 @@ class SER_trace {
     }
 
     function show($callid,$method,$status,$fromtag,$trace_url="") {
+
+        $action           = $_REQUEST['action'];
+        $toggleVisibility = $_REQUEST['toggleVisibility'];
+
+        if ($action=='toggleVisibility') {
+			$this->togglePublicVisibility($callid,$fromtag,$toggleVisibility);
+        }
 
         $query="select *,UNIX_TIMESTAMP(date) as timestamp
         from $this->table where callid = '$callid'
@@ -4149,16 +4162,48 @@ class SER_trace {
             $protocolURL="http://";
         }
 
-		$fullURL=$protocolURL.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-
         if ($this->db->num_rows()) {
 	        print "
-            <h3>SIP session trace $callid</h3>
+            <h3>SIP session trace $callid $authorize</h3>
 
             <table border=0 width=100%>
             <tr>
-            <td><a href=$fullURL>URL for this trace</a></td>
-            <td align=right>Click on the SIP message to see the trace</a>
+            <form method=post>
+            <td align=left width=50%>
+            ";
+            if ($this->isAuthorized) {
+		        $key="callid-".trim($callid).trim($fromtag);
+
+                $query=sprintf("select * from memcache where `key` = '%s'",addslashes($key));
+                dprint($query);
+                $this->cdrtool->query($query);
+
+                if ($this->cdrtool->num_rows()) {
+                	$selected_toggleVisibility['public']="selected";
+					$fullURL=$protocolURL.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']."&public=1";
+                } else {
+                	$selected_toggleVisibility['private']="selected";
+        			$fullURL=$protocolURL.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+                }
+
+                print "
+                Trace is visible
+                <select name=toggleVisibility>
+                <option $selected_toggleVisibility[public] value=1>without authorization
+                <option $selected_toggleVisibility[private] value=0>only for authorized users
+                </select>
+                <input type=hidden name=action value=toggleVisibility>
+                <input type=submit value=\"Save\">
+                ";
+          		print "<a href=$fullURL>URL for this trace</a></td>";
+            }
+
+
+            print "</td>
+            </form>
+            <td align=right width=50%>
+            Click on each trace entry to see the full message.
+            </td>
             </tr>
             </table>
     	    ";
@@ -4434,28 +4479,25 @@ class SER_trace {
                 }
 
                 if ($arrow_possition==$column_current) {
-                	print "
-                    <td class=bbot align=$arrow_align>";
+                	print "<td class=bbot align=$arrow_align>";
 
                     if ($arrow_direction == 'left') {
-                        print "
-                        <img src=images/$arrow border=0>
-                        ";
+                        print "<img src=images/$arrow border=0>";
                         if (!$isProxy && $direction=='in' && $sip_phone_img && $sip_phone_img!='unknown.png')
                         print "<img src=status/images/30/$sip_phone_img border=0>";
                     } else {
                         if (!$isProxy && $direction=='in' && $sip_phone_img && $sip_phone_img!='unknown.png')
                         print "<img src=status/images/30/$sip_phone_img border=0>";
-                        print "
-                        <img src=images/$arrow border=0>
-                        ";
+                        print "<img src=images/$arrow border=0>";
                     }
                 } else {
-                	print "<td class=bbot>&nbsp;";
+                	print "<td class=bbot>";
                 }
 
                 if ($msg_possition == $column_current) {
                     print $cell_content;
+                } else {
+                	print "&nbsp;";
                 }
 
                 print "
@@ -4510,8 +4552,7 @@ class SER_trace {
 
             print "
             </td>
-            <td valign=top class=border colspan=2 width=100%>
-            $status_color $msg </font></td>
+            <td valign=top class=border colspan=2 width=100%>$status_color $msg </font></td>
             </td>
             </tr>
             </table>
@@ -4526,7 +4567,24 @@ class SER_trace {
         print "
         </table>
         ";
+    }
 
+    function togglePublicVisibility($callid,$fromtag,$public='0') {
+
+        $key="callid-".trim($callid).trim($fromtag);
+
+        if (!$public) {
+        	$query=sprintf("delete from memcache where `key` = '%s'",addslashes($key));
+            dprint($query);
+            $this->cdrtool->query($query);
+        } else {
+        	$query=sprintf("delete from memcache where `key` = '%s'",addslashes($key));
+            dprint($query);
+            $this->cdrtool->query($query);
+        	$query=sprintf("insert into memcache values ('%s','public')",addslashes($key));
+            dprint($query);
+            $this->cdrtool->query($query);
+        }
     }
 
     function purgeRecords($days='') {
