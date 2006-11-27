@@ -429,13 +429,14 @@ sample configuration file for monit is available in setup/monit/monitrc.
 Edit the IP address and hostname where the rating engine runs and copy
 /var/www/CDRTool/setup/monit/monitrc /etc/monit/monit.d/cdrtool
 
-Graphical statistics
---------------------
+Usage statistics
+----------------
 
-CDRTool can build graphical statistics of the number of SIP online users
-from OpenSER and simultaneous media streams and IP traffic from MediaProxy.
+CDRTool can build  usage statistics of the number of online SIP devices from
+OpenSER, simultaneous number of media streams and relayed IP traffic by
+MediaProxy.
 
-Define DB_siponline as a new database class in globa.inc. Example:
+Define DB_siponline as a new database class in global.inc. Example:
 
 class DB_siponline extends DB_Sql {
   var $Host     = "db";
@@ -445,13 +446,18 @@ class DB_siponline extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
-Define all media proxy servers in
+Define all media proxy servers in:
+ 
 /var/www/CDRTool/status/config/media_servers.php
 
-Run /var/www/CDRTool/scripts/buildStatistics.php script. Check
-/tmp/CDRTool-sip-statistics.txt file to see the output
+The script that gathers the usage information and builds the graphical
+statistics is /var/www/CDRTool/scripts/buildStatistics.php
 
-Run /var/www/CDRTool/scripts/generateHTMLUsageIndexFile.php to generate
-/var/www/CDRTool/status/usage/index.html index page
+This script is run by a cron job every 5 minutes.
 
-Visit the Usage page link from the main menu
+The usage information is cumulated in /tmp/CDRTool-sip-statistics.txt file,
+which is a plain text file with one line per domain and values seprated by
+tabs. This file can be parsed to build statistics using other tools like
+SNMP.
+
+To see the graphical statistics, follow the Usage link.

@@ -4164,11 +4164,11 @@ class SER_trace {
 
         if ($this->db->num_rows()) {
 	        print "
-            <h3>SIP session trace $callid $authorize</h3>
+            <h3>CDRTool SIP session trace $callid $authorize</h3>
 
             <table border=0 width=100%>
             <tr>
-            <form method=post>
+            <form method=post name=visibility>
             <td align=left width=50%>
             ";
             if ($this->isAuthorized) {
@@ -4178,22 +4178,23 @@ class SER_trace {
                 dprint($query);
                 $this->cdrtool->query($query);
 
+				$basicURL=$protocolURL.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+
                 if ($this->cdrtool->num_rows()) {
                 	$selected_toggleVisibility['public']="selected";
-					$fullURL=$protocolURL.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']."&public=1";
+					$fullURL=$basicURL."&public=1";
                 } else {
                 	$selected_toggleVisibility['private']="selected";
-        			$fullURL=$protocolURL.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+        			$fullURL=$basicURL;
                 }
 
                 print "
                 Trace is visible
-                <select name=toggleVisibility>
+                <select name=toggleVisibility onChange=\"document.visibility.submit.disabled = true; location.href = '$basicURL&action=toggleVisibility&toggleVisibility=' + this.options[this.selectedIndex].value\">
                 <option $selected_toggleVisibility[public] value=1>without authorization
                 <option $selected_toggleVisibility[private] value=0>only for authorized users
                 </select>
                 <input type=hidden name=action value=toggleVisibility>
-                <input type=submit value=\"Save\">
                 ";
           		print "<a href=$fullURL>URL for this trace</a></td>";
             }

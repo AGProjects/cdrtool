@@ -42,7 +42,7 @@ $cdr_source  = $_REQUEST['cdr_source'];
 
 if (!$authorize || in_array($cdr_source,$CDRTool[dataSourcesAllowed])) {
 
-    $title="SIP trace: session $callid $method $status";
+    $title="CDRTool SIP trace: session $callid $method $status";
     include("header.phtml");
     
     $serTrace = new SER_trace($cdr_source);
