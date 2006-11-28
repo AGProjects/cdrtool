@@ -4163,13 +4163,13 @@ class SER_trace {
         }
 
         if ($this->db->num_rows()) {
+
 	        print "
             <h3>CDRTool SIP session trace $callid $authorize</h3>
 
             <table border=0 width=100%>
             <tr>
             <form method=post name=visibility>
-            <td align=left width=50%>
             ";
             if ($this->isAuthorized) {
 		        $key="callid-".trim($callid).trim($fromtag);
@@ -4183,12 +4183,15 @@ class SER_trace {
                 if ($this->cdrtool->num_rows()) {
                 	$selected_toggleVisibility['public']="selected";
 					$fullURL=$basicURL."&public=1";
+                    $color2="lightblue";
                 } else {
                 	$selected_toggleVisibility['private']="selected";
         			$fullURL=$basicURL;
                 }
 
                 print "
+            	<td align=left width=50% bgcolor=$color2>
+
                 Trace is visible
                 <select name=toggleVisibility onChange=\"document.visibility.submit.disabled = true; location.href = '$basicURL&action=toggleVisibility&toggleVisibility=' + this.options[this.selectedIndex].value\">
                 <option $selected_toggleVisibility[public] value=1>without authorization
@@ -4197,6 +4200,8 @@ class SER_trace {
                 <input type=hidden name=action value=toggleVisibility>
                 ";
           		print "<a href=$fullURL>URL for this trace</a></td>";
+            } else {
+            	print "<td align=left width=50%>";
             }
 
 
