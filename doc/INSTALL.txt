@@ -453,11 +453,11 @@ Define all media proxy servers in:
 The script that gathers the usage information and builds the graphical
 statistics is /var/www/CDRTool/scripts/buildStatistics.php
 
-This script is run by a cron job every 5 minutes.
+This script runs as a cron job every 5 minutes.
 
 The usage information is cumulated in /tmp/CDRTool-sip-statistics.txt file,
-which is a plain text file with one line per domain and values seprated by
-tabs. This file can be parsed to build statistics using other tools like
-SNMP.
+which is a plain text file with one line per domain and values separated by
+tabs. This file can be easily parsed by external scripts to build statistics
+using other tools like SNMP.
 
 To see the graphical statistics, follow the Usage link.
