@@ -1,21 +1,31 @@
 <?
-###########################################
-# Default pagination 
-if (!$maxrowsperpage) $maxrowsperpage=25;
+if (!$maxrowsperpage) $maxrowsperpage=15;
 
 $tz=$CDRTool['provider']['timezone'];
 putenv("TZ=$tz");
+
+if (is_readable('/etc/default/cdrtool')) {
+    $defaults=array();
+    $defaultContentLines=explode("\n",file_get_contents('/etc/default/cdrtool'));
+
+    foreach ($defaultContentLines as $_line) {
+        list($defaults_key, $defaults_value)=explode("=",$_line);
+        if (strlen($defaults_value)) $defaults[trim($defaults_key)]=trim($defaults_value);
+    }
+
+    dprint_r($defaults);
+}
 
 class CDRS {
 
     var $db_class            = "DB_cdrtool";
     var $CDR_class           = "CDR";
-    var $MinPstnNumLen       = "9";
     var $intAccessCode       = "00";
-	var $RatingEngineSocket  = false;
-    var $maxrowsperpage 	 = 25;
-	var $memcache_keyprefix = "mu:";
-	var $status              = array();
+    var $intAccessCode       = "0";
+    var $RatingEngineSocket  = false;
+    var $maxrowsperpage      = 25;
+    var $memcache_keyprefix  = "mu:";
+    var $status              = array();
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
@@ -27,9 +37,9 @@ class CDRS {
                                       'stopTime'        => 'AcctStopTime',
                                       'inputTraffic'    => 'AcctInputOctets',
                                       'outputTraffic'   => 'AcctOutputOctets',
-                                      'aNumber'  	    => 'CallingStationId',
-                                      'cNumber'   	    => 'CalledStationId',
-                                      'timestamp'	    => 'timestamp',
+                                      'aNumber'  	=> 'CallingStationId',
+                                      'cNumber'   	=> 'CalledStationId',
+                                      'timestamp'	=> 'timestamp',
                                       'BillingPartyId'  => 'UserName',
                                       'price'           => 'Price',
                                       'DestinationId'   => 'DestinationId'
@@ -58,6 +68,7 @@ class CDRS {
         global $DATASOURCES;
         global $ratingEnabled;
         global $memcache_server;
+        global $defaults;
 
         $PHP_SELF=$_SERVER["PHP_SELF"];
 
@@ -71,6 +82,13 @@ class CDRS {
         $this->cdr_source      = $cdr_source;
         $this->CDRTool         = $CDRTool;
         $this->DATASOURCES     = $DATASOURCES;
+
+        if (!$memcache_server && $defaults['START_MEMCACHE']) {
+
+            if (preg_match("/yes/i",$defaults['START_MEMCACHE'])) {
+            	$memcache_server=$defaults['MEMCACHE_IP'].":".$defaults['MEMCACHE_PORT'];
+            }
+        }
 
         if ($memcache_server) {
             $mc=new Memcache;
@@ -91,7 +109,6 @@ class CDRS {
         	dprint($log);
         }
 
-
         if ($this->DATASOURCES[$this->cdr_source]['rating'] && $ratingEnabled) {
         	$this->ratingEnabled   = 1;
         }
@@ -99,21 +116,61 @@ class CDRS {
         $_dbClass            = $this->DATASOURCES[$cdr_source]['db_class'];
         $_dbClass_readonly   = $this->DATASOURCES[$cdr_source]['db_class_readonly'];
         $_Table              = $this->DATASOURCES[$cdr_source]['table'];
-        $_DestinationIdField = $this->DATASOURCES[$cdr_source]['DestinationIdField'];
-        $_normalizedField    = $this->DATASOURCES[$cdr_source]['normalizedField'];
-        $_rating   		     = $this->DATASOURCES[$cdr_source]['rating'];
 
-        $_AccountsDBClass    = $this->DATASOURCES[$cdr_source]['AccountsDBClass'];
-        $_UserQuotaTable     = $this->DATASOURCES[$cdr_source]['UserQuotaTable'];
-        $_intAccessCode      = $this->DATASOURCES[$cdr_source]['intAccessCode'];
+		if ($this->DATASOURCES[$cdr_source]['DestinationIdField']) {
+        	$_DestinationIdField = $this->DATASOURCES[$cdr_source]['DestinationIdField'];
+        } else {
+        	$_DestinationIdField='DestinationId';
+        }
 
-        $_BillingIdField    = $this->DATASOURCES[$cdr_source]['BillingIdField'];
-        $_MinPstnNumLen     = $this->DATASOURCES[$cdr_source]['MinPstnNumLen'];
+        if ($this->DATASOURCES[$cdr_source]['UserQuotaTable']) {
+        	$_UserQuotaTable     = $this->DATASOURCES[$cdr_source]['UserQuotaTable'];
+        } else {
+            $_UserQuotaTable='subscriber'; // default OpenSER subscriber table
+        }
+
+        if ($this->DATASOURCES[$cdr_source]['normalizedField']) {
+        	$_normalizedField    = $this->DATASOURCES[$cdr_source]['normalizedField'];
+        } else {
+        	$_normalizedField='Normalized';
+        }
+
+	if ($this->DATASOURCES[$cdr_source]['intAccessCode']) {
+        	$_intAccessCode      = $this->DATASOURCES[$cdr_source]['intAccessCode'];
+        } else {
+        	$_intAccessCode      = '00';
+        }
+
+	if ($this->DATASOURCES[$cdr_source]['natAccessCode']) {
+        	$_natAccessCode      = $this->DATASOURCES[$cdr_source]['natAccessCode'];
+        } else {
+        	$_natAccessCode      = '0';
+        }
+
+	if ($this->DATASOURCES[$cdr_source]['AccountsDBClass']) {
+        	$_AccountsDBClass    = $this->DATASOURCES[$cdr_source]['AccountsDBClass'];
+        } else {
+            $_AccountsDBClass    = 'DB_ser';
+        }
+
+	if ($this->DATASOURCES[$cdr_source]['BillingIdField']) {
+        	$_BillingIdField    = $this->DATASOURCES[$cdr_source]['BillingIdField'];
+        } else {
+        	$_BillingIdField    = 'UserName';
+        }
+
+        if ($this->CDRS->DATASOURCES[$this->cdr_source]['sipTraceDataSource']) {
+            $_sipTraceDataSource=$this->CDRS->DATASOURCES[$this->cdr_source]['sipTraceDataSource'];
+        } else {
+            $_sipTraceDataSource='sip_trace';
+        }
 
         if ($_dbClass) $this->db_class=$_dbClass;
 
         if ($_dbClass_readonly && $_dbClass_readonly != $_dbClass) {
-            dprint ("CDRS can also be read from database class $_dbClass_readonly ");
+            dprint ("CDRs can also be read from database classes ");
+            dprint_r($_dbClass_readonly);
+
             if ($_dbClass_readonly) {
                 if (is_array($_dbClass_readonly)) {
                     // select a random connection from the pool
@@ -128,19 +185,17 @@ class CDRS {
 
         if (!$this->db_class_readonly) $this->db_class_readonly=$_dbClass;
 
-        //printf ("CDRS will be written to database %s. ", $this->db_class);
-        //printf ("CDRS will be read from database %s. ",$this->db_class_readonly);
-
         // init db
         $this->cdrtool  = new DB_CDRTool();
         $this->CDRdb    = new $this->db_class;
         $this->CDRdb1   = new $this->db_class;
-
         $this->CDRdb_readonly     = new $this->db_class_readonly;
 
-		if ($_intAccessCode)  $this->intAccessCode  = $_intAccessCode;
+	if (strlen($_intAccessCode))  $this->intAccessCode  = $_intAccessCode;
+        if (strlen($_natAccessCode))  $this->natAccessCode  = $_natAccessCode;
+        if ($_sipTraceDataSource)  $this->sipTraceDataSource  = $_sipTraceDataSource;
+
         if ($_UserQuotaTable) $this->UserQuotaTable = $_UserQuotaTable;
-        if ($_MinPstnNumLen)  $this->MinPstnNumLen  = $_MinPstnNumLen;
 
         if ($_AccountsDBClass) {
             $this->AccountsDBClass  = $_AccountsDBClass;
@@ -148,7 +203,7 @@ class CDRS {
         }
 
         if ($_Table) {
-            dprint ("CDRS will be read from table $_Table ");
+            dprint ("CDRS are stored in table $_Table ");
             $this->table=$_Table;
         }
 
@@ -163,7 +218,7 @@ class CDRS {
         $this->LoadDomains();
         $this->LoadAccounts();
 
-        if ($_rating) {
+        if ($this->ratingEnabled) {
             //dprint ("CDRS will have rating enabled");
 
             $_showRate 	   = $this->DATASOURCES[$cdr_source]['showRate'];
@@ -200,8 +255,8 @@ class CDRS {
         if ($_BillingIdField) $this->BillingIdField = $_BillingIdField;
 
         $this->missed_calls      = $this->DATASOURCES[$cdr_source]['missed_calls'];
-        $this->traceInURL		 = $this->DATASOURCES[$cdr_source]['traceInURL'];
-        $this->traceOutURL		 = $this->DATASOURCES[$cdr_source]['traceOutURL'];
+        $this->traceInURL	 = $this->DATASOURCES[$cdr_source]['traceInURL'];
+        $this->traceOutURL	 = $this->DATASOURCES[$cdr_source]['traceOutURL'];
         $this->missedCallsURL    = $this->DATASOURCES[$cdr_source]['missedCallsURL'];
         $this->protocolTraceURL  = $this->DATASOURCES[$cdr_source]['protocolTraceURL'];
 
@@ -241,7 +296,7 @@ class CDRS {
 		    $this->CS_CODES=array_keys($this->CDRTool['normalize']['CS_CODES']);
         }
 
-		$this->getCDRtables();
+	$this->getCDRtables();
 
         $this->initOK=1;
     }
@@ -254,13 +309,13 @@ class CDRS {
     }
 
     function LoadDestinations() {
-        dprint("CDRS->LoadDestinations()\n");
+        //dprint("CDRS->LoadDestinations()\n");
 
 		$_destinations=array();
         $this->destinationsCount=0;
 
         if (is_object($this->mc) && $mc_destinations=$this->mc->get('destinations')) {
-        	$_dests=explode("\n",$mc_destinations);
+	    	$_dests=explode("\n",$mc_destinations);
             foreach ($_dests as $_dest)  {
                 if (!strlen($_dest)) continue;
                 $this->destinationsCount++;
@@ -268,6 +323,7 @@ class CDRS {
                 $_els_parts=explode(";",$_els[0]);
                 $_destinations[$_els_parts[0]][$_els_parts[1]]=$_els[1];
             }
+            dprint ("Read destinations from memory");
 
         } else {
 
@@ -288,7 +344,6 @@ class CDRS {
     
             dprint($query);
             $this->cdrtool->query($query);
-    
 
             $mc_value_destinations = "\n";
 
@@ -301,7 +356,6 @@ class CDRS {
                 $id         = trim($this->cdrtool->Record['dest_id']);
                 $name       = trim($this->cdrtool->Record['dest_name']);
                 $name_print = $this->cdrtool->Record['dest_name']." (".$id.")";
-    
     
                 if ($subscriber) {
                     $_destinations[$subscriber][$id]=$name;
@@ -320,6 +374,7 @@ class CDRS {
                     if (is_object($this->mc)) $mc_value_destinations.=$gateway.";".$id."=".$name."\n";
                     continue;
                 }
+
                 if ($id) {
                 	$_destinations["default"][$id]=$name;
                 	if (is_object($this->mc)) $mc_value_destinations.="default;".$id."=".$name."\n";
@@ -337,8 +392,8 @@ class CDRS {
         $this->destinations=&$_destinations;
 
         if (is_array($this->destinations)) {
-			foreach ($this->destinations as $key => $val) {
-        		$this->destinations_length[$key] = max(array_map(strlen, array_keys($val)));
+		foreach ($this->destinations as $key => $val) {
+	       		$this->destinations_length[$key] = max(array_map(strlen, array_keys($val)));
 	        }
         }
 
@@ -803,7 +858,7 @@ class CDRS {
         }
 
         if ($this->status['cdr_to_normalize']>0) {
-	        $e=time();
+	    $e=time();
     	    $d=$e-$b;
 
             $locker->query("unlock tables");
@@ -822,13 +877,13 @@ class CDRS {
         // without leading zero or +
         // E164 = Country Code + Network Code + Subscriber Number
 
-        $len=$this->MinPstnNumLen-2;
-        $_regexp_international = "/^".$this->intAccessCode."([1-9][0-9]{".$len.",})\$/";
-        $_regexp_national      = "/^0([1-9][0-9]{".$len.",})\$/";
+        $_regexp_international = "/^".$this->intAccessCode."([0-9]{5,})\$/";
+        $_regexp_national      = "/^".$this->natAccessCode."([0-9]{5,})\$/";
 
         if (preg_match($_regexp_international,$Number,$m)) {
-            $E164=$m[1];
+            $E164 = $m[1];
         } else if (preg_match($_regexp_national,$Number,$m)) {
+            // Add default country code
             $E164=$this->CDRTool['normalize']['defaultCountryCode'].$m[1];
         }
 
@@ -851,24 +906,24 @@ class CDRS {
             $NumberStack['domain']    = substr($Number,$pos+1);
             $NumberStack['delimiter'] = "@";
 
-        	$pos = strpos($NumberStack['username'], ":");
-        	if ($pos) {
+            $pos = strpos($NumberStack['username'], ":");
+            if ($pos) {
             	$NumberStack['protocol'] = substr($NumberStack['username'],0,$pos+1);
             	$NumberStack['username'] = substr($NumberStack['username'],$pos+1);
             }
 
             if (preg_match("/^(.*)[=:;]/U",$NumberStack['domain'],$p)){
                 $NumberStack['domain']    = $p[1];
-		    }
+	    }
 
         } else if (preg_match("/^([a-z0-9]+:)(.*)$/i",$Number,$m)) {
-        	$oct=preg_split("/\./",$m[2]);
-    		if(sizeof($oct)==4) {
-	            // This is SIP address with no username
+            $oct=preg_split("/\./",$m[2]);
+    	    if(sizeof($oct)==4) {
+	        // This is SIP address with no username
                 $NumberStack['username']  = "";
                 $NumberStack['domain']    = $m[2];
             } else {
-	            // This is SIP address with no domain
+	        // This is SIP address with no domain
                 $NumberStack['username']  = $m[2];
                 $NumberStack['domain']    = "";
             }
@@ -902,7 +957,15 @@ class CDRS {
                 }
             }
 
-            $NumberStack[E164]=$this->E164Format($NumberStack['username']);;
+			if ($this->CDRTool['normalize']['E164Class'] && class_exists($this->CDRTool['normalize']['E164Class'])) {
+				$E164_class = $this->CDRTool['normalize']['E164Class'];
+            } else {
+				$E164_class = "E164_Europe";
+            }
+
+            $E164 =  new $E164_class($this->intAccessCode, $this->natAccessCode,$this->CDRTool['normalize']['defaultCountryCode']);
+
+            $NumberStack['E164']=$E164->E164Format($NumberStack['username']);;
         }
 
         if ($type=="destination" && $NumberStack[E164]) {
@@ -914,7 +977,7 @@ class CDRS {
             $NumberStack[NumberPrint]  = "+".$NumberStack[E164];
 
             $NumberStack[Normalized]   = $this->intAccessCode.
-                                         $NumberStack[E164].
+                                         $NumberStack['E164'].
                                          $NumberStack['delimiter'].
                                          $NumberStack['domain'];
 
@@ -946,19 +1009,19 @@ class CDRS {
     function GetCountryCodeForNumber($number,$subscriber,$domain,$gateway) {
         if ($this->destinations[$subscriber]) {
             $codes = $this->destinations[$subscriber];
-        	$maxLength = $this->destinations_length[$subscriber];
+            $maxLength = $this->destinations_length[$subscriber];
             $fCustomer="subscriber=$subscriber";
         } elseif ($this->destinations[$domain]) {
             $codes = $this->destinations[$domain];
-        	$maxLength = $this->destinations_length[$domain];
+            $maxLength = $this->destinations_length[$domain];
             $fCustomer="domain=$domain";
         } elseif ($this->destinations[$gateway]) {
             $codes = $this->destinations[$gateway];
-        	$maxLength = $this->destinations_length[$gateway];
+            $maxLength = $this->destinations_length[$gateway];
             $fCustomer="gateway=$gateway";
         } else {
             $codes = $this->destinations["default"];
-        	$maxLength = $this->destinations_length["default"];
+            $maxLength = $this->destinations_length["default"];
             $fCustomer="default";
         }
 
@@ -1402,6 +1465,51 @@ class CDRS {
 class CDRS_unknown extends CDRS {
     function searchForm() {
         return;
+    }
+}
+
+class E164 {
+    // class that helps normalization of telephone number
+    // in E164 format
+
+    function E164($intAccessCode='00', $natAccessCode='0',$CountryCode='') {
+        $this->regexp_international = "/^".$intAccessCode."([0-9]{5,})\$/";
+        $this->regexp_national      = "/^".$natAccessCode."([0-9]{3,})\$/";
+        $this->CountryCode          = $CountryCode;
+    }
+
+    function E164Format($Number) {
+        // this function retuns the full E164 format for a PSTN number
+        // without leading zero or +
+        // E164 = Country Code + Network Code + Subscriber Number
+
+    	global $CDRTool;
+
+        if (preg_match($this->regexp_international,$Number,$m)) {
+            dprint("International number");
+            return $m[1];
+        } else if (preg_match($this->regexp_national,$Number,$m)) {
+            // Add default country code
+            dprint("National number");
+            return $this->CountryCode.$m[1];
+        } else {
+            return ;
+        }
+    }
+}
+
+class E164_Europe extends E164 {
+    function E164_Europe ($intAccessCode='00', $natAccessCode='0',$CountryCode='') {
+        $this->regexp_international = "/^".$intAccessCode."([1-9][0-9]{5,})\$/";
+        $this->regexp_national      = "/^".$natAccessCode."([1-9][0-9]{3,})\$/";
+        $this->CountryCode          = $CountryCode;
+    }
+}
+
+class E164_US extends E164 {
+    function E164_US($intAccessCode='011', $natAccessCode='[1-9][0-9]{2}') {
+        $this->regexp_international = "/^".$intAccessCode."([1-9][0-9]{5,})\$/";
+        $this->regexp_national      = "/^".$natAccessCode."([0-9]{3,})\$/";
     }
 }
 

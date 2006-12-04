@@ -1,4 +1,5 @@
 <?
+# This sample file contains examples for all possible settings of CDRTool
 #
 # 1. Change all hostnames and passwords according to the installation
 # 2. Copy this file to /var/www/CDRTool/global.inc
@@ -18,14 +19,9 @@ $global_local    = $CDRTool['Path']."/global.inc.local";
 
 ###########################################
 # PHP Error reporting
-
 $errorReporting = (E_ALL & ~E_NOTICE);
 $errorReporting = 1; 	// comment this out to enable PHP warnings
 error_reporting($errorReporting);
-
-###########################################
-# Default pagination 
-$maxrowsperpage=25;
 
 ###########################################
 # Service provider information 
@@ -76,13 +72,15 @@ $CDRTool['rating']=array(
                 
                 );
 
-$memcache_server  = "127.0.0.1:11212";
+// Overwrite value from /etc/default/cdrtool
+// this setting is necessary only for non-Debian systems
+// $memcache_server  = "127.0.0.1:11212";
 
 ###########################################
 # Normalize engine settings
 
 $CDRTool['normalize']['defaultCountryCode']      = "31";
-$CDRTool['normalize']['CountryNumberLength']     = "9";
+
 # Carrier selection codes, strip first digits
 # and allocate custom Billing Party
 $CDRTool['normalize']['CS_CODES']= array("1684" => array ("name"       =>"test@Call",
@@ -92,7 +90,8 @@ $CDRTool['normalize']['CS_CODES']= array("1684" => array ("name"       =>"test@C
                                                       )
 											    );
 
-$CDRTool['statistics']['zoneFilter']=array("example1.com","example2.com");
+$CDRTool['statistics']['zoneFilter']=array("example1.com","example2.com"); // can filter for which zones we wish to build statistics
+
 
 ###########################################
 # Import settings
@@ -165,6 +164,11 @@ class DomainAuthLocal extends DomainAuth {
 class PageLayoutLocal extends PageLayout {
 }
 
+# To customize E164 normalization
+class E164_custom extends E164 {      // defined in cdrlib.phtml
+}
+# $CDRTool['normalize']['E164Class']           = "E164_custom";
+
 $DATASOURCES=array(
 "unknown"=>array(
                     "class"              => "CDRS_unknown"		// do not delete this datasource
@@ -178,24 +182,22 @@ $DATASOURCES=array(
                     "db_class_siponline" => "DB_ser", 	    // location of openser location table	
                     "rateField"          => "Rate",
                     "rating"             => "1",
-                    "priceField"         => "Price",
                     "normalize0SecCalls" => "1",
+                    "priceField"         => "Price",
                     "DestinationIdField" => "DestinationId",
                     "normalizedField"    => "Normalized",
                     "BillingPartyIdField"=> "UserName",
                     "AccountsDBClass"	 => "DB_ser",
-                    "intAccessCode"      => "00",		
+                    "intAccessCode"      => "00",	// international acess code, numbers prefixed with this are considered international destinations 
+                    "natAccessCode"      => "0",        // international acess code, numbers prefixed with this are considered national destinations
                     "sipTraceDataSource" => "sip_trace",
                     "traceOutURL"        => array(
                                             "sipvm.example.com"=>"asterisk",
                                             "voipgw02.example.com"=>"cisco"
                     			    		),
                     "UserQuotaClass"     => "SERQuota",
-                    "UserQuotaTable"     => "user_quota",
-                    "UserQuotaVerbose"   => "",
+                    "UserQuotaTable"     => "subscriber",
                     "UserQuotaNotify"    => "0",	// send e-mail notifications when quota is exceeded
-                    "MinPstnNumLen"      => "9",
-                    "EnableSIPOnline"    => "0",	// display online SIP users		
                     "EnableNetworkRating"=> "1",
                     "SOAPUsername"       => "",    // used by Multimedia Service Platform
                     "SOAPPassword"       => "",    // used by Multimedia Service Platform

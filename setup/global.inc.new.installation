@@ -16,7 +16,6 @@ $global_local    = $CDRTool['Path']."/global.inc.local";
 
 ###########################################
 # PHP Error reporting
-
 $errorReporting = (E_ALL & ~E_NOTICE);
 $errorReporting = 1; 	// comment this out to enable PHP warnings
 error_reporting($errorReporting);
@@ -34,25 +33,19 @@ $CDRTool['provider']['sampleLoginDomain']     = "example.com";
 
 ###########################################
 # Where the rating engine listens for network requests:
-
 $RatingEngine=array("socketIP"   => "IP.address.of.the.private.interface.of.cdrtool.example.com",
                     "socketPort" => "9024",
                     "CDRS_class" => "ser_radius");
 
-$memcache_server  = "127.0.0.1:11212";
-
 ###########################################
 # Normalize engine settings
-
 $CDRTool['normalize']['defaultCountryCode']      = "31";
-$CDRTool['normalize']['CountryNumberLength']     = "9";
 
 ###########################################
 # Anti-fraud settings
-# create group quota in SER and deny calls to users in this group
-$UserQuota["default"]["traffic"]  = 5000;              // MBytes
+# create group quota in OpenSER and deny calls to users in this group
+# $UserQuota["default"]["traffic"]  = 5000;            // MBytes
 $UserQuota["default"]["cost"]     = 1000;              // Euro
-
 
 ###########################################
 # CDRTool datasources
@@ -81,6 +74,14 @@ class DB_radius extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
+class DB_radius2 extends DB_Sql {
+  var $Host     = "sipdb2";
+  var $Database = "radius";
+  var $User     = "radius";
+  var $Password = "PASSWORD";
+  var $Halt_On_Error ="no";
+}
+
 class DB_ser extends DB_Sql {
   var $Host     = "sipdb";
   var $Database = "openser";
@@ -89,12 +90,17 @@ class DB_ser extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
-
 class DomainAuthLocal extends DomainAuth {	// defined in phplib/local.inc
 }
 
 class PageLayoutLocal extends PageLayout {      // defined in phplib/local.inc
 }
+
+# To customize E164 normalization
+class E164_custom extends E164 {      // defined in cdrlib.phtml
+}
+# $CDRTool['normalize']['E164Class']           = "E164_custom";
+
 
 $DATASOURCES=array(
 "unknown"=>array(
@@ -105,46 +111,24 @@ $DATASOURCES=array(
                     "class"              => "CDRS_ser_radius",
                     "table"              => "radacct",
                     "db_class"           => "DB_radius",
-                    "db_class_readonly"  => "DB_radius",
-                    "db_class_siponline" => "DB_ser", 
-                    "rateField"          => "Rate",
+                    "db_class_readonly"  => "DB_radius2",
                     "rating"             => "1",
-                    "priceField"         => "Price",
                     "normalize0SecCalls" => "1",
-                    "DestinationIdField" => "DestinationId",
-                    "normalizedField"    => "Normalized",
-                    "BillingPartyIdField"=> "UserName",
-                    "AccountsDBClass"	 => "DB_ser",
-                    "intAccessCode"      => "00",
-                    "sipTraceDataSource" => "sip_trace",
-                    "traceOutURL"        => array(
-                                            "sipvm.example.com"=>"asterisk",
-                                            "pstn.example.com"=>"cisco"
-                    			    ),
                     "UserQuotaClass"     => "SERQuota",
-                    "UserQuotaTable"     => "user_quota",
-                    "UserQuotaVerbose"   => "",
-                    "UserQuotaNotify"    => "0",
-                    "MinPstnNumLen"      => "9",
-                    "EnableSIPOnline"    => "0",
+                    "UserQuotaNotify"    => "1",
                     "EnableNetworkRating"=> "1",
-                    "domainTranslation"  => array(
-                                                  "gw02.example.com"      => "pstn.example.com"
-                                            ),
-                    "EnableSIPOnline"    => 1,
                     "RotateTables"	 => "Ym",
                     "RotateThisMonth"	 => 0,
-                    "purgeCDRsAfter"     => 120 // how many days to keep the CDRs
+                    "purgeCDRsAfter"     => 120, // how many days to keep the CDRs
+                    "SIPProxies"         =>array("11.123.28.150"=>"node01",  // frinedly names in sip trace table
+                                                 "13.49.725.105"=>"node02",
+                                                )
                     ),
 "asterisk_vm"  =>array("name"            => "Voicemail server",
                     "class"              => "CDRS_asterisk",
                     "table"              => "asterisk_cdr",
                     "db_class"           => "DB_radius",
-                    "rateField"          => "Rate",
                     "rating"             => "1",
-                    "priceField"         => "Price",
-                    "DestinationIdField" => "DestinationId",
-                    "normalizedField"    => "Normalized",
                     "normalize0SecCalls" => "1",
                     "contexts" 		 => array(
                                             "SIP"=>array("WEBName"=>"OpenSER"),

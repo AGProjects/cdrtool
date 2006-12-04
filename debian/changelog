@@ -1,3 +1,22 @@
+cdrtool (4.8.1) unstable; urgency=low
+
+  * Replaced E164Format function with a customizable class from global.inc:
+    $CDRTool['normalize']['E164Class'] default instantiates E164_Europe
+    See E164_Europe or E164_US in cdrlib.phtml for examples of how to customize
+    the behaviour of the normalization function
+  * For debian read the memcache settings from /etc/default/cdrtool
+    Remove memcache settings from global.inc if OS is Debian
+  * Remove unused settings from global.inc:
+    CountryNumberLength, EnableSIPOnline, MinPstnNumLen
+  * Set many defaults in the code to avoid explicit definitions in global.inc
+  * Default pagination is now 15 records, which better fits one screen
+  * Allow OpenSER subscriber login based on encrypted password in the
+    subscriber table (the ha1 field)
+  * Corrected the disposition mysql field in the Asterisk cdr table 
+    from int to varchar(45)
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon,  4 Dec 2006 16:06:51 +0100
+
 cdrtool (4.8) unstable; urgency=low
 
   * Log updates of rating tables

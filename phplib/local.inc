@@ -372,13 +372,17 @@ class DomainAuth {
 
     function validate ($user, $domain, $password) {
 
+      	$ha1 = md5($user. ':' . $domain . ':' . $password);
+
         $query = sprintf("SELECT * FROM subscriber
                   WHERE username = '%s'
                   AND     domain = '%s'
-                  AND   password = '%s'",
+                  AND   ( password = '%s' or ha1 = '%s') ",
                   addslashes($user),
                   addslashes($domain),
-                  addslashes($password));
+                  addslashes($password),
+                  addslashes($ha1)
+                  );
     
         if ($this->userDB->query($query)) {
             $this->userDB->next_record();

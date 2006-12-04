@@ -362,3 +362,6 @@ CREATE TABLE `memcache` (
 4.7-6
 alter table billing_customers add column increment smallint unsigned not null;
 alter table billing_customers add column min_duration smallint unsigned not null;
+
+4.8.1
+alter table asterisk_cdr change column disposition disposition varchar(45) not null default '';
