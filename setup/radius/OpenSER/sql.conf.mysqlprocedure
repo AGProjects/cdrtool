@@ -1,0 +1,89 @@
+#
+#  Configuration for the SQL module, when using MySQL.
+#
+sql {
+	driver                      = "rlm_sql_mysql"
+        server                      = "sipdb"
+        login                       = "radius"
+        password                    = "PASSWORD"
+        radius_db                   = "radius"
+	sqltrace                    = no
+	sqltracefile                = ${logdir}/sqltrace-%Y%m%d.log
+	num_sql_socks               = 25
+	connect_failure_retry_delay = 60
+
+        accounting_start_query      = "\
+          CALL insert_radacct_record( \
+                '%{Acct-Session-Id}', \
+                '%{Acct-Unique-Session-Id}', \
+                '%{SQL-User-Name}', \
+                '%{SQL-User-Name}', \
+                '%{SIP-Proxy-IP}', \
+                '%{NAS-Port}', \
+                '%S', \
+                '0', \
+                '0', \
+                '0', \
+                '0', \
+                '%{Called-Station-Id}', \
+                '%{Calling-Station-Id}', \
+                '%{Sip-Response-Code}', \
+                '%{Service-Type}', \
+                '%{Framed-Protocol}', \
+                '%{Framed-IP-Address}', \
+                '%{Acct-Delay-Time}', \
+                '0', \
+                '%{Sip-Response-Code}', \
+                '%{Sip-Method}', \
+	        '%{Sip-Translated-Request-URI}', \
+                '%{Sip-To-Tag}', \
+                '%{Sip-From-Tag}', \
+                '%{Sip-RPId}', \
+                '%{Source-IP}', \
+                '%{Source-Port}', \
+                '%{Canonical-URI}' \
+                )"
+
+	accounting_stop_query       = "\
+	  CALL update_radacct_record( \
+		'%S', \
+                '%{Acct-Delay-Time}', \
+                '%{Connect-Info}', \
+                '%{X-RTP-Stat}' \
+		'%{Acct-Session-Id}', \
+                '%{Sip-To-Tag}', \
+                '%{Sip-From-Tag}' \
+                )"
+
+        accounting_failed_query     = "\
+          CALL insert_radacct_record( \
+                '%{Acct-Session-Id}', \
+                '%{Acct-Unique-Session-Id}', \
+                '%{SQL-User-Name}', \
+                '%{SQL-User-Name}', \
+                '%{SIP-Proxy-IP}', \
+                '%{NAS-Port}', \
+                '%S', \
+                '0', \
+                '0', \
+                '0', \
+                '0', \
+                '%{Called-Station-Id}', \
+                '%{Calling-Station-Id}', \
+                '%{Sip-Response-Code}', \
+                '%{Service-Type}', \
+                '%{Framed-Protocol}', \
+                '%{Framed-IP-Address}', \
+                '%{Acct-Delay-Time}', \
+                '0', \
+                '%{Sip-Response-Code}', \
+                '%{Sip-Method}', \
+	        '%{Sip-Translated-Request-URI}', \
+                '%{Sip-To-Tag}', \
+                '%{Sip-From-Tag}', \
+                '%{Sip-RPId}', \
+                '%{Source-IP}', \
+                '%{Source-Port}', \
+                '%{Canonical-URI}' \
+                )"
+}
