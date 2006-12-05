@@ -1,13 +1,10 @@
 Mailing list support
 --------------------
 
-http://www.freelists.org/list/cdrtool-users 
-
-has been setup and is maintained by CDRTool user community.
-
 Places where one may find support from the communities using CDRTool like
 (Open)SER and Asterisk:
 
+- http://www.freelists.org/list/cdrtool-users 
 - http://openser.org/cgi-bin/mailman/listinfo/users
 - http://lists.iptel.org/mailman/listinfo/serusers
 - http://lists.digium.com/mailman/listinfo/asterisk-users

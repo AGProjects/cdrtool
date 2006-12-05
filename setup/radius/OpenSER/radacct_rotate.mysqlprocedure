@@ -60,7 +60,11 @@ CREATE PROCEDURE `insert_radacct_record`(
 	IN var_SipMethod VARCHAR(50),
 	IN var_SipTranslatedRequestURI VARCHAR(255),
 	IN var_SipToTag VARCHAR(128),
-	IN var_SipFromTag VARCHAR(128)
+	IN var_SipFromTag VARCHAR(128),
+        IN var_SipRPID VARCHAR(255),
+        IN var_SourceIP VARCHAR(255),
+        IN var_SourcePort VARCHAR(255),
+        IN var_CanonicalURI VARCHAR(255)
 )
 BEGIN
 
@@ -89,25 +93,67 @@ BEGIN
 	END IF;
 
 	-- INSERT RECORD IN NEW TABLE
-	SET @instmt = CONCAT("INSERT INTO ", @var_tbl, " (RadAcctId, AcctSessionId, AcctUniqueId,
-		UserName, Realm, NASIPAddress,
-		NASPortId, AcctStartTime, AcctStopTime,
-		AcctSessionTime, AcctInputOctets, AcctOutputOctets,
-		CalledStationId, CallingStationId, AcctTerminateCause,
-		ServiceType, FramedProtocol, FramedIPAddress,
-		AcctStartDelay, AcctStopDelay, SipResponseCode,
-		SipMethod, SipTranslatedRequestURI, SipToTag,
-		SipFromTag)
+	SET @instmt = CONCAT("INSERT INTO ", @var_tbl, " (
+                RadAcctId, 
+                AcctSessionId, 
+                AcctUniqueId,
+		UserName, 
+                Realm, 
+                NASIPAddress,
+		NASPortId, 
+                AcctStartTime, 
+                AcctStopTime,
+		AcctSessionTime, 
+                AcctInputOctets, 
+                AcctOutputOctets,
+		CalledStationId, 
+                CallingStationId, 
+                AcctTerminateCause,
+		ServiceType, 
+                FramedProtocol, 
+                FramedIPAddress,
+		AcctStartDelay, 
+                AcctStopDelay, 
+                SipResponseCode,
+		SipMethod, 
+                SipTranslatedRequestURI, 
+                SipToTag,
+		SipFromTag,
+                SipRPID,
+                SourceIP,
+                SourcePort,
+                CanonicalURI)
 		VALUES
 		(NULL,
-		?, ?, ?,
-		SUBSTRING_INDEX(?, '@',-1), ?, ?,
-		?, ?, ?,
-		?, ?, ?,
-		?, ?, ?,
-		?, ?, ?,
-		?, ?, ?,
-		?, ?, ?)");
+		?, 
+                ?, 
+                ?,
+		SUBSTRING_INDEX(?, '@',-1), 
+                ?, 
+                ?,
+		?, 
+                ?, 
+                ?,
+		?, 
+                ?, 
+                trim(leading 'sip:' from trim(leading 'sips:' from ?)),
+		trim(leading 'sip:' from trim(leading 'sips:' from ?)),
+                ?, 
+                ?,
+		?, 
+                ?, 
+                ?,
+		?, 
+                ?, 
+                ?,
+		trim(leading 'sip:' from trim(leading 'sips:' from ?)), 
+                ?, 
+                ?,
+                ?,
+		?, 
+                ?, 
+                trim(leading 'sip:' from trim(leading 'sips:' from ?))
+                )");
 
 	PREPARE add_rad FROM @instmt;
 	SET @v_AcctSessionId = var_AcctSessionId;
@@ -142,6 +188,11 @@ BEGIN
 	SET @v_SipTranslatedRequestURI = var_SipTranslatedRequestURI;
 	SET @v_SipToTag = var_SipToTag;
 	SET @v_SipFromTag = var_SipFromTag;
+	SET @v_SipRPID = var_SipRPID;
+	SET @v_SourceIP = var_SourceIP;
+	SET @v_SourcePort = var_SourcePort;
+	SET @v_CanonicalURI = var_CanonicalURI;
+
 	EXECUTE add_rad USING @v_AcctSessionId, @v_AcctUniqueId,
 		@v_UserName, @v_Realm, @v_NASIPAddress, @v_NASPortId,
 		@v_AcctStartTime, @v_AcctStopTime, @v_AcctSessionTime,
@@ -149,7 +200,8 @@ BEGIN
 		@v_CallingStationId, @v_AcctTerminateCause, @v_ServiceType,
 		@v_FramedProtocol, @v_FramedIPAddress, @v_AcctStartDelay,
 		@v_AcctStopDelay, @v_SipResponseCode, @v_SipMethod,
-		@v_SipTranslatedRequestURI, @v_SipToTag, @v_SipFromTag;
+		@v_SipTranslatedRequestURI, @v_SipToTag, @v_SipFromTag,
+                @v_SipRPID, @v_SourceIP, @v_SourcePort, @v_CanonicalURI;
 	DEALLOCATE PREPARE add_rad;
 
 END $$
@@ -248,13 +300,12 @@ DELIMITER $$
 DROP PROCEDURE IF EXISTS `update_radacct_record` $$
 CREATE PROCEDURE `update_radacct_record`(
 	IN var_AcctStopTime VARCHAR(20),
-	IN var_AcctTerminateCause VARCHAR(32),
 	IN var_AcctStopDelay INT(12),
 	IN var_ConnectInfo_stop VARCHAR(32),
+	IN var_RTPStatistics VARCHAR(255),
 	IN var_AcctSessionId VARCHAR(255),
 	IN var_SipToTag VARCHAR(128),
-	IN var_SipFromTag VARCHAR(128),
-	IN var_NASIPAddress VARCHAR(15)
+	IN var_SipFromTag VARCHAR(128)
 )
 BEGIN
 
@@ -301,42 +352,41 @@ BEGIN
 		SET @updstmt = CONCAT("UPDATE ", @var_tbl_pmonth, " SET
 		AcctStopTime = ?,
 		AcctSessionTime = UNIX_TIMESTAMP(?) - UNIX_TIMESTAMP(AcctStartTime),
-		AcctTerminateCause = ?,
 		AcctStopDelay = ?,
-		ConnectInfo_stop = ?
+ 		ConnectInfo_stop = ?
+                Normalized = '0' ,
+                RTPStatistics = ?
 		WHERE
 		AcctSessionId = ?
-		AND ((SipToTag = ? AND SipFromTag = ?) OR
-		(SipToTag = ? AND SipFromTag = ?))
-		AND NASIPAddress = ?;");
+		AND ((SipToTag = ? AND SipFromTag = ?) OR (SipToTag = ? AND SipFromTag = ?)) 
+                AND ConnectInfo_stop IS NULL;");
+
 		PREPARE update_rad FROM @updstmt;
 		IF var_AcctStopTime = '0' OR var_AcctStopTime = '' THEN
 			SET @v_AcctStopTime = NOW();
 		ELSE
 			SET @v_AcctStopTime = CAST(var_AcctStopTime AS DATETIME);
 		END IF;
-		SET @v_AcctTerminateCause = var_AcctTerminateCause;
 		SET @v_AcctStopDelay = var_AcctStopDelay;
 		SET @v_ConnectInfo_stop = var_ConnectInfo_stop;
 		SET @v_AcctSessionId = var_AcctSessionId;
 		SET @v_SipToTag = var_SipToTag;
 		SET @v_SipFromTag = var_SipFromTag;
-		SET @v_NASIPAddress = var_NASIPAddress;
+		SET @v_RTPStatistics = var_RTPStatistics;
 		EXECUTE update_rad USING @v_AcctStopTime, @v_AcctStopTime,
-			@v_AcctTerminateCause, @v_AcctStopDelay, @v_ConnectInfo_stop,
+			@v_AcctStopDelay, @v_ConnectInfo_stop, @v_RTPStatistics, 
 			@v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
-			@v_SipFromTag, @v_SipToTag, @v_NASIPAddress;
+			@v_SipFromTag, @v_SipToTag;
 		DEALLOCATE PREPARE update_rad;
 
 		-- CLEAN UP
 		SET @v_AcctStopTime = null;
-		SET @v_AcctTerminateCause = null;
 		SET @v_AcctStopDelay = null;
 		SET @v_ConnectInfo_stop = null;
+		SET @v_RTPStatistics = null;
 		SET @v_AcctSessionId = null;
 		SET @v_SipToTag = null;
 		SET @v_SipFromTag = null;
-		SET @v_NASIPAddress = null;
 
 	END IF;
 

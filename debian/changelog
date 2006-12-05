@@ -12,10 +12,13 @@ cdrtool (4.8.1) unstable; urgency=low
   * Default pagination is now 15 records, which better fits one screen
   * Allow OpenSER subscriber login based on encrypted password in the
     subscriber table (the ha1 field)
-  * Corrected the disposition mysql field in the Asterisk cdr table 
+  * Corrected the disposition mysql field in the Asterisk cdr table
     from int to varchar(45)
+  * Added MySQL stored procedure for auto-rotation of radacct table using 
+    radacctYYYMM table name format. Requires modification of sql.conf 
+    on the Freeradius server.
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon,  4 Dec 2006 16:06:51 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue,  5 Dec 2006 22:45:27 +0100
 
 cdrtool (4.8) unstable; urgency=low
 
