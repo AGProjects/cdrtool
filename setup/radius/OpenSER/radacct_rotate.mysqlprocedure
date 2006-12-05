@@ -1,0 +1,387 @@
+-- MUST FOR UNIX BASED SYSTEMS 
+-- (SEE: http://dev.mysql.com/doc/refman/5.0/en/stored-procedure-logging.html)
+
+SET GLOBAL log_bin_trust_function_creators = 1;
+
+-- CREATE "OUR DATABASE NAME" FUNCTION
+
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS `set_radius_database_name` $$
+CREATE FUNCTION `set_radius_database_name`() RETURNS varchar(50) DETERMINISTIC
+BEGIN
+	DECLARE dbname VARCHAR(50);
+	SET dbname = 'radius';
+	RETURN dbname;
+END $$
+
+DELIMITER ;
+
+-- CREATE "BEGINNING OF DEFAULT TABLE NAME" FUNCTION 
+
+DELIMITER $$
+
+DROP FUNCTION IF EXISTS `set_radacct_table_name` $$
+CREATE FUNCTION `set_radacct_table_name`() RETURNS varchar(50) DETERMINISTIC
+BEGIN
+	DECLARE tblname VARCHAR(50);
+	SET tblname = 'radacct';
+	RETURN tblname;
+END $$
+
+DELIMITER ;
+
+-- CREATE "INSERT RECORD" PROCEDURE
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS `insert_radacct_record` $$
+CREATE PROCEDURE `insert_radacct_record`(
+	IN var_AcctSessionId VARCHAR(255),
+	IN var_AcctUniqueId VARCHAR(255),
+	IN var_UserName VARCHAR(64),
+	IN var_Realm VARCHAR(64),
+	IN var_NASIPAddress VARCHAR(15),
+	IN var_NASPortId VARCHAR(50),
+	IN var_AcctStartTime VARCHAR(20),
+	IN var_AcctStopTime VARCHAR(20),
+	IN var_AcctSessionTime INT(12),
+	IN var_AcctInputOctets BIGINT(12),
+	IN var_AcctOutputOctets BIGINT(12),
+	IN var_CalledStationId VARCHAR(50),
+	IN var_CallingStationId VARCHAR(50),
+	IN var_AcctTerminateCause VARCHAR(32),
+	IN var_ServiceType VARCHAR(32),
+	IN var_FramedProtocol VARCHAR(32),
+	IN var_FramedIPAddress VARCHAR(15),
+	IN var_AcctStartDelay INT(12),
+	IN var_AcctStopDelay INT(12),
+	IN var_SipResponseCode SMALLINT(5),
+	IN var_SipMethod VARCHAR(50),
+	IN var_SipTranslatedRequestURI VARCHAR(255),
+	IN var_SipToTag VARCHAR(128),
+	IN var_SipFromTag VARCHAR(128)
+)
+BEGIN
+
+	-- SET VARIABLES
+	SET @var_y = (SELECT YEAR(CURRENT_DATE));
+	SET @var_m = (SELECT DATE_FORMAT(CURRENT_DATE, '%m'));
+	SET @var_db_name = (SELECT set_radius_database_name());
+	SET @var_tbl_begin = (SELECT set_radacct_table_name());
+	SET @var_tbl = CONCAT(@var_tbl_begin, @var_y, @var_m);
+
+	-- SEE IF TABLE EXISTS
+	SET @var_tbl_cnt = (SELECT COUNT(TABLE_NAME) AS TBLCNT
+	FROM information_schema.tables
+	WHERE TABLE_SCHEMA = @var_db_name
+	AND TABLE_NAME = @var_tbl);
+
+	-- TABLE DOES NOT EXIST
+	IF @var_tbl_cnt = 0 THEN
+
+    	-- CREATE RAD TABLE
+		SET @ctblproc = CONCAT("CALL create_radacct_table(", "'", @var_tbl, "'", ")");
+		PREPARE ctbl_proc_stmt FROM @ctblproc;
+		EXECUTE ctbl_proc_stmt;
+		DEALLOCATE PREPARE ctbl_proc_stmt;
+
+	END IF;
+
+	-- INSERT RECORD IN NEW TABLE
+	SET @instmt = CONCAT("INSERT INTO ", @var_tbl, " (RadAcctId, AcctSessionId, AcctUniqueId,
+		UserName, Realm, NASIPAddress,
+		NASPortId, AcctStartTime, AcctStopTime,
+		AcctSessionTime, AcctInputOctets, AcctOutputOctets,
+		CalledStationId, CallingStationId, AcctTerminateCause,
+		ServiceType, FramedProtocol, FramedIPAddress,
+		AcctStartDelay, AcctStopDelay, SipResponseCode,
+		SipMethod, SipTranslatedRequestURI, SipToTag,
+		SipFromTag)
+		VALUES
+		(NULL,
+		?, ?, ?,
+		SUBSTRING_INDEX(?, '@',-1), ?, ?,
+		?, ?, ?,
+		?, ?, ?,
+		?, ?, ?,
+		?, ?, ?,
+		?, ?, ?,
+		?, ?, ?)");
+
+	PREPARE add_rad FROM @instmt;
+	SET @v_AcctSessionId = var_AcctSessionId;
+	SET @v_AcctUniqueId = var_AcctUniqueId;
+	SET @v_UserName = var_UserName;
+	SET @v_Realm = var_Realm;
+	SET @v_NASIPAddress = var_NASIPAddress;
+	SET @v_NASPortId = var_NASPortId;
+	IF var_AcctStartTime = '0' OR var_AcctStartTime = '' THEN
+		SET @v_AcctStartTime = NOW();
+	ELSE
+		SET @v_AcctStartTime = CAST(var_AcctStartTime AS DATETIME);
+	END IF;
+	IF var_AcctStopTime = '0' OR var_AcctStopTime = '' THEN
+		SET @v_AcctStopTime = CAST('0000-00-00 00:00:00' AS DATETIME);
+	ELSE
+		SET @v_AcctStopTime = CAST(var_AcctStopTime AS DATETIME);
+	END IF;
+	SET @v_AcctSessionTime = var_AcctSessionTime;
+	SET @v_AcctInputOctets = var_AcctInputOctets;
+	SET @v_AcctOutputOctets = var_AcctOutputOctets;
+	SET @v_CalledStationId = var_CalledStationId;
+	SET @v_CallingStationId = var_CallingStationId;
+	SET @v_AcctTerminateCause = var_AcctTerminateCause;
+	SET @v_ServiceType = var_ServiceType;
+	SET @v_FramedProtocol = var_FramedProtocol;
+	SET @v_FramedIPAddress = var_FramedIPAddress;
+	SET @v_AcctStartDelay = var_AcctStartDelay;
+	SET @v_AcctStopDelay = var_AcctStopDelay;
+	SET @v_SipResponseCode = var_SipResponseCode;
+	SET @v_SipMethod = var_SipMethod;
+	SET @v_SipTranslatedRequestURI = var_SipTranslatedRequestURI;
+	SET @v_SipToTag = var_SipToTag;
+	SET @v_SipFromTag = var_SipFromTag;
+	EXECUTE add_rad USING @v_AcctSessionId, @v_AcctUniqueId,
+		@v_UserName, @v_Realm, @v_NASIPAddress, @v_NASPortId,
+		@v_AcctStartTime, @v_AcctStopTime, @v_AcctSessionTime,
+		@v_AcctInputOctets, @v_AcctOutputOctets, @v_CalledStationId,
+		@v_CallingStationId, @v_AcctTerminateCause, @v_ServiceType,
+		@v_FramedProtocol, @v_FramedIPAddress, @v_AcctStartDelay,
+		@v_AcctStopDelay, @v_SipResponseCode, @v_SipMethod,
+		@v_SipTranslatedRequestURI, @v_SipToTag, @v_SipFromTag;
+	DEALLOCATE PREPARE add_rad;
+
+END $$
+
+DELIMITER ;
+
+-- CREATE SUPPORT "CREATE TABLE" PROCEDURE
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS `create_radacct_table` $$
+CREATE PROCEDURE `create_radacct_table`(IN var_tbl VARCHAR(50))
+BEGIN
+
+	SET @stbl = CONCAT("CREATE TABLE IF NOT EXISTS ", var_tbl, " (
+		`RadAcctId` bigint(21) NOT NULL auto_increment,
+		`AcctSessionId` varchar(255) NOT NULL default '',
+		`AcctUniqueId` varchar(255) NOT NULL default '',
+		`UserName` varchar(64) NOT NULL default '',
+		`Realm` varchar(64) default '',
+		`NASIPAddress` varchar(15) NOT NULL default '',
+		`NASPortId` varchar(50) NOT NULL default '',
+		`NASPortType` varchar(255) NOT NULL default '',
+		`AcctStartTime` datetime NOT NULL default '0000-00-00 00:00:00',
+		`AcctStopTime` datetime NOT NULL default '0000-00-00 00:00:00',
+		`AcctSessionTime` int(12) default NULL,
+		`AcctAuthentic` varchar(32) default NULL,
+		`ConnectInfo_start` varchar(32) default NULL,
+		`ConnectInfo_stop` varchar(32) default NULL,
+		`AcctInputOctets` bigint(12) default NULL,
+		`AcctOutputOctets` bigint(12) default NULL,
+		`CalledStationId` varchar(50) NOT NULL default '',
+		`CallingStationId` varchar(50) NOT NULL default '',
+		`AcctTerminateCause` varchar(32) NOT NULL default '',
+		`ServiceType` varchar(32) default NULL,
+		`FramedProtocol` varchar(32) default NULL,
+		`FramedIPAddress` varchar(15) NOT NULL default '',
+		`AcctStartDelay` int(12) default NULL,
+		`AcctStopDelay` int(12) default NULL,
+		`SipMethod` varchar(50) NOT NULL default '',
+		`SipResponseCode` smallint(5) unsigned NOT NULL default '0',
+		`SipToTag` varchar(128) NOT NULL default '',
+		`SipFromTag` varchar(128) NOT NULL default '',
+		`SipTranslatedRequestURI` varchar(255) NOT NULL default '',
+		`SipUserAgents` varchar(255) NOT NULL default '',
+		`SipApplicationType` varchar(255) NOT NULL default '',
+		`SipCodecs` varchar(255) NOT NULL default '',
+		`SipRPID` varchar(255) NOT NULL default '',
+		`SipRPIDHeader` varchar(255) NOT NULL default '',
+		`SourceIP` varchar(255) NOT NULL default '',
+		`SourcePort` varchar(255) NOT NULL default '',
+		`CanonicalURI` varchar(255) NOT NULL default '',
+		`DelayTime` varchar(5) NOT NULL default '',
+		`Timestamp` bigint(20) NOT NULL default '0',
+		`DestinationId` varchar(15) NOT NULL default '',
+		`Rate` text NOT NULL default '',
+		`Price` double(20,4) default NULL,
+		`Normalized` enum('0','1') default '0',
+		`BillingId` varchar(255) NOT NULL default '',
+		`MediaInfo` varchar(32) default NULL,
+		`RTPStatistics` text NOT NULL default '',
+		`FromHeader` varchar(128) NOT NULL default '',
+		`UserAgent` varchar(128) NOT NULL default '',
+		`Contact` varchar(128) NOT NULL default '',
+		PRIMARY KEY  (`RadAcctId`),
+		UNIQUE KEY `sess_id` (`AcctSessionId`(128),`SipFromTag`,`SipToTag`),
+			KEY `UserName` (`UserName`),
+			KEY `AcctSessionId` (`AcctSessionId`),
+			KEY `AcctUniqueId` (`AcctUniqueId`),
+			KEY `AcctStartTime` (`AcctStartTime`),
+			KEY `AcctStopTime` (`AcctStopTime`),
+			KEY `NASIPAddress` (`NASIPAddress`),
+			KEY `caller_idx` (`CallingStationId`),
+			KEY `called_idx` (`CalledStationId`),
+			KEY `canon_idx` (`CanonicalURI`),
+			KEY `source_ip_idx` (`SourceIP`),
+			KEY `billing_id_idx` (`BillingId`),
+			KEY `dest_id_idx` (`DestinationId`),
+			KEY `sip_req_uri_idx` (`SipTranslatedRequestURI`),
+			KEY `normalize_idx` (`Normalized`),
+			KEY `MediaInfo_idx` (`MediaInfo`),
+			KEY `Realm_idx` (`Realm`)
+	) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1");
+	PREPARE ctbl_stmt FROM @stbl;
+	EXECUTE ctbl_stmt;
+	DEALLOCATE PREPARE ctbl_stmt;
+
+END $$
+
+DELIMITER ;
+
+-- CREATE "UPDATE RECORD" PROCEDURE
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS `update_radacct_record` $$
+CREATE PROCEDURE `update_radacct_record`(
+	IN var_AcctStopTime VARCHAR(20),
+	IN var_AcctTerminateCause VARCHAR(32),
+	IN var_AcctStopDelay INT(12),
+	IN var_ConnectInfo_stop VARCHAR(32),
+	IN var_AcctSessionId VARCHAR(255),
+	IN var_SipToTag VARCHAR(128),
+	IN var_SipFromTag VARCHAR(128),
+	IN var_NASIPAddress VARCHAR(15)
+)
+BEGIN
+
+	-- SET VARIABLES
+	SET @var_y = (SELECT YEAR(CURRENT_DATE));
+	SET @var_m = (SELECT DATE_FORMAT(CURRENT_DATE, '%m'));
+	SET @var_db_name = (SELECT set_radius_database_name());
+	SET @var_tbl_begin = (SELECT set_radacct_table_name());
+	SET @var_tbl = CONCAT(@var_tbl_begin, @var_y, @var_m);
+
+	-- See if table exists
+	SET @var_tbl_cnt = (SELECT COUNT(TABLE_NAME) AS TBLCNT
+	FROM information_schema.tables
+	WHERE TABLE_SCHEMA = @var_db_name
+	AND TABLE_NAME = @var_tbl);
+
+	-- TABLE DOES NOT EXIST
+	IF @var_tbl_cnt = 0 THEN
+
+		-- CREATE RAD TABLE
+		SET @ctblproc = CONCAT("CALL create_radacct_table(", "'", @var_tbl, "'", ")");
+		PREPARE ctbl_proc_stmt FROM @ctblproc;
+		EXECUTE ctbl_proc_stmt;
+		DEALLOCATE PREPARE ctbl_proc_stmt;
+
+	END IF;
+
+	SET @var_prev_month_today = (SELECT DATE_ADD(CURRENT_DATE, INTERVAL -1 MONTH));
+	SET @var_prev_month_formatted = (SELECT DATE_FORMAT(@var_prev_month_today, '%m'));
+	SET @var_tbl_pmonth = CONCAT(@var_tbl_begin, @var_y, @var_prev_month_formatted);
+
+	-- LOOK FOR THE ACTUAL TABLE WHERE OUR RECORD IS STORED
+
+	-- SO LET'S LOOK AT THE PREVIOUS MONTH TABLE
+	-- BUT FIRST... DO WE HAVE A TABLE FOR THE PREVIOUS MONTH?
+	SET @var_tbl_cnt2 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
+	FROM information_schema.tables
+	WHERE TABLE_SCHEMA = @var_db_name
+	AND TABLE_NAME = @var_tbl_pmonth);
+
+	IF @var_tbl_cnt2 = 1 THEN
+		-- WE HAVE A TABLE FOR THE PREVIOUS MONTH
+		-- SO LET'S TRY TO UPDATE
+		SET @updstmt = CONCAT("UPDATE ", @var_tbl_pmonth, " SET
+		AcctStopTime = ?,
+		AcctSessionTime = UNIX_TIMESTAMP(?) - UNIX_TIMESTAMP(AcctStartTime),
+		AcctTerminateCause = ?,
+		AcctStopDelay = ?,
+		ConnectInfo_stop = ?
+		WHERE
+		AcctSessionId = ?
+		AND ((SipToTag = ? AND SipFromTag = ?) OR
+		(SipToTag = ? AND SipFromTag = ?))
+		AND NASIPAddress = ?;");
+		PREPARE update_rad FROM @updstmt;
+		IF var_AcctStopTime = '0' OR var_AcctStopTime = '' THEN
+			SET @v_AcctStopTime = NOW();
+		ELSE
+			SET @v_AcctStopTime = CAST(var_AcctStopTime AS DATETIME);
+		END IF;
+		SET @v_AcctTerminateCause = var_AcctTerminateCause;
+		SET @v_AcctStopDelay = var_AcctStopDelay;
+		SET @v_ConnectInfo_stop = var_ConnectInfo_stop;
+		SET @v_AcctSessionId = var_AcctSessionId;
+		SET @v_SipToTag = var_SipToTag;
+		SET @v_SipFromTag = var_SipFromTag;
+		SET @v_NASIPAddress = var_NASIPAddress;
+		EXECUTE update_rad USING @v_AcctStopTime, @v_AcctStopTime,
+			@v_AcctTerminateCause, @v_AcctStopDelay, @v_ConnectInfo_stop,
+			@v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
+			@v_SipFromTag, @v_SipToTag, @v_NASIPAddress;
+		DEALLOCATE PREPARE update_rad;
+
+		-- CLEAN UP
+		SET @v_AcctStopTime = null;
+		SET @v_AcctTerminateCause = null;
+		SET @v_AcctStopDelay = null;
+		SET @v_ConnectInfo_stop = null;
+		SET @v_AcctSessionId = null;
+		SET @v_SipToTag = null;
+		SET @v_SipFromTag = null;
+		SET @v_NASIPAddress = null;
+
+	END IF;
+
+	-- CURRENT MONTH'S UPDATE TRY
+
+	SET @updstmt = CONCAT("UPDATE ", @var_tbl, " SET
+	AcctStopTime = ?,
+	AcctSessionTime = UNIX_TIMESTAMP(?) - UNIX_TIMESTAMP(AcctStartTime),
+	AcctTerminateCause = ?,
+	AcctStopDelay = ?,
+	ConnectInfo_stop = ?
+	WHERE
+	AcctSessionId = ?
+	AND ((SipToTag = ? AND SipFromTag = ?) OR
+	(SipToTag = ? AND SipFromTag = ?))
+	AND NASIPAddress = ?;");
+	PREPARE update_rad FROM @updstmt;
+	IF var_AcctStopTime = '0' OR var_AcctStopTime = '' THEN
+		SET @v_AcctStopTime = NOW();
+	ELSE
+		SET @v_AcctStopTime = CAST(var_AcctStopTime AS DATETIME);
+	END IF;
+	SET @v_AcctTerminateCause = var_AcctTerminateCause;
+	SET @v_AcctStopDelay = var_AcctStopDelay;
+	SET @v_ConnectInfo_stop = var_ConnectInfo_stop;
+	SET @v_AcctSessionId = var_AcctSessionId;
+	SET @v_SipToTag = var_SipToTag;
+	SET @v_SipFromTag = var_SipFromTag;
+	SET @v_NASIPAddress = var_NASIPAddress;
+	EXECUTE update_rad USING @v_AcctStopTime, @v_AcctStopTime,
+		@v_AcctTerminateCause, @v_AcctStopDelay, @v_ConnectInfo_stop,
+		@v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
+		@v_SipFromTag, @v_SipToTag, @v_NASIPAddress;
+	DEALLOCATE PREPARE update_rad;
+
+		-- CLEAN UP
+	SET @v_AcctStopTime = null;
+	SET @v_AcctTerminateCause = null;
+	SET @v_AcctStopDelay = null;
+	SET @v_ConnectInfo_stop = null;
+	SET @v_AcctSessionId = null;
+	SET @v_SipToTag = null;
+	SET @v_SipFromTag = null;
+	SET @v_NASIPAddress = null;
+
+END $$
+
+DELIMITER ;
