@@ -14,11 +14,14 @@ cdrtool (4.8.1) unstable; urgency=low
     subscriber table (the ha1 field)
   * Corrected the disposition mysql field in the Asterisk cdr table
     from int to varchar(45)
-  * Added MySQL stored procedure for auto-rotation of radacct table using 
-    radacctYYYMM table name format. Requires modification of sql.conf 
+  * Added MySQL stored procedure for auto-rotation of radacct table using
+    radacctYYYMM table name format. Requires modification of sql.conf
     on the Freeradius server.
+  * Added invisible property for datasources in global.inc, 
+    useful to hide it from web elements like sip_trace datasource that 
+    cannot be directly accessed 
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue,  5 Dec 2006 22:45:27 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed,  6 Dec 2006 19:13:31 +0100
 
 cdrtool (4.8) unstable; urgency=low
 

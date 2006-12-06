@@ -667,6 +667,7 @@ class CDRS_asterisk extends CDRS {
         
         if (isset($this->CDRTool['dataSourcesAllowed'])) {
             while (list($k,$v)=each($this->CDRTool['dataSourcesAllowed'])) {
+            	if ($this->DATASOURCES[$v]['invisible']) continue;
                 $cdr_source_els[]=array("label"=>$this->DATASOURCES[$v]['name'],"value"=>$v);
             }
         }

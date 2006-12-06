@@ -260,6 +260,7 @@ class CDRS_ser_radius extends CDRS {
 
         if (isset($this->CDRTool['dataSourcesAllowed'])) {
             while (list($k,$v)=each($this->CDRTool['dataSourcesAllowed'])) {
+            	if ($this->DATASOURCES[$v]['invisible']) continue;
             	$cdr_source_els[]=array("label"=>$this->DATASOURCES[$v]['name'],"value"=>$v);
             }
         }
@@ -2395,6 +2396,8 @@ class CDR_ser_radius extends CDR {
         } else if ($DATASOURCES[$datasource][RotateTables]) {
             $cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp));
         }
+        print $cdr_table;
+
 
         $this->traceIn=
                         "<a href=callsearch.phtml".

@@ -7,7 +7,7 @@ sql {
         login                       = "radius"
         password                    = "PASSWORD"
         radius_db                   = "radius"
-	sqltrace                    = no
+	sqltrace                    = yes
 	sqltracefile                = ${logdir}/sqltrace-%Y%m%d.log
 	num_sql_socks               = 25
 	connect_failure_retry_delay = 60
@@ -16,8 +16,8 @@ sql {
           CALL insert_radacct_record( \
                 '%{Acct-Session-Id}', \
                 '%{Acct-Unique-Session-Id}', \
-                '%{SQL-User-Name}', \
-                '%{SQL-User-Name}', \
+                '%{Billing-Party}', \
+                '%{Billing-Party}', \
                 '%{SIP-Proxy-IP}', \
                 '%{NAS-Port}', \
                 '%S', \
@@ -49,7 +49,7 @@ sql {
 		'%S', \
                 '%{Acct-Delay-Time}', \
                 '%{Connect-Info}', \
-                '%{X-RTP-Stat}' \
+                '%{X-RTP-Stat}', \
 		'%{Acct-Session-Id}', \
                 '%{Sip-To-Tag}', \
                 '%{Sip-From-Tag}' \
@@ -59,8 +59,8 @@ sql {
           CALL insert_radacct_record( \
                 '%{Acct-Session-Id}', \
                 '%{Acct-Unique-Session-Id}', \
-                '%{SQL-User-Name}', \
-                '%{SQL-User-Name}', \
+                '%{Billing-Party}', \
+                '%{Billing-Party}', \
                 '%{SIP-Proxy-IP}', \
                 '%{NAS-Port}', \
                 '%S', \

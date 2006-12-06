@@ -263,8 +263,8 @@ $DATASOURCES=array(
                     "purgeRecordsAfter"  => "7",
                     "SIPProxies"        => array("10.0.0.1"=>"SIP Proxy 1",
                                                  "10.0.0.2"=>"SIP Proxy 2"
-                                                )
-
+                                                ),
+                     "invisible"          => 1 // hide this datasource in call search page / datasource selection 
                     )
 
 );

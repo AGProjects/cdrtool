@@ -353,14 +353,13 @@ BEGIN
 		AcctStopTime = ?,
 		AcctSessionTime = UNIX_TIMESTAMP(?) - UNIX_TIMESTAMP(AcctStartTime),
 		AcctStopDelay = ?,
- 		ConnectInfo_stop = ?
-                Normalized = '0' ,
-                RTPStatistics = ?
+ 		ConnectInfo_stop = ?,
+                RTPStatistics = ?,
+                Normalized = '0' 
 		WHERE
 		AcctSessionId = ?
 		AND ((SipToTag = ? AND SipFromTag = ?) OR (SipToTag = ? AND SipFromTag = ?)) 
                 AND ConnectInfo_stop IS NULL;");
-
 		PREPARE update_rad FROM @updstmt;
 		IF var_AcctStopTime = '0' OR var_AcctStopTime = '' THEN
 			SET @v_AcctStopTime = NOW();
@@ -369,10 +368,10 @@ BEGIN
 		END IF;
 		SET @v_AcctStopDelay = var_AcctStopDelay;
 		SET @v_ConnectInfo_stop = var_ConnectInfo_stop;
+		SET @v_RTPStatistics = var_RTPStatistics;
 		SET @v_AcctSessionId = var_AcctSessionId;
 		SET @v_SipToTag = var_SipToTag;
 		SET @v_SipFromTag = var_SipFromTag;
-		SET @v_RTPStatistics = var_RTPStatistics;
 		EXECUTE update_rad USING @v_AcctStopTime, @v_AcctStopTime,
 			@v_AcctStopDelay, @v_ConnectInfo_stop, @v_RTPStatistics, 
 			@v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
@@ -395,42 +394,40 @@ BEGIN
 	SET @updstmt = CONCAT("UPDATE ", @var_tbl, " SET
 	AcctStopTime = ?,
 	AcctSessionTime = UNIX_TIMESTAMP(?) - UNIX_TIMESTAMP(AcctStartTime),
-	AcctTerminateCause = ?,
 	AcctStopDelay = ?,
-	ConnectInfo_stop = ?
+	ConnectInfo_stop = ?,
+        RTPStatistics = ?,
+        Normalized = '0' 
 	WHERE
 	AcctSessionId = ?
 	AND ((SipToTag = ? AND SipFromTag = ?) OR
-	(SipToTag = ? AND SipFromTag = ?))
-	AND NASIPAddress = ?;");
+	(SipToTag = ? AND SipFromTag = ?));");
 	PREPARE update_rad FROM @updstmt;
 	IF var_AcctStopTime = '0' OR var_AcctStopTime = '' THEN
 		SET @v_AcctStopTime = NOW();
 	ELSE
 		SET @v_AcctStopTime = CAST(var_AcctStopTime AS DATETIME);
 	END IF;
-	SET @v_AcctTerminateCause = var_AcctTerminateCause;
 	SET @v_AcctStopDelay = var_AcctStopDelay;
 	SET @v_ConnectInfo_stop = var_ConnectInfo_stop;
+        SET @v_RTPStatistics = var_RTPStatistics;
 	SET @v_AcctSessionId = var_AcctSessionId;
 	SET @v_SipToTag = var_SipToTag;
 	SET @v_SipFromTag = var_SipFromTag;
-	SET @v_NASIPAddress = var_NASIPAddress;
 	EXECUTE update_rad USING @v_AcctStopTime, @v_AcctStopTime,
-		@v_AcctTerminateCause, @v_AcctStopDelay, @v_ConnectInfo_stop,
+                @v_AcctStopDelay, @v_ConnectInfo_stop, @v_RTPStatistics,
 		@v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
-		@v_SipFromTag, @v_SipToTag, @v_NASIPAddress;
+		@v_SipFromTag, @v_SipToTag;
 	DEALLOCATE PREPARE update_rad;
 
 		-- CLEAN UP
 	SET @v_AcctStopTime = null;
-	SET @v_AcctTerminateCause = null;
 	SET @v_AcctStopDelay = null;
 	SET @v_ConnectInfo_stop = null;
+        SET @v_RTPStatistics = null;
 	SET @v_AcctSessionId = null;
 	SET @v_SipToTag = null;
 	SET @v_SipFromTag = null;
-	SET @v_NASIPAddress = null;
 
 END $$
 
