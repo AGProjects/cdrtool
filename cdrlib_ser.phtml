@@ -2396,8 +2396,6 @@ class CDR_ser_radius extends CDR {
         } else if ($DATASOURCES[$datasource][RotateTables]) {
             $cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp));
         }
-        print $cdr_table;
-
 
         $this->traceIn=
                         "<a href=callsearch.phtml".

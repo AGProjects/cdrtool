@@ -67,3 +67,15 @@ CALL update_radacct_record('2005-02-20 15:11:24', '201', 0, '',
 '000c3412-90f10088-13e83559-2ff3f85b@10.0.0.100', 'as095af1cc', 
 '000f341290f100ae19b10a86-4d85cf07', '81.23.228.139');
 
+
+If you write C programs that execute stored procedures with the CALL SQL
+statement, you must set the CLIENT_MULTI_RESULTS flag when you call
+mysql_real_connect(), either explicitly, or implicitly by setting
+CLIENT_MULTI_STATEMENTS. This is because each CALL returns a result to
+indicate the call status, in addition to any results sets that might be
+returned by statements executed within the procedure. To process the result
+of a CALL statement, use a loop that calls mysql_next_result() to determine
+whether there are more results.
+
+http://dev.mysql.com/doc/refman/5.0/en/call.html
+http://dev.mysql.com/doc/refman/5.0/en/c-api-multiple-queries.html
