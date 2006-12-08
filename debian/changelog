@@ -17,11 +17,13 @@ cdrtool (4.8.1) unstable; urgency=low
   * Added MySQL stored procedure for auto-rotation of radacct table using
     radacctYYYMM table name format. Requires modification of sql.conf
     on the Freeradius server.
-  * Added invisible property for datasources in global.inc, 
-    useful to hide it from web elements like sip_trace datasource that 
-    cannot be directly accessed 
+  * Added invisible property for datasources in global.inc,
+    useful to hide it from web elements like sip_trace datasource that
+    cannot be directly accessed
+  * Fixed media sessions statistics, IP traffic must be multiplied by 
+    two when both SIP UAs are outside the MediaProxy network
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed,  6 Dec 2006 19:13:31 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri,  8 Dec 2006 12:47:40 +0100
 
 cdrtool (4.8) unstable; urgency=low
 

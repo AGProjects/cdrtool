@@ -363,6 +363,10 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
             $this->statistics = $this->getrtpsessions($server, "25060", $this->statistics);
         }
 
+        // we must multiply the IP traffic by 2 when traffic enters and exists the network where the relay is located
+        // this depends however on topology, if IP traffic is relayed to a node on the same physical network as the media relay
+        // the relayed traffic will not corespond with the IP traffic monitored at the edge of the network
+
         $totals=array('online_users' =>0,
                       'sessions'     =>0,
                       'caller'       =>0,
@@ -383,14 +387,14 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
                 $sessions=0;
             }
         	if ($usage['caller']) {
-                $caller=$usage['caller'];
-                $totals['caller']+=$usage['caller'];
+                $caller=$usage['caller']*2;
+                $totals['caller']+=$usage['caller']*2;
             } else {
                 $caller=0;
             }
         	if ($usage['called']) {
-                $called=$usage['called'];
-                $totals['called']+=$usage['called'];
+                $called=$usage['called']*2;
+                $totals['called']+=$usage['called']*2;
             } else {
                 $called=0;
             }
