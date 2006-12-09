@@ -1480,14 +1480,6 @@ class CDR_asterisk extends CDR {
         $cdr_table = $DATASOURCES[$datasource][table];
 		$c_number  = preg_replace("/^(0+)/","",$this->cNumber);
 
-		if (Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp)) == Date($DATASOURCES[$datasource][RotateTables],time()) ) {
-        	if ($DATASOURCES[$datasource][RotateThisMonth]) {
-            	$cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time());
-            }
-        } else if ($DATASOURCES[$datasource][RotateTables]) {
-            $cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp));
-        }
-
         $this->traceIn=
                         "<a href=callsearch.phtml".
         				"?cdr_source=$datasource".
@@ -1516,14 +1508,6 @@ class CDR_asterisk extends CDR {
         $tmin      = $this->timestamp-300;
         $cdr_table = $DATASOURCES[$datasource][table];
 		$c_number  = preg_replace("/^(0+)/","",$this->cNumber);
-
-		if (Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp)) == Date($DATASOURCES[$datasource][RotateTables],time()) ) {
-        	if ($DATASOURCES[$datasource][RotateThisMonth]) {
-            	$cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time());
-            }
-        } else if ($DATASOURCES[$datasource][RotateTables]) {
-            $cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp));
-        }
 
         $this->traceOut=
                         "<a href=callsearch.phtml".

@@ -14,33 +14,35 @@ class Rate {
     function Rate(&$parent) {
         $this->CDRS = &$parent->CDRS;
 
-        if ($this->CDRS->CDRTool[rating][priceDenominator]) {
-            $this->priceDenominator=$this->CDRS->CDRTool[rating][priceDenominator];
+        if ($this->CDRS->CDRTool['rating']['priceDenominator']) {
+            $this->priceDenominator=$this->CDRS->CDRTool['rating']['priceDenominator'];
         }
 
-        if ($this->CDRS->CDRTool[rating][priceDecimalDigits]) {
-            $this->priceDecimalDigits=$this->CDRS->CDRTool[rating][priceDecimalDigits];
+        if ($this->CDRS->CDRTool['rating']['priceDecimalDigits']) {
+            $this->priceDecimalDigits=$this->CDRS->CDRTool['rating']['priceDecimalDigits'];
         }
 
-        if ($this->CDRS->CDRTool[rating][minimumDurationCharged]) {
-            $this->minimumDurationCharged=$this->CDRS->CDRTool[rating][minimumDurationCharged];
+        if ($this->CDRS->CDRTool['rating']['minimumDurationCharged']) {
+            // round call for rating to minimum X seconds, is overwritten by settings per customer
+            $this->minimumDurationCharged=$this->CDRS->CDRTool['rating']['minimumDurationCharged'];
         }
 
-        if ($this->CDRS->CDRTool[rating][durationPeriodRated]) {
-            $this->durationPeriodRated=$this->CDRS->CDRTool[rating][durationPeriodRated];
+        if ($this->CDRS->CDRTool['rating']['durationPeriodRated']) {
+            $this->durationPeriodRated=$this->CDRS->CDRTool['rating']['durationPeriodRated'];
         }
 
-        if ($this->CDRS->CDRTool[rating][trafficSizeRated]) {
-            $this->trafficSizeRated=$this->CDRS->CDRTool[rating][trafficSizeRated];
+        if ($this->CDRS->CDRTool['rating']['trafficSizeRated']) {
+            $this->trafficSizeRated=$this->CDRS->CDRTool['rating']['trafficSizeRated'];
         }
 
-        if ($this->CDRS->CDRTool[rating][minimumDuration]) {
-            $this->minimumDuration=$this->CDRS->CDRTool[rating][minimumDuration];
+        if ($this->CDRS->CDRTool['rating']['minimumDuration']) {
+            // if call is shorter than this, it has zero cost
+            $this->minimumDuration=$this->CDRS->CDRTool['rating']['minimumDuration'];
         }
 
-        $this->fromEmail = $this->CDRS->CDRTool[provider][fromEmail];
-        $this->toEmail   = $this->CDRS->CDRTool[provider][toEmail];
-        $this->bccEmail  = $this->CDRS->CDRTool[provider][bccEmail];
+        $this->fromEmail = $this->CDRS->CDRTool['provider']['fromEmail'];
+        $this->toEmail   = $this->CDRS->CDRTool['provider']['toEmail'];
+        $this->bccEmail  = $this->CDRS->CDRTool['provider']['bccEmail'];
 
         if ($this->fromEmail) $this->extraHeaders="From: $fromEmail\r\nBCC: $this->fromEmail";
         if ($this->bccEmail)  $this->extraHeaders=$this->extraHeaders.",".$this->bccEmail;
@@ -48,25 +50,25 @@ class Rate {
 
     function GetBillingTimezone() {
 
-        if ($this->RatingTables->customers[$this->BillingPartyId][timezone]) {
+        if ($this->RatingTables->customers[$this->BillingPartyId]['timezone']) {
 
             dprint("Found billing Party=$this->BillingPartyId");
-            return $this->RatingTables->customers[$this->BillingPartyId][timezone];
+            return $this->RatingTables->customers[$this->BillingPartyId]['timezone'];
 
-        } elseif ($this->RatingTables->customers[$this->domain][timezone]) {
+        } elseif ($this->RatingTables->customers[$this->domain]['timezone']) {
 
             dprint("Found billing Party=$this->domain");
-            return $this->RatingTables->customers[$this->domain][timezone];
+            return $this->RatingTables->customers[$this->domain]['timezone'];
 
-        } elseif ($this->RatingTables->customers[$this->gateway][timezone]) {
+        } elseif ($this->RatingTables->customers[$this->gateway]['timezone']) {
 
             dprint("Found billing Party=$this->gateway");
-            return $this->RatingTables->customers[$this->gateway][timezone];
+            return $this->RatingTables->customers[$this->gateway]['timezone'];
 
         } else {
 
             dprint("Found billing Party=default");
-        	return $this->CDRS->CDRTool[provider][timezone];
+        	return $this->CDRS->CDRTool['provider']['timezone'];
 
         }
     }
@@ -128,19 +130,23 @@ class Rate {
         /////////////////////////////////////////////////////
         // required fields passed from a CDR structure
         //
+
         // Session start time
         $this->id                = $dictionary['id'];
         $this->timestamp         = $dictionary['timestamp'];
+
         // Session usage, type and destination Id
         $this->duration          = $dictionary['duration'];
         $this->traffic           = $dictionary['traffic'];
         $this->applicationType   = $dictionary['applicationType'];
         $this->DestinationId     = $dictionary['DestinationId'];
+
         // Billable entities we try to best match the rating tables
         // against
         $this->BillingPartyId    = $dictionary['BillingPartyId'];
         $this->domain            = $dictionary['domain'];
         $this->gateway           = $dictionary['gateway'];
+
         // Contain all rating tables load once when
         // normalization process starts in CDRS parent class
         $this->RatingTables      = &$dictionary['RatingTables'];
@@ -201,12 +207,12 @@ class Rate {
             $this->destinationNamePrint=$this->destinationName;
         }
 
-        if ($this->increment > 1) {
+        if ($this->increment >= 1) {
             // increase the billed duration to the next increment
             $this->duration = $this->increment * ceil($this->duration / $this->increment);
         }
 
-        if ($this->min_duration > 1) {
+        if ($this->min_duration >= 1) {
         	$this->minimumDurationCharged = $this->min_duration;
         }
 
@@ -351,7 +357,7 @@ class Rate {
 			$this->rateSyslog="";
             if ($span=="1" && $thisRate[profile]) {
                 $this->rateInfo = $this->rateInfo .
-                "  ConnectFee: $connectCostPrint\n".
+                " Connect fee: $connectCostPrint\n".
                 "--\n";
                 $this->rateSyslog=$this->rateSyslog."ConnectFee=$connectCostPrint ";
             	$this->price  = $this->price+$connectCostSpan/$this->priceDenominator*$payConnect;
@@ -904,7 +910,7 @@ class RatingTables {
         $this->CDRTool = $CDRTool;
         $this->cdrtool->Halt_On_Error="no";
 
-        $period=$CDRTool[rating][durationPeriodRated] = 60;
+        $period=$CDRTool['rating'][durationPeriodRated] = 60;
 
         $this->tables=array(
                            "destinations"=>array("name"=>"Destinations",

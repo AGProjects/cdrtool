@@ -176,8 +176,8 @@ $DATASOURCES=array(
 "ser_radius"=>array(
                     "name"               => "OpenSER",
                     "class"              => "CDRS_ser_radius",
-                    "table"              => "radacct",
-                    "db_class"           => "DB_radius",
+                    "table"              => "radacct",      // or radacct".date("Ym") if sql.conf uses the mysql procedure to auto-rotate tables
+                    "db_class"           => "DB_radius",  
                     "db_class_readonly"  => "DB_radius",    // use replicated databases to spread the reads
                     "db_class_siponline" => "DB_ser", 	    // location of openser location table	
                     "rateField"          => "Rate",
@@ -209,8 +209,6 @@ $DATASOURCES=array(
                     "SourceIPRealmTranslation"  => array(
                                                   "10.0.0.1"      => "gateway.example.com" // translate Realm for sessions originating from IP address 10.0.0.1
                                                   ),
-                    "RotateTables"	=> "Ym",
-                    "RotateThisMonth"	=> 0,
                     "purgeCDRsAfter"    => 120 // how many days to keep old CDRs
                     ),
 "cisco"     =>array("name"               => "Cisco gateway",

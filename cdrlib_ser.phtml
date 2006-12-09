@@ -2386,16 +2386,8 @@ class CDR_ser_radius extends CDR {
 
         $tplus     = $this->timestamp+$this->duration+300;
         $tmin      = $this->timestamp-300;
-        $cdr_table = $DATASOURCES[$datasource][table];
 		$c_number  = $this->remoteUsername;
-
-		if (Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp)) == Date($DATASOURCES[$datasource][RotateTables],time()) ) {
-        	if ($DATASOURCES[$datasource][RotateThisMonth]) {
-            	$cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time());
-            }
-        } else if ($DATASOURCES[$datasource][RotateTables]) {
-            $cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp));
-        }
+        $cdr_table = Date('Ym',time($this->timestamp));
 
         $this->traceIn=
                         "<a href=callsearch.phtml".
@@ -2422,16 +2414,8 @@ class CDR_ser_radius extends CDR {
 
         $tplus     = $this->timestamp+$this->duration+300;
         $tmin      = $this->timestamp-300;
-        $cdr_table = $DATASOURCES[$datasource][table];
 		$c_number  = preg_replace("/^(0+)/","",$this->remoteUsername);
-
-		if (Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp)) == Date($DATASOURCES[$datasource][RotateTables],time()) ) {
-        	if ($DATASOURCES[$datasource][RotateThisMonth]) {
-            	$cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time());
-            }
-        } else if ($DATASOURCES[$datasource][RotateTables]) {
-            $cdr_table=$cdr_table.Date($DATASOURCES[$datasource][RotateTables],time($this->timestamp));
-        }
+        $cdr_table = Date('Ym',time($this->timestamp));
 
         $this->traceOut=
                         "<a href=callsearch.phtml".

@@ -207,13 +207,6 @@ class CDRS {
             $this->table=$_Table;
         }
 
-        // Enable table autorotate after update sql.conf and mediaproxy to log in radacctYYYYMM
-        /*
-        if ($this->DATASOURCES[$datasource][RotateTables]) {
-        	$this->table=$this->table.Date($this->DATASOURCES[$datasource][RotateTables]);
-        }
-        */
-
         $this->LoadDestinations();
         $this->LoadDomains();
         $this->LoadAccounts();
@@ -1111,7 +1104,7 @@ class CDRS {
 
     function rotateTable($month) {
 
-        // create a new table tableYYYYMM and copy data from main table into it
+        // create a new table tableYYYYMM and copy data from the main table into it
         // if no month is supplied, the default is the previous month
 
 		$createTableFile=$this->CDRTool['Path'].$this->createTableFile;
