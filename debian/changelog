@@ -6,7 +6,8 @@ cdrtool (4.9) unstable; urgency=low
     the behaviour of the normalization function
   * Added MySQL stored procedure for auto-rotation of radacct table using
     radacctYYYMM table name format. Requires modification of sql.conf
-    on the Freeradius server
+    on the Freeradius server. See setup/radius/OpenSER/radius_accounting.readme 
+    for more information
   * Remove unused settings from global.inc:
      - CountryNumberLength
      - EnableSIPOnline
@@ -25,7 +26,7 @@ cdrtool (4.9) unstable; urgency=low
     two when both SIP UAs are outside the MediaProxy network
   * Fixed rating bug when either increment and minduration = 1
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat,  9 Dec 2006 10:40:14 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat,  9 Dec 2006 10:41:49 +0100
 
 cdrtool (4.8) unstable; urgency=low
 
