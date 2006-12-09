@@ -1,4 +1,4 @@
-cdrtool (4.8.1) unstable; urgency=low
+cdrtool (4.9) unstable; urgency=low
 
   * Replaced E164Format function with a customizable class from global.inc:
     $CDRTool['normalize']['E164Class'] default instantiates E164_Europe
@@ -9,14 +9,14 @@ cdrtool (4.8.1) unstable; urgency=low
     on the Freeradius server
   * Remove unused settings from global.inc:
      - CountryNumberLength
-     - EnableSIPOnline 
-     - MinPstnNumLen 
+     - EnableSIPOnline
+     - MinPstnNumLen
      - RotateThisMonth
      - RotateTables
      - memcache only if the OS is Debian which reads it from /etc/default/cdrtool
   * Set many defaults in the code to avoid explicit definitions in global.inc
   * Default pagination is now 15 records, which better fits one screen
-  * Allow OpenSER subscriber login based on ha1 encrypted passwords 
+  * Allow OpenSER subscriber login based on ha1 encrypted passwords
   * Corrected the disposition mysql field in the Asterisk cdr table
   * Added invisible property for datasources in global.inc,
     useful to hide it from web elements like sip_trace datasource that
@@ -25,7 +25,7 @@ cdrtool (4.8.1) unstable; urgency=low
     two when both SIP UAs are outside the MediaProxy network
   * Fixed rating bug when either increment and minduration = 1
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat,  9 Dec 2006 10:20:53 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat,  9 Dec 2006 10:40:14 +0100
 
 cdrtool (4.8) unstable; urgency=low
 
