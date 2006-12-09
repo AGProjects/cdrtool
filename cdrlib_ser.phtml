@@ -4092,14 +4092,19 @@ class SER_trace {
             max(date) as max
             from $this->table";
             dprint($query);
-            if ($this->db->query($query) && $this->db->next_record()) {
+            if ($this->db->query($query)) {
+            	if ($this->db->next_record()) {
             	$this->summary=array(
                                  "count"     => $this->db->f('c'),
                                  "startDate" => $this->db->f('min'),
                                  "endDate"   => $this->db->f('max')
                                  );
+                } else {
+                	print "<p>No trace found. ";
+                	return 0;
+                }
             } else {
-                print "<p>Error: database error. ";
+                printf ("<p>Error: database error %s %s",$this->db->Error,$query);
                 return 0;
             }
 
