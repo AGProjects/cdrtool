@@ -2,7 +2,7 @@ CDRTool installation
 --------------------
 
 Obtain the software from http://cdrtool.ag-projects.com. The software is
-available as tar archive or as a debian package. 
+available as a tar archive or as a debian package. 
 
 Installing from the tar archive:
 
@@ -14,7 +14,7 @@ Installing from the debian package:
 
 dpkg -i cdrtool*.deb
 
-The files will be instaklled under /var/www/CDRTool directory.
+The files will be installed under /var/www/CDRTool directory.
 
 
 Create CDRTool database
@@ -130,8 +130,8 @@ rating engine.
 
 See the information in the head of the scripts/ratingEngine.php daemon for
 how to enable prepaid or other rating functionality. For prepaid, an
-external B2BUA is required (like the call_control module), CDRTool provides
-only the rating and update balance functions.
+external B2BUA is required, CDRTool provides only the rating and update
+balance functions.
 
 Set the IP and port where the rating engine listens to and the OpenSER
 datasource in global.inc:
@@ -140,9 +140,9 @@ $RatingEngine=array("socketIP"   =>  "IP.address.of.the.private.interface.of.cdr
                      "socketPort" => "9024",
                      "CDRS_class" => "ser_radius");
 
-The MSQL schema for prepaid accounts: setup/mysql/create_prepaid.mysql
-The network engine has no security features, it must run over a protected
-network. 
+The MSQL schema for prepaid accounts: setup/mysql/create_prepaid.mysql The
+network engine has no security features, it must run over a protected
+network.
 
 Edit /etc/default/cdrtool and set 
 
@@ -168,7 +168,7 @@ normalize the call detail records, purge the old SIP traces.
 
 The sample cron file is in /var/www/CDRTool/setup/crontabs/ 
 
-Note. This is done automatically if you install the debian package.
+This is done automatically if you install the debian package.
 
 
 RADIUS setup
@@ -194,8 +194,8 @@ the default radacct table. This will add fields necessary to store Vendor
 Specific Atributes from Cisco or OpenSER.
 
 It is not possible to mix call details records from CISCO and OpenSER
-in the same radius table. You need to created multiple radius server
-profiles and save the CDRs into dedicated tables.
+in the same radius table. You need to create multiple radius server
+profiles and save the CDRs into dedicated tables for each datasource.
 
 Modify the default radacct table for OpenSER by running:
 
@@ -205,15 +205,37 @@ and for CISCO by running:
 
 /var/www/CDRTool/setup/radius/CISCO/radacct-patch.sh 
 
+Configure Freeradius to write data into the radacct table:
+
 cp /var/www/CDRTool/setup/radius/OpenSER/sql.conf /etc/freeradius/sql.conf  
 
-Edit the database connection details in sql.conf and restart freeradius 
+For large volume of CDRs it is usefull automatically rotate the tables in
+which the data is written. 
 
-Add RADIUS clients in sql.conf
+/var/www/CDRTool/setup/radius/OpenSER/radius_accounting.*, contain mysql
+procedures that automatically create monthly tables in the format
+radacctYYYYMM. To use mysql procedures, your must use MySQL server version 5
+or greater and Freeradius server mysql module must be compiled to support
+CLIENT_MULTI_RESULTS mysql connection flag. This must be done in
+src/modules/rlm_sql/drivers/rlm_sql_mysql/sql_mysql.c:
 
-Each device sending RADIUS accounting requests must be added to /etc/radddb/clients.conf
+if (!(mysql_sock->sock = mysql_real_connect(&(mysql_sock->conn),
+                                            config->sql_server,
+                                            config->sql_login,
+                                            config->sql_password,
+                                            config->sql_db,
+                                            atoi(config->sql_port),
+                                            NULL, 
+                                            CLIENT_FOUND_ROWS|CLIENT_MULTI_RESULTS ))) {
 
-Examples:
+Also, if you use MediaProxy for accounting in combination with OpenSER you
+must use the MediaProxy version that supports the same mysql procedures.
+ 
+Edit the database connection details in sql.conf and restart Freeradius
+server.
+
+Add RADIUS clients in clients.conf. Each device sending RADIUS accounting
+requests must be added to /etc/radddb/clients.conf. Examples:
 
 client 10.0.0.0/8 {
         secret=DssUET01
@@ -221,16 +243,12 @@ client 10.0.0.0/8 {
         shortname=localnet
 }
 
-
 Enable MySQL accounting in FreeRadius server. Edit radius.conf "sql" must be uncommented
 or added if missing.   
 
 # accounting { 
-	acct_unique 
 	detail 
 	sql 
-	unix 
-	radutmp 
 	}
 
 Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/freeradius
@@ -293,9 +311,10 @@ $INCLUDE               /etc/radiusclient-ng/dictionary
 SOAP engine
 -----------
 
-Note: Depends on the SOAP library from http://pear.php.net/package/SOAP. On Debian
-systems, this dependency is automatically installed but if CDRTool is installed
-from the tar archive you must download and install manually this SOAP library.
+Note: It depends on the SOAP library from http://pear.php.net/package/SOAP.
+On Debian systems, this dependency is automatically installed but if CDRTool
+is installed from the tar archive you must download and install manually
+this SOAP library.
 
 The SOAP engine can be used by an external provisioning system to access
 information available in CDRTool (like prepaid accounts).
