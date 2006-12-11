@@ -2643,7 +2643,17 @@ class SERQuota {
                     $email_body    = $email_body.$line;
                     print $line;
 
-		  			syslog(LOG_NOTICE, "Monthly quota exceeded for $account: $reason");
+					$log=sprintf("Quota exceeded for %s: %s",$account, $reason);
+		  			syslog(LOG_NOTICE, $log);
+
+                    $log_query=sprintf("insert into log
+                    (date,login,ip,datasource,results,description)
+                    values (NOW(),'quotacheck','localhost','QuotaCheck','1','%s')",
+                    addslashes($log)
+                    );
+            
+                    dprint($log_query);
+                    $this->db->query($log_query);
 
                     if ($this->blockAccount($account)) {
                     	if ($notify && $this->SERAccounts[$account]['email']) {
@@ -2730,7 +2740,7 @@ class SERQuota {
         }
     
         if ($maxcost && ($usage['cost'] > $maxcost)) {
-            return "Maximum cost exceeded ($usage[cost] > $maxcost)";
+            return "Cost $usage[cost] > $maxcost";
         }
     
         if ($this->SERAccounts[$account]['quota_traffic']) {
@@ -2741,7 +2751,7 @@ class SERQuota {
     
         if ($maxtraffic && ($usage['traffic'] > $maxtraffic*1024*1024)) {
             $trafficMB=number_format($usage['traffic']/1024/1024,0,".","");
-            return "Maximum traffic exceeded ($trafficMB > $maxtraffic MB)";
+            return "Traffic $trafficMB > $maxtraffic MB";
         }
     
         return 0;

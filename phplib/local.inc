@@ -692,14 +692,14 @@ class pageLayout {
         $legalNotice="Legal Notice".
         "\n\n".
         "This software is intended for the use of $CDRTool_company, ".
-        "resellers of $CDRTool_company or the customers of $CDRTool_company. ".
+        "resellers of $CDRTool_company and the customers of $CDRTool_company. ".
         "The use of this software by any natural or legal person that does ".
         "not belong to $CDRTool_company, its Resellers or is a not a ".
         "customer of $CDRTool_company or its resellers is therefore ".
         "expressly prohibited.".
         "\n\n".
         "All the information stored on, and accessible through this software ".
-        "are personal data protected as such by European and domestic ".
+        "are personal data protected as such by international and domestic ".
         "legislation relating to the processing of personal data and ".
         "the protection of the right to privacy. For these reasons: ".
         "1. This software shall exclusively be used to the extent that it ".
@@ -711,27 +711,8 @@ class pageLayout {
         "possibility for competent authorities (namely government bodies, ".
         "courts, regulatory authorities) to be informed of billing or ".
         "traffic data in conformity with the applicable legislation. ".
-        "\n\n".
-        "Usage License".
-        "\n\n".
-        "You may not use this software for any commercial purpose ".
-        "without a license from AG Projects. ".
-        "This software and its source code is licensed, not sold to you, ".
-        "by AG Projects. This license grants you the right to use the software ".
-        "for the purpose mentioned in the order. ".
-        "You may NOT rent, lease, sell, lend or sublicense this or parts of this ".
-        "software to others without prior permission from AG Projects. ";
+        "\n\n";
 
-        /*
-        
-        if ($CDRTool[filter][aNumber]) {
-            $next_page="callsearch.phtml";
-        } else {
-            $next_page="frames.phtml";
-        }
-        */
-        $next_page="callsearch.phtml";
-        
         $loginName=$CDRTool[loginName];
 		$this->hasAGProjectslogo=1;
 
@@ -741,7 +722,7 @@ class pageLayout {
         <p>
         <h2>Terms and conditions</h2>
         <p>
-        <form action=$next_page method=post>
+        <form action=callsearch.phtml method=post>
         <textarea name=legal rows=25 cols=75 wrap=virtual readonly=yes>$legalNotice</textarea>
         <p>
         You are logged in as $loginname ";

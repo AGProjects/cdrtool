@@ -26,8 +26,10 @@ cdrtool (4.9) unstable; urgency=low
     two when both SIP UAs are outside the MediaProxy network
   * Fixed rating bug when either increment and minduration = 1
   * Fixed pid file name of ratingEngine in /etc/init.d/cdrtool
+  * Updated term and conditions page displayed after login
+  * Log also in mysql when quota has been exceeded
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat,  9 Dec 2006 13:55:09 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 11 Dec 2006 10:59:15 +0100
 
 cdrtool (4.8) unstable; urgency=low
 
