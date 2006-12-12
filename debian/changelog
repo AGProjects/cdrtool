@@ -8,6 +8,7 @@ cdrtool (4.9) unstable; urgency=low
     radacctYYYMM table name format. Requires modification of sql.conf on the
     Freeradius server and mediaproxy >= 1.8.0. See
     setup/radius/OpenSER/radius_accounting.proc for more information
+  * Added support for MediaProxy accounting using Radius 
   * Remove unused settings from global.inc:
      - CountryNumberLength
      - EnableSIPOnline
@@ -28,9 +29,10 @@ cdrtool (4.9) unstable; urgency=low
   * Fixed pid file name of ratingEngine in /etc/init.d/cdrtool
   * Updated term and conditions page displayed after login
   * Log also in mysql when quota has been exceeded
+  *
   * 
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Dec 2006 18:50:39 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Dec 2006 20:03:36 +0100
 
 cdrtool (4.8) unstable; urgency=low
 

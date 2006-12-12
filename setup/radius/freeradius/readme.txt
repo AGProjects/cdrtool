@@ -1,4 +1,9 @@
-Patch for Acct type Failed
+Patch for 
+- Acct type Failed
+
+Todo
+- Stored procedures
+- Remove Cisco hack
 
 Install freeradius by compiling from source:
 
