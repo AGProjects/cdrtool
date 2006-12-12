@@ -729,13 +729,13 @@ DELIMITER ;
 -- OPTIONAL: SQL QUERIES TO TEST CURRENT STORED PROCEDURES
 -- TEST PROCEDURE THAT INSERTS A RECORD
 CALL insert_radacct_record (
-'3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', '5af53194787eccf1',
+'radius','3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', '5af53194787eccf1',
 'adi@umts.ro', 'adi@umts.ro', '83.149.75.105', '5060', '2006-12-10 12:09:19', 
 '0', '0', '0', '0', 'sip:3333@umts.ro=3Buser=3Dphone',
 'sip:adi@umts.ro', '200', 'Sip-Session', '', '', '0', '0', '200', 'Invite',
 'sip:3333@vm01.dns-hosting.info=3Buser=3Dphone', 'as5664a60b', '27qems1o2j',
 '208005169', '81.23.228.147', '5060',
-'sip:3333@vm01.dns-hosting.info=3Buser=3Dphone', '', '', 'radius'
+'sip:3333@vm01.dns-hosting.info=3Buser=3Dphone', '', ''
 );
 
 -- TEST PROCEDURE THAT UPATES A RECORD WITH MEDIAPROXY INFORMATION
@@ -743,8 +743,8 @@ CALL insert_radacct_record (
 -- 1 - ROW UPDATED
 -- 0 - NO ROWS UPDATED
 CALL update_raddact_table_mediaproxy (
-'3','5896','7140','snom320/5.2 + Asterisk', 'GSM', 'Audio', '', '0',
-'3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b','27qems1o2j', 'radius'
+'radius','3','5896','7140','snom320/5.2 + Asterisk', 'GSM', 'Audio', '', '0',
+'3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b','27qems1o2j'
 );
 
 -- TEST PROCEDURE THAT UPATES A RECORD
@@ -752,8 +752,8 @@ CALL update_raddact_table_mediaproxy (
 -- 1 - ROW UPDATED
 -- 0 - NO ROWS UPDATED
 CALL update_radacct_record (
-'2006-12-10 12:09:21', '0', '', 'n/a', 
-'3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b', '27qems1o2j', 'radius'
+'radius','2006-12-10 12:09:21', '0', '', 'n/a', 
+'3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b', '27qems1o2j'
 );
 
 */
