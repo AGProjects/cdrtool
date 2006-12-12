@@ -723,11 +723,11 @@ class pageLayout {
         <h2>Terms and conditions</h2>
         <p>
         <form action=callsearch.phtml method=post>
-        <textarea name=legal rows=25 cols=75 wrap=virtual readonly=yes>$legalNotice</textarea>
+        <textarea name=legal rows=20 cols=60 wrap=virtual readonly=yes>$legalNotice</textarea>
         <p>
         You are logged in as $loginname ";
         if ($loginName) print "($loginName). ";
-        print "
+        print "<p>
         If you agree with the Terms and Conditions, <br>
         press on <b>I agree</b> button to continue.
         <p>
