@@ -1,10 +1,7 @@
-Index: man/man5/rlm_sql.5
-===================================================================
-RCS file: /source/radiusd/man/man5/rlm_sql.5,v
-retrieving revision 1.2
-diff -u -r1.2 rlm_sql.5
---- man/man5/rlm_sql.5	25 Mar 2004 11:31:17 -0000	1.2
-+++ man/man5/rlm_sql.5	2 Aug 2004 12:14:40 -0000
+Only in freeradius.new: freeradius-cvs-failed-accounting.diff
+diff -ur freeradius.orig/man/man5/rlm_sql.5 freeradius.new/man/man5/rlm_sql.5
+--- freeradius.orig/man/man5/rlm_sql.5	2004-03-25 12:31:17.000000000 +0100
++++ freeradius.new/man/man5/rlm_sql.5	2006-12-12 23:58:11.000000000 +0100
 @@ -106,6 +106,8 @@
  .IP accounting_stop_query_alt
  The query to be run when receiving an Accounting Stop packet.  If the
@@ -14,22 +11,18 @@ diff -u -r1.2 rlm_sql.5
  .IP simul_count_query
  The query to be run to return the number simultaneous sessions for the
  purposes of limiting Simultaneous Use.
-Index: raddb/mssql.conf
-===================================================================
-RCS file: /source/radiusd/raddb/mssql.conf,v
-retrieving revision 1.6
-diff -u -r1.6 mssql.conf
---- raddb/mssql.conf	25 Mar 2004 11:31:17 -0000	1.6
-+++ raddb/mssql.conf	2 Aug 2004 12:14:40 -0000
-@@ -115,6 +115,7 @@
- 	# accounting_stop_query_alt	- query for Accounting start packets 
+diff -ur freeradius.orig/raddb/mssql.conf freeradius.new/raddb/mssql.conf
+--- freeradius.orig/raddb/mssql.conf	2006-02-04 15:53:44.000000000 +0100
++++ freeradius.new/raddb/mssql.conf	2006-12-12 23:58:11.000000000 +0100
+@@ -109,6 +109,7 @@
+ 	# accounting_stop_query_alt	- query for Accounting start packets
  	#                               (alternate in case first query doesn't
  	#                                affect any existing rows in the table)
 +	# accounting_failed_query	- query for Accounting failed packets 
  	#######################################################################
  	accounting_onoff_query = "UPDATE ${acct_table1} SET AcctStopTime='%S', AcctSessionTime=unix_timestamp('%S') - unix_timestamp(AcctStartTime), AcctTerminateCause='%{Acct-Terminate-Cause}', AcctStopDelay = %{Acct-Delay-Time} WHERE AcctSessionTime=0 AND AcctStopTime=0 AND NASIPAddress= '%{NAS-IP-Address}' AND AcctStartTime <= '%S'"
  
-@@ -134,4 +135,8 @@
+@@ -128,4 +129,8 @@
  	# removed. These fields are processing by a database
  	accounting_stop_query_alt = "INSERT into ${acct_table2} (AcctSessionId, AcctUniqueId, UserName, Realm, NASIPAddress, NASPort, NASPortType, AcctStopTime, AcctSessionTime, AcctAuthentic, ConnectInfo_start, ConnectInfo_stop, AcctInputOctets, AcctOutputOctets, CalledStationId, CallingStationId, AcctTerminateCause, ServiceType, FramedProtocol, FramedIPAddress, AcctStartDelay, AcctStopDelay) values('%{Acct-Session-Id}', '%{Acct-Unique-Session-Id}', '%{SQL-User-Name}', '%{Realm}', '%{NAS-IP-Address}', '%{NAS-Port-Id}', '%{NAS-Port-Type}', '%S', '%{Acct-Session-Time}', '%{Acct-Authentic}', '', '%{Connect-Info}', '%{Acct-Input-Octets}', '%{Acct-Output-Octets}', '%{Called-Station-Id}', '%{Calling-Station-Id}', '%{Acct-Terminate-Cause}', '%{Service-Type}', '%{Framed-Protocol}', '%{Framed-IP-Address}', '0', '%{Acct-Delay-Time}')"
  
@@ -38,13 +31,10 @@ diff -u -r1.6 mssql.conf
 +	accounting_failed_query = "INSERT into ${acct_table1} (AcctSessionId, AcctUniqueId, UserName, Realm, NASIPAddress, NASPort, NASPortType, AcctStartTime, AcctSessionTime, AcctAuthentic, ConnectInfo_start, ConnectInfo_stop, AcctInputOctets, AcctOutputOctets, CalledStationId, CallingStationId, AcctTerminateCause, ServiceType, FramedProtocol, FramedIPAddress, AcctStartDelay, AcctStopDelay) values('%{Acct-Session-Id}', '%{Acct-Unique-Session-Id}', '%{SQL-User-Name}', '%{Realm}', '%{NAS-IP-Address}', '%{NAS-Port-Id}', '%{NAS-Port-Type}', '%S', '0', '%{Acct-Authentic}', '%{Connect-Info}', '', '0', '0', '%{Called-Station-Id}', '%{Calling-Station-Id}', '', '%{Service-Type}', '%{Framed-Protocol}', '%{Framed-IP-Address}', '%{Acct-Delay-Time}', '0')"
 +
  }
-Index: raddb/oraclesql.conf
-===================================================================
-RCS file: /source/radiusd/raddb/oraclesql.conf,v
-retrieving revision 1.3
-diff -u -r1.3 oraclesql.conf
---- raddb/oraclesql.conf	25 Mar 2004 11:31:18 -0000	1.3
-+++ raddb/oraclesql.conf	2 Aug 2004 12:14:40 -0000
+Only in freeradius.new/raddb: mssql.conf.orig
+diff -ur freeradius.orig/raddb/oraclesql.conf freeradius.new/raddb/oraclesql.conf
+--- freeradius.orig/raddb/oraclesql.conf	2004-08-30 21:07:18.000000000 +0200
++++ freeradius.new/raddb/oraclesql.conf	2006-12-12 23:58:11.000000000 +0100
 @@ -142,6 +142,7 @@
  	# accounting_stop_query_alt	- query for Accounting start packets 
  	#                               (alternate in case first query doesn't
@@ -62,13 +52,9 @@ diff -u -r1.3 oraclesql.conf
  	#######################################################################
  	# Simultaneous Use Checking Queries
  	#######################################################################
-Index: raddb/pgsql-voip.conf
-===================================================================
-RCS file: /source/radiusd/raddb/pgsql-voip.conf,v
-retrieving revision 1.1
-diff -u -r1.1 pgsql-voip.conf
---- raddb/pgsql-voip.conf	13 May 2004 20:10:15 -0000	1.1
-+++ raddb/pgsql-voip.conf	2 Aug 2004 12:14:40 -0000
+diff -ur freeradius.orig/raddb/pgsql-voip.conf freeradius.new/raddb/pgsql-voip.conf
+--- freeradius.orig/raddb/pgsql-voip.conf	2005-07-01 16:58:14.000000000 +0200
++++ freeradius.new/raddb/pgsql-voip.conf	2006-12-12 23:58:11.000000000 +0100
 @@ -78,6 +78,7 @@
  	# accounting_stop_query_alt	- query for Accounting start packets 
  	#                               (alternate in case first query doesn't
@@ -91,24 +77,20 @@ diff -u -r1.1 pgsql-voip.conf
 +
 +
  }
-Index: raddb/postgresql.conf
-===================================================================
-RCS file: /source/radiusd/raddb/postgresql.conf,v
-retrieving revision 1.18
-diff -u -r1.18 postgresql.conf
---- raddb/postgresql.conf	29 Jul 2004 15:01:46 -0000	1.18
-+++ raddb/postgresql.conf	2 Aug 2004 12:14:40 -0000
-@@ -167,6 +167,7 @@
- 	# accounting_stop_query_alt	- query for Accounting start packets 
+diff -ur freeradius.orig/raddb/postgresql.conf freeradius.new/raddb/postgresql.conf
+--- freeradius.orig/raddb/postgresql.conf	2006-08-18 12:50:30.000000000 +0200
++++ freeradius.new/raddb/postgresql.conf	2006-12-12 23:58:11.000000000 +0100
+@@ -184,6 +184,7 @@
+ 	# accounting_stop_query_alt	- query for Accounting start packets
  	#                               (alternate in case first query doesn't
  	#                                affect any existing rows in the table)
 +	# accounting_failed_query	- query for Accounting failed packets 
  	#######################################################################
- 	
+ 
  	accounting_onoff_query = "UPDATE ${acct_table1} \
-@@ -231,6 +232,14 @@
+@@ -248,6 +249,14 @@
  		'%{Calling-Station-Id}', '%{Acct-Terminate-Cause}', '%{Service-Type}', '%{Framed-Protocol}', \
- 		NULLIF('%{Framed-IP-Address}', '')::inet, '%{Acct-Delay-Time:-0}')"
+ 		NULLIF('%{Framed-IP-Address}', '')::inet, '%{Acct-Delay-Time:-0}', '%{X-Ascend-Session-Svr-Key}')"
  
 +	accounting_failed_query = "INSERT into ${acct_table1} \
 +		(AcctSessionId, AcctUniqueId, UserName, Realm, NASIPAddress, NASPortId, NASPortType, AcctStartTime, AcctAuthentic, \
@@ -121,22 +103,19 @@ diff -u -r1.18 postgresql.conf
  	#######################################################################
  	# Group Membership Queries
  	#######################################################################
-Index: raddb/sql.conf
-===================================================================
-RCS file: /source/radiusd/raddb/sql.conf,v
-retrieving revision 1.43
-diff -u -r1.43 sql.conf
---- raddb/sql.conf	23 Jul 2004 08:29:37 -0000	1.43
-+++ raddb/sql.conf	2 Aug 2004 12:14:41 -0000
-@@ -157,6 +157,7 @@
- 	# accounting_stop_query_alt	- query for Accounting start packets 
+Only in freeradius.new/raddb: postgresql.conf.orig
+diff -ur freeradius.orig/raddb/sql.conf freeradius.new/raddb/sql.conf
+--- freeradius.orig/raddb/sql.conf	2006-02-04 15:13:03.000000000 +0100
++++ freeradius.new/raddb/sql.conf	2006-12-12 23:58:11.000000000 +0100
+@@ -168,6 +168,7 @@
+ 	# accounting_stop_query_alt	- query for Accounting start packets
  	#                               (alternate in case first query doesn't
  	#                                affect any existing rows in the table)
 +	# accounting_failed_query	- query for Accounting failed packets 
  	#######################################################################
  	accounting_onoff_query = "UPDATE ${acct_table1} SET AcctStopTime='%S', AcctSessionTime=unix_timestamp('%S') - unix_timestamp(AcctStartTime), AcctTerminateCause='%{Acct-Terminate-Cause}', AcctStopDelay = '%{Acct-Delay-Time}' WHERE AcctSessionTime=0 AND AcctStopTime=0 AND NASIPAddress= '%{NAS-IP-Address}' AND AcctStartTime <= '%S'"
  
-@@ -179,6 +180,8 @@
+@@ -190,6 +191,8 @@
  
  	accounting_stop_query_alt = "INSERT into ${acct_table2} (AcctSessionId, AcctUniqueId, UserName, Realm, NASIPAddress, NASPortId, NASPortType, AcctStartTime, AcctStopTime, AcctSessionTime, AcctAuthentic, ConnectInfo_start, ConnectInfo_stop, AcctInputOctets, AcctOutputOctets, CalledStationId, CallingStationId, AcctTerminateCause, ServiceType, FramedProtocol, FramedIPAddress, AcctStartDelay, AcctStopDelay) values('%{Acct-Session-Id}', '%{Acct-Unique-Session-Id}', '%{SQL-User-Name}', '%{Realm}', '%{NAS-IP-Address}', '%{NAS-Port}', '%{NAS-Port-Type}', DATE_SUB('%S', INTERVAL (%{Acct-Session-Time:-0} + %{Acct-Delay-Time:-0}) SECOND), '%S', '%{Acct-Session-Time}', '%{Acct-Authentic}', '', '%{Connect-Info}', '%{Acct-Input-Octets}', '%{Acct-Output-Octets}', '%{Called-Station-Id}', '%{Calling-Station-Id}', '%{Acct-Terminate-Cause}', '%{Service-Type}', '%{Framed-Protocol}', '%{Framed-IP-Address}', '0', '%{Acct-Delay-Time}')"
  
@@ -145,14 +124,11 @@ diff -u -r1.43 sql.conf
  	#######################################################################
  	# Simultaneous Use Checking Queries
  	#######################################################################
-Index: src/include/radius.h
-===================================================================
-RCS file: /source/radiusd/src/include/radius.h,v
-retrieving revision 1.66
-diff -u -r1.66 radius.h
---- src/include/radius.h	30 Apr 2004 18:23:08 -0000	1.66
-+++ src/include/radius.h	2 Aug 2004 12:14:41 -0000
-@@ -252,6 +252,7 @@
+Only in freeradius.new/raddb: sql.conf.orig
+diff -ur freeradius.orig/src/include/radius.h freeradius.new/src/include/radius.h
+--- freeradius.orig/src/include/radius.h	2006-03-07 19:10:08.000000000 +0100
++++ freeradius.new/src/include/radius.h	2006-12-12 23:58:11.000000000 +0100
+@@ -267,6 +267,7 @@
  #define PW_STATUS_ALIVE			3
  #define PW_STATUS_ACCOUNTING_ON		7
  #define PW_STATUS_ACCOUNTING_OFF	8
@@ -160,14 +136,11 @@ diff -u -r1.66 radius.h
  
  /*
   *  Vendor Private Enterprise Codes
-Index: src/modules/rlm_sql/conf.h
-===================================================================
-RCS file: /source/radiusd/src/modules/rlm_sql/conf.h,v
-retrieving revision 1.20
-diff -u -r1.20 conf.h
---- src/modules/rlm_sql/conf.h	28 Apr 2004 21:55:16 -0000	1.20
-+++ src/modules/rlm_sql/conf.h	2 Aug 2004 12:14:42 -0000
-@@ -37,6 +37,7 @@
+Only in freeradius.new/src/include: radius.h.orig
+diff -ur freeradius.orig/src/modules/rlm_sql/conf.h freeradius.new/src/modules/rlm_sql/conf.h
+--- freeradius.orig/src/modules/rlm_sql/conf.h	2006-05-20 14:44:37.000000000 +0200
++++ freeradius.new/src/modules/rlm_sql/conf.h	2006-12-13 00:00:11.000000000 +0100
+@@ -29,6 +29,7 @@
  	char   *accounting_start_query_alt;
  	char   *accounting_stop_query;
  	char   *accounting_stop_query_alt;
@@ -175,14 +148,34 @@ diff -u -r1.20 conf.h
  	char   *simul_count_query;
  	char   *simul_verify_query;
  	char   *groupmemb_query;
-Index: src/modules/rlm_sql/rlm_sql.c
-===================================================================
-RCS file: /source/radiusd/src/modules/rlm_sql/rlm_sql.c,v
-retrieving revision 1.132
-diff -u -r1.132 rlm_sql.c
---- src/modules/rlm_sql/rlm_sql.c	30 Jun 2004 12:22:06 -0000	1.132
-+++ src/modules/rlm_sql/rlm_sql.c	2 Aug 2004 12:14:43 -0000
-@@ -119,6 +119,8 @@
+@@ -71,7 +72,7 @@
+ 
+ #define ASCEND_PORT_HACK
+ #define ASCEND_CHANNELS_PER_LINE        23
+-#define CISCO_ACCOUNTING_HACK
++/* #define CISCO_ACCOUNTING_HACK */
+ 
+ /* SQL defines */
+ #define MAX_QUERY_LEN			4096
+Only in freeradius.new/src/modules/rlm_sql: conf.h~
+Only in freeradius.new/src/modules/rlm_sql: conf.h.orig
+diff -ur freeradius.orig/src/modules/rlm_sql/drivers/rlm_sql_mysql/sql_mysql.c freeradius.new/src/modules/rlm_sql/drivers/rlm_sql_mysql/sql_mysql.c
+--- freeradius.orig/src/modules/rlm_sql/drivers/rlm_sql_mysql/sql_mysql.c	2005-12-09 17:10:08.000000000 +0100
++++ freeradius.new/src/modules/rlm_sql/drivers/rlm_sql_mysql/sql_mysql.c	2006-12-12 23:59:11.000000000 +0100
+@@ -82,7 +82,7 @@
+ 						    config->sql_db,
+ 						    atoi(config->sql_port),
+ 						    NULL,
+-						    CLIENT_FOUND_ROWS))) {
++						    CLIENT_FOUND_ROWS|CLIENT_MULTI_RESULTS))) {
+ 		radlog(L_ERR, "rlm_sql_mysql: Couldn't connect socket to MySQL server %s@%s:%s", config->sql_login, config->sql_server, config->sql_db);
+ 		radlog(L_ERR, "rlm_sql_mysql: Mysql error '%s'", mysql_error(&mysql_sock->conn));
+ 		mysql_sock->sock = NULL;
+Only in freeradius.new/src/modules/rlm_sql/drivers/rlm_sql_mysql: sql_mysql.c~
+diff -ur freeradius.orig/src/modules/rlm_sql/rlm_sql.c freeradius.new/src/modules/rlm_sql/rlm_sql.c
+--- freeradius.orig/src/modules/rlm_sql/rlm_sql.c	2006-05-20 14:44:37.000000000 +0200
++++ freeradius.new/src/modules/rlm_sql/rlm_sql.c	2006-12-12 23:58:11.000000000 +0100
+@@ -103,6 +103,8 @@
  	 offsetof(SQL_CONFIG,accounting_stop_query), NULL, ""},
  	{"accounting_stop_query_alt", PW_TYPE_STRING_PTR,
  	 offsetof(SQL_CONFIG,accounting_stop_query_alt), NULL, ""},
@@ -191,7 +184,7 @@ diff -u -r1.132 rlm_sql.c
  	{"group_membership_query", PW_TYPE_STRING_PTR,
  	 offsetof(SQL_CONFIG,groupmemb_query), NULL, ""},
  	{"connect_failure_retry_delay", PW_TYPE_INTEGER,
-@@ -1098,6 +1100,33 @@
+@@ -1095,6 +1097,33 @@
  			break;
  
  			/*
@@ -225,3 +218,4 @@ diff -u -r1.132 rlm_sql.c
  			 *	Anything else is ignored.
  			 */
  		default:
+Only in freeradius.new/src/modules/rlm_sql: rlm_sql.c.orig

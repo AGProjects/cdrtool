@@ -1,9 +1,7 @@
 Patch for 
-- Acct type Failed
-
-Todo
-- Stored procedures
-- Remove Cisco hack
+- Added support for acct type Failed (15)
+- Added MySQL stored procedures support
+- Removed Cisco hack that causes errors in radius.log if acctsessiontime= 0
 
 Install freeradius by compiling from source:
 
@@ -12,9 +10,8 @@ Install freeradius by compiling from source:
    
      apt-get build-dep freeradius
      apt-get source freeradius
-     cd freeradius-1.0.2
-     patch -p0 -s < freeradius-1.0.x-failed-accounting.diff
+     cd freeradius-1.1.3
+     patch -p0 -s < freeradius.patch
      debuild
      cd ../
-     dpkg -i freeradius_1.0.2-3_i386.deb freeradius-mysql_1.0.2-3_i386.deb
-
+     dpkg -i freeradius*deb
