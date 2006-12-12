@@ -1462,8 +1462,11 @@ class CDRS_unknown extends CDRS {
 }
 
 class E164 {
-    // class that helps normalization of telephone number
-    // in E164 format
+    // Class that helps normalization of a telephone number in E164 format
+
+    // Based on this normalization CDRTool rating engine decides whether
+    // to consider the session a PSTN destination and rate it according
+    // to the PSTN rating plan
 
     function E164($intAccessCode='00', $natAccessCode='0',$CountryCode='') {
         $this->regexp_international = "/^".$intAccessCode."([0-9]{5,})\$/";
@@ -1472,9 +1475,12 @@ class E164 {
     }
 
     function E164Format($Number) {
-        // this function retuns the full E164 format for a PSTN number
-        // without leading zero or +
+        // This function returns the full E164 format for a PSTN number without leading zero or +
         // E164 = Country Code + Network Code + Subscriber Number
+        // Example: 31208015100 is an E164 number from Holland (country code 31)
+
+        // If nothing is returned by this function the session is considered
+        // an Internet destination and no PSTN rating is applied
 
     	global $CDRTool;
 
