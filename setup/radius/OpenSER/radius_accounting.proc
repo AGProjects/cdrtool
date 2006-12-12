@@ -1,6 +1,10 @@
 /*
-LAST UPDATED: 2006-12-09 17:26 MST
+LAST UPDATED: 2006-12-11 20:19 MST
 BY: Andrei Magureanu <uskratos@gmail.com>
+
+CHANGELOG:
+- Added database name as parameter to stored procedures
+- Fixed the multiple query result in "update_raddact_table_mediaproxy"
 
 Starting with version 4.9 it is possible to store call details records in 
 automatically rotated radacct tables by using MySQL stored procedures.
@@ -26,7 +30,7 @@ accounting, instead of the UPDATE query
 
 5. In CDRTool, change global.inc table name to:
                     "table"              => "radacct".date("Ym"),
- 
+
 
 The modus operandi of the stored procedure
 ------------------------------------------
@@ -87,22 +91,6 @@ BEGIN
 	DECLARE tblname VARCHAR(50);
 	SET tblname = 'radacct';
 	RETURN tblname;
-END $$
-
-DELIMITER ;
-
--- CREATE "OUR DATABASE NAME" FUNCTION
-
-DROP FUNCTION IF EXISTS `set_radius_database_name`;
-
-DELIMITER $$
-
-CREATE FUNCTION `set_radius_database_name`() RETURNS varchar(50)
-	DETERMINISTIC
-BEGIN
-	DECLARE dbname VARCHAR(50);
-	SET dbname = 'radius';
-	RETURN dbname;
 END $$
 
 DELIMITER ;
@@ -195,12 +183,12 @@ END $$
 DELIMITER ;
 
 -- CREATE "INSERT RECORD" PROCEDURE
-
 DROP PROCEDURE IF EXISTS `insert_radacct_record`;
 
 DELIMITER $$
 
 CREATE PROCEDURE `insert_radacct_record`(
+	IN var_db_name VARCHAR(20),
 	IN var_AcctSessionId VARCHAR(255),
 	IN var_AcctUniqueId VARCHAR(255),
 	IN var_UserName VARCHAR(64),
@@ -251,6 +239,7 @@ BEGIN
 	ELSE
 		SET @v_AcctStopTime = CAST(var_AcctStopTime AS DATETIME);
 	END IF;
+	SET @v_db_name = var_db_name;
 	SET @v_AcctSessionTime = var_AcctSessionTime;
 	SET @v_AcctInputOctets = var_AcctInputOctets;
 	SET @v_AcctOutputOctets = var_AcctOutputOctets;
@@ -275,14 +264,13 @@ BEGIN
 	SET @v_RTPStatistics = var_RTPStatistics;
 	SET @var_y = (SELECT YEAR(@v_AcctStartTime));
 	SET @var_m = (SELECT DATE_FORMAT(@v_AcctStartTime, '%m'));
-	SET @var_db_name = (SELECT set_radius_database_name());
 	SET @var_tbl_begin = (SELECT set_radacct_table_name());
 	SET @var_tbl = CONCAT(@var_tbl_begin, @var_y, @var_m);
 
 	-- SEE IF TABLE EXISTS
 	SET @var_tbl_cnt = (SELECT COUNT(TABLE_NAME) AS TBLCNT
 	FROM information_schema.tables
-	WHERE TABLE_SCHEMA = @var_db_name
+	WHERE TABLE_SCHEMA = @v_db_name
 	AND TABLE_NAME = @var_tbl);
 
 	-- TABLE DOES NOT EXIST
@@ -292,7 +280,17 @@ BEGIN
 		SET @ctblproc = CONCAT("CALL create_radacct_table(", "'", @var_tbl, "'", ")");
 		PREPARE ctbl_proc_stmt FROM @ctblproc;
 		EXECUTE ctbl_proc_stmt;
-		DEALLOCATE PREPARE ctbl_proc_stmt;
+
+		IF @v_debug = 'Y' THEN
+       SET @q_res = 'dfgsdf';
+			SET @filelog_stmnt = CONCAT("CALL proc_save_filelog ('",
+			@ctblproc, "', 'insert_radacct_record', '", @q_res,"')");
+			PREPARE flog FROM @filelog_stmnt;
+			EXECUTE flog USING @ctblproc;
+			DEALLOCATE PREPARE flog;
+		END IF;
+
+    DEALLOCATE PREPARE ctbl_proc_stmt;
 
 	END IF;
 
@@ -330,6 +328,43 @@ BEGIN
 		@v_Rate, @v_RTPStatistics;
 	DEALLOCATE PREPARE add_rad;
 
+	-- CLEAN UP
+	SET @v_AcctSessionId = null;
+	SET @v_AcctUniqueId = null;
+	SET @v_UserName = null;
+	SET @v_Realm = null;
+	SET @v_NASIPAddress = null;
+	SET @v_NASPortId = null;
+	SET @v_AcctStartTime = null;
+	SET @v_AcctStopTime = null;
+	SET @v_AcctSessionTime = null;
+	SET @v_AcctInputOctets = null;
+	SET @v_AcctOutputOctets = null;
+	SET @v_CalledStationId = null;
+	SET @v_CallingStationId = null;
+	SET @v_AcctTerminateCause = null;
+	SET @v_ServiceType = null;
+	SET @v_FramedProtocol = null;
+	SET @v_FramedIPAddress = null;
+	SET @v_AcctStartDelay = null;
+	SET @v_AcctStopDelay = null;
+	SET @v_SipResponseCode = null;
+	SET @v_SipMethod = null;
+	SET @v_SipTranslatedRequestURI = null;
+	SET @v_SipToTag = null;
+	SET @v_SipFromTag = null;
+	SET @v_SipRPID = null;
+	SET @v_SourceIP = null;
+	SET @v_SourcePort = null;
+	SET @v_CanonicalURI = null;
+ 	SET @v_Rate = null;
+	SET @v_RTPStatistics = null;
+	SET @var_y = null;
+	SET @var_m = null;
+	SET @v_db_name = null;
+	SET @var_tbl_begin = null;
+	SET @var_tbl = null;
+
 END $$
 
 DELIMITER ;
@@ -341,6 +376,7 @@ DROP PROCEDURE IF EXISTS `update_radacct_record`;
 DELIMITER $$
 
 CREATE PROCEDURE `update_radacct_record`(
+	IN var_db_name VARCHAR(20),
 	IN var_AcctStopTime VARCHAR(20),
 	IN var_AcctStopDelay INT(12),
 	IN var_ConnectInfo_stop VARCHAR(32),
@@ -353,7 +389,7 @@ CREATE PROCEDURE `update_radacct_record`(
 BEGIN
 
 	-- SET VARIABLES
-	SET @var_db_name = (SELECT set_radius_database_name());
+	SET @v_db_name = var_db_name;
 	SET @var_tbl_begin = (SELECT set_radacct_table_name());
 	SET @v_stoptime = var_AcctStopTime;
 	SET @var_month_formatted = (SELECT DATE_FORMAT(@v_stoptime, '%m'));
@@ -367,12 +403,11 @@ BEGIN
 	SET @v_SipToTag = var_SipToTag;
 	SET @v_SipFromTag = var_SipFromTag;
 
-
 	-- LET'S LOOK AT THE TABLE AS PASSED BY var_AcctStopTime
 	-- BUT FIRST... DO WE HAVE THIS TABLE?
 	SET @var_tbl_cnt1 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
 	FROM information_schema.tables
-	WHERE TABLE_SCHEMA = @var_db_name
+	WHERE TABLE_SCHEMA = @v_db_name
 	AND TABLE_NAME = @var_tbl_month);
 
 	IF @var_tbl_cnt1 = 1 THEN
@@ -417,7 +452,7 @@ BEGIN
 
 		SET @var_tbl_cnt2 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
 		FROM information_schema.tables
-		WHERE TABLE_SCHEMA = @var_db_name
+		WHERE TABLE_SCHEMA = @v_db_name
 		AND TABLE_NAME = @var_tbl_pmonth);
 
 		IF @var_tbl_cnt2 = 1 THEN
@@ -460,6 +495,7 @@ BEGIN
 	SET @v_AcctSessionId = null;
 	SET @v_SipToTag = null;
 	SET @v_SipFromTag = null;
+	SET @v_db_name = null;
 
 END $$
 
@@ -472,7 +508,8 @@ DROP PROCEDURE IF EXISTS `update_raddact_table_mediaproxy`;
 DELIMITER $$
 
 CREATE PROCEDURE `update_raddact_table_mediaproxy`(
-        IN var_AcctSessionTime int(12),
+	IN var_db_name VARCHAR(20),
+	IN var_AcctSessionTime int(12),
 	IN var_AcctInputOctets bigint(12),
 	IN var_AcctOutputOctets bigint(12),
 	IN var_SipUserAgents VARCHAR(255),
@@ -490,7 +527,6 @@ BEGIN
 	-- SET VARIABLES
 	SET @var_y = (SELECT YEAR(CURRENT_DATE));
 	SET @var_m = (SELECT DATE_FORMAT(CURRENT_DATE, '%m'));
-	SET @var_db_name = (SELECT set_radius_database_name());
 	SET @var_tbl_begin = (SELECT set_radacct_table_name());
 	SET @var_tbl = CONCAT(@var_tbl_begin, @var_y, @var_m);
 	SET @var_prev_month_today = (SELECT DATE_ADD(CURRENT_DATE, INTERVAL -1 MONTH));
@@ -508,55 +544,56 @@ BEGIN
 	SET @v_SipToTag = var_SipToTag;
 	SET @v_SipFromTag = var_SipFromTag;
 	SET @v_na = 'n/a';
+	SET @v_dbname = var_db_name;
 	SET @updatedrows = 0;
 
 	-- See if table for current month exists
 	SET @var_tbl_cnt1 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
 	FROM information_schema.tables
-	WHERE TABLE_SCHEMA = @var_db_name
+	WHERE TABLE_SCHEMA = @v_dbname
 	AND TABLE_NAME = @var_tbl);
 
 	-- See if table for previous month exists
 	SET @var_tbl_cnt2 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
 	FROM information_schema.tables
-	WHERE TABLE_SCHEMA = @var_db_name
+	WHERE TABLE_SCHEMA = @v_dbname
 	AND TABLE_NAME = @var_tbl_pmonth);
 
-	SET @proc_query = CONCAT("CALL proc_update_raddact_table_mediaproxy (?,?,?,?,?,?,?,?,?,?,?,?)");
+	SET @proc_query = CONCAT("CALL proc_update_raddact_table_mediaproxy (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 	PREPARE proc_rad_stmt FROM @proc_query;
 
 	IF @var_tbl_cnt1 = 1 THEN
 		-- FOR THE CURRENT MONTH
 		EXECUTE proc_rad_stmt USING @var_tbl, @v_AcctSessionTime, 
-                @v_AcctInputOctets, @v_AcctOutputOctets,
-                @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
+            @v_AcctInputOctets, @v_AcctOutputOctets,
+            @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
         	@v_MediaInfo, @v_Normalized, @v_AcctSessionId,
-        	@v_SipToTag, @v_SipFromTag;
+        	@v_SipToTag, @v_SipFromTag, @v_dbname;
 	END IF;
 
-	IF @updatedrows = 0 AND @updatedrows = 0 THEN
+	IF @updatedrows = 0 AND @var_tbl_cnt2 = 1 THEN
 		-- FOR THE PREVIOUS MONTH
 		EXECUTE proc_rad_stmt USING @var_tbl_pmonth, @v_AcctSessionTime,
-                        @v_AcctInputOctets, @v_AcctOutputOctets,
-                        @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
+            @v_AcctInputOctets, @v_AcctOutputOctets,
+            @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
 			@v_MediaInfo, @v_Normalized, @v_AcctSessionId,
-			@v_SipToTag, @v_SipFromTag;
+			@v_SipToTag, @v_SipFromTag, @v_dbname;
 		
 		IF @var_tbl_cnt1 = 1 AND @updatedrows = 0 THEN
 			-- FOR THE CURRENT MONTH WITH SipToTag = 'n/a'
 			EXECUTE proc_rad_stmt USING @var_tbl, @v_AcctSessionTime,
-                                @v_AcctInputOctets, @v_AcctOutputOctets,
-                                @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
+                @v_AcctInputOctets, @v_AcctOutputOctets,
+                @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
 				@v_MediaInfo, @v_Normalized, @v_AcctSessionId,
-				@v_na, @v_SipFromTag;
+				@v_na, @v_SipFromTag, @v_dbname;
 			
 			IF @var_tbl_cnt2 = 1 AND @updatedrows = 0 THEN
 				-- FOR THE PREVIOUS MONTH WITH SipToTag = 'n/a'
 				EXECUTE proc_rad_stmt USING @var_tbl_pmonth, @v_AcctSessionTime,
-                                        @v_AcctInputOctets, @v_AcctOutputOctets,
-                                        @v_SipUserAgents, @v_SipCodecs, 
+                    @v_AcctInputOctets, @v_AcctOutputOctets,
+                    @v_SipUserAgents, @v_SipCodecs, 
 					@v_SipApplicationType, @v_MediaInfo, @v_Normalized, @v_AcctSessionId,
-					@v_na, @v_SipFromTag;
+					@v_na, @v_SipFromTag, @v_dbname;
 			END IF;
 		END IF;
 	END IF;
@@ -586,6 +623,7 @@ BEGIN
 	SET @v_SipFromTag = null;
 	SET @v_SipToTag = null;
 	SET @v_na = null;
+	SET @v_dbname = null;
 
 END $$
 
@@ -599,7 +637,7 @@ DELIMITER $$
 
 CREATE PROCEDURE `proc_update_raddact_table_mediaproxy`(
 	IN var_tblname VARCHAR(50),
-        IN var_AcctSessionTime int(12),
+    IN var_AcctSessionTime int(12),
 	IN var_AcctInputOctets bigint(12),
 	IN var_AcctOutputOctets bigint(12),
 	IN var_SipUserAgents VARCHAR(255),
@@ -609,14 +647,15 @@ CREATE PROCEDURE `proc_update_raddact_table_mediaproxy`(
 	IN var_Normalized ENUM('0','1'),
 	IN var_AcctSessionId VARCHAR(255),
 	IN var_SipToTag VARCHAR(128),
-	IN var_SipFromTag VARCHAR(128)
+	IN var_SipFromTag VARCHAR(128),
+	IN var_dbname VARCHAR(20)
 )
 BEGIN
 
 	-- TABLENAME VARIABLE
 	SET @var_tbl = var_tblname;
 	-- DATABASE NAME VARIABLE
-	SET @var_db_name = (SELECT set_radius_database_name());
+	SET @var_db_name = var_dbname;
 
 	-- SEE IF TABLE EXISTS
 
@@ -657,7 +696,7 @@ BEGIN
 		SET @v_SipToTag = var_SipToTag;
 		SET @v_SipFromTag = var_SipFromTag;
 		EXECUTE update_rad USING @v_AcctSessionTime, @v_AcctInputOctets, @v_AcctOutputOctets,
-                        @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
+            @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
 			@v_MediaInfo, @v_Normalized, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
 		SET @rcnt = (SELECT ROW_COUNT());
 		DEALLOCATE PREPARE update_rad;
@@ -689,28 +728,33 @@ DELIMITER ;
 
 -- OPTIONAL: SQL QUERIES TO TEST CURRENT STORED PROCEDURES
 -- TEST PROCEDURE THAT INSERTS A RECORD
-CALL insert_radacct_record(
+CALL insert_radacct_record (
 '3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', '5af53194787eccf1',
-'adi@umts.ro', 'adi@umts.ro', '83.149.75.105', '5060', '2006-12-10
-12:09:19', '0', '0', '0', '0', 'sip:3333@umts.ro=3Buser=3Dphone',
+'adi@umts.ro', 'adi@umts.ro', '83.149.75.105', '5060', '2006-12-10 12:09:19', 
+'0', '0', '0', '0', 'sip:3333@umts.ro=3Buser=3Dphone',
 'sip:adi@umts.ro', '200', 'Sip-Session', '', '', '0', '0', '200', 'Invite',
 'sip:3333@vm01.dns-hosting.info=3Buser=3Dphone', 'as5664a60b', '27qems1o2j',
 '208005169', '81.23.228.147', '5060',
-'sip:3333@vm01.dns-hosting.info=3Buser=3Dphone', '', '');
+'sip:3333@vm01.dns-hosting.info=3Buser=3Dphone', '', '', 'radius'
+);
 
 -- TEST PROCEDURE THAT UPATES A RECORD WITH MEDIAPROXY INFORMATION
 -- SHOULD RETURN VARIABLE "ROWSUPDATED" THAT IS EITHER 1 OR 0
 -- 1 - ROW UPDATED
 -- 0 - NO ROWS UPDATED
-CALL update_raddact_table_mediaproxy ('3','5896','7140','snom320/5.2 + Asterisk', 'GSM', 'Audio', '', '0',
-'3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b','27qems1o2j');
+CALL update_raddact_table_mediaproxy (
+'3','5896','7140','snom320/5.2 + Asterisk', 'GSM', 'Audio', '', '0',
+'3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b','27qems1o2j', 'radius'
+);
 
 -- TEST PROCEDURE THAT UPATES A RECORD
 -- SHOULD RETURN VARIABLE "ROWSUPDATED" THAT IS EITHER 1 OR 0
 -- 1 - ROW UPDATED
 -- 0 - NO ROWS UPDATED
-CALL update_radacct_record(                 '2006-12-10 12:09:21',
-'0', '', 'n/a', '3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247',
-'as5664a60b', '27qems1o2j' );
+CALL update_radacct_record (
+'2006-12-10 12:09:21', '0', '', 'n/a', 
+'3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b', '27qems1o2j', 'radius'
+);
 
 */
+
