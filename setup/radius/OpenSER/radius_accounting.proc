@@ -4,7 +4,7 @@ BY: Andrei Magureanu <uskratos@gmail.com>
 
 CHANGELOG:
 - Added database name as parameter to stored procedures
-- Fixed the multiple query result in "update_raddact_table_mediaproxy"
+- Fixed the multiple query result in "update_raddact_record_mediaproxy"
 
 Starting with version 4.9 it is possible to store call details records in 
 automatically rotated radacct tables by using MySQL stored procedures.
@@ -25,8 +25,8 @@ re-install Freeradius server.
 3. Copy radius_accounting.conf to sql.conf to the Freeradius server. Edit
 the new sql.conf with the database connection information.
 
-4. Update MediaProxy configuration to use the stored procedure for
-accounting, instead of the UPDATE query
+4. Update MediaProxy configuration to use radius accounting, instead of
+database accounting (mediaproxy 1.7.3 or greater is required)
 
 5. In CDRTool, change global.inc table name to:
                     "table"              => "radacct".date("Ym"),
@@ -503,11 +503,11 @@ DELIMITER ;
 
 -- CREATE "MEDIAPROXY RECORD UPDATE" PROCEDURE
 
-DROP PROCEDURE IF EXISTS `update_raddact_table_mediaproxy`;
+DROP PROCEDURE IF EXISTS `update_raddact_record_mediaproxy`;
 
 DELIMITER $$
 
-CREATE PROCEDURE `update_raddact_table_mediaproxy`(
+CREATE PROCEDURE `update_raddact_record_mediaproxy`(
 	IN var_db_name VARCHAR(20),
 	IN var_AcctSessionTime int(12),
 	IN var_AcctInputOctets bigint(12),
@@ -559,7 +559,7 @@ BEGIN
 	WHERE TABLE_SCHEMA = @v_dbname
 	AND TABLE_NAME = @var_tbl_pmonth);
 
-	SET @proc_query = CONCAT("CALL proc_update_raddact_table_mediaproxy (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+	SET @proc_query = CONCAT("CALL proc_update_raddact_record_mediaproxy (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 	PREPARE proc_rad_stmt FROM @proc_query;
 
 	IF @var_tbl_cnt1 = 1 THEN
@@ -629,13 +629,13 @@ END $$
 
 DELIMITER ;
 
--- CREATE SUPPORT PROCEDURE FOR "update_raddact_table_mediaproxy"
+-- CREATE SUPPORT PROCEDURE FOR "update_raddact_record_mediaproxy"
 
-DROP PROCEDURE IF EXISTS `proc_update_raddact_table_mediaproxy`;
+DROP PROCEDURE IF EXISTS `proc_update_raddact_record_mediaproxy`;
 
 DELIMITER $$
 
-CREATE PROCEDURE `proc_update_raddact_table_mediaproxy`(
+CREATE PROCEDURE `proc_update_raddact_record_mediaproxy`(
 	IN var_tblname VARCHAR(50),
     IN var_AcctSessionTime int(12),
 	IN var_AcctInputOctets bigint(12),
@@ -742,7 +742,7 @@ CALL insert_radacct_record (
 -- SHOULD RETURN VARIABLE "ROWSUPDATED" THAT IS EITHER 1 OR 0
 -- 1 - ROW UPDATED
 -- 0 - NO ROWS UPDATED
-CALL update_raddact_table_mediaproxy (
+CALL update_raddact_record_mediaproxy (
 'radius','3','5896','7140','snom320/5.2 + Asterisk', 'GSM', 'Audio', '', '0',
 '3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b','27qems1o2j'
 );
