@@ -1,24 +1,21 @@
 cdrtool (4.9) unstable; urgency=low
 
+  * Added support for MediaProxy accounting using Radius. Upgrade to 
+    mediaproxy version >=1.8.0 is required to use this feature
+  * Added MySQL stored procedure for auto-rotation of radacct table using
+    radacctYYYMM table name format. Requires modification of sql.conf on the
+    Freeradius server and mediaproxy >= 1.8.0. See the documentation from
+    setup/radius/OpenSER/radius_accounting.proc for more information
   * Replaced E164Format function with a customizable class from global.inc:
     $CDRTool['normalize']['E164Class'] default instantiates E164_Europe
     See E164_Europe or E164_US in cdrlib.phtml for examples of how to customize
     the behaviour of the normalization function
-  * Added MySQL stored procedure for auto-rotation of radacct table using
-    radacctYYYMM table name format. Requires modification of sql.conf on the
-    Freeradius server and mediaproxy >= 1.8.0. See
-    setup/radius/OpenSER/radius_accounting.proc for more information
-  * Added support for MediaProxy accounting using Radius 
-  * Remove unused settings from global.inc:
-     - CountryNumberLength
-     - EnableSIPOnline
-     - MinPstnNumLen
-     - RotateThisMonth
-     - RotateTables
-     - memcache only if the OS is Debian which reads it from /etc/default/cdrtool
+  * Remove unused settings from global.inc: CountryNumberLength, EnableSIPOnline, 
+    MinPstnNumLen, RotateThisMonth, RotateTables and memcache (only if the OS 
+    is Debian, which reads it from /etc/default/cdrtool)
   * Set many defaults in the code to avoid explicit definitions in global.inc
-  * Default pagination is now 15 records, which better fits one screen
-  * Allow OpenSER subscriber login based on ha1 encrypted passwords
+  * Default pagination is now 15 records, which better fits one 1024/768 screen
+  * Allow OpenSER subscriber login in CDRTool based on ha1 encrypted passwords
   * Corrected the disposition mysql field in the Asterisk cdr table
   * Added invisible property for datasources in global.inc,
     useful to hide it from web elements like sip_trace datasource that
@@ -28,11 +25,9 @@ cdrtool (4.9) unstable; urgency=low
   * Fixed rating bug when either increment and minduration = 1
   * Fixed pid file name of ratingEngine in /etc/init.d/cdrtool
   * Updated term and conditions page displayed after login
-  * Log also in mysql when quota has been exceeded
-  *
-  * 
+  * Log when quota has been exceeded
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Dec 2006 20:03:36 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Dec 2006 23:38:06 +0100
 
 cdrtool (4.8) unstable; urgency=low
 
