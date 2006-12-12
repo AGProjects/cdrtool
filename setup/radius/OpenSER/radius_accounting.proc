@@ -26,7 +26,7 @@ re-install Freeradius server.
 the new sql.conf with the database connection information.
 
 4. Update MediaProxy configuration to use radius accounting, instead of
-database accounting (mediaproxy 1.7.3 or greater is required)
+database accounting (mediaproxy >= 1.8.0 is required)
 
 5. In CDRTool, change global.inc table name to:
                     "table"              => "radacct".date("Ym"),
