@@ -11,7 +11,7 @@ Install freeradius by compiling from source:
      apt-get build-dep freeradius
      apt-get source freeradius
      cd freeradius-1.1.3
-     patch -p0 -s < freeradius.patch
+     patch -p1 -s < freeradius.patch
      debuild
      cd ../
      dpkg -i freeradius*deb
