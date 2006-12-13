@@ -123,6 +123,8 @@ class Rate {
     function calculate(&$dictionary) {
         dprint("<b>Rate->calculate(&dictionary)</b>");
 
+        $this->price=0;
+
 		if ($this->duration > $this->minimumDuration) return 0;
 
         //dprint_r($dictionary);
@@ -293,7 +295,6 @@ class Rate {
             }
         }
 
-        $this->price=0;
         $j=0;
         $span=0;
 
@@ -2675,7 +2676,7 @@ class SERQuota {
             print $line;
             $email_body=$email_body.$line;
         } else {
-	  		$log=sprintf("No accounts exceeded their montly quota since the last run\n");
+	  		$log=sprintf("No quota has been exceeded\n");
   			syslog(LOG_NOTICE, $log);
         }
         
@@ -3871,7 +3872,7 @@ class RatingEngine {
             	$RateReturn="0";
             }
 
-			syslog(LOG_NOTICE, "Price=$Rate->price");
+            //if ($Rate->price) syslog(LOG_NOTICE, "Price=$Rate->price");
 
             return $RateReturn;
 

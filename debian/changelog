@@ -33,8 +33,9 @@ cdrtool (4.9) unstable; urgency=low
   * Updated term and conditions page displayed after login
   * Log when quota has been exceeded
   * Fixed logging of normalized totals
+  * More clear syslog logging statements
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 13 Dec 2006 12:44:28 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 13 Dec 2006 13:01:25 +0100
 
 cdrtool (4.8) unstable; urgency=low
 

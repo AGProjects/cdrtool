@@ -115,11 +115,9 @@ while (true) {
             $clients[] = $newcon;
 
             if (socket_getpeername($newcon, $ip, $port)) {
-                $log=sprintf ("Connection from: %s:%d", $ip, $port);
-            } else {
-                $log = "Connection from: unknown";
+                $log=sprintf ("Connection from %s:%d", $ip, $port);
+	            syslog(LOG_NOTICE, $log);
             }
-            syslog(LOG_NOTICE, $log);
 
         } else {
             $pos = array_search($con, $clients);

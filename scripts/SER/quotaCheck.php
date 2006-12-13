@@ -55,8 +55,8 @@ function deleteQuotaCheckLockfile($lockFile) {
 
 $e=time();
 $d=$e-$b;
-if ($d) {
-	$log=sprintf("Runtime: %d seconds\n",$d);
-	syslog(LOG_NOTICE,"Runtime: $d seconds");
+if ($d > 30) {
+	$log=sprintf("QuotaCheck runtime %d s\n",$d);
+	syslog(LOG_NOTICE,$log);
 }
 ?>
