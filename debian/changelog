@@ -1,4 +1,4 @@
-cdrtool (4.9) unstable; urgency=low
+cdrtool (5.0) unstable; urgency=low
 
   * Added support for MediaProxy accounting using Radius. Upgrade to
     mediaproxy version >=1.8.0 is required to use this feature
@@ -35,7 +35,7 @@ cdrtool (4.9) unstable; urgency=low
   * Fixed logging of normalized totals
   * More clear syslog logging statements
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 13 Dec 2006 13:01:25 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 13 Dec 2006 13:09:30 +0100
 
 cdrtool (4.8) unstable; urgency=low
 
