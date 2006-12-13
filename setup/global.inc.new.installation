@@ -113,7 +113,7 @@ $DATASOURCES=array(
                     "db_class"           => "DB_radius",
                     "db_class_readonly"  => "DB_radius2",
                     "rating"             => "1",
-                    "normalize0SecCalls" => "1",
+                    "normalizedField"    => "Normalized",
                     "UserQuotaClass"     => "SERQuota",
                     "UserQuotaNotify"    => "1",
                     "EnableNetworkRating"=> "1",
@@ -127,7 +127,7 @@ $DATASOURCES=array(
                     "table"              => "asterisk_cdr",
                     "db_class"           => "DB_radius",
                     "rating"             => "1",
-                    "normalize0SecCalls" => "1",
+                    "normalizedField"    => "Normalized",
                     "contexts" 		 => array(
                                             "SIP"=>array("WEBName"=>"OpenSER"),
                                             ),

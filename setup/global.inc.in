@@ -182,7 +182,6 @@ $DATASOURCES=array(
                     "db_class_siponline" => "DB_ser", 	    // location of openser location table	
                     "rateField"          => "Rate",
                     "rating"             => "1",
-                    "normalize0SecCalls" => "1",
                     "priceField"         => "Price",
                     "DestinationIdField" => "DestinationId",
                     "normalizedField"    => "Normalized",
@@ -220,7 +219,6 @@ $DATASOURCES=array(
                     "priceField"         => "Price",
                     "DestinationIdField" => "DestinationId",
                     "normalizedField"    => "Normalized",
-                    "normalize0SecCalls" => "1",
                     "traceInURL"         => array(
                                             "10.0.0.2"=>"ser_radius",
                                             "Asterisk"=>"asterisk"
@@ -240,7 +238,6 @@ $DATASOURCES=array(
                     "priceField"         => "Price",
                     "DestinationIdField" => "DestinationId",
                     "normalizedField"    => "Normalized",
-                    "normalize0SecCalls" => "1",
                     "contexts" 		 => array(
                                             "SIP"=>array("WEBName"=>"SIP Provider 1"),
                                             "PSTN"=>array("WEBName"=>"PSTN 2 ENUM")

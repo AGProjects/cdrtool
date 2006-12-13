@@ -15,9 +15,10 @@ cdrtool (4.9) unstable; urgency=low
     global.inc: $CDRTool['normalize']['E164Class'] that default instantiates
     E164_Europe. See E164_Europe or E164_US in cdrlib.phtml for examples of
     how to customize the behaviour of the normalization function
-  * Remove unused settings from global.inc: CountryNumberLength, EnableSIPOnline,
-    MinPstnNumLen, RotateThisMonth, RotateTables and memcache (only if the OS
-    is Debian, which reads it from /etc/default/cdrtool)
+  * Remove unused settings from global.inc: CountryNumberLength,
+    EnableSIPOnline, MinPstnNumLen, RotateThisMonth, RotateTables,
+    normalize0SecCalls and memcache (only if the OS is Debian, which reads
+    it from /etc/default/cdrtool)
   * Set many defaults in the code to avoid explicit definitions in global.inc
   * Default pagination is now 15 records, which better fits one 1024/768 screen
   * Allow OpenSER subscriber login in CDRTool based on ha1 encrypted passwords
@@ -31,8 +32,9 @@ cdrtool (4.9) unstable; urgency=low
   * Fixed pid file name of ratingEngine in /etc/init.d/cdrtool
   * Updated term and conditions page displayed after login
   * Log when quota has been exceeded
+  * Fixed logging of normalized totals
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 13 Dec 2006 00:19:29 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 13 Dec 2006 12:44:28 +0100
 
 cdrtool (4.8) unstable; urgency=low
 

@@ -189,7 +189,9 @@ class CDRS {
         $this->cdrtool  = new DB_CDRTool();
         $this->CDRdb    = new $this->db_class;
         $this->CDRdb1   = new $this->db_class;
-        $this->CDRdb_readonly     = new $this->db_class_readonly;
+        if (class_exists($this->db_class_readonly)) {
+        	$this->CDRdb_readonly     = new $this->db_class_readonly;
+        }
 
 	if (strlen($_intAccessCode))  $this->intAccessCode  = $_intAccessCode;
         if (strlen($_natAccessCode))  $this->natAccessCode  = $_natAccessCode;
@@ -715,10 +717,6 @@ class CDRS {
         // normalize if call has ended
         if ($this->stopTimeField) {
             $query=$query." and $this->stopTimeField > '0000-00-00 00:00:00' ";
-        } else {
-        	if (!$this->DATASOURCES[$this->cdr_source][normalize0SecCalls]) {
-            	$query=$query." and $this->durationField > 0 ";
-        	}
         }
 
         dprint ($query);
@@ -750,10 +748,6 @@ class CDRS {
         // normalize if call has ended
         if ($this->stopTimeField) {
             $query=$query." and $this->stopTimeField > '0000-00-00 00:00:00' ";
-        } else {
-        	if (!$this->DATASOURCES[$this->cdr_source][normalize0SecCalls]) {
-            	$query=$query." and $this->durationField > 0 ";
-        	}
         }
 
         $this->status['cdr_to_normalize']=0;
@@ -1085,21 +1079,18 @@ class CDRS {
         $_tables=$this->CDRdb->table_names();
         $t=count($_tables);
 
-		if ($this->table) {
-        	$this->tables[]=$this->table;
-        }
+		if ($this->table) $this->tables[]=$this->table;
 
         while ($t <> 0 ) {
             $_table=$_tables[$t]["table_name"];
-            $pattern=$this->table."\\d{6}";
-            if (preg_match("/^$pattern$/",$_table,$m)) {
+            if (preg_match("/^(\w+)\d{6}$/",$_table,$m)) {
                 if ($list_t >24) break;
                 $this->tables[]=$_table;
                 $list_t++;
             }
             $t--;
         }
-        //dprint_r($this->tables);
+        dprint_r($this->tables);
     }
 
     function rotateTable($month) {
