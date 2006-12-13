@@ -485,8 +485,6 @@ BEGIN
 
 	END IF;
 
-	SELECT @updatedrows AS ROWSUPDATED;
-
 	-- CLEAN UP
 	SET @v_AcctStopTime = null;
 	SET @v_AcctStopDelay = null;
@@ -667,7 +665,6 @@ BEGIN
 	IF @var_tbl_cnt = 0 THEN
 		-- TABLE DOESN'T EVEN EXISTS, SO RETURN 0
 		SET @rcnt = (SELECT 0);
-		SELECT @rcnt AS ROWSUPDATED;
 	ELSE
 
 		SET @radupdstmt = CONCAT("UPDATE ", @var_tbl, " SET
@@ -716,7 +713,6 @@ BEGIN
 		SET @v_SipFromTag = null;
 
 		-- GET UPDATED ROWS COUNT AND RETURN IT
-		SELECT @rcnt AS ROWSUPDATED;
 	END IF;
 
 END $$
