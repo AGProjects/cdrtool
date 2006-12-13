@@ -3479,13 +3479,13 @@ class RatingEngine {
                 $this->lastMinuteSessionCounter=0;
                 $this->lastMinuteStatisticsTime=time();
 
-                $log=sprintf ("Call statistics last minute: %s calls in the last %s seconds @ %s CPS",
+                $log=sprintf ("Rating engine load last minute is %s calls in the last %s seconds @ %s CPS",
                 $this->statistics['lastMinute']['calls'],
                 $this->statistics['lastMinute']['interval'],
                 sprintf("%.2f",$this->statistics['lastMinute']['cps']));
                 syslog(LOG_NOTICE, $log);
 
-                $log=sprintf ("Total call statistics: %s calls in %s seconds @ %s CPS",
+                $log=sprintf ("Rating engine load is %s sessions in %s seconds @ %s CPS",
                 $this->statistics['total']['calls'],
                 $this->statistics['total']['interval'],
                 sprintf("%.2f",$this->statistics['total']['cps']));
@@ -3502,7 +3502,7 @@ class RatingEngine {
                     $this->lastHourSessionCounter=0;
                     $this->lastHourStatisticsTime=time();
     
-                    $log=sprintf ("Call statistics last hour: %s calls in the last %s seconds @ %s CPS",
+                    $log=sprintf ("Rating engine load last hour is %s calls in the last %s seconds @ %s CPS",
                     $this->statistics['lastHour']['calls'],
                     $this->statistics['lastHour']['interval'],
                     sprintf("%.2f",$this->statistics['lastHour']['cps']));

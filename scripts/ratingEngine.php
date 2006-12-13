@@ -114,10 +114,12 @@ while (true) {
             $newcon = socket_accept($sock);
             $clients[] = $newcon;
 
+            /*
             if (socket_getpeername($newcon, $ip, $port)) {
                 $log=sprintf ("Connection from %s:%d", $ip, $port);
 	            syslog(LOG_NOTICE, $log);
             }
+            */
 
         } else {
             $pos = array_search($con, $clients);
