@@ -34,8 +34,9 @@ cdrtool (5.0) unstable; urgency=low
   * Log when quota has been exceeded
   * Fixed logging of normalized totals
   * More clear syslog logging statements
+  * Update rotate table logic
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 13 Dec 2006 13:09:30 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 14 Dec 2006 20:33:26 +0100
 
 cdrtool (4.8) unstable; urgency=low
 
