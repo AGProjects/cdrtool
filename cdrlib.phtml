@@ -133,65 +133,65 @@ class CDRS {
         	$_normalizedField='Normalized';
         }
 
-	if ($this->DATASOURCES[$cdr_source]['intAccessCode']) {
-        	$_intAccessCode      = $this->DATASOURCES[$cdr_source]['intAccessCode'];
+        if ($this->DATASOURCES[$cdr_source]['intAccessCode']) {
+            $_intAccessCode      = $this->DATASOURCES[$cdr_source]['intAccessCode'];
         } else {
-        	$_intAccessCode      = '00';
+            $_intAccessCode      = '00';
         }
-
-	if ($this->DATASOURCES[$cdr_source]['natAccessCode']) {
-        	$_natAccessCode      = $this->DATASOURCES[$cdr_source]['natAccessCode'];
+    
+        if ($this->DATASOURCES[$cdr_source]['natAccessCode']) {
+            $_natAccessCode      = $this->DATASOURCES[$cdr_source]['natAccessCode'];
         } else {
-        	$_natAccessCode      = '0';
+            $_natAccessCode      = '0';
         }
-
-	if ($this->DATASOURCES[$cdr_source]['AccountsDBClass']) {
-        	$_AccountsDBClass    = $this->DATASOURCES[$cdr_source]['AccountsDBClass'];
+    
+        if ($this->DATASOURCES[$cdr_source]['AccountsDBClass']) {
+            $_AccountsDBClass    = $this->DATASOURCES[$cdr_source]['AccountsDBClass'];
         } else {
             $_AccountsDBClass    = 'DB_ser';
         }
-
-	if ($this->DATASOURCES[$cdr_source]['BillingIdField']) {
-        	$_BillingIdField    = $this->DATASOURCES[$cdr_source]['BillingIdField'];
+    
+        if ($this->DATASOURCES[$cdr_source]['BillingIdField']) {
+            $_BillingIdField    = $this->DATASOURCES[$cdr_source]['BillingIdField'];
         } else {
-        	$_BillingIdField    = 'UserName';
+            $_BillingIdField    = 'UserName';
         }
-
-        if ($this->CDRS->DATASOURCES[$this->cdr_source]['sipTraceDataSource']) {
-            $_sipTraceDataSource=$this->CDRS->DATASOURCES[$this->cdr_source]['sipTraceDataSource'];
+    
+        if ($this->DATASOURCES[$this->cdr_source]['sipTraceDataSource']) {
+            $_sipTraceDataSource=$this->DATASOURCES[$this->cdr_source]['sipTraceDataSource'];
         } else {
             $_sipTraceDataSource='sip_trace';
         }
-
+    
         if ($_dbClass) $this->db_class=$_dbClass;
-
+    
         if ($_dbClass_readonly && $_dbClass_readonly != $_dbClass) {
             dprint ("CDRs can also be read from database classes ");
             dprint_r($_dbClass_readonly);
-
+    
             if ($_dbClass_readonly) {
                 if (is_array($_dbClass_readonly)) {
                     // select a random connection from the pool
                     $_idx=array_rand($_dbClass_readonly);
                     $this->db_class_readonly=$_dbClass_readonly[$_idx];
-            	} else {
+                } else {
                     // select the only one class as string
-            		$this->db_class_readonly=$_dbClass_readonly;
-            	}
+                    $this->db_class_readonly=$_dbClass_readonly;
+                }
             }
         }
-
+    
         if (!$this->db_class_readonly) $this->db_class_readonly=$_dbClass;
-
+    
         // init db
         $this->cdrtool  = new DB_CDRTool();
         $this->CDRdb    = new $this->db_class;
         $this->CDRdb1   = new $this->db_class;
         if (class_exists($this->db_class_readonly)) {
-        	$this->CDRdb_readonly     = new $this->db_class_readonly;
+            $this->CDRdb_readonly     = new $this->db_class_readonly;
         }
-
-	if (strlen($_intAccessCode))  $this->intAccessCode  = $_intAccessCode;
+    
+        if (strlen($_intAccessCode))  $this->intAccessCode  = $_intAccessCode;
         if (strlen($_natAccessCode))  $this->natAccessCode  = $_natAccessCode;
         if ($_sipTraceDataSource)  $this->sipTraceDataSource  = $_sipTraceDataSource;
 
@@ -286,10 +286,10 @@ class CDRS {
         }
 
         if (is_array($this->CDRTool['normalize']['CS_CODES'])) {
-		    $this->CS_CODES=array_keys($this->CDRTool['normalize']['CS_CODES']);
+            $this->CS_CODES=array_keys($this->CDRTool['normalize']['CS_CODES']);
         }
-
-	$this->getCDRtables();
+    
+        $this->getCDRtables();
 
         $this->initOK=1;
     }
