@@ -18,6 +18,6 @@ $cdr_source     = "ser_radius";
 $CDR_class      = $DATASOURCES[$cdr_source]["class"];
 $CDRS           = new $CDR_class($cdr_source);
 
-$CDRS->rotateTable($argv[1]);
+$CDRS->rotateTable($argv[1],$argv[2],$argv[3]);
 
 ?>

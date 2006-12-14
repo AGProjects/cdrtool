@@ -12,8 +12,6 @@ if (is_readable('/etc/default/cdrtool')) {
         list($defaults_key, $defaults_value)=explode("=",$_line);
         if (strlen($defaults_value)) $defaults[trim($defaults_key)]=trim($defaults_value);
     }
-
-    dprint_r($defaults);
 }
 
 class CDRS {
@@ -1080,6 +1078,9 @@ class CDRS {
         $t=count($_tables);
 
 		if ($this->table) $this->tables[]=$this->table;
+        if (preg_match("/^(\w+)\d{6}$/",$this->table,$m)) {
+        	$this->tables[]=$m[1];
+        }
 
         while ($t <> 0 ) {
             $_table=$_tables[$t]["table_name"];
@@ -1093,10 +1094,28 @@ class CDRS {
         dprint_r($this->tables);
     }
 
-    function rotateTable($month) {
-
+    function rotateTable($sourceTable,$month,$action) {
         // create a new table tableYYYYMM and copy data from the main table into it
         // if no month is supplied, the default is the previous month
+
+        if (!$month) $month=date('Ym', mktime(0, 0, 0, date("m")-1, "01", date("Y")));
+
+		if (!$sourceTable) $sourceTable=$this->table;
+
+        if (preg_match("/^(\w+)\d{6}$/",$sourceTable,$m)) {
+			$destinationTable=$m[1].$month;
+        } else {
+			$destinationTable=$sourceTable.$month;
+        }
+
+        print("rotateTable($sourceTable,$month,$destinationTable)\n");
+
+		if ($sourceTable == $destinationTable) {
+        	$log=sprintf("Error: cannot copy records to the same table %s.\n",$destinationTable);
+        	syslog(LOG_NOTICE,$log);
+            print $log;
+        	return 0;;
+        }
 
 		$createTableFile=$this->CDRTool['Path'].$this->createTableFile;
 
@@ -1126,39 +1145,37 @@ class CDRS {
 
 		$b=time();
 
-		if ($month) {
-        	if (!preg_match("/^(\d{4})(\d{2})$/",$month,$m)) {
-    			print "Error: Month must be in YYYYMM format\n";
-        		return 0;
-            } else {
-                if ($m[2]>12) {
-    			    print "Error: Month must be in YYYYMM format\n";
-                    return 0;
-                }
-                $lastMonth=$month;
-                $startSQL=$m[1]."-".$m[2]."-01";
-                $stopSQL =date('Y-m-01', mktime(0, 0, 0, $m[2]+1, "01", $m[1]));
+        if (!preg_match("/^(\d{4})(\d{2})$/",$month,$m)) {
+            print "Error: Month $month must be in YYYYMM format\n";
+            return 0;
+        } else {
+            if ($m[2] > 12) {
+                print "Error: Month must be in YYYYMM format\n";
+                return 0;
             }
-		} else {
-			$lastMonth=date('Ym', mktime(0, 0, 0, date("m")-1, "01", date("Y")));
 
-            $startSQL= date('Y-m-01', mktime(0, 0, 0, date("m")-1, "01", date("Y")));
-            $stopSQL = date('Y-m-01', mktime(0, 0, 0, date("m"), "01", date("Y")));
+            $lastMonth=$month;
+            $startSQL=$m[1]."-".$m[2]."-01";
+            $stopSQL =date('Y-m-01', mktime(0, 0, 0, $m[2]+1, "01", $m[1]));
         }
 
         $query=sprintf("select count(*) as c from %s
                     where %s >='%s'
-                    and %s < '%s'",
-                    $this->table,
+                    and %s < '%s'\n",
+                    $sourceTable,
                     $this->CDRFields['startTime'],$startSQL,
                     $this->CDRFields['startTime'],$stopSQL);
 
+        dprint($query);
+
 		if ($this->CDRdb->query($query)) {
             $this->CDRdb->next_record();
-            $num_rows_mainTable=$this->CDRdb->f('c');
-		    $log=sprintf ("Table %s has %d records in %s\n",$this->table,$num_rows_mainTable,$lastMonth);
+            $rowsSourceTable=$this->CDRdb->f('c');
+		    $log=sprintf ("Source table %s has %d records in month %s\n",$sourceTable,$rowsSourceTable,$month);
         	syslog(LOG_NOTICE,$log);
             print $log;
+            if (!$rowsSourceTable) return 1;
+
 		} else {
     	    $log=sprintf ("Error: %s (%s)\n",$this->table,$this->CDRdb->Error);
         	syslog(LOG_NOTICE,$log);
@@ -1166,76 +1183,94 @@ class CDRS {
             return 0;
 		}
 
-		$tableNew=$this->table.$lastMonth;
+        $query=sprintf("select count(*) as c from %s\n", $destinationTable);
 
-		$query=sprintf("select count(*) as c from %s",$tableNew);
+        dprint($query);
 
-		if (!$this->CDRdb->query($query)) {
+		if ($this->CDRdb->query($query)) {
+            $this->CDRdb->next_record();
+            $rowsDestinationTable = $this->CDRdb->f('c');
+		    $log=sprintf ("Destination table %s has %d records\n",$destinationTable,$rowsDestinationTable);
+        	syslog(LOG_NOTICE,$log);
+            print $log;
+    
+            if ($rowsDestinationTable != $rowsSourceTable) {
+                $log=sprintf ("Error: source table has %d records and destination table has %d records\n",$rowsSourceTable,$rowsDestinationTable);
+                syslog(LOG_NOTICE,$log);
+                print $log;
+            } else {
+		    	$log=sprintf ("Tables are in sync\n");
+        		syslog(LOG_NOTICE,$log);
+            	print $log;
+            }
 
-    		$tableTmp=$tableNew."_tmp";
-    		$this->CDRdb->query("drop table if exists $tableTmp");
-
-			$table=$this->table;
-
-    		if ($query=file_get_contents($createTableFile)) {
-        		$query=preg_replace("/CREATE TABLE.*$table.*/","CREATE TABLE $tableTmp (",$query);
-				if ($this->CDRdb->query($query)) {
-
-            		$query=sprintf("insert into %s
-                    select * from %s
-            		where %s >='%s'
-                    and %s < '%s'",
-            		$tableTmp,
-                    $this->table,
-                    $this->CDRFields['startTime'],$startSQL,
-                    $this->CDRFields['startTime'],$stopSQL);
-
-                    if ($this->CDRdb->query($query)) {
-						$e=time();
-						$d=$e-$b;
-                        $rps=0;
-                        if ($this->CDRdb->affected_rows() && $d) $rps=$this->CDRdb->affected_rows()/$d;
-
-    	            	$log=printf ("Copied %d CDRs into table %s in %d s @ %.0f rps\n",$this->CDRdb->affected_rows(),$tableTmp,$d,$rps);
-        				syslog(LOG_NOTICE,$log);
-                        print $log;
-
-                        $query="rename table $tableTmp to $tableNew";
-
-                		if (!$this->CDRdb->query($query)) {
-                    		printf ("Error renaming table %s to %s: %s\n",$tableTmp,$tableNew,$this->CDRdb->Error);
-                        	return 0;
-	                	}
-            		} else {
-                		printf ("Error copying records in table %s: %s\n",$tableNew,$this->CDRdb->Error);
-                		return 0;
-            		}
-        		} else {
-            		printf ("Error creating table %s: %s\n",$tableTmp,$this->CDRdb->Error);
-                    return 0;
-        		}
-    		}
 		} else {
-			$this->CDRdb->next_record();
-            $num_rows_lastMonth=$this->CDRdb->f('c');
-
-            $log=sprintf ("Table %s has %d records\n",$tableNew,$num_rows_lastMonth);
+    	    $log=sprintf ("%s (%s)\n",$this->CDRdb->Error,$this->CDRdb->Errno);
         	syslog(LOG_NOTICE,$log);
             print $log;
 
-            if ($num_rows_mainTable != $num_rows_lastMonth) {
-			    $log=sprintf ("Error: %d != %d\n",$num_rows_mainTable,$num_rows_lastMonth);
-        		syslog(LOG_NOTICE,$log);
-                print $log;
-                return 0;
+            if ($this->CDRdb->Errno==1146) {
+
+                $destinationTableTmp=$destinationTable."_tmp";
+                $query=sprintf("drop table if exists %s",$destinationTableTmp);
+                print($query);
+                $this->CDRdb->query($query);
+    
+                if ($query=file_get_contents($createTableFile)) {
+                    $query=preg_replace("/CREATE TABLE.*/","CREATE TABLE $destinationTableTmp (",$query);
+                    if (!$this->CDRdb->query($query)) {
+                        $log=sprintf ("Error creating table %s: %s, %s\n",$destinationTableTmp,$this->CDRdb->Error,$query);
+                        syslog(LOG_NOTICE,$log);
+                        print $log;
+                        return 0;
+                    }
+                } else {
+                    $log=sprintf ("Cannot read file %s\n",$createTableFile);
+                    syslog(LOG_NOTICE,$log);
+                    print $log;
+                    return 0;
+                }
+
+                // if we reached this point we start to copy records
+                $query=sprintf("insert into %s
+                select * from %s
+                where %s >='%s'
+                and %s < '%s'",
+                $destinationTableTmp,
+                $sourceTable,
+                $this->CDRFields['startTime'],$startSQL,
+                $this->CDRFields['startTime'],$stopSQL);
+        
+                print ($query);
+                return ;
+        
+                if ($this->CDRdb->query($query)) {
+                    $e=time();
+                    $d=$e-$b;
+                    $rps=0;
+                    if ($this->CDRdb->affected_rows() && $d) $rps=$this->CDRdb->affected_rows()/$d;
+        
+                    $log=printf ("Copied %d CDRs into table %s in %d s @ %.0f rps\n",$this->CDRdb->affected_rows(),$destinationTableTmp,$d,$rps);
+                    syslog(LOG_NOTICE,$log);
+                    print $log;
+        
+                    $query="rename table $destinationTableTmp to $destinationTableTmp";
+        
+                    if (!$this->CDRdb->query($query)) {
+                        printf ("Error renaming table %s to %s: %s\n",$destinationTableTmp,$destinationTable,$this->CDRdb->Error);
+                        return 0;
+                    }
+                } else {
+                    printf ("Error copying records in table %s: %s\n",$destinationTable,$this->CDRdb->Error);
+                    return 0;
+                }
             }
-		}
-        return 1;
+        }
 	}
 
-    function purgeTable($month) {
+    function purgeTable($sourceTable,$month) {
         // delete records for a given month with minimal locking of database
-        // this function is useful after archive of CDR data
+        // this function is useful after archive of CDR data using rotate script
         $begin=time();
 
         if ($month) {
@@ -1253,10 +1288,12 @@ class CDRS {
             return 0;
         }
 
-        $query=sprintf("select min(%s) as min,max(%s) as max from %s where %s >= '%s' and %s < '%s' ",
-        $this->CDRFields['id'],$this->CDRFields['id'],$this->table,$this->CDRFields['startTime'],$beginDate,$this->CDRFields['startTime'],$endDate);
+        if (!$sourceTable) $sourceTable=$this->table;
 
-        dprint($query);
+        $query=sprintf("select min(%s) as min,max(%s) as max from %s where %s >= '%s' and %s < '%s' ",
+        $this->CDRFields['id'],$this->CDRFields['id'],$sourceTable,$this->CDRFields['startTime'],$beginDate,$this->CDRFields['startTime'],$endDate);
+
+        print($query);
 
         if (!$this->CDRdb->query($query)) {
             printf ("Error: %s",$this->CDRdb->Error);
@@ -1268,7 +1305,7 @@ class CDRS {
         $max=$this->CDRdb->f('max');
 
         if (!$min || !$max) {
-            $log=sprintf("No CDRs found in %s between %s and %s\n",$this->table,$beginDate,$endDate);
+            $log=sprintf("No CDRs found in %s between %s and %s\n",$sourceTable,$beginDate,$endDate);
             print $log;
         	syslog(LOG_NOTICE,$log);
             return 0;
@@ -1294,11 +1331,13 @@ class CDRS {
 
             $query=sprintf("delete low_priority from %s
                             where %s <= '%d' and %s >= '%d'",
-                            $this->table,
+                            $sourceTable,
                             $this->CDRFields['id'],
                             $top,
                             $this->CDRFields['id'],
                             $min);
+
+            dprint($query);
 
             if ($this->CDRdb->query($query)) {
                 $deleted=$deleted+$this->CDRdb->affected_rows();
@@ -1332,9 +1371,9 @@ class CDRS {
 
         if ($deleted && $duration) $rps=$deleted/$duration;
 
-        $log=sprintf("%s CDRs of month %s deleted from %s in %d s @ %.0f rps\n",$deleted,$month,$this->table,$duration,$rps);
-        print $log;
+        $log=sprintf("%s CDRs of month %s deleted from %s in %d s @ %.0f rps\n",$deleted,$month,$sourceTable,$duration,$rps);
         syslog(LOG_NOTICE,$log);
+        print $log;
         return 1;
     }
 
