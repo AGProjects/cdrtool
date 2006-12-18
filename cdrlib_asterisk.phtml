@@ -685,30 +685,12 @@ class CDRS_asterisk extends CDRS {
                               )
                        );
 
-        $query=sprintf("select DATE_FORMAT(%s,'%s') as start from %s order by %s ASC limit 1",
-        $this->startTimeField,'%Y-%m-%d',$this->table,$this->CDRFields['id']);
-        dprint($query);
-
-        if ($this->CDRdb->query($query) && $this->CDRdb->num_rows()) {
-            $this->CDRdb->next_record();
-            $dataStart=$this->CDRdb->f('start');
-        }
-
-        $query=sprintf("select DATE_FORMAT(%s,'%s') as end from %s order by %s DESC limit 1",
-        $this->startTimeField,'%Y-%m-%d',$this->table,$this->CDRFields['id']);
-        dprint($query);
-        if ($this->CDRdb->query($query) && $this->CDRdb->num_rows()) {
-            $this->CDRdb->next_record();
-            $dataEnd=$this->CDRdb->f('end');
-        }
-
 		$cdr_table_els=array();
         foreach ($this->tables as $_table) {
         	if (preg_match("/^.*(\d{6})$/",$_table,$m)) {
             	$cdr_table_els[]=array("label"=>$m[1],"value"=>$_table);
             } else {
-                $label=sprintf("Current (%s - %s)",$dataStart,$dataEnd);
-            	$cdr_table_els[]=array("label"=>$label,"value"=>$_table);
+                $cdr_table_els[]=array("label"=>$_table,"value"=>$_table);
             }
         }
 

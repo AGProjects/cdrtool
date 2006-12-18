@@ -2447,8 +2447,6 @@ class SERQuota {
                 $_accounts[$account]['fn'],
                 $_accounts[$account]['block_by_quota']
                 );
-
-				if ($_accounts[$account]['quota']) $accounts_with_quota_enabled++;
             }
 
             $log=sprintf ("%d subscribers have monthly quota enabled\n",$accounts_with_quota_enabled);
@@ -2466,6 +2464,25 @@ class SERQuota {
         $this->subscribers = array_keys(&$this->SERAccounts);
 
  		return count($this->SERAccounts);
+    }
+
+    function ShowAccountsWithQuota() {
+
+		if (!$this->LoadSubscribers()) return 0;
+
+		print_r($this->subscribersWithQuota);
+
+        foreach ($this->subscribers as $_subscriber) {
+			if ($this->SERAccounts[$_subscriber]['quota'] ) {
+                if ($this->SERAccounts[$_subscriber]['block_by_quota']) {
+                    $blockedStatus="blocked";
+                } else {
+                    $blockedStatus='';;
+                }
+	        	$usage = $this->CDRS->getMonthlyUsageFromCache($_subscriber);
+            	printf ("%-35s quota=%-6s usage=%-10s %s\n",$_subscriber,$this->SERAccounts[$_subscriber]['quota'],$usage['cost'],$blockedStatus);
+            }
+        }
     }
 
     function ResetUserQuotas() {
@@ -3984,6 +4001,17 @@ function reloadRatingEngineTables () {
     if ($RatingEngine["socketIP"] && $RatingEngine["socketPort"] &&
         $fp = fsockopen ($RatingEngine["socketIP"], $RatingEngine["socketPort"], $errno, $errstr, 2)) {
         fputs($fp, "ReloadRatingTables\n");
+        fclose($fp);
+        return 1;
+    }
+    return 0;
+}
+
+function reloadSipAccountsWithQuota () {
+    global $RatingEngine;
+    if ($RatingEngine["socketIP"] && $RatingEngine["socketPort"] &&
+        $fp = fsockopen ($RatingEngine["socketIP"], $RatingEngine["socketPort"], $errno, $errstr, 2)) {
+        fputs($fp, "reloadSipAccountsWithQuota\n");
         fclose($fp);
         return 1;
     }

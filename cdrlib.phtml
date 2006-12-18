@@ -166,7 +166,7 @@ class CDRS {
         if ($_dbClass) $this->db_class=$_dbClass;
     
         if ($_dbClass_readonly && $_dbClass_readonly != $_dbClass) {
-            dprint ("CDRs can also be read from database classes ");
+            dprint ("CDRs will be read from database classes ");
             dprint_r($_dbClass_readonly);
     
             if ($_dbClass_readonly) {
@@ -183,10 +183,10 @@ class CDRS {
     
         if (!$this->db_class_readonly) $this->db_class_readonly=$_dbClass;
     
-        // init db
         $this->cdrtool  = new DB_CDRTool();
         $this->CDRdb    = new $this->db_class;
         $this->CDRdb1   = new $this->db_class;
+
         if (class_exists($this->db_class_readonly)) {
             $this->CDRdb_readonly     = new $this->db_class_readonly;
         }
@@ -1091,7 +1091,9 @@ class CDRS {
             }
             $t--;
         }
-        dprint_r($this->tables);
+
+        $this->tables=array_unique($this->tables);
+        //dprint_r($this->tables);
     }
 
     function rotateTable($sourceTable,$month,$action) {

@@ -1,3 +1,9 @@
+cdrtool (5.0-1) unstable; urgency=low
+
+  * Added scripts to display quota usage and settings
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 18 Dec 2006 16:27:36 +0100
+
 cdrtool (5.0) unstable; urgency=low
 
   * Added support for MediaProxy accounting using Radius. Upgrade to

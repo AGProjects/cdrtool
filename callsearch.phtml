@@ -59,6 +59,7 @@ if ($end_day) {
 $CDR_class=$DATASOURCES[$cdr_source]["class"];
 
 if (class_exists($CDR_class) && $CDRS = new $CDR_class($cdr_source)) {
+
     if (!$export && !$trace) {
         $layout = new pageLayoutLocal();
         if ($CDRTool['filter']['aNumber']) {
