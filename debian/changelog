@@ -1,8 +1,9 @@
 cdrtool (5.0-1) unstable; urgency=low
 
   * Added scripts to display quota usage and settings
+  * Avoid duplicate tables in data source selection
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 18 Dec 2006 16:48:34 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 18 Dec 2006 16:51:08 +0100
 
 cdrtool (5.0) unstable; urgency=low
 
