@@ -2474,13 +2474,19 @@ class SERQuota {
 
         foreach ($this->subscribers as $_subscriber) {
 			if ($this->SERAccounts[$_subscriber]['quota'] ) {
-                if ($this->SERAccounts[$_subscriber]['block_by_quota']) {
-                    $blockedStatus="blocked";
-                } else {
-                    $blockedStatus='';;
-                }
 	        	$usage = $this->CDRS->getMonthlyUsageFromCache($_subscriber);
-            	printf ("%-35s quota=%-6s usage=%-10s %s\n",$_subscriber,$this->SERAccounts[$_subscriber]['quota'],$usage['cost'],$blockedStatus);
+
+                if ($usage['cost'] > 0) {
+                    if ($this->SERAccounts[$_subscriber]['block_by_quota']) {
+                        $blockedStatus="blocked";
+                    } else {
+                        $blockedStatus='';;
+                    }
+
+                    $usageRatio=$usage['cost']*100/$this->SERAccounts[$_subscriber]['quota'];
+                    $usageStatus=sprintf("usage=%-10s",$usage['cost']);
+            		printf ("%-35s quota=%-6s %s %.2f%s %s\n",$_subscriber,$this->SERAccounts[$_subscriber]['quota'],$usageStatus,$usageRatio,'%',$blockedStatus);
+                }
             }
         }
     }

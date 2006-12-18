@@ -4,8 +4,7 @@
 # a network cache, it is possible to have syncronization problems 
 # caused by network connectivity problmes or other causes
 
-# This script can be used to detect differences between real 
-# CDR usage and cached usage
+# This script can be used to detect differences between database and cached usage
 
 # Warning!
 # 
