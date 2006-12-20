@@ -1,2 +1,4 @@
-Ops,Gateway,Domain,Subscriber,WD Profile,WE Profile,NGN Profile,Timezone,Incr,Min
-2,,,,441,442,,Europe/Amsterdam,0,0
+Ops,Gateway,Domain,Subscriber,WeekDay,Alt,WeekEnd,Alt,NGN,Timezone,Incr,Min,CC
+2,,,,441,,442,,,Europe/Amsterdam,0,0,31
+2,,example.com,,441,,442,,,Europe/Amsterdam,0,0,
+2,,,user@example.com,441,,442,,,Europe/Amsterdam,0,0,45

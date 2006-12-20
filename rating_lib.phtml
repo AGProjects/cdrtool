@@ -960,22 +960,22 @@ class RatingTables {
                                                                  "subscriber"=>array("size"=>20,
                                                                  				 "name"=>"Subscriber"
                                                                                  ),
-                                                                 "profile_name1"=>array("size"=>10,
+                                                                 "profile_name1"=>array("size"=>8,
                                                                  				 "name"=>"WeekDay"
                                                                                  ),
-                                                                 "profile_name1_alt"=>array("size"=>10,
+                                                                 "profile_name1_alt"=>array("size"=>8,
                                                                  				 "name"=>"Alt"
                                                                                  ),
-                                                                 "profileNGN"=>array("size"=>10,
+                                                                 "profileNGN"=>array("size"=>8,
                                                                  				 "name"=>"NGN"
                                                                                  ),
-                                                                 "profile_name2"=>array("size"=>10,
+                                                                 "profile_name2"=>array("size"=>8,
                                                                  				 "name"=>"WeekEnd"
                                                                                  ),
-                                                                 "profile_name2_alt"=>array("size"=>10,
+                                                                 "profile_name2_alt"=>array("size"=>8,
                                                                  				 "name"=>"Alt"
                                                                                  ),
-                                                                 "timezone"     =>array("size"=>20,
+                                                                 "timezone"     =>array("size"=>16,
                                                                  				 "name"=>"Timezone"
                                                                                  ),
                                                                  "increment"     =>array("size"=>3,
@@ -983,6 +983,9 @@ class RatingTables {
                                                                                  ),
                                                                  "min_duration"  =>array("size"=>3,
                                                                  				 "name"=>"Min"
+                                                                                 ),
+                                                                 "country_code"  =>array("size"=>3,
+                                                                 				 "name"=>"CC"
                                                                                  )
 
                                                  				)
@@ -1164,7 +1167,6 @@ class RatingTables {
 
         if (!is_readable($file)) return 0;
 
-        $digits = $this->CDRTool[normalize][stripFromDestination];
         $i=0;
         if (!$fp = fopen($file, "r")) {
             return;
@@ -1182,7 +1184,7 @@ class RatingTables {
             $domain          = trim($p[2]);
             $subscriber      = trim($p[3]);
             $profile         = trim($p[4]);
-            $destination     = substr($p[5],$digits);
+            $destination     = trim($p[5]);
             $durationRate    = trim($p[6]);
             $trafficRate     = trim($p[7]);
             $applicationRate = trim($p[8]);
@@ -1190,7 +1192,7 @@ class RatingTables {
 
             if ($ops=="1") {
 
-                $query="insert into billing_rates
+                $query=sprintf("insert into billing_rates
                 (
                 gateway,
                 domain,
@@ -1202,16 +1204,26 @@ class RatingTables {
                 applicationRate,
                 connectCost
                 ) values (
-                '$gateway',
-                '$domain',
-                '$subscriber',
-                '$profile',
-                '$destination',
-                '$durationRate',
-                '$trafficRate',
-                '$applicationRate',
-                '$connectCost'
-                )";
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s'
+                )",
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($profile),
+                addslashes($destination),
+                addslashes($durationRate),
+                addslashes($trafficRate),
+                addslashes($applicationRate),
+                addslashes($connectCost)
+                );
                 //dprint($query);
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->affected_rows() >0) {
@@ -1220,42 +1232,68 @@ class RatingTables {
                     $failed++;
                 }
             } else if ($ops=="3") {
-                $query="delete from billing_rates
-                where name = '$profile'
-                and destination = '$destination'";
+                $query=sprintf("delete from billing_rates
+                where gateway      = '%s'
+                and domain         = '%s'
+                and subscriber     = '%s'
+                and name           = '%s'
+                and destination    = '%s'",
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($profile),
+                addslashes($destination)
+                );
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->affected_rows() >0) {
                     $deleted++;
                 }
             } else if ($ops=="2") {
-                $query="select * from billing_rates
-                where name       = '$profile'
-                and destination  = '$destination'
-                and gateway      = '$gateway'
-                and domain       = '$domain'
-                and subscriber   = '$subscriber'
-                ";
+                $query=sprintf("select * from billing_rates
+                where name       = '%s'
+                and destination  = '%s'
+                and gateway      = '%s'
+                and domain       = '%s'
+                and subscriber   = '%s'
+                ",
+                addslashes($profile),
+                addslashes($destination),
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber)
+                );
                 $this->cdrtool->query($query);
 
                 if ($this->cdrtool->num_rows()) {
-                    $query="update billing_rates set
-                    durationRate    = '$durationRate',
-                    trafficRate     = '$trafficRate',
-                    applicationRate = '$applicationRate',
-                    connectCost     = '$connectCost'
-                    where name      = '$profile'
-                    and destination = '$destination'
-                    and gateway      = '$gateway'
-                    and domain       = '$domain'
-                    and subscriber   = '$subscriber'
-                    ";
+                    $query=sprintf("update billing_rates set
+                    durationRate    = '%s',
+                    trafficRate     = '%s',
+                    applicationRate = '%s',
+                    connectCost     = '%s'
+                    where name      = '%s'
+                    and destination = '%s'
+                    and gateway     = '%s'
+                    and domain      = '%s'
+                    and subscriber  = '%s'
+                    ",
+                    addslashes($durationRate),
+                    addslashes($trafficRate),
+                    addslashes($applicationRate),
+                    addslashes($connectCost),
+                    addslashes($profile),
+                    addslashes($destination),
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber)
+                    );
+
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows() >0) {
                         $updated++;
                     }
 
                 } else {
-                    $query="insert into billing_rates
+                    $query=sprintf("insert into billing_rates
                     (
                     gateway,
                     domain,
@@ -1267,16 +1305,26 @@ class RatingTables {
                     applicationRate,
                     connectCost
                     ) values (
-                    '$gateway',
-                    '$domain',
-                    '$subscriber',
-                    '$profile',
-                    '$destination',
-                    '$durationRate',
-                    '$trafficRate',
-                    '$applicationRate',
-                    '$connectCost'
-                    )";
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s'
+                    )",
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($profile),
+                    addslashes($destination),
+                    addslashes($durationRate),
+                    addslashes($trafficRate),
+                    addslashes($applicationRate),
+                    addslashes($connectCost)
+                    );
                     //dprint($query);
 
                     $this->cdrtool->query($query);
@@ -1469,21 +1517,22 @@ class RatingTables {
 
             $p = explode(",", $buffer);
 
-            $ops           = trim($p[0]);
-            $gateway       = trim($p[1]);
-            $domain        = trim($p[2]);
-            $subscriber    = trim($p[3]);
-            $profile_name1 = trim($p[4]);
-            $profile_name2 = trim($p[5]);
-            $profileNGN    = trim($p[6]);
-            $timezone      = trim($p[7]);
-            $profile_name1_alt = trim($p[8]);
-            $profile_name2_alt = trim($p[9]);
-            $increment     = trim($p[10]);
-            $min_duration  = trim($p[11]);
+            $ops               = trim($p[0]);
+            $gateway           = trim($p[1]);
+            $domain            = trim($p[2]);
+            $subscriber        = trim($p[3]);
+            $profile_name1     = trim($p[4]);
+            $profile_name1_alt = trim($p[5]);
+            $profile_name2     = trim($p[6]);
+            $profile_name2_alt = trim($p[7]);
+            $profileNGN        = trim($p[8]);
+            $timezone          = trim($p[9]);
+            $increment         = trim($p[10]);
+            $min_duration      = trim($p[11]);
+            $country_code      = trim($p[12]);
 
             if ($ops=="1") {
-                $query="insert into billing_customers
+                $query=sprintf("insert into billing_customers
                 (
                 gateway,
                 domain,
@@ -1495,20 +1544,36 @@ class RatingTables {
                 profile_name1_alt,
                 profile_name2_alt,
                 increment,
-                min_duration
+                min_duration,
+                country_code
                 ) values (
-                '$gateway',
-                '$domain',
-                '$subscriber',
-                '$profile_name1',
-                '$profile_name2',
-                '$profileNGN',
-                '$timezone',
-                '$profile_name1_alt',
-                '$profile_name2_alt',
-                '$increment',
-                '$min_duration'
-                )";
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s'
+                )",
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($profile_name1),
+                addslashes($profile_name2),
+                addslashes($profileNGN),
+                addslashes($timezone),
+                addslashes($profile_name1_alt),
+                addslashes($profile_name2_alt),
+                addslashes($increment),
+                addslashes($min_duration),
+                addslashes($country_code)
+
+                );
 
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->affected_rows() >0) {
@@ -1517,45 +1582,67 @@ class RatingTables {
                     $failed++;
                 }
             } else if ($ops=="3") {
-                $query="delete from billing_customers
-                where gateway      = '$gateway'
-                and domain         = '$domain'
-                and subscriber     = '$subscriber'
-                ";
+                $query=sprintf("delete from billing_customers
+                where gateway      = '%s'
+                and domain         = '%s'
+                and subscriber     = '%s'
+                ",
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber)
+                );
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->affected_rows() >0) {
                     $deleted++;
                 }
             } else if ($ops=="2") {
-                $query="select * from billing_customers
-                where gateway      = '$gateway'
-                and domain         = '$domain'
-                and subscriber     = '$subscriber'
-                ";
+                $query=sprintf("select * from billing_customers
+                where gateway      = '%s'
+                and domain         = '%s'
+                and subscriber     = '%s'
+                ",
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber)
+                );
 
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->num_rows()) {
-                    $query="update billing_customers set
-                    profile_name1     = '$profile_name1',
-                    profile_name1     = '$profile_name2',
-                    profile_name1_alt = '$profile_name1_alt',
-                    profile_name2_alt = '$profile_name2_alt',
-                    profileNGN        = '$profileNGN',
-                    timezone          = '$timezone',
-                    increment         = '$increment',
-                    min_duration      = '$min_duration'
+                    $query=sprintf("update billing_customers set
+                    profile_name1     = '%s',
+                    profile_name2     = '%s',
+                    profile_name1_alt = '%s',
+                    profile_name2_alt = '%s',
+                    profileNGN        = '%s',
+                    timezone          = '%s',
+                    increment         = '%s',
+                    min_duration      = '%s',
+                    country_code      = '%s'
+                    where gateway     = '%s'
+                    and domain        = '%s'
+                    and subscriber    = '%s'\n",
+                    addslashes($profile_name1),
+                    addslashes($profile_name2),
+                    addslashes($profile_name1_alt),
+                    addslashes($profile_name2_alt),
+                    addslashes($profileNGN),
+                    addslashes($timezone),
+                    addslashes($increment),
+                    addslashes($min_duration),
+                    addslashes($country_code),
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber)
+                    );
 
-                    where gateway     = '$gateway'
-                    and domain        = '$domain'
-                    and subscriber    = '$subscriber'
-                    ";
+                    dprint($query);
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows()) {
                         $updated++;
                     }
 
                 } else {
-                    $query="insert into billing_customers
+                    $query=sprintf("insert into billing_customers
                     (
                     gateway,
                     domain,
@@ -1567,20 +1654,35 @@ class RatingTables {
                     profile_name1_alt,
                     profile_name2_alt,
                     increment,
-                    min_duration
+                    min_duration,
+                    country_code
                     ) values (
-                    '$gateway',
-                    '$domain',
-                    '$subscriber',
-                    '$profile_name1',
-                    '$profile_name2',
-                    '$profileNGN',
-                    '$timezone',
-                    '$profile_name1_alt',
-                    '$profile_name2_alt',
-                    '$increment',
-                    '$min_duration'
-                    )";
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s'
+                    )",
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($profile_name1),
+                    addslashes($profile_name2),
+                    addslashes($profileNGN),
+                    addslashes($timezone),
+                    addslashes($profile_name1_alt),
+                    addslashes($profile_name2_alt),
+                    addslashes($increment),
+                    addslashes($min_duration),
+                    addslashes($country_code)
+                    );
 
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows()) {
@@ -1632,7 +1734,7 @@ class RatingTables {
             $dest_name       = trim($p[5]);
 
             if ($ops=="1") {
-                $query="insert into destinations
+                $query=sprintf("insert into destinations
                 (
                 gateway,
                 domain,
@@ -1640,12 +1742,18 @@ class RatingTables {
                 dest_id,
                 dest_name
                 ) values (
-                '$gateway',
-                '$domain',
-                '$subscriber',
-                '$dest_id',
-                '$dest_name'
-                )";
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s'
+                )",
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($dest_id),
+                addslashes($dest_name)
+                );
                 //dprint($query);
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->affected_rows() >0) {
@@ -1654,39 +1762,55 @@ class RatingTables {
                     $failed++;
                 }
             } elseif ($ops=="3") {
-                $query="delete from destinations
-                where gateway      = '$gateway'
-                and domain         = '$domain'
-                and subscriber     = '$subscriber'
-                and dest_id        = '$dest_id'
-                ";
+                $query=sprintf("delete from destinations
+                where gateway      = '%s'
+                and domain         = '%s'
+                and subscriber     = '%s'
+                and dest_id        = '%s'
+                ",
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($dest_id)
+                );
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->affected_rows() >0) {
                     $deleted++;
                 }
             } elseif ($ops=="2") {
-                $query="select * from destinations
-                where gateway      = '$gateway'
-                and domain         = '$domain'
-                and subscriber     = '$subscriber'
-                and dest_id        = '$dest_id'
-                ";
+                $query=sprintf("select * from destinations
+                where gateway      = '%s'
+                and domain         = '%s'
+                and subscriber     = '%s'
+                and dest_id        = '%s'
+                ",
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($dest_id)
+                );
 
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->num_rows()) {
-                    $query="update destinations set
-                    dest_name      = '$dest_name'
-                    where gateway  = '$gateway'
-                    and domain     = '$domain'
-                    and subscriber = '$subscriber'
-                    and dest_id    = '$dest_id'
-                    ";
+                    $query=sprintf("update destinations set
+                    dest_name      = '%s'
+                    where gateway      = '%s'
+                    and domain         = '%s'
+                    and subscriber     = '%s'
+                    and dest_id        = '%s'
+                    ",
+                    addslashes($dest_name),
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($dest_id)
+                    );
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows()) {
                         $updated++;
                     }
                  } else {
-                    $query="insert into destinations
+                    $query=sprintf("insert into destinations
                     (
                     gateway,
                     domain,
@@ -1694,12 +1818,18 @@ class RatingTables {
                     dest_id,
                     dest_name
                     ) values (
-                    '$gateway',
-                    '$domain',
-                    '$subscriber',
-                    '$dest_id',
-                    '$dest_name'
-                    )";
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s'
+                    )",
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($dest_id),
+                    addslashes($dest_name)
+                    );
                     //dprint($query);
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows() >0) {
@@ -1748,19 +1878,19 @@ class RatingTables {
 
             $p = explode(",", $buffer);
 
-            $ops     = trim($p[0]);
+            $ops        = trim($p[0]);
             $gateway    = trim($p[1]);
             $domain     = trim($p[2]);
             $subscriber = trim($p[3]);
-            $profile = trim($p[4]);
-            $rate1   = trim($p[5]);
-            $hour1   = trim($p[6]);
-            $rate2   = trim($p[7]);
-            $hour2   = trim($p[8]);
-            $rate3   = trim($p[9]);
-            $hour3   = trim($p[10]);
-            $rate4   = trim($p[1]);
-            $hour4   = trim($p[12]);
+            $profile    = trim($p[4]);
+            $rate1      = trim($p[5]);
+            $hour1      = trim($p[6]);
+            $rate2      = trim($p[7]);
+            $hour2      = trim($p[8]);
+            $rate3      = trim($p[9]);
+            $hour3      = trim($p[10]);
+            $rate4      = trim($p[11]);
+            $hour4      = trim($p[12]);
 
             if (!$hour1) $hour1=0;
             if (!$hour2) $hour2=0;
@@ -1768,7 +1898,7 @@ class RatingTables {
             if (!$hour4) $hour4=0;
 
             if ($ops=="1") {
-                $query="insert into billing_profiles
+                $query=sprintf("insert into billing_profiles
                 (
                 gateway,
                 domain,
@@ -1783,19 +1913,32 @@ class RatingTables {
                 rate_name4,
                 hour4
                 ) values (
-                '$gateway',
-                '$domain',
-                '$subscriber',
-                '$profile',
-                '$rate1',
-                '$hour1',
-                '$rate2',
-                '$hour2',
-                '$rate3',
-                '$hour3',
-                '$rate4',
-                '$hour4'
-                )";
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s'
+                )",
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($profile),
+                addslashes($rate1),
+                addslashes($hour1),
+                addslashes($rate2),
+                addslashes($hour2),
+                addslashes($rate3),
+                addslashes($hour3),
+                addslashes($rate4),
+                addslashes($hour4)
+                );
                 dprint($query);
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->affected_rows() >0) {
@@ -1804,16 +1947,17 @@ class RatingTables {
                     $failed++;
                 }
             } else if ($ops=="3") {
-                $query="delete from billing_profiles
-                where name = '$profile'
-                and hour1  = '$hour1'
-                and hour2  = '$hour2'
-                and hour3  = '$hour3'
-                and hour4  = '$hour4'
-                and gateway    = '$gateway'
-                and domain     = '$domain'
-                and subscriber = '$subscriber'
-                ";
+                $query=sprintf("delete from billing_profiles
+                where name     = '%s'
+                and gateway    = '%s'
+                and domain     = '%s'
+                and subscriber = '%s'
+                ",
+                addslashes($profile),
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber)
+                );
                 dprint($query);
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->affected_rows() >0) {
@@ -1821,41 +1965,53 @@ class RatingTables {
                 }
 
             } else if ($ops=="2") {
-                $query="select * from billing_profiles
-                where name = '$profile'
-                and hour1  = '$hour1'
-                and hour2  = '$hour2'
-                and hour3  = '$hour3'
-                and hour4  = '$hour4'
-                and gateway    = '$gateway'
-                and domain     = '$domain'
-                and subscriber = '$subscriber'
-                ";
+                $query=sprintf("select * from billing_profiles
+                where name     = '%s'
+                and gateway    = '%s'
+                and domain     = '%s'
+                and subscriber = '%s'\n",
+                addslashes($profile),
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber)
+                );
 
                 dprint($query);
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->num_rows()) {
-                    $query="update billing_profiles set
-                    rate_name1 = '$rate1',
-                    rate_name2 = '$rate2',
-                    rate_name3 = '$rate3',
-                    rate_name4 = '$rate4'
-                    where name = '$profile'
-                    and hour1  = '$hour1',
-                    and hour2  = '$hour2',
-                    and hour3  = '$hour3',
-                    and hour4  = '$hour4'
-                    and gateway    = '$gateway'
-                    and domain     = '$domain'
-                    and subscriber = '$subscriber'
-                    ";
-
+                    $query=sprintf("update billing_profiles set
+                    rate_name1     = '%s',
+                    rate_name2     = '%s',
+                    rate_name3     = '%s',
+                    rate_name4     = '%s',
+                    hour1          = '%s',
+                    hour2          = '%s',
+                    hour3          = '%s',
+                    hour4          = '%s'
+                    where name     = '%s'
+                    and gateway    = '%s'
+                    and domain     = '%s'
+                    and subscriber = '%s'\n",
+                    addslashes($rate1),
+                    addslashes($rate2),
+                    addslashes($rate3),
+                    addslashes($rate4),
+                    addslashes($hour1),
+                    addslashes($hour2),
+                    addslashes($hour3),
+                    addslashes($hour4),
+                    addslashes($profile),
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber)
+                    );
+                	dprint($query);
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows()) {
                         $updated++;
                     }
                 } else {
-                    $query="insert into billing_profiles
+                    $query=sprintf("insert into billing_profiles
                     (
                     gateway,
                     domain,
@@ -1870,19 +2026,32 @@ class RatingTables {
                     rate_name4,
                     hour4
                     ) values (
-                    '$gateway',
-                    '$domain',
-                    '$subscriber',
-                    '$profile',
-                    '$rate1',
-                    '$hour1',
-                    '$rate2',
-                    '$hour2',
-                    '$rate3',
-                    '$hour3',
-                    '$rate4',
-                    '$hour4'
-                    )";
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s'
+                    )",
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($profile),
+                    addslashes($rate1),
+                    addslashes($hour1),
+                    addslashes($rate2),
+                    addslashes($hour2),
+                    addslashes($rate3),
+                    addslashes($hour3),
+                    addslashes($rate4),
+                    addslashes($hour4)
+                    );
                     dprint($query);
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows() >0) {

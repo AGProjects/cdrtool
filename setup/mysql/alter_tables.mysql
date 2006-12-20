@@ -365,3 +365,10 @@ alter table billing_customers add column min_duration smallint unsigned not null
 
 4.8.1
 alter table asterisk_cdr change column disposition disposition varchar(45) not null default '';
+
+5.0-2
+alter table billing_profiles drop index `profile_idx` ;
+alter table billing_profiles add  UNIQUE KEY `profile_idx` (`gateway`,`domain`,`subscriber`,`name`);
+alter table billing_rates drop index `rate_idx` ;
+alter table billing_rates add   UNIQUE KEY `profile_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`);
+alter table billing_customers add column country_code varchar(8) not NULL;

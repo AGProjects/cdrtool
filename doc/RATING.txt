@@ -215,8 +215,8 @@ The updates are performed based on a unique key present in each table:
 
 billing_customers   - cust_idx (gateway,domain,subscriber)
 destinations        - cust_dest_idx (gateway,domain,subscriber,dest_id)
-billing_profiles    - profile_idx (name,hour1,hour2,hour3,hour4)
-billing_rates       - rate_idx (name,destination)
+billing_profiles    - profile_idx (gateway,domain,subscriber,name)
+billing_rates       - rate_idx (gateway,domain,subscriber,name,destination)
 billing_ratesNGN    - rate_idx (name);
 billing_profilesNGN - profile_idx (name,application);
 
@@ -245,6 +245,7 @@ billing_customers
 | timezone          |
 | increment         |
 | min_duration      |
+| country_code      |
 +-------------------+
 
 billing_profiles

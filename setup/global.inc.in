@@ -94,9 +94,6 @@ $CDRTool['statistics']['zoneFilter']=array("example1.com","example2.com"); // ca
 
 
 ###########################################
-# Import settings
-$CDRTool['import']['stripFromDestination']   = "0";
-
 # usage statistics
 # filter local SIP domains if many do not have traffic  
 $CDRTool['statistics']['zoneFilter']=array("example1.com",
