@@ -2264,6 +2264,8 @@ class RatingTables {
             $increment    = $this->cdrtool->Record['increment'];
             $min_duration = $this->cdrtool->Record['min_duration'];
 
+            $country_code = $this->cdrtool->Record['country_code'];
+
             if ($profile1 || $profile2 || $profileNGN) {
                 $i++;
                 if ($subscriber) {
@@ -2279,7 +2281,8 @@ class RatingTables {
         	                "profileNGN"   => $profileNGN,
             	            "timezone"     => $timezone,
                             "increment"    => $increment,
-                            "min_duration" => $min_duration
+                            "min_duration" => $min_duration,
+                            "country_code" => $country_code
                 	        );
                     }
                     continue;
@@ -2298,7 +2301,8 @@ class RatingTables {
                         	"profileNGN"   => $profileNGN,
 	                        "timezone"     => $timezone,
                             "increment"    => $increment,
-                            "min_duration" => $min_duration
+                            "min_duration" => $min_duration,
+                            "country_code" => $country_code
                         );
                     }
                     continue;
@@ -2309,15 +2313,16 @@ class RatingTables {
                     foreach ($_els as $_el) {
                     	$_el=trim($_el);
 	                    $_customers[$_el]=
-                        array (
-                        "profile1"     => $profile1,
-                        "profile2"     => $profile2,
-                        "profile1_alt" => $profile1_alt,
-                        "profile2_alt" => $profile2_alt,
-                        "profileNGN"   => $profileNGN,
-                        "timezone"     => $timezone,
-                        "increment"    => $increment,
-                        "min_duration" => $min_duration
+                            array (
+                            "profile1"     => $profile1,
+                            "profile2"     => $profile2,
+                            "profile1_alt" => $profile1_alt,
+                            "profile2_alt" => $profile2_alt,
+                            "profileNGN"   => $profileNGN,
+                            "timezone"     => $timezone,
+                            "increment"    => $increment,
+                            "min_duration" => $min_duration,
+                            "country_code" => $country_code
                         );
                     }
                     continue;
@@ -2332,7 +2337,8 @@ class RatingTables {
                         "profileNGN"   => $profileNGN,
                         "timezone"     => $timezone,
                         "increment"    => $increment,
-                        "min_duration" => $min_duration
+                        "min_duration" => $min_duration,
+                        "country_code" => $country_code
                         );
              }
 

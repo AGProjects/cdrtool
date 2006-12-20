@@ -857,26 +857,8 @@ class CDRS {
         return 1;
     }
 
-    function E164Format($Number) {
-        // this function retuns the full E164 format for a PSTN number
-        // without leading zero or +
-        // E164 = Country Code + Network Code + Subscriber Number
-
-        $_regexp_international = "/^".$this->intAccessCode."([0-9]{5,})\$/";
-        $_regexp_national      = "/^".$this->natAccessCode."([0-9]{5,})\$/";
-
-        if (preg_match($_regexp_international,$Number,$m)) {
-            $E164 = $m[1];
-        } else if (preg_match($_regexp_national,$Number,$m)) {
-            // Add default country code
-            $E164=$this->CDRTool['normalize']['defaultCountryCode'].$m[1];
-        }
-
-        return $E164;
-    }
-
-    function NormalizeNumber($Number,$type="destination",$subscriber="",$domain="",$gateway="") {
-        dprint("CDRS->NormalizeNumber($Number,type=$type,subscriber=$subscriber,domain=$domain,gateway=$gateway)");
+    function NormalizeNumber($Number,$type="destination",$subscriber="",$domain="",$gateway="",$CountryCode) {
+        dprint("CDRS->NormalizeNumber($Number,type=$type,subscriber=$subscriber,domain=$domain,gateway=$gateway,CountryCode=$CountryCode)");
 
         $this->CSCODE="";
 
@@ -948,9 +930,11 @@ class CDRS {
 				$E164_class = "E164_Europe";
             }
 
-            $E164 =  new $E164_class($this->intAccessCode, $this->natAccessCode,$this->CDRTool['normalize']['defaultCountryCode']);
+			if (!$CountryCode) $CountryCode=$this->CDRTool['normalize']['defaultCountryCode'];
 
-            $NumberStack['E164']=$E164->E164Format($NumberStack['username']);;
+            $E164 =  new $E164_class($this->intAccessCode, $this->natAccessCode,$CountryCode);
+
+            $NumberStack['E164']=$E164->E164Format($NumberStack['username']);
         }
 
         if ($type=="destination" && $NumberStack[E164]) {
@@ -1513,8 +1497,6 @@ class E164 {
         // If nothing is returned by this function the session is considered
         // an Internet destination and no PSTN rating is applied
 
-    	global $CDRTool;
-
         if (preg_match($this->regexp_international,$Number,$m)) {
             dprint("International number");
             return $m[1];
@@ -1537,9 +1519,10 @@ class E164_Europe extends E164 {
 }
 
 class E164_US extends E164 {
-    function E164_US($intAccessCode='011', $natAccessCode='[1-9][0-9]{2}') {
+    function E164_US($intAccessCode='011', $natAccessCode='[1-9][0-9]{2}',$CountryCode='') {
         $this->regexp_international = "/^".$intAccessCode."([1-9][0-9]{5,})\$/";
         $this->regexp_national      = "/^".$natAccessCode."([0-9]{3,})\$/";
+        $this->CountryCode          = $CountryCode;
     }
 }
 
@@ -1703,7 +1686,7 @@ class CDR {
                 } else {
                 	dprint("Get rates from MySQL tables loaded in memory");
 
-                    // get pricing from mysql tables loaded in memeory
+                    // get pricing from mysql tables loaded in memory
                     $RateDictionary=array(
                                           'id'              => $this->id,
                                           'timestamp'       => $this->timestamp,
