@@ -1,13 +1,13 @@
 cdrtool (5.0-2) unstable; urgency=low
 
-  * The Import script for the rating files automtically detects if
+  * The Import script for the rating files automatically detects if
     a file has been previously imported and skips it
   * Hide non-existent radius tables from datasource selection
   * Fixed indexes of rating tables (see alter_tables.mysql)
   * Fixed errors present in CSV import functions
   * Added Country_code per customer, can be used within normalization class
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 20 Dec 2006 13:18:13 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 20 Dec 2006 18:49:55 +0100
 
 cdrtool (5.0-1) unstable; urgency=low
 
