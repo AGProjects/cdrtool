@@ -198,6 +198,14 @@ the following command:
 
 /var/www/CDRTool/scripts/importRatingTables.php
 
+The import script knows to import the files only once so you may dump
+several files there and safely run the import script from cron. The
+import script detects whether the files have been imported by building
+a unique key out of the filename and the hash of the file content. So
+you may use the same filenames as long as the content differs and
+viceversa. If the import file has changed any records, the rating
+engine is automatically instructed to reload the changes.
+
 Sample csv files are found in the setup directory. The CSV field order
 is described in setup/*.csv sample files. The first element on each
 line specifies the operation will be performed with the current record.

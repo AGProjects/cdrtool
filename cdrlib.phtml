@@ -1078,12 +1078,11 @@ class CDRS {
         $t=count($_tables);
 
 		if ($this->table) $this->tables[]=$this->table;
-        if (preg_match("/^(\w+)\d{6}$/",$this->table,$m)) {
-        	$this->tables[]=$m[1];
-        }
 
         while ($t <> 0 ) {
             $_table=$_tables[$t]["table_name"];
+            if ($_table=='radacct') $this->tables[]='radacct';
+
             if (preg_match("/^(\w+)\d{6}$/",$_table,$m)) {
                 if ($list_t >24) break;
                 $this->tables[]=$_table;

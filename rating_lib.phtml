@@ -904,6 +904,16 @@ class Rate {
 
 class RatingTables {
 
+	var $filesToImport=array();
+    var $importFilesPatterns=array('profilesNGN',
+                                   'ratesNGN',
+                                   'rates',
+                                   'profiles',
+                                   'destinations',
+                                   'customers'
+                                   );
+
+
     function RatingTables () {
         global $CDRTool;
 
@@ -1131,23 +1141,30 @@ class RatingTables {
 
     }
 
-    function ImportCSVFiles() {
-        $this->ImportCustomers();
-        $this->ImportProfilesPSTN();
-        $this->ImportProfilesNGN();
-        $this->ImportDestinations();
-        $this->ImportRates();
-        $this->ImportRatesNGN();
+    function ImportCSVFiles($dir) {
+        $mustReload=0;
+        if (!$dir) $dir=$this->CDRTool["Path"]."/csv";
+
+        $this->scanFilesForImport($dir);
+
+        foreach ($this->filesToImport as $file) {
+            $importFunction="Import".ucfirst($file['type']);
+            $results = $this->$importFunction($file['path']);
+            $this->logImport($dir,$file['name'],$file['watermark'],$results);
+            $mustReload=$mustReload+$results;
+        }
+
+        return $mustReload;
     }
 
     function ImportRates($file='') {
         if (!$file) {
             $file=$this->CDRTool["Path"]."/csv/rates.csv";
         }
-        dprint("ImportRates($file)");
+
         if (!is_readable($file)) return 0;
 
-	    $digits = $this->CDRTool[normalize][stripFromDestination];
+        $digits = $this->CDRTool[normalize][stripFromDestination];
         $i=0;
         if (!$fp = fopen($file, "r")) {
             return;
@@ -1287,12 +1304,17 @@ class RatingTables {
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
 
+        $results=$inserted+$updated+$deleted;
+
+        return $results;
+
     }
 
     function ImportRatesNGN($file='') {
         if (!$file) {
             $file=$this->CDRTool["Path"]."/csv/ratesNGN.csv";
         }
+
         dprint("ImportRatesNGN($file)");
         if (!is_readable($file)) return 0;
 
@@ -1356,14 +1378,14 @@ class RatingTables {
                     $deleted++;
                 }
             } else if ($ops=="2") {
-                $query="select from billing_ratesNGN
+                $query="select * from billing_ratesNGN
                 where name ='$name'";
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->num_rows()) {
                     $query="update billing_ratesNGN set
                     TrafficRate = '$TrafficRate',
                     ConnectCost = '$ConnectCost'
-                    where name ='$name'
+                    where name = '$name'
                     and gateway      = '$gateway'
                     and domain       = '$domain'
                     and subscriber   = '$subscriber'
@@ -1417,6 +1439,8 @@ class RatingTables {
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
 
+        $results=$inserted+$updated+$deleted;
+        return $results;
     }
 
     function ImportCustomers($file='') {
@@ -1426,6 +1450,7 @@ class RatingTables {
 
         dprint("ImportCustomers($file)");
         if (!is_readable($file)) return 0;
+
         $i=0;
         if (!$fp = fopen($file, "r")) {
             dprint ("Failed to open $file\n");
@@ -1571,6 +1596,8 @@ class RatingTables {
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
 
+        $results=$inserted+$updated+$deleted;
+        return $results;
     }
 
     function ImportDestinations($file='') {
@@ -1648,12 +1675,11 @@ class RatingTables {
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->num_rows()) {
                     $query="update destinations set
-                    dest_name  = '$dest_name'
-
-                    where gateway      = '$gateway'
-                    and domain         = '$domain'
-                    and subscriber     = '$subscriber'
-                    and dest_id        = '$dest_id'
+                    dest_name      = '$dest_name'
+                    where gateway  = '$gateway'
+                    and domain     = '$domain'
+                    and subscriber = '$subscriber'
+                    and dest_id    = '$dest_id'
                     ";
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows()) {
@@ -1694,13 +1720,15 @@ class RatingTables {
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
 
+        $results=$inserted+$updated+$deleted;
+        return $results;
     }
 
-    function ImportProfilesPSTN($file='') {
+    function ImportProfiles($file='') {
         if (!$file) {
             $file=$this->CDRTool["Path"]."/csv/profiles.csv";
         }
-        dprint("ImportProfilesPSTN($file)");
+        dprint("ImportProfiles($file)");
         if (!is_readable($file)) return 0;
 
         $i=0;
@@ -1782,9 +1810,9 @@ class RatingTables {
                 and hour2  = '$hour2'
                 and hour3  = '$hour3'
                 and hour4  = '$hour4'
-                and gateway      = '$gateway'
-                and domain       = '$domain'
-                and subscriber   = '$subscriber'
+                and gateway    = '$gateway'
+                and domain     = '$domain'
+                and subscriber = '$subscriber'
                 ";
                 dprint($query);
                 $this->cdrtool->query($query);
@@ -1793,15 +1821,15 @@ class RatingTables {
                 }
 
             } else if ($ops=="2") {
-                $query="select from billing_profiles
+                $query="select * from billing_profiles
                 where name = '$profile'
                 and hour1  = '$hour1'
                 and hour2  = '$hour2'
                 and hour3  = '$hour3'
                 and hour4  = '$hour4'
-                and gateway      = '$gateway'
-                and domain       = '$domain'
-                and subscriber   = '$subscriber'
+                and gateway    = '$gateway'
+                and domain     = '$domain'
+                and subscriber = '$subscriber'
                 ";
 
                 dprint($query);
@@ -1812,15 +1840,14 @@ class RatingTables {
                     rate_name2 = '$rate2',
                     rate_name3 = '$rate3',
                     rate_name4 = '$rate4'
-
                     where name = '$profile'
                     and hour1  = '$hour1',
                     and hour2  = '$hour2',
                     and hour3  = '$hour3',
                     and hour4  = '$hour4'
-                    and gateway      = '$gateway'
-                    and domain       = '$domain'
-                    and subscriber   = '$subscriber'
+                    and gateway    = '$gateway'
+                    and domain     = '$domain'
+                    and subscriber = '$subscriber'
                     ";
 
                     $this->cdrtool->query($query);
@@ -1873,6 +1900,8 @@ class RatingTables {
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
 
+        $results=$inserted+$updated+$deleted;
+        return $results;
     }
 
     function ImportProfilesNGN($file='') {
@@ -1931,9 +1960,9 @@ class RatingTables {
                 $query="delete from billing_profilesNGN
                 where name =  '$profile'
                 and application = '$application'
-                and gateway      = '$gateway'
-                and domain       = '$domain'
-                and subscriber   = '$subscriber'
+                and gateway     = '$gateway'
+                and domain      = '$domain'
+                and subscriber  = '$subscriber'
                 ";
                 //dprint($query);
                 $this->cdrtool->query($query);
@@ -1945,9 +1974,9 @@ class RatingTables {
                 $query="select * from billing_profilesNGN
                 where name      = '$profile'
                 and application = '$application'
-                and gateway      = '$gateway'
-                and domain       = '$domain'
-                and subscriber   = '$subscriber'
+                and gateway     = '$gateway'
+                and domain      = '$domain'
+                and subscriber  = '$subscriber'
                 ";
                 //dprint($query);
                 $this->cdrtool->query($query);
@@ -1956,9 +1985,9 @@ class RatingTables {
                     rate = '$rate'
                     where name      = '$profile'
                     and application = '$application'
-                    and gateway      = '$gateway'
-                    and domain       = '$domain'
-                    and subscriber   = '$subscriber'
+                    and gateway     = '$gateway'
+                    and domain      = '$domain'
+                    and subscriber  = '$subscriber'
                     ";
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows() >0) {
@@ -2000,12 +2029,14 @@ class RatingTables {
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
 
+        $results=$inserted+$updated+$deleted;
+        return $results;
     }
 
     function LoadRatingTables () {
         $loaded=array();
     	$loaded['customers']    = $this->LoadCustomersTable();
-        $loaded['profilesPSTN'] = $this->LoadProfilesPSTNTable();
+        $loaded['profilesPSTN'] = $this->LoadProfilesTable();
         $loaded['ratesPSTN']    = $this->LoadRatesTable();
         $loaded['profilesNGN']  = $this->LoadProfilesNGNTable();
         $loaded['ratesNGN']     = $this->LoadRatesNGNTable();
@@ -2207,7 +2238,7 @@ class RatingTables {
         return $i;
     }
 
-    function LoadProfilesPSTNTable() {
+    function LoadProfilesTable() {
         $query="select * from billing_profiles order by name";
         $this->cdrtool->query($query);
 
@@ -2308,6 +2339,63 @@ class RatingTables {
         	$rates=$rates.$key."\n";
         }
         return $rates;
+    }
+
+    function scanFilesForImport($dir) {
+        if (!$dir) $dir=$this->CDRTool["Path"]."/csv";
+
+        if ($handle = opendir($dir)) {
+            while (false !== ($filename = readdir($handle))) {
+                if ($filename != "." && $filename != "..") {
+                    foreach ($this->importFilesPatterns as $_pattern) {
+                        if (strstr($filename,$_pattern) && preg_match("/\.csv$/",$filename)) {
+                            if (!in_array($filename,$files)) {
+                                $fullPath=$dir."/".$filename;
+                                if ($content=file_get_contents($fullPath)) {
+                                    $watermark=$filename."-".md5($content);
+                                    if ($this->hasFileBeenImported($filename,$watermark)) continue;
+
+                                    $this->filesToImport[]=array( 'name'      => $filename,
+                                                                  'watermark' => $watermark,
+                                                                  'type'      => $_pattern,
+                                                                  'path'      => $fullPath
+                                                                  );
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function hasFileBeenImported($filename,$watermark) {
+        $query=sprintf("select * from log where url = '%s'\n",$watermark);
+        dprint($query);
+        if ($this->cdrtool->query($query)) {
+            if ($this->cdrtool->num_rows()) {
+                $this->cdrtool->next_record();
+                $log=sprintf ("File %s has already been imported at %s.\n",$filename,$this->cdrtool->f('date'));
+    			syslog(LOG_NOTICE, $log);
+                print $log;
+                return 1;
+            } else {
+                return 0;
+            }
+        } else {
+            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+            return 0;
+        }
+    }
+
+    function logImport($dir,$filename,$watermark,$results=0) {
+    	$query=sprintf("insert into log (date,login,ip,url,results,description,datasource)
+        values (NOW(),'ImportScript','localhost','%s','%s','Imported %s','%s')",
+        $watermark,$results,$filename,$dir
+        );
+        dprint($query);
+        $this->cdrtool->query($query);
     }
 
 }

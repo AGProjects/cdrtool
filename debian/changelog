@@ -1,3 +1,11 @@
+cdrtool (5.0-2) unstable; urgency=low
+
+  * The Import script for the rating files automtically detects if 
+    a file has been previously imported and skips it
+  * Hide non-existent radius tables from datasource selection
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 20 Dec 2006 11:25:14 +0100
+
 cdrtool (5.0-1) unstable; urgency=low
 
   * Added scripts to display quota usage and settings
