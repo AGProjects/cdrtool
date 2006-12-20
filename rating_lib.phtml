@@ -2205,7 +2205,7 @@ class RatingTables {
     function LoadRatingTables () {
         $loaded=array();
     	$loaded['customers']    = $this->LoadCustomersTable();
-        $loaded['profilesPSTN'] = $this->LoadProfilesTable();
+        $loaded['profilesPSTN'] = $this->LoadProfilesPSTNTable();
         $loaded['ratesPSTN']    = $this->LoadRatesTable();
         $loaded['profilesNGN']  = $this->LoadProfilesNGNTable();
         $loaded['ratesNGN']     = $this->LoadRatesNGNTable();
@@ -2413,7 +2413,7 @@ class RatingTables {
         return $i;
     }
 
-    function LoadProfilesTable() {
+    function LoadProfilesPSTNTable() {
         $query="select * from billing_profiles order by name";
         $this->cdrtool->query($query);
 

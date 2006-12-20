@@ -2185,12 +2185,6 @@ class CDR_ser_radius extends CDR {
             }
         }
 
-        if (!$this->BillingPartyId) {
-            $this->BillingPartyId=$this->aNumberPrint;
-        }
-
-		$this->BillingPartyId=strtolower($this->BillingPartyId);
-
         dprint("<b>A number</b>");
         $NormalizedNumber        = $this->CDRS->NormalizeNumber($this->aNumber,"source");
 	    $this->aNumberPrint      = $NormalizedNumber[NumberPrint];
@@ -2199,20 +2193,22 @@ class CDR_ser_radius extends CDR {
 		if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'])
             && in_array($this->domain,array_keys($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation']))
         	&& strlen($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain])) {
-
             $this->domainNormalized=$this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain];
-
 		} else if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation'])
             && in_array($this->SourceIP,array_keys($this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation']))
             && strlen($this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation'][$this->SourceIP])) {
-
             $this->domainNormalized=$this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation'][$this->SourceIP];
-
         } else {
         	$this->domainNormalized=$this->domain;
         }
 
 		$this->domainNormalized=strtolower($this->domainNormalized);
+
+        if (!$this->BillingPartyId) {
+            $this->BillingPartyId=$this->aNumberPrint;
+        }
+
+		$this->BillingPartyId=strtolower($this->BillingPartyId);
 
         if (!$this->domain) {
             $_els=explode("@",$this->BillingPartyId);
