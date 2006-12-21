@@ -410,9 +410,9 @@ class CDRS_asterisk extends CDRS {
         $z=0;
         
         if  ($rows>0) {
-            if ($UnNormalizedCalls=$this->getUnNormalized($where)) {
+            if ($UnNormalizedCalls=$this->getUnNormalized($where,$cdr_table)) {
                 dprint("Normalize calls");
-                $this->NormalizeCDRS($where);
+                $this->NormalizeCDRS($where,$cdr_table);
 
                 if (!$this->export && $this->status['normalized'] ) {
                     printf ("<p> Found %d CDRs for normalization. ",$this->status['normalized']);
@@ -451,19 +451,19 @@ class CDRS_asterisk extends CDRS {
                 SEC_TO_TIME(sum($this->durationField)) as hours,
                 count($group_by) as calls, ";
                 if ($this->priceField) {
-                    $query=$query." sum($this->priceField) as price, ";
+                    $query.=" sum($this->priceField) as price, ";
                 }
-                $query=$query." 
+                $query.=" 
         		SUM($this->durationField = '0') as zero,
                 SUM($this->durationField > '0') as nonzero,
                 ";
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
-                    $query=$query."
+                    $query.="
                     SUM($this->durationField = '0')/count($group_by)*100 as zeroP,
                     SUM($this->durationField > '0')/count($group_by)*100 as nonzeroP,
                     ";
                 }
-                $query=$query."
+                $query.="
                 $group_by as mygroup
                 from $cdr_table
                 where $where

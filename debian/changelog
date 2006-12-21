@@ -6,8 +6,9 @@ cdrtool (5.0-2) unstable; urgency=low
   * Fixed indexes of rating tables (see alter_tables.mysql)
   * Fixed errors present in CSV import functions
   * Added Country_code per customer, can be used within normalization class
+  * Fixed normalization of calls in previous monthly tables
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 20 Dec 2006 18:49:55 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 21 Dec 2006 09:17:24 +0100
 
 cdrtool (5.0-1) unstable; urgency=low
 

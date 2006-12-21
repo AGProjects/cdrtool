@@ -267,7 +267,7 @@ $CDRToolModules=array("ser","cisco","asterisk","custom","rating");
 $tz=$CDRTool['provider']['timezone'];
 putenv("TZ=$tz");
 
-if ($REMOTE_ADDR=="10.0.0.1") {
+if ($_SERVER['REMOTE_ADDR']=="10.0.0.1") {
     // display debug information only from this host 
     //$verbose=1;
 } else {

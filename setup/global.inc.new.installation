@@ -149,7 +149,7 @@ $DATASOURCES=array(
 // load CDRTool libraries 
 $CDRToolModules=array("ser","asterisk","rating");
 
-if ($REMOTE_ADDR=="10.0.0.1") {
+if ($_SERVER['REMOTE_ADDR']=="10.0.0.1") {
     //$verbose=1;
 } else {
     // prevent set of verbose via post/get

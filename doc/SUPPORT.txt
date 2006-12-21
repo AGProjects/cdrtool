@@ -2,7 +2,7 @@ Mailing list support
 --------------------
 
 Places where one may find support from the communities using CDRTool like
-(Open)SER and Asterisk:
+OpenSER and Asterisk:
 
 - http://www.freelists.org/list/cdrtool-users 
 - http://openser.org/cgi-bin/mailman/listinfo/users

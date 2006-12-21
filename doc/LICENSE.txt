@@ -1,7 +1,7 @@
 
 CDRTool is licensed under GNU PUBLIC LICENSE version 2.0.
 
-Copyright (c) 2002-2005 AG Projects 
+Copyright (c) 2002-2007 AG Projects 
 http://ag-projects.com
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS "AS IS" AND ANY EXPRESS

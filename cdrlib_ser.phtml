@@ -1079,22 +1079,22 @@ class CDRS_ser_radius extends CDRS {
         }
 
         if ($order_by) {
-            $this->url=$this->url."&order_by=$order_by&order_type=$order_type";
+            $this->url.="&order_by=$order_by&order_type=$order_type";
         }
 
-        $this->url=$this->url."&begin_datetime=$begin_datetime_url";
-        $this->url=$this->url."&end_datetime=$end_datetime_url";
+        $this->url.="&begin_datetime=$begin_datetime_url";
+        $this->url.="&end_datetime=$end_datetime_url";
 
         if (!$call_id && $begin_datetime && $end_datetime) {
-            $where = $where . " ($this->startTimeField >= '$begin_datetime' and $this->startTimeField < '$end_datetime') ";
+            $where .=  " ($this->startTimeField >= '$begin_datetime' and $this->startTimeField < '$end_datetime') ";
         } else {
-            $where = $where . " ($this->startTimeField >= '1970-01-01' ) ";
+            $where .=  " ($this->startTimeField >= '1970-01-01' ) ";
         }
 
         if ($MONTHYEAR) {
-            $where = $where . " and $this->startTimeField like '$MONTHYEAR%' ";
+            $where .=  " and $this->startTimeField like '$MONTHYEAR%' ";
             $MONTHYEAR_url=urlencode($MONTHYEAR);
-        	$this->url=$this->url."&MONTHYEAR=$MONTHYEAR_url";
+        	$this->url.="&MONTHYEAR=$MONTHYEAR_url";
         }
 
         if ($this->CDRTool['filter']['aNumber']) {
@@ -1141,24 +1141,24 @@ class CDRS_ser_radius extends CDRS {
                 } elseif ($UserName_comp=="equal") {
                     $where .= " and $this->usernameField = '".addslashes($UserName)."'";
                 }
-                $this->url=$this->url."&UserName=$UserName_encoded&UserName_comp=$UserName_comp";
+                $this->url.="&UserName=$UserName_encoded&UserName_comp=$UserName_comp";
             }
 
         } else {
             $where .= " and $this->usernameField = ''";
-            $this->url=$this->url."&UserName_comp=$UserName_comp";
+            $this->url.="&UserName_comp=$UserName_comp";
         }
 
         $a_number=trim($a_number);
         if ($a_number_comp == "empty") {
             $where .= " and $this->aNumberField = ''";
-            $this->url=$this->url."&a_number_comp=$a_number_comp";
+            $this->url.="&a_number_comp=$a_number_comp";
         } else if (strlen($a_number)) {
             $a_number=urldecode($a_number);
             if (!$a_number_comp) $a_number_comp="equal";
             $a_number_encoded=urlencode($a_number);
 
-            $this->url=$this->url."&a_number=$a_number_encoded";
+            $this->url.="&a_number=$a_number_encoded";
 
             if ($a_number_comp=="begin") {
                 $where .= " and ($this->aNumberField like '".addslashes($a_number)."%'";
@@ -1177,7 +1177,7 @@ class CDRS_ser_radius extends CDRS {
                 if ($s) $where .= ")";
             }
 
-            $this->url=$this->url."&a_number_comp=$a_number_comp";
+            $this->url.="&a_number_comp=$a_number_comp";
 
         }
 
@@ -1201,7 +1201,7 @@ class CDRS_ser_radius extends CDRS {
             $Realm=urldecode($Realm);
             $where .= " and $this->domainField like '".addslashes($Realm)."%' ";
             $Realm_encoded=urlencode($Realm);
-            $this->url=$this->url."&Realm=$Realm_encoded";
+            $this->url.="&Realm=$Realm_encoded";
         } else if ($Realms)  {
             $where .= "
             and (" ;
@@ -1221,13 +1221,13 @@ class CDRS_ser_radius extends CDRS {
         if (preg_match("/^\d+$/",$BillingId) && $this->BillingIdField) {
             $where .= " and $this->BillingIdField = '".addslashes($BillingId)."'";
             $BillingId_encoded=urlencode($BillingId);
-            $this->url=$this->url."&BillingId=$BillingId_encoded";
+            $this->url.="&BillingId=$BillingId_encoded";
         }
 
         if ($application) {
             $where .= " and $this->applicationTypeField like '%".addslashes($application)."%'";
             $application_encoded=urlencode($application);
-            $this->url=$this->url."&application=$application_encoded";
+            $this->url.="&application=$application_encoded";
         }
 
         if ($DestinationId) {
@@ -1238,7 +1238,7 @@ class CDRS_ser_radius extends CDRS {
             }
             $where .= " and $this->DestinationIdField = '".addslashes($DestinationIdSQL)."'";
             $DestinationId_encoded=urlencode($DestinationId);
-            $this->url=$this->url."&DestinationId=$DestinationId_encoded";
+            $this->url.="&DestinationId=$DestinationId_encoded";
         }
 
         if (strlen(trim($ExcludeDestinations))) {
@@ -1259,7 +1259,7 @@ class CDRS_ser_radius extends CDRS {
             }
 
             $ExcludeDestinations_encoded=urlencode($ExcludeDestinations);
-            $this->url=$this->url."&ExcludeDestinations=$ExcludeDestinations_encoded";
+            $this->url.="&ExcludeDestinations=$ExcludeDestinations_encoded";
 
         }
 
@@ -1269,13 +1269,13 @@ class CDRS_ser_radius extends CDRS {
             $call_id=urldecode($call_id);
             $where .= " and $this->callIdField = '".addslashes($call_id)."'";
             $call_id_encoded=urlencode($call_id);
-            $this->url=$this->url."&call_id=$call_id_encoded";
+            $this->url.="&call_id=$call_id_encoded";
         }
 
         if ($SipCodec) {
             $SipCodec_enc=urlencode($SipCodec);
 
-            $this->url=$this->url."&SipCodec=$SipCodec_enc";
+            $this->url.="&SipCodec=$SipCodec_enc";
         	if ($SipCodec != "empty") {
                 $where .= " and $this->SipCodecField = '".addslashes($SipCodec)."'";
         	} else {
@@ -1285,7 +1285,7 @@ class CDRS_ser_radius extends CDRS {
 
         if ($SipRPID) {
             $SipRPID_enc=urlencode($SipRPID);
-            $this->url=$this->url."&SipRPID=$SipRPID_enc";
+            $this->url.="&SipRPID=$SipRPID_enc";
         	if ($SipRPID != "empty") {
                 $where .= " and $this->SipRPIDField = '".addslashes($SipRPID)."'";
         	} else {
@@ -1296,17 +1296,17 @@ class CDRS_ser_radius extends CDRS {
         if ($SipUserAgents) {
             $where .= " and $this->SipUserAgentsField like '%".addslashes($SipUserAgents)."%'";
             $SipUserAgents_enc=urlencode($SipUserAgents);
-            $this->url=$this->url."&SipUserAgents=$SipUserAgents_enc";
+            $this->url.="&SipUserAgents=$SipUserAgents_enc";
         }
 
         if (strlen($SipStatus)) {
             $where .= " and $this->disconnectField ='".addslashes($SipStatus)."'";
-            $this->url=$this->url."&SipStatus=$SipStatus";
+            $this->url.="&SipStatus=$SipStatus";
         }
 
         if ($SipStatusClass) {
             $where .= " and $this->disconnectField like '$SipStatusClass%'";
-            $this->url=$this->url."&SipStatusClass=$SipStatusClass";
+            $this->url.="&SipStatusClass=$SipStatusClass";
         }
 
         if ($this->CDRTool[filter]["gateway"]) {
@@ -1316,7 +1316,7 @@ class CDRS_ser_radius extends CDRS {
             $gateway=urldecode($gateway);
             $gateway_encoded=urlencode($gateway);
             $where .= " and $this->gatewayField = '".addslashes($gateway)."'";
-            $this->url=$this->url."&gateway=$gateway_encoded";
+            $this->url.="&gateway=$gateway_encoded";
         }
 
         $c_number=trim($c_number);
@@ -1332,7 +1332,7 @@ class CDRS_ser_radius extends CDRS {
                 $where .= " and ($this->CanonicalURIField like '%".addslashes($c_number)."%' or $this->RemoteAddressField like '%".addslashes($c_number)."%') ";
             }
             $c_number_encoded=urlencode($c_number);
-            $this->url=$this->url."&c_number=$c_number_encoded&c_number_comp=$c_number_comp";
+            $this->url.="&c_number=$c_number_encoded&c_number_comp=$c_number_comp";
         }
 
         if ($duration) {
@@ -1351,20 +1351,20 @@ class CDRS_ser_radius extends CDRS {
             }
 
             $duration_enc=urlencode($duration);
-            $this->url=$this->url."&duration=$duration_enc";
+            $this->url.="&duration=$duration_enc";
 
         }
 
         if ($MediaTimeout) {
-            $this->url=$this->url."&MediaTimeout=1";
+            $this->url.="&MediaTimeout=1";
             $where .= " and $this->MediaTimeoutField > ''";
         }
 
-        $this->url=$this->url."&maxrowsperpage=$this->maxrowsperpage";
+        $this->url.="&maxrowsperpage=$this->maxrowsperpage";
         $url_calls = $this->scriptFile.$this->url."&action=search";
 
         if ($group_by) {
-            $this->url=$this->url."&group_by=$group_by";
+            $this->url.="&group_by=$group_by";
         }
 
         $this->url_edit	    = $this->scriptFile.$this->url."&action=edit";
@@ -1372,7 +1372,7 @@ class CDRS_ser_radius extends CDRS {
         $this->url_export	= $_SERVER["PHP_SELF"].$this->url."&action=search&export=1";
 
         if ($duration == "unnormalized") {
-            $where = $where . " and $this->normalizedField = '0' ";
+            $where .=  " and $this->normalizedField = '0' ";
         }
 
         if ($group_by) {
@@ -1451,8 +1451,15 @@ class CDRS_ser_radius extends CDRS {
         if ($rows>0)  {
             
             if ($call_id && $unnormalize) {
-                $query="update $cdr_table set $this->normalizedField = '0'
-                where  $this->callIdField = '$call_id'";
+                $query=sprintf("update %s
+                set %s = '0'
+                where %s = '%s'",
+                addslashes($cdr_table),
+                addslashes($this->normalizedField),
+                addslashes($this->callIdField),
+                addslashes($call_id)
+                );
+
                 dprint($query);
                 $this->CDRdb->query($query);
                 if ($this->CDRdb->affected_rows()) {
@@ -1462,9 +1469,9 @@ class CDRS_ser_radius extends CDRS {
                 }
             }
 
-            if ($UnNormalizedCalls=$this->getUnNormalized($where)) {
+            if ($UnNormalizedCalls=$this->getUnNormalized($where,$cdr_table)) {
                 dprint("Normalize calls");
-                $this->NormalizeCDRS($where);
+                $this->NormalizeCDRS($where,$cdr_table);
                 if (!$this->export && $this->status['normalized'] ) {
                     printf ("Found %d CDRs for normalization. ",$this->status['normalized']);
                     if ($this->status['cached_keys']['saved_keys']) {
@@ -1524,22 +1531,22 @@ class CDRS_ser_radius extends CDRS {
                 ";
 
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
-                    $query=$query."
+                    $query.="
                     SUM($this->durationField = '0')/count($group_by)*100 as zeroP,
                     SUM($this->durationField > '0')/count($group_by)*100 as nonzeroP,
                     ";
                 }
 
-                $query=$query."
+                $query.="
                 sum($this->inputTrafficField)*8*2/1024/sum($this->durationField) as netrate_in,
                 sum($this->outputTrafficField)*8*2/1024/sum($this->durationField) as netrate_out
                 ";
 
                 if ($this->priceField) {
-                    $query=$query. ", sum($this->priceField) as $this->priceField ";
+                    $query.= ", sum($this->priceField) as $this->priceField ";
                 }
 
-                $query=$query. "
+                $query.= "
                 , $group_by as mygroup
                 from $cdr_table
                 where $where
@@ -3584,9 +3591,9 @@ class CDRS_ser_acc extends CDRS  {
             }
         }
 
-        $this->url=$this->url."&order_by=$order_by&order_type=$order_type";
-        $this->url=$this->url."&begin_datetime=$begin_datetime_url";
-        $this->url=$this->url."&end_datetime=$end_datetime_url";
+        $this->url.="&order_by=$order_by&order_type=$order_type";
+        $this->url.="&begin_datetime=$begin_datetime_url";
+        $this->url.="&end_datetime=$end_datetime_url";
 
         if ($this->CDRTool['filter']['aNumber']) {
             $this->url   = $this->url."&UserNameS=".urlencode($this->CDRTool['filter']['aNumber']);
@@ -3640,20 +3647,20 @@ class CDRS_ser_acc extends CDRS  {
                 if ($a_number_comp != "empty") {
                     if ($a_number) {
                         $a_number_encoded=urlencode($a_number);
-                        $this->url="$this->url"."&a_number=$a_number_encoded";
+                        $this->url.="&a_number=$a_number_encoded";
                         if ($a_number_comp=="begin") {
-                                $where = "$where"." and (from_uri like 'sip:$a_number%'";
+                                $where .= " and (from_uri like 'sip:$a_number%'";
                         } elseif ($a_number_comp=="contain") {
-                                $where = "$where"." and (from_uri like 'sip:%$a_number%'";
+                                $where .= " and (from_uri like 'sip:%$a_number%'";
                         } elseif ($a_number_comp=="equal") {
-                                $where = "$where"." and (from_uri = 'sip:$a_number'";
+                                $where .= " and (from_uri = 'sip:$a_number'";
                         }
                         if ($this->CDRTool['filter']['aNumber']) {
                             $where .= " or to_uri like 'sip:$a_number%') ";
                         } else {
                             $where .= ")";
                         }
-                        $this->url=$this->url."&a_number_comp=$a_number_comp";
+                        $this->url.="&a_number_comp=$a_number_comp";
         
                     }
                 } else {
@@ -3668,32 +3675,32 @@ class CDRS_ser_acc extends CDRS  {
                 $UserName_comp="";
             } else if ($MissedFrom) {
                 $MissedFrom_encoded=urlencode($MissedFrom);
-                $this->url="$this->url"."&MissedFrom=$MissedFrom_encoded";
+                $this->url.="&MissedFrom=$MissedFrom_encoded";
                 if ($MissedFrom_comp=="contain") {
-                    $where = "$where"." and $this->aNumberField like '%$MissedFrom%'";
+                    $where .= " and $this->aNumberField like '%$MissedFrom%'";
                 }
-                $this->url=$this->url."&MissedFrom_comp=$MissedFrom_comp";
+                $this->url.="&MissedFrom_comp=$MissedFrom_comp";
             }
         }
         
         if (strlen($c_number)) {
             # Trim content of dest_form - allow only digits
             if ($c_number_comp=="begin") {
-                $where = "$where"." and to_uri like '%$c_number%'";
+                $where .= " and to_uri like '%$c_number%'";
             } elseif ($c_number_comp=="equal") {
-                $where = "$where"." and to_uri = '%$c_number'";
+                $where .= " and to_uri = '%$c_number'";
             } elseif ($c_number_comp=="contain") {
                 $where .= " and $this->cNumberField like '%$c_number%'";
             } else {
-                $where = "$where"." and to_uri like '%$c_number%'";
+                $where .= " and to_uri like '%$c_number%'";
             }
             $c_number_encoded=urlencode($c_number);
-            $this->url=$this->url."&c_number=$c_number_encoded&c_number_comp=$c_number_comp";
+            $this->url.="&c_number=$c_number_encoded&c_number_comp=$c_number_comp";
         }
         
         if ($SipMethod) {
-            $where = "$where"." and $this->SipMethodField ='$SipMethod'";
-            $this->url="$this->url"."&SipMethod=$SipMethod";
+            $where .= " and $this->SipMethodField ='$SipMethod'";
+            $this->url.="&SipMethod=$SipMethod";
         }
 
         if ($fromTag) {
@@ -3722,12 +3729,12 @@ class CDRS_ser_acc extends CDRS  {
                 } elseif ($UserName_comp=="equal") {
                     $where .= " and $this->usernameField = '$UserName'";
                 }
-                $this->url="$this->url"."&UserName=$UserName_encoded&UserName_comp=$UserName_comp";
+                $this->url.="&UserName=$UserName_encoded&UserName_comp=$UserName_comp";
             }
 
         } else {
             $where .= " and $this->usernameField = ''";
-            $this->url="$this->url"."&UserName_comp=$UserName_comp";
+            $this->url.="&UserName_comp=$UserName_comp";
         }
 
         $Realm=trim($Realm);
@@ -3742,7 +3749,7 @@ class CDRS_ser_acc extends CDRS  {
                 $Realm=urldecode($Realm);
                 $where .= " and ($this->aNumberField like '%@$Realm%' or $this->cNumberField like '%@$Realm%') ";
                 $Realm_encoded=urlencode($Realm);
-                $this->url="$this->url"."&Realm=$Realm_encoded";
+                $this->url.="&Realm=$Realm_encoded";
             }
 
         } else {
@@ -3781,23 +3788,23 @@ class CDRS_ser_acc extends CDRS  {
                 $Realm=urldecode($Realm);
                 $where .= " and ($this->aNumberField like '%@$Realm%' or $this->cNumberField like '%@$Realm%') ";
                 $Realm_encoded=urlencode($Realm);
-                $this->url="$this->url"."&Realm=$Realm_encoded";
+                $this->url.="&Realm=$Realm_encoded";
             }
         }
 
         if ($SipStatus) {
-            $where = "$where"." and $this->disconnectField ='$SipStatus'";
-            $this->url="$this->url"."&SipStatus=$SipStatus";
+            $where .= " and $this->disconnectField ='$SipStatus'";
+            $this->url.="&SipStatus=$SipStatus";
         }
 
         if ($SipStatusClass) {
-            $where = "$where"." and $this->disconnectField like '$SipStatusClass%'";
-            $this->url="$this->url"."&SipStatusClass=$SipStatusClass";
+            $where .= " and $this->disconnectField like '$SipStatusClass%'";
+            $this->url.="&SipStatusClass=$SipStatusClass";
         }
 
         if ($call_id) {
-            $where = "$where"." and $this->callIdField ='$call_id'";
-            $this->url="$this->url"."&call_id=$call_id";
+            $where .= " and $this->callIdField ='$call_id'";
+            $this->url.="&call_id=$call_id";
         }
         
         $this->url		=$this->url."&maxrowsperpage=$this->maxrowsperpage";
@@ -4724,9 +4731,9 @@ class SIPonline {
         $query=sprintf("select count(*) as c, user_agent
         from %s %s",$this->locationTable,$where);
         if ($domain) {
-            $query=$query.sprintf(" and domain = '%s' ",$domain);
+            $query.=sprintf(" and domain = '%s' ",$domain);
         }
-		$query=$query."
+		$query.="
         group by user_agent
         order by c DESC";
         dprint($query);
@@ -4833,13 +4840,10 @@ class SIPonline {
 
         $query="SELECT *, SEC_TO_TIME(UNIX_TIMESTAMP(expires)-UNIX_TIMESTAMP(NOW())) AS remain
                 FROM location
-                ";
-        if ($domain) {
-            $query=$query." where domain = '$domain'";
-        }
-        $query=$query."
-        ORDER BY domain ASC, username ASC
         ";
+        if ($domain) $query.=" where domain = '$domain'";
+
+        $query.= " ORDER BY domain ASC, username ASC ";
 
         $this->locationDB->query($query);
 
