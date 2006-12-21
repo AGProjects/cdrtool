@@ -213,14 +213,27 @@ The operation can be 2 (update/insert), 1 (insert) or 3 (delete).
 
 The updates are performed based on a unique key present in each table:
 
-billing_customers   - cust_idx (gateway,domain,subscriber)
+billing_customers   - cust_idx      (gateway,domain,subscriber)
 destinations        - cust_dest_idx (gateway,domain,subscriber,dest_id)
-billing_profiles    - profile_idx (gateway,domain,subscriber,name)
-billing_rates       - rate_idx (gateway,domain,subscriber,name,destination)
-billing_ratesNGN    - rate_idx (name);
-billing_profilesNGN - profile_idx (name,application);
+billing_profiles    - profile_idx   (gateway,domain,subscriber,name)
+billing_rates       - rate_idx      (gateway,domain,subscriber,name,destination)
+billing_ratesNGN    - rate_idx      (gateway,domain,subscriber,name);
+billing_profilesNGN - profile_idx   (gateway,domain,subscriber,name);
 
 The content of the rating tables can be exported in the Rating tables page.
+
+The import script detects the type of file to import based on its filename.
+The filename must contain the name of the destination table and end with .csv
+extension. Examples:
+
+- rates.csv or rates20061201.cvs will be loaded into the rates table
+- profiles.csv or profiles20061201.cvs will be loaded into the profiles table
+- destinations2006 will be loaded in the destinations table
+
+It is advisable to name the files in a consistent manner like tableYYYYMMDD.csv
+
+The results of the import operation is logged in the database and can be
+viewed in the Log section of the web interface and syslog.
 
 
 Rating database tables
@@ -379,7 +392,7 @@ engine is contacted for rating all calls. The rating engine is a daemon,
 which loads all rating tables and remains active in the server memory.
 Reload of rating tables is possible without stopping the daemon by
 connecting to it and issuing the reload command. The init.d script can alos
-be used fro reloading the rating engine with the current values from the
+be used for reloading the rating engine with the current values from the
 rating database.
 
 There are 3 ways of reloading the rating tables:
