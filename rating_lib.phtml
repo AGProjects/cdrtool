@@ -1152,27 +1152,29 @@ class RatingTables {
 
         foreach ($this->filesToImport as $file) {
             $importFunction="Import".ucfirst($file['type']);
+
+            printf("Reading file %s\n",$file['path']);
+
             $results = $this->$importFunction($file['path']);
+
             $this->logImport($dir,$file['name'],$file['watermark'],$results);
+
             $mustReload=$mustReload+$results;
         }
 
         return $mustReload;
     }
 
-    function ImportRates($file='') {
-        if (!$file) {
-            $file=$this->CDRTool["Path"]."/csv/rates.csv";
-        }
-
-        if (!is_readable($file)) return 0;
+    function ImportRates($file) {
+        dprint("ImportRates($file)");
+        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
 
         $i=0;
-        if (!$fp = fopen($file, "r")) {
-            return;
-        }
+        $inserted = 0;
+        $updated  = 0;
+        $deleted  = 0;
+
         print "Importing Rates:\n";
-        print "Reading file $file\n";
 
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
@@ -1287,6 +1289,7 @@ class RatingTables {
                     addslashes($subscriber)
                     );
 
+                    dprint($query);
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows() >0) {
                         $updated++;
@@ -1358,24 +1361,16 @@ class RatingTables {
 
     }
 
-    function ImportRatesNGN($file='') {
-        if (!$file) {
-            $file=$this->CDRTool["Path"]."/csv/ratesNGN.csv";
-        }
-
+    function ImportRatesNGN($file) {
         dprint("ImportRatesNGN($file)");
-        if (!is_readable($file)) return 0;
+        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
 
         $i=0;
-        if (!$fp = fopen($file, "r")) {
-            return;
-        }
-
         $inserted = 0;
         $updated  = 0;
         $deleted  = 0;
+
         print "Importing NGN Rates:\n";
-        print "Reading file $file\n";
 
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
@@ -1391,7 +1386,7 @@ class RatingTables {
             $ConnectCost     = trim($p[6]);
 
             if ($ops=="1") {
-                $query="insert into billing_ratesNGN
+                $query=sprintf("insert into billing_ratesNGN
                 (
                 gateway,
                 domain,
@@ -1400,13 +1395,20 @@ class RatingTables {
                 TrafficRate,
                 ConnectCost
                 ) values (
-                '$gateway',
-                '$domain',
-                '$subscriber',
-                '$name',
-                '$TrafficRate',
-                '$ConnectCost'
-                )";
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s'
+                )",
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($name),
+                addslashes($TrafficRate),
+                addslashes($ConnectCost)
+                );
                 //dprint($query);
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->affected_rows() >0) {
@@ -1415,36 +1417,60 @@ class RatingTables {
                     $failed++;
                 }
             } else if ($ops=="3") {
-                $query="delete from billing_ratesNGN
-                where name ='$name'
-                and gateway      = '$gateway'
-                and domain       = '$domain'
-                and subscriber   = '$subscriber'
-                ";
+                $query=sprintf("delete from billing_ratesNGN
+                where name     = '%s'
+                and gateway    = '%s'
+                and domain     = '%s'
+                and subscriber = '%s'
+                ",
+                addslashes($name),
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber)
+                );
+
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->affected_rows() >0) {
                     $deleted++;
                 }
             } else if ($ops=="2") {
-                $query="select * from billing_ratesNGN
-                where name ='$name'";
+                $query=sprintf("select * from billing_ratesNGN
+                where name     = '%s'
+                and gateway    = '%s'
+                and domain     = '%s'
+                and subscriber = '%s'
+                ",
+                addslashes($name),
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber)
+                );
+
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->num_rows()) {
-                    $query="update billing_ratesNGN set
-                    TrafficRate = '$TrafficRate',
-                    ConnectCost = '$ConnectCost'
-                    where name = '$name'
-                    and gateway      = '$gateway'
-                    and domain       = '$domain'
-                    and subscriber   = '$subscriber'
-                    ";
+                    $query=sprintf("update billing_ratesNGN set
+                    TrafficRate    = '%s',
+                    ConnectCost    = '%s'
+                    where name     = '%s'
+                    and gateway    = '%s'
+                    and domain     = '%s'
+                    and subscriber = '%s'
+                    ",
+                    addslashes($TrafficRate),
+                    addslashes($ConnectCost),
+                    addslashes($name),
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber)
+                    );
+
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows() >0) {
                         $updated++;
                     }
 
                 } else {
-                    $query="insert into billing_ratesNGN
+                    $query=sprintf("insert into billing_ratesNGN
                     (
                     gateway,
                     domain,
@@ -1453,13 +1479,20 @@ class RatingTables {
                     TrafficRate,
                     ConnectCost
                     ) values (
-                    '$gateway',
-                    '$domain',
-                    '$subscriber',
-                    '$name',
-                    '$TrafficRate',
-                    '$ConnectCost'
-                    )";
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s'
+                    )",
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($name),
+                    addslashes($TrafficRate),
+                    addslashes($ConnectCost)
+                    );
                     //dprint($query);
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows() >0) {
@@ -1491,26 +1524,17 @@ class RatingTables {
         return $results;
     }
 
-    function ImportCustomers($file='') {
-        if (!$file) {
-            $file=$this->CDRTool["Path"]."/csv/customers.csv";
-        }
-
+    function ImportCustomers($file) {
         dprint("ImportCustomers($file)");
-        if (!is_readable($file)) return 0;
+
+        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
 
         $i=0;
-        if (!$fp = fopen($file, "r")) {
-            dprint ("Failed to open $file\n");
-            return;
-        }
-
         $inserted = 0;
         $updated  = 0;
         $deleted  = 0;
 
         print "Importing Customers:\n";
-        print "Reading file $file\n";
 
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
@@ -1702,24 +1726,17 @@ class RatingTables {
         return $results;
     }
 
-    function ImportDestinations($file='') {
-        if (!$file) {
-            $file=$this->CDRTool["Path"]."/csv/destinations.csv";
-        }
+    function ImportDestinations($file) {
         dprint("ImportDestinations($file)");
-        if (!is_readable($file)) return 0;
+
+        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
 
         $i=0;
-        if (!$fp = fopen($file, "r")) {
-            return ;
-        }
-
         $inserted = 0;
         $updated  = 0;
         $deleted  = 0;
 
         print "Importing Destinations:\n";
-        print "Reading file $file\n";
 
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
@@ -1854,24 +1871,17 @@ class RatingTables {
         return $results;
     }
 
-    function ImportProfiles($file='') {
-        if (!$file) {
-            $file=$this->CDRTool["Path"]."/csv/profiles.csv";
-        }
+    function ImportProfiles($file) {
         dprint("ImportProfiles($file)");
-        if (!is_readable($file)) return 0;
+
+        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
 
         $i=0;
-        if (!$fp = fopen($file, "r")) {
-            return;
-        }
-
         $inserted = 0;
         $updated  = 0;
         $deleted  = 0;
 
         print "Importing PSTN Profiles:\n";
-        print "Reading file $file\n";
 
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
@@ -2073,20 +2083,17 @@ class RatingTables {
         return $results;
     }
 
-    function ImportProfilesNGN($file='') {
-        if (!$file) {
-            $file=$this->CDRTool["Path"]."/csv/profilesNGN.csv";
-        }
+    function ImportProfilesNGN($file) {
         dprint("ImportProfilesNGN($file)");
-        if (!is_readable($file)) return 0;
+
+        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
 
         $i=0;
-        if (!$fp = fopen($file, "r")) {
-            return ;
-        }
+        $inserted = 0;
+        $updated  = 0;
+        $deleted  = 0;
 
         print "Importing NGN Profiles:\n";
-        print "Reading file $file\n";
 
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
@@ -2102,7 +2109,7 @@ class RatingTables {
             $application = trim($p[6]);
 
             if ($ops=="1") {
-                $query="insert into billing_profilesNGN
+                $query=sprintf("insert into billing_profilesNGN
                 (
                 gateway,
                 domain,
@@ -2111,14 +2118,21 @@ class RatingTables {
                 rate,
                 application
                 ) values (
-                '$gateway',
-                '$domain',
-                '$subscriber',
-                '$profile',
-                '$rate',
-                '$application'
-                )";
-                //dprint($query);
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s'
+                )",
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($profile),
+                addslashes($rate),
+                addslashes($application)
+                );
+                dprint($query);
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->affected_rows() >0) {
                     $inserted++;
@@ -2126,13 +2140,19 @@ class RatingTables {
                     $failed++;
                 }
             } else if ($ops=="3") {
-                $query="delete from billing_profilesNGN
-                where name =  '$profile'
-                and application = '$application'
-                and gateway     = '$gateway'
-                and domain      = '$domain'
-                and subscriber  = '$subscriber'
-                ";
+                $query=sprintf("delete from billing_profilesNGN
+                where name      = '%s'
+                and application = '%s'
+                and gateway     = '%s'
+                and domain      = '%s'
+                and subscriber  = '%s'\n",
+                addslashes($profile),
+                addslashes($application),
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber)
+                );
+
                 //dprint($query);
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->affected_rows() >0) {
@@ -2140,31 +2160,45 @@ class RatingTables {
                 }
 
             } else if ($ops=="2") {
-                $query="select * from billing_profilesNGN
-                where name      = '$profile'
-                and application = '$application'
-                and gateway     = '$gateway'
-                and domain      = '$domain'
-                and subscriber  = '$subscriber'
-                ";
-                //dprint($query);
+                $query=sprintf("select * from billing_profilesNGN
+                where name      = '%s'
+                and application = '%s'
+                and gateway     = '%s'
+                and domain      = '%s'
+                and subscriber  = '%s'\n",
+                addslashes($profile),
+                addslashes($application),
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber)
+                );
+
+                dprint($query);
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->num_rows()) {
-                    $query="update billing_profilesNGN set
-                    rate = '$rate'
-                    where name      = '$profile'
-                    and application = '$application'
-                    and gateway     = '$gateway'
-                    and domain      = '$domain'
-                    and subscriber  = '$subscriber'
-                    ";
+                    $query=sprintf("update billing_profilesNGN set
+                    rate = '%s'
+                    where name      = '%s'
+                    and application = '%s'
+                    and gateway     = '%s'
+                    and domain      = '%s'
+                    and subscriber  = '%s'\n",
+                    addslashes($rate),
+                    addslashes($profile),
+                    addslashes($application),
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber)
+                    );
+
+                    dprint($query);
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows() >0) {
-                        $update++;
+                        $updated++;
                     }
 
                 } else {
-                    $query="insert into billing_profilesNGN
+                    $query=sprintf("insert into billing_profilesNGN
                     (
                     gateway,
                     domain,
@@ -2173,13 +2207,20 @@ class RatingTables {
                     rate,
                     application
                     ) values (
-                    '$gateway',
-                    '$domain',
-                    '$subscriber',
-                    '$profile',
-                    '$rate',
-                    '$application'
-                    )";
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s'
+                    )",
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($profile),
+                    addslashes($rate),
+                    addslashes($application)
+                    );
                     //dprint($query);
                     $this->cdrtool->query($query);
                     if ($this->cdrtool->affected_rows() >0) {
@@ -2528,16 +2569,17 @@ class RatingTables {
                                 $fullPath=$dir."/".$filename;
                                 if ($content=file_get_contents($fullPath)) {
                                     $watermark=$filename."-".md5($content);
-                                    if ($this->hasFileBeenImported($filename,$watermark)) continue;
+                                    if ($this->hasFileBeenImported($filename,$watermark)) break;
 
                                     $this->filesToImport[]=array( 'name'      => $filename,
                                                                   'watermark' => $watermark,
                                                                   'type'      => $_pattern,
                                                                   'path'      => $fullPath
                                                                   );
-                                    continue;
                                 }
                             }
+
+                            break;
                         }
                     }
                 }

@@ -79,7 +79,7 @@ CREATE TABLE `asterisk_cdr` (
   KEY `channel_idx` (`channel`),
   KEY `dstchannel_idx` (`dstchannel`),
   KEY `normalized_idx` (`Normalized`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `auth_user`
@@ -188,7 +188,7 @@ CREATE TABLE `billing_profilesNGN` (
   `rate` varchar(25) NOT NULL default '',
   `application` varchar(255) NOT NULL default '',
   PRIMARY KEY  (`id`),
-  UNIQUE KEY `profile_idx` (`name`,`application`),
+  UNIQUE KEY `profile_idx` (`gateway`,`domain`,`subscriber`,`name`),
   KEY `name_idx` (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
@@ -209,7 +209,7 @@ CREATE TABLE `billing_rates` (
   `applicationRate` varchar(25) NOT NULL default '',
   `connectCost` varchar(25) NOT NULL default '',
   PRIMARY KEY  (`id`),
-  UNIQUE KEY `profile_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`),
+  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`),
   KEY `name_idx` (`name`),
   KEY `dest_idx` (`destination`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
@@ -228,7 +228,7 @@ CREATE TABLE `billing_ratesNGN` (
   `TrafficRate` varchar(25) NOT NULL default '',
   `ConnectCost` varchar(255) NOT NULL default '',
   PRIMARY KEY  (`id`),
-  UNIQUE KEY `rate_idx` (`name`),
+  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`),
   KEY `name_idx` (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
