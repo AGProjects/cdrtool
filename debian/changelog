@@ -1,3 +1,11 @@
+cdrtool (5.0-4) unstable; urgency=low
+
+  * Better logging of prepaid calls in progress
+  * Added reloadPrepaidAccounts function to avoid reload of all rating tables
+    when only one prepaid account has changed
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 26 Dec 2006 12:13:54 +0100
+
 cdrtool (5.0-3) unstable; urgency=low
 
   * Fixed re-normalization of calls in previous monthly tables

@@ -3479,7 +3479,8 @@ class RatingEngine {
         	if ($this->db->num_rows()) {
         		$this->db->next_record();
             	$this->balance[$this->db->f('account')] = $this->db->f('balance');
-        		$log=sprintf("Loaded prepaid account %s",$this->db->f('account'));
+        		$log=sprintf("Loaded prepaid account %s with balance %s",$this->db->f('account'),$this->db->f('balance'));
+      			syslog(LOG_NOTICE, $log);
                 return 1;
             } else {
         		$log=sprintf("Error: Prepaid account %s does not exist",$account);
@@ -3587,22 +3588,29 @@ class RatingEngine {
 
         if ($this->balance[$BillingPartyId]) {
 
-            $query="update $this->table
-            set balance          = balance - '$balance',
+            $query=sprintf("update %s
+            set balance          = balance - '%s',
             change_date          = NOW(),
-            last_call_price      = '$balance',
+            last_call_price      = '%s',
             call_in_progress     = '0000-00-00 00:00:00',
             call_lock            = '0',
-            maxsessiontime       = '0',
-            destination          = ''
-            where account        = '$BillingPartyId'";
+            maxsessiontime       = '0'
+            where account        = '%s'",
+            addslashes($this->table),
+            addslashes($balance),
+            addslashes($balance),
+            addslashes($BillingPartyId)
+            );
             dprint($query);
 
             if ($this->db->query($query)) {
                 $log=sprintf ("Session unlock for prepaid account $BillingPartyId");
                 syslog(LOG_NOTICE, $log);
-                $query="select balance from $this->table
-            	where account        = '$BillingPartyId'";
+                $query=sprintf("select balance from %s
+            	where account = '%s'",
+                addslashes($this->table),
+                addslashes($BillingPartyId)
+                );
             	dprint($query);
         		$this->db->query($query);
                 $this->db->next_record();
@@ -3644,10 +3652,14 @@ class RatingEngine {
         }
 
         if ($this->balance[$BillingPartyId]) {
-            $query="update $this->table
-            set balance              = balance + '$balance',
-            change_date          = NOW()
-            where account        = '$BillingPartyId'";
+            $query=sprintf("update %s
+            set balance   = balance + '%s',
+            change_date   = NOW()
+            where account = '%s'",
+            addslashes($this->table),
+            addslashes($balance),
+            addslashes($BillingPartyId)
+            );
 
             dprint($query);
 
@@ -3665,8 +3677,13 @@ class RatingEngine {
             }
 
         } else {
-            $query="insert into $this->table (account, balance, change_date)
-            values ('$BillingPartyId','$balance',NOW())";
+            $query=sprintf("insert into %s
+            (balance, account, change_date)
+            values ('%s','%s',NOW())",
+            addslashes($this->table),
+            addslashes($balance),
+            addslashes($BillingPartyId)
+            );
 
             dprint($query);
 
@@ -3881,7 +3898,11 @@ class RatingEngine {
                 return "none";
             }
 
-            $query="select * from $this->table where account = '$CDR->BillingPartyId'";
+            $query=sprintf("select * from %s
+            where account = '%s'",
+            addslashes($this->table),
+            addslashes($CDR->BillingPartyId)
+            );
 
             $this->db->query($query);
             if ($this->db->num_rows()) {
@@ -3966,16 +3987,16 @@ class RatingEngine {
                     syslog(LOG_NOTICE, $log);
 
 				if ($NetFields['lock'] && $maxduration > 0) {
-                    if (preg_match("/^(sip|sips):(\d+)@/",$CDR->RemoteAddress,$m)) $destination=$m[2];
 
                 	// mark the account that is locked during call
-                    $query=sprintf("update $this->table
+                    $query=sprintf("update %s
                     set call_in_progress = NOW(),
-                    call_lock = '1',
-                    destination = '%s',
+                    call_lock      = '1',
+                    destination    = '%s',
                     maxsessiontime = '%s'
-                    where account = '%s'",
-                    addslashes($destination),
+                    where account  = '%s'",
+                    addslashes($this->table),
+                    addslashes($CDR->destinationPrint),
                     addslashes($maxduration),
                     addslashes($CDR->BillingPartyId));
 
@@ -4312,6 +4333,21 @@ function reloadRatingEngineTables () {
     if ($RatingEngine["socketIP"] && $RatingEngine["socketPort"] &&
         $fp = fsockopen ($RatingEngine["socketIP"], $RatingEngine["socketPort"], $errno, $errstr, 2)) {
         fputs($fp, "ReloadRatingTables\n");
+        fclose($fp);
+        return 1;
+    }
+    return 0;
+}
+
+function reloadPrepaidAccounts($account='') {
+    global $RatingEngine;
+    if ($RatingEngine["socketIP"] && $RatingEngine["socketPort"] &&
+        $fp = fsockopen ($RatingEngine["socketIP"], $RatingEngine["socketPort"], $errno, $errstr, 2)) {
+        $account=trim($account);
+        $cmd="ReloadPrepaidAccounts";
+        if (strlen($account)) $cmd .= sprintf(" Account=%s",$account);
+        $cmd.="\n";
+        fputs($fp,$cmd);
         fclose($fp);
         return 1;
     }
