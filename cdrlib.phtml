@@ -875,7 +875,7 @@ class CDRS {
         return 1;
     }
 
-    function NormalizeNumber($Number,$type="destination",$subscriber="",$domain="",$gateway="",$CountryCode) {
+    function NormalizeNumber($Number,$type="destination",$subscriber="",$domain="",$gateway="",$CountryCode="") {
         dprint("CDRS->NormalizeNumber($Number,type=$type,subscriber=$subscriber,domain=$domain,gateway=$gateway,CountryCode=$CountryCode)");
 
         $this->CSCODE="";

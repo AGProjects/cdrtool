@@ -1,3 +1,4 @@
 
 - Allow definition of country code per customer to be able to normalize
   national numbers depeding on billing party
+- use lock per table using GET_LOCK() server function
