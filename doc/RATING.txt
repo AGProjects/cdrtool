@@ -406,14 +406,13 @@ application and load it back into CDRTool.
 Reloading rating tables
 ------------------------
 
-From cdrtool version >=3.2  the rating tables are no longer loaded into the
-from database into memory during each normalization. The network rating
-engine is contacted for rating all calls. The rating engine is a daemon,
-which loads all rating tables and remains active in the server memory.
-Reload of rating tables is possible without stopping the daemon by
-connecting to it and issuing the reload command. The init.d script can alos
-be used for reloading the rating engine with the current values from the
-rating database.
+From cdrtool version 3.2  the rating tables are no longer loaded from
+database into memory during each normalization. The network rating engine is
+contacted for rating all calls. The rating engine is a daemon, which loads
+all rating tables and remains active in the server memory. Reload of rating
+tables is possible without stopping the daemon by connecting to it and
+issuing the reload command. The init.d script can also be used for reloading
+the rating engine with the current values from the rating database.
 
 There are 3 ways of reloading the rating tables:
 
@@ -436,8 +435,8 @@ Troubleshooting
 
 To examine the rate information for a rated call click on the Id field on
 the leftmost column. (Java script support in browser is required). A blue
-are will open under the CDR containing more information about the SIP
-session. 
+area will open under the CDR line containing more information about the SIP
+session.
 
 If you see no price in the CDR or no rating information appears in the call
 details it means that either no destination was found in the destinations
@@ -455,19 +454,14 @@ $CDRTool['provider']['bccEmail'] = "cdrtool@example.com";
 Re-rating calls
 ---------------
 
-Sometimes is useful the change the rates for calls that have been already
-normalized and rated, for example after changing the rating tables you wish
-to apply the changes retroactively for the last month. To re-rate the CDRs
-based on different tables do the following:
+Sometime is useful to be able to change the rates for calls that have been
+already normalized and rated, for example after changing the rating tables
+you wish to apply the changes for the previous month for a customer. To
+re-rate the CDRs based do the following:
 
-1. Add new files (like rates.csv, profiles.csv or customers.csv in  
-csv directory) or edit the rating tables using the WEB interface
+1. Change the rates (using cvs files or by using the WEB interface)
 
-2. Import the rating csv files using command (use full path of the import script)
-
-   /var/www/CDRTool/scripts/importRatingTables.php
-
-3. Re-normalize the calls to be re-rated by either selecting ReNormalize
+2. Re-normalize the calls to be re-rated by either selecting ReNormalize
    check-box in the search screen or by changing the Normalized field in the
    CDR MySQL table (e.g. radacct):
 
@@ -480,11 +474,11 @@ csv directory) or edit the rating tables using the WEB interface
    b) Re-rate calls for SIP subscriber sip01@example.com:	
    UPDATE radacct set Normalized = '0' where UserName = 'sip01@example.com'
 
-4. Apply rating again using command: 
+3. Apply rating again using command: 
 
    /var/www/CDRTool/scripts/normalize.php
 
-Warning:
+Notes
 
 Renormalization process can take long time during which your database
 (radacct table) will be locked. Perform this operation only during low
@@ -496,7 +490,7 @@ table scan will be performed.
 
 Holidays must be added as individual days YYYY-MM-DD in table
 billing_holidays. The profile applied for holidays is the same as for
-week-ends.
+week-ends. Holidays are global and cannot be specified per customer.
 
 
 Sending custom notifications when quota is exceeded
@@ -504,7 +498,7 @@ Sending custom notifications when quota is exceeded
 
 When quota is exceeded an email notification is sent to the end-user. To
 customize the email message subject, body and other header fields you must
-create some entries in cdrtool.settings table. 
+create some entries in cdrtool.settings table.
 
 See setup/mysql/custom_notifications.mysql for an example.
 
@@ -512,36 +506,21 @@ See setup/mysql/custom_notifications.mysql for an example.
 Known limitations
 ------------------
 
-The rating engine cannot calculate rates based on the outbound carriers or
-outbound gateways, the rates can be assigned only per calling party and not
-per called party.
+The rating engine does not calculate rates based on the outbound carriers or
+outbound gateways, the rates are based per calling party and not per called
+party.
 
 Price discounts must be applied outside CDRTool, in the billing system that
 prints the actual invoices. CDRTool has no possibility to rate only calls
 after X minutes per month for subscriber Y, all calls are rated uniformly.
 
 
-Notes
------
-
-The fields gateway, domain and subscribers from the tables:
-
-billing_profiles
-billing_profilesNGN
-billing_rates
-billing_ratesNGN
-
-are used only for the purpose of displaying them in the web interface of
-CDRTool for login accounts that have restricted access to the corresponding
-gateway, domain or subscribers.
-   
-
 Performance
 -----------
 
 Rating is part of the normalization process that happens every time a query
 is executed in the web interface or when the rating engine is contacted by
-the SIP Proxy or User Agent that performs the prepaid application.
+the SIP Proxy or by the User Agent that performs the prepaid application.
 
 The following tests have been performed between two machines with 3 GHz CPU
 and 1 GB memory located on the same LAN having a round trip time of 0.2 ms.
@@ -575,10 +554,6 @@ Clients		Rating command			Execution speed
 
 Client means either a SIP Proxy entity or a CDRTool server, which performs
 the normalization process.
-
-
-Notes
------
 
 The pre-calculated maximum duration of prepaid calls may be affected by
 rating plans with custom time increments and minimum charged durations. Do
