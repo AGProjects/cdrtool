@@ -4,8 +4,9 @@ cdrtool (5.0-4) unstable; urgency=low
   * Added reloadPrepaidAccounts function to avoid reload of all rating tables
     when only one prepaid account has changed
   * Updated rating documentation
+  * Corrected some lintian errors for debian packaging
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 26 Dec 2006 12:13:54 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 27 Dec 2006 11:53:09 +0100
 
 cdrtool (5.0-3) unstable; urgency=low
 

@@ -32,6 +32,7 @@ install: build
 	mkdir -p debian/cdrtool/var/www/CDRTool/local/images
 	mkdir -p debian/cdrtool/var/www/CDRTool/csv
 	cp -a doc debian/cdrtool/usr/share/doc/cdrtool
+        cp debian/copyright /usr/share/doc/cdrtool/
 	cp -a setup/global.inc.in  debian/cdrtool/usr/share/doc/cdrtool/
 	cp -a setup/csv debian/cdrtool/usr/share/doc/cdrtool/rating-sample-files
 	cp -a images debian/cdrtool/var/www/CDRTool/
