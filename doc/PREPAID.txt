@@ -12,9 +12,9 @@ an API described below.
 prepaid accounts from external systems (remote web front-ends). The prepaid
 accounts can be also managed in the Rating tables web interface.
 
-3. Rating engine - provides session locking, calculates maximum session time
-based on user balance and destination using the same algorithm as the
-postpaid engine and debits the subscriber balance.
+3. CDRTool rating engine - provides session locking, calculates maximum
+session time based on user balance and destination using the same algorithm
+as the postpaid engine and debits the subscriber balance.
 
 See doc/PrepaidEngine.pdf for a detailed call flow.
 
@@ -41,14 +41,15 @@ itself and is described below.
    ------------------------------
 
 To request the maximum time for a session, the following request must be
-sent to CDRTool prepaid engine:
+sent to CDRTool rating engine on one line:
 
-MaxSessionTime From=sip:123@example.com To=sip:0031650222@example.com Duration=7200 Lock=1\n
+MaxSessionTime From=sip:123@example.com To=sip:0031650222@example.com
+Duration=7200 Gateway=81.20.68.10 Lock=1\n
 
 Duration is a limit imposed to the time allowed, in case you want to limit
 the call time to a maximum duration. This will be a top limit for the call's
 time, even if the user could talk more than that based on his current
-balance. The SIP proxy may limits all calls to 7200 seconds for example. 
+balance. The SIP proxy may limit all calls to 7200 seconds for example. 
 Lock specifies if the account is to be locked or not (i.e. don't allow the
 same user make multiple calls at the same time). This is used because
 sometimes we only need to peek at the time but not actually start a call and
@@ -66,13 +67,17 @@ or it's a free destination, like a 0800... number).  There is no empty line
 before value (response starts with value on the first line and then it has 2
 enters unix style as described).
 
+To field must be the canonical destination SIP URI after all possible
+lookups in the SIP Proxy.
+
 2. Debiting the balance when the conversation ends
    -----------------------------------------------
 
 To debit money from the user account when the conversation ends, the Call
-control module must send the following command:
+control module must send the following command on one line:
 
-DebitBalance From=sip:123@example.com To=sip:0031650222 Duration=59
+DebitBalance From=sip:123@example.com To=sip:0031650222@example.com
+Gateway=81.20.68.10 Duration=59\n
 
 Same notes about the From and To fields as above apply.
 

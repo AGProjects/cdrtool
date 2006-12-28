@@ -14,53 +14,42 @@ the database containing the CDRs.
 Based on exceptions, different rates may be applied per caller party
 identified by source IP, SIP domain or SIP subscriber.
 
-The rates are linked with profiles corresponding with different time of the
-day, day of the week or holidays. Each profile has its own rate values. For
-rating calls, which span multiple profiles, the right rate is selected and
-applied for the call duration within each profile. Each customer may be
-assigned its own dedicated rating plans destination id and names.
-
-Chained profiles are possible to enable exception based rating. Multiple
-customers may share a common rate list, while some destinations may be rated
-differently, only the differences must be provisioned.
-
-Multiple time zones are supported for multiple billing parties hosted on the
-same platform.
-
 Rating is applied only after the call has ended. CDRTool considers that a
 call has ended when there is a stop time. In case of missing BYEs, CDRTool
 relies on the fact that MediaProxy will update the CDR with the proper stop
 time information based on the last moment the media stream passed through
 the media proxy.
 
-
-Fraud prevention
------------------
+The rates are linked with profiles corresponding with different time of the
+day, day of the week or holidays. For rating calls, which span multiple
+profiles, the right rate is selected and applied for the call duration
+within each profile. Each customer may be assigned its own dedicated rating
+plans destination id and names. Chained profiles are possible to enable
+exception based rating. Multiple customers may share a common rate list,
+while some destinations may be rated differently, only the differences must
+be provisioned. Multiple time zones are supported for multiple billing
+parties hosted on the same platform.
 
 Against fraud, one may enforce limits for post-paid customers, an external
 scripts builds incremental statistics based on customer usage, check the
 customers quota and blocks the customers in the SIP Proxy. This will not
 stop in real-time ongoing calls for customers exceeding their quota but
 provides in practice a perfect protection against fraudulent usage on a
-platform basis.
-
-The quota checking script available in scripts/SER/quotaCheck.php is called
-from cron every 5 minutes. To speed up the quota checking process, which
-normally requires a full scan of the CDR table at each run, from version
-4.7-0 onwards the actual usage per user is stored in a memcache server or a
-mysql table depending on the setup. It is preferably to use memcache server
-in place of mysql to avoid loading the database with queries. The usage data
-is reused and incrementally updated during normalization process thus
-ofloading the server from scanning the whole table at each quota check
-interval.
-
-To start/stop memcache use /etc/init.d/cdrtool command.
+platform basis. The quota checking script available in
+scripts/SER/quotaCheck.php is called from cron every 5 minutes. To speed up
+the quota checking process, which normally requires a full scan of the CDR
+table at each run, from version 4.7-0 onwards the actual usage per user is
+stored in a memcache server or a mysql table depending on the setup. It is
+preferably to use memcache server in place of mysql to avoid loading the
+database with queries. The usage data is reused and incrementally updated
+during normalization process thus ofloading the server from scanning the
+whole table at each quota check interval. To start/stop memcache use
+/etc/init.d/cdrtool command.
 
 Memcached can be manually downloaded from http://www.danga.com/memcached or
-is automatically installed during debian package installation.
-
-Beware that memcached server has no built in security, for this reason is
-advisable to configure it to listen only to a private network interface.
+is automatically installed during debian package installation. Beware that
+memcached server has no built in security, for this reason is advisable to
+configure it to listen only to a private network interface.
 
 
 Determination of the billing party
@@ -79,6 +68,19 @@ database (radacct.UserName for radius data sources) in the following order:
 The longest match is done against entries present in the billing_customers
 table. The match yields a set of profiles to be used further depending on
 the type of session and day of the week.
+
+
+Determination of the destination
+--------------------------------
+
+CDRTool identifies the destination id for which to perform the rating based
+on the CanonicalURI field from the accounting table. If the CanonicalURI is
+not available or is empty the destination is taken from either
+SipTranslatedRequestURI or CalledStationId fields in this order. The
+CanonicalURI is preferred because the destination field must contain the
+real SIP destination after all possible lookups performed by the SIP Proxy
+(except for the DNS lookups). A destination id is then calculated based on
+the longest match in the billing_destinations table and the billing party.
 
 
 PSTN rating 
@@ -121,7 +123,8 @@ steps are performed during the normalization process.
    'default'
 
 3. Lookup in the cdrtool.billing_rates table the record having same name
-   found at point 2 and having billing_rates.destination = $this->destinationId
+   found at point 2 and having billing_rates.destination = destination Id
+   found at Determination of the destination step above.
 
    - return an array with all the rating values and the duration rated
 
@@ -135,14 +138,12 @@ steps are performed during the normalization process.
    of 10 spans (different rates depending of time of day, day of the week)
    can be calculated using this mechanism.
 
-
 5. Lookup the call rate based on time (peak/of-peak, day of week, holiday) 
 
-6. Calculate the call Price based on duration and destination id (country
-   codes). In global.inc there are several variables that affect how the
-   price is calculated.  These settings are global per CDRTool installation
-   but some can be overwritten with per customer values in the
-   billing_customers table.
+6. Calculate the call Price based on duration. In global.inc there are
+   several variables that affect how the price is calculated.  These
+   settings are global per CDRTool installation but some can be overwritten
+   with per customer values in the billing_customers table.
 
    $PRICING=array( 
            "priceDenominator"        => 10000, // Rates units (global setting)
@@ -204,8 +205,8 @@ NGN rating support rating of data traffic based on application type.
    - return an array with all the rating values and the duration rated
 
 
-Importing/exporting of rating files
------------------------------------
+Importing and exporting of rating files
+---------------------------------------
 
 There are different data files needed for rating CDRs. The data files are
 imported into corresponding MySQL tables. The files must be uploaded to

@@ -284,22 +284,27 @@ modparam("acc", "radius_missed_flag", 1)
 modparam("acc", "radius_extra",       "Sip-RPid=$avp(s:rpid); \
                                        Source-IP=$si; \
                                        Source-Port=$sp; \
+                                       Canonical-URI=$avp(can_uri); \
+                                       Billing-Party=$avp(billing_party); \
+                                       Divert-Reason=$avp(s:divert_reason); \
                                        X-RTP-Stat=$avp(s:rtp_statistics); \
                                        From-Header=$hdr(from); \
                                        User-Agent=$hdr(user-agent); \
                                        Contact=$hdr(contact); \
                                        Event=$hdr(event); \
-                                       SIP-Proxy-IP=$avp(s:sip-proxy)")
+                                       SIP-Proxy-IP=$avp(s:sip_proxy_ip)")
 
 Further, you must enable accounting in various parts of the routing script
 by setting the accounting flag and saving the AVP containing the proxy IP
-address..
+address. It is important to save $avp(can_uri) after the Proxy has performed
+all possible lookups except DNS. The Canonical-URI will be used for rating
+the session. Example:
 
 route {
        ...
        setflag(ACCOUNTING_FLAG);
        avp_write("SER_IP","$avp(s:sip-proxy)");
-       ...
+       avp_write("$ru", "$avp(can_uri)");
 }
 
 Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/openser/radius/
@@ -310,6 +315,10 @@ $INCLUDE               /etc/radiusclient-ng/dictionary
 
 SOAP engine
 -----------
+
+Warning!
+
+Support for the SOAP engine has been discontinued from version >=5.0.
 
 Note: It depends on the SOAP library from http://pear.php.net/package/SOAP.
 On Debian systems, this dependency is automatically installed but if CDRTool
@@ -392,6 +401,8 @@ The following information is logged:
 - ApplicationType (text/audio/video)
 - User Agent(s)
 - Media IP source and IP destination
+
+See MediaProxy documentation for how to enable Radius or database accounting.
 
 
 Asterisk setup
