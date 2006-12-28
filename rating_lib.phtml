@@ -4101,6 +4101,7 @@ class RatingEngine {
             	$log=sprintf ("New balance     : %s",$this->balance[$CDR->BillingPartyId]);
                 	syslog(LOG_NOTICE, $log);
             }
+
             if ($result) {
                 return "Ok";
             } else {
