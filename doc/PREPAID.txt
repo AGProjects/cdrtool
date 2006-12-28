@@ -18,6 +18,7 @@ as the postpaid engine and debits the subscriber balance.
 
 See doc/PrepaidEngine.pdf for a detailed call flow.
 
+
 Prepaid API
 -----------
 
@@ -90,3 +91,14 @@ is not prepaid - this case is not considered a failure)
 
 There are cases where we call DebitBalance with a 0 duration. This is valid
 and should unlock the account but leave the credit untouched.
+
+
+Prepaid calls in progress
+-------------------------
+
+To see the calls in progress go to Rating -> Prepaid -> Search with Lock = 1
+
+If the connection between the SIP Proxy call control module and CDRTool
+rating engine is broken it is possible to have prepaid accounts that
+remained locked becuase no DebitBalance command has been received. To unlock
+these accounts find them in Rating -> Prepaid section and set Lock to 0.
