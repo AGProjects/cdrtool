@@ -18,12 +18,13 @@ $table_fname=array(
  );
 
 
+$PHP_SELF           = $_SERVER['PHP_SELF'];
+
 $export             = $_REQUEST['export'];
 $table              = $_REQUEST['table'];
 $action             = $_REQUEST['action'];
 $subaction          = $_REQUEST['subaction'];
 $next               = $_REQUEST['next'];
-$PHP_SELF           = $_SERVER['PHP_SELF'];
 $id                 = $_REQUEST['id'];
 $search_text        = $_REQUEST['search_text'];
 $ReloadRatingTables = $_REQUEST['ReloadRatingTables'];
@@ -128,9 +129,9 @@ if ($action =="update" && $table) {
 					$comma = "";
 				}
 				if (preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
-					$query = $query.$comma.$Fname."= ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
+					$query .= $comma.$Fname."= ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
 				} else {
-					$query = $query.$comma.$Fname."='".$value."'";
+					$query .= $comma.$Fname."='".$value."'";
 				}
 				$kkk++;
 			}
@@ -140,7 +141,7 @@ if ($action =="update" && $table) {
 
         $log_entity="id=$id";
 
-		$query = $query." where id = '".$id."' and $whereDomainFilter";
+		$query .= " where id = '".$id."' and $whereDomainFilter";
 		dprint($query);
 
         if ($table=="prepaid") {
@@ -231,9 +232,9 @@ if ($action =="update" && $table) {
                     $value="";
                 }
 				if (preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
-					$query = $query.$comma.$Fname."= ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
+					$query .= $comma.$Fname."= ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
 				} else {
-					$query = $query.$comma.$Fname."='".$value."'";
+					$query .= $comma.$Fname."='".$value."'";
 				}
 				
 				$kkk++;
@@ -436,13 +437,13 @@ if ($action =="update" && $table) {
                     } else {
                         $comma="";
                     }
-                    $query = $query.$comma.$Fname;
+                    $query .= $comma.$Fname;
                     $kkk++;
                 }
                 $k++;
                 
             }
-            $query = $query.") values ( ";
+            $query .= ") values ( ";
             $k=1;
             $kkk=0;
             while ($k < $cc ) {
@@ -455,13 +456,13 @@ if ($action =="update" && $table) {
                     } else {
                         $comma="";
                     }
-                    $query = $query.$comma."'".$value."'";
+                    $query .= $comma."'".$value."'";
                     $kkk++;
                 }
                 $k++;
                 
             }
-            $query = $query.") ";
+            $query .= ") ";
     
             $k=1;
             while ($k < $cc ) {
@@ -569,9 +570,7 @@ while ($j < $cc ) {
     $j++;	
 }
     
-if ($where) {
-	$query=$query.$where;
-}
+$query .= $where;
 
 dprint($query);
 

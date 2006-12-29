@@ -1105,7 +1105,7 @@ class RatingTables {
                            "prepaid"=>array("name"=>"Prepaid",
                                                  "keys"=>"id",
                                                  "size"=>15,
-                                                 "domainMatchColumn"=>"account",
+                                                 "domainFilterColumn"=>"account",
                                                  "fields"=>array("account"=>array("size"=>35,
                                                                                "name"=>"Account",
                                                                                "readonly"=>0
@@ -1122,18 +1122,18 @@ class RatingTables {
                                                                                  "readonly"=>0
                                                                                  ),
                                                                  "call_in_progress"=>array("size"=>18,
-                                                                 				 "name"=>"Call in progress",
+                                                                 				 "name"=>"Start time",
                                                                                  "readonly"=>1
                                                                                  ),
                                                                  "last_call_price"=>array("size"=>10,
-                                                                 				 "name"=>"Last call price",
+                                                                 				 "name"=>"Last price",
                                                                                  "readonly"=>1
                                                                                  ),
                                                                  "maxsessiontime"=>array("size"=>5,
                                                                  				 "name"=>"Max",
                                                                                  "readonly"=>1
                                                                                  ),
-                                                                 "destination"=>array("size"=>12,
+                                                                 "destination"=>array("size"=>15,
                                                                  				 "name"=>"Destination",
                                                                                  "readonly"=>1
                                                                                  )
@@ -3604,21 +3604,19 @@ class RatingEngine {
             dprint($query);
 
             if ($this->db->query($query)) {
-                $log=sprintf ("Session unlock for prepaid account $BillingPartyId");
-                syslog(LOG_NOTICE, $log);
-                $query=sprintf("select balance from %s
-            	where account = '%s'",
+
+                $query=sprintf("select balance from %s where account = '%s'",
                 addslashes($this->table),
                 addslashes($BillingPartyId)
                 );
-            	dprint($query);
+
+                dprint($query);
         		$this->db->query($query);
                 $this->db->next_record();
                 $this->balance[$BillingPartyId]=$this->db->f('balance');
                 return 1;
             } else {
-                $error_msg=$this->db->Error;
-                $log=sprintf ("DebitBalance() error: failed to debit balance ($error_msg)");
+                $log=sprintf ("DebitBalance error: %s (%s)",$this->db->Error,$this->db->Errno);
                 syslog(LOG_NOTICE, $log);
         		return 0;
             }
@@ -3966,25 +3964,15 @@ class RatingEngine {
                 	return 0;
                 }
 
-                // print maximum allowed session time based on customer Balance
-                $log=sprintf ("Caller party    : %s",$CDR->aNumber);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("Billing party   : %s",$CDR->BillingPartyId);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("Domain          : %s",$CDR->domain);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("Timezone        : %s",$Rate->billingTimezone);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("Balance         : %s",$RateDictionary['Balance']);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("Session start   : %s",$Rate->startTimeBilling);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("Destination     : %s",$CDR->RemoteAddress);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("Destination Id  : %s (%s)",$CDR->DestinationId,$CDR->destinationName);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("MaxSessionTime  : %s (%s)",sec2hms($maxduration),$maxduration);
-                    syslog(LOG_NOTICE, $log);
+                $log=sprintf ("CallId=%s MaxSessionTime=%s BillingParty=%s DestId=%s Balance=%s",
+                $NetFields['callid'],
+                $maxduration,
+                $CDR->BillingPartyId,
+                $CDR->DestinationId,
+                $RateDictionary['Balance']
+                );
+
+                syslog(LOG_NOTICE, $log);
 
 				if ($NetFields['lock'] && $maxduration > 0) {
 
@@ -4003,15 +3991,14 @@ class RatingEngine {
                     dprint($query);
 
                     if ($this->db->query($query)) {
-                        if ($this->db->affected_rows()) {
-                        	$log=sprintf ("Session lock for $CDR->BillingPartyId");
-                        } else {
+                        if (!$this->db->affected_rows()) {
                         	$log=sprintf ("$CDR->BillingPartyId is already locked");
+                    		syslog(LOG_NOTICE, $log);
                         }
                     } else {
                     	$log=sprintf ("Error: cannot lock $CDR->BillingPartyId");
+                    	syslog(LOG_NOTICE, $log);
                     }
-                    syslog(LOG_NOTICE, $log);
                 }
 
                 return $maxduration;
@@ -4075,31 +4062,24 @@ class RatingEngine {
                                   );
             
             $Rate = new Rate(&$CDR);
-            $Rate->calculate($RateDictionary);
 
-			if ($CDR->duration) {
-                // print maximum allowed session time based on customer Balance
-                $log=sprintf ("Customer        : %s",$CDR->BillingPartyId);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("Timezone        : %s",$Rate->billingTimezone);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("Destination     : %s",$CDR->RemoteAddress);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("Destination Id  : %s (%s)",$CDR->DestinationId,$CDR->destinationName);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("Duration        : %s (%s)",sec2hms($CDR->duration), $CDR->duration);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("Price           : %s", $Rate->price);
-                    syslog(LOG_NOTICE, $log);
-                $log=sprintf ("Balance         : %s",$this->balance[$CDR->BillingPartyId]);
-                    syslog(LOG_NOTICE, $log);
-            }
+            $Rate->calculate($RateDictionary);
 
             $result = $this->DebitBalance($CDR->BillingPartyId,$Rate->price);
 
-            if ($CDR->duration) {
-            	$log=sprintf ("New balance     : %s",$this->balance[$CDR->BillingPartyId]);
-                	syslog(LOG_NOTICE, $log);
+			if ($CDR->duration) {
+            	$oldBalance=$this->balance[$CDR->BillingPartyId];
+
+                $log=sprintf ("CallId=%s Duration=%s BillingParty=%s DestId=%s Price=%s Balance=%s",
+                $NetFields['callid'],
+                $CDR->duration,
+                $CDR->BillingPartyId,
+                $CDR->DestinationId,
+                $Rate->price,
+                $this->balance[$CDR->BillingPartyId]
+                );
+
+                syslog(LOG_NOTICE, $log);
             }
 
             if ($result) {
