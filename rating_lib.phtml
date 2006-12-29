@@ -222,19 +222,19 @@ class Rate {
             dprint("Rate PSTN call having $this->duration seconds to $this->cNumber DestinationId=$this->DestinationId ($this->destinationName)");
             unset($IntervalsForPricing);
 
-            $this->rateInfo = $this->rateInfo .
+            $this->rateInfo .= 
     
                 "         App: PSTN voice\n".
                 " Destination: $this->DestinationId ($this->destinationNamePrint)\n".
                 "    Customer: $this->CustomerProfile\n";
     
             if ($this->increment > 1) {
-                $this->rateInfo = $this->rateInfo .
+                $this->rateInfo .= 
                 "    Increment: $this->increment s\n";
             }
     
             if ($this->min_duration > 1) {
-                $this->rateInfo = $this->rateInfo .
+                $this->rateInfo .= 
                 " Min duration: $this->min_duration s\n";
             }
 
@@ -284,7 +284,7 @@ class Rate {
 		if ($this->duration) {
         	$this->GetProfilesNGN();
             if ($this->allProfiles[profileNGN]) {
-                $this->rateInfo = $this->rateInfo .
+                $this->rateInfo .= 
                     "         App: $this->applicationType\n".
                     "    Customer: $this->CustomerProfile\n";
 
@@ -336,7 +336,7 @@ class Rate {
             if (!$this->inputTraffic)  $this->inputTraffic=0;
             if (!$this->outputTraffic) $this->outputTraffic=0;
 
-            if ($span>1) $this->rateInfo = $this->rateInfo."--\n";
+            if ($span>1) $this->rateInfo .= "--\n";
 
             dprint("price=price+connectCostSpan/priceDenominator*payConnect+
                             durationRate*durationForRating/durationPeriodRated/priceDenominator+
@@ -357,18 +357,18 @@ class Rate {
 
 			$this->rateSyslog="";
             if ($span=="1" && $thisRate[profile]) {
-                $this->rateInfo = $this->rateInfo .
+                $this->rateInfo .= 
                 " Connect fee: $connectCostPrint\n".
                 "--\n";
                 $this->rateSyslog=$this->rateSyslog."ConnectFee=$connectCostPrint ";
             	$this->price  = $this->price+$connectCostSpan/$this->priceDenominator*$payConnect;
             }
 
-            $this->rateInfo = $this->rateInfo .
+            $this->rateInfo .= 
             "        Span: $span\n".
             "    Duration: $durationForRating s\n";
 
-            $this->rateSyslog=$this->rateSyslog."Span=$span Dur=$durationForRating Prefix=$this->DestinationId Name=$this->destinationNamePrint $thisRate[customer]";
+            $this->rateSyslog=$this->rateSyslog."Span=$span Duration=$durationForRating DestId=$this->DestinationId $thisRate[customer]";
 
             if ($this->CDRS->CSCODE) {
                 // We found a Peer Carrier so we will change BillingPartyId
@@ -378,12 +378,12 @@ class Rate {
                     $CarrierName=$this->CDRS->CSCODE;
                 }
 
-                $this->rateInfo = $this->rateInfo .
+                $this->rateInfo .= 
             	"     Carrier: $CarrierName\n";
             }
 
             if ($thisRate[profile]) {
-                $this->rateInfo = $this->rateInfo .
+                $this->rateInfo .= 
                 "   StartTime: $this->startTimeBilling ($this->billingTimezone)\n".
                 "   ProfileId: $thisRate[profile] for $thisRate[day]\n".
                 "      RateId: $thisRate[rate] for $thisRate[interval]h\n".
@@ -394,7 +394,7 @@ class Rate {
                 $this->rateSyslog=$this->rateSyslog." Profile=$thisRate[profile] Period=$thisRate[day] Rate=$thisRate[rate] Interval=$thisRate[interval] Cost=$durationRatePrint/$this->durationPeriodRated";
 
             } else {
-                $this->rateInfo = $this->rateInfo .
+                $this->rateInfo .= 
                 "   ProfileId: none\n".
                 "      RateId: none\n";
                 $this->rateSyslog=$this->rateSyslog." Profile=none, Rate=none";
@@ -3876,9 +3876,8 @@ class RatingEngine {
 
             $CDRStructure=array (
                               $this->CDRS->CDRFields['aNumber']  	   => $NetFields['from'],
-                              $this->CDRS->CDRFields['RemoteAddress']  => $NetFields['to'],
-                              $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
                               $this->CDRS->CDRFields['cNumber']        => $NetFields['to'],
+                              $this->CDRS->CDRFields['RemoteAddress']  => $NetFields['to'],
                               $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
                               $this->CDRS->CDRFields['duration']       => $NetFields['duration'],
                               $this->CDRS->CDRFields['timestamp']      => time(),
@@ -3964,12 +3963,12 @@ class RatingEngine {
                 	return 0;
                 }
 
-                $log=sprintf ("CallId=%s MaxSessionTime=%s BillingParty=%s DestId=%s Balance=%s",
+                $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Balance=%s MaxSessionTime=%s",
                 $NetFields['callid'],
-                $maxduration,
                 $CDR->BillingPartyId,
                 $CDR->DestinationId,
-                $RateDictionary['Balance']
+                $RateDictionary['Balance'],
+                $maxduration
                 );
 
                 syslog(LOG_NOTICE, $log);
@@ -4029,10 +4028,11 @@ class RatingEngine {
                 return "Failed";
             }
 
-            // simulate a CDR structure from network input
             $CDRStructure=array (
                               $this->CDRS->CDRFields['aNumber']  	   => $NetFields['from'],
+                              $this->CDRS->CDRFields['cNumber']        => $NetFields['to'],
                               $this->CDRS->CDRFields['RemoteAddress']  => $NetFields['to'],
+                              $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
                               $this->CDRS->CDRFields['duration']       => $NetFields['duration'],
                               $this->CDRS->CDRFields['timestamp']      => time(),
                               );
@@ -4070,11 +4070,11 @@ class RatingEngine {
 			if ($CDR->duration) {
             	$oldBalance=$this->balance[$CDR->BillingPartyId];
 
-                $log=sprintf ("CallId=%s Duration=%s BillingParty=%s DestId=%s Price=%s Balance=%s",
+                $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Duration=%s Price=%s Balance=%s",
                 $NetFields['callid'],
-                $CDR->duration,
                 $CDR->BillingPartyId,
                 $CDR->DestinationId,
+                $CDR->duration,
                 $Rate->price,
                 $this->balance[$CDR->BillingPartyId]
                 );
