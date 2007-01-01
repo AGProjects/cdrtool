@@ -1,10 +1,11 @@
 /*
-LAST UPDATED: 2006-12-26 10:19 CET
+LAST UPDATED: 2007-01-01 12:03 CET
 
 CHANGELOG:
 - Added database name as parameter to stored procedures
 - Fixed the multiple query result in "update_raddact_record_mediaproxy"
 - Modus operandi update
+- Fixed determination of previous year in "update_raddact_record_mediaproxy"
 
 Starting with version CDRTool version 4.9 it is possible to store call
 details records in automatically rotated radacct tables by using MySQL
@@ -443,10 +444,8 @@ BEGIN
 	IF @updatedrows = 0 THEN
 		-- UPDATE LAST MONTH'S TABLE BASED ON var_AcctStopTime
 
-		SET @var_monthago = (SELECT DATE_ADD(@v_stoptime, INTERVAL -1 MONTH));
-		SET @var_pmonth_formatted = (SELECT DATE_FORMAT(@var_monthago, '%m'));
-		SET @var_pyst = (SELECT DATE_FORMAT(@var_monthago, '%Y'));
-		SET @var_tbl_pmonth = CONCAT(@var_tbl_begin, @var_pyst, @var_pmonth_formatted);
+		SET @var_prev_month = (SELECT DATE_FORMAT(DATE_ADD(@v_stoptime, INTERVAL -1 MONTH), '%Y%m'));
+		SET @var_tbl_pmonth = CONCAT(@var_tbl_begin, @var_prev_month);
 
 		-- SEE IF WE HAVE THIS TABLE
 
@@ -523,13 +522,14 @@ CREATE PROCEDURE `update_raddact_record_mediaproxy`(
 BEGIN
 
 	-- SET VARIABLES
-	SET @var_y = (SELECT YEAR(CURRENT_DATE));
-	SET @var_m = (SELECT DATE_FORMAT(CURRENT_DATE, '%m'));
 	SET @var_tbl_begin = (SELECT set_radacct_table_name());
-	SET @var_tbl = CONCAT(@var_tbl_begin, @var_y, @var_m);
-	SET @var_prev_month_today = (SELECT DATE_ADD(CURRENT_DATE, INTERVAL -1 MONTH));
-	SET @var_prev_month_formatted = (SELECT DATE_FORMAT(@var_prev_month_today, '%m'));
-	SET @var_tbl_pmonth = CONCAT(@var_tbl_begin, @var_y, @var_prev_month_formatted);
+
+	SET @var_prev_month = (SELECT DATE_FORMAT(DATE_ADD(CURRENT_DATE, INTERVAL -1 MONTH), '%Y%m'));
+	SET @var_current_month = (SELECT DATE_FORMAT(CURRENT_DATE, '%Y%m'));
+
+	SET @var_tbl = CONCAT(@var_tbl_begin, @var_current_month);
+	SET @var_tbl_prev_month = CONCAT(@var_tbl_begin, @var_prev_month);
+
 	SET @v_AcctSessionTime = var_AcctSessionTime;
 	SET @v_AcctInputOctets = var_AcctInputOctets;
 	SET @v_AcctOutputOctets = var_AcctOutputOctets;
@@ -555,7 +555,7 @@ BEGIN
 	SET @var_tbl_cnt2 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
 	FROM information_schema.tables
 	WHERE TABLE_SCHEMA = @v_dbname
-	AND TABLE_NAME = @var_tbl_pmonth);
+	AND TABLE_NAME = @var_tbl_prev_month);
 
 	SET @proc_query = CONCAT("CALL proc_update_raddact_record_mediaproxy (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 	PREPARE proc_rad_stmt FROM @proc_query;
@@ -571,7 +571,7 @@ BEGIN
 
 	IF @updatedrows = 0 AND @var_tbl_cnt2 = 1 THEN
 		-- FOR THE PREVIOUS MONTH
-		EXECUTE proc_rad_stmt USING @var_tbl_pmonth, @v_AcctSessionTime,
+		EXECUTE proc_rad_stmt USING @var_tbl_prev_month, @v_AcctSessionTime,
             @v_AcctInputOctets, @v_AcctOutputOctets,
             @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
 			@v_MediaInfo, @v_Normalized, @v_AcctSessionId,
@@ -587,7 +587,7 @@ BEGIN
 			
 			IF @var_tbl_cnt2 = 1 AND @updatedrows = 0 THEN
 				-- FOR THE PREVIOUS MONTH WITH SipToTag = 'n/a'
-				EXECUTE proc_rad_stmt USING @var_tbl_pmonth, @v_AcctSessionTime,
+				EXECUTE proc_rad_stmt USING @var_tbl_prev_month, @v_AcctSessionTime,
                     @v_AcctInputOctets, @v_AcctOutputOctets,
                     @v_SipUserAgents, @v_SipCodecs, 
 					@v_SipApplicationType, @v_MediaInfo, @v_Normalized, @v_AcctSessionId,
@@ -600,15 +600,13 @@ BEGIN
 
 	-- CLEAN UP
 
-	SET @var_y = null;
-	SET @var_m = null;
+	SET @var_current_month = null;
 	SET @var_db_name = null;
 	SET @var_tbl_begin = null;
 	SET @var_tbl = null;
 	SET @var_tbl_cnt = null;
-	SET @var_prev_month_today = null;
-	SET @var_prev_month_formatted = null;
-	SET @var_tbl_pmonth = null;
+	SET @var_prev_month = null;
+	SET @var_tbl_prev_month = null;
 	SET @v_AcctSessionTime = null;
 	SET @v_AcctInputOctets = null;
 	SET @v_AcctOutputOctets = null;
@@ -635,7 +633,7 @@ DELIMITER $$
 
 CREATE PROCEDURE `proc_update_raddact_record_mediaproxy`(
 	IN var_tblname VARCHAR(50),
-    IN var_AcctSessionTime int(12),
+	IN var_AcctSessionTime int(12),
 	IN var_AcctInputOctets bigint(12),
 	IN var_AcctOutputOctets bigint(12),
 	IN var_SipUserAgents VARCHAR(255),
@@ -693,7 +691,7 @@ BEGIN
 		SET @v_SipToTag = var_SipToTag;
 		SET @v_SipFromTag = var_SipFromTag;
 		EXECUTE update_rad USING @v_AcctSessionTime, @v_AcctInputOctets, @v_AcctOutputOctets,
-            @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
+			@v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
 			@v_MediaInfo, @v_Normalized, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
 		SET @rcnt = (SELECT ROW_COUNT());
 		DEALLOCATE PREPARE update_rad;
@@ -712,7 +710,6 @@ BEGIN
 		SET @v_SipToTag = null;
 		SET @v_SipFromTag = null;
 
-		-- GET UPDATED ROWS COUNT AND RETURN IT
 	END IF;
 
 END $$
@@ -746,4 +743,3 @@ CALL update_radacct_record (
 );
 
 */
-
