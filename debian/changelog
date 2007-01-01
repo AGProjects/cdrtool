@@ -1,3 +1,16 @@
+cdrtool (5.0-5) unstable; urgency=low
+
+  * Fixed determination of previous year in update_raddact_record_mediaproxy
+    setup/radius/OpenSER/radius_accounting.proc must be reloaded into the MySQL server:
+    mysql -u root -p -h sipdb radius <  setup/radius/OpenSER/radius_accounting.proc
+  * Use same CDR structure for MaxSessionTime and DebitBalance
+  * Change logging for prepaid actions to fit one line
+  * Normalize tries previous month if no record has been updated
+  * Mention how to see prepaid account status
+  * Updated rating docs
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon,  1 Jan 2007 12:07:56 +0100
+
 cdrtool (5.0-4) unstable; urgency=low
 
   * Better logging of prepaid calls in progress
