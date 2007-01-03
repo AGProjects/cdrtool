@@ -752,6 +752,14 @@ class CDRS {
             return 0;
         }
 
+        $lockName=sprintf("%s_%s",$this->cdr_source,$table);
+
+        if (!getNormalizeLock($lockName)) {
+            $log=sprintf("Normalization already in progress");
+            syslog(LOG_NOTICE, $log);
+            return 1;
+        }
+
         $query=sprintf("select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
         from %s
         where %s
@@ -775,11 +783,6 @@ class CDRS {
         $this->status['cdr_to_normalize']=$this->CDRdb->num_rows();
 
         if ($this->status['cdr_to_normalize']>0) {
-            $log=sprintf("Lock db (%s) %d  CDRs",$this->cdr_source,$this->status['cdr_to_normalize']);
-            syslog(LOG_NOTICE, $log);
-            $locker = new DB_Locker();
-            register_shutdown_function("unLockTables",$locker);
-            $locker->query("lock tables normalize_lock write");
 
         	if ($this->ratingEnabled) {
                 // The rating table will be used in each instance of
@@ -861,11 +864,9 @@ class CDRS {
         }
 
         if ($this->status['cdr_to_normalize']>0) {
-	    $e=time();
+	    	$e=time();
     	    $d=$e-$b;
-
-            $locker->query("unlock tables");
-            syslog(LOG_NOTICE, "Unlock db ($this->cdr_source) after $d seconds");
+            if ($d) syslog(LOG_NOTICE, "Normalization done in $d ");
     
             if ($this->RatingEngineSocket) {
                 fclose($this->RatingEngineSocket);
@@ -1915,6 +1916,48 @@ foreach ($CDRToolModules as $module) {
     if (is_readable($module_filename)) include($module_filename);
     $module_filename=$CDRTool['Path']."/local/cdrlib_".$module.".phtml";
     if (is_readable($module_filename)) include($module_filename);
+}
+
+function getNormalizeLock($lockname='') {
+
+   if (!$locker = new DB_Locker()) {
+       $log=sprintf("Error: cannot init locker database. ");
+       syslog(LOG_NOTICE, $log);
+       return 0;
+   }
+
+   if (!$lockname) {
+       $log=sprintf("Error: no lockname provided. ");
+       syslog(LOG_NOTICE, $log);
+       return 0;
+   }
+
+   $log=sprintf("Lock %s for normalization",$lockname);
+   syslog(LOG_NOTICE, $log);
+
+   register_shutdown_function("unLockNormalization",$locker,$lockname);
+
+   $query=sprintf("SELECT GET_LOCK('%s',1)",$lockname);
+
+   dprint($query);
+
+   if (!$locker->query($query) || !$locker->next_record()) {
+       return 0;
+   } else {
+       return $locker->Record[0];
+   }
+}
+
+function unLockNormalization ($dbid,$lockname) {
+	$query=sprintf("SELECT RELEASE_LOCK('%s')",$lockname);
+    dprint($query);
+    $log=sprintf("Unlock %s",$lockname);
+    syslog(LOG_NOTICE, $log);
+
+    if (!$dbid->query($query)) {
+    	$log="Error in unLockNormalization()";
+    	syslog(LOG_NOTICE, $log);
+    }
 }
 
 ?>
