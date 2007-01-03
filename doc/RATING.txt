@@ -1,3 +1,4 @@
+
 CDRTool rating engine
 ---------------------
 
@@ -20,34 +21,15 @@ relies on the fact that MediaProxy will update the CDR with the proper stop
 time information based on the last moment the media stream passed through
 the media proxy.
 
-
-Fraud prevention
------------------
-
-Against fraud, one may enforce limits for post-paid customers, an external
-scripts builds incremental statistics based on customer usage, check the
-customers quota and blocks the customers in the SIP Proxy. This will not
-stop in real-time ongoing calls for customers exceeding their quota but
-provides in practice a perfect protection against fraudulent usage on a
-platform basis.
-
-The quota checking script available in scripts/SER/quotaCheck.php is called
-from cron every 5 minutes. To speed up the quota checking process, which
-normally requires a full scan of the CDR table at each run, from version
-4.7-0 onwards the actual usage per user is stored in a memcache server or a
-mysql table depending on the setup. It is preferably to use memcache server
-in place of mysql to avoid loading the database with queries. The usage data
-is reused and incrementally updated during normalization process thus
-ofloading the server from scanning the whole table at each quota check
-interval.
-
-To start/stop memcache use /etc/init.d/cdrtool command.
-
-Memcached can be manually downloaded from http://www.danga.com/memcached or
-is automatically installed during debian package installation.
-
-Beware that memcached server has no built in security, for this reason is
-advisable to configure it to listen only to a private network interface.
+The rates are linked with profiles corresponding with different time of the
+day, day of the week or holidays. For rating calls, which span multiple
+profiles, the right rate is selected and applied for the call duration
+within each profile. Each customer may be assigned its own dedicated rating
+plans destination id and names. Chained profiles are possible to enable
+exception based rating. Multiple customers may share a common rate list,
+while some destinations may be rated differently, only the differences must
+be provisioned. Multiple time zones are supported for multiple billing
+parties hosted on the same platform.
 
 
 Determination of the billing party
@@ -491,16 +473,6 @@ quota.
 Holidays must be added as individual days YYYY-MM-DD in table
 billing_holidays. The profile applied for holidays is the same as for
 week-ends. Holidays are global and cannot be specified per customer.
-
-
-Sending custom notifications when quota is exceeded
----------------------------------------------------
-
-When quota is exceeded an email notification is sent to the end-user. To
-customize the email message subject, body and other header fields you must
-create some entries in cdrtool.settings table. 
-
-See setup/mysql/custom_notifications.mysql for an example.
 
 
 Known limitations
