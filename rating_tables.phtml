@@ -19,16 +19,17 @@ $table_fname=array(
 
 
 $PHP_SELF           = $_SERVER['PHP_SELF'];
+$REMOTE_ADDR        = $_SERVER['REMOTE_ADDR'];
 
 $export             = $_REQUEST['export'];
 $table              = $_REQUEST['table'];
 $action             = $_REQUEST['action'];
 $subaction          = $_REQUEST['subaction'];
+$confirmDelete      = $_REQUEST['confirmDelete'];
 $next               = $_REQUEST['next'];
 $id                 = $_REQUEST['id'];
 $search_text        = $_REQUEST['search_text'];
 $ReloadRatingTables = $_REQUEST['ReloadRatingTables'];
-$REMOTE_ADDR        = $_SERVER['REMOTE_ADDR'];
 
 global $CDRTool;
 

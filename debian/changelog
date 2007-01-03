@@ -14,10 +14,12 @@ cdrtool (5.0-5) unstable; urgency=low
   * Added documentation for the Quota system (doc/QuotaSystem.txt)
   * Use normalization lock per table using GET_LOCK() server function
     http://dev.mysql.com/doc/refman/5.0/en/miscellaneous-functions.html
-    This provided faster web response when multiple clients access the 
+    This provided faster web response when multiple clients access the
     interface
+  * Fixed confirmation for delete operations in rating tables when global
+    vars are turned off in php.ini
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed,  3 Jan 2007 13:57:43 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed,  3 Jan 2007 14:05:35 +0100
 
 cdrtool (5.0-4) unstable; urgency=low
 
