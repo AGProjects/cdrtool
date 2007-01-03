@@ -9,8 +9,11 @@ cdrtool (5.0-5) unstable; urgency=low
   * Mention how to see prepaid account status
   * Updated rating docs
   * Moved E164 class to phplib/local.inc
+  * Show accounts with quota that exceeded a certain treshold
+    scripts/SER/quotaShowAccounts.php treshhold
+  * Added documentation for the Quota system (doc/QuotaSystem.txt)
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue,  2 Jan 2007 15:47:18 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed,  3 Jan 2007 11:41:28 +0100
 
 cdrtool (5.0-4) unstable; urgency=low
 

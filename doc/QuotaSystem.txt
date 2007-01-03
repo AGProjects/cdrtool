@@ -1,0 +1,48 @@
+
+The quota system
+----------------
+
+This quota systrem works with only with OpenSER datasource.
+
+It is possible to enforce limits for post-paid customers. An external
+scripts builds incremental statistics based on customer usage, check the
+customers quota and blocks the customers in the SIP Proxy. This will not
+stop in real-time ongoing calls but provides in practice a perfect
+protection against fraudulent usage on a platform basis.
+
+To speed up the quota checking process, which normally requires a full scan
+of the CDR table at each run, from version 4.7-0 onwards the actual usage
+per user is stored in a memcache server or a mysql table depending on the
+setup. It is preferably to use memcache server in place of mysql to avoid
+loading the database with queries. The usage data is reused and
+incrementally updated during normalization process thus ofloading the server
+from scanning the whole table at each quota check interval. To start/stop
+memcache server for quota use /etc/init.d/cdrtool command.
+
+Memcached can be manually downloaded from http://www.danga.com/memcached or
+is automatically installed during debian package installation. Beware that
+memcached server has no built in security, for this reason is advisable to
+configure it to listen only on a private network interface.
+
+The quota is checked from cron by the job:
+
+/var/www/CDRTool/scripts/SER/quotaCheck.php
+
+To check the current quota usage run:
+
+/var/www/CDRTool/scripts/SER/quotaShowAccounts.php
+
+To check if the cached quota is in sync with the stored CDRs use run:
+
+/var/www/prj/dnshosting/CDRTool/scripts/SER/quotaCompareUsage.php
+
+At the begining of each month the current quota usage is reset and all users
+are unblocked by this cron job:
+
+/var/www/CDRTool/scripts/SER/quotaReset.php
+
+When quota is exceeded an email notification is sent to the end-user. To
+customize the email message subject, body and other header fields you must
+create some entries in cdrtool.settings table.
+
+See /var/www/CDRTool/setup/mysql/custom_notifications.mysql for an example.

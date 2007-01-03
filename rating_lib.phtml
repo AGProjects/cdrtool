@@ -2771,7 +2771,7 @@ class SERQuota {
  		return count($this->SERAccounts);
     }
 
-    function ShowAccountsWithQuota() {
+    function ShowAccountsWithQuota($treshhold='') {
 
 		if (!$this->LoadSubscribers()) return 0;
 
@@ -2789,6 +2789,9 @@ class SERQuota {
                     }
 
                     $usageRatio=$usage['cost']*100/$this->SERAccounts[$_subscriber]['quota'];
+
+                    if ($treshhold && $treshhold > $usageRatio) continue;
+
                     $usageStatus=sprintf("usage=%-10s",$usage['cost']);
             		printf ("%-35s quota=%-6s %s %.2f%s %s\n",$_subscriber,$this->SERAccounts[$_subscriber]['quota'],$usageStatus,$usageRatio,'%',$blockedStatus);
                 }
