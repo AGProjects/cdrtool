@@ -6,14 +6,14 @@ CDRTool provides on-the-fly rating of CDRs from multiple data-sources like
 OpenSER, Asterisk or Cisco gateways based on an easy to build rating plan,
 which can be imported from external data sources.
 
-A Call Detail Record (a CDR) is one record from the radius radacct table.
-The CDR record contains all information related to a SIP session, like
-duration, calling and called party. The rating engine calculates the Price
-of the call, which is applied in real-time to the web output and saved to
-the database containing the CDRs.
+A Call Detail Record (or CDR) is one record from the radius radacct table.
+The CDR record contains all information related to a session, like session
+duration, calling, called party and media information. The rating engine
+calculates the price of the session, which is applied in real-time to the
+web output and saved to the database containing the CDRs.
 
 Based on exceptions, different rates may be applied per caller party
-identified by source IP, SIP domain or SIP subscriber.
+identified by source IP, domain or subscriber.
 
 Rating is applied only after the call has ended. CDRTool considers that a
 call has ended when there is a stop time. In case of missing BYEs, CDRTool
@@ -36,13 +36,13 @@ Determination of the billing party
 -----------------------------------
 
 CDRTool identifies the rating plans associated with a session based on a
-billing party entity, which is calculated on the fly. The calculus is based
+Billing Party entity, which is calculated on the fly. The calculus is based
 on the first successful match of the BillingPartyId field from the CDR
 database (radacct.UserName for radius data sources) in the following order:
 
-1. SIP account user@domain (the BillingPartyId itself) 
-2. SIP domain of the BillingPartyId 
-3. Source IP of the session 
+1. SIP account user@domain 
+2. SIP domain of the SIP account
+3. Source IP of the session
 4. Default (when none of the above matches)
 
 The longest match is done against entries present in the billing_customers
@@ -53,21 +53,28 @@ the type of session and day of the week.
 Determination of the destination
 --------------------------------
 
-CDRTool identifies the destination id for which to perform the rating based
-on the CanonicalURI field from the accounting table. If the CanonicalURI is
-not available or is empty the destination is taken from either
-SipTranslatedRequestURI or CalledStationId fields in this order. The
-CanonicalURI is preferred because the destination field must contain the
+CDRTool identifies the destination for which to perform the rating based on
+one of the destination fields from the accounting table. The destination is
+taken from the first non-empty field in this order:
+
+1. CanonicalURI (the destination after all lookups inside the SIP Proxy) 
+2. SipTranslatedRequestURI (the Request URI as presented by the SIP UA)
+3. CalledStationId (the content of the To header)
+
+The CanonicalURI is preferred because the destination field must contain the
 real SIP destination after all possible lookups performed by the SIP Proxy
-(except for the DNS lookups). A destination id is then calculated based on
-the longest match in the billing_destinations table and the billing party.
+(except for the DNS lookups). You must configure OpenSER to send this Radius
+attribute when doing accounting (instructions are available in INSTALL.txt).
+
+A destination ID is then calculated based on the longest match of this
+destination in the billing_destinations table and the billing party.
 
 
 PSTN rating 
 -----------
 
-The following steps are taken to rate the calls terminated to PSTN. The
-steps are performed during the normalization process.
+The following steps are taken to rate the calls terminated to PSTN based on
+the destination ID and billing party found in previous steps. 
 
 1. Lookup the billing Profile in cdrtool.billing_customers table in the
    following order: subscriber,domain,gateway (based on $this->dayofweek):
@@ -75,15 +82,13 @@ steps are performed during the normalization process.
 
    - profile_name1 matches week days [1-5]
    - profile_name1_alt matches week days [1-5] if no rates for profile_name1
-   are found
+     are found
    - profile_name2 matches week-ends [6-0]
    - profile_name2_alt matches week-ends [6-0] if no rates for profile_name2
-   are found
+     are found
    - profile_name2 matches also holidays from billing_holidays table
    
-   Note
-   ----
-   in CDRTool, the week starts with 0 (Sunday) and ends with 6 (Saturday)
+   The week starts with 0 (Sunday) and ends with 6 (Saturday)
 
 2. Using the profile_name found, lookup the rate_name based
    on $this->hourofday in cdrtool.billing_profiles table
@@ -108,10 +113,9 @@ steps are performed during the normalization process.
 
    - return an array with all the rating values and the duration rated
 
-  Note
-  ----
   No rate will be returned if no destination Id is found. Make sure each
-  possible destination has a corresponding Id and name in destinations table.
+  possible destination has a corresponding Id and name in destinations
+  table.
 
 4. If the duration rated at point 3 is less than total call duration, apply
    point 3 again for the remaining call duration in next profile.  A maximum
@@ -158,9 +162,10 @@ steps are performed during the normalization process.
    else 
         Price = 0
 
-7. Save the calculated price and DestinationId for each non zero call
+7. Save the calculated price, Billing Party and Destination Id for each call
    in the CDRs. Having the price stored in database, it is possible to build
-   statistics to display consolidated revenues per country code, network or subscriber.
+   statistics to display consolidated revenues per country code, network or
+   subscriber.
    	
    Update the normalized caller and destination for each CDR.
  
@@ -169,7 +174,7 @@ steps are performed during the normalization process.
 NGN rating flow
 ---------------
 
-NGN rating support rating of data traffic based on application type. 
+NGN rating support rating of data traffic based on application type.
 
 1. Lookup the billing Profile in cdrtool.billing_customers table in the
    following order: subscriber,domain,gateway:
@@ -184,6 +189,8 @@ NGN rating support rating of data traffic based on application type.
 
    - return an array with all the rating values and the duration rated
 
+Note. This rating flow has not been used in production environments yet.
+
 
 Importing and exporting of rating files
 ---------------------------------------
@@ -196,17 +203,17 @@ the following command:
 /var/www/CDRTool/scripts/importRatingTables.php
 
 The import script knows to import the files only once so you may dump
-several files there and safely run the import script from cron. The
-import script detects whether the files have been imported by building
-a unique key out of the filename and the hash of the file content. So
-you may use the same filenames as long as the content differs and
-viceversa. If the import file has changed any records, the rating
-engine is automatically instructed to reload the changes.
+several files there and safely run the import script from cron. The import
+script detects whether the files have been imported by building a unique key
+out of the filename and the hash of the file content. So you may use the
+same filenames as long as the content differs and viceversa. If the import
+file has changed any records, the rating engine is automatically instructed
+to reload the changes.
 
-Sample csv files are found in the setup directory. The CSV field order
-is described in setup/*.csv sample files. The first element on each
-line specifies the operation will be performed with the current record.
-The operation can be 2 (update/insert), 1 (insert) or 3 (delete). 
+Sample csv files are found in the setup directory. The CSV field order is
+described in setup/*.csv sample files. The first element on each line
+specifies the operation will be performed with the current record. The
+operation can be 2 (update/insert), 1 (insert) or 3 (delete).
 
 The updates are performed based on a unique key present in each table:
 

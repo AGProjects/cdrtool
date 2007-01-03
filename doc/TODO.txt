@@ -3,3 +3,4 @@
   national numbers depeding on billing party
 - use lock per table using GET_LOCK() server function
 - avoid reload of rating tables on add/delete
+- Define custom directory to load the CSV files from
