@@ -8,8 +8,9 @@ cdrtool (5.0-5) unstable; urgency=low
   * Normalize tries previous month if no record has been updated
   * Mention how to see prepaid account status
   * Updated rating docs
+  * Moved E164 class to phplib/local.inc
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon,  1 Jan 2007 12:07:56 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue,  2 Jan 2007 15:47:18 +0100
 
 cdrtool (5.0-4) unstable; urgency=low
 
