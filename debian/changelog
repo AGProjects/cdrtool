@@ -1,7 +1,11 @@
 cdrtool (5.0-5) unstable; urgency=low
 
   * Fixed determination of previous year in update_raddact_record_mediaproxy
-    setup/radius/OpenSER/radius_accounting.proc must be reloaded into the MySQL server:
+    Consolidate SET statements to minimize binary log entries. Fixed bug in
+    update_raddact_record_mediaproxy, the record values were reset after
+    execution of update on the first table causing failure to update the
+    previous table. setup/radius/OpenSER/radius_accounting.proc must be
+    reloaded into the MySQL server:
     mysql -u root -p -h sipdb radius <  setup/radius/OpenSER/radius_accounting.proc
   * Use same CDR structure for MaxSessionTime and DebitBalance
   * Change logging for prepaid actions to fit one line
@@ -19,7 +23,7 @@ cdrtool (5.0-5) unstable; urgency=low
   * Fixed confirmation for delete operations in rating tables when global
     vars are turned off in php.ini
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed,  3 Jan 2007 14:05:35 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu,  4 Jan 2007 15:32:52 +0100
 
 cdrtool (5.0-4) unstable; urgency=low
 

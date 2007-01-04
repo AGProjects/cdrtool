@@ -1,11 +1,15 @@
 /*
-LAST UPDATED: 2007-01-01 12:03 CET
+LAST UPDATED: 2007-01-04 03:14 CET
 
 CHANGELOG:
 - Added database name as parameter to stored procedures
 - Fixed the multiple query result in "update_raddact_record_mediaproxy"
 - Modus operandi update
 - Fixed determination of previous year in "update_raddact_record_mediaproxy"
+- Consolidate SET statements to minimize binary log entries
+- Fixed bug in update_raddact_record_mediaproxy, the record values were reset 
+  after execution of update on the first table causing failure to update 
+  the previous table 
 
 Starting with version CDRTool version 4.9 it is possible to store call
 details records in automatically rotated radacct tables by using MySQL
@@ -224,52 +228,53 @@ CREATE PROCEDURE `insert_radacct_record`(
 BEGIN
 
 	-- SET VARIABLES
-	SET @v_AcctSessionId = var_AcctSessionId;
-	SET @v_AcctUniqueId = var_AcctUniqueId;
-	SET @v_UserName = var_UserName;
-	SET @v_Realm = var_Realm;
-	SET @v_NASIPAddress = var_NASIPAddress;
-	SET @v_NASPortId = var_NASPortId;
+	SET @v_AcctSessionId = var_AcctSessionId,
+	@v_AcctUniqueId = var_AcctUniqueId,
+	@v_UserName = var_UserName,
+	@v_Realm = var_Realm,
+	@v_NASIPAddress = var_NASIPAddress,
+	@v_NASPortId = var_NASPortId;
+
 	IF var_AcctStartTime = '0' OR var_AcctStartTime = '' THEN
 		SET @v_AcctStartTime = NOW();
 	ELSE
 		SET @v_AcctStartTime = CAST(var_AcctStartTime AS DATETIME);
 	END IF;
+	
 	IF var_AcctStopTime = '0' OR var_AcctStopTime = '' THEN
 		SET @v_AcctStopTime = CAST('0000-00-00 00:00:00' AS DATETIME);
 	ELSE
 		SET @v_AcctStopTime = CAST(var_AcctStopTime AS DATETIME);
 	END IF;
-	SET @v_db_name = var_db_name;
-	SET @v_AcctSessionTime = var_AcctSessionTime;
-	SET @v_AcctInputOctets = var_AcctInputOctets;
-	SET @v_AcctOutputOctets = var_AcctOutputOctets;
-	SET @v_CalledStationId = var_CalledStationId;
-	SET @v_CallingStationId = var_CallingStationId;
-	SET @v_AcctTerminateCause = var_AcctTerminateCause;
-	SET @v_ServiceType = var_ServiceType;
-	SET @v_FramedProtocol = var_FramedProtocol;
-	SET @v_FramedIPAddress = var_FramedIPAddress;
-	SET @v_AcctStartDelay = var_AcctStartDelay;
-	SET @v_AcctStopDelay = var_AcctStopDelay;
-	SET @v_SipResponseCode = var_SipResponseCode;
-	SET @v_SipMethod = var_SipMethod;
-	SET @v_SipTranslatedRequestURI = var_SipTranslatedRequestURI;
-	SET @v_SipToTag = var_SipToTag;
-	SET @v_SipFromTag = var_SipFromTag;
-	SET @v_SipRPID = var_SipRPID;
-	SET @v_SourceIP = var_SourceIP;
-	SET @v_SourcePort = var_SourcePort;
-	SET @v_CanonicalURI = var_CanonicalURI;
- 	SET @v_Rate = var_Rate;
-	SET @v_RTPStatistics = var_RTPStatistics;
-	SET @var_y = (SELECT YEAR(@v_AcctStartTime));
-	SET @var_m = (SELECT DATE_FORMAT(@v_AcctStartTime, '%m'));
-	SET @var_tbl_begin = (SELECT set_radacct_table_name());
-	SET @var_tbl = CONCAT(@var_tbl_begin, @var_y, @var_m);
-
-	-- SEE IF TABLE EXISTS
-	SET @var_tbl_cnt = (SELECT COUNT(TABLE_NAME) AS TBLCNT
+	
+	SET @v_db_name = var_db_name,
+	@v_AcctSessionTime = var_AcctSessionTime,
+	@v_AcctInputOctets = var_AcctInputOctets,
+	@v_AcctOutputOctets = var_AcctOutputOctets,
+	@v_CalledStationId = var_CalledStationId,
+	@v_CallingStationId = var_CallingStationId,
+	@v_AcctTerminateCause = var_AcctTerminateCause,
+	@v_ServiceType = var_ServiceType,
+	@v_FramedProtocol = var_FramedProtocol,
+	@v_FramedIPAddress = var_FramedIPAddress,
+	@v_AcctStartDelay = var_AcctStartDelay,
+	@v_AcctStopDelay = var_AcctStopDelay,
+	@v_SipResponseCode = var_SipResponseCode,
+	@v_SipMethod = var_SipMethod,
+	@v_SipTranslatedRequestURI = var_SipTranslatedRequestURI,
+	@v_SipToTag = var_SipToTag,
+	@v_SipFromTag = var_SipFromTag,
+	@v_SipRPID = var_SipRPID,
+	@v_SourceIP = var_SourceIP,
+	@v_SourcePort = var_SourcePort,
+	@v_CanonicalURI = var_CanonicalURI,
+ 	@v_Rate = var_Rate,
+	@v_RTPStatistics = var_RTPStatistics,
+	@var_y = (SELECT YEAR(@v_AcctStartTime)),
+	@var_m = (SELECT DATE_FORMAT(@v_AcctStartTime, '%m')),
+	@var_tbl_begin = (SELECT set_radacct_table_name()),
+	@var_tbl = CONCAT(@var_tbl_begin, @var_y, @var_m),
+	@var_tbl_cnt = (SELECT COUNT(TABLE_NAME) AS TBLCNT
 	FROM information_schema.tables
 	WHERE TABLE_SCHEMA = @v_db_name
 	AND TABLE_NAME = @var_tbl);
@@ -277,21 +282,11 @@ BEGIN
 	-- TABLE DOES NOT EXIST
 	IF @var_tbl_cnt = 0 THEN
 
-    	-- CREATE RAD TABLE
+    		-- CREATE RAD TABLE
 		SET @ctblproc = CONCAT("CALL create_radacct_table(", "'", @var_tbl, "'", ")");
 		PREPARE ctbl_proc_stmt FROM @ctblproc;
 		EXECUTE ctbl_proc_stmt;
-
-		IF @v_debug = 'Y' THEN
-       SET @q_res = 'dfgsdf';
-			SET @filelog_stmnt = CONCAT("CALL proc_save_filelog ('",
-			@ctblproc, "', 'insert_radacct_record', '", @q_res,"')");
-			PREPARE flog FROM @filelog_stmnt;
-			EXECUTE flog USING @ctblproc;
-			DEALLOCATE PREPARE flog;
-		END IF;
-
-    DEALLOCATE PREPARE ctbl_proc_stmt;
+    		DEALLOCATE PREPARE ctbl_proc_stmt;
 
 	END IF;
 
@@ -330,41 +325,41 @@ BEGIN
 	DEALLOCATE PREPARE add_rad;
 
 	-- CLEAN UP
-	SET @v_AcctSessionId = null;
-	SET @v_AcctUniqueId = null;
-	SET @v_UserName = null;
-	SET @v_Realm = null;
-	SET @v_NASIPAddress = null;
-	SET @v_NASPortId = null;
-	SET @v_AcctStartTime = null;
-	SET @v_AcctStopTime = null;
-	SET @v_AcctSessionTime = null;
-	SET @v_AcctInputOctets = null;
-	SET @v_AcctOutputOctets = null;
-	SET @v_CalledStationId = null;
-	SET @v_CallingStationId = null;
-	SET @v_AcctTerminateCause = null;
-	SET @v_ServiceType = null;
-	SET @v_FramedProtocol = null;
-	SET @v_FramedIPAddress = null;
-	SET @v_AcctStartDelay = null;
-	SET @v_AcctStopDelay = null;
-	SET @v_SipResponseCode = null;
-	SET @v_SipMethod = null;
-	SET @v_SipTranslatedRequestURI = null;
-	SET @v_SipToTag = null;
-	SET @v_SipFromTag = null;
-	SET @v_SipRPID = null;
-	SET @v_SourceIP = null;
-	SET @v_SourcePort = null;
-	SET @v_CanonicalURI = null;
- 	SET @v_Rate = null;
-	SET @v_RTPStatistics = null;
-	SET @var_y = null;
-	SET @var_m = null;
-	SET @v_db_name = null;
-	SET @var_tbl_begin = null;
-	SET @var_tbl = null;
+	SET @v_AcctSessionId = null,
+	@v_AcctUniqueId = null,
+	@v_UserName = null,
+	@v_Realm = null,
+	@v_NASIPAddress = null,
+	@v_NASPortId = null,
+	@v_AcctStartTime = null,
+	@v_AcctStopTime = null,
+	@v_AcctSessionTime = null,
+	@v_AcctInputOctets = null,
+	@v_AcctOutputOctets = null,
+	@v_CalledStationId = null,
+	@v_CallingStationId = null,
+	@v_AcctTerminateCause = null,
+	@v_ServiceType = null,
+	@v_FramedProtocol = null,
+	@v_FramedIPAddress = null,
+	@v_AcctStartDelay = null,
+	@v_AcctStopDelay = null,
+	@v_SipResponseCode = null,
+	@v_SipMethod = null,
+	@v_SipTranslatedRequestURI = null,
+	@v_SipToTag = null,
+	@v_SipFromTag = null,
+	@v_SipRPID = null,
+	@v_SourceIP = null,
+	@v_SourcePort = null,
+	@v_CanonicalURI = null,
+ 	@v_Rate = null,
+	@v_RTPStatistics = null,
+	@var_y = null,
+	@var_m = null,
+	@v_db_name = null,
+	@var_tbl_begin = null,
+	@var_tbl = null;
 
 END $$
 
@@ -390,23 +385,20 @@ CREATE PROCEDURE `update_radacct_record`(
 BEGIN
 
 	-- SET VARIABLES
-	SET @v_db_name = var_db_name;
-	SET @var_tbl_begin = (SELECT set_radacct_table_name());
-	SET @v_stoptime = var_AcctStopTime;
-	SET @var_month_formatted = (SELECT DATE_FORMAT(@v_stoptime, '%m'));
-	SET @var_yst = (SELECT DATE_FORMAT(@v_stoptime, '%Y'));
- 	SET @var_tbl_month = CONCAT(@var_tbl_begin, @var_yst, @var_month_formatted);
-	SET @v_AcctStopTime = CAST(var_AcctStopTime AS DATETIME);
-	SET @v_AcctStopDelay = var_AcctStopDelay;
-	SET @v_ConnectInfo_stop = var_ConnectInfo_stop;
-	SET @v_RTPStatistics = var_RTPStatistics;
-	SET @v_AcctSessionId = var_AcctSessionId;
-	SET @v_SipToTag = var_SipToTag;
-	SET @v_SipFromTag = var_SipFromTag;
-
-	-- LET'S LOOK AT THE TABLE AS PASSED BY var_AcctStopTime
-	-- BUT FIRST... DO WE HAVE THIS TABLE?
-	SET @var_tbl_cnt1 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
+	SET @v_db_name = var_db_name,
+	@var_tbl_begin = (SELECT set_radacct_table_name()),
+	@v_stoptime = var_AcctStopTime,
+	@var_month_formatted = (SELECT DATE_FORMAT(@v_stoptime, '%m')),
+	@var_yst = (SELECT DATE_FORMAT(@v_stoptime, '%Y')),
+ 	@var_tbl_month = CONCAT(@var_tbl_begin, @var_yst, @var_month_formatted),
+	@v_AcctStopTime = CAST(var_AcctStopTime AS DATETIME),
+	@v_AcctStopDelay = var_AcctStopDelay,
+	@v_ConnectInfo_stop = var_ConnectInfo_stop,
+	@v_RTPStatistics = var_RTPStatistics,
+	@v_AcctSessionId = var_AcctSessionId,
+	@v_SipToTag = var_SipToTag,
+	@v_SipFromTag = var_SipFromTag,
+	@var_tbl_cnt1 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
 	FROM information_schema.tables
 	WHERE TABLE_SCHEMA = @v_db_name
 	AND TABLE_NAME = @var_tbl_month);
@@ -430,11 +422,11 @@ BEGIN
 			@v_AcctStopDelay, @v_ConnectInfo_stop, @v_RTPStatistics,
 			@v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
 			@v_SipFromTag, @v_SipToTag;
-		SET @updatedrows = (SELECT ROW_COUNT());
-		DEALLOCATE PREPARE update_rad1;
 
-		-- CLEAN UP
-		SET @updstmt1 = null;
+		SET @updatedrows = (SELECT ROW_COUNT()),
+		@updstmt1 = null;
+
+		DEALLOCATE PREPARE update_rad1;
 
 	ELSE
 		SET @updatedrows = 0;
@@ -444,12 +436,9 @@ BEGIN
 	IF @updatedrows = 0 THEN
 		-- UPDATE LAST MONTH'S TABLE BASED ON var_AcctStopTime
 
-		SET @var_prev_month = (SELECT DATE_FORMAT(DATE_ADD(@v_stoptime, INTERVAL -1 MONTH), '%Y%m'));
-		SET @var_tbl_pmonth = CONCAT(@var_tbl_begin, @var_prev_month);
-
-		-- SEE IF WE HAVE THIS TABLE
-
-		SET @var_tbl_cnt2 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
+		SET @var_prev_month = (SELECT DATE_FORMAT(DATE_ADD(@v_stoptime, INTERVAL -1 MONTH), '%Y%m')),
+		@var_tbl_pmonth = CONCAT(@var_tbl_begin, @var_prev_month),
+		@var_tbl_cnt2 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
 		FROM information_schema.tables
 		WHERE TABLE_SCHEMA = @v_db_name
 		AND TABLE_NAME = @var_tbl_pmonth);
@@ -473,11 +462,11 @@ BEGIN
 				@v_AcctStopDelay, @v_ConnectInfo_stop, @v_RTPStatistics,
 				@v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
 				@v_SipFromTag, @v_SipToTag;
-			SET @updatedrows = (SELECT ROW_COUNT());
-			DEALLOCATE PREPARE update_rad2;
 
-			-- CLEAN UP
-			SET @updstmt = null;
+			SET @updatedrows = (SELECT ROW_COUNT()),
+			@updstmt = null;
+
+			DEALLOCATE PREPARE update_rad2;
 		ELSE
 			SET @updatedrows = 0;
 		END IF;
@@ -485,14 +474,14 @@ BEGIN
 	END IF;
 
 	-- CLEAN UP
-	SET @v_AcctStopTime = null;
-	SET @v_AcctStopDelay = null;
-	SET @v_ConnectInfo_stop = null;
-	SET @v_RTPStatistics = null;
-	SET @v_AcctSessionId = null;
-	SET @v_SipToTag = null;
-	SET @v_SipFromTag = null;
-	SET @v_db_name = null;
+	SET @v_AcctStopTime = null,
+	@v_AcctStopDelay = null,
+	@v_ConnectInfo_stop = null,
+	@v_RTPStatistics = null,
+	@v_AcctSessionId = null,
+	@v_SipToTag = null,
+	@v_SipFromTag = null,
+	@v_db_name = null;
 
 END $$
 
@@ -522,49 +511,42 @@ CREATE PROCEDURE `update_raddact_record_mediaproxy`(
 BEGIN
 
 	-- SET VARIABLES
-	SET @var_tbl_begin = (SELECT set_radacct_table_name());
-
-	SET @var_prev_month = (SELECT DATE_FORMAT(DATE_ADD(CURRENT_DATE, INTERVAL -1 MONTH), '%Y%m'));
-	SET @var_current_month = (SELECT DATE_FORMAT(CURRENT_DATE, '%Y%m'));
-
-	SET @var_tbl = CONCAT(@var_tbl_begin, @var_current_month);
-	SET @var_tbl_prev_month = CONCAT(@var_tbl_begin, @var_prev_month);
-
-	SET @v_AcctSessionTime = var_AcctSessionTime;
-	SET @v_AcctInputOctets = var_AcctInputOctets;
-	SET @v_AcctOutputOctets = var_AcctOutputOctets;
-	SET @v_SipUserAgents = var_SipUserAgents;
-	SET @v_SipCodecs = var_SipCodecs;
-	SET @v_SipApplicationType = var_SipApplicationType;
-	SET @v_MediaInfo = var_MediaInfo;
-	SET @v_Normalized = var_Normalized;
-	SET @v_AcctSessionId = var_AcctSessionId;
-	SET @v_SipToTag = var_SipToTag;
-	SET @v_SipFromTag = var_SipFromTag;
-	SET @v_na = 'n/a';
-	SET @v_dbname = var_db_name;
-	SET @updatedrows = 0;
-
-	-- See if table for current month exists
-	SET @var_tbl_cnt1 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
+	SET @var_tbl_begin = (SELECT set_radacct_table_name()),
+	@var_prev_month = (SELECT DATE_FORMAT(DATE_ADD(CURRENT_DATE, INTERVAL -1 MONTH), '%Y%m')),
+	@var_current_month = (SELECT DATE_FORMAT(CURRENT_DATE, '%Y%m')),
+	@var_tbl = CONCAT(@var_tbl_begin, @var_current_month),
+	@var_tbl_prev_month = CONCAT(@var_tbl_begin, @var_prev_month),
+	@v_AcctSessionTime = var_AcctSessionTime,
+	@v_AcctInputOctets = var_AcctInputOctets,
+	@v_AcctOutputOctets = var_AcctOutputOctets,
+	@v_SipUserAgents = var_SipUserAgents,
+	@v_SipCodecs = var_SipCodecs,
+	@v_SipApplicationType = var_SipApplicationType,
+	@v_MediaInfo = var_MediaInfo,
+	@v_Normalized = var_Normalized,
+	@v_AcctSessionId = var_AcctSessionId,
+	@v_SipToTag = var_SipToTag,
+	@v_SipFromTag = var_SipFromTag,
+	@v_na = 'n/a',
+	@v_dbname = var_db_name,
+	@updatedrows = 0,
+	@var_tbl_cnt1 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
 	FROM information_schema.tables
 	WHERE TABLE_SCHEMA = @v_dbname
-	AND TABLE_NAME = @var_tbl);
-
-	-- See if table for previous month exists
-	SET @var_tbl_cnt2 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
+	AND TABLE_NAME = @var_tbl),
+	@var_tbl_cnt2 = (SELECT COUNT(TABLE_NAME) AS TBLCNT
 	FROM information_schema.tables
 	WHERE TABLE_SCHEMA = @v_dbname
-	AND TABLE_NAME = @var_tbl_prev_month);
+	AND TABLE_NAME = @var_tbl_prev_month),
+	@proc_query = CONCAT("CALL proc_update_raddact_record_mediaproxy (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
-	SET @proc_query = CONCAT("CALL proc_update_raddact_record_mediaproxy (?,?,?,?,?,?,?,?,?,?,?,?,?)");
 	PREPARE proc_rad_stmt FROM @proc_query;
 
 	IF @var_tbl_cnt1 = 1 THEN
 		-- FOR THE CURRENT MONTH
 		EXECUTE proc_rad_stmt USING @var_tbl, @v_AcctSessionTime, 
-            @v_AcctInputOctets, @v_AcctOutputOctets,
-            @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
+            	@v_AcctInputOctets, @v_AcctOutputOctets,
+            	@v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
         	@v_MediaInfo, @v_Normalized, @v_AcctSessionId,
         	@v_SipToTag, @v_SipFromTag, @v_dbname;
 	END IF;
@@ -572,26 +554,26 @@ BEGIN
 	IF @updatedrows = 0 AND @var_tbl_cnt2 = 1 THEN
 		-- FOR THE PREVIOUS MONTH
 		EXECUTE proc_rad_stmt USING @var_tbl_prev_month, @v_AcctSessionTime,
-            @v_AcctInputOctets, @v_AcctOutputOctets,
-            @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
-			@v_MediaInfo, @v_Normalized, @v_AcctSessionId,
-			@v_SipToTag, @v_SipFromTag, @v_dbname;
+            	@v_AcctInputOctets, @v_AcctOutputOctets,
+            	@v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
+		@v_MediaInfo, @v_Normalized, @v_AcctSessionId,
+		@v_SipToTag, @v_SipFromTag, @v_dbname;
 		
 		IF @var_tbl_cnt1 = 1 AND @updatedrows = 0 THEN
 			-- FOR THE CURRENT MONTH WITH SipToTag = 'n/a'
 			EXECUTE proc_rad_stmt USING @var_tbl, @v_AcctSessionTime,
-                @v_AcctInputOctets, @v_AcctOutputOctets,
-                @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
-				@v_MediaInfo, @v_Normalized, @v_AcctSessionId,
-				@v_na, @v_SipFromTag, @v_dbname;
+                	@v_AcctInputOctets, @v_AcctOutputOctets,
+                	@v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
+			@v_MediaInfo, @v_Normalized, @v_AcctSessionId,
+			@v_na, @v_SipFromTag, @v_dbname;
 			
 			IF @var_tbl_cnt2 = 1 AND @updatedrows = 0 THEN
 				-- FOR THE PREVIOUS MONTH WITH SipToTag = 'n/a'
 				EXECUTE proc_rad_stmt USING @var_tbl_prev_month, @v_AcctSessionTime,
-                    @v_AcctInputOctets, @v_AcctOutputOctets,
-                    @v_SipUserAgents, @v_SipCodecs, 
-					@v_SipApplicationType, @v_MediaInfo, @v_Normalized, @v_AcctSessionId,
-					@v_na, @v_SipFromTag, @v_dbname;
+                    		@v_AcctInputOctets, @v_AcctOutputOctets,
+                    		@v_SipUserAgents, @v_SipCodecs, 
+				@v_SipApplicationType, @v_MediaInfo, @v_Normalized, @v_AcctSessionId,
+				@v_na, @v_SipFromTag, @v_dbname;
 			END IF;
 		END IF;
 	END IF;
@@ -600,26 +582,26 @@ BEGIN
 
 	-- CLEAN UP
 
-	SET @var_current_month = null;
-	SET @var_db_name = null;
-	SET @var_tbl_begin = null;
-	SET @var_tbl = null;
-	SET @var_tbl_cnt = null;
-	SET @var_prev_month = null;
-	SET @var_tbl_prev_month = null;
-	SET @v_AcctSessionTime = null;
-	SET @v_AcctInputOctets = null;
-	SET @v_AcctOutputOctets = null;
-	SET @v_SipUserAgents = null;
-	SET @v_SipCodecs = null;
-	SET @v_SipApplicationType = null;
-	SET @v_MediaInfo = null;
-	SET @v_Normalized = null;
-	SET @v_AcctSessionId = null;
-	SET @v_SipFromTag = null;
-	SET @v_SipToTag = null;
-	SET @v_na = null;
-	SET @v_dbname = null;
+	SET @var_current_month = null,
+	@var_db_name = null,
+	@var_tbl_begin = null,
+	@var_tbl = null,
+	@var_tbl_cnt = null,
+	@var_prev_month = null,
+	@var_tbl_prev_month = null,
+	@v_AcctSessionTime = null,
+	@v_AcctInputOctets = null,
+	@v_AcctOutputOctets = null,
+	@v_SipUserAgents = null,
+	@v_SipCodecs = null,
+	@v_SipApplicationType = null,
+	@v_MediaInfo = null,
+	@v_Normalized = null,
+	@v_AcctSessionId = null,
+	@v_SipFromTag = null,
+	@v_SipToTag = null,
+	@v_na = null,
+	@v_dbname = null;
 
 END $$
 
@@ -649,13 +631,9 @@ CREATE PROCEDURE `proc_update_raddact_record_mediaproxy`(
 BEGIN
 
 	-- TABLENAME VARIABLE
-	SET @var_tbl = var_tblname;
-	-- DATABASE NAME VARIABLE
-	SET @var_db_name = var_dbname;
-
-	-- SEE IF TABLE EXISTS
-
-	SET @var_tbl_cnt = (SELECT COUNT(TABLE_NAME) AS TBLCNT
+	SET @var_tbl = var_tblname,
+	@var_db_name = var_dbname,
+	@var_tbl_cnt = (SELECT COUNT(TABLE_NAME) AS TBLCNT
 	FROM information_schema.tables
 	WHERE TABLE_SCHEMA = @var_db_name
 	AND TABLE_NAME = @var_tbl);
@@ -679,36 +657,24 @@ BEGIN
 			AcctSessionId = ?
 			AND SipToTag = ? AND SipFromTag = ?;");
 			PREPARE update_rad FROM @radupdstmt;
-		SET @v_AcctSessionTime = var_AcctSessionTime;
-		SET @v_AcctInputOctets = var_AcctInputOctets;
-		SET @v_AcctOutputOctets = var_AcctOutputOctets;
-		SET @v_SipUserAgents = var_SipUserAgents;
-		SET @v_SipCodecs = var_SipCodecs;
-		SET @v_SipApplicationType = var_SipApplicationType;
-		SET @v_MediaInfo = var_MediaInfo;
-		SET @v_Normalized = var_Normalized;
-		SET @v_AcctSessionId = var_AcctSessionId;
-		SET @v_SipToTag = var_SipToTag;
-		SET @v_SipFromTag = var_SipFromTag;
+
+		SET @v_AcctSessionTime = var_AcctSessionTime,
+		@v_AcctInputOctets = var_AcctInputOctets,
+		@v_AcctOutputOctets = var_AcctOutputOctets,
+		@v_SipUserAgents = var_SipUserAgents,
+		@v_SipCodecs = var_SipCodecs,
+		@v_SipApplicationType = var_SipApplicationType,
+		@v_MediaInfo = var_MediaInfo,
+		@v_Normalized = var_Normalized,
+		@v_AcctSessionId = var_AcctSessionId,
+		@v_SipToTag = var_SipToTag,
+		@v_SipFromTag = var_SipFromTag;
+
 		EXECUTE update_rad USING @v_AcctSessionTime, @v_AcctInputOctets, @v_AcctOutputOctets,
 			@v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
 			@v_MediaInfo, @v_Normalized, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
 		SET @rcnt = (SELECT ROW_COUNT());
 		DEALLOCATE PREPARE update_rad;
-
-		-- CLEAN UP
-		SET @var_tbl = null;
-		SET @v_AcctSessionTime = null;
-		SET @v_AcctInputOctets = null;
-		SET @v_AcctOutputOctets = null;
-		SET @v_SipUserAgents = null;
-		SET @v_SipCodecs = null;
-		SET @v_SipApplicationType = null;
-		SET @v_MediaInfo = null;
-		SET @v_Normalized = null;
-		SET @v_AcctSessionId = null;
-		SET @v_SipToTag = null;
-		SET @v_SipFromTag = null;
 
 	END IF;
 
