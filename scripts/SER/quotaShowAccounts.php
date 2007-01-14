@@ -5,7 +5,7 @@ include($path."/../../global.inc");
 include($path."/../../cdrlib.phtml");
 
 if (!count($argv) || count($argv) != 2) {
-    print "Syntax: $PHP_SELF treshhold\n";
+    printf ("Syntax: %s treshhold\n",$_SERVER['PHP_SELF']);
     print "Accounts with quota usage percentage greater than the treshhold will be showed.\n";
     return 0;
 }
