@@ -91,6 +91,22 @@ class DB_ser extends DB_Sql {
 }
 
 // Used by /var/www/CDRTool/scripts/replicationStatus.php
+class DB1 extends DB_Sql {
+  var $Host     = "10.0.0.1";
+  var $Database = "radius";
+  var $User     = "root";
+  var $Password = "PASSWORD";
+  var $Halt_On_Error ="no";
+}
+
+class DB2 extends DB_Sql {
+  var $Host     = "10.0.0.2";
+  var $Database = "radius";
+  var $User     = "root";
+  var $Password = "PASSWORD";
+  var $Halt_On_Error ="no";
+}
+
 $CDRTool['replicated_databases']=array('DB1','DB2');
 
 class DomainAuthLocal extends DomainAuth {	// defined in phplib/local.inc

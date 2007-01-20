@@ -1,3 +1,14 @@
+cdrtool (5.0.9) unstable; urgency=low
+
+  * Added /var/www/CDRTool/scripts/replicationStatus.php
+    script to easily check the database replication process
+    Add to global.inc $CDRTool['replicated_databases']=array('DB1','DB2');
+    and defined DB1 and DB2 connections to the mysql databases that 
+    replicate to each other. The connections must use the same IP 
+    addresses and usernames used during the setup of the replication process
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 20 Jan 2007 16:14:09 +0100
+
 cdrtool (5.0.8) unstable; urgency=low
 
   * Enable failover between CDR databases for normalization process 
