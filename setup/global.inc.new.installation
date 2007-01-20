@@ -55,7 +55,7 @@ class DB_CDRTool extends DB_Sql {
   var $Database = "cdrtool";
   var $User     = "cdradmin";
   var $Password = "PASSWORD";
-  var $Halt_On_Error ="no";
+  var $Halt_On_Error ="yes";
 }
 
 class DB_Locker extends DB_Sql {
@@ -110,8 +110,7 @@ $DATASOURCES=array(
                     "name"               => "OpenSER",
                     "class"              => "CDRS_ser_radius",
                     "table"              => "radacct",
-                    "db_class"           => "DB_radius",
-                    "db_class_readonly"  => "DB_radius2",
+                    "db_class"           => array("DB_radius2","DB_radius"),  
                     "rating"             => "1",
                     "normalizedField"    => "Normalized",
                     "UserQuotaClass"     => "SERQuota",

@@ -66,7 +66,7 @@ class DB_Sql {
       $User     = $this->User;
     if ("" == $Password)
       $Password = $this->Password;
-      
+
     /* establish connection, select database */
     if ( 0 == $this->Link_ID ) {
     
@@ -80,6 +80,7 @@ class DB_Sql {
         $this->halt("cannot use database ".$this->Database);
         return 0;
       }
+
     }
     
     return $this->Link_ID;

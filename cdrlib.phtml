@@ -68,6 +68,8 @@ class CDRS {
         global $memcache_server;
         global $defaults;
 
+        $this->cdrtool  = new DB_CDRTool();
+
         $PHP_SELF=$_SERVER["PHP_SELF"];
 
         if (!$cdr_source || !$DATASOURCES[$cdr_source]) {
@@ -112,7 +114,6 @@ class CDRS {
         }
 
         $_dbClass            = $this->DATASOURCES[$cdr_source]['db_class'];
-        $_dbClass_readonly   = $this->DATASOURCES[$cdr_source]['db_class_readonly'];
         $_Table              = $this->DATASOURCES[$cdr_source]['table'];
 
 		if ($this->DATASOURCES[$cdr_source]['DestinationIdField']) {
@@ -162,35 +163,39 @@ class CDRS {
         } else {
             $_sipTraceDataSource='sip_trace';
         }
-    
-        if ($_dbClass) $this->db_class=$_dbClass;
-    
-        if ($_dbClass_readonly && $_dbClass_readonly != $_dbClass) {
-            dprint ("CDRs will be read from database classes ");
-            dprint_r($_dbClass_readonly);
-    
-            if ($_dbClass_readonly) {
-                if (is_array($_dbClass_readonly)) {
-                    // select a random connection from the pool
-                    $_idx=array_rand($_dbClass_readonly);
-                    $this->db_class_readonly=$_dbClass_readonly[$_idx];
+
+        // connect to the CDR database
+        unset($this->db_class);
+
+        if (is_array($_dbClass)) {
+            if ($_dbClass[0]) $this->primary_database   = $_dbClass[0];
+            if ($_dbClass[1]) $this->secondary_database = $_dbClass[1];
+        } else {
+            $this->primary_database = $_dbClass;
+        }
+
+		$this->CDRdb    = new $this->primary_database;
+
+        if (!$this->CDRdb->query('SELECT 1')) {
+            if ($this->secondary_database) {
+				$this->CDRdb    = new $this->secondary_database;
+		        if (!$this->CDRdb->query('SELECT 1')) {
+                    $log="Failed to connect to any CDR database\n";
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
+                    return 0;
                 } else {
-                    // select the only one class as string
-                    $this->db_class_readonly=$_dbClass_readonly;
+        			$this->CDRdb1         = new $this->secondary_database;
+            		$this->CDRdb_readonly = new $this->secondary_database;
+		            $this->db_class       = $this->secondary_database;
                 }
             }
+        } else {
+        	$this->CDRdb1         = new $this->primary_database;
+            $this->CDRdb_readonly = new $this->primary_database;
+            $this->db_class       = $this->primary_database;
         }
-    
-        if (!$this->db_class_readonly) $this->db_class_readonly=$_dbClass;
-    
-        $this->cdrtool  = new DB_CDRTool();
-        $this->CDRdb    = new $this->db_class;
-        $this->CDRdb1   = new $this->db_class;
 
-        if (class_exists($this->db_class_readonly)) {
-            $this->CDRdb_readonly     = new $this->db_class_readonly;
-        }
-    
         if (strlen($_intAccessCode))  $this->intAccessCode  = $_intAccessCode;
         if (strlen($_natAccessCode))  $this->natAccessCode  = $_natAccessCode;
         if ($_sipTraceDataSource)  $this->sipTraceDataSource  = $_sipTraceDataSource;
@@ -700,6 +705,9 @@ class CDRS {
 
     function getUnNormalized($where="",$table) {
         dprint("<b>getUnNormalizeCDRS</b>($where,$table)");
+		if (!$this->db_class) {
+            return 0;
+        }
 
         if (!$where) $where=" (1=1) ";
         if (!$table) $table=$this->table;
@@ -742,6 +750,11 @@ class CDRS {
 
     function NormalizeCDRS($where="",$table) {
         dprint("<b>NormalizeCDRS</b>($where,$table)");
+
+		if (!$this->db_class) {
+            return 0;
+        }
+
         $b=time();
 
         if (!$where) $where=" (1=1) ";

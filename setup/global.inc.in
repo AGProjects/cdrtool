@@ -119,7 +119,7 @@ class DB_CDRTool extends DB_Sql {
   var $Database = "cdrtool";
   var $User     = "cdradmin";
   var $Password = "PASSWORD";
-  var $Halt_On_Error ="no";
+  var $Halt_On_Error ="yes";
 }
 
 class DB_Locker extends DB_Sql {
@@ -173,9 +173,8 @@ $DATASOURCES=array(
 "ser_radius"=>array(
                     "name"               => "OpenSER",
                     "class"              => "CDRS_ser_radius",
+                    "db_class"           => array("DB_radius2","DB_radius"),  
                     "table"              => "radacct",      // or radacct".date("Ym") if sql.conf uses the mysql procedure to auto-rotate tables
-                    "db_class"           => "DB_radius",  
-                    "db_class_readonly"  => "DB_radius",    // use replicated databases to spread the reads
                     "db_class_siponline" => "DB_ser", 	    // location of openser location table	
                     "rateField"          => "Rate",
                     "rating"             => "1",

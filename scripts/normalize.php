@@ -30,10 +30,9 @@ while (list($k,$v) = each($DATASOURCES)) {
         $class_name=$v["class"];
 
         unset($CDRS);
-
         $CDRS = new $class_name($k);
 
-        $log=sprintf("Normalize datasource %s, database %s, table %s\n",$k,$v['db_class'],$CDRS->table);
+        $log=sprintf("Normalize datasource %s, database %s, table %s\n",$k,$CDRS->db_class,$CDRS->table);
         print $log;
         syslog(LOG_NOTICE,$log);
 
@@ -53,7 +52,7 @@ while (list($k,$v) = each($DATASOURCES)) {
         if (preg_match("/^(\w+)\d{6}$/",$CDRS->table,$m)) {
         	$lastMonthTable=$m[1].date('Ym', mktime(0, 0, 0, date("m")-1, "01", date("Y")));
 
-            $log=sprintf("Normalize datasource %s, database %s, table %s\n",$k,$v['db_class'],$lastMonthTable);
+            $log=sprintf("Normalize datasource %s, database %s, table %s\n",$k,$CDRS->db_class,$lastMonthTable);
             print $log;
             syslog(LOG_NOTICE,$log);
 

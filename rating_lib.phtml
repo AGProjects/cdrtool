@@ -2628,7 +2628,6 @@ class SERQuota {
         $this->AccountsDBClass = &$parent->AccountsDBClass;
         $this->UserQuotaTable  = &$parent->UserQuotaTable;
         $this->CDRdb           = &$parent->CDRdb;
-        $this->CDRdb_readonly  = &$parent->CDRdb_readonly;
 	    $this->table           = &$parent->table;
         $this->CDRTool         = &$parent->CDRTool;
 
@@ -2884,23 +2883,23 @@ class SERQuota {
         //$domains_sql,
 
         dprint($query);
-        $this->CDRdb_readonly->query($query);
+        $this->CDRdb->query($query);
 
-        $rows=$this->CDRdb_readonly->num_rows();
+        $rows=$this->CDRdb->num_rows();
 		$log=sprintf ("%d callers generated traffic in %s\n",$rows,Date("Y-m",time()));
         print $log;
 		syslog(LOG_NOTICE, $log);
 
         $j=0;
 
-        while($this->CDRdb_readonly->next_record()) {
+        while($this->CDRdb->next_record()) {
 
-            if (!$this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]) continue;
+            if (!$this->SERAccounts[$this->CDRdb->f($this->BillingPartyIdField)]) continue;
 
-            $this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]['usage']['calls']    = $this->CDRdb_readonly->f('calls');
-            $this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]['usage']['duration'] = $this->CDRdb_readonly->f('duration');
-            $this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]['usage']['cost']     = $this->CDRdb_readonly->f('cost');
-            $this->SERAccounts[$this->CDRdb_readonly->f($this->BillingPartyIdField)]['usage']['traffic']  = $this->CDRdb_readonly->f('traffic');
+            $this->SERAccounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['calls']    = $this->CDRdb->f('calls');
+            $this->SERAccounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['duration'] = $this->CDRdb->f('duration');
+            $this->SERAccounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['cost']     = $this->CDRdb->f('cost');
+            $this->SERAccounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['traffic']  = $this->CDRdb->f('traffic');
 
             $j++;
 

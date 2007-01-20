@@ -1,3 +1,11 @@
+cdrtool (5.0.8) unstable; urgency=low
+
+  * Enable failover between CDR databases for normalization process 
+    db_class can be an array with database connection classes 
+  * Removed db_class_readonly from global.inc
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 20 Jan 2007 12:03:19 +0100
+
 cdrtool (5.0.7) unstable; urgency=low
 
   * Fixed version to be compliant with debian native version numbering
