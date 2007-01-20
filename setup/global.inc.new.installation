@@ -90,6 +90,9 @@ class DB_ser extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
+// Used by /var/www/CDRTool/scripts/replicationStatus.php
+$CDRTool['replicated_databases']=array('DB1','DB2');
+
 class DomainAuthLocal extends DomainAuth {	// defined in phplib/local.inc
 }
 
