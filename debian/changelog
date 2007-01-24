@@ -1,3 +1,10 @@
+cdrtool (5.0.10) unstable; urgency=low
+
+  * Fixed reload of prepaid accounts from rating page to reload only the
+  prepaid account that has changed (when PHP register_globals if off)
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 24 Jan 2007 12:46:30 +0100
+
 cdrtool (5.0.9) unstable; urgency=low
 
   * Added /var/www/CDRTool/scripts/replicationStatus.php
