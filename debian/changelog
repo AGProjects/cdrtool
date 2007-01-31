@@ -2,8 +2,9 @@ cdrtool (5.0.10) unstable; urgency=low
 
   * Fixed reload of prepaid accounts from rating page to reload only the
   prepaid account that has changed (when PHP register_globals if off)
+  * Fixed logging in prepaid history table 
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 24 Jan 2007 12:46:30 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 31 Jan 2007 17:04:48 +0100
 
 cdrtool (5.0.9) unstable; urgency=low
 
