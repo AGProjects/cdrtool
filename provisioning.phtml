@@ -559,10 +559,11 @@ class SIPAccounts extends Records {
                         $bgcolor="white";
                     }
 
+					$sip_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
                     printf("
                     <tr bgcolor=$bgcolor>
                     <td>%s</td>
-                    <td>%s@%s</td>
+                    <td>%s</td>
                     <td>%s</td>
                     <td>%s %s</td>
                     <td>%s</td>
@@ -572,8 +573,7 @@ class SIPAccounts extends Records {
                     ",
     
                     $index,
-                    $account->id->username,
-                    $account->id->domain,
+                    $sip_account,
                     $account->timezone,
                     $account->firstName,
                     $account->lastName,
