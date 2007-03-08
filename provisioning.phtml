@@ -57,7 +57,7 @@ if ($rType=='enum') {
                       );
     
     $next      = $_REQUEST['next'];
-    
+
     printf ("<h3>SIP accounts <a href=%s?rType=enum>ENUM mappings</a></h3>",$_SERVER['PHP_SELF']);
     $SIPAccounts->listRecords($filters,$next);
 }
@@ -451,7 +451,7 @@ class SIPAccounts extends Records {
         	$filters['domain'] = $this->domainsFilter[0];
         }
 
-        if ($filters['domain'] && !in_array($filters['domain'],$this->domainsFilter)) {
+        if ($filters['domain'] && $this->domainsFilter && !in_array($filters['domain'],$this->domainsFilter)) {
         	$filters['domain'] = $this->domainsFilter[0];
         }
 
