@@ -6,61 +6,26 @@ page_open(
                   "perm" => "CDRTool_Perm"));
 
 $title="Provisioning interface";
+
 if (is_readable("local/header.phtml")) {
     include("local/header.phtml");
 } else {
     include("header.phtml");
 }
 
-$perm->check("rates");
+$perm->check("admin");
 
 include("SOAP/Client.php");
 include("provisioning_lib.phtml");
 
 $layout = new pageLayoutLocal();
 
-global $CDRTool;
+$layout->showTopMenu();
 
-if ($CDRTool['filter']['aNumber']) {
-    $layout->showHeader();
-    $layout->showTopMenuSubscriber();
-} else {
-    $layout->showTopMenu();
-}
-
-$rType=$_REQUEST['rType'];
-
-if ($rType=='enum') {
-    $ENUMmappings = new ENUMmappings();
-    
-    $filters   = array('number'       => trim($_REQUEST['number_filter']),
-                       'type'         => trim($_REQUEST['type_filter']),
-                       'mapto'        => trim($_REQUEST['mapto_filter']),
-                       'sortBy'       => trim($_REQUEST['sortBy']),
-                       'sortOrder'    => trim($_REQUEST['sortOrder']),
-                       'soapEngineId' => trim($_REQUEST['soapEngineId'])
-                      );
-    
-    $next      = $_REQUEST['next'];
-    printf ("<h3> ENUM mappings <a href=%s?rType=sip>SIP accounts</a></h3>",$_SERVER['PHP_SELF']);
-    $ENUMmappings->listRecords($filters,$next);
-} else {
-    
-    $SIPAccounts = new SIPAccounts();
-    
-    $filters   = array('username'     => trim($_REQUEST['username_filter']),
-                       'domain'       => trim($_REQUEST['domain_filter']),
-                       'fullname'     => trim($_REQUEST['fullname_filter']),
-                       'sortBy'       => trim($_REQUEST['sortBy']),
-                       'sortOrder'    => trim($_REQUEST['sortOrder']),
-                       'soapEngineId' => trim($_REQUEST['soapEngineId'])
-                      );
-    
-    $next      = $_REQUEST['next'];
-
-    printf ("<h3>SIP accounts <a href=%s?rType=enum>ENUM mappings</a></h3>",$_SERVER['PHP_SELF']);
-    $SIPAccounts->listRecords($filters,$next);
-}
+$SOAPEngine   = new SOAPEngine($_REQUEST['service']);
+$recordsClass = $SOAPEngine->recordsClass;
+$RECORDS      = new $recordsClass(&$SOAPEngine);
+$RECORDS->listRecords();
 
 $layout->showFooter();
 
@@ -70,46 +35,54 @@ print "
 ";
 
 class SOAPEngine {
-	function SOAPEngine ($port) {
-        global $DATASOURCES;
+    var $services=array(
+                        'sip' =>array('recordsClass' => 'SipAccounts',
+                                      'soapClass'    => 'WebService_NGNPro_SipPort'
+                                      ),
+                        'sipa' =>array('recordsClass' => 'SipAliases',
+                                       'soapClass'    => 'WebService_NGNPro_SipPort'
+                                      ),
+                        'enum'=>array('recordsClass' => 'EnumMappings',
+                                      'soapClass'    => 'WebService_NGNPro_EnumPort'
+                                      ),
+                        'trusted'=>array('recordsClass' => 'TrustedPeers',
+                                      'soapClass'    => 'WebService_NGNPro_SipPort'
+                                      )
+                        );
 
-        global $perm;
-        $this->perm = $perm;
-
+	function SOAPEngine ($service) {
         global $soapEngines;
         $this->soapEngines = $soapEngines;
 
-        if (($DATASOURCES[$this->cdr_source]['SOAPUsername'] &&
-            $DATASOURCES[$this->cdr_source]['SOAPPassword'] &&
-            $DATASOURCES[$this->cdr_source]['SOAPURL'] ) || (is_array($this->soapEngines) && $this->perm->have_perm('admin')) ) {
-    
-            if ($this->perm->have_perm('admin') && $this->soapEngines) {
-                if (!$_REQUEST['soapEngineId']) {
-                    $_soapids=array_keys($this->soapEngines);
-                    $this->soapEngineId = $_soapids[0];
-                } else {
-                    $this->soapEngineId = $_REQUEST['soapEngineId'];
-                }
-    
-                $this->SOAPlogin = array(
-                                       "username"    => $this->soapEngines[$this->soapEngineId]['username'],
-                                       "password"    => $this->soapEngines[$this->soapEngineId]['password'],
-                                       "admin"       => true
-                                       );
-                $this->SOAPurl=$this->soapEngines[$this->soapEngineId]['url'];
-    
-            } else {
-                $this->SOAPlogin = array(
-                                       "username"    => $DATASOURCES[$this->cdr_source]['SOAPUsername'],
-                                       "password"    => $DATASOURCES[$this->cdr_source]['SOAPPassword'],
-                                       "admin"       => $DATASOURCES[$this->cdr_source]['SOAPAdmin']
-                                       );
-                $this->SOAPurl = $DATASOURCES[$this->cdr_source]['SOAPURL'];
+        if (is_array($this->soapEngines)) {
+
+            if (!$service) {
+                $_services     = array_keys($this->services);
+                $_soapids      = array_keys($this->soapEngines);
+                $service       = $_soapids[0].":".$_services[0];
             }
+
+            $this->service=$service;
+
+            $_els=explode(":",$service);
+
+            $this->soapEngineId   = $_els[0];
+            $this->soapEnginePort = $_els[1];
+            $this->recordsClass   = $this->services[$this->soapEnginePort]['recordsClass'];
+            $this->soapClass      = $this->services[$this->soapEnginePort]['soapClass'];
+
+            $this->SOAPlogin = array(
+                                   "username"    => $this->soapEngines[$this->soapEngineId]['username'],
+                                   "password"    => $this->soapEngines[$this->soapEngineId]['password'],
+                                   "admin"       => true
+                                   );
+
+            $this->SOAPurl=$this->soapEngines[$this->soapEngineId]['url'];
     
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
-    
-            $this->selectPort($port);
+
+
+    		$this->soapclient = new $this->soapClass($this->SOAPurl);
 
             $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
@@ -118,33 +91,35 @@ class SOAPEngine {
     	} else {
             print "<p><font color=red>Error: No SOAP credentials defined.</font>";
         }
-
-    }
-
-    function selectPort ($port='Sip') {
-        if ($port=='Sip') {
-    		$this->soapclient = new WebService_NGNPro_SipPort($this->SOAPurl);
-        } else if ($port='Enum') {
-    		$this->soapclient = new WebService_NGNPro_EnumPort($this->SOAPurl);
-        }
     }
 
     function showEngineSelection() {
-
-        if ($this->perm->have_perm('admin')) {
-            $selected_soapEngine[$this->soapEngineId]='selected';
-            print " Platform:";
-            printf ("<select name=soapEngineId>");
-            foreach (array_keys($this->soapEngines) as $_engine) {
-                printf ("<option value='%s' %s>%s",$_engine,$selected_soapEngine[$_engine],$this->soapEngines[$_engine]['name']);
+        $selected_soapEngine[$this->service]='selected';
+        printf ("<select name=service onChange=\"document.soapengine.submit.disabled = true; location.href = '%s?source=' + this.options[this.selectedIndex].value\">",$_SERVER['PHP_SELF']);
+        $j=0;
+        foreach (array_keys($this->soapEngines) as $_engine) {
+        	if ($j) printf ("<option value=''>--------");
+            foreach (array_keys($this->services) as $_service) {
+                $idx=$_engine.":".$_service;
+                printf ("<option value='%s:%s' %s>%s:%s",$_engine,$_service,$selected_soapEngine[$idx],ucfirst($_service),$this->soapEngines[$_engine]['name']);
             }
-            printf ("</select>");
+            $j++;
         }
+
+        printf ("</select>");
     }
 }
 
 class Records {
 	var $maxrowsperpage = '15';
+
+    function Records(&$SOAPEngine) {
+    	$this->SOAPEngine=&$SOAPEngine;
+
+        $this->filters['sortBy']    = trim($_REQUEST['sortBy']);
+        $this->filters['sortOrder'] = trim($_REQUEST['sortOrder']);
+        $this->next                 = $_REQUEST['next'];
+    }
 
     function showPagination($next,$maxrows) {
         print "
@@ -153,7 +128,8 @@ class Records {
         <tr>
         <td>
         ";
-        $this->url.="&rType=".urlencode($_REQUEST['rType']);
+
+        $this->url.="&service=".urlencode($this->SOAPEngine->service);
 
         if ($next != 0  ) {
             $show_next=$this->maxrowsperpage-$next;
@@ -183,48 +159,104 @@ class Records {
         ";
     }
 
+    function showSeachFormCustom() {
+    }
+
     function showSeachForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=soapengine action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+            $this->SOAPEngine->showEngineSelection();
+
+            $this->showSeachFormCustom();
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print " Sort by: ";
+
+            $this->showSortForm();
+
+            print "
+            <input type=submit name=action value=Search>
+            ";
+            print "
+	        </td>
+            </form>
+        </tr>
+        </table>
+        ";
     }
 
     function listRecords() {
     }
 
+    function tel2enum($tel,$tld) {
+
+        if (strlen($tld) == 0)  $tld="e164.arpa";
+
+        // transform telephone number in FQDN Enum style domain name
+        if (preg_match("/^[+]?(\d+)$/",$tel,$m)) {
+            $l=strlen($m[1]);
+            $rev_num="";
+            $z=0;
+            while ($z < $l) {
+                $ss=substr($m[1],$z,1);
+                $enum=$ss.".".$enum;
+                $z++;
+            }
+            preg_match("/^(.*)\.$/",$enum,$m);
+            $enum=$m[1];
+            $enum=$enum.".$tld.";
+            return($enum);
+         } else {
+            return($tel);
+         }
+    }
+
+    function showSortForm () {
+    }
 }
 
 class ENUMmappings extends Records {
 
-    function ENUMmappings() {
-        global $perm;
-        $this->perm = $perm;
-
-        $this->SOAPEngine = new SOAPEngine('Enum');
+    function ENUMmappings(&$SOAPEngine) {
+        $this->filters   = array('number'       => trim($_REQUEST['number_filter']),
+                                 'type'         => trim($_REQUEST['type_filter']),
+                                 'mapto'        => trim($_REQUEST['mapto_filter'])
+                                );
+        
+		$this->Records(&$SOAPEngine);
     }
 
-    function listRecords($filters,$next) {
+    function listRecords() {
 
-		$this->showSeachForm($filters);
-
-		if (!is_object($this->SOAPEngine->soapclient)) return false;
-
-        $this->next=$next;
+		$this->showSeachForm();
 
         // Filter
-        $filter=array('number' => $filters['number'],
-                      'type'   => $filters['type'],
-                      'mapto'  => $filters['mapto']
+        $filter=array('number' => $this->filters['number'],
+                      'type'   => $this->filters['type'],
+                      'mapto'  => $this->filters['mapto']
                       );
 
         // Range
-        $range=array('start' => intval($next),
+        $range=array('start' => intval($this->next),
                      'count' => intval($this->maxrowsperpage)
                      );
 
         // Order
-        if (!$filters['sortBy'])    $filters['sortBy']    = 'changeDate';
-        if (!$filters['sortOrder']) $filters['sortOrder'] = 'DESC';
+        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'changeDate';
+        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'DESC';
 
-        $orderBy = array('attribute' => $filters['sortBy'],
-                         'direction' => $filters['sortOrder']
+        $orderBy = array('attribute' => $this->filters['sortBy'],
+                         'direction' => $this->filters['sortOrder']
                          );
 
         // Compose query
@@ -233,15 +265,11 @@ class ENUMmappings extends Records {
                      'range'   => $range
                      );
 
-        $this->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($filters['sortBy']),urlencode($filters['sortOrder']));
+        $this->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
 
-        if ($this->perm->have_perm('admin') && $_REQUEST['soapEngineId']) {
-			$this->url .= sprintf("&soapEngineId=%s",urlencode($_REQUEST['soapEngineId']));
-        }
-
-        if (strlen($filters['number'])) $this->url .= sprintf("&number_filter=%s",urlencode($filters['number']));
-        if (strlen($filters['type']))   $this->url .= sprintf("&type_filter=%s",urlencode($filters['type']));
-        if (strlen($filters['mapto'])) $this->url .= sprintf("&mapto_filter=%s",urlencode($filters['mapto']));
+        if (strlen($this->filters['number'])) $this->url .= sprintf("&number_filter=%s",urlencode($this->filters['number']));
+        if (strlen($this->filters['type']))   $this->url .= sprintf("&type_filter=%s",urlencode($this->filters['type']));
+        if (strlen($this->filters['mapto']))  $this->url .= sprintf("&mapto_filter=%s",urlencode($this->filters['mapto']));
 
         // Insert credetials
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -271,12 +299,14 @@ class ENUMmappings extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
-                <td><b>ENUM number</b></td>
+                <td><b>E.164 number</b></td>
                 <td><b>Top level domain</b></td>
+                <td><b>DNS name</b></td>
                 <td><b>Service</b></td>
                 <td><b>Map to</b></td>
                 <td><b>TTL</b></td>
                 <td><b>Priority</b></td>
+                <td><b>Owner</b></td>
                 <td><b>Info</b></td>
             </tr>
             ";
@@ -323,14 +353,18 @@ class ENUMmappings extends Records {
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
                             </tr>",
                             $index,
                             $number->id->number,
                             $number->id->tld,
+                            $this->tel2enum($number->id->number,$number->id->tld),
                             ucfirst($_mapping->type),
                             $_mapping->mapto,
                             $_mapping->ttl,
                             $_mapping->priority,
+                            $number->owner,
                             $number->info
                             );
                         } else {
@@ -339,17 +373,18 @@ class ENUMmappings extends Records {
                             <td></td>
                             <td></td>
                             <td></td>
+                            <td></td>
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
-                            <td>%s</td>
+                            <td></td>
+                            <td></td>
                             </tr>",
                             ucfirst($_mapping->type),
                             $_mapping->mapto,
                             $_mapping->ttl,
-                            $_mapping->priority,
-                            $number->info
+                            $_mapping->priority
                             );
 
                         }
@@ -374,97 +409,184 @@ class ENUMmappings extends Records {
         }
     }
 
-    function showSeachForm($filters) {
+    function showSeachFormCustom() {
 
-        print "
-        <p>
-        <table border=0 class=border width=100%>
-        <tr>
-            ";
-            printf ("<form method=post action=%s>",$_SERVER['PHP_SELF']);
+        printf (" ENUM number: <input type=text name=number_filter value='%s'>",$this->filters['number']);
+        printf (" Service: <input type=text name=type_filter value='%s'>",$this->filters['type']);
+        printf (" Map to: <input type=text name=mapto_filter value='%s'>",$this->filters['mapto']);
+
+    }
+
+    function showSortForm() {
+        $selected_sortBy[$this->filters['sortBy']]='selected';
+        print "<select name=sortBy>";
+        printf ("<option value='changeDate' %s>Change date",$selected_sortBy['changeDate']);
+        printf ("<option value='number' %s>Number",$selected_sortBy['number']);
+        print "</select>";
+
+        $selected_sortOrder[$this->filters['sortOrder']]='selected';
+        print "<select name=sortOrder>";
+        printf ("<option value='DESC' %s>DESC",$selected_sortOrder['DESC']);
+        printf ("<option value='ASC' %s>ASC",$selected_sortOrder['ASC']);
+        print "</select>";
+    }
+
+}
+
+class TrustedPeers extends Records {
+
+    function TrustedPeers(&$SOAPEngine) {
+
+		$this->Records(&$SOAPEngine);
+    }
+
+    function listRecords() {
+
+		$this->showSeachForm();
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getTrustedPeers();
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = count($result);
+
             print "
-        	<td align=left>
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>IP address</b></td>
+                <td><b>Protocol</b></td>
+                <td><b>From pattern</b></td>
+                <td><b>Max sessions</b></td>
+                <td><b>Description</b></td>
+                <td><b>Owner</b></td>
+            </tr>
             ";
-            $this->SOAPEngine->showEngineSelection();
 
-            printf (" ENUM number: <input type=text name=number_filter value='%s'>",$filters['number']);
-            printf (" Service: <input type=text name=type_filter value='%s'>",$filters['type']);
-            printf (" Map to: <input type=text name=mapto_filter value='%s'>",$filters['mapto']);
+            if (!$this->next)  $this->next=0;
 
-            print "</td>";
-            print "<td align=right>";
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
 
-            print " Sort by: ";
-            $selected_sortBy[$filters['sortBy']]='selected';
-            print "<select name=sortBy>";
-            printf ("<option value='changeDate' %s>Change date",$selected_sortBy['changeDate']);
-            printf ("<option value='number' %s>Number",$selected_sortBy['number']);
-            print "</select>";
+            $i=0;
 
-            $selected_sortOrder[$filters['sortOrder']]='selected';
-            print "<select name=sortOrder>";
-            printf ("<option value='DESC' %s>DESC",$selected_sortOrder['DESC']);
-            printf ("<option value='ASC' %s>ASC",$selected_sortOrder['ASC']);
-            print "</select>";
+			if ($this->rows) {
+                while ($i < $this->maxrowsperpage)  {
+    
+                    $peer = $result[$i];
+                    if (!$peer->ip) break;
 
-            print "
-            <input type=submit name=action value=Search>
-            ";
-            printf("<input type=hidden name=rType value='%s'>",$_REQUEST['rType']);
-            print "
-	        </td>
-            </form>
-        </tr>
-        </table>
-        ";
+                    $index = $this->next+$i+1;
+    
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+                    printf("
+                    <tr bgcolor=$bgcolor>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    </tr>",
+                    $index,
+                    $peer->ip,
+                    $peer->protocol,
+                    $peer->fromPattern,
+                    $peer->maxSessions,
+                    $peer->description,
+                    $peer->info
+                    );
+
+                    printf("
+                    </tr>
+                    ");
+
+                    $i++;
+    
+                }
+    
+			}
+
+            print "</table>";
+
+            $this->showPagination($next,$maxrows);
+
+            return true;
+        }
+    }
+
+    function showSeachFormCustom() {
     }
 
 }
 
 class SIPAccounts extends Records {
-    function SIPAccounts($cdr_source='ser_radius') {
+    function SIPAccounts(&$SOAPEngine) {
         global $CDRTool;
         $this->CDRTool = $CDRTool;
 
-        global $perm;
-        $this->perm = $perm;
-
-        $this->cdr_source = $cdr_source;
+        $this->filters   = array('username'     => trim($_REQUEST['username_filter']),
+                           'domain'       => trim($_REQUEST['domain_filter']),
+                           'fullname'     => trim($_REQUEST['fullname_filter'])
+                           );
 
         if ($this->CDRTool['filter']['domain']) {
             $this->domainsFilter=explode(" ",$this->CDRTool['filter']['domain']);
 		}
 
-        $this->SOAPEngine = new SOAPEngine('Sip');;
+		$this->Records(&$SOAPEngine);
 
     }
 
-    function listRecords($filters,$next) {
+    function listRecords() {
 
-		if (preg_match("/^(.*)@(.*)$/",$filters['username'],$m)) {
-        	$filters['username'] = $m[1];
-            $filters['domain']   = $m[2];
+		if (preg_match("/^(.*)@(.*)$/",$this->filters['username'],$m)) {
+        	$this->filters['username'] = $m[1];
+            $this->filters['domain']   = $m[2];
         }
 
         // Make sure we apply the domain filter from the login credetials
-        if ($this->domainsFilter && !$filters['domain']) {
-        	$filters['domain'] = $this->domainsFilter[0];
+        if ($this->domainsFilter && !$this->filters['domain']) {
+        	$this->filters['domain'] = $this->domainsFilter[0];
         }
 
-        if ($filters['domain'] && $this->domainsFilter && !in_array($filters['domain'],$this->domainsFilter)) {
-        	$filters['domain'] = $this->domainsFilter[0];
+        if ($this->filters['domain'] && $this->domainsFilter && !in_array($this->filters['domain'],$this->domainsFilter)) {
+        	$this->filters['domain'] = $this->domainsFilter[0];
         }
 
-		$this->showSeachForm($filters);
-
-		if (!is_object($this->SOAPEngine->soapclient)) return false;
-
-        $this->next=$next;
+		$this->showSeachForm();
 
         // Filter
-        $filter=array('username' => $filters['username'],
-                      'domain'   => $filters['domain'],
-                      'name'     => $filters['fullname']
+        $filter=array('username' => $this->filters['username'],
+                      'domain'   => $this->filters['domain'],
+                      'name'     => $this->filters['fullname']
                       );
 
         // Range
@@ -473,11 +595,11 @@ class SIPAccounts extends Records {
                      );
 
         // Order
-        if (!$filters['sortBy'])    $filters['sortBy']    = 'changeDate';
-        if (!$filters['sortOrder']) $filters['sortOrder'] = 'DESC';
+        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'changeDate';
+        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'DESC';
 
-        $orderBy = array('attribute' => $filters['sortBy'],
-                         'direction' => $filters['sortOrder']
+        $orderBy = array('attribute' => $this->filters['sortBy'],
+                         'direction' => $this->filters['sortOrder']
                          );
 
         // Compose query
@@ -486,15 +608,11 @@ class SIPAccounts extends Records {
                         'range'   => $range
                         );
 
-        $this->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($filters['sortBy']),urlencode($filters['sortOrder']));
+        $this->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
 
-        if ($this->perm->have_perm('admin') && $_REQUEST['soapEngineId']) {
-			$this->url .= sprintf("&soapEngineId=%s",urlencode($_REQUEST['soapEngineId']));
-        }
-
-        if (strlen($filters['username'])) $this->url .= sprintf("&username_filter=%s",urlencode($filters['username']));
-        if (strlen($filters['domain']))   $this->url .= sprintf("&domain_filter=%s",urlencode($filters['domain']));
-        if (strlen($filters['fullname'])) $this->url .= sprintf("&fullname_filter=%s",urlencode($filters['fullname']));
+        if (strlen($this->filters['username'])) $this->url .= sprintf("&username_filter=%s",urlencode($this->filters['username']));
+        if (strlen($this->filters['domain']))   $this->url .= sprintf("&domain_filter=%s",urlencode($this->filters['domain']));
+        if (strlen($this->filters['fullname'])) $this->url .= sprintf("&fullname_filter=%s",urlencode($this->filters['fullname']));
 
         // Insert credetials
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -596,64 +714,238 @@ class SIPAccounts extends Records {
         }
     }
 
-    function showSeachForm($filters) {
+    function showSeachFormCustom() {
+        printf (" Username: <input type=text name=username_filter value='%s'>",$this->filters['username']);
+        printf (" Domain: ");
 
-        print "
-        <p>
-        <table border=0 class=border width=100%>
-        <tr>
-            ";
-            printf ("<form method=post action=%s>",$_SERVER['PHP_SELF']);
-            print "
-        	<td align=left>
-            ";
-            $this->SOAPEngine->showEngineSelection();
-
-            printf (" Username: <input type=text name=username_filter value='%s'>",$filters['username']);
-            printf (" Domain: ");
-
-            if ($this->domainsFilter) {
-            	$selected_domain[$filters['domain']]='selected';
-            	printf ("<select name=domain_filter>");
-                foreach ($this->domainsFilter as $_domain) {
-            		printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
-                }
-
-                printf ("</select");
-            } else {
-            	printf ("<input type=text name=domain_filter value='%s'>",$filters['domain']);
+        if ($this->domainsFilter) {
+            $selected_domain[$this->filters['domain']]='selected';
+            printf ("<select name=domain_filter>");
+            foreach ($this->domainsFilter as $_domain) {
+                printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
             }
 
-            printf (" Full name: <input type=text name=fullname_filter value='%s'>",$filters['fullname']);
+            printf ("</select");
+        } else {
+            printf ("<input type=text name=domain_filter value='%s'>",$this->filters['domain']);
+        }
 
-            print "
-	        </td>
-        	<td align=right>
-            ";
-            print " Sort by: ";
-            $selected_sortBy[$filters['sortBy']]='selected';
-            print "<select name=sortBy>";
-            printf ("<option value='changeDate' %s>Change date",$selected_sortBy['changeDate']);
-            printf ("<option value='username' %s>Username",$selected_sortBy['username']);
-            print "</select>";
+        printf (" Full name: <input type=text name=fullname_filter value='%s'>",$this->filters['fullname']);
+    }
 
-            $selected_sortOrder[$filters['sortOrder']]='selected';
-            print "<select name=sortOrder>";
-            printf ("<option value='DESC' %s>DESC",$selected_sortOrder['DESC']);
-            printf ("<option value='ASC' %s>ASC",$selected_sortOrder['ASC']);
-            print "</select>";
+    function showSortForm() {
+        $selected_sortBy[$this->filters['sortBy']]='selected';
+        print "<select name=sortBy>";
+        printf ("<option value='changeDate' %s>Change date",$selected_sortBy['changeDate']);
+        printf ("<option value='username' %s>Username",$selected_sortBy['username']);
+        print "</select>";
 
-            print "
-            <input type=submit name=action value=Search>
-	        </td>
-            </form>
-        </tr>
-        </table>
-        ";
+        $selected_sortOrder[$this->filters['sortOrder']]='selected';
+        print "<select name=sortOrder>";
+        printf ("<option value='DESC' %s>DESC",$selected_sortOrder['DESC']);
+        printf ("<option value='ASC' %s>ASC",$selected_sortOrder['ASC']);
+        print "</select>";
     }
 
 }
 
+class SIPAliases extends Records {
+    function SIPAliases(&$SOAPEngine) {
+        global $CDRTool;
+        $this->CDRTool = $CDRTool;
+
+        $this->filters   = array('aliasUsername'     => trim($_REQUEST['alias_username_filter']),
+                                 'aliasDomain'       => trim($_REQUEST['alias_domain_filter']),
+                                 'targetUsername'    => trim($_REQUEST['target_username_filter']),
+                                 'targetDomain'      => trim($_REQUEST['target_domain_filter'])
+                           );
+
+        if ($this->CDRTool['filter']['domain']) {
+            $this->domainsFilter=explode(" ",$this->CDRTool['filter']['domain']);
+		}
+
+		$this->Records(&$SOAPEngine);
+
+    }
+
+    function listRecords() {
+
+        // Make sure we apply the domain filter from the login credetials
+        if ($this->domainsFilter && !$this->filters['aliasDomain']) {
+        	$this->filters['aliasDomain'] = $this->domainsFilter[0];
+        }
+
+        if ($this->filters['aliasDomain'] && $this->domainsFilter && !in_array($this->filters['aliasDomain'],$this->domainsFilter)) {
+        	$this->filters['aliasDomain'] = $this->domainsFilter[0];
+        }
+
+		$this->showSeachForm();
+
+        // Filter
+        $filter=array('aliasUsername'  => $this->filters['aliasUsername'],
+                      'aliasDomain'    => $this->filters['aliasDomain'],
+                      'targetUsername' => $this->filters['targetUsername'],
+                      'targetDomain'   => $this->filters['targetDomain']
+                      );
+
+        // Range
+        $range=array('start' => intval($next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'aliasUsername';
+        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->filters['sortBy'],
+                         'direction' => $this->filters['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        $this->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
+
+        if (strlen($this->filters['aliasUsername']))  $this->url .= sprintf("&alias_username_filter=%s",urlencode($this->filters['aliasUsername']));
+        if (strlen($this->filters['aliasDomain']))    $this->url .= sprintf("&alias_domain_filter=%s",urlencode($this->filters['aliasDomain']));
+        if (strlen($this->filters['targetUsername'])) $this->url .= sprintf("&target_username_filter=%s",urlencode($this->filters['targetUsername']));
+        if (strlen($this->filters['targetDomain']))   $this->url .= sprintf("&target_domain_filter=%s",urlencode($this->filters['targetDomain']));
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getAliases($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = $result->total;
+            //print "<pre>";
+            //print_r($result);
+
+            print "
+            <p>
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>SIP alias</b></td>
+                <td><b>SIP target</b></td>
+                <td><b>Owner</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $this->maxrowsperpage)  {
+    
+                    if (!$result->aliases[$i]) break;
+    
+                    $alias = $result->aliases[$i];
+    
+                    $index=$this->next+$i+1;
+    
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+                    printf("
+                    <tr bgcolor=$bgcolor>
+                    <td>%s</td>
+                    <td>%s@%s</td>
+                    <td>%s@%s</td>
+                    <td>%s</td>
+                    </tr>
+                    ",
+    
+                    $index,
+                    $alias->id->username,
+                    $alias->id->domain,
+                    $alias->target->username,
+                    $alias->target->domain,
+                    $alias->owner
+                    );
+    
+                    $i++;
+    
+                }
+    
+			}
+
+            print "</table>";
+
+            $this->showPagination($next,$maxrows);
+
+            return true;
+        }
+    }
+
+    function showSeachFormCustom() {
+        printf (" Alias: <input type=text name=alias_username_filter value='%s'>",$this->filters['aliasUsername']);
+        printf (" Domain: ");
+
+        if ($this->domainsFilter) {
+            $selected_domain[$this->filters['aliasDomain']]='selected';
+            printf ("<select name=alias_domain_filter>");
+            foreach ($this->domainsFilter as $_domain) {
+                printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
+            }
+
+            printf ("</select");
+        } else {
+            printf ("<input type=text name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
+        }
+
+        printf (" Target: <input type=text name=target_username_filter value='%s'>",$this->filters['targetUsername']);
+        printf ("Domain: <input type=text name=target_domain_filter value='%s'>",$this->filters['targetDomain']);
+
+    }
+
+    function showSortForm() {
+        $selected_sortBy[$this->filters['sortBy']]='selected';
+        print "<select name=sortBy>";
+        printf ("<option value='changeDate' %s>Change date",$selected_sortBy['changeDate']);
+        printf ("<option value='aliasUsername' %s>Alias username",$selected_sortBy['aliasUsername']);
+        printf ("<option value='aliasDomain' %s>Alias domain",$selected_sortBy['aliasDomain']);
+        printf ("<option value='targetUsername' %s>Target username",$selected_sortBy['targetUsername']);
+        printf ("<option value='targetDomain' %s>Target domain",$selected_sortBy['targetDomain']);
+        print "</select>";
+
+        $selected_sortOrder[$this->filters['sortOrder']]='selected';
+        print "<select name=sortOrder>";
+        printf ("<option value='DESC' %s>DESC",$selected_sortOrder['DESC']);
+        printf ("<option value='ASC' %s>ASC",$selected_sortOrder['ASC']);
+        print "</select>";
+    }
+
+}
 
 page_close();
 ?>
