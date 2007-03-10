@@ -119,7 +119,7 @@ class SOAPEngine {
 }
 
 class Records {
-	var $maxrowsperpage = '15';
+	var $maxrowsperpage = '20';
 
     function Records(&$SOAPEngine) {
     	$this->SOAPEngine=&$SOAPEngine;
@@ -129,7 +129,7 @@ class Records {
         $this->next                 = $_REQUEST['next'];
     }
 
-    function showPagination($next,$maxrows) {
+    function showPagination($maxrows) {
         print "
         <p>
         <table border=0 align=center>
@@ -139,8 +139,8 @@ class Records {
 
         $this->url.="&service=".urlencode($this->SOAPEngine->service);
 
-        if ($next != 0  ) {
-            $show_next=$this->maxrowsperpage-$next;
+        if ($this->next != 0  ) {
+            $show_next=$this->maxrowsperpage-$this->next;
             if  ($show_next < 0)  {
                 $mod_show_next  =  $show_next-2*$show_next;
             }
@@ -154,7 +154,7 @@ class Records {
         <td>
         ";
 
-        if ($next + $this->maxrowsperpage < $this->rows)  {
+        if ($this->next + $this->maxrowsperpage < $this->rows)  {
             $show_next = $this->maxrowsperpage + $this->next;
             $url_next  = $_SERVER['PHP_SELF'].$this->url."&next=$show_next";
             print "<a href=\"$url_next\">Next</a>";
@@ -436,7 +436,7 @@ class ENUMmappings extends Records {
 
             print "</table>";
 
-            $this->showPagination($next,$maxrows);
+            $this->showPagination($maxrows);
 
             return true;
         }
@@ -556,7 +556,7 @@ class TrustedPeers extends Records {
 
             print "</table>";
 
-            $this->showPagination($next,$maxrows);
+            $this->showPagination($maxrows);
 
             return true;
         }
@@ -613,7 +613,7 @@ class SIPAccounts extends Records {
                       );
 
         // Range
-        $range=array('start' => intval($next),
+        $range=array('start' => intval($this->next),
                      'count' => intval($this->maxrowsperpage)
                      );
 
@@ -731,7 +731,7 @@ class SIPAccounts extends Records {
 
             print "</table>";
 
-            $this->showPagination($next,$maxrows);
+            $this->showPagination($maxrows);
 
             return true;
         }
@@ -805,7 +805,7 @@ class SIPAliases extends Records {
                       );
 
         // Range
-        $range=array('start' => intval($next),
+        $range=array('start' => intval($this->next),
                      'count' => intval($this->maxrowsperpage)
                      );
 
@@ -917,7 +917,7 @@ class SIPAliases extends Records {
 
             print "</table>";
 
-            $this->showPagination($next,$maxrows);
+            $this->showPagination($maxrows);
 
             return true;
         }
@@ -1049,7 +1049,7 @@ class DomainStatistics extends Records {
 
             print "</table>";
 
-            $this->showPagination($next,$maxrows);
+            $this->showPagination($maxrows);
 
             return true;
         }
