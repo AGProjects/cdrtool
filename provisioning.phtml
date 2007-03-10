@@ -42,6 +42,9 @@ class SOAPEngine {
                         'sipa'    => array('recordsClass' => 'SipAliases',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
+                        'domains'    => array('recordsClass' => 'DomainStatistics',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                                          ),
                         'enum'    => array('recordsClass' => 'EnumMappings',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
                                           ),
@@ -249,14 +252,18 @@ class Records {
 }
 
 class ENUMmappings extends Records {
-    var $sortElements=array('changeDate'=>'Change date',
-                            'number' => 'E.164 numberame'
+    var $sortElements=array('changeDate' => 'Change date',
+                            'number'     => 'E.164 number',
+                            'tld'        => 'TLD',
+                            'owner'      => 'Owner'
                             );
 
     function ENUMmappings(&$SOAPEngine) {
         $this->filters   = array('number'       => trim($_REQUEST['number_filter']),
+                                 'tld'          => trim($_REQUEST['tld_filter']),
                                  'type'         => trim($_REQUEST['type_filter']),
-                                 'mapto'        => trim($_REQUEST['mapto_filter'])
+                                 'mapto'        => trim($_REQUEST['mapto_filter']),
+                                 'owner'        => trim($_REQUEST['owner_filter'])
                                 );
         
 		$this->Records(&$SOAPEngine);
@@ -438,6 +445,7 @@ class ENUMmappings extends Records {
     function showSeachFormCustom() {
 
         printf (" E.164 number: <input type=text size=10 name=number_filter value='%s'>",$this->filters['number']);
+        printf (" TLD: <input type=text size=10 name=tld_filter value='%s'>",$this->filters['tld']);
         printf (" Service: <input type=text size=10 name=type_filter value='%s'>",$this->filters['type']);
         printf (" Map to: <input type=text size=10 name=mapto_filter value='%s'>",$this->filters['mapto']);
 
@@ -938,6 +946,123 @@ class SIPAliases extends Records {
     }
 
 }
+
+class DomainStatistics extends Records {
+
+    var $maxrowsperpage= 200;
+
+    function DomainStatistics(&$SOAPEngine) {
+        $this->filters   = array(
+                           'domain'       => trim($_REQUEST['domain_filter'])
+                           );
+
+		$this->Records(&$SOAPEngine);
+    }
+
+    function listRecords() {
+
+		$this->showSeachForm();
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+		$filter=$this->filters['domain'];
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getDomainStatistics($filter);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = count($result);
+
+            print "
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>SIP domain</b></td>
+                <td><b>SIP subscribers</b></td>
+                <td><b>Online subscribers</b></td>
+                <td><b>Online SIP devices</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $this->maxrowsperpage)  {
+    
+                    $domain = $result[$i];
+                    if (!$domain->domain) break;
+
+                    $index = $this->next+$i+1;
+    
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+                    printf("
+                    <tr bgcolor=$bgcolor>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    </tr>",
+                    $index,
+                    $domain->domain,
+                    $domain->users,
+                    $domain->onlineUsers,
+                    $domain->onlineDevices
+                    );
+
+                    printf("
+                    </tr>
+                    ");
+
+                    $i++;
+    
+                }
+			}
+
+            print "</table>";
+
+            $this->showPagination($next,$maxrows);
+
+            return true;
+        }
+    }
+
+    function showSeachFormCustom() {
+
+        printf (" Domain: <input type=text size=10 name=domain_filter value='%s'>",$this->filters['domain']);
+
+    }
+
+}
+
 
 page_close();
 ?>
