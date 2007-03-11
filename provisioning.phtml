@@ -566,14 +566,14 @@ class TrustedPeers extends Records {
                         $bgcolor="white";
                     }
 
-                    $this->url .= sprintf("?service=%s&action=Delete&ip_filter=%s",
+                    $_url = $_SERVER['PHP_SELF'].sprintf("?service=%s&action=Delete&ip_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($peer->ip)
                     );
 
                     if ($_REQUEST['action'] == 'Delete' &&
                     	$_REQUEST['ip_filter'] == $peer->ip) {
-                		$this->url .= "&confirm=1";
+                		$_url .= "&confirm=1";
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
                         $actionText = "Delete";
@@ -596,7 +596,7 @@ class TrustedPeers extends Records {
                     $peer->fromPattern,
                     $peer->description,
                     $peer->owner,
-                    $this->url,
+                    $_url,
                     $actionText
                     );
 
@@ -851,7 +851,7 @@ class SIPAccounts extends Records {
                         $bgcolor="white";
                     }
 
-        			$this->url .= sprintf("&service=%s&action=Delete&username_filter=%s&domain_filter=%s",
+        			$_url = $_SERVER['PHP_SELF'].sprintf("?service=%s&action=Delete&username_filter=%s&domain_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($account->id->username),
                     urlencode($account->id->domain)
@@ -860,7 +860,7 @@ class SIPAccounts extends Records {
                     if ($_REQUEST['action'] == 'Delete' &&
                     	$_REQUEST['username_filter'] == $account->id->username &&
                         $_REQUEST['domain_filter'] == $account->id->domain) {
-                		$this->url .= "&confirm=1";
+                		$_url .= "&confirm=1";
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
                         $actionText = "Delete";
@@ -889,7 +889,7 @@ class SIPAccounts extends Records {
                     $account->email,
                     $account->rpid,
                     $account->changeDate,
-                    $this->url,
+                    $_url,
                     $actionText
                     );
     
@@ -1181,7 +1181,7 @@ class SIPAliases extends Records {
                         $bgcolor="white";
                     }
 
-        			$this->url .= sprintf("&service=%s&action=Delete&alias_username_filter=%s&alias_domain_filter=%s",
+        			$_url = $_SERVER['PHP_SELF'].sprintf("?service=%s&action=Delete&alias_username_filter=%s&alias_domain_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($alias->id->username),
                     urlencode($alias->id->domain)
@@ -1190,7 +1190,7 @@ class SIPAliases extends Records {
                     if ($_REQUEST['action'] == 'Delete' &&
                     	$_REQUEST['alias_username_filter'] == $alias->id->username &&
                         $_REQUEST['alias_domain_filter'] == $alias->id->domain) {
-                		$this->url .= "&confirm=1";
+                		$_url .= "&confirm=1";
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
                         $actionText = "Delete";
@@ -1212,7 +1212,7 @@ class SIPAliases extends Records {
                     $alias->target->username,
                     $alias->target->domain,
                     $alias->owner,
-                    $this->url,
+                    $_url,
                     $actionText
                     );
     
@@ -1441,14 +1441,14 @@ class DomainStatistics extends Records {
                         $bgcolor="white";
                     }
 
-        			$this->url .= sprintf("?service=%s&action=Delete&domain_filter=%s",
+        			$_url = $_SERVER['PHP_SELF'].sprintf("?service=%s&action=Delete&domain_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($domain->domain)
                     );
 
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['domain_filter'] == $domain->domain) {
-                		$this->url .= "&confirm=1";
+                		$_url .= "&confirm=1";
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
                         $actionText = "Delete";
@@ -1469,7 +1469,7 @@ class DomainStatistics extends Records {
                     $domain->users,
                     $domain->onlineUsers,
                     $domain->onlineDevices,
-                    $this->url,
+                    $_url,
                     $actionText
                     );
 
