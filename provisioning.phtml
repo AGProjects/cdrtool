@@ -25,6 +25,10 @@ $layout->showTopMenu();
 $SOAPEngine = new SOAPEngine($_REQUEST['service']);
 $_class     = $SOAPEngine->recordsClass;
 $RECORDS    = new $_class(&$SOAPEngine);
+
+if ($_REQUEST['action']=='Add') $RECORDS->addRecord();
+if ($_REQUEST['action']=='Delete') $RECORDS->deleteRecord();
+
 $RECORDS->listRecords();
 
 $layout->showFooter();
@@ -199,9 +203,18 @@ class Records {
         </tr>
         </table>
         ";
+
+        if ($_REQUEST['action'] != 'Delete') $this->showAddForm();
+
     }
 
     function listRecords() {
+    }
+
+    function addRecord() {
+    }
+
+    function deleteRecord() {
     }
 
     function tel2enum($tel,$tld) {
@@ -227,6 +240,9 @@ class Records {
          }
     }
 
+    function showAddForm() {
+	}
+
     function showSortForm() {
 
         if (!count($this->sortElements)) {
@@ -235,7 +251,7 @@ class Records {
 
         $selected_sortBy[$this->filters['sortBy']]='selected';
 
-        print " Sort by: ";
+        //print " Sort ";
 
         print "<select name=sortBy>";
         foreach (array_keys($this->sortElements) as $key) {
@@ -247,6 +263,27 @@ class Records {
         print "<select name=sortOrder>";
         printf ("<option value='DESC' %s>DESC",$selected_sortOrder['DESC']);
         printf ("<option value='ASC' %s>ASC",$selected_sortOrder['ASC']);
+        print "</select>";
+    }
+
+    function showTimezones() {
+        if (!$fp = fopen("timezones", "r")) {
+        	print _("Failed to open timezone file.");
+            return false;
+        }
+        print "<select name=timezone>";
+        print "\n<option>";
+        while ($buffer = fgets($fp,1024)) {
+        	$buffer=trim($buffer);
+            if ($this->timezone==$buffer) {
+                $selected="selected";
+            } else {
+                $selected="";
+            }
+            print "\n<option $selected>";
+            print "$buffer";
+        }
+        fclose($fp);
         print "</select>";
     }
 }
@@ -377,7 +414,7 @@ class ENUMmappings extends Records {
                     foreach ($number->mappings as $_mapping) {
                         if ($j==1) {
                             printf("
-                            <tr bgcolor=$bgcolor>
+                            <tr bgcolor=%s>
                             <td>%s</td>
                             <td>+%s</td>
                             <td>%s</td>
@@ -389,6 +426,7 @@ class ENUMmappings extends Records {
                             <td>%s</td>
                             <td>%s</td>
                             </tr>",
+                            $bgcolor,
                             $index,
                             $number->id->number,
                             $number->id->tld,
@@ -402,7 +440,7 @@ class ENUMmappings extends Records {
                             );
                         } else {
                             printf("
-                            <tr bgcolor=$bgcolor>
+                            <tr bgcolor=%s>
                             <td></td>
                             <td></td>
                             <td></td>
@@ -414,6 +452,7 @@ class ENUMmappings extends Records {
                             <td></td>
                             <td></td>
                             </tr>",
+                            $bgcolor,
                             ucfirst($_mapping->type),
                             $_mapping->mapto,
                             $_mapping->ttl,
@@ -456,6 +495,8 @@ class ENUMmappings extends Records {
 class TrustedPeers extends Records {
 
     function TrustedPeers(&$SOAPEngine) {
+        $this->filters   = array('ip'     => trim($_REQUEST['ip_filter'])
+                           );
 
 		$this->Records(&$SOAPEngine);
     }
@@ -491,9 +532,9 @@ class TrustedPeers extends Records {
                 <td><b>IP address</b></td>
                 <td><b>Protocol</b></td>
                 <td><b>From pattern</b></td>
-                <td><b>Max sessions</b></td>
                 <td><b>Description</b></td>
                 <td><b>Owner</b></td>
+                <td><b>Action</b></td>
             </tr>
             ";
 
@@ -525,23 +566,38 @@ class TrustedPeers extends Records {
                         $bgcolor="white";
                     }
 
+                    $this->url .= sprintf("?service=%s&action=Delete&ip_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($peer->ip)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                    	$_REQUEST['ip_filter'] == $peer->ip) {
+                		$this->url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
                     printf("
-                    <tr bgcolor=$bgcolor>
+                    <tr bgcolor=%s>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
                     </tr>",
+                    $bgcolor,
                     $index,
                     $peer->ip,
                     $peer->protocol,
                     $peer->fromPattern,
-                    $peer->maxSessions,
                     $peer->description,
-                    $peer->info
+                    $peer->owner,
+                    $this->url,
+                    $actionText
                     );
 
                     printf("
@@ -559,6 +615,100 @@ class TrustedPeers extends Records {
             $this->showPagination($maxrows);
 
             return true;
+        }
+    }
+
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+
+            printf (" IP address: <input type=text size=20 name=ipaddress>");
+            printf (" Description: <input type=text size=30 name=description>");
+            printf (" Owner: <input type=text size=10 name=owner>");
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+            printf("<input type=hidden name=service value='%s'>",$this->SOAPEngine->service);
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+    	$ipaddress   = trim($_REQUEST['ipaddress']);
+        $description = trim($_REQUEST['description']);
+        $owner       = trim($_REQUEST['owner']);
+
+		if (!strlen($ipaddress) || !strlen($description)) {
+            printf ("<p><font color=red>Error: Missing IP or description. </font>");
+            return false;
+        }
+
+        $peer=array(
+                     'ip'          => $ipaddress,
+                     'description' => $description,
+                     'owner'       => intval($_REQUEST['owner'])
+        			);
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->addTrustedPeer($peer);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>Trusted peers %s has been added. </font>",$ipaddress);
+           return 1;
+        }
+    }
+
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
+
+        if (!strlen($this->filters['ip']) || !strlen($this->filters['ip'])) {
+            print "<p><font color=red>Error: missing IP address. </font>";
+            return 0;
+        }
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->deleteTrustedPeer($this->filters['ip']);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>Trusted peer %s has been deleted. </font> ",$this->filters['ip']);
+           unset($this->filters);
+           return 1;
         }
     }
 
@@ -668,6 +818,7 @@ class SIPAccounts extends Records {
                 <td><b>Email</b></td>
                 <td><b>Caller Id</b></td>
                 <td><b>Change date</b></td>
+                <td><b>Action</b></td>
             </tr>
             ";
 
@@ -700,9 +851,25 @@ class SIPAccounts extends Records {
                         $bgcolor="white";
                     }
 
+        			$this->url .= sprintf("&service=%s&action=Delete&username_filter=%s&domain_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($account->id->username),
+                    urlencode($account->id->domain)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                    	$_REQUEST['username_filter'] == $account->id->username &&
+                        $_REQUEST['domain_filter'] == $account->id->domain) {
+                		$this->url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
 					$sip_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
+
                     printf("
-                    <tr bgcolor=$bgcolor>
+                    <tr bgcolor=%s>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -710,9 +877,10 @@ class SIPAccounts extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
+                    <td><a href=%s>%s</a></td>
                     </tr>
                     ",
-    
+                    $bgcolor,
                     $index,
                     $sip_account,
                     $account->timezone,
@@ -720,11 +888,12 @@ class SIPAccounts extends Records {
                     $account->lastName,
                     $account->email,
                     $account->rpid,
-                    $account->changeDate
+                    $account->changeDate,
+                    $this->url,
+                    $actionText
                     );
     
                     $i++;
-    
                 }
     
 			}
@@ -738,7 +907,7 @@ class SIPAccounts extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Username: <input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
+        printf (" Username: <input type=text size=15 name=username_filter value='%s'>",$this->filters['username']);
         printf (" Domain: ");
 
         if ($this->domainsFilter) {
@@ -750,18 +919,137 @@ class SIPAccounts extends Records {
 
             printf ("</select");
         } else {
-            printf ("<input type=text size=10 name=domain_filter value='%s'>",$this->filters['domain']);
+            printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
         }
 
-        printf (" Full name: <input type=text size=10 name=fullname_filter value='%s'>",$this->filters['fullname']);
+        printf (" Full name: <input type=text size=15 name=fullname_filter value='%s'>",$this->filters['fullname']);
     }
+
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
+
+        if (!strlen($this->filters['username']) || !strlen($this->filters['domain'])) {
+            print "<p><font color=red>Error: missing SIP account username or domain. </font>";
+            return 0;
+        }
+
+        $account=array('username' => $this->filters['username'],
+                     'domain'   => $this->filters['domain']
+        			);
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->deleteAccount($account);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP account %s@%s has been deleted. </font> ",$this->filters['username'],$this->filters['domain']);
+           unset($this->filters);
+           return 1;
+        }
+    }
+
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+
+            printf (" SIP: <input type=text size=15 name=account value='%s'>",$_REQUEST['account']);
+            printf (" Pass: <input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
+            printf (" Name: <input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
+            printf (" Email: <input type=text size=15 name=email value='%s'>",$_REQUEST['email']);
+            printf (" Owner: <input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
+            print " TZ: ";
+
+            global $CDRTool;
+            if ($_REQUEST['timezone']) {
+				$this->timezone=$_REQUEST['timezone'];
+            } else {
+				$this->timezone=$CDRTool['provider']['timezone'];
+            }
+
+            $this->showTimezones();
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+            printf("<input type=hidden name=service value='%s'>",$this->SOAPEngine->service);
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+    	$account_els  = explode("@", trim($_REQUEST['account']));
+        $name_els  = explode(" ", trim($_REQUEST['fullname']));
+
+		if (!strlen($account_els[0]) || !strlen($account_els[1])) {
+            printf ("<p><font color=red>Error: Missing SIP account username or domain. </font>");
+            return false;
+        }
+
+        $account=array(
+                     'id'     => array('username' => $account_els[0],
+                                       'domain'   => $account_els[1]
+                                       ),
+                     'firstName'  => $name_els[0],
+                     'lastName'   => $name_els[1],
+                     'password'   => trim($_REQUEST['password']),
+                     'timezone'   => trim($_REQUEST['timezone']),
+                     'email'      => trim($_REQUEST['email']),
+                     'owner'      => intval($_REQUEST['owner'])
+        			);
+
+        //print_r($account);
+
+        // check if domain exists
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->addAccount($account);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP account %s@%s has been added. </font>",$alias_els[0],$alias_els[1]);
+           return 1;
+        }
+    }
+
 }
 
 class SIPAliases extends Records {
     var $sortElements=array(
-                            'aliasUsername'  => 'Alias username',
+                            'aliasUsername'  => 'Alias user',
                             'aliasDomain'    => 'Alias domain',
-                            'taregtUsername' => 'Target username',
+                            'targetUsername' => 'Target user',
                             'targetDomain'   => 'Target domain',
                             'owner'          => 'Owner'
                             );
@@ -860,6 +1148,7 @@ class SIPAliases extends Records {
                 <td><b>SIP alias</b></td>
                 <td><b>SIP target</b></td>
                 <td><b>Owner</b></td>
+                <td><b>Action</b></td>
             </tr>
             ";
 
@@ -892,21 +1181,39 @@ class SIPAliases extends Records {
                         $bgcolor="white";
                     }
 
+        			$this->url .= sprintf("&service=%s&action=Delete&alias_username_filter=%s&alias_domain_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($alias->id->username),
+                    urlencode($alias->id->domain)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                    	$_REQUEST['alias_username_filter'] == $alias->id->username &&
+                        $_REQUEST['alias_domain_filter'] == $alias->id->domain) {
+                		$this->url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
                     printf("
-                    <tr bgcolor=$bgcolor>
+                    <tr bgcolor=%s>
                     <td>%s</td>
                     <td>%s@%s</td>
                     <td>%s@%s</td>
                     <td>%s</td>
+                    <td><a href=%s>%s</a></td>
                     </tr>
                     ",
-    
+                    $bgcolor,
                     $index,
                     $alias->id->username,
                     $alias->id->domain,
                     $alias->target->username,
                     $alias->target->domain,
-                    $alias->owner
+                    $alias->owner,
+                    $this->url,
+                    $actionText
                     );
     
                     $i++;
@@ -923,8 +1230,42 @@ class SIPAliases extends Records {
         }
     }
 
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
+
+        if (!strlen($this->filters['aliasUsername']) || !strlen($this->filters['aliasDomain'])) {
+            print "<p><font color=red>Error: missing SIP alias username or domain. </font>";
+            return 0;
+        }
+
+        $alias=array('username' => $this->filters['aliasUsername'],
+                     'domain'   => $this->filters['aliasDomain']
+        			);
+
+        //print_r($alias);
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->deleteAlias($alias);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP alias %s@%s has been deleted. </font> ",$this->filters['aliasUsername'],$this->filters['aliasDomain']);
+           unset($this->filters);
+           $this->recordDeleted=1;
+           return 1;
+        }
+    }
+
     function showSeachFormCustom() {
-        printf (" Alias: <input type=text size=10 name=alias_username_filter value='%s'>",$this->filters['aliasUsername']);
+        printf (" User: <input type=text size=10 name=alias_username_filter value='%s'>",$this->filters['aliasUsername']);
         printf (" Domain: ");
 
         if ($this->domainsFilter) {
@@ -940,11 +1281,85 @@ class SIPAliases extends Records {
             printf ("<input type=text size=10 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
         }
 
-        printf (" Target username: <input type=text size=10 name=target_username_filter value='%s'>",$this->filters['targetUsername']);
+        printf (" Target user: <input type=text size=10 name=target_username_filter value='%s'>",$this->filters['targetUsername']);
         printf (" Target domain: <input type=text size=10 name=target_domain_filter value='%s'>",$this->filters['targetDomain']);
 
     }
 
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+
+            printf (" SIP alias: <input type=text size=35 name=alias>");
+            printf (" SIP target: <input type=text size=35 name=target>");
+            printf (" Owner: <input type=text size=10 name=owner>");
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+            printf("<input type=hidden name=service value='%s'>",$this->SOAPEngine->service);
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+    	$alias_els  = explode("@", trim($_REQUEST['alias']));
+        $target_els = explode("@", trim($_REQUEST['target']));
+
+        if (!strlen($alias_els[0]) || !strlen($alias_els[1])) {
+            print "<p><font color=red>Error: missing SIP alias username or domain. </font>";
+            return 0;
+        }
+
+        if (!strlen($target_els[0]) || !strlen($target_els[1])) {
+            print "<p><font color=red>Error: missing SIP target username or domain. </font>";
+            return 0;
+        }
+
+        $alias=array(
+                     'id'     => array('username' => $alias_els[0],
+                                       'domain'   => $alias_els[1]
+                                       ),
+                     'target' => array('username' => $target_els[0],
+                                       'domain'   => $target_els[1]
+                                       ),
+                     'owner'  => intval($_REQUEST['owner'])
+        			);
+
+        //print_r($alias);
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->addAlias($alias);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP alias %s@%s has been added. </font>",$alias_els[0],$alias_els[1]);
+           return 1;
+        }
+    }
 }
 
 class DomainStatistics extends Records {
@@ -980,6 +1395,8 @@ class DomainStatistics extends Records {
 
 			$this->rows = count($result);
 
+            //print_r($result);
+
             print "
             <table border=0 align=center>
             <tr><td>$this->rows records found</td></tr>
@@ -992,6 +1409,7 @@ class DomainStatistics extends Records {
                 <td><b>SIP subscribers</b></td>
                 <td><b>Online subscribers</b></td>
                 <td><b>Online SIP devices</b></td>
+                <td><b>Action</b></td>
             </tr>
             ";
 
@@ -1010,7 +1428,7 @@ class DomainStatistics extends Records {
                 while ($i < $this->maxrowsperpage)  {
     
                     $domain = $result[$i];
-                    if (!$domain->domain) break;
+                    if (!strlen($domain->users)) break;
 
                     $index = $this->next+$i+1;
     
@@ -1023,27 +1441,39 @@ class DomainStatistics extends Records {
                         $bgcolor="white";
                     }
 
+        			$this->url .= sprintf("?service=%s&action=Delete&domain_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($domain->domain)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                        $_REQUEST['domain_filter'] == $domain->domain) {
+                		$this->url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
                     printf("
-                    <tr bgcolor=$bgcolor>
+                    <tr bgcolor=%s>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
+                    <td><a href=%s>%s</a></td>
                     </tr>",
+                    $bgcolor,
                     $index,
                     $domain->domain,
                     $domain->users,
                     $domain->onlineUsers,
-                    $domain->onlineDevices
+                    $domain->onlineDevices,
+                    $this->url,
+                    $actionText
                     );
 
-                    printf("
-                    </tr>
-                    ");
-
                     $i++;
-    
                 }
 			}
 
@@ -1057,12 +1487,95 @@ class DomainStatistics extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" Domain: <input type=text size=10 name=domain_filter value='%s'>",$this->filters['domain']);
+        printf (" Domain: <input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
 
     }
 
-}
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
 
+        if (!strlen($this->filters['domain']) || !strlen($this->filters['domain'])) {
+            print "<p><font color=red>Error: missing SIP domain. </font>";
+            return 0;
+        }
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->deleteDomain($this->filters['domain']);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP domain %s has been deleted. </font> ",$this->filters['domain']);
+           unset($this->filters);
+           return 1;
+        }
+    }
+
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+
+            printf (" Domain: <input type=text size=20 name=domain>");
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+            printf("<input type=hidden name=service value='%s'>",$this->SOAPEngine->service);
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+
+        $domain=trim($_REQUEST['domain']);
+
+        if (!strlen($domain)) {
+            print "<p><font color=red>Error: missing SIP domain. </font>";
+            return 0;
+        }
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->addDomain($domain);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP domain %s has been added. </font>",$domain);
+           return 1;
+        }
+    }
+}
 
 page_close();
 ?>
