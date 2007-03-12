@@ -224,7 +224,7 @@ class Rate {
 
             $this->rateInfo .= 
     
-                "         App: PSTN voice\n".
+                "         App: Voice session\n".
                 " Destination: $this->DestinationId ($this->destinationNamePrint)\n".
                 "    Customer: $this->CustomerProfile\n";
     
@@ -937,10 +937,10 @@ class RatingTables {
                                                                  "subscriber"=>array("size"=>30,
                                                                  				 "name"=>"Subscriber"
                                                                                  ),
-                                                                 "dest_id"=>array("size"=>10,
+                                                                 "dest_id"=>array("size"=>20,
                                                                  				 "name"=>"Destination"
                                                                                  ),
-                                                                 "dest_name"=>array("size"=>30,
+                                                                 "dest_name"=>array("size"=>20,
                                                                  				 "name"=>"Description"
                                                                                  )
 
@@ -991,7 +991,7 @@ class RatingTables {
                                                  				)
 
                                                  ),
-                           "billing_profiles"=>array("name"=>"Profiles PSTN",
+                           "billing_profiles"=>array("name"=>"Profiles",
                                                  "keys"=>"id",
                                                  "size"=>6,
                                                  "domainFilterColumn"=>"domain",
@@ -1036,7 +1036,7 @@ class RatingTables {
                                                  				)
 
                                                  ),
-                           "billing_rates"=>array("name"=>"Rates PSTN",
+                           "billing_rates"=>array("name"=>"Rates",
                                                  "keys"=>"id",
                                                  "size"=>10,
                                                  "domainFilterColumn"=>"domain",
@@ -1053,7 +1053,7 @@ class RatingTables {
                                                                  "name"=>array("size"=>10,
                                                                                "name"=>"Rate"
                                                                                 ),
-                                                                 "destination"=>array("size"=>15,
+                                                                 "destination"=>array("size"=>20,
                                                                  				 "name"=>"Destination"
                                                                                  ),
                                                                  "durationRate"=>array("size"=>10,
@@ -1068,40 +1068,6 @@ class RatingTables {
 
                                                                   )
                                                    ),
-                           "billing_profilesNGN"=>array("name"=>"Profiles NGN",
-                                                 "keys"=>"id",
-                                                 "domainFilterColumn"=>"domain",
-                                                 "size"=>6,
-                                                 "fields"=>array(
-                                                 				 "gateway"=>array("size"=>15,
-                                                                                  "name"=>"Gateway"
-                                                                                ),
-                                                                 "domain"=>array("size"=>15,
-                                                                 				 "name"=>"Domain"
-                                                                                 ),
-                                                                 "subscriber"=>array("size"=>30,
-                                                                 				 "name"=>"Subscriber"
-                                                                                 )
-                                                                )
-
-                                                 ),
-                           "billing_ratesNGN"=>array("name"=>"Rates NGN",
-                                                 "keys"=>"id",
-                                                 "domainFilterColumn"=>"domain",
-                                                 "size"=>6,
-                                                 "fields"=>array(
-                                                 				 "gateway"=>array("size"=>15,
-                                                                                  "name"=>"Gateway"
-                                                                                ),
-                                                                 "domain"=>array("size"=>15,
-                                                                 				 "name"=>"Domain"
-                                                                                 ),
-                                                                 "subscriber"=>array("size"=>30,
-                                                                 				 "name"=>"Subscriber"
-                                                                                 )
-                                                                )
-
-                                                 ),
                            "prepaid"=>array("name"=>"Prepaid",
                                                  "keys"=>"id",
                                                  "size"=>15,
@@ -1140,6 +1106,43 @@ class RatingTables {
                                                                   )
                                                    ),
                            );
+
+                            /*
+                           "billing_profilesNGN"=>array("name"=>"Profiles NGN",
+                                                 "keys"=>"id",
+                                                 "domainFilterColumn"=>"domain",
+                                                 "size"=>6,
+                                                 "fields"=>array(
+                                                 				 "gateway"=>array("size"=>15,
+                                                                                  "name"=>"Gateway"
+                                                                                ),
+                                                                 "domain"=>array("size"=>15,
+                                                                 				 "name"=>"Domain"
+                                                                                 ),
+                                                                 "subscriber"=>array("size"=>30,
+                                                                 				 "name"=>"Subscriber"
+                                                                                 )
+                                                                )
+
+                                                 ),
+                           "billing_ratesNGN"=>array("name"=>"Rates NGN",
+                                                 "keys"=>"id",
+                                                 "domainFilterColumn"=>"domain",
+                                                 "size"=>6,
+                                                 "fields"=>array(
+                                                 				 "gateway"=>array("size"=>15,
+                                                                                  "name"=>"Gateway"
+                                                                                ),
+                                                                 "domain"=>array("size"=>15,
+                                                                 				 "name"=>"Domain"
+                                                                                 ),
+                                                                 "subscriber"=>array("size"=>30,
+                                                                 				 "name"=>"Subscriber"
+                                                                                 )
+                                                                )
+
+                                                 ),
+                              */
 
 
     }
