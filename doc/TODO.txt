@@ -1,6 +1,2 @@
-
-- Allow definition of country code per customer to be able to normalize
-  national numbers depeding on billing party
-- use lock per table using GET_LOCK() server function
-- avoid reload of rating tables on add/delete
+- Match SIP URIs as Destination Id to apply price per SIP destination
 - Define custom directory to load the CSV files from
