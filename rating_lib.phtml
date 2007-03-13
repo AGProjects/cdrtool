@@ -262,7 +262,6 @@ class Rate {
                 $durationRatedTotal  = $durationRatedTotal + $foundRate["duration"];
 
 				if (!$foundRate['rate']) {
-        			syslog(LOG_NOTICE, "Error: Cannot find rate for call id $this->id (DestId=$this->DestinationId)");
                     return 0;
                 }
 
@@ -614,23 +613,25 @@ class Rate {
                     $this->rateValues=$this->RatingTables->rates[$this->rateName][$this->DestinationId];
                 } else {
                     dprint("No rates for destination $this->DestinationId in alternative profile=$this->profileNameAlt.");
-                    dprint("");
                 }
             }
 
+        /*
         } else if (!is_array($profileValuesAlt)) {
-            dprint("No rates for destination=$this->DestinationId in alternative profile=$this->profileNameAlt");
-            $body="No rates for destination=$this->DestinationId in alternative profile=$this->profileNameAlt";
-            mail($this->toEmail, "CDRTool rating problem", $body , $this->extraHeaders);
-        	syslog(LOG_NOTICE, "Error: Cannot find rates for profile=$this->profileName");
+            $log=sprintf("Error: Cannot find alternative rates for destination=%s, profile=%s",$this->DestinationId,$this->profileName);
+            dprint($log);
+        	syslog(LOG_NOTICE, $log);
+            mail($this->toEmail, "CDRTool rating problem", $log, $this->extraHeaders);
             return 0;
+        */
         }
 
         if (!$this->rateValues) {
-            dprint("No rates for destination $this->DestinationId in rate=$this->rateName, profile=$this->profileName");
-            $body="No rates for destination=$this->DestinationId in rate=$this->rateName, profile=$this->profileName, customer=$this->CustomerProfile";
-            mail($this->toEmail, "CDRTool rating problem", $body , $this->extraHeaders);
-        	syslog(LOG_NOTICE, "Error: Cannot find rate $this->rateName for destination $this->DestinationId");
+            $log=sprintf("Error: Cannot find rates for callid=%s, %s, destination=%s, profile=%s",$this->id,$this->CustomerProfile,$this->DestinationId,$this->profileName);
+            dprint($log);
+            $subject=$this->CDRS->CDRTool['provider']['service']." - CDRTool rating problem";
+            mail($this->toEmail, $subject, $log, $this->extraHeaders);
+        	syslog(LOG_NOTICE, $log);
             return 0;
         }
 

@@ -2696,7 +2696,11 @@ class CDR_ser_radius extends CDR {
         <td valign=top><nobr>$this->destinationPrint</nobr>";
 
         if ($this->DestinationId) {
-            print " ($this->destinationName $this->DestinationId)";
+            if ($this->DestinationId != $this->CanonicalURI) {
+            	print " ($this->destinationName $this->DestinationId)";
+            } else {
+            	print " ($this->destinationName)";
+            }
         }
 
         print "</td>";

@@ -307,22 +307,36 @@ class CDRS {
     }
 
     function LoadDestinations() {
-        //dprint("CDRS->LoadDestinations()\n");
+        dprint("CDRS->LoadDestinations()\n");
 
 		$_destinations=array();
-        $this->destinationsCount=0;
+        $_SipDestinations=array();
 
-        if (is_object($this->mc) && $mc_destinations=$this->mc->get('destinations')) {
-	    	$_dests=explode("\n",$mc_destinations);
+        $this->destinationsCount=0;
+        $this->sipDestinationsCount=0;
+
+        //if (is_object($this->mc) && $mc_destinations = $this->mc->get('destinations') && $mc_SipDestinations = $this->mc->get('SipDestinations')) {
+        if (is_object($this->mc) && $mc_destinations = $this->mc->get('destinations')) {
+            $_dests=explode("\n",$mc_destinations);
             foreach ($_dests as $_dest)  {
                 if (!strlen($_dest)) continue;
                 $this->destinationsCount++;
-            	$_els=explode("=",$_dest) ;
+                $_els=explode("=",$_dest) ;
                 $_els_parts=explode(";",$_els[0]);
                 $_destinations[$_els_parts[0]][$_els_parts[1]]=$_els[1];
             }
-            dprint ("Read destinations from memory");
+            dprint ("Read $this->destinationsCount PSTN destinations from memory");
 
+			$mc_SipDestinations = $this->mc->get('SipDestinations');
+            $_SipDests=explode("\n",$mc_SipDestinations);
+            foreach ($_SipDests as $_dest)  {
+                if (!strlen($_dest)) continue;
+                $this->sipDestinationsCount++;
+                $_els=explode("=",$_dest) ;
+                $_els_parts=explode(";",$_els[0]);
+                $_SipDestinations[$_els_parts[0]][$_els_parts[1]]=$_els[1];
+            }
+            dprint ("Read $this->sipDestinationsCount SIP destinations from memory");
         } else {
 
             $query="select * from destinations";
@@ -344,9 +358,9 @@ class CDRS {
             $this->cdrtool->query($query);
 
             $mc_value_destinations = "\n";
+            $mc_value_SipDestinations = "\n";
 
             while($this->cdrtool->next_record()) {
-                $this->destinationsCount++;
 
                 $gateway    = trim($this->cdrtool->Record['gateway']);
                 $domain     = trim($this->cdrtool->Record['domain']);
@@ -354,51 +368,90 @@ class CDRS {
                 $id         = trim($this->cdrtool->Record['dest_id']);
                 $name       = trim($this->cdrtool->Record['dest_name']);
                 $name_print = $this->cdrtool->Record['dest_name']." (".$id.")";
-    
-                if ($subscriber) {
-                    $_destinations[$subscriber][$id]=$name;
-                    if (is_object($this->mc)) $mc_value_destinations.=$subscriber.";".$id."=".$name."\n";
-                    continue;
-                }
-    
-                if ($domain) {
-                    $_destinations[$domain][$id]=$name;
-                    if (is_object($this->mc)) $mc_value_destinations.=$domain.";".$id."=".$name."\n";
-                    continue;
-                }
-    
-                if ($gateway) {
-                    $_destinations[$gateway][$id]=$name;
-                    if (is_object($this->mc)) $mc_value_destinations.=$gateway.";".$id."=".$name."\n";
-                    continue;
-                }
 
-                if ($id) {
-                	$_destinations["default"][$id]=$name;
-                	if (is_object($this->mc)) $mc_value_destinations.="default;".$id."=".$name."\n";
+                if (strstr($id,'@')) {
+                    // SIP destination
+	                $this->sipDestinationsCount++;
+
+                    if ($subscriber) {
+                        $_SipDestinations[$subscriber][$id]=$name;
+                        if (is_object($this->mc)) $mc_value_SipDestinations.=$subscriber.";".$id."=".$name."\n";
+                        continue;
+                    }
+        
+                    if ($domain) {
+                        $_SipDestinations[$domain][$id]=$name;
+                        if (is_object($this->mc)) $mc_value_SipDestinations.=$domain.";".$id."=".$name."\n";
+                        continue;
+                    }
+        
+                    if ($gateway) {
+                        $_SipDestinations[$gateway][$id]=$name;
+                        if (is_object($this->mc)) $mc_value_SipDestinations.=$gateway.";".$id."=".$name."\n";
+                        continue;
+                    }
+    
+                    if ($id) {
+                        $_SipDestinations["default"][$id]=$name;
+                        if (is_object($this->mc)) $mc_value_SipDestinations.="default;".$id."=".$name."\n";
+                    }
+                } else {
+                    // PSTN destination
+	                $this->destinationsCount++;
+
+                    if ($subscriber) {
+                        $_destinations[$subscriber][$id]=$name;
+                        if (is_object($this->mc)) $mc_value_destinations.=$subscriber.";".$id."=".$name."\n";
+                        continue;
+                    }
+        
+                    if ($domain) {
+                        $_destinations[$domain][$id]=$name;
+                        if (is_object($this->mc)) $mc_value_destinations.=$domain.";".$id."=".$name."\n";
+                        continue;
+                    }
+        
+                    if ($gateway) {
+                        $_destinations[$gateway][$id]=$name;
+                        if (is_object($this->mc)) $mc_value_destinations.=$gateway.";".$id."=".$name."\n";
+                        continue;
+                    }
+    
+                    if ($id) {
+                        $_destinations["default"][$id]=$name;
+                        if (is_object($this->mc)) $mc_value_destinations.="default;".$id."=".$name."\n";
+                    }
                 }
             }
 
             if (is_object($this->mc)) {
             	if ($this->mc->set('destinations',$mc_value_destinations,0,0)) {
-                	$log=sprintf("Saved %d destinations in memcache",$this->destinationsCount);
+                	$log=sprintf("Saved %d PSTN destinations in memcache",$this->destinationsCount);
+            		syslog(LOG_NOTICE, $log);
+                }
+            	if ($this->mc->set('SipDestinations',$mc_value_SipDestinations,0,0)) {
+                	$log=sprintf("Saved %d SIP destinations in memcache",$this->sipDestinationsCount);
             		syslog(LOG_NOTICE, $log);
                 }
             }
         }
 
-        $this->destinations=&$_destinations;
+        $this->destinations    = &$_destinations;
+        $this->sipDestinations = &$_SipDestinations;
 
         if (is_array($this->destinations)) {
-		foreach ($this->destinations as $key => $val) {
+			foreach ($this->destinations as $key => $val) {
 	       		$this->destinations_length[$key] = max(array_map(strlen, array_keys($val)));
 	        }
         }
 
-        dprint("Loaded $this->destinationsCount destinations\n");
+        dprint("Loaded $this->destinationsCount PSTN destinations\n");
+        dprint("Loaded $this->sipDestinationsCount SIP destinations\n");
         //dprint_r($this->destinations);
+        //dprint_r($this->sipDestinations);
 
-        return $this->destinationsCount;
+		$c=$this->destinationsCount + $this->sipDestinationsCount;
+        return $c;
     }
 
     function LoadDisconnectCodes() {
@@ -913,7 +966,7 @@ class CDRS {
 
             if (preg_match("/^(.*)[=:;]/U",$NumberStack['domain'],$p)){
                 $NumberStack['domain']    = $p[1];
-	    }
+	    	}
 
         } else if (preg_match("/^([a-z0-9]+:)(.*)$/i",$Number,$m)) {
             $oct=preg_split("/\./",$m[2]);
@@ -971,25 +1024,29 @@ class CDRS {
 
         if ($type=="destination" && $NumberStack[E164]) {
             // lookup destination id for the E164 number
-            $dst_struct                    = $this->getDestinationId($NumberStack[E164],$subscriber,$domain,$gateway);
-            $NumberStack[DestinationId]    = $dst_struct[0];
-            $NumberStack[destinationName]  = $dst_struct[1];
+            $dst_struct                     = $this->getDestinationId($NumberStack[E164],$subscriber,$domain,$gateway);
+            $NumberStack['DestinationId']   = $dst_struct[0];
+            $NumberStack['destinationName'] = $dst_struct[1];
 
-            $NumberStack[NumberPrint]  = "+".$NumberStack[E164];
+            $NumberStack['NumberPrint']     = "+".$NumberStack[E164];
 
-            $NumberStack[Normalized]   = $this->intAccessCode.
-                                         $NumberStack['E164'].
-                                         $NumberStack['delimiter'].
-                                         $NumberStack['domain'];
+            $NumberStack['Normalized']      = $this->intAccessCode.
+                                              $NumberStack['E164'].
+                                              $NumberStack['delimiter'].
+                                              $NumberStack['domain'];
 
         } else {
-            $NumberStack[NumberPrint]  = $NumberStack['username'].
-                                         $NumberStack['delimiter'].
-                                         $NumberStack['domain'];
+            $dst_struct                     = $this->getDestinationId($Number,$subscriber,$domain,$gateway);
+            $NumberStack['DestinationId']   = $dst_struct[0];
+            $NumberStack['destinationName'] = $dst_struct[1];
 
-            $NumberStack[Normalized]   = $NumberStack['username'].
-                                         $NumberStack['delimiter'].
-                                         $NumberStack['domain'];
+            $NumberStack['NumberPrint']     = $NumberStack['username'].
+                                              $NumberStack['delimiter'].
+                                              $NumberStack['domain'];
+
+            $NumberStack['Normalized']      = $NumberStack['username'].
+                                              $NumberStack['delimiter'].
+                                              $NumberStack['domain'];
 
         }
 
@@ -997,17 +1054,52 @@ class CDRS {
 
     }
 
-    function getDestinationId($number,$subscriber="",$domain="",$gateway="") {
-        dprint("getDestinationId($number,$subscriber,$domain,$gateway)");
-        if (!$number) {
+    function getDestinationId($destination,$subscriber="",$domain="",$gateway="") {
+        dprint("getDestinationId($destination,$subscriber,$domain,$gateway)");
+
+        if (!$destination) {
             dprint("Missing destination number.");
+            return;
         }
-        if (is_numeric($number)){
-            return $this->GetCountryCodeForNumber($number,$subscriber,$domain,$gateway);
+
+        if (is_numeric($destination)){
+            return $this->getPSTNDestinationId($destination,$subscriber,$domain,$gateway);
+        } else {
+            return $this->getSIPDestinationId($destination,$subscriber,$domain,$gateway);
         }
     }
 
-    function GetCountryCodeForNumber($number,$subscriber,$domain,$gateway) {
+    function getSIPDestinationId($destination,$subscriber,$domain,$gateway) {
+        dprint("getSIPDestinationId($destination,$subscriber,$domain,$gateway)");
+        if ($this->sipDestinations[$subscriber]) {
+            $sipDestinations = $this->sipDestinations[$subscriber];
+            $fCustomer="subscriber=$subscriber";
+        } elseif ($this->sipDestinations[$domain]) {
+            $sipDestinations = $this->sipDestinations[$domain];
+            $fCustomer="domain=$domain";
+        } elseif ($this->sipDestinations[$gateway]) {
+            $sipDestinations = $this->sipDestinations[$gateway];
+            $fCustomer="gateway=$gateway";
+        } else {
+            $sipDestinations = $this->sipDestinations['default'];
+            $fCustomer="default";
+        }
+
+        dprint("Found SIP destinations for customer=$fCustomer");
+        //dprint_r($this->sipDestinations);
+
+        if ($sipDestinations[$destination]) {
+        	$ret=array($destination,$sipDestinations[$destination]);
+            dprint("Found dest_id=$destination");
+            return $ret;
+        } else {
+            return false;
+        }
+
+    }
+
+    function getPSTNDestinationId($destination,$subscriber,$domain,$gateway) {
+        dprint("getPSTNDestinationId($destination,$subscriber,$domain,$gateway)");
         if ($this->destinations[$subscriber]) {
             $codes = $this->destinations[$subscriber];
             $maxLength = $this->destinations_length[$subscriber];
@@ -1021,24 +1113,25 @@ class CDRS {
             $maxLength = $this->destinations_length[$gateway];
             $fCustomer="gateway=$gateway";
         } else {
-            $codes = $this->destinations["default"];
-            $maxLength = $this->destinations_length["default"];
+            $codes = $this->destinations['default'];
+            $maxLength = $this->destinations_length['default'];
             $fCustomer="default";
         }
 
         dprint("Found destinations for customer=$fCustomer");
         //dprint_r($this->destinations[$domain]);
 
-        if (!$number)
+        if (!$destination)
             return false;
     
         if (count($codes)>0) {
-            $length = min(strlen($number), $maxLength);
+            $length = min(strlen($destination), $maxLength);
             for ($i=$length; $i>0; $i--) {
-                $buf = substr($number, 0, $i);
+                $buf = substr($destination, 0, $i);
                 if ($codes[$buf]) {
                     $dest_name=$codes[$buf];
                     $ret=array($buf,$dest_name);
+                    dprint("Found dest_id=$buf");
                     return $ret;
                 }
             }

@@ -380,3 +380,7 @@ alter table billing_profilesNGN add  UNIQUE KEY `profile_idx` (`gateway`,`domain
 
 alter table billing_ratesNGN drop index `rate_idx` ;
 alter table billing_ratesNGN add  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`);
+
+5.0.10
+alter table destinations change column dest_id dest_id varchar(100) not null;
+alter table billing_rates change column destination destination varchar(100) not null;

@@ -799,8 +799,7 @@ class E164 {
         // E164 = Country Code + Network Code + Subscriber Number
         // Example: 31208015100 is an E164 number from Holland (country code 31)
 
-        // If nothing is returned by this function the session is considered
-        // an Internet destination and no PSTN rating is applied
+        // If nothing is returned by this function the session is considered an Internet destination 
 
         if (preg_match($this->regexp_international,$Number,$m)) {
             dprint("$Number is an international number");
