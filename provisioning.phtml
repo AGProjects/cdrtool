@@ -976,6 +976,7 @@ class SIPAccounts extends Records {
             printf (" Pass: <input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
             printf (" Name: <input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
             printf (" Email: <input type=text size=15 name=email value='%s'>",$_REQUEST['email']);
+            printf (" CallerId: <input type=text size=11 name=rpid value='%s'>",$_REQUEST['rpid']);
             printf (" Owner: <input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
             print " TZ: ";
 
@@ -1007,11 +1008,6 @@ class SIPAccounts extends Records {
     	$account_els  = explode("@", trim($_REQUEST['account']));
         $name_els  = explode(" ", trim($_REQUEST['fullname']));
 
-		if (!strlen($account_els[0]) || !strlen($account_els[1])) {
-            printf ("<p><font color=red>Error: Missing SIP account username or domain. </font>");
-            return false;
-        }
-
         $account=array(
                      'id'     => array('username' => $account_els[0],
                                        'domain'   => $account_els[1]
@@ -1021,12 +1017,12 @@ class SIPAccounts extends Records {
                      'password'   => trim($_REQUEST['password']),
                      'timezone'   => trim($_REQUEST['timezone']),
                      'email'      => trim($_REQUEST['email']),
+                     'rpid'       => trim($_REQUEST['rpid']),
                      'owner'      => intval($_REQUEST['owner'])
         			);
 
         //print_r($account);
 
-        // check if domain exists
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
         $result     = $this->SOAPEngine->soapclient->addAccount($account);
@@ -1039,8 +1035,25 @@ class SIPAccounts extends Records {
             return false;
         } else {
            printf ("<p><font color=green>SIP account %s@%s has been added. </font>",$alias_els[0],$alias_els[1]);
-           return 1;
         }
+
+        if (strlen(trim($_REQUEST['rpid']))) {
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->addToGroup(array("username" => $account_els[0],"domain"=> $account_els[1]), "free-pstn");
+
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+               printf ("<font color=green>PSTN enabled. </font>");
+            }
+        }
+
+        return 1;
+
     }
 
 }
@@ -1324,16 +1337,6 @@ class SIPAliases extends Records {
     	$alias_els  = explode("@", trim($_REQUEST['alias']));
         $target_els = explode("@", trim($_REQUEST['target']));
 
-        if (!strlen($alias_els[0]) || !strlen($alias_els[1])) {
-            print "<p><font color=red>Error: missing SIP alias username or domain. </font>";
-            return 0;
-        }
-
-        if (!strlen($target_els[0]) || !strlen($target_els[1])) {
-            print "<p><font color=red>Error: missing SIP target username or domain. </font>";
-            return 0;
-        }
-
         $alias=array(
                      'id'     => array('username' => $alias_els[0],
                                        'domain'   => $alias_els[1]
@@ -1554,11 +1557,6 @@ class DomainStatistics extends Records {
     function addRecord() {
 
         $domain=trim($_REQUEST['domain']);
-
-        if (!strlen($domain)) {
-            print "<p><font color=red>Error: missing SIP domain. </font>";
-            return 0;
-        }
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
