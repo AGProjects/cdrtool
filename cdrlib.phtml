@@ -1945,6 +1945,13 @@ class CDR {
     function isCallerLocal() {
         return 0;
     }
+
+    function obfuscateCallerId() {
+        global $obfuscateCallerId;
+        if ($obfuscateCallerId) {
+    	}
+    }
+
 }
 
 function getLocalTime($timezone,$timestamp) {
