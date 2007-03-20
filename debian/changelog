@@ -1,3 +1,12 @@
+cdrtool (5.1.0) unstable; urgency=low
+
+  * Added function to obfuscate caller Ids
+  * Added a sample provisioning interface for Multimedia Service Platform
+  * Added capability to do accounting for SIP URIs (e.g. paid helpdesk)
+  * Improved compatibility with Firefox in media sesessions screen
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 20 Mar 2007 15:17:30 +0100
+
 cdrtool (5.0.10) unstable; urgency=low
 
   * Fixed reload of prepaid accounts from rating page to reload only the
