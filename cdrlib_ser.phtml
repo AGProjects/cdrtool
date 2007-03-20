@@ -2868,7 +2868,7 @@ class CDR_ser_radius extends CDR {
             if (is_numeric($caller_els[0]) && strlen($caller_els[0]>3)) {
                 $_user=substr($caller_els[0],0,strlen($caller_els[0])-3).'xxx';
             } else {
-                $_user='caller';
+                $_user='party';
             }
     
             $this->BillingPartyIdPrint=$_user.'@'.$caller_els[1];
@@ -2879,7 +2879,7 @@ class CDR_ser_radius extends CDR {
             if (is_numeric($caller_els[0]) && strlen($caller_els[0]>3)) {
                 $_user=substr($caller_els[0],0,strlen($caller_els[0])-3).'xxx';
             } else {
-                $_user='caller';
+                $_user='destination';
             }
     
             if (count($caller_els)== 2) {
@@ -2893,7 +2893,7 @@ class CDR_ser_radius extends CDR {
             if (is_numeric($caller_els[0]) && strlen($caller_els[0]>3)) {
                 $_user=substr($caller_els[0],0,strlen($caller_els[0])-3).'xxx';
             } else {
-                $_user='caller';
+                $_user='dialedNumber';
             }
     
             if (count($caller_els)== 2) {
@@ -2907,7 +2907,7 @@ class CDR_ser_radius extends CDR {
             if (is_numeric($caller_els[0]) && strlen($caller_els[0]>3)) {
                 $_user=substr($caller_els[0],0,strlen($caller_els[0])-3).'xxx';
             } else {
-                $_user='caller';
+                $_user='remoteAddress';
             }
     
             if (count($caller_els)== 2) {
@@ -2922,7 +2922,7 @@ class CDR_ser_radius extends CDR {
             if (is_numeric($caller_els[0]) && strlen($caller_els[0]>3)) {
                 $_user=substr($caller_els[0],0,strlen($caller_els[0])-3).'xxx';
             } else {
-                $_user='caller';
+                $_user='canonicalURI';
             }
 
             if (count($caller_els)== 2) {
@@ -2934,7 +2934,7 @@ class CDR_ser_radius extends CDR {
             if (is_numeric($this->SipRPIDPrint) && strlen($this->SipRPIDPrint) > 3) {
                 $this->SipRPIDPrint=substr($this->SipRPID,0,strlen($this->SipRPID)-3).'xxx';
             } else {
-                $_user='caller';
+                $_user='callerId';
             }
 
             // IP address
