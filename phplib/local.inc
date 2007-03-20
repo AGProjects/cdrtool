@@ -154,10 +154,10 @@ class CDRTool_Auth extends Auth {
 
                 if ($ret[1] == "subscriber") {
                     $CDRTool[filter][aNumber] = $username;
-                	$this->auth["perm"] = "callsearch,statistics";
+                	$this->auth["perm"] = "callsearch,statistics,showPrice,showCallerId";
                 } else {
                     $CDRTool[filter][domain]  = $a[1];
-                	$this->auth["perm"] = "callsearch,statistics";
+                	$this->auth["perm"] = "callsearch,statistics,showPrice,showCallerId";
                 }
             }
 
@@ -284,7 +284,9 @@ class CDRTool_Perm extends Perm {
             "statistics"  	=> 4,
             "sqlquery"    	=> 8,
             "soapclient"    => 16,
-            "rates"         => 32
+            "rates"         => 32,
+            "showCallerId"  => 64,
+            "showPrice"     => 128
             );
 
   function perm_invalid($does_have, $must_have) {

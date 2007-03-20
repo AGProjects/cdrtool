@@ -2180,6 +2180,8 @@ class CDR_ser_radius extends CDR {
 
     function CDR_ser_radius(&$parent, $CDRfields) {
 
+        global $perm;
+
         dprint("<hr>Init CDR");
 
         $this->CDRS = &$parent;
@@ -2350,7 +2352,11 @@ class CDR_ser_radius extends CDR {
 		if ($this->price == "0.0000" && !$this->rate) {
             $this->pricePrint="";
         } else {
-        	$this->pricePrint=$this->price;
+			if ($perm->have_perm("showPrice")) {
+        		$this->pricePrint=$this->price;
+            } else {
+        		$this->pricePrint='x.xxx';
+            }
         }
 
         $this->NetworkRateDictionary=array(
@@ -2431,6 +2437,7 @@ class CDR_ser_radius extends CDR {
 
     function show() {
         global $found;
+		global $perm;
 
         $rr=floor($found/2);
         $mod=$found-$rr*2;
@@ -2674,22 +2681,23 @@ class CDR_ser_radius extends CDR {
         <td width=30></td>
         <td valign=top> ";
 
-        if ($this->price > 0 || $this->rate) {
-            $CallInfoVerbose.= "
-        	<table border=0 cellpadding=0 cellspacing=0>
-
-            <tr>
-        		<td colspan=3><b>Rating information</b></td>
-
-            </tr>
-            <tr>
-            <td></td>
-            <td colspan=2>$this->ratePrint</td>
-            </tr>
-            </table>
-            ";
+		if ($perm->have_perm("showPrice")) {
+            if ($this->price > 0 || $this->rate) {
+                $CallInfoVerbose.= "
+                <table border=0 cellpadding=0 cellspacing=0>
+    
+                <tr>
+                    <td colspan=3><b>Rating information</b></td>
+    
+                </tr>
+                <tr>
+                <td></td>
+                <td colspan=2>$this->ratePrint</td>
+                </tr>
+                </table>
+                ";
+            }
         }
-
         $CallInfoVerbose.=  "
         </td>
         </tr>

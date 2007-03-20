@@ -4,8 +4,9 @@ cdrtool (5.1.0) unstable; urgency=low
   * Added a sample provisioning interface for Multimedia Service Platform
   * Added capability to do accounting for SIP URIs (e.g. paid helpdesk)
   * Improved compatibility with Firefox in media sesessions screen
+  * Added rights for login accounts to show pricing and caller id
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 20 Mar 2007 15:17:30 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 20 Mar 2007 15:49:05 +0100
 
 cdrtool (5.0.10) unstable; urgency=low
 
