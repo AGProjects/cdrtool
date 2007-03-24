@@ -1863,7 +1863,8 @@ class CDRS_ser_radius extends CDRS {
 		if (!is_array($this->localDomains) || !in_array($_domain,$this->localDomains)) return 0;
 
         $query=sprintf("select * from subscriber
-        where username= '%s' and domain ='%s'",
+        where username = '%s'
+        and domain ='%s'",
         addslashes($_user),
         addslashes($_domain));
 
@@ -2162,6 +2163,8 @@ class CDRS_ser_radius extends CDRS {
 
 class CDR_ser_radius extends CDR {
 
+	var $CalleeIsLocal=0;
+
     var $QoSParameters=array(
         "PS"=>"Audio packets sent",
         "OS"=>"Audio octets sent",
@@ -2271,9 +2274,9 @@ class CDR_ser_radius extends CDR {
         $this->cNumberDelimiter        		= $NormalizedNumber['delimiter'];
 
         dprint("<b>Canonical URI: $this->CanonicalURI</b>");
-        // Canonical URI is the final logical SIP destination after all Proxy
-        //   lookups like SIP aliases, SIP locations, call forwarding, ENUM
-        //   mappings or PSTN gateways before the DNS lookup is performed by SER.
+        // Canonical URI is the final logical SIP destination after all
+        //   lookups like aliases, usrloc , call forwarding, ENUM
+        //   mappings or PSTN gateways but before the DNS lookup
         //   Canonical URI must be saved in the SIP Proxy and added as an extra
         //   Radius attribute in the Radius START packet
 
@@ -2376,6 +2379,7 @@ class CDR_ser_radius extends CDR {
 		$this->parseAVMRTPstatistics();
 
         $this->obfuscateCallerId();
+        $this->isCalleeLocal();
 
     }
 
@@ -2455,11 +2459,11 @@ class CDR_ser_radius extends CDR {
         } else {
             $timezone_print=$this->CDRS->CDRTool[provider][timezone];
         }
-        if ($this->normalized) {
-            $found_print=$found."N";
-        } else {
-            $found_print=$found;
-        }
+
+        $found_print=$found;
+
+        if ($this->normalized)    $found_print.='N';
+        if ($this->CalleeIsLocal) $found_print.= 'L';
 
         $providerTimezone=$this->CDRS->CDRTool[provider][timezone];
 
@@ -2549,24 +2553,23 @@ class CDR_ser_radius extends CDR {
         </tr>
         ";
 
-        $CanonicalURIPrint=htmlentities($this->CanonicalURIPrint);
-        if ($CanonicalURIPrint) {
-        $CallInfoVerbose.= "
+        if ($this->CanonicalURI) {
+        $CallInfoVerbose.= sprintf("
         <tr>
             <td></td>
         	<td>Canonical URI:   </td>
-            <td>$CanonicalURIPrint</td>
+            <td>%s</td>
         </tr>
-        ";
+        ",htmlentities($this->CanonicalURI));
         }
 
-		$CallInfoVerbose.= "
+		$CallInfoVerbose.= sprintf("
         <tr>
             <td></td>
         	<td>Next hop:</td>
-            <td>$this->RemoteAddressPrint </td>
+            <td>%s</td>
         </tr>
-        ";
+        ",htmlentities($this->RemoteAddress));
 
         if ($this->DestinationId) {
             $CallInfoVerbose.= "
@@ -2849,6 +2852,14 @@ class CDR_ser_radius extends CDR {
     function isCallerLocal() {
         if (in_array($this->domain,$this->CDRS->localDomains)) return 1;
         return 0;
+    }
+
+    function isCalleeLocal() {
+    	if ($this->CanonicalURIUsername == $this->RemoteAddressUsername &&
+            in_array($this->CanonicalURIDomain,$this->CDRS->localDomains) &&
+        	!preg_match("/^0/",$this->CanonicalURIUsername)) {
+			$this->CalleeIsLocal=1;
+        }
     }
 
     function obfuscateCallerId() {
