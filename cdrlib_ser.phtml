@@ -144,7 +144,7 @@ class CDRS_ser_radius extends CDRS {
         <td>
         <table border=0 cellspacing=2 width=100%>
         <tr bgcolor=lightgrey>
-        <td>Index</td>
+        <td>Id</td>
         <td><b>Start time</b></td>
         <td><b>SIP Proxy</b></td>
         <td><b>SIP caller</b></td>
@@ -153,10 +153,10 @@ class CDRS_ser_radius extends CDRS {
         <td><b>Out</b></td>
         <td><b>Dur</b></td>
         <td><b>Price</b></td>
-        <td align=right><b>Caller KBIn</b></td>
-        <td align=right><b>Called KBIn</b></td>
+        <td align=right><b>KBIn</b></td>
+        <td align=right><b>KBOut</b></td>
         <td align=right><b>Status</b></td>
-        <td align=right><b>Codecs</b></td>
+        <td align=right><b>Codec</b></td>
         </tr>
         ";
     }
@@ -2164,6 +2164,9 @@ class CDRS_ser_radius extends CDRS {
 class CDR_ser_radius extends CDR {
 
 	var $CalleeIsLocal=0;
+    var $CallerIsLocal=0;
+	var $show_in_icon=0;
+    var $show_out_icon=0;
 
     var $QoSParameters=array(
         "PS"=>"Audio packets sent",
@@ -2206,6 +2209,7 @@ class CDR_ser_radius extends CDR {
         $NormalizedNumber        = $this->CDRS->NormalizeNumber($this->aNumber,"source");
 	    $this->aNumberPrint      = $NormalizedNumber[NumberPrint];
         $this->aNumberNormalized = $NormalizedNumber[Normalized];
+        $this->aNumberDomain     = $NormalizedNumber['domain'];
 
 		if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'])
             && in_array($this->domain,array_keys($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation']))
@@ -2380,6 +2384,7 @@ class CDR_ser_radius extends CDR {
 
         $this->obfuscateCallerId();
         $this->isCalleeLocal();
+        $this->isCallerLocal();
 
     }
 
@@ -2463,7 +2468,6 @@ class CDR_ser_radius extends CDR {
         $found_print=$found;
 
         if ($this->normalized)    $found_print.='N';
-        if ($this->CalleeIsLocal) $found_print.= 'L';
 
         $providerTimezone=$this->CDRS->CDRTool[provider][timezone];
 
@@ -2682,26 +2686,42 @@ class CDR_ser_radius extends CDR {
         $CallInfoVerbose.=  "
         </td>
         <td width=30></td>
-        <td valign=top> ";
-
-		if ($perm->have_perm("showPrice")) {
-            if ($this->price > 0 || $this->rate) {
-                $CallInfoVerbose.= "
+        <td valign=top>
                 <table border=0 cellpadding=0 cellspacing=0>
     
                 <tr>
                     <td colspan=3><b>Rating information</b></td>
     
                 </tr>
+        ";
+
+		if ($perm->have_perm("showPrice")) {
+            if ($this->price > 0 || $this->rate) {
+                $CallInfoVerbose.= "
                 <tr>
                 <td></td>
                 <td colspan=2>$this->ratePrint</td>
                 </tr>
-                </table>
+                ";
+            } else if ($this->normalized){
+                $CallInfoVerbose.= "
+                <tr>
+                <td></td>
+                <td colspan=2>Free call</td>
+                </tr>
+                ";
+            } else {
+                $CallInfoVerbose.= "
+                <tr>
+                <td></td>
+                <td colspan=2><font color=red>Session in progress</font></td>
+                </tr>
                 ";
             }
         }
+
         $CallInfoVerbose.=  "
+                </table>
         </td>
         </tr>
         </table>";
@@ -2709,10 +2729,9 @@ class CDR_ser_radius extends CDR {
         print "
         <tr bgcolor=$inout_color>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
-        <td valign=top><nobr>$this->startTime</nobr></td>
-        <td valign=top>$this->SipProxyServer</td>
-        <!-- <td valign=top>$this->applicationTypePrint $this->SipMethod</td> -->
-        <td valign=top><nobr>$this->aNumberPrint</td>
+        <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime</nobr></td>
+        <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
+        <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->aNumberPrint</td>
         <td valign=top>$this->traceIn</td>
         <td valign=top><nobr>$this->destinationPrint</nobr>";
 
@@ -2850,7 +2869,10 @@ class CDR_ser_radius extends CDR {
     }
 
     function isCallerLocal() {
-        if (in_array($this->domain,$this->CDRS->localDomains)) return 1;
+        if (in_array($this->aNumberDomain,$this->CDRS->localDomains)) {
+        	$this->CallerIsLocal=1;
+            return 1;
+        }
         return 0;
     }
 

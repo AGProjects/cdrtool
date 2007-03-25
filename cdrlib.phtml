@@ -1919,12 +1919,11 @@ class CDR {
 
     function cacheMonthlyUsage($accounts) {
 
-
         if (!is_array($accounts)) return ;
 
         foreach (array_keys($accounts) as $_account) {
 
-        	if ($this->isCallerLocal()) {
+        	if ($this->CallerIsLocal) {
 
 	            $_usage = $this->CDRS->getMonthlyUsageFromCache($_account);
 
