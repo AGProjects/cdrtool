@@ -2186,8 +2186,6 @@ class CDR_ser_radius extends CDR {
 
     function CDR_ser_radius(&$parent, $CDRfields) {
 
-        global $perm;
-
         dprint("<hr>Init CDR");
 
         $this->CDRS = &$parent;
@@ -2355,16 +2353,6 @@ class CDR_ser_radius extends CDR {
 
         $this->durationPrint=sec2hms($this->duration);
         $this->disconnectPrint=$this->NormalizeDisconnect($this->disconnect);
-
-		if ($this->price == "0.0000" && !$this->rate) {
-            $this->pricePrint="";
-        } else {
-			if (is_object($perm) && $perm->have_perm("showPrice")) {
-        		$this->pricePrint=$this->price;
-            } else {
-        		$this->pricePrint='x.xxx';
-            }
-        }
 
         $this->NetworkRateDictionary=array(
                                   'Id'              => $this->id,
@@ -2695,7 +2683,7 @@ class CDR_ser_radius extends CDR {
                 </tr>
         ";
 
-		if (is_object($perm) && $perm->have_perm("showPrice")) {
+		if ($perm->have_perm("showPrice")) {
             if ($this->price > 0 || $this->rate) {
                 $CallInfoVerbose.= "
                 <tr>
@@ -2751,7 +2739,20 @@ class CDR_ser_radius extends CDR {
             print "<td valign=top align=right><font color=red>$this->durationPrint</a></td>";
         }
 
-        if ($this->CDRS->rating) print "<td valign=top align=right>$this->pricePrint</td>";
+
+        if ($this->CDRS->rating) {
+            if ($this->price == "0.0000" && !$this->rate) {
+                $this->pricePrint="";
+            } else {
+                if ($perm->have_perm("showPrice")) {
+                    $this->pricePrint=$this->price;
+                } else {
+                    $this->pricePrint='x.xxx';
+                }
+            }
+
+        	print "<td valign=top align=right>$this->pricePrint</td>";
+        }
 
 		$SIPclass=substr($this->disconnect,0,1);
 
