@@ -3,7 +3,7 @@ class WebService_NGNPro_SipPort extends SOAP_Client
 {
     function WebService_NGNPro_SipPort($port)
 {
-        $this->SOAP_Client($port, 0);
+        $this->SOAP_Client("http://node06.dns-hosting.info:9200/", 0);
     }
     function &addDomain($domain) {
         return $this->call("addDomain", 
@@ -56,9 +56,12 @@ class WebService_NGNPro_SipPort extends SOAP_Client
                             'style'=>'rpc',
                             'use'=>'encoded' ));
     }
-    function &getTrustedPeers() {
+    function &getTrustedPeers($query) {
+        // query is a ComplexType TrustedPeerQuery,
+        //refer to wsdl for more info
+        $query =& new SOAP_Value('query','{urn:AGProjects:NGNPro}TrustedPeerQuery',$query);
         return $this->call("getTrustedPeers", 
-                        $v = null, 
+                        $v = array("query"=>$query), 
                         array('namespace'=>'urn:AGProjects:NGNPro:Sip',
                             'soapaction'=>'',
                             'style'=>'rpc',
@@ -418,9 +421,9 @@ class WebService_NGNPro_SipPort extends SOAP_Client
 }
 class WebService_NGNPro_VoicemailPort extends SOAP_Client
 {
-    function WebService_NGNPro_Voicemail($port)
+    function WebService_NGNPro_VoicemailPort($port)
 {
-        $this->SOAP_Client("https://secure.dns-hosting.info/ngnpro/voicemail/", 0);
+        $this->SOAP_Client("http://node06.dns-hosting.info:9200/voicemail/", 0);
     }
     function &addAccount($account) {
         // account is a ComplexType VoicemailAccount,
@@ -477,9 +480,9 @@ class WebService_NGNPro_VoicemailPort extends SOAP_Client
 }
 class WebService_NGNPro_EnumPort extends SOAP_Client
 {
-    function WebService_NGNPro_Enum($port)
+    function WebService_NGNPro_EnumPort($port)
 {
-        $this->SOAP_Client("https://secure.dns-hosting.info/ngnpro/", 0);
+        $this->SOAP_Client("http://node06.dns-hosting.info:9200/", 0);
     }
     function &addRange($range) {
         // range is a ComplexType EnumRange,
@@ -569,9 +572,9 @@ class WebService_NGNPro_EnumPort extends SOAP_Client
 }
 class WebService_NGNPro_RatingPort extends SOAP_Client
 {
-    function WebService_NGNPro_Rating($port)
+    function WebService_NGNPro_RatingPort($port)
 {
-        $this->SOAP_Client("https://secure.dns-hosting.info/ngnpro/", 0);
+        $this->SOAP_Client("http://node06.dns-hosting.info:9200/", 0);
     }
     function &setEntityProfiles($profiles) {
         // profiles is a ComplexType RatingEntityProfiles,
@@ -603,9 +606,9 @@ class WebService_NGNPro_RatingPort extends SOAP_Client
 }
 class WebService_NGNPro_CustomerPort extends SOAP_Client
 {
-    function WebService_NGNPro_Customer($port)
+    function WebService_NGNPro_CustomerPort($port)
 {
-        $this->SOAP_Client("https://secure.dns-hosting.info/ngnpro/", 0);
+        $this->SOAP_Client("http://node06.dns-hosting.info:9200/", 0);
     }
     function &addAccount($account) {
         // account is a ComplexType CustomerAccount,
@@ -648,9 +651,9 @@ class WebService_NGNPro_CustomerPort extends SOAP_Client
 }
 class WebService_NGNPro_InternalSipPort extends SOAP_Client
 {
-    function WebService_NGNPro_InternalSip($port)
+    function WebService_NGNPro_InternalSipPort($port)
 {
-        $this->SOAP_Client("http://ns1p.dns-hosting.info:9200/", 0);
+        $this->SOAP_Client("http://node06p.dns-hosting.info:9200/", 0);
     }
     function &addDomain($domain) {
         return $this->call("addDomain", 
@@ -703,9 +706,12 @@ class WebService_NGNPro_InternalSipPort extends SOAP_Client
                             'style'=>'rpc',
                             'use'=>'encoded' ));
     }
-    function &getTrustedPeers() {
+    function &getTrustedPeers($query) {
+        // query is a ComplexType TrustedPeerQuery,
+        //refer to wsdl for more info
+        $query =& new SOAP_Value('query','{urn:AGProjects:NGNPro}TrustedPeerQuery',$query);
         return $this->call("getTrustedPeers", 
-                        $v = null, 
+                        $v = array("query"=>$query), 
                         array('namespace'=>'urn:AGProjects:NGNPro:Sip',
                             'soapaction'=>'',
                             'style'=>'rpc',
@@ -1065,9 +1071,9 @@ class WebService_NGNPro_InternalSipPort extends SOAP_Client
 }
 class WebService_NGNPro_InternalVoicemailPort extends SOAP_Client
 {
-    function WebService_NGNPro_InternalVoicemail($port)
+    function WebService_NGNPro_InternalVoicemailPort($port)
 {
-        $this->SOAP_Client("http://ns1p.dns-hosting.info:9200/", 0);
+        $this->SOAP_Client("http://node06p.dns-hosting.info:9200/", 0);
     }
     function &addAccount($account) {
         // account is a ComplexType VoicemailAccount,
@@ -1124,9 +1130,9 @@ class WebService_NGNPro_InternalVoicemailPort extends SOAP_Client
 }
 class WebService_NGNPro_InternalEnumPort extends SOAP_Client
 {
-    function WebService_NGNPro_InternalEnum($port)
+    function WebService_NGNPro_InternalEnumPort($port)
 {
-        $this->SOAP_Client("http://ns1p.dns-hosting.info:9200/", 0);
+        $this->SOAP_Client("http://node06p.dns-hosting.info:9200/", 0);
     }
     function &addRange($range) {
         // range is a ComplexType EnumRange,
@@ -1216,9 +1222,9 @@ class WebService_NGNPro_InternalEnumPort extends SOAP_Client
 }
 class WebService_NGNPro_InternalRatingPort extends SOAP_Client
 {
-    function WebService_NGNPro_InternalRating($port)
+    function WebService_NGNPro_InternalRatingPort($port)
 {
-        $this->SOAP_Client("http://ns1p.dns-hosting.info:9200/", 0);
+        $this->SOAP_Client("http://node06p.dns-hosting.info:9200/", 0);
     }
     function &setEntityProfiles($profiles) {
         // profiles is a ComplexType RatingEntityProfiles,
@@ -1250,9 +1256,9 @@ class WebService_NGNPro_InternalRatingPort extends SOAP_Client
 }
 class WebService_NGNPro_InternalCustomerPort extends SOAP_Client
 {
-    function WebService_NGNPro_InternalCustomer($port)
+    function WebService_NGNPro_InternalCustomerPort($port)
 {
-        $this->SOAP_Client("http://ns1p.dns-hosting.info:9200/", 0);
+        $this->SOAP_Client("http://node06p.dns-hosting.info:9200/", 0);
     }
     function &addAccount($account) {
         // account is a ComplexType CustomerAccount,

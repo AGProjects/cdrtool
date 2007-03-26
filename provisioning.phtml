@@ -494,9 +494,15 @@ class ENUMmappings extends Records {
 
 class TrustedPeers extends Records {
 
+    var $sortElements=array(
+                            'description'   => 'Description',
+                            'ip' =>'IP address'
+                            );
+
     function TrustedPeers(&$SOAPEngine) {
-        $this->filters   = array('ip'     => trim($_REQUEST['ip_filter'])
-                           );
+    	$this->filters   = array('ip'     => trim($_REQUEST['ip_filter']),
+                                 'description'  => trim($_REQUEST['description_filter'])
+                                 );
 
 		$this->Records(&$SOAPEngine);
     }
@@ -508,8 +514,37 @@ class TrustedPeers extends Records {
         // Insert credetials
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
+        // Filter
+        $filter=array('ip' => $this->filters['ip'],
+                      'description'   => $this->filters['description']
+                      );
+
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'description';
+        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'ASC';
+
+        $orderBy = array('attribute' => $this->filters['sortBy'],
+                         'direction' => $this->filters['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        $this->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
+
+        if (strlen($this->filters['ip'])) $this->url .= sprintf("&ip_filter=%s",urlencode($this->filters['ip']));
+        if (strlen($this->filters['description'])) $this->url .= sprintf("&description_filter=%s",urlencode($this->filters['description']));
+
         // Call function
-        $result     = $this->SOAPEngine->soapclient->getTrustedPeers();
+        $result     = $this->SOAPEngine->soapclient->getTrustedPeers($Query);
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -519,7 +554,7 @@ class TrustedPeers extends Records {
             return false;
         } else {
 
-			$this->rows = count($result);
+			$this->rows = $result->total;
 
             print "
             <table border=0 align=center>
@@ -552,11 +587,12 @@ class TrustedPeers extends Records {
 			if ($this->rows) {
                 while ($i < $this->maxrowsperpage)  {
     
-                    $peer = $result[$i];
-                    if (!$peer->ip) break;
-
-                    $index = $this->next+$i+1;
+                    if (!$result->peers[$i]) break;
     
+                    $peer = $result->peers[$i];
+    
+                    $index=$this->next+$i+1;
+
                     $rr=floor($index/2);
                     $mod=$index-$rr*2;
             
