@@ -2359,7 +2359,7 @@ class CDR_ser_radius extends CDR {
 		if ($this->price == "0.0000" && !$this->rate) {
             $this->pricePrint="";
         } else {
-			if ($perm->have_perm("showPrice")) {
+			if (is_object($perm) && $perm->have_perm("showPrice")) {
         		$this->pricePrint=$this->price;
             } else {
         		$this->pricePrint='x.xxx';
@@ -2695,7 +2695,7 @@ class CDR_ser_radius extends CDR {
                 </tr>
         ";
 
-		if ($perm->have_perm("showPrice")) {
+		if (is_object($perm) && $perm->have_perm("showPrice")) {
             if ($this->price > 0 || $this->rate) {
                 $CallInfoVerbose.= "
                 <tr>
