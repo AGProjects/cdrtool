@@ -32,6 +32,8 @@ $search_text        = $_REQUEST['search_text'];
 $ReloadRatingTables = $_REQUEST['ReloadRatingTables'];
 $account            = $_REQUEST['account'];
 $balance            = $_REQUEST['balance'];
+$fromRate           = $_REQUEST['fromRate'];
+$toRate             = $_REQUEST['toRate'];
 
 global $CDRTool;
 
@@ -103,18 +105,16 @@ if ($CDRTool['filter']['domain']) {
     }
 }
 
-$exceptions=$tables[$table]['exceptions'];
-$keys      =$tables[$table]['keys'];
-$fields    =$tables[$table]['fields'];
+$el_size="20";
 
-if ($tables[$table][size]) {
-    $el_size=$tables[$table][size];
-} else {
-    $el_size="20";
-}
-
-$metadata=$db->metadata($table="$table");
-$cc=count($metadata);
+// Init table structure
+$exceptions= $tables[$table]['exceptions'];
+$keys      = $tables[$table]['keys'];
+$fields    = $tables[$table]['fields'];
+$metadata  = $db->metadata($table="$table");
+$cc        = count($metadata);
+if ($tables[$table]['size']) $el_size=$tables[$table]['size'];
+// end init table structure
 
 if ($action =="update" && $table) {
 	$affected_rows=0;
@@ -125,7 +125,7 @@ if ($action =="update" && $table) {
 			$Fname=$metadata[$k]["name"];
             $value=$_REQUEST[$Fname];
             dprint("fname=$Fname, value=$value");
-			if (!preg_match("/^($exceptions)$/",$Fname) ) {
+			if (!in_array($Fname,$exceptions) ) {
 				if ($kkk > 0) {
 					$comma = ",";
 				} else {
@@ -224,7 +224,7 @@ if ($action =="update" && $table) {
 		while ($k < $cc ) {
 			$Fname=$metadata[$k]["name"];
             $value=$_REQUEST[$Fname];
-			if (strlen($value) && !preg_match("/^($exceptions)$/",$Fname)
+			if (strlen($value) && !in_array($Fname,$exceptions)
 				&& !preg_match("/^$keys$/",$Fname)) {
 				if ($kkk > 0) {
 					$comma = ",";
@@ -255,7 +255,7 @@ if ($action =="update" && $table) {
                 $Fname=$metadata[$j]["name"];
                 $size=$metadata[$j]["len"];
 
-                if (!preg_match("/^($exceptions)$/",$Fname)) {
+                if (!in_array($Fname,$exceptions)) {
     
                     $f_name="search_".$Fname;
                     $value=$_REQUEST[$f_name];
@@ -271,7 +271,7 @@ if ($action =="update" && $table) {
                     }				
     
                     if (strlen($value)) {
-                        $update_all_where=$update_all_where." and $Fname $like $quotes".$likewhat."$quotes";
+                        $update_all_where .= " and $Fname $like $quotes".$likewhat."$quotes";
                         $t++;
                     }
                 
@@ -304,7 +304,7 @@ if ($action =="update" && $table) {
                 $Fname=$metadata[$j]["name"];
                 $size=$metadata[$j]["len"];
     
-                if (!preg_match("/^($exceptions)$/",$Fname)) {
+                if (!in_array($Fname,$exceptions)) {
     
                     $f_name="search_".$Fname;
                     $value=$_REQUEST[$f_name];
@@ -320,7 +320,7 @@ if ($action =="update" && $table) {
                     }				
     
                     if (strlen($value)) {
-                        $update_all_where=$update_all_where." and $Fname $like $quotes".$likewhat."$quotes";
+                        $update_all_where .= " and $Fname $like $quotes".$likewhat."$quotes";
                         $t++;
                     }
                 
@@ -351,27 +351,50 @@ if ($action =="update" && $table) {
         }
 	} elseif ($subaction == "Copy rate" && strlen($fromRate) && strlen($toRate)) {
         if ($confirmCopy) {
-            $query="insert into billing_rates
-            (gateway,domain,subscriber,name,destination,durationRate,trafficRate,applicationRate,connectCost)
-            select
-            billing_rates.gateway,
-            billing_rates.domain,
-            billing_rates.subscriber,
-            '$toRate',
-            billing_rates.destination,
-            billing_rates.durationRate,
-            billing_rates.trafficRate,
-            billing_rates.applicationRate,
-            billing_rates.connectCost
-            from billing_rates ";
+            if ($toRate == 'history') {
+                $query=sprintf("insert into billing_rates_history
+                (gateway,domain,subscriber,name,destination,durationRate,
+                trafficRate,applicationRate,connectCost,startDate,endDate)
+                select
+                billing_rates.gateway,
+                billing_rates.domain,
+                billing_rates.subscriber,
+                '%s',
+                billing_rates.destination,
+                billing_rates.durationRate,
+                billing_rates.trafficRate,
+                billing_rates.applicationRate,
+                billing_rates.connectCost,
+                NOW(),
+                NOW()
+                from billing_rates ",
+                $fromRate);
 
+            } else {
+
+                $query=sprintf("insert into billing_rates
+                (gateway,domain,subscriber,name,destination,durationRate,
+                trafficRate,applicationRate,connectCost)
+                select
+                billing_rates.gateway,
+                billing_rates.domain,
+                billing_rates.subscriber,
+                '%s',
+                billing_rates.destination,
+                billing_rates.durationRate,
+                billing_rates.trafficRate,
+                billing_rates.applicationRate,
+                billing_rates.connectCost
+                from billing_rates ",
+                $toRate);
+            }
             $j=0;
             while ($j < $cc ) {
     
                 $Fname=$metadata[$j]["name"];
                 $size=$metadata[$j]["len"];
     
-                if (!preg_match("/^($exceptions)$/",$Fname)) {
+                if (!in_array($Fname,$exceptions)) {
     
                     $f_name="search_".$Fname;
                     $value=$_REQUEST[$f_name];
@@ -387,7 +410,7 @@ if ($action =="update" && $table) {
                     }				
     
                     if (strlen($value)) {
-                        $update_all_where=$update_all_where." and $Fname $like $quotes".$likewhat."$quotes";
+                        $update_all_where .= " and $Fname $like $quotes".$likewhat."$quotes";
                         $t++;
                     }
                 
@@ -400,11 +423,26 @@ if ($action =="update" && $table) {
 
             dprint($endquery);
             if ($db->query($endquery)) {
+
 				$affected_rows=$db->affected_rows();
 
                 if ($affected_rows) {
                 	$db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
                 	print "$affected_rows rates copied. ";
+                }
+
+                if ($toRate == 'history') {
+                    // Switch to history
+                    $table      = 'billing_rates_history';
+
+                    // Init table structure
+                    $exceptions= $tables[$table]['exceptions'];
+                    $keys      = $tables[$table]['keys'];
+                    $fields    = $tables[$table]['fields'];
+                    $metadata  = $db->metadata($table="$table");
+                    $cc        = count($metadata);
+                    if ($tables[$table]['size']) $el_size=$tables[$table]['size'];
+                    // end init table structure
                 }
 
                 unset($confirmCopy);
@@ -434,7 +472,7 @@ if ($action =="update" && $table) {
             $kkk=0;
             while ($k < $cc ) {
                 $Fname=$metadata[$k]["name"];
-                if (!preg_match("/^($exceptions)$/",$Fname) ) {
+                if (!in_array($Fname,$exceptions) ) {
                     if ($kkk > 0) {
                         $comma = ",";
                     } else {
@@ -453,7 +491,7 @@ if ($action =="update" && $table) {
                 $Fname=$metadata[$k]["name"];
                 $value=$_REQUEST[$Fname];
     
-                if (!preg_match("/^($exceptions)$/",$Fname) ) {
+                if (!in_array($Fname,$exceptions) ) {
                     if ($kkk > 0) {
                         $comma = ",";
                     } else {
@@ -550,7 +588,7 @@ $j=0;
 while ($j < $cc ) {
     $Fname=$metadata[$j]["name"];
     $size=$metadata[$j]["len"];
-    if (!preg_match("/^($exceptions)$/",$Fname)) {
+    if (!in_array($Fname,$exceptions)) {
         $f_name="search_".$Fname;
         $value=$_REQUEST[$f_name];
         #print "$Fname $size $t  $nrsf $f_name ${$f_name}<br>";
@@ -664,7 +702,7 @@ if (!$export) {
 
     while ($k < $cc) {
         $th=$metadata[$k]["name"];
-        if (!preg_match("/^($exceptions)$/",$th)) {
+		if (!in_array($th,$exceptions) ) {
             if ($fields[$th][name]) {
                 $th=$fields[$th][name];
             } else {
@@ -717,7 +755,7 @@ if (!$export) {
         $Fname=$metadata[$j]["name"];
         $size=$metadata[$j]["len"];
     
-        if (!preg_match("/^($exceptions)$/",$Fname)) {
+        if (!in_array($Fname,$exceptions)) {
             $SEARCH_NAME="search_".$Fname;
             $value=$_REQUEST[$SEARCH_NAME];
             if ($value != "") {
@@ -776,7 +814,7 @@ if (!$export) {
     while ($j < $cc ) {
         $Fname=$metadata[$j]["name"];
         $size=$metadata[$j]["len"];
-        if (!preg_match("/^($exceptions)$/",$Fname)) {
+        if (!in_array($Fname,$exceptions)) {
             $SEARCH_NAME="search_".$Fname;
             $value=$_REQUEST[$SEARCH_NAME];
             print "<input type=hidden name=search_$Fname value=\"$value\">";
@@ -826,7 +864,7 @@ if (!$export) {
             }
     
     
-            if (!preg_match("/^($exceptions)$/",$Fname)) {
+            if (!in_array($Fname,$exceptions)) {
                 if (!preg_match("/^$keys$/",$Fname) ) {
                     if ($Fname=="domain" && is_array($insertDomainOption)) {
                         print "<td><select name=$Fname>";
@@ -853,7 +891,7 @@ if (!$export) {
         while ($j < $cc ) {
             $Fname=$metadata[$j]["name"];
             $size=$metadata[$j]["len"];
-            if (!preg_match("/^($exceptions)$/",$Fname)) {
+            if (!in_array($Fname,$exceptions)) {
                 $SEARCH_NAME="search_".$Fname;
                 $value=$_REQUEST[$SEARCH_NAME];
                 print "<input type=hidden name=search_$Fname value=\"$value\">";
@@ -881,7 +919,7 @@ if (!$export) {
                 }
             	print "
                 <input type=submit name=subaction value=\"Copy rate\">";
-                print " $search_name to ";
+                print " id $search_name to";
 
                 $query="select distinct(name) as name
                 from billing_rates where
@@ -899,9 +937,17 @@ if (!$export) {
                 } else {
                     $newRateName=$_rateName."_1";
                 }
-                print "$newRateName";
             	print "<input type=hidden name=fromRate value=\"$search_name\">";
-                print "<input type=hidden name=toRate value=\"$newRateName\">";
+                $selected_newtable[$toRate]='selected';
+                printf ("<select name=toRate>
+                <option value=\"%s\" %s>Rate id %s
+                <option value=history %s>Rate history table
+                </select>",
+                $newRateName,
+                $selected_newtable[$newRateName],
+                $newRateName,
+                $selected_newtable['history']
+                );
 
             } else {
                 print "<td>";
@@ -944,7 +990,7 @@ if (!$export) {
                 $field_size=$el_size;
             }
     
-            if (!preg_match("/^($exceptions)$/",$Fname)) {
+            if (!in_array($Fname,$exceptions)) {
                 if (!preg_match("/^$keys$/",$Fname) ) {
                 	if ($Fname=="domain" && is_array($insertDomainOption)) {
                     	print "<td><select  name=$Fname>";
@@ -970,7 +1016,7 @@ if (!$export) {
         while ($j < $cc ) {
             $Fname=$metadata[$j]["name"];
             $size=$metadata[$j]["len"];
-            if (!preg_match("/^($exceptions)$/",$Fname)) {
+            if (!in_array($Fname,$exceptions)) {
                 $SEARCH_NAME="search_".$Fname;
                 $value=$_REQUEST[$SEARCH_NAME];
                 print "<input type=hidden name=search_$Fname value=\"$value\">";
@@ -1032,7 +1078,7 @@ while  ($i<$maxrows)  {
             $extra_form_els="";
         }
 
-        if (!preg_match("/^($exceptions)$/",$Fname)) {
+        if (!in_array($Fname,$exceptions)) {
     		if (!$export) {
                 if (!preg_match("/^$keys$/",$Fname)) {
                     if ($Fname=="domain" && is_array($insertDomainOption)) {
@@ -1070,7 +1116,7 @@ while  ($i<$maxrows)  {
         $Fname=$metadata[$j]["name"];
         $size=$metadata[$j]["len"];
 
-        if (!preg_match("/^($exceptions)$/",$Fname)) {
+        if (!in_array($Fname,$exceptions)) {
         	$SEARCH_NAME="search_".$Fname;
             $value=$_REQUEST[$SEARCH_NAME];
             if (!$export) {
@@ -1143,7 +1189,7 @@ if (!$export) {
             $Fname=$metadata[$j]["name"];
             $size=$metadata[$j]["len"];
     
-            if (!preg_match("/^($exceptions)$/",$Fname)) {
+            if (!in_array($Fname,$exceptions)) {
                 $SEARCH_NAME="search_".$Fname;
                 $value=$_REQUEST[$SEARCH_NAME];
                 print "<input type=hidden name=search_$Fname value=\"$value\">
@@ -1177,7 +1223,7 @@ if (!$export) {
             $Fname=$metadata[$j]["name"];
             $size=$metadata[$j]["len"];
     
-            if (!preg_match("/^($exceptions)$/",$Fname)) {
+            if (!in_array($Fname,$exceptions)) {
                 $SEARCH_NAME="search_".$Fname;
                 $value=$_REQUEST[$SEARCH_NAME];
                 print "<input type=hidden name=search_$Fname value=\"$value\">";

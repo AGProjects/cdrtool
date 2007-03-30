@@ -384,3 +384,31 @@ alter table billing_ratesNGN add  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`sub
 5.0.10
 alter table destinations change column dest_id dest_id varchar(100) not null;
 alter table billing_rates change column destination destination varchar(100) not null;
+
+5.1.0
+alter table billing_rates change column `name` `name` varchar(25) not null;
+alter table billing_profiles change column `name` `name` varchar(25) not null;
+alter table billing_customers change column `profile_name1` `profile_name1` varchar(25) not null;
+alter table billing_customers change column `profile_name1_alt` `profile_name1_alt` varchar(25) not null;
+alter table billing_customers change column `profile_name2` `profile_name2` varchar(25) not null;
+alter table billing_customers change column `profile_name2_alt` `profile_name2_alt` varchar(25) not null;
+
+CREATE TABLE `billing_rates_history` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `gateway` varchar(50) NOT NULL default '',
+  `domain` varchar(50) NOT NULL default '',
+  `subscriber` varchar(50) NOT NULL default '',
+  `name` varchar(25) NOT NULL default '',
+  `destination` varchar(100) NOT NULL default '',
+  `durationRate` varchar(25) NOT NULL default '',
+  `trafficRate` varchar(25) NOT NULL default '',
+  `applicationRate` varchar(25) NOT NULL default '',
+  `connectCost` varchar(25) NOT NULL default '',
+  `startDate` date  NOT NULL,
+  `endDate` date  NOT NULL,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`,`startDate`,`endDate`),
+  KEY `name_idx` (`name`),
+  KEY `dest_idx` (`destination`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+

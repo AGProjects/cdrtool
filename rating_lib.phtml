@@ -577,6 +577,7 @@ class Rate {
 
             if ($this->rateName) {
             	dprint("Found rate=$this->rateName for interval=$this->timeInterval in profile=$this->profileName");
+                // adi, to do get historical rating if exists
             	$this->rateValues=$this->RatingTables->rates[$this->rateName][$this->DestinationId];
             } else {
                 dprint("No rates for destination=$this->DestinationId. Trying alternative profile=$this->profileNameAlt");
@@ -616,14 +617,6 @@ class Rate {
                 }
             }
 
-        /*
-        } else if (!is_array($profileValuesAlt)) {
-            $log=sprintf("Error: Cannot find alternative rates for destination=%s, profile=%s",$this->DestinationId,$this->profileName);
-            dprint($log);
-        	syslog(LOG_NOTICE, $log);
-            mail($this->toEmail, "CDRTool rating problem", $log, $this->extraHeaders);
-            return 0;
-        */
         }
 
         if (!$this->rateValues) {
@@ -935,7 +928,7 @@ class RatingTables {
                                                                  "domain"=>array("size"=>15,
                                                                  				 "name"=>"Domain"
                                                                                  ),
-                                                                 "subscriber"=>array("size"=>30,
+                                                                 "subscriber"=>array("size"=>15,
                                                                  				 "name"=>"Subscriber"
                                                                                  ),
                                                                  "dest_id"=>array("size"=>20,
@@ -952,20 +945,21 @@ class RatingTables {
                            "billing_customers"=>array("name"=>"Customers",
                                                  "keys"=>"id",
                                                  "domainFilterColumn"=>"domain",
+                                                 "exceptions" =>array('country_code','profileNGN'),
                                                  "fields"=>array("gateway"=>array("size"=>15,
                                                                                   "name"=>"Gateway"
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
                                                                  				 "name"=>"Domain"
                                                                                  ),
-                                                                 "subscriber"=>array("size"=>20,
+                                                                 "subscriber"=>array("size"=>15,
                                                                  				 "name"=>"Subscriber"
                                                                                  ),
                                                                  "profile_name1"=>array("size"=>8,
                                                                  				 "name"=>"WeekDay"
                                                                                  ),
                                                                  "profile_name1_alt"=>array("size"=>8,
-                                                                 				 "name"=>"Alt"
+                                                                 				 "name"=>"Fallback"
                                                                                  ),
                                                                  "profileNGN"=>array("size"=>8,
                                                                  				 "name"=>"NGN"
@@ -974,7 +968,7 @@ class RatingTables {
                                                                  				 "name"=>"WeekEnd"
                                                                                  ),
                                                                  "profile_name2_alt"=>array("size"=>8,
-                                                                 				 "name"=>"Alt"
+                                                                 				 "name"=>"Fallback"
                                                                                  ),
                                                                  "timezone"     =>array("size"=>16,
                                                                  				 "name"=>"Timezone"
@@ -1003,7 +997,7 @@ class RatingTables {
                                                                  "domain"=>array("size"=>15,
                                                                  				 "name"=>"Domain"
                                                                                  ),
-                                                                 "subscriber"=>array("size"=>30,
+                                                                 "subscriber"=>array("size"=>15,
                                                                  				 "name"=>"Subscriber"
                                                                                  ),
                                                  				 "name"=>array("size"=>10,
@@ -1041,6 +1035,7 @@ class RatingTables {
                                                  "keys"=>"id",
                                                  "size"=>10,
                                                  "domainFilterColumn"=>"domain",
+                                                 "exceptions" =>array('trafficRate','applicationRate'),
                                                  "fields"=>array(
                                                  				 "gateway"=>array("size"=>15,
                                                                                   "name"=>"Gateway"
@@ -1048,7 +1043,7 @@ class RatingTables {
                                                                  "domain"=>array("size"=>15,
                                                                  				 "name"=>"Domain"
                                                                                  ),
-                                                                 "subscriber"=>array("size"=>30,
+                                                                 "subscriber"=>array("size"=>15,
                                                                  				 "name"=>"Subscriber"
                                                                                  ),
                                                                  "name"=>array("size"=>10,
@@ -1065,6 +1060,45 @@ class RatingTables {
                                                                                  ),
                                                                  "connectCost"=>array("size"=>10,
                                                                  				 "name"=>"SetupCost"
+                                                                                 )
+
+                                                                  )
+                                                   ),
+                           "billing_rates_history"=>array("name"=>"Rates history",
+                                                 "keys"=>"id",
+                                                 "size"=>10,
+                                                 "domainFilterColumn"=>"domain",
+                                                 "exceptions" =>array('trafficRate','applicationRate'),
+                                                 "fields"=>array(
+                                                 				 "gateway"=>array("size"=>15,
+                                                                                  "name"=>"Gateway"
+                                                                                ),
+                                                                 "domain"=>array("size"=>15,
+                                                                 				 "name"=>"Domain"
+                                                                                 ),
+                                                                 "subscriber"=>array("size"=>15,
+                                                                 				 "name"=>"Subscriber"
+                                                                                 ),
+                                                                 "name"=>array("size"=>10,
+                                                                               "name"=>"Rate"
+                                                                                ),
+                                                                 "destination"=>array("size"=>20,
+                                                                 				 "name"=>"Destination"
+                                                                                 ),
+                                                                 "durationRate"=>array("size"=>10,
+                                                                 				 "name"=>"DurationRate"
+                                                                                 ),
+                                                                 "applicationRate"=>array("size"=>10,
+                                                                 				 "name"=>"AppRate"
+                                                                                 ),
+                                                                 "connectCost"=>array("size"=>10,
+                                                                 				 "name"=>"SetupCost"
+                                                                                 ),
+                                                                 "startDate"=>array("size"=>11,
+                                                                 				 "name"=>"Start Date"
+                                                                                 ),
+                                                                 "endDate"=>array("size"=>11,
+                                                                 				 "name"=>"End Date"
                                                                                  )
 
                                                                   )
@@ -2249,12 +2283,13 @@ class RatingTables {
 
     function LoadRatingTables () {
         $loaded=array();
-    	$loaded['customers']    = $this->LoadCustomersTable();
-        $loaded['profilesPSTN'] = $this->LoadProfilesPSTNTable();
-        $loaded['ratesPSTN']    = $this->LoadRatesTable();
-        $loaded['profilesNGN']  = $this->LoadProfilesNGNTable();
-        $loaded['ratesNGN']     = $this->LoadRatesNGNTable();
-        $loaded['holidays']     = $this->LoadHolidaysTable();
+    	$loaded['customers']        = $this->LoadCustomersTable();
+        $loaded['profilesPSTN']     = $this->LoadProfilesPSTNTable();
+        $loaded['ratesPSTN']        = $this->LoadRatesTable();
+        $loaded['ratesHistoryPSTN'] = $this->LoadRatesHistoryTable();
+        $loaded['profilesNGN']      = $this->LoadProfilesNGNTable();
+        $loaded['ratesNGN']         = $this->LoadRatesNGNTable();
+        $loaded['holidays']         = $this->LoadHolidaysTable();
 
         foreach(array_keys($loaded) as $_load) {
         	syslog(LOG_NOTICE, "Loaded $loaded[$_load] $_load");
@@ -2282,7 +2317,10 @@ class RatingTables {
 
         dprint($query);
 
-        $this->cdrtool->query($query);
+        if (!$this->cdrtool->query($query)) {
+            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+            return false;
+        }
 
         if ($updateCustomer && !$this->cdrtool->num_rows()) {
         	$log=sprintf("Customer %s of type %s not found ",$customerFilter['customer'],$customerFilter['type']);
@@ -2411,9 +2449,11 @@ class RatingTables {
     }
 
     function LoadRatesTable() {
-        $query="select * from billing_rates
-        order by destination";
-        $this->cdrtool->query($query);
+        $query="select * from billing_rates order by destination";
+        if (!$this->cdrtool->query($query)) {
+            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+            return false;
+        }
 
         $i=0;
         $rows=$this->cdrtool->num_rows();
@@ -2436,9 +2476,47 @@ class RatingTables {
         return $i;
     }
 
+    function LoadRatesHistoryTable() {
+        $query="select *,
+        UNIX_TIMESTAMP(startDate) as startDateTimestamp,
+        UNIX_TIMESTAMP(endDate) as endDateTimestamp
+        from billing_rates_history
+        order by destination";
+
+        if (!$this->cdrtool->query($query)) {
+            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+            return false;
+        }
+
+        $i=0;
+        $rows=$this->cdrtool->num_rows();
+        while($this->cdrtool->next_record()) {
+            if ($this->cdrtool->Record['name'] && $this->cdrtool->Record['destination']) {
+                $i++;
+                $_rates[$this->cdrtool->Record['name']][$this->cdrtool->Record['destination']]=
+                array(
+                     "durationRate"    => $this->cdrtool->Record['durationRate'],
+                     "trafficRate"     => $this->cdrtool->Record['trafficRate'],
+                     "applicationRate" => $this->cdrtool->Record['applicationRate'],
+                     "connectCost"     => $this->cdrtool->Record['connectCost'],
+                     "startDate"       => $this->cdrtool->Record['startDateTimestamp'],
+                     "endDate"         => $this->cdrtool->Record['endDateTimestamp']
+                );
+            }
+        }
+
+		$this->ratesHistory=$_rates;
+        $this->ratesHistoryCount=$i;
+        dprint("Loaded $i PSTN history rates");
+        return $i;
+    }
+
     function LoadRatesNGNTable() {
         $query="select * from billing_ratesNGN order by name";
-        $this->cdrtool->query($query);
+        if (!$this->cdrtool->query($query)) {
+            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+            return false;
+        }
 
         $i=0;
         $rows=$this->cdrtool->num_rows();
@@ -2460,7 +2538,10 @@ class RatingTables {
 
     function LoadProfilesPSTNTable() {
         $query="select * from billing_profiles order by name";
-        $this->cdrtool->query($query);
+        if (!$this->cdrtool->query($query)) {
+            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+            return false;
+        }
 
         $i=0;
         while($this->cdrtool->next_record()) {
@@ -2488,7 +2569,10 @@ class RatingTables {
 
     function LoadProfilesNGNTable() {
         $query="select * from billing_profilesNGN order by name";
-        $this->cdrtool->query($query);
+        if (!$this->cdrtool->query($query)) {
+            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+            return false;
+        }
 
         $i=0;
         while($this->cdrtool->next_record()) {
@@ -2509,7 +2593,10 @@ class RatingTables {
 
     function LoadHolidaysTable() {
         $query="select * from billing_holidays order by day";
-        $this->cdrtool->query($query);
+        if (!$this->cdrtool->query($query)) {
+            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+            return false;
+        }
 
         $i=0;
         while($this->cdrtool->next_record()) {

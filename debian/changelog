@@ -1,12 +1,14 @@
 cdrtool (5.1.0) unstable; urgency=low
 
-  * Added function to obfuscate caller Ids
+  * Added historical rating engine, requires changes in database
+    structure, see setup/mysql/alter_tables.mysql
   * Added a sample provisioning interface for Multimedia Service Platform
+  * Added function to obfuscate caller Ids
   * Added capability to do accounting for SIP URIs (e.g. paid helpdesk)
   * Improved compatibility with Firefox in media sesessions screen
   * Added rights for login accounts to show pricing and caller id
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 20 Mar 2007 15:49:05 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 30 Mar 2007 18:50:32 +0200
 
 cdrtool (5.0.10) unstable; urgency=low
 

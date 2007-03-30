@@ -123,11 +123,11 @@ CREATE TABLE `billing_customers` (
   `gateway` varchar(50) NOT NULL default '',
   `domain` varchar(50) NOT NULL default '',
   `subscriber` varchar(50) NOT NULL default '',
-  `profile_name1` varchar(10) NOT NULL default '',
-  `profile_name1_alt` varchar(10) NOT NULL default '',
-  `profile_name2` varchar(10) NOT NULL default '',
-  `profile_name2_alt` varchar(10) NOT NULL default '',
-  `profileNGN` varchar(10) NOT NULL default '',
+  `profile_name1` varchar(25) NOT NULL default '',
+  `profile_name1_alt` varchar(25) NOT NULL default '',
+  `profile_name2` varchar(25) NOT NULL default '',
+  `profile_name2_alt` varchar(25) NOT NULL default '',
+  `profileNGN` varchar(25) NOT NULL default '',
   `timezone` varchar(128) NOT NULL default '',
   `increment` smallint(5) unsigned NOT NULL,
   `min_duration` smallint(5) unsigned NOT NULL,
@@ -202,7 +202,7 @@ CREATE TABLE `billing_rates` (
   `gateway` varchar(50) NOT NULL default '',
   `domain` varchar(50) NOT NULL default '',
   `subscriber` varchar(50) NOT NULL default '',
-  `name` varchar(250) NOT NULL default '',
+  `name` varchar(25) NOT NULL default '',
   `destination` varchar(100) NOT NULL default '',
   `durationRate` varchar(25) NOT NULL default '',
   `trafficRate` varchar(25) NOT NULL default '',
@@ -210,6 +210,30 @@ CREATE TABLE `billing_rates` (
   `connectCost` varchar(25) NOT NULL default '',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`),
+  KEY `name_idx` (`name`),
+  KEY `dest_idx` (`destination`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+--
+-- Table structure for table `billing_rates_history`
+--
+
+DROP TABLE IF EXISTS `billing_rates_history`;
+CREATE TABLE `billing_rates_history` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `gateway` varchar(50) NOT NULL default '',
+  `domain` varchar(50) NOT NULL default '',
+  `subscriber` varchar(50) NOT NULL default '',
+  `name` varchar(25) NOT NULL default '',
+  `destination` varchar(100) NOT NULL default '',
+  `durationRate` varchar(25) NOT NULL default '',
+  `trafficRate` varchar(25) NOT NULL default '',
+  `applicationRate` varchar(25) NOT NULL default '',
+  `connectCost` varchar(25) NOT NULL default '',
+  `startDate` date  NOT NULL,
+  `endDate` date  NOT NULL,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`,`startDate`,`endDate`),
   KEY `name_idx` (`name`),
   KEY `dest_idx` (`destination`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
