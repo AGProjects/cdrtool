@@ -217,12 +217,13 @@ operation can be 2 (update/insert), 1 (insert) or 3 (delete).
 
 The updates are performed based on a unique key present in each table:
 
-billing_customers   - cust_idx      (gateway,domain,subscriber)
-destinations        - cust_dest_idx (gateway,domain,subscriber,dest_id)
-billing_profiles    - profile_idx   (gateway,domain,subscriber,name)
-billing_rates       - rate_idx      (gateway,domain,subscriber,name,destination)
-billing_ratesNGN    - rate_idx      (gateway,domain,subscriber,name);
-billing_profilesNGN - profile_idx   (gateway,domain,subscriber,name);
+billing_customers     - cust_idx      (gateway,domain,subscriber)
+destinations          - cust_dest_idx (gateway,domain,subscriber,dest_id)
+billing_profiles      - profile_idx   (gateway,domain,subscriber,name)
+billing_rates         - rate_idx      (gateway,domain,subscriber,name,destination)
+billing_rates_history - rate_idx      (gateway,domain,subscriber,name,destination,startDate,endDate)
+billing_ratesNGN      - rate_idx      (gateway,domain,subscriber,name);
+billing_profilesNGN   - profile_idx   (gateway,domain,subscriber,name);
 
 The content of the rating tables can be exported in the Rating tables page.
 
@@ -315,6 +316,24 @@ billing_rates
 | trafficRate     |
 | applicationRate |
 | connectCost     |
++-----------------+
+
+billing_rates_history
++-----------------+
+| Field           |
++-----------------+
+| id              |
+| gateway         |
+| domain          |
+| subscriber      |
+| name            |
+| destination     |
+| durationRate    |
+| trafficRate     |
+| applicationRate |
+| connectCost     |
+| startDate       |
+| endDate         |
 +-----------------+
 
 billing_ratesNGN

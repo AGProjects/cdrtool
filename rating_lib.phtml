@@ -900,6 +900,7 @@ class RatingTables {
 
 	var $filesToImport=array();
     var $importFilesPatterns=array('profilesNGN',
+                                   'rates_history',
                                    'ratesNGN',
                                    'rates',
                                    'profiles',
@@ -1381,6 +1382,228 @@ class RatingTables {
 
             if ($j=="10000") {
                 dprint("Loaded another $j rates");
+                flush();
+                $j=0;
+            }
+
+            $i++;
+        }
+
+        if ($i) print "Read $i records\n";
+        if ($inserted) print "Inserted $inserted records\n";
+        if ($updated)  print "Updated $updated records\n";
+        if ($deleted)  print "Delete $deleted records\n";
+
+        $results=$inserted+$updated+$deleted;
+
+        return $results;
+
+    }
+
+    function ImportRatesHistory($file) {
+        dprint("ImportRatesHistory($file)");
+        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
+
+        $i=0;
+        $inserted = 0;
+        $updated  = 0;
+        $deleted  = 0;
+
+        print "Importing Rates history:\n";
+
+        while ($buffer = fgets($fp,1024)) {
+            $buffer=trim($buffer);
+
+            $p = explode(",", $buffer);
+
+            $ops             = trim($p[0]);
+            $gateway         = trim($p[1]);
+            $domain          = trim($p[2]);
+            $subscriber      = trim($p[3]);
+            $profile         = trim($p[4]);
+            $destination     = trim($p[5]);
+            $durationRate    = trim($p[6]);
+            $trafficRate     = trim($p[7]);
+            $applicationRate = trim($p[8]);
+            $connectCost     = trim($p[9]);
+            $startDate       = trim($p[10]);
+            $endDate         = trim($p[11]);
+
+            if ($ops=="1") {
+
+                $query=sprintf("insert into billing_rates_history
+                (
+                gateway,
+                domain,
+                subscriber,
+                name,
+                destination,
+                durationRate,
+                trafficRate,
+                applicationRate,
+                connectCost,
+                startDate,
+                endDate
+                ) values (
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s'
+                )",
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($profile),
+                addslashes($destination),
+                addslashes($durationRate),
+                addslashes($trafficRate),
+                addslashes($applicationRate),
+                addslashes($connectCost),
+                addslashes($startDate),
+                addslashes($endDate)
+                );
+                //dprint($query);
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $inserted++;
+                } else {
+                    $failed++;
+                }
+            } else if ($ops=="3") {
+                $query=sprintf("delete from billing_rates_history
+                where gateway      = '%s'
+                and domain         = '%s'
+                and subscriber     = '%s'
+                and name           = '%s'
+                and destination    = '%s'
+                and startDate      = '%s'
+                and endDate        = '%s'",
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($profile),
+                addslashes($destination),
+                addslashes($startDate),
+                addslashes($endDate)
+                );
+                $this->cdrtool->query($query);
+                if ($this->cdrtool->affected_rows() >0) {
+                    $deleted++;
+                }
+            } else if ($ops=="2") {
+                $query=sprintf("select * from billing_rates_history
+                where name       = '%s'
+                and destination  = '%s'
+                and gateway      = '%s'
+                and domain       = '%s'
+                and subscriber   = '%s'
+                and startDate    = '%s'
+                and endDate      = '%s'
+                ",
+                addslashes($profile),
+                addslashes($destination),
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($startDate),
+                addslashes($endDate)
+                );
+                $this->cdrtool->query($query);
+
+                if ($this->cdrtool->num_rows()) {
+                    $query=sprintf("update billing_rates_history set
+                    durationRate    = '%s',
+                    trafficRate     = '%s',
+                    applicationRate = '%s',
+                    connectCost     = '%s'
+                    where name      = '%s'
+                    and destination = '%s'
+                    and gateway     = '%s'
+                    and domain      = '%s'
+                    and subscriber  = '%s'
+                    and startDate   = '%s'
+                    and endDate     = '%s'
+                    ",
+                    addslashes($durationRate),
+                    addslashes($trafficRate),
+                    addslashes($applicationRate),
+                    addslashes($connectCost),
+                    addslashes($profile),
+                    addslashes($destination),
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($startDate),
+                    addslashes($endDate)
+                    );
+
+                    dprint($query);
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows() >0) {
+                        $updated++;
+                    }
+
+                } else {
+                    $query=sprintf("insert into billing_rates_history
+                    (
+                    gateway,
+                    domain,
+                    subscriber,
+                    name,
+                    destination,
+                    durationRate,
+                    trafficRate,
+                    applicationRate,
+                    connectCost,
+                    startDate,
+                    endDate
+                    ) values (
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s'
+                    )",
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($profile),
+                    addslashes($destination),
+                    addslashes($durationRate),
+                    addslashes($trafficRate),
+                    addslashes($applicationRate),
+                    addslashes($connectCost),
+                    addslashes($startDate),
+                    addslashes($endDate)
+                    );
+                    //dprint($query);
+
+                    $this->cdrtool->query($query);
+                    if ($this->cdrtool->affected_rows() >0) {
+                        $inserted++;
+                    } else {
+                        $failed++;
+                    }
+                }
+            }
+
+            $j++;
+
+            if ($j=="10000") {
+                dprint("Loaded another $j rates history");
                 flush();
                 $j=0;
             }
