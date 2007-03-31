@@ -35,9 +35,9 @@ class CDRS {
                                       'stopTime'        => 'AcctStopTime',
                                       'inputTraffic'    => 'AcctInputOctets',
                                       'outputTraffic'   => 'AcctOutputOctets',
-                                      'aNumber'  	=> 'CallingStationId',
-                                      'cNumber'   	=> 'CalledStationId',
-                                      'timestamp'	=> 'timestamp',
+                                      'aNumber'  	    => 'CallingStationId',
+                                      'cNumber'   	    => 'CalledStationId',
+                                      'timestamp'	    => 'timestamp',
                                       'BillingPartyId'  => 'UserName',
                                       'price'           => 'Price',
                                       'DestinationId'   => 'DestinationId'
@@ -325,7 +325,7 @@ class CDRS {
                 $_els_parts=explode(";",$_els[0]);
                 $_destinations[$_els_parts[0]][$_els_parts[1]]=$_els[1];
             }
-            dprint ("Read $this->destinationsCount PSTN destinations from memory");
+            dprint ("Read $this->destinationsCount destinations from memory");
 
 			$mc_SipDestinations = $this->mc->get('SipDestinations');
             $_SipDests=explode("\n",$mc_SipDestinations);
@@ -426,7 +426,7 @@ class CDRS {
 
             if (is_object($this->mc)) {
             	if ($this->mc->set('destinations',$mc_value_destinations,0,0)) {
-                	$log=sprintf("Saved %d PSTN destinations in memcache",$this->destinationsCount);
+                	$log=sprintf("Saved %d destinations in memcache",$this->destinationsCount);
             		syslog(LOG_NOTICE, $log);
                 }
             	if ($this->mc->set('SipDestinations',$mc_value_SipDestinations,0,0)) {
@@ -445,7 +445,7 @@ class CDRS {
 	        }
         }
 
-        dprint("Loaded $this->destinationsCount PSTN destinations\n");
+        dprint("Loaded $this->destinationsCount E164 destinations\n");
         dprint("Loaded $this->sipDestinationsCount SIP destinations\n");
         //dprint_r($this->destinations);
         //dprint_r($this->sipDestinations);
@@ -1770,14 +1770,14 @@ class CDR {
                 $Rate = new Rate(&$this);
 
                 if ($this->CDRS->RatingEngineSocket && $this->NetworkRateDictionary) {
-                	dprint("Get rates from network");
+                	dprint("Get rates from network ...");
 
                     // get pricing from network rating engine
 					$Rate->getRateFromNetwork(&$this->NetworkRateDictionary,&$this->CDRS->RatingEngineSocket);
 			        dprint_r($this->NetworkRateDictionary);
 
                 } else {
-                	dprint("Get rates from MySQL tables loaded in memory");
+                	dprint("Reaing rates from MySQL tables ...");
 
                     // get pricing from mysql tables loaded in memory
                     $RateDictionary=array(

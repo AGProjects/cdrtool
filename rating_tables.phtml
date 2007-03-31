@@ -124,7 +124,7 @@ if ($action =="update" && $table) {
 		while ($k < $cc ) {
 			$Fname=$metadata[$k]["name"];
             $value=$_REQUEST[$Fname];
-            dprint("fname=$Fname, value=$value");
+            //dprint("fname=$Fname, value=$value");
 			if (!in_array($Fname,$exceptions) ) {
 				if ($kkk > 0) {
 					$comma = ",";
@@ -354,7 +354,7 @@ if ($action =="update" && $table) {
             if ($toRate == 'history') {
                 $query=sprintf("insert into billing_rates_history
                 (gateway,domain,subscriber,name,destination,durationRate,
-                trafficRate,applicationRate,connectCost,startDate,endDate)
+                trafficRate,application,connectCost,startDate,endDate)
                 select
                 billing_rates.gateway,
                 billing_rates.domain,
@@ -363,7 +363,7 @@ if ($action =="update" && $table) {
                 billing_rates.destination,
                 billing_rates.durationRate,
                 billing_rates.trafficRate,
-                billing_rates.applicationRate,
+                billing_rates.application,
                 billing_rates.connectCost,
                 NOW(),
                 NOW()
@@ -374,7 +374,7 @@ if ($action =="update" && $table) {
 
                 $query=sprintf("insert into billing_rates
                 (gateway,domain,subscriber,name,destination,durationRate,
-                trafficRate,applicationRate,connectCost)
+                trafficRate,application,connectCost)
                 select
                 billing_rates.gateway,
                 billing_rates.domain,
@@ -383,7 +383,7 @@ if ($action =="update" && $table) {
                 billing_rates.destination,
                 billing_rates.durationRate,
                 billing_rates.trafficRate,
-                billing_rates.applicationRate,
+                billing_rates.application,
                 billing_rates.connectCost
                 from billing_rates ",
                 $toRate);
@@ -581,7 +581,6 @@ if ($action =="update" && $table) {
 } 
 
 $query="select count(*) as c from $table where $whereDomainFilter";
-dprint($query);
 
 $t=0;
 $j=0;

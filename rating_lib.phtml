@@ -52,22 +52,22 @@ class Rate {
 
         if ($this->RatingTables->customers[$this->BillingPartyId]['timezone']) {
 
-            dprint("Found billing Party=$this->BillingPartyId");
+            dprint("Found billing party = $this->BillingPartyId");
             return $this->RatingTables->customers[$this->BillingPartyId]['timezone'];
 
         } elseif ($this->RatingTables->customers[$this->domain]['timezone']) {
 
-            dprint("Found billing Party=$this->domain");
+            dprint("Found billing party = $this->domain");
             return $this->RatingTables->customers[$this->domain]['timezone'];
 
         } elseif ($this->RatingTables->customers[$this->gateway]['timezone']) {
 
-            dprint("Found billing Party=$this->gateway");
+            dprint("Found billing party = $this->gateway");
             return $this->RatingTables->customers[$this->gateway]['timezone'];
 
         } else {
 
-            dprint("Found billing Party=default");
+            dprint("Found billing party = default");
         	return $this->CDRS->CDRTool['provider']['timezone'];
 
         }
@@ -165,14 +165,9 @@ class Rate {
         if (!$this->duration) $this->duration = 0;
 		if (!$this->traffic)  $this->traffic  = 0;
 
-		if (preg_match("/video/i",$this->applicationType)) {
-            $this->applicationType="video";
-        } else {
-            $this->applicationType="audio";
-        }
+		if (!strlen($this->applicationType)) $this->applicationType='audio';
 
         $trafficRate            = 0;
-        $applicationRate        = 0;
         $durationRate           = 0;
 
         $foundRates=array();
@@ -219,12 +214,12 @@ class Rate {
         }
 
         if ($this->duration && $this->DestinationId) {
-            dprint("Rate PSTN call having $this->duration seconds to $this->cNumber DestinationId=$this->DestinationId ($this->destinationName)");
+            dprint("Rate $this->applicationType session having $this->duration seconds to $this->cNumber DestinationId=$this->DestinationId ($this->destinationName)");
             unset($IntervalsForPricing);
 
             $this->rateInfo .= 
     
-                "         App: Voice session\n".
+                "         App: $this->applicationType\n".
                 " Destination: $this->DestinationId ($this->destinationNamePrint)\n".
                 "    Customer: $this->CustomerProfile\n";
     
@@ -258,7 +253,7 @@ class Rate {
                     $dayofyear       = date("Y-m-d",$this->timestampBilling+$durationRatedTotal);
                 }
 
-                $foundRate           = $this->GetRatePSTN($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
+                $foundRate           = $this->GetRate($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
                 $durationRatedTotal  = $durationRatedTotal + $foundRate["duration"];
 
 				if (!$foundRate['rate']) {
@@ -276,20 +271,6 @@ class Rate {
         			syslog(LOG_NOTICE, "Error: Rating of call $this->id (DestId=$this->DestinationId) has more than 10 spans.");
                     return 0;
                     break;
-                }
-            }
-        }
-
-		if ($this->duration) {
-        	$this->GetProfilesNGN();
-            if ($this->allProfiles[profileNGN]) {
-                $this->rateInfo .= 
-                    "         App: $this->applicationType\n".
-                    "    Customer: $this->CustomerProfile\n";
-
-                dprint("Rate NGN call having $this->duration seconds to $this->cNumber");
-                if ($foundRate             = $this->GetRateNGN()) {
-                    $foundRates[]          = $foundRate;
                 }
             }
         }
@@ -315,7 +296,6 @@ class Rate {
             $connectCost     = $thisRate[values][connectCost];
             $durationRate    = $thisRate[values][durationRate];
             $trafficRate     = $thisRate[values][trafficRate];
-            $applicationRate = $thisRate[values][applicationRate];
 
 			if ($span=="1") {
             	$connectCostSpan=$connectCost;
@@ -326,12 +306,10 @@ class Rate {
             $connectCostPrint     = number_format($connectCostSpan/$this->priceDenominator,$this->priceDecimalDigits);
             $durationRatePrint    = number_format($durationRate/$this->priceDenominator,$this->priceDecimalDigits);
             $trafficRatePrint     = number_format($trafficRate/$this->priceDenominator,$this->priceDecimalDigits);
-            $applicationRatePrint = number_format($applicationRate/$this->priceDenominator,$this->priceDecimalDigits);
 
             if (!$connectCostSpan)     $connectCostSpan=0;
             if (!$durationRate)        $durationRate=0;
             if (!$trafficRate)         $trafficRate=0;
-            if (!$applicationRate)     $applicationRate=0;
             if (!$this->inputTraffic)  $this->inputTraffic=0;
             if (!$this->outputTraffic) $this->outputTraffic=0;
 
@@ -339,17 +317,14 @@ class Rate {
 
             dprint("price=price+connectCostSpan/priceDenominator*payConnect+
                             durationRate*durationForRating/durationPeriodRated/priceDenominator+
-                            trafficRate/priceDenominator/trafficSizeRated*(inputTraffic+outputTraffic)/8+
-                            applicationRate/priceDenominator*payConnect");
+                            trafficRate/priceDenominator/trafficSizeRated*(inputTraffic+outputTraffic)/8");
 
             dprint("price=$this->price+$connectCostSpan/$this->priceDenominator*$payConnect+
                             $durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator+
-                            $trafficRate/$this->priceDenominator/$this->trafficSizeRated*($this->inputTraffic+$this->outputTraffic)/8+
-                            $applicationRate/$this->priceDenominator*$payConnect=");
+                            $trafficRate/$this->priceDenominator/$this->trafficSizeRated*($this->inputTraffic+$this->outputTraffic)/8");
 
             $spanPrice   =  $durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator+
-                            $trafficRate/$this->priceDenominator/$this->trafficSizeRated*($this->inputTraffic+$this->outputTraffic)/8+
-                            $applicationRate/$this->priceDenominator*$payConnect;
+                            $trafficRate/$this->priceDenominator/$this->trafficSizeRated*($this->inputTraffic+$this->outputTraffic)/8;
 
             $this->price    = $this->price+$spanPrice;
             $spanPricePrint = number_format($spanPrice,$this->priceDecimalDigits);
@@ -389,7 +364,6 @@ class Rate {
                 "        Rate: $durationRatePrint / $this->durationPeriodRated s\n".
                 "       Price: $spanPricePrint\n";
                 #" TrafficRate: $trafficRatePrint / $this->trafficSizeRated KBytes\n".
-                #"    ApplRate: $applicationRatePrint\n".
                 $this->rateSyslog=$this->rateSyslog." Profile=$thisRate[profile] Period=$thisRate[day] Rate=$thisRate[rate] Interval=$thisRate[interval] Cost=$durationRatePrint/$this->durationPeriodRated";
 
             } else {
@@ -480,8 +454,8 @@ class Rate {
         return 1;
     }
 
-    function GetRatePSTN($dayofyear,$dayofweek,$hourofday,$durationRatedAlready) {
-        dprint("<b>GetRatePSTN(DayOfYear=$dayofyear,DayOfWeek=$dayofweek,HourOfDay=$hourofday,durationRatedAlready=$durationRatedAlready)</b>");
+    function GetRate($dayofyear,$dayofweek,$hourofday,$durationRatedAlready) {
+        dprint("<b>GetRate(DayOfYear=$dayofyear,DayOfWeek=$dayofweek,HourOfDay=$hourofday,durationRatedAlready=$durationRatedAlready)</b>");
 
         /*
         // Required information from CDR structure
@@ -576,9 +550,46 @@ class Rate {
             }
 
             if ($this->rateName) {
-            	dprint("Found rate=$this->rateName for interval=$this->timeInterval in profile=$this->profileName");
-                // adi, to do get historical rating if exists
-            	$this->rateValues=$this->RatingTables->rates[$this->rateName][$this->DestinationId];
+                dprint("Found rate=$this->rateName for interval=$this->timeInterval in profile=$this->profileName");
+
+                $found_history=false;
+
+                //get historical rating if exists
+            	if (is_array($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType])) {
+                    dprint('Found historical rates for this destination');
+	            	dprint_r(($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType]));
+                    $h=0;
+                    foreach (($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType]) as $_idx) {
+                        $h++;
+                        dprint("Checking rate history id $h");
+                        if ($_idx['startDate'] <= $this->timestamp) {
+
+                            if ($_idx['endDate'] > $this->timestamp) {
+                                // found historical rate
+                    			dprint("Found historical rate $h");
+                                $found_history=true;
+			                	$this->rateValues=$_idx;
+                                break;
+                            } else {
+                                $_log=sprintf("Interval missmatch %s < %s",$_idx['endDate'],$this->timestamp);
+                                dprint($_log);
+
+                                continue;
+                            }
+                        } else {
+                        	$_log=sprintf("Interval missmatch %s > %s",$_idx['startDate'],$this->timestamp);
+                            dprint($_log);
+                            continue;
+                        }
+
+                    }
+
+                }
+
+                if (!$found_history) {
+                	$this->rateValues=$this->RatingTables->rates[$this->rateName][$this->DestinationId][$this->applicationType];
+                }
+
             } else {
                 dprint("No rates for destination=$this->DestinationId. Trying alternative profile=$this->profileNameAlt");
                 dprint_r($profileValues);
@@ -611,7 +622,7 @@ class Rate {
 
                 if ($this->rateName) {
                     dprint("Found rate \"$this->rateName\" for interval \"$this->timeInterval\" in alternative profile=\"$this->profileNameAlt\"");
-                    $this->rateValues=$this->RatingTables->rates[$this->rateName][$this->DestinationId];
+                    $this->rateValues=$this->RatingTables->rates[$this->rateName][$this->DestinationId][$this->applicationType];
                 } else {
                     dprint("No rates for destination $this->DestinationId in alternative profile=$this->profileNameAlt.");
                 }
@@ -681,7 +692,7 @@ class Rate {
 
         $rate=array(
                     "customer"      =>$this->CustomerProfile,
-                    "application"   =>"PSTN voice",
+                    "application"   =>$this->applicationType,
                     "profile"       =>$this->profileName,
                     "day"           =>$this->PeriodOfProfile,
                     "destinationId" =>$this->DestinationId,
@@ -694,65 +705,11 @@ class Rate {
         return $rate;
     }
 
-    function GetProfilesNGN() {
-
-        if ($this->RatingTables->customers[$this->BillingPartyId][profileNGN]) {
-            $this->allProfiles     = $this->RatingTables->customers[$this->BillingPartyId];
-            $this->CustomerProfile = "subscriber=$this->BillingPartyId";
-
-        } elseif ($this->RatingTables->customers[$this->domain][profileNGN]) {
-            $this->allProfiles     = $this->RatingTables->customers[$this->domain];
-            $this->CustomerProfile = "domain=$this->domain";
-
-        } elseif ($this->RatingTables->customers[$this->gateway][profileNGN]) {
-            $this->allProfiles     = $this->RatingTables->customers[$this->gateway];
-            $this->CustomerProfile = "gateway=$this->gateway";
-
-        } else {
-            $this->allProfiles     = $this->RatingTables->customers['default'];
-            $this->CustomerProfile = "default";
-        }
-
-		if (!$this->allProfiles[profileNGN]) {
-        	dprint("Could not find any NGN profile for $this->aNumber");
-            return 0;
-        }
-
-        return 1;
-	}
-
-    function GetRateNGN() {
-
-        dprint("<b>GetRateNGN($application)</b>");
-
-        $this->rateName=$this->RatingTables->profilesNGN[$this->allProfiles[profileNGN]][$this->applicationType][rate];
-
-        if (!$this->rateName) {
-        	dprint("Cound not find any NGN rate for application $this->applicationType");
-            return 0;
-        } else {
-        	dprint("Found NGN rate $this->rateName for application $this->applicationType");
-        }
-
-        $rate=array(
-                    "customer"      =>$this->CustomerProfile,
-                    "application"   =>$this->applicationType,
-                    "duration"      =>$this->duration,
-                    "profile"       =>$this->allProfiles[profileNGN],
-                    "rate"          =>$this->rateName,
-                    "day"           =>"All days",
-                    "interval"      =>"0-24",
-                    "values"        =>$this->RatingTables->ratesNGN[$rateName]
-                    );
-        return $rate;
-    }
-
     function MaxSessionTime($dictionary) {
         // Used for prepaid application
         dprint("<b>Rate->MaxSessionTime()</b>");
 
         $trafficRate            = 0;
-        $applicationRate        = 0;
         $durationRate           = 0;
 
         /////////////////////////////////////////////////////
@@ -807,7 +764,7 @@ class Rate {
                 $dayofyear       = date("Y-m-d",$this->timestampBilling+$durationRatedTotal);
             }
 
-            $foundRate            = $this->GetRatePSTN($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
+            $foundRate            = $this->GetRate($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
 
             dprint_r($foundRate);
 
@@ -899,9 +856,7 @@ class Rate {
 class RatingTables {
 
 	var $filesToImport=array();
-    var $importFilesPatterns=array('profilesNGN',
-                                   'rates_history',
-                                   'ratesNGN',
+    var $importFilesPatterns=array('rates_history',
                                    'rates',
                                    'profiles',
                                    'destinations',
@@ -946,7 +901,7 @@ class RatingTables {
                            "billing_customers"=>array("name"=>"Customers",
                                                  "keys"=>"id",
                                                  "domainFilterColumn"=>"domain",
-                                                 "exceptions" =>array('country_code','profileNGN'),
+                                                 "exceptions" =>array('country_code'),
                                                  "fields"=>array("gateway"=>array("size"=>15,
                                                                                   "name"=>"Gateway"
                                                                                 ),
@@ -961,9 +916,6 @@ class RatingTables {
                                                                                  ),
                                                                  "profile_name1_alt"=>array("size"=>8,
                                                                  				 "name"=>"Fallback"
-                                                                                 ),
-                                                                 "profileNGN"=>array("size"=>8,
-                                                                 				 "name"=>"NGN"
                                                                                  ),
                                                                  "profile_name2"=>array("size"=>8,
                                                                  				 "name"=>"WeekEnd"
@@ -1036,7 +988,7 @@ class RatingTables {
                                                  "keys"=>"id",
                                                  "size"=>10,
                                                  "domainFilterColumn"=>"domain",
-                                                 "exceptions" =>array('trafficRate','applicationRate'),
+                                                 "exceptions" =>array('trafficRate'),
                                                  "fields"=>array(
                                                  				 "gateway"=>array("size"=>15,
                                                                                   "name"=>"Gateway"
@@ -1056,8 +1008,8 @@ class RatingTables {
                                                                  "durationRate"=>array("size"=>10,
                                                                  				 "name"=>"DurationRate"
                                                                                  ),
-                                                                 "applicationRate"=>array("size"=>10,
-                                                                 				 "name"=>"AppRate"
+                                                                 "application"=>array("size"=>6,
+                                                                 				 "name"=>"App"
                                                                                  ),
                                                                  "connectCost"=>array("size"=>10,
                                                                  				 "name"=>"SetupCost"
@@ -1069,7 +1021,7 @@ class RatingTables {
                                                  "keys"=>"id",
                                                  "size"=>10,
                                                  "domainFilterColumn"=>"domain",
-                                                 "exceptions" =>array('trafficRate','applicationRate'),
+                                                 "exceptions" =>array('trafficRate'),
                                                  "fields"=>array(
                                                  				 "gateway"=>array("size"=>15,
                                                                                   "name"=>"Gateway"
@@ -1089,8 +1041,8 @@ class RatingTables {
                                                                  "durationRate"=>array("size"=>10,
                                                                  				 "name"=>"DurationRate"
                                                                                  ),
-                                                                 "applicationRate"=>array("size"=>10,
-                                                                 				 "name"=>"AppRate"
+                                                                 "application"=>array("size"=>6,
+                                                                 				 "name"=>"App"
                                                                                  ),
                                                                  "connectCost"=>array("size"=>10,
                                                                  				 "name"=>"SetupCost"
@@ -1143,44 +1095,6 @@ class RatingTables {
                                                    ),
                            );
 
-                            /*
-                           "billing_profilesNGN"=>array("name"=>"Profiles NGN",
-                                                 "keys"=>"id",
-                                                 "domainFilterColumn"=>"domain",
-                                                 "size"=>6,
-                                                 "fields"=>array(
-                                                 				 "gateway"=>array("size"=>15,
-                                                                                  "name"=>"Gateway"
-                                                                                ),
-                                                                 "domain"=>array("size"=>15,
-                                                                 				 "name"=>"Domain"
-                                                                                 ),
-                                                                 "subscriber"=>array("size"=>30,
-                                                                 				 "name"=>"Subscriber"
-                                                                                 )
-                                                                )
-
-                                                 ),
-                           "billing_ratesNGN"=>array("name"=>"Rates NGN",
-                                                 "keys"=>"id",
-                                                 "domainFilterColumn"=>"domain",
-                                                 "size"=>6,
-                                                 "fields"=>array(
-                                                 				 "gateway"=>array("size"=>15,
-                                                                                  "name"=>"Gateway"
-                                                                                ),
-                                                                 "domain"=>array("size"=>15,
-                                                                 				 "name"=>"Domain"
-                                                                                 ),
-                                                                 "subscriber"=>array("size"=>30,
-                                                                 				 "name"=>"Subscriber"
-                                                                                 )
-                                                                )
-
-                                                 ),
-                              */
-
-
     }
 
     function ImportCSVFiles($dir) {
@@ -1228,8 +1142,10 @@ class RatingTables {
             $destination     = trim($p[5]);
             $durationRate    = trim($p[6]);
             $trafficRate     = trim($p[7]);
-            $applicationRate = trim($p[8]);
+            $application     = trim($p[8]);
             $connectCost     = trim($p[9]);
+
+			if (!strlen($application)) $application='audio';
 
             if ($ops=="1") {
 
@@ -1242,7 +1158,7 @@ class RatingTables {
                 destination,
                 durationRate,
                 trafficRate,
-                applicationRate,
+                application,
                 connectCost
                 ) values (
                 '%s',
@@ -1262,7 +1178,7 @@ class RatingTables {
                 addslashes($destination),
                 addslashes($durationRate),
                 addslashes($trafficRate),
-                addslashes($applicationRate),
+                addslashes($application),
                 addslashes($connectCost)
                 );
                 //dprint($query);
@@ -1278,12 +1194,14 @@ class RatingTables {
                 and domain         = '%s'
                 and subscriber     = '%s'
                 and name           = '%s'
-                and destination    = '%s'",
+                and destination    = '%s'
+                and application    = '%s'",
                 addslashes($gateway),
                 addslashes($domain),
                 addslashes($subscriber),
                 addslashes($profile),
-                addslashes($destination)
+                addslashes($destination),
+                addslashes($application)
                 );
                 $this->cdrtool->query($query);
                 if ($this->cdrtool->affected_rows() >0) {
@@ -1296,12 +1214,14 @@ class RatingTables {
                 and gateway      = '%s'
                 and domain       = '%s'
                 and subscriber   = '%s'
+                and application  = '%s'
                 ",
                 addslashes($profile),
                 addslashes($destination),
                 addslashes($gateway),
                 addslashes($domain),
-                addslashes($subscriber)
+                addslashes($subscriber),
+                addslashes($application)
                 );
                 $this->cdrtool->query($query);
 
@@ -1309,23 +1229,25 @@ class RatingTables {
                     $query=sprintf("update billing_rates set
                     durationRate    = '%s',
                     trafficRate     = '%s',
-                    applicationRate = '%s',
                     connectCost     = '%s'
                     where name      = '%s'
                     and destination = '%s'
                     and gateway     = '%s'
                     and domain      = '%s'
                     and subscriber  = '%s'
+                    and application = '%s'
                     ",
                     addslashes($durationRate),
                     addslashes($trafficRate),
-                    addslashes($applicationRate),
+                    addslashes($application),
                     addslashes($connectCost),
                     addslashes($profile),
                     addslashes($destination),
                     addslashes($gateway),
                     addslashes($domain),
-                    addslashes($subscriber)
+                    addslashes($subscriber),
+                	addslashes($application)
+
                     );
 
                     dprint($query);
@@ -1344,7 +1266,7 @@ class RatingTables {
                     destination,
                     durationRate,
                     trafficRate,
-                    applicationRate,
+                    application,
                     connectCost
                     ) values (
                     '%s',
@@ -1364,7 +1286,7 @@ class RatingTables {
                     addslashes($destination),
                     addslashes($durationRate),
                     addslashes($trafficRate),
-                    addslashes($applicationRate),
+                    addslashes($application),
                     addslashes($connectCost)
                     );
                     //dprint($query);
@@ -1424,7 +1346,7 @@ class RatingTables {
             $destination     = trim($p[5]);
             $durationRate    = trim($p[6]);
             $trafficRate     = trim($p[7]);
-            $applicationRate = trim($p[8]);
+            $application     = trim($p[8]);
             $connectCost     = trim($p[9]);
             $startDate       = trim($p[10]);
             $endDate         = trim($p[11]);
@@ -1440,7 +1362,7 @@ class RatingTables {
                 destination,
                 durationRate,
                 trafficRate,
-                applicationRate,
+                application,
                 connectCost,
                 startDate,
                 endDate
@@ -1464,7 +1386,7 @@ class RatingTables {
                 addslashes($destination),
                 addslashes($durationRate),
                 addslashes($trafficRate),
-                addslashes($applicationRate),
+                addslashes($application),
                 addslashes($connectCost),
                 addslashes($startDate),
                 addslashes($endDate)
@@ -1521,7 +1443,7 @@ class RatingTables {
                     $query=sprintf("update billing_rates_history set
                     durationRate    = '%s',
                     trafficRate     = '%s',
-                    applicationRate = '%s',
+                    application = '%s',
                     connectCost     = '%s'
                     where name      = '%s'
                     and destination = '%s'
@@ -1533,7 +1455,7 @@ class RatingTables {
                     ",
                     addslashes($durationRate),
                     addslashes($trafficRate),
-                    addslashes($applicationRate),
+                    addslashes($application),
                     addslashes($connectCost),
                     addslashes($profile),
                     addslashes($destination),
@@ -1560,7 +1482,7 @@ class RatingTables {
                     destination,
                     durationRate,
                     trafficRate,
-                    applicationRate,
+                    application,
                     connectCost,
                     startDate,
                     endDate
@@ -1584,7 +1506,7 @@ class RatingTables {
                     addslashes($destination),
                     addslashes($durationRate),
                     addslashes($trafficRate),
-                    addslashes($applicationRate),
+                    addslashes($application),
                     addslashes($connectCost),
                     addslashes($startDate),
                     addslashes($endDate)
@@ -1622,169 +1544,6 @@ class RatingTables {
 
     }
 
-    function ImportRatesNGN($file) {
-        dprint("ImportRatesNGN($file)");
-        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
-
-        $i=0;
-        $inserted = 0;
-        $updated  = 0;
-        $deleted  = 0;
-
-        print "Importing NGN Rates:\n";
-
-        while ($buffer = fgets($fp,1024)) {
-            $buffer=trim($buffer);
-
-            $p = explode(",", $buffer);
-
-            $ops             = trim($p[0]);
-            $gateway         = trim($p[1]);
-            $domain          = trim($p[2]);
-            $subscriber      = trim($p[3]);
-            $name            = trim($p[4]);
-            $TrafficRate     = trim($p[5]);
-            $ConnectCost     = trim($p[6]);
-
-            if ($ops=="1") {
-                $query=sprintf("insert into billing_ratesNGN
-                (
-                gateway,
-                domain,
-                subscriber,
-                name,
-                TrafficRate,
-                ConnectCost
-                ) values (
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s'
-                )",
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber),
-                addslashes($name),
-                addslashes($TrafficRate),
-                addslashes($ConnectCost)
-                );
-                //dprint($query);
-                $this->cdrtool->query($query);
-                if ($this->cdrtool->affected_rows() >0) {
-                    $inserted++;
-                } else {
-                    $failed++;
-                }
-            } else if ($ops=="3") {
-                $query=sprintf("delete from billing_ratesNGN
-                where name     = '%s'
-                and gateway    = '%s'
-                and domain     = '%s'
-                and subscriber = '%s'
-                ",
-                addslashes($name),
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber)
-                );
-
-                $this->cdrtool->query($query);
-                if ($this->cdrtool->affected_rows() >0) {
-                    $deleted++;
-                }
-            } else if ($ops=="2") {
-                $query=sprintf("select * from billing_ratesNGN
-                where name     = '%s'
-                and gateway    = '%s'
-                and domain     = '%s'
-                and subscriber = '%s'
-                ",
-                addslashes($name),
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber)
-                );
-
-                $this->cdrtool->query($query);
-                if ($this->cdrtool->num_rows()) {
-                    $query=sprintf("update billing_ratesNGN set
-                    TrafficRate    = '%s',
-                    ConnectCost    = '%s'
-                    where name     = '%s'
-                    and gateway    = '%s'
-                    and domain     = '%s'
-                    and subscriber = '%s'
-                    ",
-                    addslashes($TrafficRate),
-                    addslashes($ConnectCost),
-                    addslashes($name),
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($subscriber)
-                    );
-
-                    $this->cdrtool->query($query);
-                    if ($this->cdrtool->affected_rows() >0) {
-                        $updated++;
-                    }
-
-                } else {
-                    $query=sprintf("insert into billing_ratesNGN
-                    (
-                    gateway,
-                    domain,
-                    subscriber,
-                    name,
-                    TrafficRate,
-                    ConnectCost
-                    ) values (
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s'
-                    )",
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($subscriber),
-                    addslashes($name),
-                    addslashes($TrafficRate),
-                    addslashes($ConnectCost)
-                    );
-                    //dprint($query);
-                    $this->cdrtool->query($query);
-                    if ($this->cdrtool->affected_rows() >0) {
-                        $inserted++;
-                    } else {
-                        $failed++;
-                    }
-                }
-
-            }
-
-            $j++;
-
-            if ($j=="10000") {
-                dprint("Loaded another $j rates");
-                flush();
-                $j=0;
-            }
-
-            $i++;
-        }
-
-        if ($i) print "Read $i records\n";
-        if ($inserted) print "Inserted $inserted records\n";
-        if ($updated)  print "Updated $updated records\n";
-        if ($deleted)  print "Delete $deleted records\n";
-
-        $results=$inserted+$updated+$deleted;
-        return $results;
-    }
-
     function ImportCustomers($file) {
         dprint("ImportCustomers($file)");
 
@@ -1810,11 +1569,10 @@ class RatingTables {
             $profile_name1_alt = trim($p[5]);
             $profile_name2     = trim($p[6]);
             $profile_name2_alt = trim($p[7]);
-            $profileNGN        = trim($p[8]);
-            $timezone          = trim($p[9]);
-            $increment         = trim($p[10]);
-            $min_duration      = trim($p[11]);
-            $country_code      = trim($p[12]);
+            $timezone          = trim($p[8]);
+            $increment         = trim($p[9]);
+            $min_duration      = trim($p[10]);
+            $country_code      = trim($p[11]);
 
             if ($ops=="1") {
                 $query=sprintf("insert into billing_customers
@@ -1824,7 +1582,6 @@ class RatingTables {
                 subscriber,
                 profile_name1,
                 profile_name2,
-                profileNGN,
                 timezone,
                 profile_name1_alt,
                 profile_name2_alt,
@@ -1842,7 +1599,6 @@ class RatingTables {
                 '%s',
                 '%s',
                 '%s',
-                '%s',
                 '%s'
                 )",
                 addslashes($gateway),
@@ -1850,7 +1606,6 @@ class RatingTables {
                 addslashes($subscriber),
                 addslashes($profile_name1),
                 addslashes($profile_name2),
-                addslashes($profileNGN),
                 addslashes($timezone),
                 addslashes($profile_name1_alt),
                 addslashes($profile_name2_alt),
@@ -1898,7 +1653,6 @@ class RatingTables {
                     profile_name2     = '%s',
                     profile_name1_alt = '%s',
                     profile_name2_alt = '%s',
-                    profileNGN        = '%s',
                     timezone          = '%s',
                     increment         = '%s',
                     min_duration      = '%s',
@@ -1910,7 +1664,6 @@ class RatingTables {
                     addslashes($profile_name2),
                     addslashes($profile_name1_alt),
                     addslashes($profile_name2_alt),
-                    addslashes($profileNGN),
                     addslashes($timezone),
                     addslashes($increment),
                     addslashes($min_duration),
@@ -1934,7 +1687,6 @@ class RatingTables {
                     subscriber,
                     profile_name1,
                     profile_name2,
-                    profileNGN,
                     timezone,
                     profile_name1_alt,
                     profile_name2_alt,
@@ -1952,7 +1704,6 @@ class RatingTables {
                     '%s',
                     '%s',
                     '%s',
-                    '%s',
                     '%s'
                     )",
                     addslashes($gateway),
@@ -1960,7 +1711,6 @@ class RatingTables {
                     addslashes($subscriber),
                     addslashes($profile_name1),
                     addslashes($profile_name2),
-                    addslashes($profileNGN),
                     addslashes($timezone),
                     addslashes($profile_name1_alt),
                     addslashes($profile_name2_alt),
@@ -2142,7 +1892,7 @@ class RatingTables {
         $updated  = 0;
         $deleted  = 0;
 
-        print "Importing PSTN Profiles:\n";
+        print "Importing Profiles:\n";
 
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
@@ -2344,175 +2094,13 @@ class RatingTables {
         return $results;
     }
 
-    function ImportProfilesNGN($file) {
-        dprint("ImportProfilesNGN($file)");
-
-        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
-
-        $i=0;
-        $inserted = 0;
-        $updated  = 0;
-        $deleted  = 0;
-
-        print "Importing NGN Profiles:\n";
-
-        while ($buffer = fgets($fp,1024)) {
-            $buffer=trim($buffer);
-
-            $p = explode(",", $buffer);
-
-            $ops         = trim($p[0]);
-            $gateway     = trim($p[1]);
-            $domain      = trim($p[2]);
-            $subscriber  = trim($p[3]);
-            $profile     = trim($p[4]);
-            $rate        = trim($p[5]);
-            $application = trim($p[6]);
-
-            if ($ops=="1") {
-                $query=sprintf("insert into billing_profilesNGN
-                (
-                gateway,
-                domain,
-                subscriber,
-                name,
-                rate,
-                application
-                ) values (
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s'
-                )",
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber),
-                addslashes($profile),
-                addslashes($rate),
-                addslashes($application)
-                );
-                dprint($query);
-                $this->cdrtool->query($query);
-                if ($this->cdrtool->affected_rows() >0) {
-                    $inserted++;
-                } else {
-                    $failed++;
-                }
-            } else if ($ops=="3") {
-                $query=sprintf("delete from billing_profilesNGN
-                where name      = '%s'
-                and application = '%s'
-                and gateway     = '%s'
-                and domain      = '%s'
-                and subscriber  = '%s'\n",
-                addslashes($profile),
-                addslashes($application),
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber)
-                );
-
-                //dprint($query);
-                $this->cdrtool->query($query);
-                if ($this->cdrtool->affected_rows() >0) {
-                    $deleted++;
-                }
-
-            } else if ($ops=="2") {
-                $query=sprintf("select * from billing_profilesNGN
-                where name      = '%s'
-                and application = '%s'
-                and gateway     = '%s'
-                and domain      = '%s'
-                and subscriber  = '%s'\n",
-                addslashes($profile),
-                addslashes($application),
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber)
-                );
-
-                dprint($query);
-                $this->cdrtool->query($query);
-                if ($this->cdrtool->num_rows()) {
-                    $query=sprintf("update billing_profilesNGN set
-                    rate = '%s'
-                    where name      = '%s'
-                    and application = '%s'
-                    and gateway     = '%s'
-                    and domain      = '%s'
-                    and subscriber  = '%s'\n",
-                    addslashes($rate),
-                    addslashes($profile),
-                    addslashes($application),
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($subscriber)
-                    );
-
-                    dprint($query);
-                    $this->cdrtool->query($query);
-                    if ($this->cdrtool->affected_rows() >0) {
-                        $updated++;
-                    }
-
-                } else {
-                    $query=sprintf("insert into billing_profilesNGN
-                    (
-                    gateway,
-                    domain,
-                    subscriber,
-                    name,
-                    rate,
-                    application
-                    ) values (
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s'
-                    )",
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($subscriber),
-                    addslashes($profile),
-                    addslashes($rate),
-                    addslashes($application)
-                    );
-                    //dprint($query);
-                    $this->cdrtool->query($query);
-                    if ($this->cdrtool->affected_rows() >0) {
-                        $inserted++;
-                    } else {
-                        $failed++;
-                    }
-                }
-
-            }
-            $i++;
-        }
-
-        if ($i) print "Read $i records\n";
-        if ($inserted) print "Inserted $inserted records\n";
-        if ($updated)  print "Updated $updated records\n";
-        if ($deleted)  print "Delete $deleted records\n";
-
-        $results=$inserted+$updated+$deleted;
-        return $results;
-    }
-
     function LoadRatingTables () {
         $loaded=array();
-    	$loaded['customers']        = $this->LoadCustomersTable();
-        $loaded['profilesPSTN']     = $this->LoadProfilesPSTNTable();
-        $loaded['ratesPSTN']        = $this->LoadRatesTable();
-        $loaded['ratesHistoryPSTN'] = $this->LoadRatesHistoryTable();
-        $loaded['profilesNGN']      = $this->LoadProfilesNGNTable();
-        $loaded['ratesNGN']         = $this->LoadRatesNGNTable();
-        $loaded['holidays']         = $this->LoadHolidaysTable();
+    	$loaded['customers']    = $this->LoadCustomersTable();
+        $loaded['profiles']     = $this->LoadProfilesTable();
+        $loaded['rates']        = $this->LoadRatesTable();
+        $loaded['ratesHistory'] = $this->LoadRatesHistoryTable();
+        $loaded['holidays']     = $this->LoadHolidaysTable();
 
         foreach(array_keys($loaded) as $_load) {
         	syslog(LOG_NOTICE, "Loaded $loaded[$_load] $_load");
@@ -2564,7 +2152,6 @@ class RatingTables {
             $profile2     = $this->cdrtool->Record['profile_name2'];
             $profile2_alt = $this->cdrtool->Record['profile_name2_alt'];
 
-            $profileNGN   = $this->cdrtool->Record['profileNGN'];
             $timezone     = $this->cdrtool->Record['timezone'];
 
             $increment    = $this->cdrtool->Record['increment'];
@@ -2572,7 +2159,7 @@ class RatingTables {
 
             $country_code = $this->cdrtool->Record['country_code'];
 
-            if ($profile1 || $profile2 || $profileNGN) {
+            if ($profile1 || $profile2) {
                 $i++;
                 if ($subscriber) {
                     $_els=explode(" ",trim($subscriber));
@@ -2584,7 +2171,6 @@ class RatingTables {
                         	"profile2"     => $profile2,
 	                        "profile1_alt" => $profile1_alt,
     	                    "profile2_alt" => $profile2_alt,
-        	                "profileNGN"   => $profileNGN,
             	            "timezone"     => $timezone,
                             "increment"    => $increment,
                             "min_duration" => $min_duration,
@@ -2604,7 +2190,6 @@ class RatingTables {
             	            "profile2"     => $profile2,
                 	        "profile1_alt" => $profile1_alt,
                     	    "profile2_alt" => $profile2_alt,
-                        	"profileNGN"   => $profileNGN,
 	                        "timezone"     => $timezone,
                             "increment"    => $increment,
                             "min_duration" => $min_duration,
@@ -2624,7 +2209,6 @@ class RatingTables {
                             "profile2"     => $profile2,
                             "profile1_alt" => $profile1_alt,
                             "profile2_alt" => $profile2_alt,
-                            "profileNGN"   => $profileNGN,
                             "timezone"     => $timezone,
                             "increment"    => $increment,
                             "min_duration" => $min_duration,
@@ -2640,7 +2224,6 @@ class RatingTables {
                         "profile2"     => $profile2,
                         "profile1_alt" => $profile1_alt,
                         "profile2_alt" => $profile2_alt,
-                        "profileNGN"   => $profileNGN,
                         "timezone"     => $timezone,
                         "increment"    => $increment,
                         "min_duration" => $min_duration,
@@ -2683,11 +2266,13 @@ class RatingTables {
         while($this->cdrtool->next_record()) {
             if ($this->cdrtool->Record['name'] && $this->cdrtool->Record['destination']) {
                 $i++;
-                $_rates[$this->cdrtool->Record['name']][$this->cdrtool->Record['destination']]=
+                $_app=$this->cdrtool->Record['application'];
+                if (!strlen($_app)) $_app='audio';
+
+                $_rates[$this->cdrtool->Record['name']][$this->cdrtool->Record['destination']][$_app]=
                 array(
                      "durationRate"    => $this->cdrtool->Record['durationRate'],
                      "trafficRate"     => $this->cdrtool->Record['trafficRate'],
-                     "applicationRate" => $this->cdrtool->Record['applicationRate'],
                      "connectCost"     => $this->cdrtool->Record['connectCost']
                 );
             }
@@ -2695,7 +2280,7 @@ class RatingTables {
 
 		$this->rates=$_rates;
         $this->ratesCount=$i;
-        dprint("Loaded $i PSTN rates");
+        dprint("Loaded $i rates");
         return $i;
     }
 
@@ -2704,7 +2289,7 @@ class RatingTables {
         UNIX_TIMESTAMP(startDate) as startDateTimestamp,
         UNIX_TIMESTAMP(endDate) as endDateTimestamp
         from billing_rates_history
-        order by destination";
+        order by name ASC,destination ASC,startDate DESC";
 
         if (!$this->cdrtool->query($query)) {
             printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
@@ -2716,11 +2301,13 @@ class RatingTables {
         while($this->cdrtool->next_record()) {
             if ($this->cdrtool->Record['name'] && $this->cdrtool->Record['destination']) {
                 $i++;
-                $_rates[$this->cdrtool->Record['name']][$this->cdrtool->Record['destination']]=
+                $_app=$this->cdrtool->Record['application'];
+                if (!strlen($_app)) $_app='audio';
+
+                $_rates[$this->cdrtool->Record['name']][$this->cdrtool->Record['destination']][$_app][$this->cdrtool->Record['id']]=
                 array(
                      "durationRate"    => $this->cdrtool->Record['durationRate'],
                      "trafficRate"     => $this->cdrtool->Record['trafficRate'],
-                     "applicationRate" => $this->cdrtool->Record['applicationRate'],
                      "connectCost"     => $this->cdrtool->Record['connectCost'],
                      "startDate"       => $this->cdrtool->Record['startDateTimestamp'],
                      "endDate"         => $this->cdrtool->Record['endDateTimestamp']
@@ -2730,36 +2317,14 @@ class RatingTables {
 
 		$this->ratesHistory=$_rates;
         $this->ratesHistoryCount=$i;
-        dprint("Loaded $i PSTN history rates");
+        dprint("Loaded $i rates history");
+        //dprint_r($this->ratesHistory);
+
         return $i;
+
     }
 
-    function LoadRatesNGNTable() {
-        $query="select * from billing_ratesNGN order by name";
-        if (!$this->cdrtool->query($query)) {
-            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
-            return false;
-        }
-
-        $i=0;
-        $rows=$this->cdrtool->num_rows();
-        while($this->cdrtool->next_record()) {
-        	if ($this->cdrtool->Record['name']) {
-                $i++;
-                $_ratesNGN[$this->cdrtool->Record['name']]=
-                array(
-                     "trafficRate"     => $this->cdrtool->Record['TrafficRate'],
-                     "connectCost"     => $this->cdrtool->Record['ConnectCost']
-                );
-            }
-        }
-
-		$this->ratesNGN=$_ratesNGN;
-        dprint("Loaded $i NGN rates");
-        return $i;
-    }
-
-    function LoadProfilesPSTNTable() {
+    function LoadProfilesTable() {
         $query="select * from billing_profiles order by name";
         if (!$this->cdrtool->query($query)) {
             printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
@@ -2785,31 +2350,7 @@ class RatingTables {
         }
 
         $this->profiles=$_profiles;
-        dprint("Loaded $i PSTN profiles");
-        return $i;
-
-    }
-
-    function LoadProfilesNGNTable() {
-        $query="select * from billing_profilesNGN order by name";
-        if (!$this->cdrtool->query($query)) {
-            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
-            return false;
-        }
-
-        $i=0;
-        while($this->cdrtool->next_record()) {
-            if ($this->cdrtool->Record['name'] && $this->cdrtool->Record['application']) {
-                $i++;
-                $_profilesNGN[$this->cdrtool->Record['name']][$this->cdrtool->Record['application']]=
-                array(
-                     "rate"        => $this->cdrtool->Record['rate']
-                );
-            }
-        }
-
-        $this->profilesNGN=$_profilesNGN;
-        dprint("Loaded $i NGN profiles");
+        dprint("Loaded $i profiles");
         return $i;
 
     }
@@ -4233,12 +3774,12 @@ class RatingEngine {
             }
 
             if (!preg_match("/^0/",$CDR->RemoteAddressNormalized)) {
-               	$log = sprintf ("Non-PSTN call to %s, no limit imposed",$CDR->RemoteAddressNormalized);
+               	$log = sprintf ("Call to %s, no limit imposed",$CDR->RemoteAddressNormalized);
                 syslog(LOG_NOTICE, $log);
                 return "none";
             } else {
             	if (!$CDR->DestinationId) {
-            		$log = sprintf ("Error: cannot figure out the PSTN destination id for $CDR->RemoteAddress");
+            		$log = sprintf ("Error: cannot figure out the destination id for $CDR->RemoteAddress");
                 	syslog(LOG_NOTICE, $log);
                 	return "0";
             	}
@@ -4465,11 +4006,8 @@ class RatingEngine {
             	$timestamp=time();
             }
 
-            if ($NetFields['application']) {
-                $application=$NetFields['application'];
-            } else {
-                $application="Audio";
-            }
+            $application="audio";
+            if ($NetFields['application']) $application=$NetFields['application'];
 
             $CDRStructure=array (
                               $this->CDRS->CDRFields['id']  	        => $NetFields['id'],
@@ -4573,13 +4111,11 @@ class RatingEngine {
         } else if ($NetFields['action'] == "reloadprepaidaccounts") {
             return $this->reloadPrepaidAccounts($NetFields['account']);
         } else if ($NetFields['action'] == "showmemory") {
-            $return = sprintf ("%s destinations\n%s customers\n%s PSTN profiles\n%s PSTN rates\n%s NGN profiles\n%s NGN rates\n%s holidays\n%s prepaid accounts\n%s sessions\n%s sessions last minute\n%s sessions last hour\n%s sessions last day",
+            $return = sprintf ("%s destinations\n%s customers\n%s profiles\n%s rates\n%s holidays\n%s prepaid accounts\n%s sessions\n%s sessions last minute\n%s sessions last hour\n%s sessions last day",
             $this->CDRS->destinationsCount,
             count($this->CDRS->RatingTables->customers),
             count($this->CDRS->RatingTables->profiles),
             $this->CDRS->RatingTables->ratesCount,
-            count($this->CDRS->RatingTables->profilesNGN),
-            count($this->CDRS->RatingTables->ratesNGN),
             count($this->CDRS->RatingTables->holidays),
             count($this->balance),
             count($this->sessionCounter),

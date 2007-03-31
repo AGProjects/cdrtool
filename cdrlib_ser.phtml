@@ -653,12 +653,12 @@ class CDRS_ser_radius extends CDRS {
                                     "size"=>"1"
                                 ));
         $application_els=array(
-        array("label"=>"Any application","value"=>""),
-        array("label"=>"Audio session","value"=>"audio"),
-        array("label"=>"Video session","value"=>"video"),
-        array("label"=>"Text message" ,"value"=>"message"),
-        array("label"=>"Presence" ,"value"=>"presence")
-        );
+                               array("label"=>"Any application","value"=>""),
+                               array("label"=>"Audio","value"=>"audio"),
+                               array("label"=>"Video","value"=>"video"),
+                               array("label"=>"Text message" ,"value"=>"message"),
+                               array("label"=>"Presence" ,"value"=>"presence")
+                               );
 
         $this->f->add_element(array("name"=>"application",
                                     "type"=>"select",
@@ -2203,6 +2203,27 @@ class CDR_ser_radius extends CDR {
 
 	    $this->SourceIPPrint      = $this->SourceIP;
 
+        dprint("<b>Application</b>");
+
+        if (!$this->applicationType) {
+            if (strtolower($this->SipMethod)=="publish" ||
+            	strtolower($this->SipMethod)=="subscribe" ||
+                strtolower($this->SipMethod)=="notify") {
+        		$this->applicationType="presence";
+            } else if (strtolower($this->SipMethod)=="message") {
+        		$this->applicationType="message";
+            } else {
+        		$this->applicationType="audio";
+            }
+            $this->applicationTypeNormalized=$this->applicationType;
+        } else {
+			$this->applicationType=strtolower($this->applicationType);
+        }
+
+        $this->applicationTypePrint=$this->applicationType;
+
+		dprint("Application type: $this->applicationType");
+
         dprint("<b>A number</b>");
         $NormalizedNumber        = $this->CDRS->NormalizeNumber($this->aNumber,"source");
 	    $this->aNumberPrint      = $NormalizedNumber[NumberPrint];
@@ -2246,34 +2267,9 @@ class CDR_ser_radius extends CDR {
         $this->hourofday       = date("G",$this->timestamp);
         $this->dayofyear       = date("Y-m-d",$this->timestamp);
 
-		if (!$this->applicationType) {
-            if (strtolower($this->SipMethod)=="publish" ||
-            	strtolower($this->SipMethod)=="subscribe" ||
-                strtolower($this->SipMethod)=="notify") {
-        		$this->applicationType="presence";
-            } else if (strtolower($this->SipMethod)=="message") {
-        		$this->applicationType="message";
-            } else {
-        		$this->applicationType="audio";
-            }
-            $this->applicationTypeNormalized=$this->applicationType;
-        }
-
-        $this->applicationTypePrint=ucfirst($this->applicationType);
-
-		dprint("Application type: $this->applicationType");
-
         // Called Station ID or cNumber should not be used for rating purposes because
         // it is chosen by the subscriber but the Proxy rewrites it into a different
         // final destination (the Canonical URI)
-
-        dprint("<b>Dialed URI: $this->cNumber</b>");
-		$NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->cNumber,"destination",$this->BillingPartyId,$this->domain,$this->gateway);
-        $this->cNumberNormalized            = $NormalizedNumber['Normalized'];
-        $this->cNumberUsername              = $NormalizedNumber['username'];
-        $this->cNumberDomain                = $NormalizedNumber['domain'];
-		$this->cNumberPrint          		= $NormalizedNumber['username'].$NormalizedNumber['delimiter'].$NormalizedNumber['domain'];
-        $this->cNumberDelimiter        		= $NormalizedNumber['delimiter'];
 
         dprint("<b>Canonical URI: $this->CanonicalURI</b>");
         // Canonical URI is the final logical SIP destination after all
@@ -2293,9 +2289,19 @@ class CDR_ser_radius extends CDR {
         $this->CanonicalURIPrint            = $NormalizedNumber['NumberPrint'];
         $this->CanonicalURIDelimiter        = $NormalizedNumber['delimiter'];
 
-        // Destination Id is used for PSTN rating purposes
+        dprint("<b>Destination Id</b>");
+        // Destination Id is used for rating purposes
 		$this->DestinationId                = $NormalizedNumber['DestinationId'];
         $this->destinationName              = $NormalizedNumber['destinationName'];
+        dprint ("id = $this->DestinationId, name=$this->destinationName");
+
+        dprint("<b>Dialed URI: $this->cNumber</b>");
+		$NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->cNumber,"destination",$this->BillingPartyId,$this->domain,$this->gateway);
+        $this->cNumberNormalized            = $NormalizedNumber['Normalized'];
+        $this->cNumberUsername              = $NormalizedNumber['username'];
+        $this->cNumberDomain                = $NormalizedNumber['domain'];
+		$this->cNumberPrint          		= $NormalizedNumber['username'].$NormalizedNumber['delimiter'].$NormalizedNumber['domain'];
+        $this->cNumberDelimiter        		= $NormalizedNumber['delimiter'];
 
         // Next hop is real destination after all lookups including DNS
 

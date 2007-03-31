@@ -206,10 +206,10 @@ CREATE TABLE `billing_rates` (
   `destination` varchar(100) NOT NULL default '',
   `durationRate` varchar(25) NOT NULL default '',
   `trafficRate` varchar(25) NOT NULL default '',
-  `applicationRate` varchar(25) NOT NULL default '',
+  `application` varchar(25) NOT NULL default '',
   `connectCost` varchar(25) NOT NULL default '',
   PRIMARY KEY  (`id`),
-  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`),
+  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`,`application`),
   KEY `name_idx` (`name`),
   KEY `dest_idx` (`destination`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
@@ -228,12 +228,12 @@ CREATE TABLE `billing_rates_history` (
   `destination` varchar(100) NOT NULL default '',
   `durationRate` varchar(25) NOT NULL default '',
   `trafficRate` varchar(25) NOT NULL default '',
-  `applicationRate` varchar(25) NOT NULL default '',
+  `application` varchar(25) NOT NULL default '',
   `connectCost` varchar(25) NOT NULL default '',
   `startDate` date  NOT NULL,
   `endDate` date  NOT NULL,
   PRIMARY KEY  (`id`),
-  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`,`startDate`,`endDate`),
+  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`,`application`,`startDate`,`endDate`),
   KEY `name_idx` (`name`),
   KEY `dest_idx` (`destination`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;

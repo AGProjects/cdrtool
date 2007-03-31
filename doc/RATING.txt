@@ -32,6 +32,12 @@ be provisioned. Multiple time zones are supported for multiple billing
 parties hosted on the same platform.
 
 
+Determination of application type
+---------------------------------
+
+The only supported application type is 'audio'.
+
+
 Determination of the billing party
 -----------------------------------
 
@@ -108,8 +114,8 @@ the destination ID and billing party found in previous steps.
    'default'
 
 3. Lookup in the cdrtool.billing_rates table the record having same name
-   found at point 2 and having billing_rates.destination = destination Id
-   found at Determination of the destination step above.
+   found at point 2 having billing_rates.destination = destination Id
+   and billing_rates.application = application type found in the steps above.
 
    - return an array with all the rating values and the duration rated
 
@@ -170,28 +176,6 @@ the destination ID and billing party found in previous steps.
    Update the normalized caller and destination for each CDR.
  
 
-
-NGN rating flow
----------------
-
-NGN rating support rating of data traffic based on application type.
-
-1. Lookup the billing Profile in cdrtool.billing_customers table in the
-   following order: subscriber,domain,gateway:
-
-   - profileNGN
-
-2. Using the profile found, lookup the rate based
-   on application type in cdrtool.billing_profilesNGN table
-
-3. Lookup in the cdrtool.billing_ratesNGN table the record having same name
-   found at point 2. 
-
-   - return an array with all the rating values and the duration rated
-
-Note. This rating flow has not been used in production environments yet.
-
-
 Importing and exporting of rating files
 ---------------------------------------
 
@@ -220,10 +204,8 @@ The updates are performed based on a unique key present in each table:
 billing_customers     - cust_idx      (gateway,domain,subscriber)
 destinations          - cust_dest_idx (gateway,domain,subscriber,dest_id)
 billing_profiles      - profile_idx   (gateway,domain,subscriber,name)
-billing_rates         - rate_idx      (gateway,domain,subscriber,name,destination)
-billing_rates_history - rate_idx      (gateway,domain,subscriber,name,destination,startDate,endDate)
-billing_ratesNGN      - rate_idx      (gateway,domain,subscriber,name);
-billing_profilesNGN   - profile_idx   (gateway,domain,subscriber,name);
+billing_rates         - rate_idx      (gateway,domain,subscriber,name,destination,application)
+billing_rates_history - rate_idx      (gateway,domain,subscriber,name,destination,application,startDate,endDate)
 
 The content of the rating tables can be exported in the Rating tables page.
 
@@ -263,7 +245,6 @@ billing_customers
 | profile_name1_alt |
 | profile_name2     |
 | profile_name2_alt |
-| profileNGN        |
 | timezone          |
 | increment         |
 | min_duration      |
@@ -289,19 +270,6 @@ billing_profiles
 | hour4      |
 +------------+
 
-billing_profilesNGN
-+-------------+
-| Field       |
-+-------------+
-| id          |
-| gateway     |
-| domain      |
-| subscriber  |
-| name        |
-| rate        |
-| application |
-+-------------+
-
 billing_rates
 +-----------------+
 | Field           |
@@ -314,7 +282,7 @@ billing_rates
 | destination     |
 | durationRate    |
 | trafficRate     |
-| applicationRate |
+| application     |
 | connectCost     |
 +-----------------+
 
@@ -330,24 +298,11 @@ billing_rates_history
 | destination     |
 | durationRate    |
 | trafficRate     |
-| applicationRate |
+| application     |
 | connectCost     |
 | startDate       |
 | endDate         |
 +-----------------+
-
-billing_ratesNGN
-+-------------+
-| Field       |
-+-------------+
-| id          |
-| gateway     |
-| domain      |
-| subscriber  |
-| name        |
-| TrafficRate |
-| ConnectCost |
-+-------------+
 
 destinations
 +------------+
@@ -528,7 +483,6 @@ The rating tables have been populated durring the tests with:
 Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 8135 destinations
 Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 6 profilesPSTN
 Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 16277 ratesPSTN
-Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 2 profilesNGN
 Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 4 holidays
 Aug 11 11:25:44 sip03 CDRTool[4945]: Loaded 7273 prepaid accounts
 
