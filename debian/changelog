@@ -3,7 +3,8 @@ cdrtool (5.1.0) unstable; urgency=low
   * Added historical rating engine, requires changes in database
     structure (you must apply changes from setup/mysql/alter_tables.mysql)
   * Added a sample provisioning interface for Multimedia Service Platform
-  * Added function to obfuscate caller Ids
+  * Added function to obfuscate caller Ids, this changes the login rights 
+    The login accounts rights must be updated in the Accounts page
   * Added capability to do accounting for SIP URIs (e.g. paid helpdesk)
   * Improved compatibility with Firefox in media sesessions screen
   * Added rights for login accounts to show pricing and caller id
@@ -14,7 +15,7 @@ cdrtool (5.1.0) unstable; urgency=low
   * Default application set to 'audio'
   * application field is now mandatory when imprting rates CSV files
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 31 Mar 2007 14:57:28 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 31 Mar 2007 15:07:21 +0200
 
 cdrtool (5.0.10) unstable; urgency=low
 
