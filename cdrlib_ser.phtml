@@ -2205,12 +2205,14 @@ class CDR_ser_radius extends CDR {
 
         dprint("<b>Application</b>");
 
+		$_method=strtolower($this->SipMethod);
+
         if (!$this->applicationType) {
-            if (strtolower($this->SipMethod)=="publish" ||
-            	strtolower($this->SipMethod)=="subscribe" ||
-                strtolower($this->SipMethod)=="notify") {
+            if ($_method=="publish"   ||
+            	$_method=="subscribe" ||
+                $_method=="notify"    ){
         		$this->applicationType="presence";
-            } else if (strtolower($this->SipMethod)=="message") {
+            } else if ($_method=="message") {
         		$this->applicationType="message";
             } else {
         		$this->applicationType="audio";
@@ -2218,6 +2220,14 @@ class CDR_ser_radius extends CDR {
             $this->applicationTypeNormalized=$this->applicationType;
         } else {
 			$this->applicationType=strtolower($this->applicationType);
+        }
+
+        if (strstr($this->applicationType,'video')) {
+            // we rate calls containing video same as audio
+            // is not possible to determine that a session is
+            // video from start to end as SIP allows streams to
+            // be added and substracted on the fly
+        	$this->applicationType='audio';
         }
 
         $this->applicationTypePrint=$this->applicationType;
