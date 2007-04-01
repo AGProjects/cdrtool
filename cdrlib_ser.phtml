@@ -1484,7 +1484,7 @@ class CDRS_ser_radius extends CDRS {
                         } else {
                         	$cached_place="database";
                         }
-                        printf ("Cached usage for %d callers in %s. ",$this->status['cached_keys']['saved_keys'],$cached_place);
+                        printf ("Cached usage for %d accounts in %s. ",$this->status['cached_keys']['saved_keys'],$cached_place);
                     }
                 }
             }
@@ -2494,6 +2494,25 @@ class CDR_ser_radius extends CDR {
         <tr>
             <td colspan=3><b>Signalling information</b></td>
         </tr>
+        ";
+        $CallInfoVerbose.= "
+        <tr>
+            <td></td>
+        	<td>Start time: </td>
+            <td>$this->startTime $providerTimezone</td>
+        </tr>
+        ";
+		if ($this->normalized) {
+            $CallInfoVerbose.= "
+            <tr>
+                <td></td>
+                <td>Stop time: </td>
+                <td>$this->stopTime $providerTimezone</td>
+            </tr>
+            ";
+        }
+
+        $CallInfoVerbose.= "
         <tr>
         	<td width=10></td>
             <td>Session: </td>
@@ -2512,52 +2531,8 @@ class CDR_ser_radius extends CDR {
         </tr>
 		<tr>
             <td></td>
-        	<td>Domain:</td>
-            <td>$this->domain</td>
-        </tr>
-		<tr>
-            <td></td>
-        	<td>To:</td>
+        	<td>Dialed URI:</td>
             <td>$this->cNumberPrint</td>
-        </tr>
-        ";
-
-        if ($this->SipRPID) {
-        	$CallInfoVerbose .= "
-        	<tr>
-            <td></td>
-        	<td>Caller ID:  </td>
-            <td>$this->SipRPIDPrint</td>
-            </tr>
-            ";
-        }
-
-        $CallInfoVerbose.= "
-        <tr>
-            <td></td>
-        	<td>Start time: </td>
-            <td>$this->startTime $providerTimezone</td>
-        </tr>
-        ";
-		if ($this->normalized) {
-            $CallInfoVerbose.= "
-            <tr>
-                <td></td>
-                <td>Stop time: </td>
-                <td>$this->stopTime $providerTimezone</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>Duration:</td>
-                <td>$this->durationPrint</td>
-            </tr>
-            ";
-        }
-        $CallInfoVerbose.= "
-		<tr>
-            <td></td>
-        	<td>SIP Proxy:</td>
-            <td>$this->SipProxyServer</td>
         </tr>
         ";
 
@@ -2574,7 +2549,7 @@ class CDR_ser_radius extends CDR {
 		$CallInfoVerbose.= sprintf("
         <tr>
             <td></td>
-        	<td>Next hop:</td>
+        	<td>Next hop URI:</td>
             <td>%s</td>
         </tr>
         ",htmlentities($this->RemoteAddress));
@@ -2588,6 +2563,18 @@ class CDR_ser_radius extends CDR {
             </tr>
             ";
         }
+
+        if ($this->SipRPID && $this->SipRPID!='n/a') {
+        	$CallInfoVerbose .= "
+        	<tr>
+            <td></td>
+        	<td>Caller ID:  </td>
+            <td>$this->SipRPIDPrint</td>
+            </tr>
+            ";
+        }
+
+
 
 		if ($this->BillingId) {
             $CallInfoVerbose.= "
