@@ -1856,7 +1856,7 @@ class CDRS_ser_radius extends CDRS {
 
         if (!$this->AccountsDBClass) return 0;
         if (!$account) return 0;
-		if ($this->SERAccounts[$account]) return 1;
+		if ($this->Accounts[$account]) return 1;
 
 		list($_user,$_domain)=explode("@",$account);
 
@@ -1881,7 +1881,7 @@ class CDRS_ser_radius extends CDRS {
 
 		$this->AccountsDB->next_record();
 
-        $this->SERAccounts[$account]=array("timezone"=>$this->AccountsDB->f('timezone'));
+        $this->Accounts[$account]=array("timezone"=>$this->AccountsDB->f('timezone'));
 
         return 1;
     }
@@ -2269,7 +2269,7 @@ class CDR_ser_radius extends CDR {
         }
 
         $this->traffic            = 2*($this->inputTraffic+$this->outputTraffic);
-        $this->BillingId          = $this->CDRS->SERAccounts[$this->BillingPartyId][BillingId];
+        $this->BillingId          = $this->CDRS->Accounts[$this->BillingPartyId][BillingId];
 
         $_timestamp_stop=$this->timestamp+$this->duration;
 
@@ -2463,8 +2463,8 @@ class CDR_ser_radius extends CDR {
 
         $this->ratePrint=nl2br($this->rate);
 
-        if ($this->CDRS->SERAccounts[$this->BillingPartyId][timezone]) {
-            $timezone_print=$this->CDRS->SERAccounts[$this->BillingPartyId][timezone];
+        if ($this->CDRS->Accounts[$this->BillingPartyId][timezone]) {
+            $timezone_print=$this->CDRS->Accounts[$this->BillingPartyId][timezone];
         } else {
             $timezone_print=$this->CDRS->CDRTool[provider][timezone];
         }

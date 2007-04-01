@@ -416,7 +416,7 @@ class Rate {
         */
 
         if ($this->RatingTables->customers[$this->BillingPartyId]['profile1'] && $this->RatingTables->customers[$this->BillingPartyId]['profile2']) {
-            // Subscriber XXX@domain.com has rating profiles assigned
+            // Account XXX@domain.com has rating profiles assigned
             $this->allProfiles     = $this->RatingTables->customers[$this->BillingPartyId];
             $this->CustomerProfile = "subscriber=$this->BillingPartyId";
             $this->increment       = $this->RatingTables->customers[$this->BillingPartyId]['increment'];
@@ -888,7 +888,7 @@ class RatingTables {
                                                                  				 "name"=>"Subscriber"
                                                                                  ),
                                                                  "dest_id"=>array("size"=>20,
-                                                                 				 "name"=>"Destination"
+                                                                 				 "name"=>"Destination Id"
                                                                                  ),
                                                                  "dest_name"=>array("size"=>20,
                                                                  				 "name"=>"Description"
@@ -930,7 +930,7 @@ class RatingTables {
                                                                  				 "name"=>"Incr"
                                                                                  ),
                                                                  "min_duration"  =>array("size"=>3,
-                                                                 				 "name"=>"Min"
+                                                                 				 "name"=>"Minim"
                                                                                  ),
                                                                  "country_code"  =>array("size"=>3,
                                                                  				 "name"=>"CC"
@@ -954,31 +954,31 @@ class RatingTables {
                                                                  				 "name"=>"Subscriber"
                                                                                  ),
                                                  				 "name"=>array("size"=>10,
-                                                                                  "name"=>"Profile"
+                                                                                  "name"=>"Profile Id"
                                                                                 ),
                                                                  "rate_name1"=>array("size"=>10,
-                                                                 				 "name"=>"Rate1"
+                                                                 				 "name"=>"Rate Id1"
                                                                                  ),
                                                                  "hour1"=>array("size"=>3,
-                                                                 				 "name"=>"Hour1"
+                                                                 				 "name"=>"00-H1"
                                                                                  ),
                                                                  "rate_name2"=>array("size"=>10,
-                                                                 				 "name"=>"Rate2"
+                                                                 				 "name"=>"Rate Id2"
                                                                                  ),
                                                                  "hour2"=>array("size"=>3,
-                                                                 				 "name"=>"Hour2"
+                                                                 				 "name"=>"H1-H2"
                                                                                  ),
                                                                  "rate_name3"=>array("size"=>10,
-                                                                 				 "name"=>"Rate3"
+                                                                 				 "name"=>"Rate Id3"
                                                                                  ),
                                                                  "hour3"=>array("size"=>3,
-                                                                 				 "name"=>"Hour3"
+                                                                 				 "name"=>"H2-H3"
                                                                                  ),
                                                                  "rate_name4"=>array("size"=>10,
-                                                                 				 "name"=>"Rate4"
+                                                                 				 "name"=>"Rate Id4"
                                                                                  ),
                                                                  "hour4"=>array("size"=>3,
-                                                                 				 "name"=>"Hour4"
+                                                                 				 "name"=>"H3-24"
                                                                                  ),
 
                                                  				)
@@ -1000,13 +1000,13 @@ class RatingTables {
                                                                  				 "name"=>"Subscriber"
                                                                                  ),
                                                                  "name"=>array("size"=>10,
-                                                                               "name"=>"Rate"
+                                                                               "name"=>"Rate Id"
                                                                                 ),
                                                                  "destination"=>array("size"=>20,
                                                                  				 "name"=>"Destination"
                                                                                  ),
                                                                  "durationRate"=>array("size"=>10,
-                                                                 				 "name"=>"Rate"
+                                                                 				 "name"=>"Price"
                                                                                  ),
                                                                  "application"=>array("size"=>6,
                                                                  				 "name"=>"App"
@@ -1033,13 +1033,13 @@ class RatingTables {
                                                                  				 "name"=>"Subscriber"
                                                                                  ),
                                                                  "name"=>array("size"=>10,
-                                                                               "name"=>"Rate"
+                                                                               "name"=>"Rate Id"
                                                                                 ),
                                                                  "destination"=>array("size"=>20,
                                                                  				 "name"=>"Destination"
                                                                                  ),
                                                                  "durationRate"=>array("size"=>10,
-                                                                 				 "name"=>"Rate"
+                                                                 				 "name"=>"Price"
                                                                                  ),
                                                                  "application"=>array("size"=>6,
                                                                  				 "name"=>"App"
@@ -2543,14 +2543,14 @@ class SERQuota {
 
     }
 
-    function LoadSubscribers() {
+    function LoadAccounts() {
 
         if (!$this->AccountsDBClass) {
             print("Info: No database defined for SER accounts.\n");
             return 0;
         }
 
-		if ($this->CDRS->mc && $mc_value = $this->CDRS->mc->get('subscribers')) {
+		if ($this->CDRS->mc && $mc_value = $this->CDRS->mc->get('accounts')) {
             $_accounts_tmp=explode("\n",$mc_value);
             foreach ($_accounts_tmp  as $_account_tmp) {
                 $_avps=explode(":",$_account_tmp);
@@ -2566,6 +2566,7 @@ class SERQuota {
             dprint($query);
     
             if (!$this->AccountsDB->query($query)) {
+            	printf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
                 return 0;
             }
     
@@ -2576,12 +2577,12 @@ class SERQuota {
     
             while($this->AccountsDB->next_record()) {
     
-                $account = $this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
+                $account   = $this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
                 $full_name = $this->AccountsDB->f('first_name')." ".$this->AccountsDB->f('last_name');
     
-                $_accounts[$account]=array('quota'    => $this->AccountsDB->f('quota'),
-                                           'email'    => $this->AccountsDB->f('email_address'),
-                                           'fn' => $full_name
+                $_accounts[$account]=array('quota' => $this->AccountsDB->f('quota'),
+                                           'email' => $this->AccountsDB->f('email_address'),
+                                           'fn'    => $full_name
                                            );
             }
     
@@ -2608,52 +2609,50 @@ class SERQuota {
                 );
             }
 
-            $log=sprintf ("%d subscribers have monthly quota enabled\n",$accounts_with_quota_enabled);
+            $log=sprintf ("%d accounts have monthly quota enabled\n",$accounts_with_quota_enabled);
 
 	        if (is_object($this->CDRS->mc)) {
-                $this->CDRS->mc->set('subscribers',$mc_value,MEMCACHE_COMPRESSED,3600);
-                $log=sprintf("Saved %d subscribers in cache\n",count($_accounts));
+                $this->CDRS->mc->set('accounts',$mc_value,MEMCACHE_COMPRESSED,3600);
+                $log=sprintf("Saved %d accounts in cache\n",count($_accounts));
                 print $log;
                 syslog(LOG_NOTICE,$log);
             }
         }
 
-        $this->SERAccounts = &$_accounts;
+        $this->Accounts = &$_accounts;
 
-        $this->subscribers = array_keys(&$this->SERAccounts);
-
- 		return count($this->SERAccounts);
+ 		return count($this->Accounts);
     }
 
     function ShowAccountsWithQuota($treshhold='') {
 
-		if (!$this->LoadSubscribers()) return 0;
+		if (!$this->LoadAccounts()) return 0;
 
-		print_r($this->subscribersWithQuota);
+		print_r($this->accountsWithQuota);
 
-        foreach ($this->subscribers as $_subscriber) {
-			if ($this->SERAccounts[$_subscriber]['quota'] ) {
+        foreach (array_keys($this->Accounts) as $_subscriber) {
+			if ($this->Accounts[$_subscriber]['quota'] ) {
 	        	$usage = $this->CDRS->getMonthlyUsageFromCache($_subscriber);
 
                 if ($usage['cost'] > 0) {
-                    if ($this->SERAccounts[$_subscriber]['block_by_quota']) {
+                    if ($this->Accounts[$_subscriber]['block_by_quota']) {
                         $blockedStatus="blocked";
                     } else {
                         $blockedStatus='';;
                     }
 
-                    $usageRatio=$usage['cost']*100/$this->SERAccounts[$_subscriber]['quota'];
+                    $usageRatio=$usage['cost']*100/$this->Accounts[$_subscriber]['quota'];
 
                     if ($treshhold && $treshhold > $usageRatio) continue;
 
                     $usageStatus=sprintf("usage=%-10s",$usage['cost']);
-            		printf ("%-35s quota=%-6s %s %.2f%s %s\n",$_subscriber,$this->SERAccounts[$_subscriber]['quota'],$usageStatus,$usageRatio,'%',$blockedStatus);
+            		printf ("%-35s quota=%-6s %s %.2f%s %s\n",$_subscriber,$this->Accounts[$_subscriber]['quota'],$usageStatus,$usageRatio,'%',$blockedStatus);
                 }
             }
         }
     }
 
-    function ResetUserQuotas() {
+    function Reset() {
 
         if (!$this->AccountsDBClass) {
             print("Info: No database defined for SER accounts.\n");
@@ -2696,7 +2695,7 @@ class SERQuota {
             $account = substr($this->db->f('key'),strlen($this->CDRS->memcache_keyprefix));
 			$_usage  = $this->CDRS->parseMonthlyUsage($this->db->f('value'));
 
-            $this->SERAccounts[$account]['usage']=$_usage;
+            $this->Accounts[$account]['usage']=$_usage;
         }
     }
 
@@ -2708,7 +2707,7 @@ class SERQuota {
         	$this->startTime=$month."-01 00:00";
         }
 
-        $this->LoadSubscribers();
+        $this->LoadAccounts();
 
         $j=0;
 
@@ -2749,12 +2748,12 @@ class SERQuota {
 
         while($this->CDRdb->next_record()) {
 
-            if (!$this->SERAccounts[$this->CDRdb->f($this->BillingPartyIdField)]) continue;
+            if (!$this->Accounts[$this->CDRdb->f($this->BillingPartyIdField)]) continue;
 
-            $this->SERAccounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['calls']    = $this->CDRdb->f('calls');
-            $this->SERAccounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['duration'] = $this->CDRdb->f('duration');
-            $this->SERAccounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['cost']     = $this->CDRdb->f('cost');
-            $this->SERAccounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['traffic']  = $this->CDRdb->f('traffic');
+            $this->Accounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['calls']    = $this->CDRdb->f('calls');
+            $this->Accounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['duration'] = $this->CDRdb->f('duration');
+            $this->Accounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['cost']     = $this->CDRdb->f('cost');
+            $this->Accounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['traffic']  = $this->CDRdb->f('traffic');
 
             $j++;
 
@@ -2794,7 +2793,7 @@ class SERQuota {
         global $UserQuota;
 
         $this->cacheMonthlyUsage();
-        $this->LoadSubscribers();
+        $this->LoadAccounts();
 
         $toNotify=array();
 
@@ -2803,18 +2802,18 @@ class SERQuota {
         }
 
 		$_checks=0;
-        foreach (array_keys($this->SERAccounts) as $account) {
+        foreach (array_keys($this->Accounts) as $account) {
 
             if (!$account['quota']) continue;
 
             list($username,$domain)=explode("@",$account);
 
-			if (is_object($this->CDRS->mc)) $this->SERAccounts[$account]['usage']=$this->CDRS->getMonthlyUsageFromCache($account);
+			if (is_object($this->CDRS->mc)) $this->Accounts[$account]['usage']=$this->CDRS->getMonthlyUsageFromCache($account);
 
-            if ($reason=$this->checkLimit($account,$this->SERAccounts[$account]['usage'])) {
+            if ($reason=$this->checkLimit($account,$this->Accounts[$account]['usage'])) {
                 $exceeding_accounts++;
 
-                if (!$this->SERAccounts[$account]['block_by_quota']) {
+                if (!$this->Accounts[$account]['block_by_quota']) {
 
                     if (!$seen_title) {
                         $line=sprintf ("%40s %6s %8s %8s %13s %s\n","User","Calls","Price","Minutes","Traffic","Reason");
@@ -2823,9 +2822,9 @@ class SERQuota {
                         $seen_title++;
                     }
 
-                    $traffic       = number_format($this->SERAccounts[$account]['usage']['traffic']/1024/1024,2);
-                    $duration      = number_format($this->SERAccounts[$account]['usage']['duration']/60,0,"","");
-                    $line          = sprintf ("%40s %6s %8s %8s %10s MB %s\n",$account,$this->SERAccounts[$account]['usage']['calls'],$this->SERAccounts[$account]['usage']['cost'],$duration,$traffic,$reason);
+                    $traffic       = number_format($this->Accounts[$account]['usage']['traffic']/1024/1024,2);
+                    $duration      = number_format($this->Accounts[$account]['usage']['duration']/60,0,"","");
+                    $line          = sprintf ("%40s %6s %8s %8s %10s MB %s\n",$account,$this->Accounts[$account]['usage']['calls'],$this->Accounts[$account]['usage']['cost'],$duration,$traffic,$reason);
                     $email_body    = $email_body.$line;
                     print $line;
 
@@ -2842,7 +2841,7 @@ class SERQuota {
                     $this->db->query($log_query);
 
                     if ($this->blockAccount($account)) {
-                    	if ($notify && $this->SERAccounts[$account]['email']) {
+                    	if ($notify && $this->Accounts[$account]['email']) {
                         	$toNotify[]=$account;
                         }
                     	$blocked_now++;
@@ -2868,7 +2867,7 @@ class SERQuota {
         if ($blocked_now) {
         	$line=sprintf("%6d accounts have been blocked now\n",$blocked_now);
             $email_body=$email_body.$line;
-            if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete('subscribers');
+            if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete('accounts');
         }
         
         if ($blockedAccountsNow) {
@@ -2901,14 +2900,14 @@ class SERQuota {
 
         }
 
-        dprint("Notify subscribers");
+        dprint("Notify accounts");
 
         if ($notify && is_array($toNotify) && count($toNotify) >0) {
             dprint_r($toNotify);
 
-            // send notification to subscribers
+            // send notification to accounts
             foreach($toNotify as $rcpt) {
-                $this->notifySubscriber($rcpt);
+                $this->notifyAccount($rcpt);
             }
         }
     }
@@ -2919,8 +2918,8 @@ class SERQuota {
         $maxcost    = "";
         $maxtraffic = "";
     
-        if ($this->SERAccounts[$account]['quota']) {
-            $maxcost = $this->SERAccounts[$account]['quota'];
+        if ($this->Accounts[$account]['quota']) {
+            $maxcost = $this->Accounts[$account]['quota'];
         } elseif  ($UserQuota['default']['cost']) {
             $maxcost = $UserQuota['default']['cost'];
         }
@@ -2929,8 +2928,8 @@ class SERQuota {
             return "Cost $usage[cost] > $maxcost";
         }
     
-        if ($this->SERAccounts[$account]['quota_traffic']) {
-            $maxtraffic = $this->SERAccounts[$account]['quota_traffic'];
+        if ($this->Accounts[$account]['quota_traffic']) {
+            $maxtraffic = $this->Accounts[$account]['quota_traffic'];
         } elseif  ($UserQuota['default']['traffic']) {
             $maxtraffic = $UserQuota['default']['traffic'];
         }
@@ -2943,8 +2942,8 @@ class SERQuota {
         return 0;
     }
 
-    function notifySubscriber($account) {
-        dprint("notifySubscriber($account)");
+    function notifyAccount($account) {
+        dprint("notifyAccount($account)");
         global $DATASOURCES;
 
         list($username,$domain)=explode("@",$account);
@@ -2981,7 +2980,7 @@ class SERQuota {
             $subject=$this->notificationAddresses[$domain]['quotaSubject'];
         }
 
-        $body=preg_replace("/__NAME__/",$this->SERAccounts[$account]['fn'],$body);
+        $body=preg_replace("/__NAME__/",$this->Accounts[$account]['fn'],$body);
         $body=preg_replace("/__ACCOUNT__/",$account,$body);
 
         if (!strlen($subject)) {
@@ -2990,7 +2989,7 @@ class SERQuota {
             $subject=preg_replace("/__ACCOUNT__/",$account,$subject);
         }
 
-		$toEmail=$this->SERAccounts[$account]['email'];
+		$toEmail=$this->Accounts[$account]['email'];
 
         if (!$toEmail || !$fromEmail) {
             dprint("missing From or Rcpt");
@@ -3171,13 +3170,13 @@ class SERQuota {
     	if (is_object($this->CDRS->mc)) {
 			if (!$this->CDRS->mc->get('quotaCheckInit')) {
 
-                $this->ResetUserQuotas();
+                $this->Reset();
 
                 $this->deleteMonthlyUsageFromCache();
 
 				$this->initMonthlyUsageFromDatabase();
 
-                $this->CDRS->cacheMonthlyUsage(&$this->SERAccounts);
+                $this->CDRS->cacheMonthlyUsage(&$this->Accounts);
         
                 if ($this->CDRS->status['cached_keys']['saved_keys']) {
                     $log=sprintf("Saved %d usage keys in cache\n",$this->CDRS->status['cached_keys']['saved_keys']);
@@ -3205,7 +3204,7 @@ class SERQuota {
             if ($this->db->query($query)) {
                 if (!$this->db->num_rows()) {
     
-                    $this->ResetUserQuotas();
+                    $this->Reset();
 
                     $this->deleteMonthlyUsageFromCache();
 
@@ -3289,17 +3288,15 @@ class SERQuota {
 		$this->initMonthlyUsageFromDatabase();
 
         foreach (array_keys($this->cachedUsage) as $_key) {
-            if ($this->SERAccounts[$_key]['usage']['calls'] && $this->SERAccounts[$_key]['usage']['calls'] != $this->cachedUsage[$_key]['usage']['calls']) {
-               $errorMargin=($this->cachedUsage[$_key]['usage']['calls']/$this->SERAccounts[$_key]['usage']['calls']-1)*100;
-               printf ("%50s Database=%10d Cached=%10d Error=%.4f%s\n",$_key,$this->SERAccounts[$_key]['usage']['calls'],$this->cachedUsage[$_key]['usage']['calls'],$errorMargin,"%");
+            if ($this->Accounts[$_key]['usage']['calls'] && $this->Accounts[$_key]['usage']['calls'] != $this->cachedUsage[$_key]['usage']['calls']) {
+               $errorMargin=($this->cachedUsage[$_key]['usage']['calls']/$this->Accounts[$_key]['usage']['calls']-1)*100;
+               printf ("%50s Database=%10d Cached=%10d Error=%.4f%s\n",$_key,$this->Accounts[$_key]['usage']['calls'],$this->cachedUsage[$_key]['usage']['calls'],$errorMargin,"%");
                $errors++;
             }
         }
 
         if (!$errors) print "Cached usage is up to date with database usage.\n";
-
     }
-
 }
 
 class RatingEngine {
@@ -3396,8 +3393,8 @@ class RatingEngine {
 
     function reloadSipAccountsWithQuota () {
 		if (is_object($this->CDRS->mc)) {
-        	if ($this->CDRS->mc->delete('subscribers')) {
-            	syslog(LOG_NOTICE, "Deleted subscribers key from memcache");
+        	if ($this->CDRS->mc->delete('accounts')) {
+            	syslog(LOG_NOTICE, "Deleted accounts key from memcache");
             }
         }
         return 1;
