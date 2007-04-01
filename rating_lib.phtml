@@ -135,6 +135,7 @@ class Rate {
 
         // Session start time
         $this->id                = $dictionary['id'];
+        $this->callId            = $dictionary['callId'];
         $this->timestamp         = $dictionary['timestamp'];
 
         // Session usage, type and destination Id
@@ -631,7 +632,9 @@ class Rate {
         }
 
         if (!$this->rateValues) {
-            $log=sprintf("Error: Cannot find rates for callid=%s, %s, destination=%s, profile=%s",$this->id,$this->CustomerProfile,$this->DestinationId,$this->profileName);
+        	$this->rateNotFound=true;
+            $log=sprintf("Error: Cannot find rates for callid=%s, %s, destination=%s, profile=%s, app=%s",
+            $this->callId,$this->CustomerProfile,$this->DestinationId,$this->profileName,$this->applicationType);
             dprint($log);
             $subject=$this->CDRS->CDRTool['provider']['service']." - CDRTool rating problem";
             mail($this->toEmail, $subject, $log, $this->extraHeaders);
@@ -716,6 +719,7 @@ class Rate {
         // required fields passed from the CDR structure
         //
         $this->timestamp         = time();
+        $this->callId            = $dictionary['callId'];
         $this->DestinationId     = $dictionary['DestinationId'];
         $this->BillingPartyId    = $dictionary['BillingPartyId'];
         $this->domain            = $dictionary['domain'];
@@ -723,7 +727,10 @@ class Rate {
         $this->aNumber           = $dictionary['aNumber'];
         $this->cNumber           = $dictionary['cNumber'];
         $this->RatingTables      = $dictionary['RatingTables'];
+        $this->applicationType   = $dictionary['Application'];
         $Balance      			 = $dictionary['Balance'];
+
+		if (!strlen($this->applicationType)) $this->applicationType='audio';
 
         if (!$this->DestinationId) {
             dprint("Could not find any destination id found for $this->cNumber");
@@ -766,6 +773,11 @@ class Rate {
 
             $foundRate            = $this->GetRate($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
 
+            if ($this->rateNotFound) {
+                // break here to avoid loops
+                break;
+            }
+
             dprint_r($foundRate);
 
             $thisRate=$foundRate;
@@ -790,8 +802,9 @@ class Rate {
             if ($span=="1") {
                 $connectCostSpan=$connectCost;
                 $setupBalanceRequired=$connectCost/$this->priceDenominator;
+
                 if ($connectCost && $Balance <= $setupBalanceRequired) {
-                    syslog(LOG_NOTICE,"$Balance <= $setupBalanceRequired");
+                    syslog(LOG_NOTICE,"Balance too small: $Balance <= $setupBalanceRequired");
                     return 0;
                 }
 
@@ -3729,12 +3742,13 @@ class RatingEngine {
             }
 
             $CDRStructure=array (
+                              $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
                               $this->CDRS->CDRFields['aNumber']  	   => $NetFields['from'],
                               $this->CDRS->CDRFields['cNumber']        => $NetFields['to'],
                               $this->CDRS->CDRFields['RemoteAddress']  => $NetFields['to'],
                               $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
                               $this->CDRS->CDRFields['duration']       => $NetFields['duration'],
-                              $this->CDRS->CDRFields['timestamp']      => time(),
+                              $this->CDRS->CDRFields['timestamp']      => time()
                               );
 
             dprint_r($CDRStructure);
@@ -3787,6 +3801,7 @@ class RatingEngine {
                 // Build Rate dictionary containing normalized CDR fields plus customer Balance
                 $RateDictionary=array(
                                       'duration'        => $CDR->duration,
+                                      'callId'          => $CDR->callId,
                                       'Balance'         => $Balance,
                                       'timestamp'       => $CDR->timestamp,
                                       'DestinationId'   => $CDR->DestinationId,
