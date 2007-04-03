@@ -2497,6 +2497,11 @@ class CDR_ser_radius extends CDR {
         ";
         $CallInfoVerbose.= "
         <tr>
+        	<td width=10></td>
+            <td>Session: </td>
+            <td>$this->callIdPrint</td>
+        </tr>
+        <tr>
             <td></td>
         	<td>Start time: </td>
             <td>$this->startTime $providerTimezone</td>
@@ -2513,11 +2518,6 @@ class CDR_ser_radius extends CDR {
         }
 
         $CallInfoVerbose.= "
-        <tr>
-        	<td width=10></td>
-            <td>Session: </td>
-            <td>$this->callIdPrint</td>
-        </tr>
         <tr>
         	<td></td>
             <td>Method:</td>
