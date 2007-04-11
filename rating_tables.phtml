@@ -224,7 +224,7 @@ if ($action =="update" && $table) {
 			$Fname=$metadata[$k]["name"];
             $value=$_REQUEST[$Fname];
 			if (strlen($value) && !in_array($Fname,$exceptions)
-				&& !preg_match("/^$keys$/",$Fname)) {
+				&& !in_array($Fname,$keys)) {
 				if ($kkk > 0) {
 					$comma = ",";
 				} else {
@@ -509,7 +509,7 @@ if ($action =="update" && $table) {
                 $Fname=$metadata[$k]["name"];
                 $value=$_REQUEST[$Fname];
                 #print "var $Fname = ${$Fname} $keys<br>";
-                if (preg_match("/^$keys$/",$Fname) ) {
+                if (in_array($Fname,$keys) ) {
                     if ($value == "") {
                         $Fname_print_insert=substr($Fname,4);
                         print "$Fname_print_insert = ???? <br>";
@@ -767,7 +767,7 @@ if (!$export) {
                 $field_size=$el_size;
             }
     
-            if (!preg_match("/^$keys$/",$Fname) ) {
+            if (!in_array($Fname,$keys) ) {
                 if ($Fname=="domain" && is_array($insertDomainOption)) {
                     print "<td><select name=search_$Fname>";
                     $selected_domain[$value]="selected";
@@ -863,7 +863,7 @@ if (!$export) {
     
     
             if (!in_array($Fname,$exceptions)) {
-                if (!preg_match("/^$keys$/",$Fname) ) {
+                if (!in_array($Fname,$keys) ) {
                     if ($Fname=="domain" && is_array($insertDomainOption)) {
                         print "<td><select name=$Fname>";
                         foreach ($insertDomainOption as $_option) {
@@ -989,7 +989,7 @@ if (!$export) {
             }
     
             if (!in_array($Fname,$exceptions)) {
-                if (!preg_match("/^$keys$/",$Fname) ) {
+                if (!in_array($Fname,$keys) ) {
                 	if ($Fname=="domain" && is_array($insertDomainOption)) {
                     	print "<td><select  name=$Fname>";
                         foreach ($insertDomainOption as $_option) {
@@ -1078,7 +1078,7 @@ while  ($i<$maxrows)  {
 
         if (!in_array($Fname,$exceptions)) {
     		if (!$export) {
-                if (!preg_match("/^$keys$/",$Fname)) {
+                if (!in_array($Fname,$keys)) {
                     if ($Fname=="domain" && is_array($insertDomainOption)) {
                         print "<td><select name=$Fname>";
                         $selected_domain[$value]="selected";

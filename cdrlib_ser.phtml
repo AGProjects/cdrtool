@@ -2618,13 +2618,13 @@ class CDR_ser_radius extends CDR {
             </tr>
             <tr>
             	<td></td>
-        		<td>Caller KBIn: </td>
-            	<td>$this->inputTrafficPrint</td>
+        		<td>Caller RTP: </td>
+            	<td>$this->inputTrafficPrint KB</td>
             </tr>
             <tr>
             	<td></td>
-        		<td>Called KBIn: </td>
-            	<td>$this->outputTrafficPrint</td>
+        		<td>Called RTP: </td>
+            	<td>$this->outputTrafficPrint KB</td>
             </tr>
             ";
 
@@ -2646,12 +2646,12 @@ class CDR_ser_radius extends CDR {
                 $CallInfoVerbose.= "
                 <tr>
             		<td></td>
-        			<td>Caller UA: </td>
+        			<td>Caller SIP UA: </td>
             		<td>$callerUA</td>
                 </tr>
                 <tr>
             		<td></td>
-        			<td>Called UA: </td>
+        			<td>Called SIP UA: </td>
             		<td>$calledUA</td>
                 </tr>
                 ";
@@ -2736,25 +2736,29 @@ class CDR_ser_radius extends CDR {
 
         print "</td>";
         print "<td valign=top>$this->traceOut</td>";
-        if ($this->duration) {
-            print "<td valign=top align=right>$this->durationPrint</td>";
+
+        if (!$this->normalized){
+            print "<td valign=top align=left colspan=4><font color=red>in progress</a></td>";
         } else {
-            print "<td valign=top align=right><font color=red>$this->durationPrint</a></td>";
-        }
-
-
-        if ($this->CDRS->rating) {
-            if ($this->price == "0.0000" && !$this->rate) {
-                $this->pricePrint="";
-            } else {
-                if ($perm->have_perm("showPrice")) {
-                    $this->pricePrint=$this->price;
+            print "<td valign=top align=right>$this->durationPrint</td>";
+            if ($this->CDRS->rating) {
+                if ($this->price == "0.0000" && !$this->rate) {
+                    $this->pricePrint="";
                 } else {
-                    $this->pricePrint='x.xxx';
+                    if ($perm->have_perm("showPrice")) {
+                        $this->pricePrint=$this->price;
+                    } else {
+                        $this->pricePrint='x.xxx';
+                    }
                 }
+    
+                print "<td valign=top align=right>$this->pricePrint</td>";
             }
 
-        	print "<td valign=top align=right>$this->pricePrint</td>";
+            print "
+            <td valign=top align=right>$this->inputTrafficPrint </td>
+            <td valign=top align=right>$this->outputTrafficPrint</td>
+            ";
         }
 
 		$SIPclass=substr($this->disconnect,0,1);
@@ -2774,8 +2778,6 @@ class CDR_ser_radius extends CDR {
         }
 
         print "
-        <td valign=top align=right>$this->inputTrafficPrint </td>
-        <td valign=top align=right>$this->outputTrafficPrint</td>
         <td valign=top align=right>$status_color $this->disconnectPrint</font></td>
         <td valign=top align=right>$this->SipCodec</td>
         </tr>
@@ -4434,8 +4436,8 @@ class SER_trace {
             }
         }
 
-        //print "<pre>";
-        //print_r($trace_array);
+        #print "<pre>";
+        #print_r($trace_array);
         print "
         <p>
         <a name=#top>
