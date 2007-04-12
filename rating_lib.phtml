@@ -2497,7 +2497,6 @@ class SERQuota {
         $this->CDRTool         = &$parent->CDRTool;
 
         $this->AccountsDB       = new $this->AccountsDBClass;
-        $this->subscriber_table = $parent->subscriber_table;
         $this->enableThor       = $parent->enableThor;
 
         $parent->LoadDomains();
@@ -2624,7 +2623,7 @@ class SERQuota {
     function LoadAccountsfromThordb() {
 
         if (!$this->AccountsDBClass) {
-            print("Info: No database defined for SER accounts.\n");
+            print("Info: No database defined for SIP accounts.\n");
             return 0;
         }
 
@@ -2666,11 +2665,11 @@ class SERQuota {
     function LoadAccountsfromSERdb() {
 
         if (!$this->AccountsDBClass) {
-            print("Info: No database defined for SER accounts.\n");
+            print("Info: No database defined for SIP accounts.\n");
             return 0;
         }
 
-        $query=sprintf("select * from %s",$this->subscriber_table);
+        $query=sprintf("select * from subscriber");
 
         dprint($query);
 
@@ -2741,7 +2740,7 @@ class SERQuota {
     function Reset() {
 
         if (!$this->AccountsDBClass) {
-            print("Info: No database defined for SER accounts.\n");
+            print("Info: No database defined for SIP accounts.\n");
             return 0;
         }
 
@@ -2849,7 +2848,7 @@ class SERQuota {
     function initMonthlyUsageFromCache () {
 
         if (!$this->AccountsDBClass) {
-            print("Info: No database defined for SER accounts.\n");
+            print("Info: No database defined for SIP accounts.\n");
             return 0;
         }
 
@@ -3331,7 +3330,7 @@ class SERQuota {
     	$deleted_keys=0;
 
         if (!$this->AccountsDBClass) {
-            print("Info: No database defined for SER accounts.\n");
+            print("Info: No database defined for SIP accounts.\n");
             return 0;
         }
 

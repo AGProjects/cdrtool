@@ -162,10 +162,6 @@ class CDRS {
             $this->domain_table = $this->DATASOURCES[$cdr_source]['domain_table'];
         }
 
-        if ($this->DATASOURCES[$cdr_source]['subscriber_table']) {
-            $this->subscriber_table = $this->DATASOURCES[$cdr_source]['subscriber_table'];
-        }
-
         if ($this->DATASOURCES[$cdr_source]['enableThor']) {
             $this->enableThor      = $this->DATASOURCES[$cdr_source]['enableThor'];
         }
