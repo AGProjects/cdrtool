@@ -2,6 +2,9 @@
 class CDRS_ser_radius extends CDRS {
     var $table                 = "radacct";
     var $CDR_class             = "CDR_ser_radius";
+    var $domain_table          = "domain";
+    var $subscriber_table      = "subscriber";
+    var $enable_thor           = false;
 
     var $CDRFields=array('id'   	       => 'RadAcctId',
                          'callId'          => 'AcctSessionId',
@@ -1821,7 +1824,7 @@ class CDRS_ser_radius extends CDRS {
         } else {
         	$mc_value="";
 
-            $query="select * from domain";
+            $query=sprintf("select domain from %s",$this->domain_table);
             if ($this->CDRTool['filter']['aNumber']) {
                 $els=explode("@",$this->CDRTool['filter']['aNumber']);
                 $query=$query ." where domain = '$els[1]' ";
@@ -1850,43 +1853,8 @@ class CDRS_ser_radius extends CDRS {
         return count($this->localDomains);
     }
 
-    function LoadAccounts($account='') {
-
-		$account=trim($account);
-
-        if (!$this->AccountsDBClass) return 0;
-        if (!$account) return 0;
-		if ($this->Accounts[$account]) return 1;
-
-		list($_user,$_domain)=explode("@",$account);
-
-		if (!is_array($this->localDomains) || !in_array($_domain,$this->localDomains)) return 0;
-
-        $query=sprintf("select * from subscriber
-        where username = '%s'
-        and domain ='%s'",
-        addslashes($_user),
-        addslashes($_domain));
-
-        if ($this->CDRTool['filter']['aNumber']) {
-            $els=explode("@",$this->CDRTool['filter']['aNumber']);
-            $query=$query ." where username = '$els[0]' and domain = '$els[1]' ";
-        }
-
-        dprint($query);
-
-        if (!$this->AccountsDB->query($query) || !$this->AccountsDB->num_rows()) {
-            return 0;
-        }
-
-		$this->AccountsDB->next_record();
-
-        $this->Accounts[$account]=array("timezone"=>$this->AccountsDB->f('timezone'));
-
-        return 1;
-    }
-
     function import($file,$timezone) {
+        // do not use this, is not up to date anymore
         $b=time();
         $this->radiusAttributes=array(
             "Acct-Status-Type"           => "",
@@ -1912,7 +1880,6 @@ class CDRS_ser_radius extends CDRS {
             "Source-IP"                  => "SourceIP",
             "Source-Port"                => "SourcePort",
             "Canonical-URI"              => "CanonicalURI"
-
             );
 
         if (!$fp=fopen("$file","r")) {
@@ -2269,7 +2236,6 @@ class CDR_ser_radius extends CDR {
         }
 
         $this->traffic            = 2*($this->inputTraffic+$this->outputTraffic);
-        $this->BillingId          = $this->CDRS->Accounts[$this->BillingPartyId][BillingId];
 
         $_timestamp_stop=$this->timestamp+$this->duration;
 
@@ -2463,17 +2429,17 @@ class CDR_ser_radius extends CDR {
 
         $this->ratePrint=nl2br($this->rate);
 
-        if ($this->CDRS->Accounts[$this->BillingPartyId][timezone]) {
-            $timezone_print=$this->CDRS->Accounts[$this->BillingPartyId][timezone];
+        if ($this->CDRS->Accounts[$this->BillingPartyId]['timezone']) {
+            $timezone_print=$this->CDRS->Accounts[$this->BillingPartyId]['timezone'];
         } else {
-            $timezone_print=$this->CDRS->CDRTool[provider][timezone];
+            $timezone_print=$this->CDRS->CDRTool['provider']['timezone'];
         }
 
         $found_print=$found;
 
         if ($this->normalized)    $found_print.='N';
 
-        $providerTimezone=$this->CDRS->CDRTool[provider][timezone];
+        $providerTimezone=$this->CDRS->CDRTool['provider']['timezone'];
 
         if ($this->CDRS->sipTraceDataSource) {
             $accDS=$this->CDRS->sipTraceDataSource;
@@ -2570,18 +2536,6 @@ class CDR_ser_radius extends CDR {
             <td></td>
         	<td>Caller ID:  </td>
             <td>$this->SipRPIDPrint</td>
-            </tr>
-            ";
-        }
-
-
-
-		if ($this->BillingId) {
-            $CallInfoVerbose.= "
-            <tr>
-            <td></td>
-            <td>Billing id</td>
-            <td><font color=green>$this->BillingId</font></td>
             </tr>
             ";
         }
@@ -2836,7 +2790,7 @@ class CDR_ser_radius extends CDR {
         }
 
         if (!$this->CDRS->export) {
-            $timezone_print=$this->CDRS->CDRTool[provider][timezone];
+            $timezone_print=$this->CDRS->CDRTool['provider']['timezone'];
 
             print "
             <tr bgcolor=$inout_color>

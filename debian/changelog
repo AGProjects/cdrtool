@@ -14,8 +14,9 @@ cdrtool (5.1.0) unstable; urgency=low
     (you must apply changes from setup/mysql/alter_tables.mysql)
   * Default application set to 'audio'
   * application field is now mandatory when importing rates CSV files
+  * Added Thor enablers 
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue,  3 Apr 2007 09:58:31 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 12 Apr 2007 15:04:58 +0200
 
 cdrtool (5.0.10) unstable; urgency=low
 

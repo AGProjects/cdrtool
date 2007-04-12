@@ -122,12 +122,6 @@ class CDRS {
         	$_DestinationIdField='DestinationId';
         }
 
-        if ($this->DATASOURCES[$cdr_source]['UserQuotaTable']) {
-        	$_UserQuotaTable     = $this->DATASOURCES[$cdr_source]['UserQuotaTable'];
-        } else {
-            $_UserQuotaTable='subscriber'; // default OpenSER subscriber table
-        }
-
         if ($this->DATASOURCES[$cdr_source]['normalizedField']) {
         	$_normalizedField    = $this->DATASOURCES[$cdr_source]['normalizedField'];
         } else {
@@ -157,11 +151,23 @@ class CDRS {
         } else {
             $_BillingIdField    = 'UserName';
         }
-    
+
         if ($this->DATASOURCES[$this->cdr_source]['sipTraceDataSource']) {
             $_sipTraceDataSource=$this->DATASOURCES[$this->cdr_source]['sipTraceDataSource'];
         } else {
             $_sipTraceDataSource='sip_trace';
+        }
+
+        if ($this->DATASOURCES[$cdr_source]['domain_table']) {
+            $this->domain_table = $this->DATASOURCES[$cdr_source]['domain_table'];
+        }
+
+        if ($this->DATASOURCES[$cdr_source]['subscriber_table']) {
+            $this->subscriber_table = $this->DATASOURCES[$cdr_source]['subscriber_table'];
+        }
+
+        if ($this->DATASOURCES[$cdr_source]['enableThor']) {
+            $this->enableThor      = $this->DATASOURCES[$cdr_source]['enableThor'];
         }
 
         // connect to the CDR database
@@ -214,7 +220,7 @@ class CDRS {
 
         $this->LoadDestinations();
         $this->LoadDomains();
-        $this->LoadAccounts();
+        //$this->LoadAccounts();
 
         if ($this->ratingEnabled) {
             //dprint ("CDRS will have rating enabled");
@@ -920,8 +926,8 @@ class CDRS {
                     foreach (array_keys($this->brokenRates) as $dest) {
                         $missingRatesBodytext=$missingRatesBodytext."\nDestination id $dest (".$this->brokenRates[$dest]." calls)";
                     }
-                    $to=$this->CDRTool[provider][toEmail];
-                    $from=$this->CDRTool[provider][fromEmail];
+                    $to=$this->CDRTool['provider'][toEmail];
+                    $from=$this->CDRTool['provider'][fromEmail];
      
                     dprint ("Mailing operator about missing rates");
                     mail($to, "Missing CDRTool rates",$missingRatesBodytext, "From: $from");
@@ -1961,13 +1967,13 @@ function getLocalTime($timezone,$timestamp) {
     //dprint("<b>getLocalTime($timezone,$timestamp)</b>");
 	global $CDRTool;
 
-    if (!$timezone || $timezone == $CDRTool[provider][timezone]) {
+    if (!$timezone || $timezone == $CDRTool['provider']['timezone']) {
     	return date("Y-m-d H:i:s", $timestamp);
     }
 
     putenv("TZ=$timezone");
     $startTimeLocal=date("Y-m-d H:i:s", $timestamp);
-    $timezone=$CDRTool[provider][timezone];
+    $timezone=$CDRTool['provider']['timezone'];
     putenv("TZ=$timezone");
     return $startTimeLocal;
 }

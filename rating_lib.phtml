@@ -2492,18 +2492,21 @@ class SERQuota {
     	global $DATASOURCES;
 
         $this->AccountsDBClass = &$parent->AccountsDBClass;
-        $this->UserQuotaTable  = &$parent->UserQuotaTable;
         $this->CDRdb           = &$parent->CDRdb;
 	    $this->table           = &$parent->table;
         $this->CDRTool         = &$parent->CDRTool;
 
-        $this->AccountsDB      = new $this->AccountsDBClass;
+        $this->AccountsDB       = new $this->AccountsDBClass;
+        $this->subscriber_table = $parent->subscriber_table;
+        $this->enableThor       = $parent->enableThor;
 
         $parent->LoadDomains();
 
         $this->localDomains        = &$parent->localDomains;
 		$this->cdr_source          = &$parent->cdr_source;
         $this->BillingPartyIdField = &$parent->CDRFields['BillingPartyId'];
+
+        $this->parent = &$parent;
 
         $this->db = new DB_cdrtool;
         $this->db->Halt_On_Error="no";
@@ -2555,13 +2558,47 @@ class SERQuota {
     }
 
     function LoadAccounts() {
+		if (!$this->LoadAccountsfromMemcache()) {
+            if ($this->enableThor) {
+        		$this->LoadAccountsfromThordb();
+            } else {
+				$this->LoadAccountsfromSERdb();
+            }
+        	$this->SaveAccountsToMemcache();
 
-        if (!$this->AccountsDBClass) {
-            print("Info: No database defined for SER accounts.\n");
-            return 0;
         }
 
+        return count($this->Accounts);
+    }
+
+    function SaveAccountsToMemcache() {
+
+		unset($mc_value);
+
+        foreach (array_keys($this->Accounts) as $account) {
+            if (!strlen($account)) continue;
+            $mc_value.= sprintf("%s:quota=%s;email=%s;fn=%s%s;block_by_quota=%d\n",
+            $account,
+            $this->Accounts[$account]['quota'],
+            $this->Accounts[$account]['email'],
+            $this->Accounts[$account]['first_name'],
+            $this->Accounts[$account]['last_name'],
+            $this->Accounts[$account]['block_by_quota']
+            );
+        }
+
+        if (is_object($this->CDRS->mc)) {
+            $this->CDRS->mc->set('accounts',$mc_value,MEMCACHE_COMPRESSED,3600);
+            $log=sprintf("Save %d accounts in memcache\n",count($this->Accounts));
+            print $log;
+            syslog(LOG_NOTICE,$log);
+        }
+    }
+
+    function LoadAccountsfromMemcache() {
+
 		if ($this->CDRS->mc && $mc_value = $this->CDRS->mc->get('accounts')) {
+
             $_accounts_tmp=explode("\n",$mc_value);
             foreach ($_accounts_tmp  as $_account_tmp) {
                 $_avps=explode(":",$_account_tmp);
@@ -2571,68 +2608,106 @@ class SERQuota {
                 	$_accounts[$_avps[0]][$_els[0]]=$_els[1];
                 }
             }
-        } else {
-            $query="select * from subscriber";
-    
-            dprint($query);
-    
-            if (!$this->AccountsDB->query($query)) {
-            	printf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
-                return 0;
-            }
-    
-            $rows=$this->AccountsDB->num_rows();
-    
-            print $log;
-            syslog(LOG_NOTICE, $log);
-    
-            while($this->AccountsDB->next_record()) {
-    
-                $account   = $this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
-                $full_name = $this->AccountsDB->f('first_name')." ".$this->AccountsDB->f('last_name');
-    
-                $_accounts[$account]=array('quota' => $this->AccountsDB->f('quota'),
-                                           'email' => $this->AccountsDB->f('email_address'),
-                                           'fn'    => $full_name
-                                           );
-            }
-    
-            $query = "select * from grp where grp = 'quota'";
-    
-            dprint($query);
-            $this->AccountsDB->query($query);
-    
-            while($this->AccountsDB->next_record()) {
-                $account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
+
+            $log=sprintf("Load %d accounts from memcache\n",count($_accounts));
+            //print $log;
+            syslog(LOG_NOTICE,$log);
+
+            $this->Accounts = &$_accounts;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    function LoadAccountsfromThordb() {
+
+        if (!$this->AccountsDBClass) {
+            print("Info: No database defined for SER accounts.\n");
+            return 0;
+        }
+
+        $query=sprintf("select * from sip_accounts");
+
+        dprint($query);
+
+        if (!$this->AccountsDB->query($query)) {
+            $log=sprintf("Error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+            syslog(LOG_NOTICE,$log);
+            return 0;
+        }
+
+        $log=sprintf("Read %d accounts from Thor database\n",$this->AccountsDB->num_rows());
+        print $log;
+        syslog(LOG_NOTICE,$log);
+
+        while ($this->AccountsDB->next_record()) {
+        	$i++;
+
+            $_account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
+            $_profile=json_decode(trim($this->AccountsDB->f('profile')));
+
+            $_accounts[$_account]=array('timezone'   => $_profile->timezone,
+                                        'quota'      => $_profile->quota,
+                                        'email'      => $_profile->email,
+                                        'first_name' => $_profile->firstName,
+                                        'last_name'  => $_profile->lastName
+                                        );
+            if (in_array('quota',$_profile->groups)) {
                 $_accounts[$account]['block_by_quota']= 1;
-            }
-
-    		$accounts_with_quota_enabled=0;
-
-            foreach (array_keys($_accounts) as $account) {
-                if (!strlen($account)) continue;
-                $mc_value.= sprintf("%s:quota=%s;email=%s;fn=%s;block_by_quota=%d\n",
-                $account,
-                $_accounts[$account]['quota'],
-                $_accounts[$account]['email'],
-                $_accounts[$account]['fn'],
-                $_accounts[$account]['block_by_quota']
-                );
-            }
-
-            $log=sprintf ("%d accounts have monthly quota enabled\n",$accounts_with_quota_enabled);
-
-	        if (is_object($this->CDRS->mc)) {
-                $this->CDRS->mc->set('accounts',$mc_value,MEMCACHE_COMPRESSED,3600);
-                $log=sprintf("Saved %d accounts in cache\n",count($_accounts));
-                print $log;
-                syslog(LOG_NOTICE,$log);
             }
         }
 
         $this->Accounts = &$_accounts;
+ 		return true;
+    }
 
- 		return count($this->Accounts);
+    function LoadAccountsfromSERdb() {
+
+        if (!$this->AccountsDBClass) {
+            print("Info: No database defined for SER accounts.\n");
+            return 0;
+        }
+
+        $query=sprintf("select * from %s",$this->subscriber_table);
+
+        dprint($query);
+
+        if (!$this->AccountsDB->query($query)) {
+            $log=sprintf("Error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+            syslog(LOG_NOTICE,$log);
+            return 0;
+        }
+
+        $log=sprintf("Read %d accounts from SER database\n",$this->AccountsDB->num_rows());
+        print $log;
+        syslog(LOG_NOTICE,$log);
+
+        while ($this->AccountsDB->next_record()) {
+
+            $_account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
+
+            $_accounts[$_account]=array('timezone'   => $this->AccountsDB->f('timezone'),
+                                        'quota'      => $this->AccountsDB->f('quota'),
+                                        'email'      => $this->AccountsDB->f('email_address'),
+                                        'first_name' => $this->AccountsDB->f('first_name'),
+                                        'last_name'  => $this->AccountsDB->f('last_name')
+                                        );
+        }
+
+        $query = "select * from grp where grp = 'quota'";
+
+        dprint($query);
+        $this->AccountsDB->query($query);
+
+        while($this->AccountsDB->next_record()) {
+            $account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
+            $_accounts[$account]['block_by_quota']= 1;
+        }
+
+        $this->Accounts = &$_accounts;
+ 		return true;
     }
 
     function ShowAccountsWithQuota($treshhold='') {
