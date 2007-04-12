@@ -2595,7 +2595,7 @@ class SERQuota {
         if (is_object($this->CDRS->mc)) {
 
             $this->CDRS->mc->set($this->mc_key_accounts,$mc_value,MEMCACHE_COMPRESSED,3600);
-            $log=sprintf("Saved %d accounts in memcache key %s (%.02f KB)\n",count($this->Accounts),$this->mc_key_accounts,strlen($mc_value)/1024/1024);
+            $log=sprintf("Saved %d accounts in memcache key %s (%.02f MB)\n",count($this->Accounts),$this->mc_key_accounts,strlen($mc_value)/1024/1024);
             print $log;
             syslog(LOG_NOTICE,$log);
 
@@ -2782,7 +2782,7 @@ class SERQuota {
 
     function getMonthlyUsageFromDatabaseCache() {
         $query=sprintf("select * from memcache where `key` like '%s%s'",
-        $this->CDRS->memcache_keyprefix,"%");
+        $this->CDRS->mc_key_mu_prefix,"%");
 
         dprint($query);
 
@@ -2790,7 +2790,7 @@ class SERQuota {
 
         while($this->db->next_record()) {
 
-            $account = substr($this->db->f('key'),strlen($this->CDRS->memcache_keyprefix));
+            $account = substr($this->db->f('key'),strlen($this->CDRS->mc_key_mu_prefix));
 			$_usage  = $this->CDRS->parseMonthlyUsage($this->db->f('value'));
 
             $this->Accounts[$account]['usage']=$_usage;
@@ -2967,7 +2967,7 @@ class SERQuota {
         if ($blocked_now) {
         	$line=sprintf("%6d accounts have been blocked now\n",$blocked_now);
             $email_body=$email_body.$line;
-            if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete('accounts');
+            if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete($this->CDRS->mc_key_accounts);
         }
         
         if ($blockedAccountsNow) {
@@ -3080,7 +3080,8 @@ class SERQuota {
             $subject=$this->notificationAddresses[$domain]['quotaSubject'];
         }
 
-        $body=preg_replace("/__NAME__/",$this->Accounts[$account]['fn'],$body);
+		$fullname=$this->Accounts[$account]['first_name']." ".$this->Accounts[$account]['last_name'];
+        $body=preg_replace("/__NAME__/",$fullname,$body);
         $body=preg_replace("/__ACCOUNT__/",$account,$body);
 
         if (!strlen($subject)) {
@@ -3356,7 +3357,7 @@ class SERQuota {
         	$this->AccountsDB->query($query);
 
             while($this->AccountsDB->next_record()) {
-                $mc_key=$this->CDRS->memcache_keyprefix.$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');;
+                $mc_key=$this->CDRS->mc_key_mu_prefix.$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');;
                 if ($this->CDRS->mc->delete($mc_key)) {
                     $deleted_keys++;
                 }
@@ -3370,7 +3371,7 @@ class SERQuota {
         }
 
         $query=sprintf("delete from memcache where `key` like '%s%s'",
-        $this->CDRS->memcache_keyprefix,"%");
+        $this->CDRS->mc_key_mu_prefix,"%");
     	dprint($query);
         $this->db->query($query);
 
@@ -3487,14 +3488,15 @@ class RatingEngine {
     }
 
     function reloadDomains () {
-		if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete('sip_domains');
+		if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete($this->CDRS->mc_key_domains);
         return 1;
     }
 
     function reloadSipAccountsWithQuota () {
 		if (is_object($this->CDRS->mc)) {
-        	if ($this->CDRS->mc->delete('accounts')) {
-            	syslog(LOG_NOTICE, "Deleted accounts key from memcache");
+        	if ($this->CDRS->mc->delete($this->CDRS->mc_key_accounts)) {
+            	$log=sprintf("Deleted %s key from memcache",$this->CDRS->mc_key_accounts);
+            	syslog(LOG_NOTICE, $log);
             }
         }
         return 1;

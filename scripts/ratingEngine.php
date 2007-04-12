@@ -42,15 +42,13 @@ $path=dirname(realpath($_SERVER['PHP_SELF']));
 include($path."/../global.inc");
 include($path."/../cdrlib.phtml");
 
-if ( $RatingEngine['socketIP'] && $RatingEngine['socketPort'] && $RatingEngine['CDRS_class']) {
-    $address 	= $RatingEngine['socketIP'];
-    $port 	= $RatingEngine['socketPort'];
-    $cdr_source = $RatingEngine['CDRS_class'];
-}
-
-if (!$address || !$port || !$cdr_source) {
-    // Set the IP and Port we will listen on
+if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] && $RatingEngine['CDRS_class']) {
     // make sure you protect access to this socket by external means
+
+    $address 	= $RatingEngine['socketIP'];
+    $port 	    = $RatingEngine['socketPort'];
+    $cdr_source = $RatingEngine['CDRS_class'];
+} else {
     die('Please define RatingEngine[socketIP], RatingEngine[socketPort] and RatingEngine[CDRS_class] in global.inc');
 }
 
