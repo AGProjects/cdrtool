@@ -16,11 +16,11 @@ cdrtool (5.1.0) unstable; urgency=low
   * application field is now mandatory when importing rates CSV files
   * Added SIP Thor enable per data-source
   * Use separate name spaces for memcache keys per data source
-  * Allow quata for multiple data-sources
-  * Must add in global.inc "AccountsDBClass"    => "DB_ser" for 
+  * Allow quota checks for multiple OpenSER data-sources
+  * Must add in global.inc "AccountsDBClass"    => "DB_ser" for
     each SER data-source, there is no default anymore
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 12 Apr 2007 18:33:22 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 12 Apr 2007 18:42:00 +0200
 
 cdrtool (5.0.10) unstable; urgency=low
 

@@ -2595,7 +2595,7 @@ class SERQuota {
         if (is_object($this->CDRS->mc)) {
 
             $this->CDRS->mc->set($this->mc_key_accounts,$mc_value,MEMCACHE_COMPRESSED,3600);
-            $log=sprintf("Saved %d accounts in memcache key %s\n",count($this->Accounts),$this->mc_key_accounts);
+            $log=sprintf("Saved %d accounts in memcache key %s (%.02f KB)\n",count($this->Accounts),$this->mc_key_accounts,strlen($mc_value)/1024/1024);
             print $log;
             syslog(LOG_NOTICE,$log);
 
@@ -2621,7 +2621,7 @@ class SERQuota {
                 }
             }
 
-            $log=sprintf("Load %d accounts from memcache key %s\n",count($_accounts),$this->mc_key_accounts);
+            $log=sprintf("Load %d accounts from memcache key %s (%.02f MB)\n",count($_accounts),$this->mc_key_accounts,strlen($mc_value)/1024/1024);
             //print $log;
             syslog(LOG_NOTICE,$log);
 
