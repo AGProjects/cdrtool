@@ -22,7 +22,6 @@ class CDRS {
     var $natAccessCode       = "0";
     var $RatingEngineSocket  = false;
     var $maxrowsperpage      = 25;
-    var $memcache_keyprefix  = "mu:";
     var $status              = array();
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
@@ -142,8 +141,6 @@ class CDRS {
     
         if ($this->DATASOURCES[$cdr_source]['AccountsDBClass']) {
             $_AccountsDBClass    = $this->DATASOURCES[$cdr_source]['AccountsDBClass'];
-        } else {
-            $_AccountsDBClass    = 'DB_ser';
         }
     
         if ($this->DATASOURCES[$cdr_source]['BillingIdField']) {
@@ -298,6 +295,12 @@ class CDRS {
     
         $this->getCDRtables();
 
+        // Init memcache key names to be unique per datasource
+        $this->mc_key_init       = $this->cdr_source.':quotaCheckInit';
+        $this->mc_key_domains    = $this->cdr_source.':domains';
+        $this->mc_key_accounts   = $this->cdr_source.':accounts';
+    	$this->mc_key_mu_prefix  = 'mu:'.$this->cdr_source.":";
+
         $this->initOK=1;
     }
 
@@ -428,11 +431,11 @@ class CDRS {
 
             if (is_object($this->mc)) {
             	if ($this->mc->set('destinations',$mc_value_destinations,0,0)) {
-                	$log=sprintf("Saved %d destinations in memcache",$this->destinationsCount);
+                	$log=sprintf("Saved %d destinations in memcache key destinations",$this->destinationsCount);
             		syslog(LOG_NOTICE, $log);
                 }
             	if ($this->mc->set('SipDestinations',$mc_value_SipDestinations,0,0)) {
-                	$log=sprintf("Saved %d SIP destinations in memcache",$this->sipDestinationsCount);
+                	$log=sprintf("Saved %d SIP destinations in memcache key SipDestinations",$this->sipDestinationsCount);
             		syslog(LOG_NOTICE, $log);
                 }
             }
@@ -746,8 +749,8 @@ class CDRS {
         if ($this->CDRdb->query($query)) {
             $c=$this->CDRdb->affected_rows();
             if ($c) {
-            	if (is_object($this->mc)) $this->mc->delete('quotaCheckInit');
-                $query=sprintf("delete from memcache where `key`= 'quotaCheckInit'");
+            	if (is_object($this->mc)) $this->mc->delete($this->mc_key_init);
+                $query=sprintf("delete from memcache where `key`= '%s'",$this->mc_key_init);
 	            dprint($query);
             	$this->cdrtool->query($query);
             }
@@ -1493,7 +1496,7 @@ class CDRS {
         // retuns array with usage information saved with cacheMonthlyUsage
         $_usage=array();
 
-        $mc_key=sprintf("%s%s",$this->memcache_keyprefix,$account);
+        $mc_key=sprintf("%s%s",$this->mc_key_mu_prefix,$account);
 
         if (is_object($this->mc)) {
             // use memcache server
@@ -1532,7 +1535,7 @@ class CDRS {
             $accounts[$_key]['usage']['traffic']
             );
 
-            $mc_key=sprintf("%s%s",$this->memcache_keyprefix,trim($_key));
+            $mc_key=sprintf("%s%s",$this->mc_key_mu_prefix,trim($_key));
 
         	if (is_object($this->mc)) {
                 // use memcache server

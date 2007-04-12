@@ -11,12 +11,18 @@
 # - Add this script to cron to run every 5 minutes
 # - Notifications are sent once to subscribers
 #$verbose=1;
+set_time_limit(0);
+
+$path=dirname(realpath($_SERVER['PHP_SELF']));
+include($path."/../../global.inc");
+include($path."/../../cdrlib.phtml");
+
+define_syslog_variables();
+openlog("CDRTool", LOG_PID, LOG_LOCAL0);
 
 $b=time();
-define_syslog_variables();
-openlog("CDRTool Quota", LOG_PID, LOG_LOCAL0);
 
-$lockFile="/var/lock/CDRTool_QuotaCheck.lock";
+$lockFile=sprintf("/var/lock/CDRTool_QuotaCheck.lock",$cdr_source);
 
 $f=fopen($lockFile,"w");
 if (flock($f, LOCK_EX + LOCK_NB, $w)) {
@@ -31,20 +37,24 @@ if (flock($f, LOCK_EX + LOCK_NB, $w)) {
     exit(1);
 }
 
-$path=dirname(realpath($_SERVER['PHP_SELF']));
-include($path."/../../global.inc");
-include($path."/../../cdrlib.phtml");
+while (list($k,$v) = each($DATASOURCES)) {
+    if (strlen($v["UserQuotaClass"])) {
 
-$cdr_source     = "ser_radius";
-$CDR_class      = $DATASOURCES[$cdr_source]["class"];
-$CDRS           = new $CDR_class($cdr_source);
+        unset($CDRS);
+        $class_name=$v["class"];
+        $CDRS = new $class_name($k);
 
-$SERQuota_class = $DATASOURCES[$cdr_source]["UserQuotaClass"];
+        $SERQuota_class = $v["UserQuotaClass"];
 
-if (!$SERQuota_class) $SERQuota_class="SERQuota";
-$Quota = new $SERQuota_class($CDRS);
+		$log=sprintf("Checking user quotas for data source %s\n",$v['name']);
+        syslog(LOG_NOTICE,$log);
+        //print $log;
 
-$Quota->checkQuota($DATASOURCES[$cdr_source]['UserQuotaNotify']);
+        $Quota = new $SERQuota_class($CDRS);
+        $Quota->mc_key_accounts = $k.':accounts';
+        $Quota->checkQuota($v['UserQuotaNotify']);
+	}
+}
 
 function deleteQuotaCheckLockfile($lockFile) {
 	if (!unlink($lockFile)) {
