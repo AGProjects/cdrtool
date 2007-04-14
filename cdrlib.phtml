@@ -16,13 +16,16 @@ if (is_readable('/etc/default/cdrtool')) {
 
 class CDRS {
 
-    var $db_class            = "DB_cdrtool";
-    var $CDR_class           = "CDR";
-    var $intAccessCode       = "00";
-    var $natAccessCode       = "0";
+    var $CDR_class           = 'CDR';
+    var $intAccessCode       = '00';
+    var $natAccessCode       = '0';
     var $RatingEngineSocket  = false;
-    var $maxrowsperpage      = 25;
+    var $maxrowsperpage      = 15;
     var $status              = array();
+    var $normalizedField     = 'Normalized';
+    var $DestinationIdField  = 'DestinationId';
+    var $BillingIdField      = 'UserName';
+    var $sipTraceDataSource  = 'sip_trace';
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
@@ -67,25 +70,26 @@ class CDRS {
         global $memcache_server;
         global $defaults;
 
-        $this->cdrtool  = new DB_CDRTool();
-
-        $PHP_SELF=$_SERVER["PHP_SELF"];
-
-        if (!$cdr_source || !$DATASOURCES[$cdr_source]) {
-            dprint("Fatal error instantiating CDRS class: cdr_source not defined");
+        if (!$cdr_source || !$DATASOURCES[$cdr_source] || !$DATASOURCES[$cdr_source]['db_class']) {
+            $log="Error instantiating CDRS class: cdr_source or database not defined\n";
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return 0;
         }
 
-        #dprint_r($DATASOURCES[$cdr_source]);
-
+        $this->cdrtool  	   = new DB_CDRTool();
         $this->cdr_source      = $cdr_source;
         $this->CDRTool         = $CDRTool;
         $this->DATASOURCES     = $DATASOURCES;
 
-        if (!$memcache_server && $defaults['START_MEMCACHE']) {
+        $this->table           = $this->DATASOURCES[$this->cdr_source]['table'];
 
+        if (!$memcache_server && $defaults['START_MEMCACHE']) {
+            // for debian systems read the settings from /etc/default/cdrtool
             if (preg_match("/yes/i",$defaults['START_MEMCACHE'])) {
             	$memcache_server=$defaults['MEMCACHE_IP'].":".$defaults['MEMCACHE_PORT'];
+            } else {
+                unset($memcache_server);
             }
         }
 
@@ -99,78 +103,46 @@ class CDRS {
                 if ($mc_stats=$this->mc->getStats()) {
                 	$this->mc_usage=$mc_stats['bytes']/$mc_stats['limit_maxbytes']*100;
                 }
-                $log=sprintf ("Connected to memcache %s:%d version %s, usage %.0f%s\n",$memcache_host,$memcache_port, $this->mc->getVersion(),$this->mc_usage,"%");
-
+                $log=sprintf ("Connected to memcache %s:%d version %s, usage %.0f%s, %d stored keys\n",$memcache_host,$memcache_port, $this->mc->getVersion(),$this->mc_usage,"%",$mc_stats['curr_items']);
             } else {
                 $log=sprintf ("Connection to memcache %s:%d failed\n",$memcache_host,$memcache_port);
             }
+
             syslog(LOG_NOTICE, $log);
         	dprint($log);
         }
 
+        // init names of CDR fields
+        foreach (array_keys($this->CDRFields) as $field) {
+            $mysqlField=$this->CDRFields[$field];
+            $_field=$field."Field";
+            $this->$_field=$mysqlField;
+        }
+
         if ($this->DATASOURCES[$this->cdr_source]['rating'] && $ratingEnabled) {
+            //dprint ("CDRS will have rating enabled");
         	$this->ratingEnabled   = 1;
+            $this->rating  = $this->DATASOURCES[$this->cdr_source]['rating'];
+            if ($this->DATASOURCES[$this->cdr_source]['showRate'])   $this->showRate    = $this->DATASOURCES[$this->cdr_source]['showRate'];
+            if ($this->DATASOURCES[$this->cdr_source]['rateField'])  $this->rateField   = $this->DATASOURCES[$this->cdr_source]['rateField'];
+            if ($this->DATASOURCES[$this->cdr_source]['priceField']) $this->rateField   = $this->DATASOURCES[$this->cdr_source]['priceField'];
         }
 
-        $_dbClass            = $this->DATASOURCES[$cdr_source]['db_class'];
-        $_Table              = $this->DATASOURCES[$cdr_source]['table'];
-
-		if ($this->DATASOURCES[$cdr_source]['DestinationIdField']) {
-        	$_DestinationIdField = $this->DATASOURCES[$cdr_source]['DestinationIdField'];
-        } else {
-        	$_DestinationIdField='DestinationId';
-        }
-
-        if ($this->DATASOURCES[$cdr_source]['normalizedField']) {
-        	$_normalizedField    = $this->DATASOURCES[$cdr_source]['normalizedField'];
-        } else {
-        	$_normalizedField='Normalized';
-        }
-
-        if ($this->DATASOURCES[$cdr_source]['intAccessCode']) {
-            $_intAccessCode      = $this->DATASOURCES[$cdr_source]['intAccessCode'];
-        } else {
-            $_intAccessCode      = '00';
-        }
-    
-        if ($this->DATASOURCES[$cdr_source]['natAccessCode']) {
-            $_natAccessCode      = $this->DATASOURCES[$cdr_source]['natAccessCode'];
-        } else {
-            $_natAccessCode      = '0';
-        }
-    
-        if ($this->DATASOURCES[$cdr_source]['AccountsDBClass']) {
-            $_AccountsDBClass    = $this->DATASOURCES[$cdr_source]['AccountsDBClass'];
-        }
-    
-        if ($this->DATASOURCES[$cdr_source]['BillingIdField']) {
-            $_BillingIdField    = $this->DATASOURCES[$cdr_source]['BillingIdField'];
-        } else {
-            $_BillingIdField    = 'UserName';
-        }
-
-        if ($this->DATASOURCES[$this->cdr_source]['sipTraceDataSource']) {
-            $_sipTraceDataSource=$this->DATASOURCES[$this->cdr_source]['sipTraceDataSource'];
-        } else {
-            $_sipTraceDataSource='sip_trace';
-        }
-
-        if ($this->DATASOURCES[$cdr_source]['domain_table']) {
-            $this->domain_table = $this->DATASOURCES[$cdr_source]['domain_table'];
-        }
-
-        if ($this->DATASOURCES[$cdr_source]['enableThor']) {
-            $this->enableThor      = $this->DATASOURCES[$cdr_source]['enableThor'];
-        }
-
-        // connect to the CDR database
-        unset($this->db_class);
+        // connect to the CDR database(s)
+        $_dbClass            = $this->DATASOURCES[$this->cdr_source]['db_class'];
 
         if (is_array($_dbClass)) {
-            if ($_dbClass[0]) $this->primary_database   = $_dbClass[0];
-            if ($_dbClass[1]) $this->secondary_database = $_dbClass[1];
+            if (class_exists($_dbClass[0])) $this->primary_database   = $_dbClass[0];
+            if (class_exists($_dbClass[1])) $this->secondary_database = $_dbClass[1];
         } else {
             $this->primary_database = $_dbClass;
+        }
+
+		if(!class_exists($this->primary_database)) {
+            $log="Error instantiating db class: $this->primary_database\n";
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return 0;
         }
 
 		$this->CDRdb    = new $this->primary_database;
@@ -179,121 +151,81 @@ class CDRS {
             if ($this->secondary_database) {
 				$this->CDRdb    = new $this->secondary_database;
 		        if (!$this->CDRdb->query('SELECT 1')) {
-                    $log="Failed to connect to any CDR database\n";
+                    $log="Error: failed to connect to the CDR database\n";
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return 0;
                 } else {
         			$this->CDRdb1         = new $this->secondary_database;
-            		$this->CDRdb_readonly = new $this->secondary_database;
 		            $this->db_class       = $this->secondary_database;
                 }
             }
         } else {
         	$this->CDRdb1         = new $this->primary_database;
-            $this->CDRdb_readonly = new $this->primary_database;
             $this->db_class       = $this->primary_database;
         }
 
-        if (strlen($_intAccessCode))  $this->intAccessCode  = $_intAccessCode;
-        if (strlen($_natAccessCode))  $this->natAccessCode  = $_natAccessCode;
-        if ($_sipTraceDataSource)  $this->sipTraceDataSource  = $_sipTraceDataSource;
+		if ($this->DATASOURCES[$this->cdr_source]['DestinationIdField']) {
+        	$this->DestinationIdField = $this->DATASOURCES[$this->cdr_source]['DestinationIdField'];
+        }
 
-        if ($_UserQuotaTable) $this->UserQuotaTable = $_UserQuotaTable;
+        if ($this->DATASOURCES[$this->cdr_source]['normalizedField']) {
+        	$this->normalizedField=$this->DATASOURCES[$this->cdr_source]['normalizedField'];
+        }
 
-        if ($_AccountsDBClass) {
-            $this->AccountsDBClass  = $_AccountsDBClass;
+        if (strlen($this->DATASOURCES[$this->cdr_source]['intAccessCode'])) {
+        	$this->intAccessCode=$this->DATASOURCES[$this->cdr_source]['intAccessCode'];
+        }
+    
+        if (strlen($this->DATASOURCES[$this->cdr_source]['natAccessCode'])) {
+        	$this->natAccessCode  = $this->DATASOURCES[$this->cdr_source]['natAccessCode'];
+        }
+    
+        if ($this->DATASOURCES[$this->cdr_source]['AccountsDBClass'] && class_exists($this->AccountsDBClass)) {
             $this->AccountsDB       = new $this->AccountsDBClass;
+            $this->AccountsDBClass  = $this->DATASOURCES[$this->cdr_source]['AccountsDBClass'];
+        }
+    
+        if ($this->DATASOURCES[$this->cdr_source]['BillingIdField']) {
+            $this->BillingIdField  = $this->DATASOURCES[$this->cdr_source]['BillingIdField'];
         }
 
-        if ($_Table) {
-            dprint ("CDRS are stored in table $_Table ");
-            $this->table=$_Table;
+        if ($this->DATASOURCES[$this->cdr_source]['sipTraceDataSource']) {
+            $this->sipTraceDataSource=$this->DATASOURCES[$this->cdr_source]['sipTraceDataSource'];
         }
 
-        $this->LoadDestinations();
-        $this->LoadDomains();
-        //$this->LoadAccounts();
-
-        if ($this->ratingEnabled) {
-            //dprint ("CDRS will have rating enabled");
-
-            $_showRate 	   = $this->DATASOURCES[$cdr_source]['showRate'];
-            $_rateField    = $this->DATASOURCES[$cdr_source]['rateField'];
-            $_priceField   = $this->DATASOURCES[$cdr_source]['priceField'];
-
-            $this->rating = $this->DATASOURCES[$cdr_source]['rating'];
-            if ($_rateField) {
-                //dprint ("CDRS will have rate information stored in field $_rateField");
-                $this->rateField=$_rateField;
-            }
-
-            if ($_priceField) {
-                //dprint ("CDRS will have price stored in field $_priceField");
-                $this->priceField=$_priceField;
-            }
-
-            if ($_showRate) {
-                //dprint ("CDRS will be showing rating information");
-                $this->showRate=$_showRate;
-            }
+        if ($this->DATASOURCES[$this->cdr_source]['domain_table']) {
+            $this->domain_table = $this->DATASOURCES[$this->cdr_source]['domain_table'];
         }
 
-        if ($_DestinationIdField) {
-            //dprint ("CDRS will have DestinationId stored in field $_DestinationIdField");
-            $this->DestinationIdField=$_DestinationIdField;
+        if ($this->DATASOURCES[$this->cdr_source]['enableThor']) {
+            $this->enableThor      = $this->DATASOURCES[$this->cdr_source]['enableThor'];
         }
 
-        if ($_normalizedField) {
-            //dprint ("CDRS will be marked as normalized in field $_normalizedField");
-            $this->normalizedField=$_normalizedField;
-        }
+        if (is_array($this->CDRTool['normalize']['CS_CODES'])) $this->CS_CODES=array_keys($this->CDRTool['normalize']['CS_CODES']);
 
-        if ($_BillingIdField) $this->BillingIdField = $_BillingIdField;
+        $this->missed_calls      = $this->DATASOURCES[$this->cdr_source]['missed_calls'];
+        $this->traceInURL	     = $this->DATASOURCES[$this->cdr_source]['traceInURL'];
+        $this->traceOutURL	     = $this->DATASOURCES[$this->cdr_source]['traceOutURL'];
+        $this->protocolTraceURL  = $this->DATASOURCES[$this->cdr_source]['protocolTraceURL'];
 
-        $this->missed_calls      = $this->DATASOURCES[$cdr_source]['missed_calls'];
-        $this->traceInURL	 = $this->DATASOURCES[$cdr_source]['traceInURL'];
-        $this->traceOutURL	 = $this->DATASOURCES[$cdr_source]['traceOutURL'];
-        $this->missedCallsURL    = $this->DATASOURCES[$cdr_source]['missedCallsURL'];
-        $this->protocolTraceURL  = $this->DATASOURCES[$cdr_source]['protocolTraceURL'];
-
-        $spath=explode("/",$PHP_SELF);
-        $last=count($spath)-1;
+        $spath = explode("/",$_SERVER["PHP_SELF"]);
+        $last  = count($spath)-1;
         $this->scriptFile=$spath[$last];
-
-        $this->LoadDisconnectCodes();
-
-        $maxrowsperpage = $_REQUEST["maxrowsperpage"];
-        $next           = $_REQUEST["next"];
-        $export         = $_REQUEST["export"];
-        $trace          = $_REQUEST["trace"];
 
         if ($export) {
             $this->maxrowsperpage=10000000;
         } else {
-            if ($maxrowsperpage) {
-                $this->maxrowsperpage = $maxrowsperpage;
+            if ($_REQUEST["maxrowsperpage"]) {
+                $this->maxrowsperpage = $_REQUEST["maxrowsperpage"];
             } else {
                 $this->maxrowsperpage = "25";
             }
         }
 
-        $this->export         = $export;
-        $this->trace          = $trace;
-        $this->next           = $next;
-        $this->cdr_source     = $cdr_source;
-
-        foreach (array_keys($this->CDRFields) as $field) {
-            $mysqlField=$this->CDRFields[$field];
-            $_field=$field."Field";
-            $this->$_field=$mysqlField;
-        }
-
-        if (is_array($this->CDRTool['normalize']['CS_CODES'])) {
-            $this->CS_CODES=array_keys($this->CDRTool['normalize']['CS_CODES']);
-        }
-    
-        $this->getCDRtables();
+        $this->next           = $_REQUEST["next"];
+        $this->export         = $_REQUEST["export"];
+        $this->trace          = $_REQUEST["trace"];
 
         // Init memcache key names to be unique per datasource
         $this->mc_key_init       = $this->cdr_source.':quotaCheckInit';
@@ -301,10 +233,14 @@ class CDRS {
         $this->mc_key_accounts   = $this->cdr_source.':accounts';
     	$this->mc_key_mu_prefix  = 'mu:'.$this->cdr_source.":";
 
+        $this->LoadDisconnectCodes();
+        $this->LoadDestinations();
+        $this->LoadDomains();
+        $this->getCDRtables();
+
         $this->initOK=1;
     }
 
-    // dummy functions used by SER
     function LoadDomains() {
     }
 
@@ -823,7 +759,7 @@ class CDRS {
             return 0;
         }
 
-        $lockName=sprintf("%s_%s",$this->cdr_source,$table);
+        $lockName=sprintf("%s:%s",$this->cdr_source,$table);
 
         if (!getNormalizeLock($lockName)) {
             $log=sprintf("Normalization already in progress");
