@@ -24,16 +24,18 @@ $b=time();
 
 $lockFile=sprintf("/var/lock/CDRTool_QuotaCheck.lock",$cdr_source);
 
+$abort_text="Another check is in progress. Try again later.\n";
+
 $f=fopen($lockFile,"w");
 if (flock($f, LOCK_EX + LOCK_NB, $w)) {
     if ($w) {
-        print "Another CDRTool quota check is in progress. Aborting.\n";
-        syslog(LOG_NOTICE,"Another CDRTool quota check is in progress. Aborting.");
+        print $abort_text;
+        syslog(LOG_NOTICE,$abort_text);
         exit(2);
     }
 } else {
-    print "Another CDRTool quota check is in progress. Aborting.\n";
-    syslog(LOG_NOTICE,"Another CDRTool quota check is in progress. Aborting.");
+    print $abort_text;
+    syslog(LOG_NOTICE,$abort_text);
     exit(1);
 }
 
@@ -53,6 +55,9 @@ while (list($k,$v) = each($DATASOURCES)) {
         $Quota = new $SERQuota_class($CDRS);
         $Quota->mc_key_accounts = $k.':accounts';
         $Quota->checkQuota($v['UserQuotaNotify']);
+        $d=time()-$b;
+        $log=sprintf("Runtime: %d s",$d);
+        syslog(LOG_NOTICE,$log);
 	}
 }
 
@@ -63,10 +68,3 @@ function deleteQuotaCheckLockfile($lockFile) {
 	}
 }
 
-$e=time();
-$d=$e-$b;
-if ($d > 5) {
-	$log=sprintf("Runtime: %d s",$d);
-	syslog(LOG_NOTICE,$log);
-}
-?>
