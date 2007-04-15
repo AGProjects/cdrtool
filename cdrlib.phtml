@@ -95,7 +95,7 @@ class CDRS {
                 if ($mc_stats=$this->mc->getStats()) {
                 	$this->mc_usage=$mc_stats['bytes']/$mc_stats['limit_maxbytes']*100;
                 }
-                $log=sprintf ("Connected to memcache %s:%d version %s, usage %.0f%s, %d stored keys\n",$memcache_host,$memcache_port, $this->mc->getVersion(),$this->mc_usage,"%",$mc_stats['curr_items']);
+                $log=sprintf ("Connected to memcache %s:%d ver %s, memory: %.02f/%.02f MB, usage: %.0f%s, keys: %s\n",$memcache_host,$memcache_port, $this->mc->getVersion(),$mc_stats['bytes']/1024/1024,$mc_stats['limit_maxbytes']/1024/1024,$this->mc_usage,"%",$mc_stats['curr_items']);
             } else {
                 $log=sprintf ("Connection to memcache %s:%d failed\n",$memcache_host,$memcache_port);
             }
@@ -172,10 +172,13 @@ class CDRS {
         if (strlen($this->DATASOURCES[$this->cdr_source]['natAccessCode'])) {
         	$this->natAccessCode  = $this->DATASOURCES[$this->cdr_source]['natAccessCode'];
         }
-    
-        if ($this->DATASOURCES[$this->cdr_source]['AccountsDBClass'] && class_exists($this->AccountsDBClass)) {
-            $this->AccountsDB       = new $this->AccountsDBClass;
+
+        if ($this->DATASOURCES[$this->cdr_source]['AccountsDBClass'] && class_exists($this->DATASOURCES[$this->cdr_source]['AccountsDBClass'])) {
+            $this->AccountsDB       = new $this->DATASOURCES[$this->cdr_source]['AccountsDBClass'];
             $this->AccountsDBClass  = $this->DATASOURCES[$this->cdr_source]['AccountsDBClass'];
+        } else if (class_exists('DB_ser')) {
+            $this->AccountsDB       = new DB_ser();
+            $this->AccountsDBClass  = 'DB_ser';
         }
     
         if ($this->DATASOURCES[$this->cdr_source]['BillingIdField']) {

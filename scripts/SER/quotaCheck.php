@@ -18,7 +18,7 @@ include($path."/../../global.inc");
 include($path."/../../cdrlib.phtml");
 
 define_syslog_variables();
-openlog("CDRTool", LOG_PID, LOG_LOCAL0);
+openlog("CDRTool quota", LOG_PID, LOG_LOCAL0);
 
 $b=time();
 
@@ -65,8 +65,8 @@ function deleteQuotaCheckLockfile($lockFile) {
 
 $e=time();
 $d=$e-$b;
-if ($d > 30) {
-	$log=sprintf("QuotaCheck runtime %d s\n",$d);
+if ($d > 5) {
+	$log=sprintf("Runtime: %d s",$d);
 	syslog(LOG_NOTICE,$log);
 }
 ?>

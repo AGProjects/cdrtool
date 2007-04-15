@@ -15,17 +15,23 @@ if (!preg_match("/^\d{1,2}$/",$argv[1])) {
     return 0;
 }
 
-$cdr_source     = "ser_radius";
-$CDR_class      = $DATASOURCES[$cdr_source]["class"];
-$CDRS           = new $CDR_class($cdr_source);
+while (list($k,$v) = each($DATASOURCES)) {
+    if (strlen($v["UserQuotaClass"])) {
 
-$SERQuota_class = $DATASOURCES[$cdr_source]["UserQuotaClass"];
+        unset($CDRS);
+        $class_name=$v["class"];
+        $CDRS = new $class_name($k);
 
-if (!$SERQuota_class) $SERQuota_class="SERQuota";
+        $SERQuota_class = $v["UserQuotaClass"];
 
-$Quota = new $SERQuota_class($CDRS);
+		$log=sprintf("Checking user quotas for data source %s\n",$v['name']);
+        syslog(LOG_NOTICE,$log);
+        //print $log;
 
-
-$Quota->showAccountsWithQuota($argv[1]);
+        $Quota = new $SERQuota_class($CDRS);
+        $Quota->mc_key_accounts = $k.':accounts';
+		$Quota->showAccountsWithQuota($argv[1]);
+	}
+}
 
 ?>

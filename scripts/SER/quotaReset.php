@@ -10,14 +10,22 @@ $path=dirname(realpath($_SERVER['PHP_SELF']));
 include($path."/../../global.inc");
 include($path."/../../cdrlib.phtml");
 
-$cdr_source     = "ser_radius";
-$CDR_class      = $DATASOURCES[$cdr_source]["class"];
-$CDRS           = new $CDR_class($cdr_source);
+while (list($k,$v) = each($DATASOURCES)) {
+    if (strlen($v["UserQuotaClass"])) {
 
-$SERQuota_class = $DATASOURCES[$cdr_source]["UserQuotaClass"];
-if (!$SERQuota_class) $SERQuota_class="SERQuota";
+        unset($CDRS);
+        $class_name=$v["class"];
+        $CDRS = new $class_name($k);
 
-$Quota = new $SERQuota_class($CDRS);
-$Quota->deleteQuotaInitFlag();
+        $SERQuota_class = $v["UserQuotaClass"];
 
+		$log=sprintf("Reset user quotas for data source %s\n",$v['name']);
+        syslog(LOG_NOTICE,$log);
+        //print $log;
+
+        $Quota = new $SERQuota_class($CDRS);
+        $Quota->mc_key_accounts = $k.':accounts';
+		$Quota->deleteQuotaInitFlag();
+	}
+}
 ?>
