@@ -2212,6 +2212,8 @@ class RatingTables {
         	syslog(LOG_NOTICE, "Loaded $loaded[$_load] $_load");
         }
 
+        $log=sprintf("Memory usage: %0.2f MB",memory_get_usage()/1024/1024);
+        syslog(LOG_NOTICE, $log);
         return $loaded;
     }
 
@@ -3963,11 +3965,6 @@ class RatingEngine {
                 memory_get_usage()/1024/1024);
                 syslog(LOG_NOTICE, $log);
 
-                $log=sprintf ("Load since start: %s sessions @ %s cps",
-                $this->statistics['total']['calls'],
-                sprintf("%.2f",$this->statistics['total']['cps']));
-                syslog(LOG_NOTICE, $log);
-
 	            $_intervalHour = $_now  - $this->lastHourStatisticsTime;
 
 	            if ( $_now > $this->lastHourStatisticsTime + 3600 && $_intervalHour > 0) {
@@ -3982,6 +3979,11 @@ class RatingEngine {
                     $log=sprintf ("Load last hour: %s calls @ %s cps",
                     $this->statistics['lastHour']['calls'],
                     sprintf("%.2f",$this->statistics['lastHour']['cps']));
+                    syslog(LOG_NOTICE, $log);
+
+                    $log=sprintf ("Load since start: %s sessions @ %s cps",
+                    $this->statistics['total']['calls'],
+                    sprintf("%.2f",$this->statistics['total']['cps']));
                     syslog(LOG_NOTICE, $log);
 
                 }

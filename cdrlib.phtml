@@ -95,7 +95,7 @@ class CDRS {
                 if ($mc_stats=$this->mc->getStats()) {
                 	$this->mc_usage=$mc_stats['bytes']/$mc_stats['limit_maxbytes']*100;
                 }
-                $log=sprintf ("Connected to memcache %s:%d ver %s, usage: %.02f/%.02f MB (%.0f%s), keys: %s\n",$memcache_host,$memcache_port, $this->mc->getVersion(),$mc_stats['bytes']/1024/1024,$mc_stats['limit_maxbytes']/1024/1024,$this->mc_usage,"%",$mc_stats['curr_items']);
+                $log=sprintf ("Connected to memcache %s:%d, usage: %.02f/%.02f MB (%.0f%s), keys: %s\n",$memcache_host,$memcache_port,$mc_stats['bytes']/1024/1024,$mc_stats['limit_maxbytes']/1024/1024,$this->mc_usage,"%",$mc_stats['curr_items']);
             } else {
                 $log=sprintf ("Connection to memcache %s:%d failed\n",$memcache_host,$memcache_port);
             }
@@ -1996,7 +1996,7 @@ function getNormalizeLock($lockname='') {
        return 0;
    }
 
-   $log=sprintf("Lock %s for normalization",$lockname);
+   $log=sprintf("Lock %s",$lockname);
    syslog(LOG_NOTICE, $log);
 
    register_shutdown_function("unLockNormalization",$locker,$lockname);
