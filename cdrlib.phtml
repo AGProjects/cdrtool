@@ -4,16 +4,6 @@ if (!$maxrowsperpage) $maxrowsperpage=15;
 $tz=$CDRTool['provider']['timezone'];
 putenv("TZ=$tz");
 
-if (is_readable('/etc/default/cdrtool')) {
-    $defaults=array();
-    $defaultContentLines=explode("\n",file_get_contents('/etc/default/cdrtool'));
-
-    foreach ($defaultContentLines as $_line) {
-        list($defaults_key, $defaults_value)=explode("=",$_line);
-        if (strlen($defaults_value)) $defaults[trim($defaults_key)]=trim($defaults_value);
-    }
-}
-
 class CDRS {
 
     var $CDR_class           = 'CDR';
@@ -26,6 +16,7 @@ class CDRS {
     var $DestinationIdField  = 'DestinationId';
     var $BillingIdField      = 'UserName';
     var $sipTraceDataSource  = 'sip_trace';
+    var $defaults            = array();
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
@@ -66,16 +57,16 @@ class CDRS {
 
         global $CDRTool;
         global $DATASOURCES;
-        global $ratingEnabled;
         global $memcache_server;
-        global $defaults;
 
-        if (!$cdr_source || !$DATASOURCES[$cdr_source] || !$DATASOURCES[$cdr_source]['db_class']) {
-            $log="Error instantiating CDRS class: cdr_source or database not defined\n";
+        if (!$DATASOURCES[$cdr_source] || !$DATASOURCES[$cdr_source]['db_class']) {
+            $log="Error: cdr_source or database not defined\n";
             print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
         }
+
+		$this->initDefaults();
 
         $this->cdrtool  	   = new DB_CDRTool();
         $this->cdr_source      = $cdr_source;
@@ -84,10 +75,11 @@ class CDRS {
 
         $this->table           = $this->DATASOURCES[$this->cdr_source]['table'];
 
-        if (!$memcache_server && $defaults['START_MEMCACHE']) {
+
+        if (!$memcache_server && $this->defaults['START_MEMCACHE']) {
             // for debian systems read the settings from /etc/default/cdrtool
-            if (preg_match("/yes/i",$defaults['START_MEMCACHE'])) {
-            	$memcache_server=$defaults['MEMCACHE_IP'].":".$defaults['MEMCACHE_PORT'];
+            if (preg_match("/yes/i",$this->defaults['START_MEMCACHE'])) {
+            	$memcache_server=$this->defaults['MEMCACHE_IP'].":".$this->defaults['MEMCACHE_PORT'];
             } else {
                 unset($memcache_server);
             }
@@ -119,8 +111,7 @@ class CDRS {
             $this->$_field=$mysqlField;
         }
 
-        if ($this->DATASOURCES[$this->cdr_source]['rating'] && $ratingEnabled) {
-            //dprint ("CDRS will have rating enabled");
+        if ($this->DATASOURCES[$this->cdr_source]['rating']) {
         	$this->ratingEnabled   = 1;
             $this->rating  = $this->DATASOURCES[$this->cdr_source]['rating'];
             if ($this->DATASOURCES[$this->cdr_source]['showRate'])   $this->showRate    = $this->DATASOURCES[$this->cdr_source]['showRate'];
@@ -147,6 +138,7 @@ class CDRS {
 
 		$this->CDRdb    = new $this->primary_database;
 
+        // check db connectivity
         if (!$this->CDRdb->query('SELECT 1')) {
             if ($this->secondary_database) {
 				$this->CDRdb    = new $this->secondary_database;
@@ -239,6 +231,18 @@ class CDRS {
         $this->getCDRtables();
 
         $this->initOK=1;
+    }
+
+    function initDefaults() {
+        if (is_readable('/etc/default/cdrtool')) {
+            $defaultContentLines=explode("\n",file_get_contents('/etc/default/cdrtool'));
+        
+            foreach ($defaultContentLines as $_line) {
+                list($defaults_key, $defaults_value)=explode("=",$_line);
+                if (strlen($defaults_value)) $this->defaults[trim($defaults_key)]=trim($defaults_value);
+            }
+        }
+
     }
 
     function LoadDomains() {
@@ -871,9 +875,9 @@ class CDRS {
         }
 
         if ($this->status['cdr_to_normalize']>0) {
-	    	$e=time();
-    	    $d=$e-$b;
-            if ($d) syslog(LOG_NOTICE, "Normalization done in $d ");
+            $d=time()-$b;
+            $log=sprintf("Normalization done in %d s, memory usage: %0.2f MB",$d,memory_get_usage()/1024/1024);
+            syslog(LOG_NOTICE,$log );
     
             if ($this->RatingEngineSocket) {
                 fclose($this->RatingEngineSocket);

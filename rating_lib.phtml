@@ -1,8 +1,4 @@
 <?
-// if this file is loaded, check global var $ratingEnabled
-$ratingEnabled=1;
-require_once("SOAP/Client.php");
-
 class Rate {
     var $priceDenominator       = 10000; // allow sub cents
     var $priceDecimalDigits     = 4;     // web display
@@ -1193,7 +1189,11 @@ class RatingTables {
                 addslashes($connectCost)
                 );
                 //dprint($query);
-                $this->cdrtool->query($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
                 if ($this->cdrtool->affected_rows() >0) {
                     $inserted++;
                 } else {
@@ -1214,7 +1214,11 @@ class RatingTables {
                 addslashes($destination),
                 addslashes($application)
                 );
-                $this->cdrtool->query($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
                 if ($this->cdrtool->affected_rows() >0) {
                     $deleted++;
                 }
@@ -1234,7 +1238,11 @@ class RatingTables {
                 addslashes($subscriber),
                 addslashes($application)
                 );
-                $this->cdrtool->query($query);
+
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
 
                 if ($this->cdrtool->num_rows()) {
                     $query=sprintf("update billing_rates set
@@ -1262,7 +1270,11 @@ class RatingTables {
                     );
 
                     dprint($query);
-                    $this->cdrtool->query($query);
+                    if (!$this->cdrtool->query($query)) {
+                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                        return false;
+                    }
+
                     if ($this->cdrtool->affected_rows() >0) {
                         $updated++;
                     }
@@ -1302,7 +1314,10 @@ class RatingTables {
                     );
                     //dprint($query);
 
-                    $this->cdrtool->query($query);
+                    if (!$this->cdrtool->query($query)) {
+                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                        return false;
+                    }
                     if ($this->cdrtool->affected_rows() >0) {
                         $inserted++;
                     } else {
@@ -1403,7 +1418,11 @@ class RatingTables {
                 addslashes($endDate)
                 );
                 //dprint($query);
-                $this->cdrtool->query($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
                 if ($this->cdrtool->affected_rows() >0) {
                     $inserted++;
                 } else {
@@ -1426,7 +1445,11 @@ class RatingTables {
                 addslashes($startDate),
                 addslashes($endDate)
                 );
-                $this->cdrtool->query($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
                 if ($this->cdrtool->affected_rows() >0) {
                     $deleted++;
                 }
@@ -1448,7 +1471,11 @@ class RatingTables {
                 addslashes($startDate),
                 addslashes($endDate)
                 );
-                $this->cdrtool->query($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
 
                 if ($this->cdrtool->num_rows()) {
                     $query=sprintf("update billing_rates_history set
@@ -1478,7 +1505,11 @@ class RatingTables {
                     );
 
                     dprint($query);
-                    $this->cdrtool->query($query);
+                    if (!$this->cdrtool->query($query)) {
+                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                        return false;
+                    }
+
                     if ($this->cdrtool->affected_rows() >0) {
                         $updated++;
                     }
@@ -1522,9 +1553,13 @@ class RatingTables {
                     addslashes($startDate),
                     addslashes($endDate)
                     );
-                    //dprint($query);
+                    dprint($query);
 
-                    $this->cdrtool->query($query);
+                    if (!$this->cdrtool->query($query)) {
+                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                        return false;
+                    }
+
                     if ($this->cdrtool->affected_rows() >0) {
                         $inserted++;
                     } else {
@@ -1626,7 +1661,11 @@ class RatingTables {
 
                 );
 
-                $this->cdrtool->query($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
                 if ($this->cdrtool->affected_rows() >0) {
                     $inserted++;
                 } else {
@@ -1642,7 +1681,11 @@ class RatingTables {
                 addslashes($domain),
                 addslashes($subscriber)
                 );
-                $this->cdrtool->query($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
                 if ($this->cdrtool->affected_rows() >0) {
                     $deleted++;
                 }
@@ -1657,7 +1700,11 @@ class RatingTables {
                 addslashes($subscriber)
                 );
 
-                $this->cdrtool->query($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
                 if ($this->cdrtool->num_rows()) {
                     $query=sprintf("update billing_customers set
                     profile_name1     = '%s',
@@ -1685,7 +1732,11 @@ class RatingTables {
                     );
 
                     dprint($query);
-                    $this->cdrtool->query($query);
+                    if (!$this->cdrtool->query($query)) {
+                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                        return false;
+                    }
+
                     if ($this->cdrtool->affected_rows()) {
                         $updated++;
                     }
@@ -1730,7 +1781,11 @@ class RatingTables {
                     addslashes($country_code)
                     );
 
-                    $this->cdrtool->query($query);
+                    if (!$this->cdrtool->query($query)) {
+                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                        return false;
+                    }
+
                     if ($this->cdrtool->affected_rows()) {
                         $inserted++;
                     }
@@ -1793,8 +1848,12 @@ class RatingTables {
                 addslashes($dest_id),
                 addslashes($dest_name)
                 );
-                //dprint($query);
-                $this->cdrtool->query($query);
+                dprint($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
                 if ($this->cdrtool->affected_rows() >0) {
                     $inserted++;
                 } else {
@@ -1812,7 +1871,11 @@ class RatingTables {
                 addslashes($subscriber),
                 addslashes($dest_id)
                 );
-                $this->cdrtool->query($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
                 if ($this->cdrtool->affected_rows() >0) {
                     $deleted++;
                 }
@@ -1829,7 +1892,11 @@ class RatingTables {
                 addslashes($dest_id)
                 );
 
-                $this->cdrtool->query($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
                 if ($this->cdrtool->num_rows()) {
                     $query=sprintf("update destinations set
                     dest_name      = '%s'
@@ -1844,7 +1911,11 @@ class RatingTables {
                     addslashes($subscriber),
                     addslashes($dest_id)
                     );
-                    $this->cdrtool->query($query);
+                    if (!$this->cdrtool->query($query)) {
+                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                        return false;
+                    }
+
                     if ($this->cdrtool->affected_rows()) {
                         $updated++;
                     }
@@ -1869,8 +1940,12 @@ class RatingTables {
                     addslashes($dest_id),
                     addslashes($dest_name)
                     );
-                    //dprint($query);
-                    $this->cdrtool->query($query);
+                    dprint($query);
+                    if (!$this->cdrtool->query($query)) {
+                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                        return false;
+                    }
+
                     if ($this->cdrtool->affected_rows() >0) {
                         $inserted++;
                     } else {
@@ -1972,7 +2047,11 @@ class RatingTables {
                 addslashes($hour4)
                 );
                 dprint($query);
-                $this->cdrtool->query($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
                 if ($this->cdrtool->affected_rows() >0) {
                     $inserted++;
                 } else {
@@ -1991,7 +2070,11 @@ class RatingTables {
                 addslashes($subscriber)
                 );
                 dprint($query);
-                $this->cdrtool->query($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
                 if ($this->cdrtool->affected_rows() >0) {
                     $deleted++;
                 }
@@ -2009,7 +2092,11 @@ class RatingTables {
                 );
 
                 dprint($query);
-                $this->cdrtool->query($query);
+                if (!$this->cdrtool->query($query)) {
+                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    return false;
+                }
+
                 if ($this->cdrtool->num_rows()) {
                     $query=sprintf("update billing_profiles set
                     rate_name1     = '%s',
@@ -2038,7 +2125,11 @@ class RatingTables {
                     addslashes($subscriber)
                     );
                 	dprint($query);
-                    $this->cdrtool->query($query);
+                    if (!$this->cdrtool->query($query)) {
+                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                        return false;
+                    }
+
                     if ($this->cdrtool->affected_rows()) {
                         $updated++;
                     }
@@ -2085,7 +2176,11 @@ class RatingTables {
                     addslashes($hour4)
                     );
                     dprint($query);
-                    $this->cdrtool->query($query);
+                    if (!$this->cdrtool->query($query)) {
+                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                        return false;
+                    }
+
                     if ($this->cdrtool->affected_rows() >0) {
                         $inserted++;
                     } else {
@@ -2478,13 +2573,16 @@ class RatingTables {
         $watermark,$results,$filename,$dir
         );
         dprint($query);
-        $this->cdrtool->query($query);
+        if (!$this->cdrtool->query($query)) {
+            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+            return false;
+        }
     }
-
 }
 
 class SERQuota {
-	var $localDomains    = array();
+	var $localDomains  = array();
+	var $quotaGroup    = 'quota'; // group set if subscriber was blocked by quota
 
     function SERQuota(&$parent) {
 
@@ -2497,6 +2595,7 @@ class SERQuota {
         $this->cdr_source      = &$parent->cdr_source;
 
         if (!class_exists($this->AccountsDBClass)) {
+            print("Info: No database defined for SIP accounts.\n");
         	return 0;
         }
 
@@ -2708,10 +2807,16 @@ class SERQuota {
                                         );
         }
 
-        $query = "select * from grp where grp = 'quota'";
+        $query = sprintf("select * from grp where grp = '%s'",$this->quotaGroup);
 
         dprint($query);
-        $this->AccountsDB->query($query);
+
+        if (!$this->AccountsDB->query($query)) {
+            $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
 
         while($this->AccountsDB->next_record()) {
             $account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
@@ -2757,20 +2862,31 @@ class SERQuota {
             return 0;
         }
 
-        $query="select CONCAT(username,'@',domain) as account from grp where grp = 'quota'";
-        if ($this->AccountsDB->query($query)) {
-            while ($this->AccountsDB->next_record()) {
-                $blockedAccounts[]=$this->AccountsDB->f('account');
-            }
+        $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",$this->quotaGroup);
+
+        if (!$this->AccountsDB->query($query)) {
+            $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
+        while ($this->AccountsDB->next_record()) {
+            $blockedAccounts[]=$this->AccountsDB->f('account');
         }
 
 		if (count($blockedAccounts) >0 ) {
             $this->unBlockRemoteAccounts($blockedAccounts);
 
-            $query="delete from grp where grp = 'quota'";
+            $query=sprintf("delete from grp where grp = '%s'",$this->quotaGroup);
             dprint($query);
     
-            $this->AccountsDB->query($query);
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                print $log;
+                syslog(LOG_NOTICE,$log);
+                return false;
+            }
         }
 
 		if  (count($blockedAccounts)) {
@@ -2786,7 +2902,12 @@ class SERQuota {
 
         dprint($query);
 
-        $this->db->query($query);
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
 
         while($this->db->next_record()) {
 
@@ -2809,17 +2930,10 @@ class SERQuota {
 
         $j=0;
 
-        /*
-        $domains_sql="";
-		foreach ($this->localDomains as $_domain) {
-            if ($j>0) $domains_sql.=",";
-            $domains_sql.="'".addslashes($_domain)."'";
-            $j++;
-        }
-        */
-
-        $query=sprintf("select %s, count(*) as calls,
-        sum(AcctSessionTime) as duration, sum(Price) as cost,
+        $query=sprintf("select %s,
+        count(*) as calls,
+        sum(AcctSessionTime) as duration,
+        sum(Price) as cost,
         sum(AcctInputOctets + AcctOutputOctets)/2 as traffic
         from %s
         where AcctStartTime >= '%s'
@@ -2831,11 +2945,14 @@ class SERQuota {
         addslashes($this->BillingPartyIdField)
         );
 
-        //and Realm in (%s)
-        //$domains_sql,
-
         dprint($query);
-        $this->CDRdb->query($query);
+
+        if (!$this->CDRdb->query($query)) {
+            $log=sprintf ("Database error: %s (%s)",$this->CDRdb->Error,$this->CDRdb->Errno);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
 
         $rows=$this->CDRdb->num_rows();
 		$log=sprintf ("%d callers generated traffic in %s\n",$rows,Date("Y-m",time()));
@@ -2871,7 +2988,13 @@ class SERQuota {
 
 	        $query="select * from subscriber";
     	    dprint($query);
-        	$this->AccountsDB->query($query);
+
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                print $log;
+                syslog(LOG_NOTICE,$log);
+                return false;
+            }
 
             while($this->AccountsDB->next_record()) {
                 $_account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');;
@@ -2939,6 +3062,12 @@ class SERQuota {
             
                     dprint($log_query);
                     $this->db->query($log_query);
+
+                    if (!$this->db->query($query)) {
+                        $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                        print $log;
+                        syslog(LOG_NOTICE,$log);
+                    }
 
                     if ($this->blockAccount($account)) {
                     	if ($notify && $this->Accounts[$account]['email']) {
@@ -3124,26 +3253,38 @@ class SERQuota {
         $query=sprintf("delete from grp
         where username = '%s'
         and   domain   = '%s'
-        and   grp      = 'quota'",
+        and   grp      = '%s'",
         addslashes($username),
-        addslashes($domain)
+        addslashes($domain),
+        addslashes($this->quotaGroup)
         );
 
         dprint($query);
-        $this->AccountsDB->query($query);
+
+        if (!$this->AccountsDB->query($query)) {
+            $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
 
         $query=sprintf("insert into grp
         (username,domain,grp,last_modified)
         values
-        ('%s','%s','quota',NOW())",
+        ('%s','%s','%s',NOW())",
         addslashes($username),
-        addslashes($domain)
+        addslashes($domain),
+        addslashes($this->quotaGroup)
         );
 
         dprint($query);
 
-        $this->AccountsDB->query($query) ;
-
+        if (!$this->AccountsDB->query($query)) {
+            $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
         return 1;
     }
 
@@ -3240,7 +3381,12 @@ class SERQuota {
         } else {
             $query=sprintf("delete from memcache where `key`= '%s'",$this->mc_key_init);
             dprint($query);
-            if (!$this->db->query($query)) return 0;
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                print $log;
+                syslog(LOG_NOTICE,$log);
+                return false;
+            }
 
             $query=sprintf("insert into memcache (`key`,`value`) values ('%s','1')",$this->mc_key_init);
 
@@ -3302,40 +3448,40 @@ class SERQuota {
 		} else {
 		    $query=sprintf("select * from memcache where `key` = '%s'",$this->mc_key_init);
             dprint($query);
-            if ($this->db->query($query)) {
-                if (!$this->db->num_rows()) {
-    
-                    $this->Reset();
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                print $log;
+                syslog(LOG_NOTICE,$log);
+                return false;
+            }
 
-                    $this->deleteMonthlyUsageFromCache();
+            if (!$this->db->num_rows()) {
 
-                    $this->initMonthlyUsageFromDatabase();
+                $this->Reset();
 
-                    if ($this->CDRS->status['cached_keys']['saved_keys']) {
-                        $log=sprintf("Saved %d keys\n",$this->CDRS->status['cached_keys']['saved_keys']);
-                        print $log;
-                        syslog(LOG_NOTICE, $log);
-                    }
-            
-                    if ($this->CDRS->status['cached_keys']['failed_keys']) {
-                        $log=sprintf("Error: failed to save %d keys\n",$this->CDRS->status['cached_keys']['failed_keys']);
-                        print $log;
-                        syslog(LOG_NOTICE, $log);
-                    }
+                $this->deleteMonthlyUsageFromCache();
 
-                    if ($this->saveQuotaInitFlag()) {
-                        return 1;
-                    } else {
-                        $log=sprintf ("Error: failed to save key quotaCheckInit in memcache");
-                        syslog(LOG_NOTICE, $log);
-                        return 0;
-                    }
+                $this->initMonthlyUsageFromDatabase();
+
+                if ($this->CDRS->status['cached_keys']['saved_keys']) {
+                    $log=sprintf("Saved %d keys\n",$this->CDRS->status['cached_keys']['saved_keys']);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
+                }
+        
+                if ($this->CDRS->status['cached_keys']['failed_keys']) {
+                    $log=sprintf("Error: failed to save %d keys\n",$this->CDRS->status['cached_keys']['failed_keys']);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                 }
 
-            } else {
-                $log=sprintf ("Error: failed to query for key quotaCheckInit in mysql");
-                syslog(LOG_NOTICE, $log);
-                return 0;
+                if ($this->saveQuotaInitFlag()) {
+                    return 1;
+                } else {
+                    $log=sprintf ("Error: failed to save key quotaCheckInit in memcache");
+                    syslog(LOG_NOTICE, $log);
+                    return 0;
+                }
             }
 		}
         return 1;
@@ -3354,7 +3500,12 @@ class SERQuota {
 
 	        $query="select * from subscriber";
     	    dprint($query);
-        	$this->AccountsDB->query($query);
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                print $log;
+                syslog(LOG_NOTICE,$log);
+                return false;
+            }
 
             while($this->AccountsDB->next_record()) {
                 $mc_key=$this->CDRS->mc_key_mu_prefix.$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');;
@@ -3373,7 +3524,12 @@ class SERQuota {
         $query=sprintf("delete from memcache where `key` like '%s%s'",
         $this->CDRS->mc_key_mu_prefix,"%");
     	dprint($query);
-        $this->db->query($query);
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->Accountsdb->Errno);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
 
 		if ($this->db->affected_rows()) {
         	$log=sprintf("Deleted %d mysql keys\n",$this->db->affected_rows());
@@ -3428,7 +3584,12 @@ class RatingEngine {
         if ($account) $query.= sprintf(" where account = '%s' ",addslashes($account));
 
         dprint($query);
-        if (!$this->db->query($query)) return 0;
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
 
         if ($account) {
         	if ($this->db->num_rows()) {
@@ -3761,6 +3922,7 @@ class RatingEngine {
 
             if ( $_now > $this->lastMinuteStatisticsTime + 60 && $_intervalMinute > 0) {
 
+	            $log=sprintf("Normalization done in %d s, memory usage: %0.2f MB",$d,memory_get_usage()/1024/1024);
                 $_cpsTotal  = $this->sessionCounter/$_runtime;
 
                 $_cpsMinute = $this->lastMinuteSessionCounter/$_intervalMinute;
@@ -3778,15 +3940,14 @@ class RatingEngine {
                 $this->lastMinuteSessionCounter=0;
                 $this->lastMinuteStatisticsTime=time();
 
-                $log=sprintf ("Rating engine load last minute is %s calls in the last %s seconds @ %s CPS",
+                $log=sprintf ("Load last minute: %s calls @ %s cps, memory: %0.2f MB",
                 $this->statistics['lastMinute']['calls'],
-                $this->statistics['lastMinute']['interval'],
-                sprintf("%.2f",$this->statistics['lastMinute']['cps']));
+                sprintf("%.2f",$this->statistics['lastMinute']['cps']),
+                memory_get_usage()/1024/1024);
                 syslog(LOG_NOTICE, $log);
 
-                $log=sprintf ("Rating engine load is %s sessions in %s seconds @ %s CPS",
+                $log=sprintf ("Load since start: %s sessions @ %s cps",
                 $this->statistics['total']['calls'],
-                $this->statistics['total']['interval'],
                 sprintf("%.2f",$this->statistics['total']['cps']));
                 syslog(LOG_NOTICE, $log);
 
@@ -3801,9 +3962,8 @@ class RatingEngine {
                     $this->lastHourSessionCounter=0;
                     $this->lastHourStatisticsTime=time();
     
-                    $log=sprintf ("Rating engine load last hour is %s calls in the last %s seconds @ %s CPS",
+                    $log=sprintf ("Load last hour: %s calls @ %s cps",
                     $this->statistics['lastHour']['calls'],
-                    $this->statistics['lastHour']['interval'],
                     sprintf("%.2f",$this->statistics['lastHour']['cps']));
                     syslog(LOG_NOTICE, $log);
 
@@ -3820,9 +3980,8 @@ class RatingEngine {
                     $this->lastDaySessionCounter=0;
                     $this->lastDayStatisticsTime=time();
     
-                    $log=sprintf ("Call statistics last day: %s calls in the last %s seconds @ %s CPS",
+                    $log=sprintf ("Load last day: %s calls @ %s cps",
                     $this->statistics['lastDay']['calls'],
-                    $this->statistics['lastDay']['interval'],
                     sprintf("%.2f",$this->statistics['lastDay']['cps']));
                     syslog(LOG_NOTICE, $log);
 
@@ -3858,7 +4017,12 @@ class RatingEngine {
             addslashes($CDR->BillingPartyId)
             );
 
-            $this->db->query($query);
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                syslog(LOG_NOTICE,$log);
+                return "none";
+            }
+
             if ($this->db->num_rows()) {
                 $this->db->next_record();
                 if ($this->db->f('call_lock') == "1") {
@@ -3947,14 +4111,15 @@ class RatingEngine {
 
                     dprint($query);
 
-                    if ($this->db->query($query)) {
-                        if (!$this->db->affected_rows()) {
-                        	$log=sprintf ("$CDR->BillingPartyId is already locked");
-                    		syslog(LOG_NOTICE, $log);
-                        }
-                    } else {
-                    	$log=sprintf ("Error: cannot lock $CDR->BillingPartyId");
-                    	syslog(LOG_NOTICE, $log);
+                    if (!$this->db->query($query)) {
+                        $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                        syslog(LOG_NOTICE,$log);
+                        return false;
+                    }
+
+                    if (!$this->db->affected_rows()) {
+                        $log=sprintf ("$CDR->BillingPartyId is already locked");
+                        syslog(LOG_NOTICE, $log);
                     }
                 }
 

@@ -2,7 +2,9 @@ cdrtool (5.1.0) unstable; urgency=low
 
   * Added historical rating engine, requires changes in database
     structure (you must apply changes from setup/mysql/alter_tables.mysql)
-  * Added a sample provisioning interface for Multimedia Service Platform
+  * Must add in global.inc "AccountsDBClass"    => "DB_ser" for
+    each SER data-source, there is no default anymore
+  * Added a sample provisioning interface (MSP only)
   * Added function to obfuscate caller Ids, this changes the login rights
     The login accounts rights must be updated in the Accounts page
   * Added capability to do accounting for SIP URIs (e.g. paid helpdesk)
@@ -12,15 +14,15 @@ cdrtool (5.1.0) unstable; urgency=low
     please update your CSV file import tools)
   * Modify index of rates tables to accomodate multiple applications
     (you must apply changes from setup/mysql/alter_tables.mysql)
-  * Default application set to 'audio'
-  * application field is now mandatory when importing rates CSV files
+  * Default application set to 'audio', application field is now mandatory
+    when importing rates CSV files
   * Added SIP Thor enable per data-source
   * Use separate name spaces for memcache keys per data source
   * Allow quota checks for multiple OpenSER data-sources
-  * Must add in global.inc "AccountsDBClass"    => "DB_ser" for
-    each SER data-source, there is no default anymore
+  * Show memory usage in syslog
+  * Print sql errors in syslog 
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 12 Apr 2007 18:42:00 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 15 Apr 2007 10:19:07 +0200
 
 cdrtool (5.0.10) unstable; urgency=low
 
