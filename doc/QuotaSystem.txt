@@ -2,22 +2,24 @@
 The quota system
 ----------------
 
-This quota system works with only with OpenSER data-source.
-
-It is possible to enforce limits for post-paid customers. An external
-scripts builds incremental statistics based on customer usage, check the
-customers quota and blocks the customers in the SIP Proxy. This will not
+The quota system works with OpenSER data sources. It enforces usage limits
+for post-paid accounts. The quota system builds incremental statistics with
+usage information from the normalized SIP sessions, it compares the curent
+usage with the monthlyquota assigned by administrator and blocks the
+accounts in the SIP Proxy when the quota is exceeded. The system will not
 stop in real-time ongoing calls but provides in practice a perfect
 protection against fraudulent usage on a platform basis.
 
-To speed up the quota checking process, which normally requires a full scan
-of the CDR table at each run, from version 4.7-0 onwards the actual usage
-per user is stored in a memcache server or a mysql table depending on the
-setup. It is preferably to use memcache server in place of mysql to avoid
-loading the database with queries. The usage data is reused and
-incrementally updated during normalization process thus offloading the server
-from scanning the whole table at each quota check interval. To start/stop
-memcache server for quota use /etc/init.d/cdrtool command.
+The quota system is efficient, it does not impose a high load on the CDR
+database by using an efficient caching and a memcached server. The usage
+data is incrementally updated during the normalization process thus
+offloading the server from scanning the whole CDR table at each checking
+interval. The process is able to check the quotas for 100K users in less
+then 60 seconds.
+
+To start/stop memcache server used by the quota system use:
+
+/etc/init.d/cdrtool
 
 Memcached can be manually downloaded from http://www.danga.com/memcached or
 is automatically installed during debian package installation. Beware that
@@ -41,8 +43,8 @@ are unblocked by this cron job:
 
 /var/www/CDRTool/scripts/SER/quotaReset.php
 
-When quota is exceeded an email notification is sent to the end-user. To
-customize the email message subject, body and other header fields you must
-create some entries in cdrtool.settings table.
-
-See /var/www/CDRTool/setup/mysql/custom_notifications.mysql for an example.
+When quota is exceeded email notifications are sent to the end-user and a
+copy to the system administrator. To customize the email message subject,
+body and other header fields you must create some entries in
+cdrtool.settings table. See CDRTool/setup/mysql/custom_notifications.mysql
+for an example.

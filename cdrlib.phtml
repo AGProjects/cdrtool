@@ -226,7 +226,7 @@ class CDRS {
         $this->mc_key_init       = $this->cdr_source.':quotaCheckInit';
         $this->mc_key_domains    = $this->cdr_source.':domains';
         $this->mc_key_accounts   = $this->cdr_source.':accounts';
-    	$this->mc_key_mu_prefix  = 'mu:'.$this->cdr_source.":";
+    	$this->mc_key_mu_prefix  = 'mu:';
 
         $this->LoadDisconnectCodes();
         $this->LoadDestinations();
