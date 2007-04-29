@@ -1,9 +1,9 @@
+
 CDRTool
+-------
 
-http://ag-projects.com/CDRTool.html
+Copyright (c) 2002-2007 AG Projects http://ag-projects.com
 
-Description
-------------
 
 CDRTool is a support system for SIP service providers. CDRTool allows
 real-time mediation, rating, prepaid and web access to Call Detail Records
