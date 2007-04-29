@@ -2,7 +2,8 @@
 CDRTool
 -------
 
-Copyright (c) 2002-2007 AG Projects http://ag-projects.com
+Copyright (c) 2002-2007 AG Projects 
+http://ag-projects.com
 
 
 CDRTool is a support system for SIP service providers. CDRTool allows
