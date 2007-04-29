@@ -46,7 +46,7 @@ CREATE TABLE cdrtool.billing_profilesNGN (
   application varchar(255) NOT NULL,
   PRIMARY KEY  (id),
   KEY name_idx (name)
-) TYPE=MyISAM;
+) ;
 
 CREATE TABLE cdrtool.billing_ratesNGN (
   id bigint(20) unsigned NOT NULL auto_increment,
@@ -55,7 +55,7 @@ CREATE TABLE cdrtool.billing_ratesNGN (
   ConnectCost varchar(255) NOT NULL,
   PRIMARY KEY  (id),
   KEY name_idx (name)
-) TYPE=MyISAM;
+) ;
 
 # v 1.7
 CREATE TABLE ser.user_quota (  
@@ -357,7 +357,7 @@ CREATE TABLE `memcache` (
   `key` varchar(255) NOT NULL,
   `value` text NOT NULL,
   PRIMARY KEY  (`key`)
-) TYPE=MyISAM;
+) ;
 
 4.7-6
 alter table billing_customers add column increment smallint unsigned not null;
