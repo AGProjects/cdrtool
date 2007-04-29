@@ -1,3 +1,3 @@
-Ops,Gateway,Domain,Subscriber,Profile,Rate1,Hour1,Rate2,Hour2,Rate3,Hour3,Rate4,Hour4
+Ops,Gateway,Domain,Subscriber,Profile Id,Rate Id1,00-H1,Rate Id2,H1-H2,Rate Id3,H2-H3,Rate Id4,H3-24
 2,,,,441,442,8,441,19,442,24,,0
 2,,,,442,442,24,,0,,0,,0

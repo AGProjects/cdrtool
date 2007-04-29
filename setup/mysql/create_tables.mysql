@@ -79,7 +79,7 @@ CREATE TABLE `asterisk_cdr` (
   KEY `channel_idx` (`channel`),
   KEY `dstchannel_idx` (`dstchannel`),
   KEY `normalized_idx` (`Normalized`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=193598 DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `auth_user`
@@ -123,11 +123,10 @@ CREATE TABLE `billing_customers` (
   `gateway` varchar(50) NOT NULL default '',
   `domain` varchar(50) NOT NULL default '',
   `subscriber` varchar(50) NOT NULL default '',
-  `profile_name1` varchar(25) NOT NULL default '',
-  `profile_name1_alt` varchar(25) NOT NULL default '',
-  `profile_name2` varchar(25) NOT NULL default '',
-  `profile_name2_alt` varchar(25) NOT NULL default '',
-  `profileNGN` varchar(25) NOT NULL default '',
+  `profile_name1` varchar(25) NOT NULL,
+  `profile_name1_alt` varchar(25) NOT NULL,
+  `profile_name2` varchar(25) NOT NULL,
+  `profile_name2_alt` varchar(25) NOT NULL,
   `timezone` varchar(128) NOT NULL default '',
   `increment` smallint(5) unsigned NOT NULL,
   `min_duration` smallint(5) unsigned NOT NULL,
@@ -138,7 +137,7 @@ CREATE TABLE `billing_customers` (
   KEY `gatedom_idx` (`gateway`,`domain`),
   KEY `gate_idx` (`gateway`),
   KEY `sub_idx` (`subscriber`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=877 DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `billing_holidays`
@@ -160,7 +159,7 @@ CREATE TABLE `billing_profiles` (
   `gateway` varchar(50) NOT NULL default '',
   `domain` varchar(50) NOT NULL default '',
   `subscriber` varchar(50) NOT NULL default '',
-  `name` varchar(25) NOT NULL default '',
+  `name` varchar(25) NOT NULL,
   `rate_name1` varchar(25) NOT NULL default '',
   `hour1` smallint(5) unsigned NOT NULL default '0',
   `rate_name2` varchar(25) NOT NULL default '',
@@ -172,7 +171,7 @@ CREATE TABLE `billing_profiles` (
   PRIMARY KEY  (`id`),
   UNIQUE KEY `profile_idx` (`gateway`,`domain`,`subscriber`,`name`),
   KEY `name_idx` (`name`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=3322 DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `billing_profilesNGN`
@@ -190,7 +189,7 @@ CREATE TABLE `billing_profilesNGN` (
   PRIMARY KEY  (`id`),
   UNIQUE KEY `profile_idx` (`gateway`,`domain`,`subscriber`,`name`),
   KEY `name_idx` (`name`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=82 DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `billing_rates`
@@ -202,41 +201,17 @@ CREATE TABLE `billing_rates` (
   `gateway` varchar(50) NOT NULL default '',
   `domain` varchar(50) NOT NULL default '',
   `subscriber` varchar(50) NOT NULL default '',
-  `name` varchar(25) NOT NULL default '',
-  `destination` varchar(100) NOT NULL default '',
+  `name` varchar(25) NOT NULL,
+  `destination` varchar(100) NOT NULL,
   `durationRate` varchar(25) NOT NULL default '',
   `trafficRate` varchar(25) NOT NULL default '',
-  `application` varchar(25) NOT NULL default '',
+  `application` varchar(25) NOT NULL default 'audio',
   `connectCost` varchar(25) NOT NULL default '',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`,`application`),
   KEY `name_idx` (`name`),
   KEY `dest_idx` (`destination`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Table structure for table `billing_rates_history`
---
-
-DROP TABLE IF EXISTS `billing_rates_history`;
-CREATE TABLE `billing_rates_history` (
-  `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(50) NOT NULL default '',
-  `domain` varchar(50) NOT NULL default '',
-  `subscriber` varchar(50) NOT NULL default '',
-  `name` varchar(25) NOT NULL default '',
-  `destination` varchar(100) NOT NULL default '',
-  `durationRate` varchar(25) NOT NULL default '',
-  `trafficRate` varchar(25) NOT NULL default '',
-  `application` varchar(25) NOT NULL default '',
-  `connectCost` varchar(25) NOT NULL default '',
-  `startDate` date  NOT NULL,
-  `endDate` date  NOT NULL,
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`,`application`,`startDate`,`endDate`),
-  KEY `name_idx` (`name`),
-  KEY `dest_idx` (`destination`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=876868 DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `billing_ratesNGN`
@@ -254,7 +229,31 @@ CREATE TABLE `billing_ratesNGN` (
   PRIMARY KEY  (`id`),
   UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`),
   KEY `name_idx` (`name`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=42 DEFAULT CHARSET=latin1;
+
+--
+-- Table structure for table `billing_rates_history`
+--
+
+DROP TABLE IF EXISTS `billing_rates_history`;
+CREATE TABLE `billing_rates_history` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `gateway` varchar(50) NOT NULL default '',
+  `domain` varchar(50) NOT NULL default '',
+  `subscriber` varchar(50) NOT NULL default '',
+  `name` varchar(25) NOT NULL default '',
+  `destination` varchar(100) NOT NULL default '',
+  `durationRate` varchar(25) NOT NULL default '',
+  `trafficRate` varchar(25) NOT NULL default '',
+  `application` varchar(25) NOT NULL default 'audio',
+  `connectCost` varchar(25) NOT NULL default '',
+  `startDate` date NOT NULL,
+  `endDate` date NOT NULL,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`,`startDate`,`endDate`,`application`),
+  KEY `name_idx` (`name`),
+  KEY `dest_idx` (`destination`)
+) ENGINE=MyISAM AUTO_INCREMENT=657 DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `db_sequence`
@@ -277,12 +276,12 @@ CREATE TABLE `destinations` (
   `gateway` varchar(50) NOT NULL default '',
   `domain` varchar(50) NOT NULL default '',
   `subscriber` varchar(50) NOT NULL default '',
-  `dest_id` varchar(100) NOT NULL default '',
+  `dest_id` varchar(100) NOT NULL,
   `dest_name` varchar(255) NOT NULL default '',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `cust_dest_idx` (`gateway`,`domain`,`subscriber`,`dest_id`),
   KEY `dest_idx` (`dest_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=88142 DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `isdncause`
@@ -304,7 +303,7 @@ CREATE TABLE `lastquery` (
   `date` datetime NOT NULL default '0000-00-00 00:00:00',
   `query` text,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `log`
@@ -325,7 +324,7 @@ CREATE TABLE `log` (
   PRIMARY KEY  (`id`),
   KEY `log_date` (`date`),
   KEY `login_idx` (`login`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=62360 DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `memcache`
@@ -364,7 +363,7 @@ CREATE TABLE `prepaid` (
   `destination` varchar(50) NOT NULL default '',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `acc_id` (`account`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=10142 DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `prepaid_cards`
@@ -401,7 +400,7 @@ CREATE TABLE `prepaid_history` (
   `date` datetime default NULL,
   PRIMARY KEY  (`id`),
   KEY `acct_id` (`username`,`domain`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=127 DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `settings`
@@ -420,7 +419,7 @@ CREATE TABLE `settings` (
   `var_module` varchar(255) default NULL,
   PRIMARY KEY  (`id`),
   KEY `name` (`var_name`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `sip_status`

@@ -1,3 +1,10 @@
+cdrtool (5.1.1) unstable; urgency=low
+
+  * Updated sample data for rating tables
+  * Updated mysql schema
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 29 Apr 2007 11:07:21 +0200
+
 cdrtool (5.1.0) unstable; urgency=low
 
   * Added historical rating engine, requires changes in database
