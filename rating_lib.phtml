@@ -1104,7 +1104,7 @@ class RatingTables {
 
     }
 
-    function ImportCSVFiles($dir) {
+    function ImportCSVFiles($dir=false) {
         $mustReload=0;
         if (!$dir) $dir=$this->CDRTool["Path"]."/csv";
 
@@ -2528,7 +2528,7 @@ class RatingTables {
                 if ($filename != "." && $filename != "..") {
                     foreach ($this->importFilesPatterns as $_pattern) {
                         if (strstr($filename,$_pattern) && preg_match("/\.csv$/",$filename)) {
-                            if (!in_array($filename,$files)) {
+                            //if (!in_array($filename,$files)) {
                                 $fullPath=$dir."/".$filename;
                                 if ($content=file_get_contents($fullPath)) {
                                     $watermark=$filename."-".md5($content);
@@ -2540,7 +2540,7 @@ class RatingTables {
                                                                   'path'      => $fullPath
                                                                   );
                                 }
-                            }
+                            //}
 
                             break;
                         }
