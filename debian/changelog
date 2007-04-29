@@ -4,7 +4,7 @@ cdrtool (5.1.1) unstable; urgency=low
   * Updated mysql schema
   * Fixed bug in csv import script
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 29 Apr 2007 11:25:32 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 29 Apr 2007 11:35:09 +0200
 
 cdrtool (5.1.0) unstable; urgency=low
 

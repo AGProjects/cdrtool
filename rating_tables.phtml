@@ -108,8 +108,12 @@ $el_size="20";
 
 // Init table structure
 $exceptions= $tables[$table]['exceptions'];
+if (!is_array($exceptions)) $exceptions=array();
 $keys      = $tables[$table]['keys'];
+if (!is_array($keys)) $keys=array();
 $fields    = $tables[$table]['fields'];
+if (!is_array($fields)) $fields=array();
+
 $metadata  = $db->metadata($table="$table");
 $cc        = count($metadata);
 if ($tables[$table]['size']) $el_size=$tables[$table]['size'];
