@@ -17,8 +17,9 @@ $replicationStatus = array();
 $clusters=array_keys($CDRTool['mysql_clusters']);
 
 foreach ($clusters as $_cluster) {
-
-    print "MySQL cluster: $_cluster\n\n";
+    $replicationStatus=array();
+    
+    $title= "\nMySQL cluster: $_cluster\n\n";
     print $title;
 
     $databases=$CDRTool['mysql_clusters'][$_cluster];
@@ -27,12 +28,13 @@ foreach ($clusters as $_cluster) {
         if (!class_exists($_database)) continue;
         $_db = new $_database;
     
-        if ($_db->query($slaveStatusQuery) && $_db->next_record()) {
+        if ($_db->query($slaveStatusQuery)) {
+            $_db->next_record();
             $replicationStatus[$_db->Host]['slave_status']=array(
                 'Master_Host'	   => $_db->f('Master_Host'),
                 'Master_User'	   => $_db->f('Master_User'),
                 'Master_Port'	   => $_db->f('Master_Port'),
-                'Log_File'	       => $_db->f('Master_Log_File'),
+                'Log_File'	   => $_db->f('Master_Log_File'),
                 'Position'    	   => $_db->f('Read_Master_Log_Pos'),
                 'Slave_SQL_Running'=> $_db->f('Slave_SQL_Running'),
                 'Slave_IO_Running' => $_db->f('Slave_IO_Running'),
@@ -46,19 +48,21 @@ foreach ($clusters as $_cluster) {
                 );
     
         } else {
-            if ($_db->Error) {
-                printf ("Error: %s(%s)\n",$_db->Error,$_db->Errno);
-            }
+            printf ("Error for query '%s' on server %s: %s(%s)\n",$slaveStatusQuery,$_database,$_db->Error,$_db->Errno);
             $replicationStatus[$_db->Host]['slave_status']=array();
+            break;
         }
     
-        if ($_db->query($masterStatusQuery) &&	$_db->next_record()) {
+        if ($_db->query($masterStatusQuery)) {
+            $_db->next_record();
             $replicationStatus[$_db->Host]['master_status']=array(
                 'Position'	=> $_db->f('Position'),
                 'Log_File'	=> $_db->f('File')
                 );
         } else {
+            printf ("Error for query '%s' on server %s: %s(%s)\n",$masterStatusQuery,$_database,$_db->Error,$_db->Errno);
             $replicationStatus[$_db->Host]['master_status']=array();
+            break;
         }
     }
     
