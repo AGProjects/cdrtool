@@ -20,19 +20,26 @@ $table_fname=array(
 $PHP_SELF           = $_SERVER['PHP_SELF'];
 $REMOTE_ADDR        = $_SERVER['REMOTE_ADDR'];
 
-$export             = $_REQUEST['export'];
-$table              = $_REQUEST['table'];
-$action             = $_REQUEST['action'];
-$subaction          = $_REQUEST['subaction'];
-$confirmDelete      = $_REQUEST['confirmDelete'];
-$next               = $_REQUEST['next'];
-$id                 = $_REQUEST['id'];
-$search_text        = $_REQUEST['search_text'];
-$ReloadRatingTables = $_REQUEST['ReloadRatingTables'];
-$account            = $_REQUEST['account'];
-$balance            = $_REQUEST['balance'];
-$fromRate           = $_REQUEST['fromRate'];
-$toRate             = $_REQUEST['toRate'];
+
+$web_elements=array('table',
+                    'export',
+                    'action',
+                    'subaction',
+                    'confirmDelete',
+                    'confirmCopy',
+                    'next',
+                    'id',
+                    'search_text',
+                    'ReloadRatingTables',
+                    'account',
+                    'balance',
+                    'fromRate',
+                    'toRate');
+
+foreach ($web_elements as $_el) {
+    ${$_el}= $_REQUEST[$_el];
+    //printf ("<br>%s = %s",$_el,$_REQUEST[$_el]);
+}
 
 global $CDRTool;
 
@@ -908,9 +915,10 @@ if (!$export) {
         	print "<input type=submit name=subaction value=\"Delete selection\">";
             print " ($rows records)";
         } else {
-            if ($table == "billing_rates" && strlen($search_name)) {
+
+            if ($table == "billing_rates" && strlen($_REQUEST['search_name'])) {
                 if ($subaction=="Copy rate" && !$confirmCopy) {
-		        	print "<td bgcolor=lightgrey>";
+		        print "<td bgcolor=lightgrey>";
             		print "<input type=hidden name=confirmCopy value=1>";
                 } else {
 	            	print "<td>";
@@ -921,13 +929,13 @@ if (!$export) {
                 }
             	print "
                 <input type=submit name=subaction value=\"Copy rate\">";
-                print " id $search_name to";
+                printf (" id %s to",$_REQUEST['search_name']);
 
-                $query="select distinct(name) as name
+                $query=sprintf("select distinct(name) as name
                 from billing_rates where
-                name like '$search_name'
+                name like '%s'
                 order by name DESC
-                limit 1";
+                limit 1",$_REQUEST['search_name']);
                 dprint($query);
                 $db1->query($query);
                 $db1->next_record();
@@ -939,7 +947,7 @@ if (!$export) {
                 } else {
                     $newRateName=$_rateName."_1";
                 }
-            	print "<input type=hidden name=fromRate value=\"$search_name\">";
+            	printf ("<input type=hidden name=fromRate value=\"%s\">",$_REQUEST['search_name']);
                 $selected_newtable[$toRate]='selected';
                 printf ("<select name=toRate>
                 <option value=\"%s\" %s>Rate id %s
