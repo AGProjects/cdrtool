@@ -1,3 +1,11 @@
+cdrtool (5.1.2) unstable; urgency=low
+
+  * Show status of multiple mysql clusters
+    Must migrate global.inc setting $CDRTool['replicated_databases'] to $CDRTool['mysql_clusters']
+    See setup/global.inc.in for example
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue,  1 May 2007 10:16:37 +0200
+
 cdrtool (5.1.1) unstable; urgency=low
 
   * Updated sample data for rating tables

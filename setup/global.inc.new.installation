@@ -107,7 +107,7 @@ class DB2 extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
-$CDRTool['replicated_databases']=array('DB1','DB2');
+$CDRTool['mysql_clusters']=array('production'=>array('DB1','DB2'));
 
 class DomainAuthLocal extends DomainAuth {	// defined in phplib/local.inc
 }

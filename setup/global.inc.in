@@ -171,7 +171,8 @@ class DB2 extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
-$CDRTool['replicated_databases']=array('DB1','DB2');
+# To show mysql replication status using scripts/replicationStatus.php
+$CDRTool['mysql_clusters']=array('production'=>array('DB1','DB2'));
 
 # To allow users to login using a custom procedure. See DomainAuth from phplib/local.inc as example
 class DomainAuthLocal extends DomainAuth {

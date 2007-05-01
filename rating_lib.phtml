@@ -885,6 +885,7 @@ class RatingTables {
         $this->tables=array(
                            "destinations"=>array("name"=>"Destinations",
                                                  "keys"=>array("id"),
+                                                 "exceptions" =>array(),
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
                                                  				 "gateway"=>array("size"=>15,
@@ -948,6 +949,7 @@ class RatingTables {
                                                  ),
                            "billing_profiles"=>array("name"=>"Profiles",
                                                  "keys"=>array("id"),
+                                                 "exceptions" =>array(),
                                                  "size"=>6,
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
@@ -1066,6 +1068,7 @@ class RatingTables {
                            "prepaid"=>array("name"=>"Prepaid",
                                                  "keys"=>array("id"),
                                                  "size"=>15,
+                                                 "exceptions" =>array(),
                                                  "domainFilterColumn"=>"account",
                                                  "fields"=>array("account"=>array("size"=>35,
                                                                                "name"=>"Account",
