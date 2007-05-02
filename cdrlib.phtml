@@ -208,7 +208,11 @@ class CDRS {
         $last  = count($spath)-1;
         $this->scriptFile=$spath[$last];
 
-        if ($export) {
+        $this->next           = $_REQUEST["next"];
+        $this->export         = $_REQUEST["export"];
+        $this->trace          = $_REQUEST["trace"];
+
+        if ($this->export) {
             $this->maxrowsperpage=10000000;
         } else {
             if ($_REQUEST["maxrowsperpage"]) {
@@ -217,10 +221,6 @@ class CDRS {
                 $this->maxrowsperpage = "25";
             }
         }
-
-        $this->next           = $_REQUEST["next"];
-        $this->export         = $_REQUEST["export"];
-        $this->trace          = $_REQUEST["trace"];
 
         // Init memcache key names to be unique per datasource
         $this->mc_key_init       = $this->cdr_source.':quotaCheckInit';
