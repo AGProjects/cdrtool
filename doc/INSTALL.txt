@@ -318,7 +318,7 @@ SOAP engine
 
 Warning!
 
-Support for the SOAP engine has been discontinued from version >=5.0.
+Support for the SOAP server engine has been discontinued from version >=5.0.
 
 Note: It depends on the SOAP library from http://pear.php.net/package/SOAP.
 On Debian systems, this dependency is automatically installed but if CDRTool
