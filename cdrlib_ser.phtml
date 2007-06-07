@@ -1697,7 +1697,6 @@ class CDRS_ser_radius extends CDRS {
                     $traceValue_enc=urlencode($traceValue);
 
                     if (!$this->export) {
-                        $pricePrint=number_format($price,4,".","");
                         print "
                         <tr bgcolor=$inout_color>
                         <td><b>$found</b></td>
@@ -1705,6 +1704,13 @@ class CDRS_ser_radius extends CDRS {
                         <td align=right>$seconds_print</td>
                         <td align=right>$minutes_print</td>
                         <td align=right>$hours</td>
+                        ";
+                        if ($perm->have_perm("showPrice")) {
+                        	$pricePrint=number_format($price,4,".","");
+                        } else {
+                            $pricePrint='x.xxx';
+                        }
+                        print "
                         <td align=right>$pricePrint</td>
                         <td align=right>$AcctInputOctets</td>
                         <td align=right>$AcctOutputOctets</td>
@@ -1723,7 +1729,12 @@ class CDRS_ser_radius extends CDRS {
                          print "$seconds,";
                          print "$minutes,";
                          print "$hours,";
-                         print "$price,";
+                         if ($perm->have_perm("showPrice")) {
+                             $pricePrint=$price;
+                         } else {
+                             $pricePrint='x.xxx';
+                         }
+                         print "$pricePrint,";
                          print "$AcctInputOctets,";
                          print "$AcctOutputOctets,";
                          print "$success,";
