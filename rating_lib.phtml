@@ -618,8 +618,44 @@ class Rate {
                 }
 
                 if ($this->rateName) {
-                    dprint("Found rate \"$this->rateName\" for interval \"$this->timeInterval\" in alternative profile=\"$this->profileNameAlt\"");
-                    $this->rateValues=$this->RatingTables->rates[$this->rateName][$this->DestinationId][$this->applicationType];
+	                dprint("Found rate=$this->rateName for interval=$this->timeInterval in alternative profile=$this->profileNameAlt");
+
+                    $found_history=false;
+    
+                    //get historical rating if exists
+                    if (is_array($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType])) {
+                        dprint('Found historical rates for this destination');
+                        dprint_r(($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType]));
+                        $h=0;
+                        foreach (($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType]) as $_idx) {
+                            $h++;
+                            dprint("Checking rate history id $h");
+                            if ($_idx['startDate'] <= $this->timestamp) {
+    
+                                if ($_idx['endDate'] > $this->timestamp) {
+                                    // found historical rate
+                                    dprint("Found historical rate $h");
+                                    $found_history=true;
+                                    $this->rateValues=$_idx;
+                                    break;
+                                } else {
+                                    $_log=sprintf("Interval missmatch %s < %s",$_idx['endDate'],$this->timestamp);
+                                    dprint($_log);
+    
+                                    continue;
+                                }
+                            } else {
+                                $_log=sprintf("Interval missmatch %s > %s",$_idx['startDate'],$this->timestamp);
+                                dprint($_log);
+                                continue;
+                            }
+                        }
+                    }
+    
+                    if (!$found_history) {
+                        $this->rateValues=$this->RatingTables->rates[$this->rateName][$this->DestinationId][$this->applicationType];
+                    }
+
                 } else {
                     dprint("No rates for destination $this->DestinationId in alternative profile=$this->profileNameAlt.");
                 }

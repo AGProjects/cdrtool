@@ -1,3 +1,10 @@
+cdrtool (5.1.6) unstable; urgency=low
+
+  * Fixed calculus of historical rates when rate is found in alternative
+  profile
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 19 Jun 2007 09:35:39 +0200
+
 cdrtool (5.1.5) unstable; urgency=low
 
   * Hide price when grouping results for login accounts without showPrice right
