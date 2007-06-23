@@ -1,3 +1,9 @@
+cdrtool (5.1.7) unstable; urgency=low
+
+  * Added SOAP/XML management for LCR
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 23 Jun 2007 12:13:29 +0200
+
 cdrtool (5.1.6) unstable; urgency=low
 
   * Fixed calculus of historical rates when rate is found in alternative
