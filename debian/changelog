@@ -1,8 +1,10 @@
 cdrtool (5.1.7) unstable; urgency=low
 
   * Added SOAP/XML management for LCR
+  * Save when the user agrees with the usage license to avoid display the
+  license agreement at each login
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 23 Jun 2007 12:13:29 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 24 Jun 2007 13:16:32 +0200
 
 cdrtool (5.1.6) unstable; urgency=low
 

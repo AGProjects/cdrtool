@@ -11,8 +11,21 @@ if ($DATASOURCES) {
              "auth" => "CDRTool_Auth",
              "perm" => "CDRTool_Perm")
              );
+    $loginname=$auth->auth["uname"];
     
     $title="Legal notice";
+
+    $db = new DB_CDRTool();
+    $query=sprintf("select * from settings
+    where billing_party = '%s'
+    and var_module= 'login'
+    and var_name = 'I_agree_with_license'",$loginname);
+    if ($db->query($query)) {
+    	if ($db->num_rows()) {
+        	$refreshURL='callsearch.phtml';
+        	$refreshTime=0;
+        }
+    }
 
     if (is_readable("local/header.phtml")) {
         include("local/header.phtml");
@@ -20,7 +33,6 @@ if ($DATASOURCES) {
         include("header.phtml");
     }
     
-    $loginname=$auth->auth["uname"];
     $layout = new pageLayoutLocal();
     $layout->showHeader();
     $layout->showLegalNotice();

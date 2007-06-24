@@ -734,6 +734,7 @@ class pageLayout {
         press on <b>I agree</b> button to continue.
         <p>
         <input type=submit value=\"I agree\">
+        <input type=hidden name=previous_page value=license_page>
         </form>
         ";
     }   

@@ -17,6 +17,17 @@ if (!$export) {
     } else {
         include("header.phtml");
     }
+
+	if ($_REQUEST['previous_page'] == 'license_page') {
+        // save agreement
+        $db = new DB_CDRTool();
+    	$query=sprintf("insert into settings
+        (billing_party, var_module,var_name,var_value)
+        values
+    	('%s','login','I_agree_with_license','True')
+        ",$loginname);
+    	$db->query($query);
+     }
 } else {
     Header("Content-type: text/plain");
     Header("Content-Disposition: inline; filename=CDR.txt");
