@@ -648,9 +648,9 @@ class WebService_NGNPro_NetworkPort extends SOAP_Client
                             'style'=>'rpc',
                             'use'=>'encoded' ));
     }
-    function &deleteGatewayGroup($name) {
+    function &deleteGatewayGroup($group) {
         return $this->call("deleteGatewayGroup", 
-                        $v = array("name"=>$name), 
+                        $v = array("group"=>$group), 
                         array('namespace'=>'urn:AGProjects:NGNPro:Network',
                             'soapaction'=>'',
                             'style'=>'rpc',
