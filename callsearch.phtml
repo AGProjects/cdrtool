@@ -26,7 +26,7 @@ if (!$export) {
         values
     	('%s','login','I_agree_with_license','True')
         ",$auth->auth["uname"]);
-        print $query;
+        //dprint($query);
     	$db->query($query);
      }
 } else {
