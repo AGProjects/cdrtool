@@ -1,3 +1,9 @@
+cdrtool (5.1.8) unstable; urgency=low
+
+  * Fixed saving the agreement with license page
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 28 Jun 2007 10:21:39 +0200
+
 cdrtool (5.1.7) unstable; urgency=low
 
   * Added SOAP/XML management for LCR

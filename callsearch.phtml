@@ -25,7 +25,8 @@ if (!$export) {
         (billing_party, var_module,var_name,var_value)
         values
     	('%s','login','I_agree_with_license','True')
-        ",$loginname);
+        ",$auth->auth["uname"]);
+        print $query;
     	$db->query($query);
      }
 } else {
