@@ -423,3 +423,8 @@ alter table billing_customers drop column profileNGN;
 alter table billing_rates drop index rate_idx;
 
 alter table billing_rates add  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`,`application`);
+
+
+5.2.1
+Apply again the MySQL stored procedures to radius database from:
+setup/radius/OpenSER/radius_accounting.proc

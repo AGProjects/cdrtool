@@ -1,6 +1,13 @@
+cdrtool (5.2.1) unstable; urgency=low
+
+  * Synced UPDATE queries for current and older month (in SQL stored procedures)
+  (you must apply changes from setup/mysql/alter_tables.mysql)
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 03 Jul 2007 17:25:52 +0200
+
 cdrtool (5.2.0) unstable; urgency=low
 
-  * Eliminate the raise condition that appears when normalization process is
+  * Eliminate the race condition that appears when normalization process is
   performed between the time radius database is updated when a BYE arrives
   and the MediaProxy updates the same radius record. 
 
