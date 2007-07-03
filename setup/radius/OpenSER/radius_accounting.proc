@@ -455,8 +455,8 @@ BEGIN
 			Normalized = '0'
 			WHERE
 			AcctSessionId = ?
-			AND ((SipToTag = ? AND SipFromTag = ?) OR
-			(SipToTag = ? AND SipFromTag = ?));");
+			AND ((SipToTag = ? AND SipFromTag = ?) OR (SipToTag = ? AND SipFromTag = ?))
+			AND ConnectInfo_stop IS NULL;");
 			PREPARE update_rad2 FROM @updstmt2;
 			EXECUTE update_rad2 USING @v_AcctStopTime, @v_AcctStopTime,
 				@v_AcctStopDelay, @v_ConnectInfo_stop, @v_RTPStatistics,
