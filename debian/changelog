@@ -1,3 +1,11 @@
+cdrtool (5.2.0) unstable; urgency=low
+
+  * Eliminate the raise condition that appears when normalization process is
+  performed between the time radius database is updated when a BYE arrives
+  and the MediaProxy updates the same radius record. 
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 03 Jul 2007 14:51:40 +0200
+
 cdrtool (5.1.9) unstable; urgency=low
 
   * Removed print of sql query

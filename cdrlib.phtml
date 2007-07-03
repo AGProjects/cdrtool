@@ -17,6 +17,7 @@ class CDRS {
     var $BillingIdField      = 'UserName';
     var $sipTraceDataSource  = 'sip_trace';
     var $defaults            = array();
+	var $whereUnnormalized   = '';
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
@@ -670,7 +671,9 @@ class CDRS {
 
     function unNormalize($where="",$table) {
         dprint ("CDRS->UnNormalize($where,$table)");
+
         if (!$where) $where=" (1=1) ";
+
         if (!$table) $table=$this->table;
 
         if (!$this->normalizedField) {
@@ -678,9 +681,7 @@ class CDRS {
             return 0;
         }
 
-        $query=sprintf("update %s
-        set %s = '0'
-        where %s ",
+        $query=sprintf("update %s set %s = '0' where %s ",
         addslashes($table),
         addslashes($this->normalizedField),
         $where
@@ -704,9 +705,53 @@ class CDRS {
         return $c;
     }
 
+    function buildWhereForUnnormalizedSessions () {
+
+    	$this->whereUnnormalized = sprintf(" %s = '0'",$this->normalizedField);
+
+        if ($this->stopTimeField) $this->whereUnnormalized .= " and $this->stopTimeField != '0000-00-00 00:00:00' ";
+
+        if ($this->CDRFields['MediaTimeout']) {
+            /*
+            If we use MediaProxy information then eliminate all possible raise conditions
+    
+            1. Session started and is in progress:
+                                AcctStopTime = '0000-00-00 00:00:00'
+                                AcctSessionTime = 0
+                                MediaInfo is NULL
+                                ConnectInfo_stop is NULL
+    
+            2. Session closed with a negative response code ([4-6]XX):
+                                AcctSessionTime = 0
+                                AcctStopTime != '0000-00-00 00:00:00'
+                                MediaInfo is NULL
+                                ConnectInfo_stop is NULL
+    
+            3. Session received a BYE:
+                                ConnectInfo_stop is not NULL
+                                AcctStopTime != '0000-00-00 00:00:00'
+    
+            4. Media has timed-out:
+                                MediaInfo = 'timeout'
+                                ConnectInfo_stop is NULL
+                                AcctStopTime != '0000-00-00 00:00:00'
+    
+            5. MediaProxy update before BYE is received:
+                                MediaInfo = ''
+                                ConnectInfo_stop is NULL
+                                AcctStopTime != '0000-00-00 00:00:00'
+    
+            */
+
+            $this->whereUnnormalized .= " and (ConnectInfo_stop is not NULL or MediaInfo is NULL or MediaInfo != '') ";
+        }
+
+    }
+
     function getUnNormalized($where="",$table) {
         dprint("<b>getUnNormalizeCDRS</b>($where,$table)");
-		if (!$this->db_class) {
+
+        if (!$this->db_class) {
             return 0;
         }
 
@@ -717,25 +762,18 @@ class CDRS {
 
         if ($ReNormalize) $this->unNormalize($where,$table);
 
-        if (!$where) $where =" (1=1) ";
-
         if (!$this->normalizedField) {
             dprint("No normalizedField defined for this data source");
             return 0;
         }
 
-        $query=sprintf("select count(*) as c from %s
-        where %s
-        and  %s = '0'",
+		$this->buildWhereForUnnormalizedSessions();
+
+        $query=sprintf("select count(*) as c from %s where %s and %s",
         addslashes($table),
         $where,
-        addslashes($this->normalizedField)
+        $this->whereUnnormalized
         );
-
-        // normalize if call has ended
-        if ($this->stopTimeField) {
-            $query.=" and $this->stopTimeField > '0000-00-00 00:00:00' ";
-        }
 
         dprint ($query);
 
@@ -774,19 +812,14 @@ class CDRS {
             return 1;
         }
 
+		$this->buildWhereForUnnormalizedSessions();
+
         $query=sprintf("select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
-        from %s
-        where %s
-        and %s = '0'  ",
+        from %s where %s and %s",
         addslashes($table),
         $where,
-        addslashes($this->normalizedField)
+        $this->whereUnnormalized
         );
-
-        // normalize if call has ended
-        if ($this->stopTimeField) {
-            $query.=" and $this->stopTimeField > '0000-00-00 00:00:00' ";
-        }
 
         $this->status['cdr_to_normalize']=0;
         $this->status['normalized']=0;
