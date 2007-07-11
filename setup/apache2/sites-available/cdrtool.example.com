@@ -27,5 +27,10 @@
    #      Order Allow,Deny
    #      Allow from all
    # </Proxy>
+
+        <Directory /var/www/CDRTool>
+                Options FollowSymLinks
+                AllowOverride All
+        </Directory>
    	
 </VirtualHost>
