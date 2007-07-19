@@ -18,6 +18,7 @@ class CDRS {
     var $sipTraceDataSource  = 'sip_trace';
     var $defaults            = array();
 	var $whereUnnormalized   = '';
+	var $skipNormalize       = false;
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
@@ -192,6 +193,10 @@ class CDRS {
 
         if ($this->DATASOURCES[$this->cdr_source]['domain_table']) {
             $this->domain_table = $this->DATASOURCES[$this->cdr_source]['domain_table'];
+        }
+
+        if ($this->DATASOURCES[$this->cdr_source]['skipNormalize']) {
+            $this->skipNormalize = $this->DATASOURCES[$this->cdr_source]['skipNormalize'];
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['enableThor']) {
@@ -676,6 +681,11 @@ class CDRS {
 
         if (!$table) $table=$this->table;
 
+        if ($this->skipNormalize) {
+            dprint("Normalize is disabled for this data source");
+            return 0;
+        }
+
         if (!$this->normalizedField) {
             dprint("No normalizedField defined for this data source");
             return 0;
@@ -755,6 +765,11 @@ class CDRS {
             return 0;
         }
 
+        if ($this->skipNormalize) {
+            dprint("Normalize is disabled for this data source");
+            return 0;
+        }
+
         if (!$where) $where=" (1=1) ";
         if (!$table) $table=$this->table;
 
@@ -798,6 +813,11 @@ class CDRS {
 
         if (!$where) $where=" (1=1) ";
         if (!$table) $table=$this->table;
+
+        if ($this->skipNormalize) {
+            dprint("Normalize is disabled for this data source");
+            return 0;
+        }
 
         if (!$this->normalizedField) {
             dprint("No normalizedField defined for this data source");

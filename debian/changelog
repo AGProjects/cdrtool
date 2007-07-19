@@ -1,3 +1,9 @@
+cdrtool (5.2.2) unstable; urgency=low
+
+  * Added SIP trace for SIP Thor datasource
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 19 Jul 2007 11:53:24 +0200
+
 cdrtool (5.2.1) unstable; urgency=low
 
   * Synced UPDATE queries for current and older month (in SQL stored procedures)

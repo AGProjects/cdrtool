@@ -33,22 +33,21 @@ if ($authorize==1) {
 	unset($perm);
 }
 
+//$verbose=1;
 require("cdrlib.phtml");
 $callid      = $_REQUEST['callid'];
-$method      = $_REQUEST['method'];
-$status      = $_REQUEST['status'];
 $fromtag     = $_REQUEST['fromtag'];
+$proxyIP     = $_REQUEST['proxyIP'];
 $cdr_source  = $_REQUEST['cdr_source'];
 
-if (!$authorize || in_array($cdr_source,$CDRTool[dataSourcesAllowed])) {
+if (!$authorize || in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
 
     $title="CDRTool SIP trace: session $callid $method $status";
     include("header.phtml");
     
-    $serTrace = new SER_trace($cdr_source);
-    if ($serTrace->initOK) {
-        $serTrace->show($callid,$method,$status,$fromtag);
-    }
+    $sipTrace = new SIP_trace($cdr_source);
+    $sipTrace->show($callid,$fromtag,$proxyIP);
+
 } else {
     printf ("Error: Invalid datasource '%s' for user '%s'" ,$cdr_source,$auth->auth["uname"]);
 }

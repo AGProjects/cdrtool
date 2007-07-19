@@ -418,6 +418,14 @@ class WebService_NGNPro_SipPort extends SOAP_Client
                             'style'=>'rpc',
                             'use'=>'encoded' ));
     }
+    function &getTrace($nodeIP, $callID, $fromTag) {
+        return $this->call("getTrace", 
+                        $v = array("nodeIP"=>$nodeIP, "callID"=>$callID, "fromTag"=>$fromTag), 
+                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
+                            'soapaction'=>'',
+                            'style'=>'rpc',
+                            'use'=>'encoded' ));
+    }
 }
 class WebService_NGNPro_VoicemailPort extends SOAP_Client
 {

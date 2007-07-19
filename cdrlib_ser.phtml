@@ -2457,7 +2457,7 @@ class CDR_ser_radius extends CDR {
             $callid_enc   = urlencode($this->callId);
             $fromtag_enc  = urlencode($this->SipFromTag);
 
-        	$this->callIdPrint="&nbsp;<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$accDS&callid=$callid_enc&fromtag=$fromtag_enc', 'Trace',
+        	$this->callIdPrint="&nbsp;<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$accDS&callid=$callid_enc&fromtag=$fromtag_enc&proxyIP=$this->SipProxyServer', 'Trace',
             'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">$this->callId</a> &nbsp;";
         } else {
             $this->callIdPrint=$this->callId;
@@ -4187,56 +4187,168 @@ class CDR_ser_acc extends CDR {
     }
 }
 
-class SER_trace {
-    function SER_trace ($cdr_source) {
+class SIP_trace {
+    var $enableThor = false;
+	var $trace_array = array();
+
+    function SIP_trace ($cdr_source) {
         global $DATASOURCES, $auth;
         $this->cdrtool  = new DB_CDRTool();
 
-        $this->table = $DATASOURCES[$cdr_source]['table'];
-        $db_class    = $DATASOURCES[$cdr_source]['db_class'];
-        $this->purgeRecordsAfter    = $DATASOURCES[$cdr_source]['purgeRecordsAfter'];
+        global $soapEngines;
+        $this->soapEngines = $soapEngines;
 
-        if ($db_class && $this->table) {
-        	$this->db    = new $db_class;
+		if (strlen($DATASOURCES[$cdr_source]['enableThor'])) {
+        	$this->enableThor = $DATASOURCES[$cdr_source]['enableThor'];
+        }
 
-            $query="select count(*) as c,
-            min(date) as min,
-            max(date) as max
-            from $this->table";
-            dprint($query);
-            if ($this->db->query($query)) {
-            	if ($this->db->next_record()) {
-            	$this->summary=array(
-                                 "count"     => $this->db->f('c'),
-                                 "startDate" => $this->db->f('min'),
-                                 "endDate"   => $this->db->f('max')
-                                 );
-                } else {
-                	print "<p>No trace found. ";
-                	return 0;
-                }
-            } else {
-                printf ("<p>Error: database error %s %s",$this->db->Error,$query);
+        if ($this->enableThor) {
+        	if ($DATASOURCES[$cdr_source]['soapEngineId']) {
+            	$this->soapEngineId=$DATASOURCES[$cdr_source]['soapEngineId'];
+
+		        require_once("provisioning_lib.phtml");
+
+                $this->SOAPlogin = array(
+                                       "username"    => $this->soapEngines[$this->soapEngineId]['username'],
+                                       "password"    => $this->soapEngines[$this->soapEngineId]['password'],
+                                       "admin"       => true
+                                       );
+    
+                $this->SOAPurl=$this->soapEngines[$this->soapEngineId]['url'];
+        
+                $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+    
+                // Instantiate the SOAP client
+                $this->soapclient = new WebService_NGNPro_SipPort($this->SOAPurl);
+    
+                $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
+                $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+                $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+    
+        	} else {
+                print "Error: soapEngineID not defined in datasource $cdr_source";
                 return 0;
             }
 
-            $this->initOK=1;
+        } else {
+            $this->table             = $DATASOURCES[$cdr_source]['table'];
+            $db_class                = $DATASOURCES[$cdr_source]['db_class'];
+            $this->purgeRecordsAfter = $DATASOURCES[$cdr_source]['purgeRecordsAfter'];
+    
+            $this->db    = new $db_class;
+    
             if (is_object($auth)) {
                 $this->isAuthorized=1;
             }
 
-        } else {
-            print "<p>Error: missing database or table definition in $cdr_source datasource). ";
-            return 0;
+            if (is_array($DATASOURCES[$cdr_source]['SIPProxies'])) {
+                $this->SIPProxies=$DATASOURCES[$cdr_source]['SIPProxies'];
+            }
         }
-
-        if (is_array($DATASOURCES[$cdr_source]['SIPProxies'])) {
-            $this->SIPProxies=$DATASOURCES[$cdr_source]['SIPProxies'];
-        }
-
     }
 
-    function show($callid,$method,$status,$fromtag,$trace_url="") {
+    function getTrace ($callid,$fromtag,$proxyIP) {
+
+		if ($this->enableThor) {
+            // get trace using soap request
+            if (!is_object($this->soapclient)) {
+                //return 0;
+            }
+    
+            $this->soapclient->addHeader($this->SoapAuth);
+            $result     = $this->soapclient->getTrace($proxyIP,$callid,$fromtag);
+    
+            if (PEAR::isError($result)) {
+                $error_msg   = $result->getMessage();
+                $error_fault = $result->getFault();
+                $error_code  = $result->getCode();
+    
+                $log=sprintf("%s: %s",$error_fault->faultstring,$error_fault->faultcode);
+                syslog(LOG_NOTICE, "SOAP error: $log1");
+                return 0;
+            }
+
+            foreach ($result as $_trace) {
+
+                if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->toip,$m)) {
+                    $toip=$m[2];
+                    $protocol=$m[1];
+                }
+
+				preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/",$_trace->date,$m);
+                $timestamp = mktime($m[4],$m[5],$m[6],$m[2],$m[3],$m[1]);
+
+                $this->trace_array[$_trace->id]=
+                            array (
+                                   'id'        => $_trace->id,
+                                   'direction' => $_trace->direction,
+                                   'fromip'    => $_trace->fromip,
+                                   'toip'      => $_trace->toip,
+                                   'method'    => $_trace->method,
+                                   'protocol'  => $protocol,
+                                   'date'      => $_trace->date,
+                                   'status'    => $_trace->status,
+                                   'timestamp' => $timestamp,
+                                   'msg'       => $_trace->msg,
+                                   'md5'       => md5($_trace->msg)
+                                   );
+            }
+
+    
+        } else {
+            $query="select *,UNIX_TIMESTAMP(date) as timestamp
+            from $this->table where callid = '$callid'
+            and traced_user = ''";
+    
+            dprint($query);
+    
+            if (!$this->db->query($query)) {
+                printf ("<p>Error: database error %s %s",$this->db->Error,$query);
+                return 0;
+            }
+    
+            $rows=$this->db->num_rows();
+    
+            dprint("Found $rows rows");
+    
+            $columns=0;
+    
+            while ($this->db->next_record()) {
+    
+                if (preg_match("/^(udp|tcp|tls):(.*)$/",$this->db->f('toip'),$m)) {
+                    $toip=$m[2];
+                    $protocol=$m[1];
+                }
+    
+                if (!$this->column[$this->db->f('fromip')]) {
+                    $this->column[$this->db->f('fromip')]=$columns+1;
+                    $columns++;
+                }
+    
+                if (!$this->column[$toip]) {
+                    $this->column[$toip]=$columns+1;
+                    $columns++;
+                }
+    
+                $this->trace_array[$this->db->f('id')]=
+                            array (
+                                   'id'        => $this->db->f('id'),
+                                   'direction' => $this->db->f('direction'),
+                                   'fromip'    => $this->db->f('fromip'),
+                                   'toip'      => $toip,
+                                   'method'    => $this->db->f('method'),
+                                   'protocol'  => $protocol,
+                                   'date'      => $this->db->f('date'),
+                                   'status'    => $this->db->f('status'),
+                                   'timestamp' => $this->db->f('timestamp'),
+                                   'msg'       => $this->db->f('msg'),
+                                   'md5'       => md5($this->db->f('msg'))
+                                   );
+            }
+        }
+    }
+
+    function show($callid,$fromtag,$proxyIP) {
 
         $action           = $_REQUEST['action'];
         $toggleVisibility = $_REQUEST['toggleVisibility'];
@@ -4245,164 +4357,115 @@ class SER_trace {
 			$this->togglePublicVisibility($callid,$fromtag,$toggleVisibility);
         }
 
-        $query="select *,UNIX_TIMESTAMP(date) as timestamp
-        from $this->table where callid = '$callid'
-        and traced_user = ''";
-
-        if ($status)  $query.=" and status = '$status' ";
-        if ($method)  $query.=" and method = '$method'";
-
-        $query.=" order by id limit 1000";
-
-        dprint($query);
-
-    	$this->db->query($query);
-        $rows=$this->db->num_rows();
-
         if ($_SERVER['HTTPS']=="on") {
             $protocolURL="https://";
         } else {
             $protocolURL="http://";
         }
 
-        if ($this->db->num_rows()) {
+        $this->getTrace($callid,$fromtag,$proxyIP);
 
-	        print "
-            <h3>CDRTool SIP session trace $callid $authorize</h3>
-
-            <table border=0 width=100%>
-            <tr>
-            <form method=post name=visibility>
-            ";
-            if ($this->isAuthorized) {
-		        $key="callid-".trim($callid).trim($fromtag);
-
-                $query=sprintf("select * from memcache where `key` = '%s'",addslashes($key));
-                dprint($query);
-                $this->cdrtool->query($query);
-
-				$basicURL=$protocolURL.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
-
-                if ($this->cdrtool->num_rows()) {
-                	$selected_toggleVisibility['public']="selected";
-					$fullURL=$basicURL."&public=1";
-                    $color2="lightblue";
-                } else {
-                	$selected_toggleVisibility['private']="selected";
-        			$fullURL=$basicURL;
-                }
-
-                print "
-            	<td align=left width=50% bgcolor=$color2>
-
-                Trace is visible
-                <select name=toggleVisibility onChange=\"document.visibility.submit.disabled = true; location.href = '$basicURL&action=toggleVisibility&toggleVisibility=' + this.options[this.selectedIndex].value\">
-                <option $selected_toggleVisibility[public] value=1>without authorization
-                <option $selected_toggleVisibility[private] value=0>only for authorized users
-                </select>
-                <input type=hidden name=action value=toggleVisibility>
-                ";
-          		print "<a href=$fullURL>URL for this trace</a></td>";
-            } else {
-            	print "<td align=left width=50%>";
-            }
-
-
-            print "</td>
-            </form>
-            <td align=right width=50%>
-            Click on each trace entry to see the full message.
-            </td>
-            </tr>
-            </table>
-    	    ";
-
-        } else {
+        if (!count($this->trace_array)) {
             print "<p>
             SIP trace for session id $callid is not available.";
             return;
+		}
+
+        print "
+        <h3>CDRTool SIP session trace $callid $authorize</h3>
+
+        <table border=0 width=100%>
+        <tr>
+        <form method=post name=visibility>
+        ";
+        if ($this->isAuthorized) {
+            $key="callid-".trim($callid).trim($fromtag);
+
+            $query=sprintf("select * from memcache where `key` = '%s'",addslashes($key));
+            dprint($query);
+            $this->cdrtool->query($query);
+
+            $basicURL=$protocolURL.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+
+            if ($this->cdrtool->num_rows()) {
+                $selected_toggleVisibility['public']="selected";
+                $fullURL=$basicURL."&public=1";
+                $color2="lightblue";
+            } else {
+                $selected_toggleVisibility['private']="selected";
+                $fullURL=$basicURL;
+            }
+
+            print "
+            <td align=left width=50% bgcolor=$color2>
+
+            Trace is visible
+            <select name=toggleVisibility onChange=\"document.visibility.submit.disabled = true; location.href = '$basicURL&action=toggleVisibility&toggleVisibility=' + this.options[this.selectedIndex].value\">
+            <option $selected_toggleVisibility[public] value=1>without authorization
+            <option $selected_toggleVisibility[private] value=0>only for authorized users
+            </select>
+            <input type=hidden name=action value=toggleVisibility>
+            ";
+            print "<a href=$fullURL>URL for this trace</a></td>";
+        } else {
+            print "<td align=left width=50%>";
         }
 
-		$columns=0;
 
-        while ($this->db->next_record()) {
+        print "</td>
+        </form>
+        <td align=right width=50%>
+        Click on each trace entry to see the full message.
+        </td>
+        </tr>
+        </table>
+        ";
 
-			if (preg_match("/^(udp|tcp|tls):(.*)$/",$this->db->f('toip'),$m)) {
-            	$toip=$m[2];
-            	$protocol=$m[1];
-            }
+        foreach (array_keys($this->trace_array) as $key) {
 
-            if (!$column[$this->db->f('fromip')]) {
-                $column[$this->db->f('fromip')]=$columns+1;
-                $columns++;
-            }
-
-            if (!$column[$toip]) {
-                $column[$toip]=$columns+1;
-                $columns++;
-            }
-
-            $trace_array[$this->db->f('id')]=
-            			array (
-                               'id'        => $this->db->f('id'),
-                               'direction' => $this->db->f('direction'),
-                               'fromip'    => $this->db->f('fromip'),
-                               'toip'      => $toip,
-                               'method'    => $this->db->f('method'),
-                               'protocol'  => $protocol,
-                               'date'      => $this->db->f('date'),
-                               'status'    => $this->db->f('status'),
-                               'timestamp' => $this->db->f('timestamp'),
-                               'msg'       => $this->db->f('msg'),
-                               'md5'       => md5($this->db->f('msg'))
-                               );
-        }
-
-        foreach (array_keys($trace_array) as $key) {
-
-            if ($trace_array[$key]['direction'] == 'in') {
+            if ($this->trace_array[$key]['direction'] == 'in') {
 
                 if (is_array($this->SIPProxies)) {
-                    $thisIP=explode(":",$trace_array[$key]['fromip']);
+                    $thisIP=explode(":",$this->trace_array[$key]['fromip']);
                     if (in_array($thisIP[0],array_keys($this->SIPProxies))) {
-                    	$trace_array[$key]['isProxy'] = 1;
+                    	$this->trace_array[$key]['isProxy'] = 1;
                     }
                 }
 
-                if ($trace_array[$key]['fromip'] == $trace_array[$key]['toip']) {
-                	$trace_array[$key]['arrow_align'] = "left";
+                if ($this->trace_array[$key]['fromip'] == $this->trace_array[$key]['toip']) {
+                	$this->trace_array[$key]['arrow_align'] = "left";
                 	$arrow_direction="loop";
-				} else if ($column[$trace_array[$key]['fromip']] < $column[$trace_array[$key]['toip']]) {
+				} else if ($this->column[$this->trace_array[$key]['fromip']] < $this->column[$this->trace_array[$key]['toip']]) {
                 	$arrow_direction="right";
-                	$trace_array[$key]['arrow_align'] = "right";
+                	$this->trace_array[$key]['arrow_align'] = "right";
                 } else {
                 	$arrow_direction="left";
-                	$trace_array[$key]['arrow_align'] = "left";
+                	$this->trace_array[$key]['arrow_align'] = "left";
                 }
-				$trace_array[$key]['msg_possition']   = $column[$trace_array[$key]['toip']];
-                $trace_array[$key]['arrow_possition'] = $column[$trace_array[$key]['fromip']];
-                $trace_array[$key]['arrow_direction'] = $arrow_direction;
+				$this->trace_array[$key]['msg_possition']   = $this->column[$this->trace_array[$key]['toip']];
+                $this->trace_array[$key]['arrow_possition'] = $this->column[$this->trace_array[$key]['fromip']];
+                $this->trace_array[$key]['arrow_direction'] = $arrow_direction;
 
             } else {
-                if ($trace_array[$key]['fromip'] == $trace_array[$key]['toip']) {
-                	$trace_array[$key]['arrow_align'] = "left";
+                if ($this->trace_array[$key]['fromip'] == $this->trace_array[$key]['toip']) {
+                	$this->trace_array[$key]['arrow_align'] = "left";
                 	$arrow_direction="loop";
-				} else if ($column[$trace_array[$key]['fromip']] < $column[$trace_array[$key]['toip']]) {
-                	$trace_array[$key]['arrow_align'] = "left";
+				} else if ($this->column[$this->trace_array[$key]['fromip']] < $this->column[$this->trace_array[$key]['toip']]) {
+                	$this->trace_array[$key]['arrow_align'] = "left";
                 	$arrow_direction="right";
                 } else {
-                	$trace_array[$key]['arrow_align'] = "right";
+                	$this->trace_array[$key]['arrow_align'] = "right";
                 	$arrow_direction="left";
                 }
 
-				$trace_array[$key]['msg_possition']   = $column[$trace_array[$key]['fromip']];
-                $trace_array[$key]['arrow_possition'] = $column[$trace_array[$key]['toip']];
-                $trace_array[$key]['arrow_direction'] = $arrow_direction;
+				$this->trace_array[$key]['msg_possition']   = $this->column[$this->trace_array[$key]['fromip']];
+                $this->trace_array[$key]['arrow_possition'] = $this->column[$this->trace_array[$key]['toip']];
+                $this->trace_array[$key]['arrow_direction'] = $arrow_direction;
             }
         }
 
-        #print "<pre>";
-        #print_r($trace_array);
+        //print "<pre>";
+        //print_r($this->trace_array);
         print "
         <p>
         <a name=#top>
@@ -4413,7 +4476,7 @@ class SER_trace {
         <td align=center><b>Time</b></td>
         ";
 
-        foreach (array_keys($column) as $_key) {
+        foreach (array_keys($this->column) as $_key) {
         	unset($isProxy);
         	if (is_array($this->SIPProxies)) {
             	$IPels=explode(":",$_key);
@@ -4434,26 +4497,26 @@ class SER_trace {
 
         $i=0;
 
-        foreach (array_keys($trace_array) as $key) {
+        foreach (array_keys($this->trace_array) as $key) {
 
             $i++;
 
-            $id        = $trace_array[$key]['id'];
-            $msg       = $trace_array[$key]['msg'];
-            $fromip    = $trace_array[$key]['fromip'];
-            $toip      = $trace_array[$key]['toip'];
-            $date      = substr($trace_array[$key]['date'],11);
-            $status    = $trace_array[$key]['status'];
-            $direction = $trace_array[$key]['direction'];
-            $timestamp = $trace_array[$key]['timestamp'];
-            $method    = $trace_array[$key]['method'];
-            $isProxy   = $trace_array[$key]['isProxy'];
+            $id        = $this->trace_array[$key]['id'];
+            $msg       = $this->trace_array[$key]['msg'];
+            $fromip    = $this->trace_array[$key]['fromip'];
+            $toip      = $this->trace_array[$key]['toip'];
+            $date      = substr($this->trace_array[$key]['date'],11);
+            $status    = $this->trace_array[$key]['status'];
+            $direction = $this->trace_array[$key]['direction'];
+            $timestamp = $this->trace_array[$key]['timestamp'];
+            $method    = $this->trace_array[$key]['method'];
+            $isProxy   = $this->trace_array[$key]['isProxy'];
 
-            $msg_possition   = $trace_array[$key]['msg_possition'];
-            $arrow_possition = $trace_array[$key]['arrow_possition'];
-            $arrow_direction = $trace_array[$key]['arrow_direction'];
-            $arrow_align     = $trace_array[$key]['arrow_align'];
-            $md5             = $trace_array[$key]['md5'];
+            $msg_possition   = $this->trace_array[$key]['msg_possition'];
+            $arrow_possition = $this->trace_array[$key]['arrow_possition'];
+            $arrow_direction = $this->trace_array[$key]['arrow_direction'];
+            $arrow_align     = $this->trace_array[$key]['arrow_align'];
+            $md5             = $this->trace_array[$key]['md5'];
 
             if ($i==1) $begin_timestamp = $timestamp;
             $timeline=$timestamp-$begin_timestamp;
@@ -4564,7 +4627,7 @@ class SER_trace {
 
             $column_current=1;
             
-            while ($column_current <= count($column)) {
+            while ($column_current <= count($this->column)) {
 
                 if ($arrow_possition==$column_current) {
                     if ($direction=='out') {
@@ -4630,7 +4693,7 @@ class SER_trace {
                 }
             }
 
-            $trace_span=count($column)+2;
+            $trace_span=count($this->column)+2;
 
             print "
             <tr>

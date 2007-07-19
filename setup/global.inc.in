@@ -278,8 +278,14 @@ $DATASOURCES=array(
                                                  "10.0.0.2"=>"SIP Proxy 2"
                                                 ),
                      "invisible"          => 1 // hide this datasource in call search page / datasource selection 
+                    ),
+"sip_trace_thor"   =>array(
+                    "name"               => "SIP trace Thor",
+                    "enableThor"         => true,
+                    "soapEngineId"       => "id",   
+                    "invisible"          => 1 
                     )
-
+                    
 );
 
 // load other CDRTool libraries
