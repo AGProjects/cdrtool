@@ -4234,17 +4234,17 @@ class SIP_trace {
             $this->table             = $DATASOURCES[$cdr_source]['table'];
             $db_class                = $DATASOURCES[$cdr_source]['db_class'];
             $this->purgeRecordsAfter = $DATASOURCES[$cdr_source]['purgeRecordsAfter'];
-    
-            $this->db    = new $db_class;
-    
-            if (is_object($auth)) {
-                $this->isAuthorized=1;
-            }
-
-            if (is_array($DATASOURCES[$cdr_source]['SIPProxies'])) {
-                $this->SIPProxies=$DATASOURCES[$cdr_source]['SIPProxies'];
-            }
+            $this->db                = new $db_class;
         }
+
+        if (is_object($auth)) {
+        	$this->isAuthorized=1;
+        }
+
+        if (is_array($DATASOURCES[$cdr_source]['SIPProxies'])) {
+        	$this->SIPProxies=$DATASOURCES[$cdr_source]['SIPProxies'];
+        }
+
     }
 
     function getTrace ($callid,$fromtag,$proxyIP) {
@@ -4268,11 +4268,25 @@ class SIP_trace {
                 return 0;
             }
 
+            //print "<pre>";
+            $columns=0;
+
+
             foreach ($result as $_trace) {
 
                 if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->toip,$m)) {
                     $toip=$m[2];
                     $protocol=$m[1];
+                }
+
+                if (!$this->column[$_trace->fromip]) {
+                    $this->column[$_trace->fromip]=$columns+1;
+                    $columns++;
+                }
+    
+                if (!$this->column[$toip]) {
+                    $this->column[$toip]=$columns+1;
+                    $columns++;
                 }
 
 				preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/",$_trace->date,$m);
@@ -4283,7 +4297,7 @@ class SIP_trace {
                                    'id'        => $_trace->id,
                                    'direction' => $_trace->direction,
                                    'fromip'    => $_trace->fromip,
-                                   'toip'      => $_trace->toip,
+                                   'toip'      => $toip,
                                    'method'    => $_trace->method,
                                    'protocol'  => $protocol,
                                    'date'      => $_trace->date,
@@ -4294,7 +4308,6 @@ class SIP_trace {
                                    );
             }
 
-    
         } else {
             $query="select *,UNIX_TIMESTAMP(date) as timestamp
             from $this->table where callid = '$callid'
@@ -4760,6 +4773,11 @@ class SIP_trace {
     }
 
     function purgeRecords($days='') {
+
+		if ($this->enableThor) {
+            return 1;
+        }
+
         $b=time();
 
         if ($days) {
