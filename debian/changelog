@@ -1,3 +1,9 @@
+cdrtool (5.2.3) unstable; urgency=low
+
+  * Allow usernames without domain part in quota check
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 31 Jul 2007 13:14:43 +0200
+
 cdrtool (5.2.2) unstable; urgency=low
 
   * Added SIP trace for SIP Thor datasource

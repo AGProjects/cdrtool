@@ -2759,7 +2759,11 @@ class SERQuota {
         
                 while ($this->AccountsDB->next_record()) {
         
-                    $_account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
+                    if (strlen($this->AccountsDB->f('domain'))) {
+                    	$_account = $this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
+                    } else {
+                    	$_account = $this->AccountsDB->f('username');
+                    }
         
                     $_accounts[$_account]=array('timezone'   => $this->AccountsDB->f('timezone'),
                                                 'quota'      => $this->AccountsDB->f('quota'),
@@ -2854,8 +2858,6 @@ class SERQuota {
     function ShowAccountsWithQuota($treshhold='') {
 
 		if (!$this->LoadAccounts()) return 0;
-
-		print_r($this->accountsWithQuota);
 
         foreach (array_keys($this->Accounts) as $_subscriber) {
 			if ($this->Accounts[$_subscriber]['quota'] ) {

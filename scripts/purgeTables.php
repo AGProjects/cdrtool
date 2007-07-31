@@ -1,5 +1,9 @@
 #!/usr/bin/php
 <?
+# Note:
+# This script has not been tested anymore since the auto-rotation performed by
+# the MySQL stored procedures has been introduced in version 5.0
+
 define_syslog_variables();
 openlog("CDRTool purge", LOG_PID, LOG_LOCAL0);
 
