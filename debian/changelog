@@ -1,6 +1,7 @@
 cdrtool (5.2.3) unstable; urgency=low
 
   * Allow usernames without domain part in quota check
+  * Added publish of SIP domain statistics using SIP SIMPLE
 
  -- Adrian Georgescu <ag@ag-projects.com>  Tue, 31 Jul 2007 13:14:43 +0200
 

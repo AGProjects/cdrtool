@@ -2,6 +2,7 @@
 class SIPstatistics {
     var $SipEnabledZones = array();
 	var $online          = array();
+    var $StatisticsPresentities = array();
 
     function SIPstatistics () {
         global $CDRTool;
@@ -22,6 +23,11 @@ class SIPstatistics {
         	$this->online_db = new DB_siponline();
         } else {
         	$this->online_db = new DB_ser();
+        }
+
+
+        if (is_array($CDRTool['StatisticsPresentities'])) {
+        	$this->StatisticsPresentities = $CDRTool['StatisticsPresentities'];
         }
 
 	}
@@ -403,6 +409,18 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
             }
 
         	fwrite($handle,"{$key}\t\t{$online_users}\t\t{$sessions}\t\t{$caller}\t{$called}\n");
+
+            if (in_array($key,array_keys($this->StatisticsPresentities))) {
+
+                $activity='busy';
+                $note=sprintf("Sessions %d, Online %d",$sessions,$online_users);
+    			$this->publishPresence ($this->StatisticsPresentities[$key]['SOAPEngine'],
+                                        $this->StatisticsPresentities[$key]['SIPaccount'],
+                                        $note,
+                                        $activity);
+
+            }
+
         }
 
 		$total_text=sprintf("total\t\t%d\t\t%d\t\t%s\t%s\n",
@@ -595,7 +613,46 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         //dprint_r($this->online);
 	}
 
+    function publishPresence ($SOAPEngine,$SIPaccount,$note,$activity) {
 
+		require_once("provisioning_lib.phtml");
+
+        $this->PresencePort  = new WebService_GeckoSIMPLEProxy_PresencePort($SOAPEngine['url']);
+
+        $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+
+        $this->SOAPLoginPresence = array("username"    => $SOAPEngine['username'],
+                                         "password"    => $SOAPEngine['password']
+                                        );
+
+        $this->SoapAuthPresence = array('auth', $this->SOAPLoginPresence , 'urn:AGProjects:PresenceEngine', 0, '');
+    
+        $allowed_activities=array('open',
+                                  'idle',
+                                  'busy',
+                                  'available'
+                                 );
+    
+        if (in_array($activity,$allowed_activities)) {
+            $presentity['activity'] = $activity;
+        } else {
+            $presentity['activity'] = 'open';
+        }
+    
+        $presentity['note']     = $note;
+
+        $this->PresencePort->addHeader($this->SoapAuthPresence);
+        $result = $this->PresencePort->setPresenceInformation(array("username" =>$SIPaccount['username'],"domain"   =>$SIPaccount['domain']),$SIPaccount['password'], $presentity);
+    
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+    
+        return true;
+    }
 }
-
 ?>
