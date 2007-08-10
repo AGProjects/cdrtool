@@ -55,6 +55,9 @@ The longest match is done against entries present in the billing_customers
 table. The match yields a set of profiles to be used further depending on
 the type of session and day of the week.
 
+The billing_customers table field that matches the Source IP is gateway. Do
+not use hostnames for this field.
+
 
 Determination of the destination
 --------------------------------
@@ -411,6 +414,9 @@ set in global.inc:
  
 $CDRTool['provider']['toEmail']  = "support@example.com";
 $CDRTool['provider']['bccEmail'] = "cdrtool@example.com";
+
+To log to syslog about missing rates or incorrect setup of the rating tables
+enable 'reportMissingRates' in $CDRTool['rating'] section of global.inc
 
 
 Re-rating calls
