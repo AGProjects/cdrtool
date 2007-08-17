@@ -8,8 +8,8 @@ $path=dirname(realpath($_SERVER['PHP_SELF']));
 include($path."/../../global.inc");
 include($path."/../../cdrlib.phtml");
 
-$serTrace = new SER_trace("sip_trace");
+$SipTrace = new SIP_trace("sip_trace");
 
-$serTrace->purgeRecords();
+$SipTrace->purgeRecords();
 
 ?>

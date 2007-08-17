@@ -412,8 +412,13 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
 
             if (in_array($key,array_keys($this->StatisticsPresentities))) {
 
-                $activity='busy';
-                $note=sprintf("Sessions %d, Online %d",$sessions,$online_users);
+                if (!$online_users) {
+                	$activity='busy';
+                } else {
+                	$activity='open';
+                }
+
+                $note=sprintf("%s: Sessions %d, Online %d",$key, $sessions,$online_users);
     			$this->publishPresence ($this->StatisticsPresentities[$key]['SOAPEngine'],
                                         $this->StatisticsPresentities[$key]['SIPaccount'],
                                         $note,

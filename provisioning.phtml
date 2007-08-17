@@ -39,28 +39,31 @@ print "
 
 class SOAPEngine {
     var $services=array(
-                        'sip'     => array('recordsClass' => 'SipAccounts',
+                        'sipAccounts'     => array('recordsClass' => 'SipAccounts',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
-                        'sipa'    => array('recordsClass' => 'SipAliases',
+                        'sipAliases'    => array('recordsClass' => 'SipAliases',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
-                        'domains'    => array('recordsClass' => 'DomainStatistics',
+                        'sipDomains'    => array('recordsClass' => 'DomainStatistics',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
-                        'enum'    => array('recordsClass' => 'EnumMappings',
+                        'enumMappings'    => array('recordsClass' => 'EnumMappings',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
                                           ),
-                        'trusted' => array('recordsClass' => 'TrustedPeers',
+                        'enumRanges'    => array('recordsClass' => 'EnumRanges',
+                                           'soapClass'    => 'WebService_NGNPro_EnumPort'
+                                          ),
+                        'trustedParties' => array('recordsClass' => 'TrustedPeers',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
-                        'gateways' => array('recordsClass' => 'Gateways',
+                        'pstnGateways' => array('recordsClass' => 'Gateways',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                            ),
-                        'gwGroups' => array('recordsClass' => 'GatewayGroups',
+                        'pstnGwGroups' => array('recordsClass' => 'GatewayGroups',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                           ),
-                        'routes' => array('recordsClass' => 'Routes',
+                        'pstnRoutes' => array('recordsClass' => 'Routes',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                           )
                         );
@@ -495,6 +498,174 @@ class ENUMmappings extends Records {
         printf (" TLD: <input type=text size=10 name=tld_filter value='%s'>",$this->filters['tld']);
         printf (" Service: <input type=text size=10 name=type_filter value='%s'>",$this->filters['type']);
         printf (" Map to: <input type=text size=10 name=mapto_filter value='%s'>",$this->filters['mapto']);
+
+    }
+
+}
+
+class ENUMranges extends Records {
+    var $sortElements=array('changeDate' => 'Change date',
+                            'number'     => 'E.164 number',
+                            'tld'        => 'TLD',
+                            'owner'      => 'Owner'
+                            );
+
+    function ENUMranges(&$SOAPEngine) {
+        $this->filters   = array('number'       => trim($_REQUEST['number_filter']),
+                                 'tld'          => trim($_REQUEST['tld_filter']),
+                                 'type'         => trim($_REQUEST['type_filter']),
+                                 'mapto'        => trim($_REQUEST['mapto_filter']),
+                                 'owner'        => trim($_REQUEST['owner_filter'])
+                                );
+        
+		$this->Records(&$SOAPEngine);
+    }
+
+    function listRecords() {
+
+		$this->showSeachForm();
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getRanges();
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = $result->total;
+
+            //print "<pre>";
+            //print_r($result);
+
+            print "
+            <p>
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>E.164 prefix </b></td>
+                <td><b>Top level domain</b></td>
+                <td><b>DNS name</b></td>
+                <td><b>TTL</b></td>
+                <td><b>Min digits</b></td>
+                <td><b>Max digits</b></td>
+                <td><b>Used</b></td>
+                <td><b>Owner</b></td>
+                <td><b>Info</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $this->maxrowsperpage)  {
+    
+                    if (!$result->numbers[$i]) break;
+    
+                    $number = $result->numbers[$i];
+    
+                    $index=$this->next+$i+1;
+    
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+                    $j=1;
+                    foreach ($number->mappings as $_mapping) {
+                        if ($j==1) {
+                            printf("
+                            <tr bgcolor=%s>
+                            <td>%s</td>
+                            <td>+%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            </tr>",
+                            $bgcolor,
+                            $index,
+                            $number->id->number,
+                            $number->id->tld,
+                            $this->tel2enum($number->id->number,$number->id->tld),
+                            ucfirst($_mapping->type),
+                            $_mapping->mapto,
+                            $_mapping->ttl,
+                            $_mapping->priority,
+                            $number->owner,
+                            $number->info
+                            );
+                        } else {
+                            printf("
+                            <tr bgcolor=%s>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td></td>
+                            <td></td>
+                            </tr>",
+                            $bgcolor,
+                            ucfirst($_mapping->type),
+                            $_mapping->mapto,
+                            $_mapping->ttl,
+                            $_mapping->priority
+                            );
+
+                        }
+                        $j++;
+                    }
+
+                    printf("
+                    </tr>
+                    ");
+
+                    $i++;
+    
+                }
+    
+			}
+
+            print "</table>";
+
+            $this->showPagination($maxrows);
+
+            return true;
+        }
+    }
+
+    function showSeachFormCustom() {
 
     }
 
@@ -2524,6 +2695,7 @@ class DomainStatistics extends Records {
         }
     }
 }
+
 
 page_close();
 ?>
