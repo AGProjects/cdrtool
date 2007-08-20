@@ -102,3 +102,17 @@ If the connection between the SIP Proxy call control module and CDRTool
 rating engine is broken it is possible to have prepaid accounts that
 remained locked becuase no DebitBalance command has been received. To unlock
 these accounts find them in Rating -> Prepaid section and set Lock to 0.
+
+
+Third party tools
+-----------------
+
+FreeRADIUS-CDRTool by Dan-Cristian Bogos 
+
+FreeRADIUS module providing connectivity to CDRTool prepaid engine. Provides
+prepaid authentication for calls proxied by OpenSER and returns to OpenSER
+MaxCallDuration and user Credit. Can be easily extended to support other SIP
+or H323 devices.
+
+http://sourceforge.net/projects/frad-cdrtool
+
