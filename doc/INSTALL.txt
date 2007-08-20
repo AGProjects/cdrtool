@@ -257,8 +257,6 @@ Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/freeradius
 OpenSER setup
 ------------- 
 
-CDRTool version >4.3 have been tested only against OpenSER 1.0 and above.
-
 Enable MySQL storage for subscribers and accounting and Radius accounting.
 For SIP Tracing you need OpenSER siptrace module. To enable quota you must
 add an extra column in the subscriber table:
@@ -312,76 +310,12 @@ and uncomment the line:
 
 $INCLUDE               /etc/radiusclient-ng/dictionary
 
+Note
+----
 
-SOAP engine
------------
-
-Warning!
-
-Support for the SOAP server engine has been discontinued from version >=5.0.
-
-Note: It depends on the SOAP library from http://pear.php.net/package/SOAP.
-On Debian systems, this dependency is automatically installed but if CDRTool
-is installed from the tar archive you must download and install manually
-this SOAP library.
-
-The SOAP engine can be used by an external provisioning system to access
-information available in CDRTool (like prepaid accounts).
-
-The rating and other CDRTool functions (like provisioning of prepaid
-accounts or checking the balance) are available by using SOAP calls. The
-SOAP calls are translated into requests for the rating engine (which must be
-up and running, see previous section).
-
-The SOAP functionality including a WSDL file for creating a SOAP
-client is available in SOAP/WSDL/ directory.
-
-The SOAP server supports authorization, the SOAP clients must connect using
-an account that has soap_client right assigned into the CDRTool accounts
-page. The SOAP server uses the Apache web server for transport, it can work
-with both HTTP and HTTPS. The servers logs all network requests to syslog.
- 
-Define in global.inc the SOAP server URL where the client should connect to:
-
-$SOAPServer=array("cdr_source"=>"ser_radius",
-                  "location"  =>"https://example.com/CDRTool/SOAP/server.php",
-                  "wsdl"      =>"https://example.com/CDRTool/SOAP/WSDL/"
-                  );
-
-A test SOAP client is available in SOAP/client.php. It connects to the server and
-displays the CDRTool server version.
-
-To prevent a bug in PEAR SOAP server add the following last line in
-function SOAP_ServerErrorHandler from SOAP/Server.php
-
-function SOAP_ServerErrorHandler($errno, $errmsg, $filename,$linenum, $vars) {
-    ....
-
-    unset($soap_server_fault->backtrace);
-}
-
-Interaction between rating engine and SOAP:
-
-Function            Provisioning            B2BUA            RatingEngine        SOAP/XML
-----------------------------------------------------------------------------------------
-MaxSessionTime                                <-----------------> 
-
-DeductBalance                                 <-----------------> 
-
-AddBalance                ----------------------------------------------------------->
-                                                                   <------------------                        		
-
-CheckBalance              ----------------------------------------------------------->
-                                                                   <------------------                        		
-
-ShowAccounts              ----------------------------------------------------------->
-                                                                   <------------------                        		
-
-LastMissedCalls           -----------------------------------------------------------> 
-LastPlacedCalls           -----------------------------------------------------------> 
-LastReceivedCalls         -----------------------------------------------------------> 
-OpenSERLocations          -----------------------------------------------------------> 
-
+Many of the standard Radius attributes previously logged by default in the
+accounting packets must be added manually to "radius_extra" parameter of the
+acc module when using OpenSER >= 1.2.
 
 
 MediaProxy setup
