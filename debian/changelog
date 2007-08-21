@@ -1,3 +1,13 @@
+cdrtool (5.2.4) unstable; urgency=low
+
+  * Skip billing_rates.trafficRate absent from csv import
+  * Update rating documentation
+  * Added link to FreeRADIUS-CDRTool by Dan-Cristian Bogos
+  * Fixed sip trace purging
+  * Fix for virtualhost allowing .htaccess customization for cdrtool
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 21 Aug 2007 10:02:49 +0200
+
 cdrtool (5.2.3) unstable; urgency=low
 
   * Allow usernames without domain part in quota check
