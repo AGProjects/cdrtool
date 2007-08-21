@@ -3116,9 +3116,8 @@ class SERQuota {
                     );
             
                     dprint($log_query);
-                    $this->db->query($log_query);
 
-                    if (!$this->db->query($query)) {
+                    if (!$this->db->query($log_query)) {
                         $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                         print $log;
                         syslog(LOG_NOTICE,$log);
