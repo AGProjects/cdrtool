@@ -96,6 +96,7 @@ class SOAPEngine {
         }
 
         $this->url = $_SERVER['PHP_SELF']."?1=1";
+
         foreach (array_keys($this->extraFormElements) as $element) {
             if (!strlen($this->extraFormElements[$element])) continue;
             $this->url  .= sprintf('&%s=%s',$element,urlencode($this->extraFormElements[$element]));
@@ -134,10 +135,12 @@ class Records {
         $this->next                 = $_REQUEST['next'];
 
 		$this->getAllowedDomains();
+        $this->url = $this->SOAPEngine->url;
 
     }
 
     function showPagination($maxrows) {
+
         print "
         <p>
         <table border=0 align=center>
@@ -145,7 +148,11 @@ class Records {
         <td>
         ";
 
-        $this->SOAPEngine->url.="&service=".urlencode($this->SOAPEngine->service);
+        $this->url .= sprintf("&service=%s&sortBy=%s&sortOrder=%s",
+        urlencode($this->SOAPEngine->service),
+        urlencode($this->filters['sortBy']),
+        urlencode($this->filters['sortOrder'])
+        );
 
         if ($this->next != 0  ) {
             $show_next=$this->maxrowsperpage-$this->next;
@@ -153,11 +160,7 @@ class Records {
                 $mod_show_next  =  $show_next-2*$show_next;
             }
             if (!$mod_show_next) $mod_show_next=0;
-            $url_prev=$this->SOAPEngine->url."&next=$mod_show_next";
-            foreach (array_keys($this->SOAPEngine->extraFormElements) as $element) {
-        		if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
-            	$url_prev  .= sprintf('&%s=%s',$element,urlencode($this->SOAPEngine->extraFormElements[$element]));
-            }
+            $url_prev=$this->url."&next=$mod_show_next";
             print "<a href=\"$url_prev\">Previous</a> ";
         }
         
@@ -168,11 +171,7 @@ class Records {
 
         if ($this->next + $this->maxrowsperpage < $this->rows)  {
             $show_next = $this->maxrowsperpage + $this->next;
-            $url_next  = $this->SOAPEngine->url."&next=$show_next";
-            foreach (array_keys($this->SOAPEngine->extraFormElements) as $element) {
-        		if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
-            	$url_next  .= sprintf('&%s=%s',$element,urlencode($this->SOAPEngine->extraFormElements[$element]));
-            }
+            $url_next  = $this->url."&next=$show_next";
             print "<a href=\"$url_next\">Next</a>";
         }
 
@@ -364,11 +363,9 @@ class ENUMmappings extends Records {
                      'range'   => $range
                      );
 
-        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
-
-        if (strlen($this->filters['number'])) $this->SOAPEngine->url .= sprintf("&number_filter=%s",urlencode($this->filters['number']));
-        if (strlen($this->filters['type']))   $this->SOAPEngine->url .= sprintf("&type_filter=%s",urlencode($this->filters['type']));
-        if (strlen($this->filters['mapto']))  $this->SOAPEngine->url .= sprintf("&mapto_filter=%s",urlencode($this->filters['mapto']));
+        if (strlen($this->filters['number'])) $this->url .= sprintf("&number_filter=%s",urlencode($this->filters['number']));
+        if (strlen($this->filters['type']))   $this->url .= sprintf("&type_filter=%s",urlencode($this->filters['type']));
+        if (strlen($this->filters['mapto']))  $this->url .= sprintf("&mapto_filter=%s",urlencode($this->filters['mapto']));
 
         // Insert credetials
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -735,10 +732,8 @@ class TrustedPeers extends Records {
                         'range'   => $range
                         );
 
-        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
-
-        if (strlen($this->filters['ip'])) $this->SOAPEngine->url .= sprintf("&ip_filter=%s",urlencode($this->filters['ip']));
-        if (strlen($this->filters['description'])) $this->SOAPEngine->url .= sprintf("&description_filter=%s",urlencode($this->filters['description']));
+        if (strlen($this->filters['ip'])) $this->url .= sprintf("&ip_filter=%s",urlencode($this->filters['ip']));
+        if (strlen($this->filters['description'])) $this->url .= sprintf("&description_filter=%s",urlencode($this->filters['description']));
 
         // Call function
         $result     = $this->SOAPEngine->soapclient->getTrustedPeers($Query);
@@ -799,7 +794,7 @@ class TrustedPeers extends Records {
                         $bgcolor="white";
                     }
 
-                    $_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&ip_filter=%s",
+                    $_url = $this->url.sprintf("&service=%s&action=Delete&ip_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($peer->ip)
                     );
@@ -991,9 +986,7 @@ class GatewayGroups extends Records {
                         'range'   => $range
                         );
 
-        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
-
-        if (strlen($this->filters['group'])) $this->SOAPEngine->url .= sprintf("&group_filter=%s",urlencode($this->filters['group']));
+        if (strlen($this->filters['group'])) $this->url .= sprintf("&group_filter=%s",urlencode($this->filters['group']));
 
         // Call function
         $result     = $this->SOAPEngine->soapclient->getGatewayGroups($Query);
@@ -1053,7 +1046,7 @@ class GatewayGroups extends Records {
                         $bgcolor="white";
                     }
 
-                    $_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&group_filter=%s",
+                    $_url = $this->url.sprintf("&service=%s&action=Delete&group_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($group)
                     );
@@ -1239,10 +1232,8 @@ class Gateways extends Records {
                         'range'   => $range
                         );
 
-        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
-
-        if (strlen($this->filters['name'])) $this->SOAPEngine->url .= sprintf("&name_filter=%s",urlencode($this->filters['name']));
-        if (strlen($this->filters['group'])) $this->SOAPEngine->url .= sprintf("&group_filter=%s",urlencode($this->filters['group']));
+        if (strlen($this->filters['name'])) $this->url .= sprintf("&name_filter=%s",urlencode($this->filters['name']));
+        if (strlen($this->filters['group'])) $this->url .= sprintf("&group_filter=%s",urlencode($this->filters['group']));
 
         // Call function
         $result     = $this->SOAPEngine->soapclient->getGateways($Query);
@@ -1306,7 +1297,7 @@ class Gateways extends Records {
                         $bgcolor="white";
                     }
 
-                    $_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&name_filter=%s",
+                    $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($gateway->name)
                     );
@@ -1601,11 +1592,9 @@ class Routes extends Records {
                         'range'   => $range
                         );
 
-        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
-
-        if (strlen($this->filters['prefix'])) $this->SOAPEngine->url .= sprintf("&prefix_filter=%s",urlencode($this->filters['prefix']));
-        if (strlen($this->filters['gatewayGroup'])) $this->SOAPEngine->url .= sprintf("&gatewayGroup_filter=%s",urlencode($this->filters['gatewayGroup']));
-        if (strlen($this->filters['fromURI'])) $this->SOAPEngine->url .= sprintf("&fromURI_filter=%s",urlencode($this->filters['fromURI']));
+        if (strlen($this->filters['prefix'])) $this->url .= sprintf("&prefix_filter=%s",urlencode($this->filters['prefix']));
+        if (strlen($this->filters['gatewayGroup'])) $this->url .= sprintf("&gatewayGroup_filter=%s",urlencode($this->filters['gatewayGroup']));
+        if (strlen($this->filters['fromURI'])) $this->url .= sprintf("&fromURI_filter=%s",urlencode($this->filters['fromURI']));
 
         // Call function
         $result     = $this->SOAPEngine->soapclient->getRoutes($Query);
@@ -1668,7 +1657,7 @@ class Routes extends Records {
                         $bgcolor="white";
                     }
 
-                    $_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&gatewayGroup_filter=%s&fromURI_filter=%s&priority_filter=%s",
+                    $_url = $this->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&gatewayGroup_filter=%s&fromURI_filter=%s&priority_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($route->prefix),
                     urlencode($route->gatewayGroup),
@@ -1921,11 +1910,9 @@ class SIPAccounts extends Records {
                         'range'   => $range
                         );
 
-        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
-
-        if (strlen($this->filters['username'])) $this->SOAPEngine->url .= sprintf("&username_filter=%s",urlencode($this->filters['username']));
-        if (strlen($this->filters['domain']))   $this->SOAPEngine->url .= sprintf("&domain_filter=%s",urlencode($this->filters['domain']));
-        if (strlen($this->filters['fullname'])) $this->SOAPEngine->url .= sprintf("&fullname_filter=%s",urlencode($this->filters['fullname']));
+        if (strlen($this->filters['username'])) $this->url .= sprintf("&username_filter=%s",urlencode($this->filters['username']));
+        if (strlen($this->filters['domain']))   $this->url .= sprintf("&domain_filter=%s",urlencode($this->filters['domain']));
+        if (strlen($this->filters['fullname'])) $this->url .= sprintf("&fullname_filter=%s",urlencode($this->filters['fullname']));
 
         // Insert credetials
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -1942,7 +1929,6 @@ class SIPAccounts extends Records {
         } else {
 
 			$this->rows = $result->total;
-
             print "
             <p>
             <table border=0 align=center>
@@ -1992,7 +1978,7 @@ class SIPAccounts extends Records {
                         $bgcolor="white";
                     }
 
-        			$_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&username_filter=%s&domain_filter=%s",
+        			$_url = $this->url.sprintf("&service=%s&action=Delete&username_filter=%s&domain_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($account->id->username),
                     urlencode($account->id->domain)
@@ -2149,13 +2135,6 @@ class SIPAccounts extends Records {
             printf (" CallerId: <input type=text size=11 name=rpid value='%s'>",$_REQUEST['rpid']);
             printf (" Owner: <input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
             print " TZ: ";
-
-            global $CDRTool;
-            if ($_REQUEST['timezone']) {
-				$this->timezone=$_REQUEST['timezone'];
-            } else {
-				$this->timezone=$CDRTool['provider']['timezone'];
-            }
 
             $this->showTimezones();
 
@@ -2323,12 +2302,10 @@ class SIPAliases extends Records {
                         'range'   => $range
                         );
 
-        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
-
-        if (strlen($this->filters['aliasUsername']))  $this->SOAPEngine->url .= sprintf("&alias_username_filter=%s",urlencode($this->filters['aliasUsername']));
-        if (strlen($this->filters['aliasDomain']))    $this->SOAPEngine->url .= sprintf("&alias_domain_filter=%s",urlencode($this->filters['aliasDomain']));
-        if (strlen($this->filters['targetUsername'])) $this->SOAPEngine->url .= sprintf("&target_username_filter=%s",urlencode($this->filters['targetUsername']));
-        if (strlen($this->filters['targetDomain']))   $this->SOAPEngine->url .= sprintf("&target_domain_filter=%s",urlencode($this->filters['targetDomain']));
+        if (strlen($this->filters['aliasUsername']))  $this->url .= sprintf("&alias_username_filter=%s",urlencode($this->filters['aliasUsername']));
+        if (strlen($this->filters['aliasDomain']))    $this->url .= sprintf("&alias_domain_filter=%s",urlencode($this->filters['aliasDomain']));
+        if (strlen($this->filters['targetUsername'])) $this->url .= sprintf("&target_username_filter=%s",urlencode($this->filters['targetUsername']));
+        if (strlen($this->filters['targetDomain']))   $this->url .= sprintf("&target_domain_filter=%s",urlencode($this->filters['targetDomain']));
 
         // Insert credetials
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -2393,7 +2370,7 @@ class SIPAliases extends Records {
                         $bgcolor="white";
                     }
 
-        			$_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&alias_username_filter=%s&alias_domain_filter=%s",
+        			$_url = $this->url.sprintf("&service=%s&action=Delete&alias_username_filter=%s&alias_domain_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($alias->id->username),
                     urlencode($alias->id->domain)
@@ -2644,7 +2621,7 @@ class DomainStatistics extends Records {
                         $bgcolor="white";
                     }
 
-        			$_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
+        			$_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($domain->domain)
                     );
@@ -2848,7 +2825,7 @@ class Domains extends Records {
                         $bgcolor="white";
                     }
 
-        			$_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
+        			$_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($domain)
                     );
