@@ -108,16 +108,17 @@ class SOAPEngine {
         $selected_soapEngine[$this->service]='selected';
 
         printf ("<select name=service onChange=\"document.soapengine.submit.disabled = true; location.href = '%s&service=' + this.options[this.selectedIndex].value\">",$this->url);
-        $j=0;
+        $j=1;
         foreach (array_keys($this->soapEngines) as $_engine) {
-        	if ($j) printf ("<option value=''>--------");
+        	if ($j>1) printf ("<option value=''>--------");
+            $k=1;
             foreach (array_keys($this->services) as $_service) {
                 $idx=$_engine.":".$_service;
-                printf ("<option value='%s:%s' %s>%s:%s",$_engine,$_service,$selected_soapEngine[$idx],ucfirst($_service),$this->soapEngines[$_engine]['name']);
+                printf ("<option value='%s:%s' %s>%d.%d %s:%s",$_engine,$_service,$selected_soapEngine[$idx],$j,$k,ucfirst($_service),$this->soapEngines[$_engine]['name']);
+                $k++;
             }
             $j++;
         }
-
         printf ("</select>");
     }
 }
@@ -311,8 +312,19 @@ class Records {
     }
 
     function getAllowedDomains() {
-        // retrun a list of allowed domains for given reseller to display
-        // as selection list in various pages
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclient->getDomains();
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            $this->allowedDomains=$result;
+        }
     }
 }
 
@@ -1939,6 +1951,7 @@ class SIPAccounts extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>SIP account</b></td>
+                <td><b>Reseller</b></td>
                 <td><b>Timezone</b></td>
                 <td><b>Full name</b></td>
                 <td><b>Email</b></td>
@@ -2016,6 +2029,7 @@ class SIPAccounts extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
+                    <td>%s</td>
                     <td>%s %s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -2028,6 +2042,7 @@ class SIPAccounts extends Records {
                     $bgcolor,
                     $index,
                     $sip_account,
+                    $account->reseller,
                     $account->timezone,
                     $account->firstName,
                     $account->lastName,
@@ -2129,14 +2144,16 @@ class SIPAccounts extends Records {
 
             }
 
-            printf (" Pass: <input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
+            printf (" Password: <input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
             printf (" Name: <input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
-            printf (" Email: <input type=text size=15 name=email value='%s'>",$_REQUEST['email']);
-            printf (" CallerId: <input type=text size=11 name=rpid value='%s'>",$_REQUEST['rpid']);
+            printf (" Email: <input type=text size=25 name=email value='%s'>",$_REQUEST['email']);
+            //printf (" CallerId: <input type=text size=11 name=rpid value='%s'>",$_REQUEST['rpid']);
             printf (" Owner: <input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
+            /*
             print " TZ: ";
 
             $this->showTimezones();
+            */
 
             print "
 	        </td>
@@ -2171,11 +2188,23 @@ class SIPAccounts extends Records {
         }
 
 		if (is_array($this->allowedDomains) && !in_array($domain,$this->allowedDomains)) {
-            printf ("<p><font color=red>Error: Missing SIP domain %s is not allowed</font>",$domain);
+            printf ("<p><font color=red>Error: SIP domain %s is not allowed</font>",$domain);
             return false;
         }
 
         $name_els  = explode(" ", trim($_REQUEST['fullname']));
+
+		if (strlen(trim($_REQUEST['timezone']))) {
+            $timezone=trim($_REQUEST['timezone']);
+        } else {
+            $timezone='Europe/Amsterdam';
+        }
+
+        if (strlen(trim($_REQUEST['password']))) {
+            $password=trim($_REQUEST['password']);
+        } else {
+            $password=$this->RandomPassword(6);
+        }
 
         $account=array(
                      'id'     => array('username' => $username,
@@ -2183,10 +2212,9 @@ class SIPAccounts extends Records {
                                        ),
                      'firstName'  => $name_els[0],
                      'lastName'   => $name_els[1],
-                     'password'   => trim($_REQUEST['password']),
-                     'timezone'   => trim($_REQUEST['timezone']),
+                     'password'   => $password,
+                     'timezone'   => $timezone,
                      'email'      => trim($_REQUEST['email']),
-                     'rpid'       => trim($_REQUEST['rpid']),
                      'owner'      => intval($_REQUEST['owner'])
         			);
 
@@ -2225,20 +2253,20 @@ class SIPAccounts extends Records {
 
     }
 
-    function getAllowedDomains() {
-        // Insert credetials
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-        $result     = $this->SOAPEngine->soapclient->getDomains();
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-            $this->allowedDomains=$result;
+    function RandomPassword($len=11) {
+        $alf=array("a","b","c","d","e","f",
+               "h","i","j","k","l","m",
+               "n","p","r","s","t","w",
+               "x","y","1","2","3","4",
+               "5","6","7","8","9");
+        $i=0;
+        while($i < $len) {
+            srand((double)microtime()*1000000);
+            $randval = rand(0,28);
+            $string="$string"."$alf[$randval]";
+            $i++;
         }
+        return $string;
     }
 }
 
@@ -2264,10 +2292,11 @@ class SIPAliases extends Records {
     }
 
     function listRecords() {
+        $this->getAllowedDomains();
 
         // Make sure we apply the domain filter from the login credetials
         if ($this->allowedDomains && !$this->filters['aliasDomain']) {
-        	$this->filters['aliasDomain'] = $this->allowedDomains[0];
+        	//$this->filters['aliasDomain'] = $this->allowedDomains[0];
         }
 
         if ($this->filters['aliasDomain'] && $this->allowedDomains && !in_array($this->filters['aliasDomain'],$this->allowedDomains)) {
@@ -2459,7 +2488,8 @@ class SIPAliases extends Records {
 
         if ($this->allowedDomains) {
             $selected_domain[$this->filters['aliasDomain']]='selected';
-            printf ("<select name=alias_domain_filter>");
+            printf ("<select name=alias_domain_filter>
+            <option>");
 
             foreach ($this->allowedDomains as $_domain) {
                 printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
@@ -2490,7 +2520,16 @@ class SIPAliases extends Records {
             <input type=submit name=action value=Add>
             ";
 
-            printf (" SIP alias: <input type=text size=35 name=alias>");
+            printf (" SIP alias: <input type=text size=15 name=alias>");
+
+            if (is_array($this->allowedDomains)) {
+            	print "@<select name=domain>";
+                foreach ($this->allowedDomains as $_domain) {
+                    print "<option value=$_domain>$_domain\n";
+                }
+                print "</select>";
+            }
+
             printf (" SIP target: <input type=text size=35 name=target>");
             printf (" Owner: <input type=text size=10 name=owner>");
 
@@ -2514,9 +2553,27 @@ class SIPAliases extends Records {
     	$alias_els  = explode("@", trim($_REQUEST['alias']));
         $target_els = explode("@", trim($_REQUEST['target']));
 
+        $username=$alias_els[0];
+
+        if (strlen($alias_els[1])) {
+        	$domain=$alias_els[1];
+
+        } else if (trim($_REQUEST['domain'])) {
+            $domain=trim($_REQUEST['domain']);
+
+        } else {
+            printf ("<p><font color=red>Error: Missing SIP domain</font>");
+            return false;
+        }
+
+		if (is_array($this->allowedDomains) && !in_array($domain,$this->allowedDomains)) {
+            printf ("<p><font color=red>Error: SIP domain %s is not allowed</font>",$domain);
+            return false;
+        }
+
         $alias=array(
-                     'id'     => array('username' => $alias_els[0],
-                                       'domain'   => $alias_els[1]
+                     'id'     => array('username' => $username,
+                                       'domain'   => $domain
                                        ),
                      'target' => array('username' => $target_els[0],
                                        'domain'   => $target_els[1]
