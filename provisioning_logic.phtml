@@ -1,0 +1,2977 @@
+<?
+class SOAPEngine {
+    var $services=array(
+                        'sipAccounts'     => array('recordsClass' => 'SipAccounts',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                                          ),
+                        'sipAliases'    => array('recordsClass' => 'SipAliases',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                                          ),
+                        'sipDomains'    => array('recordsClass' => 'Domains',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                                          ),
+                        'sipUsage'    => array('recordsClass' => 'DomainStatistics',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                                          ),
+                        'enumMappings'    => array('recordsClass' => 'EnumMappings',
+                                           'soapClass'    => 'WebService_NGNPro_EnumPort'
+                                          ),
+                        'enumRanges'    => array('recordsClass' => 'EnumRanges',
+                                           'soapClass'    => 'WebService_NGNPro_EnumPort'
+                                          ),
+                        'trustedParties' => array('recordsClass' => 'TrustedPeers',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                                          ),
+                        'pstnGateways' => array('recordsClass' => 'Gateways',
+                                           'soapClass'    => 'WebService_NGNPro_NetworkPort'
+                                           ),
+                        'pstnGwGroups' => array('recordsClass' => 'GatewayGroups',
+                                           'soapClass'    => 'WebService_NGNPro_NetworkPort'
+                                          ),
+                        'pstnRoutes' => array('recordsClass' => 'Routes',
+                                           'soapClass'    => 'WebService_NGNPro_NetworkPort'
+                                          )
+                        );
+
+    function SOAPEngine($service,$soapEngines,$extraFormElements=array()) {
+
+        /*
+
+        $soapEngines=array(
+                                   'mdns' => array('name'=> 'Managed DNS',
+                                                 'username'=> 'soapadmin',
+                                                 'password'=> 'passwd',
+                                                 'url'     => 'http://example.com:9200/',
+                                                 'impersonate' => 1745
+                                                 ),
+        */
+
+        $this->soapEngines = $soapEngines;
+
+        if (is_array($this->soapEngines)) {
+
+            if (!$service) {
+                // Use first defined service in global.inc
+                $_services     = array_keys($this->services);
+                $_soapids      = array_keys($this->soapEngines);
+                $service       = $_soapids[0].":".$_services[0];
+            }
+
+            if (is_array($extraFormElements)) {
+	        	$this->extraFormElements    = $extraFormElements;
+            }
+
+            $this->service = $service;
+
+            $_els=explode(":",$this->service);
+
+            $this->soapEngineId   = $_els[0];
+            $this->soapEnginePort = $_els[1];
+            $this->recordsClass   = $this->services[$this->soapEnginePort]['recordsClass'];
+            $this->soapClass      = $this->services[$this->soapEnginePort]['soapClass'];
+
+			$impersonate=intval($this->soapEngines[$this->soapEngineId]['impersonate']);
+
+            $this->SOAPlogin = array(
+                                   "username"    => $this->soapEngines[$this->soapEngineId]['username'],
+                                   "password"    => $this->soapEngines[$this->soapEngineId]['password'],
+                                   "admin"       => true,
+                                   "impersonate" => $impersonate
+                                   );
+
+            $this->SOAPurl=$this->soapEngines[$this->soapEngineId]['url'];
+    
+            $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+
+
+    		// Instantiate the SOAP client
+            $this->soapclient = new $this->soapClass($this->SOAPurl);
+
+            $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
+            $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+            $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+    	} else {
+            print "<p><font color=red>Error: No SOAP credentials defined.</font>";
+        }
+
+        $this->url = $_SERVER['PHP_SELF']."?1=1";
+        foreach (array_keys($this->extraFormElements) as $element) {
+            if (!strlen($this->extraFormElements[$element])) continue;
+            $this->url  .= sprintf('&%s=%s',$element,urlencode($this->extraFormElements[$element]));
+        }
+    }
+
+    function showEngineSelection() {
+
+        $selected_soapEngine[$this->service]='selected';
+
+        printf ("<select name=service onChange=\"document.soapengine.submit.disabled = true; location.href = '%s&service=' + this.options[this.selectedIndex].value\">",$this->url);
+        $j=0;
+        foreach (array_keys($this->soapEngines) as $_engine) {
+        	if ($j) printf ("<option value=''>--------");
+            foreach (array_keys($this->services) as $_service) {
+                $idx=$_engine.":".$_service;
+                printf ("<option value='%s:%s' %s>%s:%s",$_engine,$_service,$selected_soapEngine[$idx],ucfirst($_service),$this->soapEngines[$_engine]['name']);
+            }
+            $j++;
+        }
+
+        printf ("</select>");
+    }
+}
+
+class Records {
+	var $maxrowsperpage  = '20';
+    var $SipSettingsPage = 'sip_settings-dev.phtml';
+    var $allowedDomains  = false;
+
+    function Records(&$SOAPEngine) {
+    	$this->SOAPEngine=&$SOAPEngine;
+
+        $this->filters['sortBy']    = trim($_REQUEST['sortBy']);
+        $this->filters['sortOrder'] = trim($_REQUEST['sortOrder']);
+        $this->next                 = $_REQUEST['next'];
+
+		$this->getAllowedDomains();
+
+    }
+
+    function showPagination($maxrows) {
+        print "
+        <p>
+        <table border=0 align=center>
+        <tr>
+        <td>
+        ";
+
+        $this->SOAPEngine->url.="&service=".urlencode($this->SOAPEngine->service);
+
+        if ($this->next != 0  ) {
+            $show_next=$this->maxrowsperpage-$this->next;
+            if  ($show_next < 0)  {
+                $mod_show_next  =  $show_next-2*$show_next;
+            }
+            if (!$mod_show_next) $mod_show_next=0;
+            $url_prev=$this->SOAPEngine->url."&next=$mod_show_next";
+            foreach (array_keys($this->SOAPEngine->extraFormElements) as $element) {
+        		if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
+            	$url_prev  .= sprintf('&%s=%s',$element,urlencode($this->SOAPEngine->extraFormElements[$element]));
+            }
+            print "<a href=\"$url_prev\">Previous</a> ";
+        }
+        
+        print "
+        </td>
+        <td>
+        ";
+
+        if ($this->next + $this->maxrowsperpage < $this->rows)  {
+            $show_next = $this->maxrowsperpage + $this->next;
+            $url_next  = $this->SOAPEngine->url."&next=$show_next";
+            foreach (array_keys($this->SOAPEngine->extraFormElements) as $element) {
+        		if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
+            	$url_next  .= sprintf('&%s=%s',$element,urlencode($this->SOAPEngine->extraFormElements[$element]));
+            }
+            print "<a href=\"$url_next\">Next</a>";
+        }
+
+        print "
+        </td>
+        </tr>
+        </table>
+        ";
+    }
+
+    function showSeachFormCustom() {
+    }
+
+    function showSeachForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=soapengine action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+            $this->SOAPEngine->showEngineSelection();
+
+            $this->showSeachFormCustom();
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            $this->showSortForm();
+
+            print "
+            <input type=submit name=action value=Search>
+            ";
+            $this->printHiddenFormElements();
+
+            print "
+	        </td>
+            </form>
+        </tr>
+        </table>
+        ";
+
+        if ($_REQUEST['action'] != 'Delete') $this->showAddForm();
+
+    }
+
+    function listRecords() {
+    }
+
+    function addRecord() {
+    }
+
+    function deleteRecord() {
+    }
+
+    function tel2enum($tel,$tld) {
+
+        if (strlen($tld) == 0)  $tld="e164.arpa";
+
+        // transform telephone number in FQDN Enum style domain name
+        if (preg_match("/^[+]?(\d+)$/",$tel,$m)) {
+            $l=strlen($m[1]);
+            $rev_num="";
+            $z=0;
+            while ($z < $l) {
+                $ss=substr($m[1],$z,1);
+                $enum=$ss.".".$enum;
+                $z++;
+            }
+            preg_match("/^(.*)\.$/",$enum,$m);
+            $enum=$m[1];
+            $enum=$enum.".$tld.";
+            return($enum);
+         } else {
+            return($tel);
+         }
+    }
+
+    function showAddForm() {
+	}
+
+    function showSortForm() {
+
+        if (!count($this->sortElements)) {
+            return;
+        }
+
+        $selected_sortBy[$this->filters['sortBy']]='selected';
+
+        //print " Sort ";
+
+        print "<select name=sortBy>";
+        foreach (array_keys($this->sortElements) as $key) {
+        	printf ("<option value='%s' %s>%s",$key,$selected_sortBy[$key],$this->sortElements[$key]);
+        }
+        print "</select>";
+
+        $selected_sortOrder[$this->filters['sortOrder']]='selected';
+        print "<select name=sortOrder>";
+        printf ("<option value='DESC' %s>DESC",$selected_sortOrder['DESC']);
+        printf ("<option value='ASC' %s>ASC",$selected_sortOrder['ASC']);
+        print "</select>";
+    }
+
+    function showTimezones() {
+        if (!$fp = fopen("timezones", "r")) {
+        	print _("Failed to open timezone file.");
+            return false;
+        }
+        print "<select name=timezone>";
+        print "\n<option>";
+        while ($buffer = fgets($fp,1024)) {
+        	$buffer=trim($buffer);
+            if ($this->timezone==$buffer) {
+                $selected="selected";
+            } else {
+                $selected="";
+            }
+            print "\n<option $selected>";
+            print "$buffer";
+        }
+        fclose($fp);
+        print "</select>";
+    }
+
+    function printHiddenFormElements () {
+        printf("<input type=hidden name=service value='%s'>",$this->SOAPEngine->service);
+
+        foreach (array_keys($this->SOAPEngine->extraFormElements) as $element) {
+        	if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
+            printf ("<input type=hidden name=%s value='%s'>\n",$element,$this->SOAPEngine->extraFormElements[$element]);
+        }
+
+    }
+
+    function getAllowedDomains() {
+        // retrun a list of allowed domains for given reseller to display
+        // as selection list in various pages
+    }
+}
+
+class ENUMmappings extends Records {
+    var $sortElements=array('changeDate' => 'Change date',
+                            'number'     => 'E.164 number',
+                            'tld'        => 'TLD',
+                            'owner'      => 'Owner'
+                            );
+
+    function ENUMmappings(&$SOAPEngine) {
+        $this->filters   = array('number'       => trim($_REQUEST['number_filter']),
+                                 'tld'          => trim($_REQUEST['tld_filter']),
+                                 'type'         => trim($_REQUEST['type_filter']),
+                                 'mapto'        => trim($_REQUEST['mapto_filter']),
+                                 'owner'        => trim($_REQUEST['owner_filter'])
+                                );
+        
+		$this->Records(&$SOAPEngine);
+    }
+
+    function listRecords() {
+
+		$this->showSeachForm();
+
+        // Filter
+        $filter=array('number' => $this->filters['number'],
+                      'type'   => $this->filters['type'],
+                      'mapto'  => $this->filters['mapto']
+                      );
+
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'changeDate';
+        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->filters['sortBy'],
+                         'direction' => $this->filters['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+
+        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
+
+        if (strlen($this->filters['number'])) $this->SOAPEngine->url .= sprintf("&number_filter=%s",urlencode($this->filters['number']));
+        if (strlen($this->filters['type']))   $this->SOAPEngine->url .= sprintf("&type_filter=%s",urlencode($this->filters['type']));
+        if (strlen($this->filters['mapto']))  $this->SOAPEngine->url .= sprintf("&mapto_filter=%s",urlencode($this->filters['mapto']));
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getNumbers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = $result->total;
+
+            //print "<pre>";
+            //print_r($result);
+
+            print "
+            <p>
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>E.164 number</b></td>
+                <td><b>Top level domain</b></td>
+                <td><b>DNS name</b></td>
+                <td><b>Service</b></td>
+                <td><b>Map to</b></td>
+                <td><b>TTL</b></td>
+                <td><b>Priority</b></td>
+                <td><b>Owner</b></td>
+                <td><b>Info</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    if (!$result->numbers[$i]) break;
+    
+                    $number = $result->numbers[$i];
+    
+                    $index=$this->next+$i+1;
+    
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+                    $j=1;
+                    foreach ($number->mappings as $_mapping) {
+                        if ($j==1) {
+                            printf("
+                            <tr bgcolor=%s>
+                            <td>%s</td>
+                            <td>+%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            </tr>",
+                            $bgcolor,
+                            $index,
+                            $number->id->number,
+                            $number->id->tld,
+                            $this->tel2enum($number->id->number,$number->id->tld),
+                            ucfirst($_mapping->type),
+                            $_mapping->mapto,
+                            $_mapping->ttl,
+                            $_mapping->priority,
+                            $number->owner,
+                            $number->info
+                            );
+                        } else {
+                            printf("
+                            <tr bgcolor=%s>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td></td>
+                            <td></td>
+                            </tr>",
+                            $bgcolor,
+                            ucfirst($_mapping->type),
+                            $_mapping->mapto,
+                            $_mapping->ttl,
+                            $_mapping->priority
+                            );
+
+                        }
+                        $j++;
+                    }
+
+                    printf("
+                    </tr>
+                    ");
+
+                    $i++;
+    
+                }
+    
+			}
+
+            print "</table>";
+
+            $this->showPagination($maxrows);
+
+            return true;
+        }
+    }
+
+    function showSeachFormCustom() {
+
+        printf (" E.164 number: <input type=text size=10 name=number_filter value='%s'>",$this->filters['number']);
+        printf (" TLD: <input type=text size=10 name=tld_filter value='%s'>",$this->filters['tld']);
+        printf (" Service: <input type=text size=10 name=type_filter value='%s'>",$this->filters['type']);
+        printf (" Map to: <input type=text size=10 name=mapto_filter value='%s'>",$this->filters['mapto']);
+
+    }
+
+}
+
+class ENUMranges extends Records {
+    var $sortElements=array('changeDate' => 'Change date',
+                            'number'     => 'E.164 number',
+                            'tld'        => 'TLD',
+                            'owner'      => 'Owner'
+                            );
+
+    function ENUMranges(&$SOAPEngine) {
+        $this->filters   = array('number'       => trim($_REQUEST['number_filter']),
+                                 'tld'          => trim($_REQUEST['tld_filter']),
+                                 'type'         => trim($_REQUEST['type_filter']),
+                                 'mapto'        => trim($_REQUEST['mapto_filter']),
+                                 'owner'        => trim($_REQUEST['owner_filter'])
+                                );
+        
+		$this->Records(&$SOAPEngine);
+    }
+
+    function listRecords() {
+
+		$this->showSeachForm();
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getRanges();
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = $result->total;
+
+            //print "<pre>";
+            //print_r($result);
+
+            print "
+            <p>
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>E.164 prefix </b></td>
+                <td><b>Top level domain</b></td>
+                <td><b>DNS name</b></td>
+                <td><b>TTL</b></td>
+                <td><b>Min digits</b></td>
+                <td><b>Max digits</b></td>
+                <td><b>Used</b></td>
+                <td><b>Owner</b></td>
+                <td><b>Info</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    if (!$result->numbers[$i]) break;
+    
+                    $number = $result->numbers[$i];
+    
+                    $index=$this->next+$i+1;
+    
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+                    $j=1;
+                    foreach ($number->mappings as $_mapping) {
+                        if ($j==1) {
+                            printf("
+                            <tr bgcolor=%s>
+                            <td>%s</td>
+                            <td>+%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            </tr>",
+                            $bgcolor,
+                            $index,
+                            $number->id->number,
+                            $number->id->tld,
+                            $this->tel2enum($number->id->number,$number->id->tld),
+                            ucfirst($_mapping->type),
+                            $_mapping->mapto,
+                            $_mapping->ttl,
+                            $_mapping->priority,
+                            $number->owner,
+                            $number->info
+                            );
+                        } else {
+                            printf("
+                            <tr bgcolor=%s>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td></td>
+                            <td></td>
+                            </tr>",
+                            $bgcolor,
+                            ucfirst($_mapping->type),
+                            $_mapping->mapto,
+                            $_mapping->ttl,
+                            $_mapping->priority
+                            );
+
+                        }
+                        $j++;
+                    }
+
+                    printf("
+                    </tr>
+                    ");
+
+                    $i++;
+    
+                }
+    
+			}
+
+            print "</table>";
+
+            $this->showPagination($maxrows);
+
+            return true;
+        }
+    }
+
+    function showSeachFormCustom() {
+
+    }
+
+}
+
+class TrustedPeers extends Records {
+
+    var $sortElements=array(
+                            'description'   => 'Description',
+                            'ip' =>'IP address'
+                            );
+
+    function TrustedPeers(&$SOAPEngine) {
+    	$this->filters   = array('ip'     => trim($_REQUEST['ip_filter']),
+                                 'description'  => trim($_REQUEST['description_filter'])
+                                 );
+
+		$this->Records(&$SOAPEngine);
+    }
+
+    function listRecords() {
+
+		$this->showSeachForm();
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Filter
+        $filter=array('ip' => $this->filters['ip'],
+                      'description'   => $this->filters['description']
+                      );
+
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'description';
+        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'ASC';
+
+        $orderBy = array('attribute' => $this->filters['sortBy'],
+                         'direction' => $this->filters['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
+
+        if (strlen($this->filters['ip'])) $this->SOAPEngine->url .= sprintf("&ip_filter=%s",urlencode($this->filters['ip']));
+        if (strlen($this->filters['description'])) $this->SOAPEngine->url .= sprintf("&description_filter=%s",urlencode($this->filters['description']));
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getTrustedPeers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = $result->total;
+
+            print "
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>IP address</b></td>
+                <td><b>Protocol</b></td>
+                <td><b>From pattern</b></td>
+                <td><b>Description</b></td>
+                <td><b>Owner</b></td>
+                <td><b>Action</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    if (!$result->peers[$i]) break;
+    
+                    $peer = $result->peers[$i];
+    
+                    $index=$this->next+$i+1;
+
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+                    $_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&ip_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($peer->ip)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                    	$_REQUEST['ip_filter'] == $peer->ip) {
+                		$_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+                    $bgcolor,
+                    $index,
+                    $peer->ip,
+                    $peer->protocol,
+                    $peer->fromPattern,
+                    $peer->description,
+                    $peer->owner,
+                    $_url,
+                    $actionText
+                    );
+
+                    printf("
+                    </tr>
+                    ");
+
+                    $i++;
+    
+                }
+    
+			}
+
+            print "</table>";
+
+            $this->showPagination($maxrows);
+
+            return true;
+        }
+    }
+
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+            printf (" IP address: <input type=text size=20 name=ipaddress>");
+            printf (" Description: <input type=text size=30 name=description>");
+            printf (" Owner: <input type=text size=10 name=owner>");
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+
+            $this->printHiddenFormElements();
+
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+    	$ipaddress   = trim($_REQUEST['ipaddress']);
+        $description = trim($_REQUEST['description']);
+        $owner       = trim($_REQUEST['owner']);
+
+		if (!strlen($ipaddress) || !strlen($description)) {
+            printf ("<p><font color=red>Error: Missing IP or description. </font>");
+            return false;
+        }
+
+        $peer=array(
+                     'ip'          => $ipaddress,
+                     'description' => $description,
+                     'owner'       => intval($_REQUEST['owner'])
+        			);
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->addTrustedPeer($peer);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>Trusted peers %s has been added. </font>",$ipaddress);
+           return 1;
+        }
+    }
+
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
+
+        if (!strlen($this->filters['ip']) || !strlen($this->filters['ip'])) {
+            print "<p><font color=red>Error: missing IP address. </font>";
+            return 0;
+        }
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->deleteTrustedPeer($this->filters['ip']);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>Trusted peer %s has been deleted. </font> ",$this->filters['ip']);
+           unset($this->filters);
+           return 1;
+        }
+    }
+
+}
+
+class GatewayGroups extends Records {
+
+    var $sortElements=array(
+                            'name'   => 'Name'
+                            );
+
+    function GatewayGroups(&$SOAPEngine) {
+    	$this->filters   = array('group'   => trim($_REQUEST['group_filter'])
+                                 );
+
+		$this->Records(&$SOAPEngine);
+    }
+
+    function listRecords() {
+
+		$this->showSeachForm();
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Filter
+        $filter=array('name'  => $this->filters['group']
+                      );
+
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'name';
+        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'ASC';
+
+        $orderBy = array('attribute' => $this->filters['sortBy'],
+                         'direction' => $this->filters['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
+
+        if (strlen($this->filters['group'])) $this->SOAPEngine->url .= sprintf("&group_filter=%s",urlencode($this->filters['group']));
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getGatewayGroups($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = $result->total;
+
+            print "<pre>";
+            //print_r($result);
+            print "</pre>";
+            print "
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>Name</b></th>
+                <td><b>Action</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    if (!$result->groups[$i]) break;
+    
+                    $group = $result->groups[$i];
+    
+                    $index=$this->next+$i+1;
+
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+                    $_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&group_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($group)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                    	$_REQUEST['group_filter'] == $group) {
+                		$_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+                    $bgcolor,
+                    $index,
+                    $group,
+                    $_url,
+                    $actionText
+                    );
+
+                    printf("
+                    </tr>
+                    ");
+
+                    $i++;
+    
+                }
+    
+			}
+
+            print "</table>";
+
+            $this->showPagination($maxrows);
+
+            return true;
+        }
+    }
+
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+
+            printf (" Name: <input type=text size=20 name=name>");
+
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getGatewayGroups();
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+            $this->printHiddenFormElements();
+
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+    	$name     = trim($_REQUEST['name']);
+
+		if (!strlen($name)) {
+            printf ("<p><font color=red>Error: Missing name. </font>");
+            return false;
+        }
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->addGatewayGroup($name);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>Gateway group %s has been added. </font>",$name);
+           return 1;
+        }
+    }
+
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
+
+        if (!strlen($this->filters['group'])) {
+            print "<p><font color=red>Error: missing gateway group. </font>";
+            return 0;
+        }
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->deleteGatewayGroup($this->filters['group']);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>Gateway %s has been deleted. </font> ",$this->filters['group']);
+           unset($this->filters);
+           return 1;
+        }
+    }
+
+    function showSeachFormCustom() {
+        printf (" Group: <input type=text size=15 name=group_filter value='%s'>",$this->filters['group']);
+    }
+
+}
+
+class Gateways extends Records {
+
+    var $sortElements=array(
+                            'name'   => 'Name',
+                            'group'  => 'Group',
+                            'ip'     => 'IP address',
+                            'prefix' => 'Prefix'
+                            );
+
+    function Gateways(&$SOAPEngine) {
+    	$this->filters   = array('name'   => trim($_REQUEST['name_filter']),
+                                 'group'  => trim($_REQUEST['group_filter'])
+                                 );
+
+		$this->Records(&$SOAPEngine);
+    }
+
+    function listRecords() {
+
+		$this->showSeachForm();
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Filter
+        $filter=array('name'  => $this->filters['name'],
+                      'group' => $this->filters['group']
+                      );
+
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'name';
+        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'ASC';
+
+        $orderBy = array('attribute' => $this->filters['sortBy'],
+                         'direction' => $this->filters['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
+
+        if (strlen($this->filters['name'])) $this->SOAPEngine->url .= sprintf("&name_filter=%s",urlencode($this->filters['name']));
+        if (strlen($this->filters['group'])) $this->SOAPEngine->url .= sprintf("&group_filter=%s",urlencode($this->filters['group']));
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getGateways($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = $result->total;
+
+            print "<pre>";
+            //print_r($result);
+            print "</pre>";
+            print "
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>Name</b></th>
+                <td><b>Group</b></td>
+                <td><b>Address</b></td>
+                <td><b>Strip</b></td>
+                <td><b>Prefix</b></td>
+                <td><b>Action</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    if (!$result->gateways[$i]) break;
+    
+                    $gateway = $result->gateways[$i];
+    
+                    $index=$this->next+$i+1;
+
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+                    $_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&name_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($gateway->name)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                    	$_REQUEST['name_filter'] == $gateway->name) {
+                		$_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s:%s:%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+                    $bgcolor,
+                    $index,
+                    $gateway->name,
+                    $gateway->group,
+                    $gateway->transport,
+                    $gateway->ip,
+                    $gateway->port,
+                    $gateway->strip,
+                    $gateway->prefix,
+                    $_url,
+                    $actionText
+                    );
+
+                    printf("
+                    </tr>
+                    ");
+
+                    $i++;
+    
+                }
+    
+			}
+
+            print "</table>";
+
+            $this->showPagination($maxrows);
+
+            return true;
+        }
+    }
+
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+
+            printf (" Name: <input type=text size=20 name=name>");
+
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getGatewayGroups();
+
+            printf (" Group: ");
+
+            // Compose query
+            $Query=array('filter'  => array('name'=>''),
+                         'orderBy' => array('attribute' => 'name',
+                                            'direction' => 'ASC'
+                                      ),
+                         'range'   => array('start' => 0,
+			                                'count' => 1000)
+                         );
+
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getGatewayGroups($Query);
+
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+            	print "<select name=group> ";
+                foreach ($result->groups as $_grp) {
+                	printf ("<option value='%s'>%s",$_grp,$_grp);
+                }
+            	printf (" </select>");
+            }
+            printf (" Address: <input type=text size=25 name=address>");
+            printf (" Strip: <select name=strip>");
+            $t=0;
+            while ($t<10) {
+                print "<option value=$t>$t";
+                $t++;
+            }
+
+            print "</select>";
+            printf (" Prefix: <input type=text size=5 name=prefix>");
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+            $this->printHiddenFormElements();
+
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+    	$name     = trim($_REQUEST['name']);
+        $group    = trim($_REQUEST['group']);
+        $address  = trim($_REQUEST['address']);
+        $strip    = trim($_REQUEST['strip']);
+        $prefix   = trim($_REQUEST['prefix']);
+
+		if (!strlen($name) || !strlen($group) || !strlen($address)) {
+            printf ("<p><font color=red>Error: Missing name, group or address. </font>");
+            return false;
+        }
+
+        $address_els=explode(":",$address);
+
+        if (count($address_els) == 1) {
+            $ip=$address_els[0];
+            $transport='udp';
+            $port='5060';
+        } else if (count($address_els) == 2) {
+            $ip=$address_els[0];
+            $port=$address_els[1];
+            $transport='udp';
+        } else if (count($address_els) == 3) {
+            $ip=$address_els[1];
+            $port=intval($address_els[2]);
+            if ($address_els[0] == 'tcp' || $address_els[0] == 'tls' || $address_els[0] == 'udp') {
+            	$transport=$address_els[0];
+            } else {
+            	$transport='udp';
+            }
+        }
+
+        $gateway=array(
+                     'name'      => $name,
+                     'group'     => $group,
+                     'ip'        => $ip,
+                     'port'      => intval($port),
+                     'uriScheme' => 'sip',
+                     'transport' => $transport,
+                     'strip'     => intval($_REQUEST['strip']),
+                     'prefix'    => $_REQUEST['prefix']
+        			);
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->addGateway($gateway);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>Gateway %s has been added. </font>",$address);
+           return 1;
+        }
+    }
+
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
+
+        if (!strlen($this->filters['name'])) {
+            print "<p><font color=red>Error: missing gateway name. </font>";
+            return 0;
+        }
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->deleteGateway($this->filters['name']);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>Gateway %s has been deleted. </font> ",$this->filters['address']);
+           unset($this->filters);
+           return 1;
+        }
+    }
+
+    function showSeachFormCustom() {
+        printf (" Name: <input type=text size=15 name=name_filter value='%s'>",$this->filters['name']);
+        printf (" Group: <input type=text size=15 name=group_filter value='%s'>",$this->filters['group']);
+    }
+
+}
+
+class Routes extends Records {
+    var $gatewayGroups=array();
+
+    var $sortElements=array(
+                            'prefix'       => 'Prefix',
+                            'fromURI'      => 'From URI',
+                            'priority'     => 'Priority'
+                            );
+
+    function Routes(&$SOAPEngine) {
+    	$this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
+                                 'gatewayGroup' => trim($_REQUEST['gatewayGroup_filter']),
+                                 'fromURI'      => trim($_REQUEST['fromURI_filter'])
+                                 );
+
+		$this->Records(&$SOAPEngine);
+    }
+
+    function listRecords() {
+
+        // Get gateway groups
+        $Query=array('filter'  => array('name'=>''),
+                     'orderBy' => array('attribute' => 'name',
+                                        'direction' => 'ASC'
+                                  ),
+                     'range'   => array('start' => 0,
+                                        'count' => 1000)
+                     );
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclient->getGatewayGroups($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            $this->gatewayGroups=$result->groups;
+        }
+
+
+		$this->showSeachForm();
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Filter
+        $filter=array('prefix'       => $this->filters['prefix'],
+                      'gatewayGroup' => $this->filters['gatewayGroup'],
+                      'fromURI'      => $this->filters['fromURI']
+                      );
+
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'prefix';
+        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'ASC';
+
+        $orderBy = array('attribute' => $this->filters['sortBy'],
+                         'direction' => $this->filters['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
+
+        if (strlen($this->filters['prefix'])) $this->SOAPEngine->url .= sprintf("&prefix_filter=%s",urlencode($this->filters['prefix']));
+        if (strlen($this->filters['gatewayGroup'])) $this->SOAPEngine->url .= sprintf("&gatewayGroup_filter=%s",urlencode($this->filters['gatewayGroup']));
+        if (strlen($this->filters['fromURI'])) $this->SOAPEngine->url .= sprintf("&fromURI_filter=%s",urlencode($this->filters['fromURI']));
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getRoutes($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = $result->total;
+
+            print "<pre>";
+            //print_r($result);
+            print "</pre>";
+            print "
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>Prefix</b></th>
+                <td><b>Gateway Group</b></td>
+                <td><b>From URI</b></td>
+                <td><b>Priority</b></td>
+                <td><b>Action</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    if (!$result->routes[$i]) break;
+    
+                    $route = $result->routes[$i];
+    
+                    $index=$this->next+$i+1;
+
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+                    $_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&gatewayGroup_filter=%s&fromURI_filter=%s&priority_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($route->prefix),
+                    urlencode($route->gatewayGroup),
+                    urlencode($route->fromURI),
+                    urlencode($route->priority)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                    	$_REQUEST['prefix_filter'] == $route->prefix &&
+                        $_REQUEST['gatewayGroup_filter'] == $route->gatewayGroup &&
+                        $_REQUEST['fromURI_filter'] == $route->fromURI &&
+                        $_REQUEST['priority_filter'] == $route->priority) {
+
+                		$_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+                    $bgcolor,
+                    $index,
+                    $route->prefix,
+                    $route->gatewayGroup,
+                    $route->fromURI,
+                    $route->priority,
+                    $_url,
+                    $actionText
+                    );
+
+                    printf("
+                    </tr>
+                    ");
+
+                    $i++;
+    
+                }
+    
+			}
+
+            print "</table>";
+
+            $this->showPagination($maxrows);
+
+            return true;
+        }
+    }
+
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+
+            printf (" Prefix: <input type=text size=20 name=prefix>");
+
+            printf (" Group: ");
+
+            print "<select name=gatewayGroup> ";
+            foreach ($this->gatewayGroups as $_grp) {
+                printf ("<option value='%s'>%s",$_grp,$_grp);
+            }
+            printf (" </select>");
+            printf (" From: <input type=text size=25 name=fromURI>");
+            printf (" Priority: <input type=text size=5 name=priority>");
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+
+            $this->printHiddenFormElements();
+
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+
+    	$prefix       = trim($_REQUEST['prefix']);
+        $gatewayGroup = trim($_REQUEST['gatewayGroup']);
+        $fromURI         = trim($_REQUEST['fromURI']);
+        $priority     = trim($_REQUEST['priority']);
+
+		if (!strlen($prefix) || !strlen($gatewayGroup)) {
+            printf ("<p><font color=red>Error: Missing prefix or gatewayGroup. </font>");
+            return false;
+        }
+
+        $route=array(
+                     'prefix'       => $prefix,
+                     'gatewayGroup' => $gatewayGroup,
+                     'fromURI'      => $fromURI,
+                     'priority'     => intval($priority)
+        			);
+
+		$routes=array($route);
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->addRoutes($routes);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>Route %s has been added. </font>",$prefix);
+           return 1;
+        }
+    }
+
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
+
+        if (!strlen($this->filters['prefix']) || !strlen($this->filters['gatewayGroup'])) {
+            print "<p><font color=red>Error: missing route prefix or gatewayGroup. </font>";
+            return 0;
+        }
+
+        $route=array(
+                     'prefix'       => $this->filters['prefix'],
+                     'gatewayGroup' => $this->filters['gatewayGroup'],
+                     'fromURI'      => $this->filters['fromURI'],
+                     'priority'     => intval($this->filters['priority'])
+        			);
+
+        $routes=array($route);
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->deleteRoutes($routes);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>Route %s has been deleted. </font> ",$this->filters['prefix']);
+           unset($this->filters);
+           return 1;
+        }
+    }
+
+    function showSeachFormCustom() {
+        printf (" Prefix: <input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
+        print "<select name=gatewayGroup_filter>
+        	<option>";
+		$selected_gatewayGroups[$this->filters['gatewayGroup']]='selected';
+        foreach ($this->gatewayGroups as $_grp) {
+            printf ("<option value='%s' %s>%s",$_grp,$selected_gatewayGroups[$_grp],$_grp);
+        }
+        printf (" </select>");
+
+        printf (" From URI: <input type=text size=15 name=fromURI_filter value='%s'>",$this->filters['fromURI']);
+    }
+
+}
+
+class SIPAccounts extends Records {
+    var $sortElements=array('changeDate' =>'Change date',
+                            'username'   => 'Username',
+                            'domain'     => 'Domain',
+                            'owner'      => 'Owner'
+                            );
+
+    function SIPAccounts(&$SOAPEngine) {
+
+        $this->filters   = array('username'     => trim($_REQUEST['username_filter']),
+                           'domain'       => trim($_REQUEST['domain_filter']),
+                           'fullname'     => trim($_REQUEST['fullname_filter'])
+                           );
+
+		$this->Records(&$SOAPEngine);
+
+    }
+
+    function listRecords() {
+
+        $this->getAllowedDomains();
+
+		if (preg_match("/^(.*)@(.*)$/",$this->filters['username'],$m)) {
+        	$this->filters['username'] = $m[1];
+            $this->filters['domain']   = $m[2];
+        }
+
+        // Make sure we apply the domain filter from the login credetials
+        if ($this->allowedDomains && !$this->filters['domain']) {
+        	//$this->filters['domain'] = $this->allowedDomains[0];
+        }
+
+        if ($this->filters['domain'] && $this->allowedDomains && !in_array($this->filters['domain'],$this->allowedDomains)) {
+        	$this->filters['domain'] = $this->allowedDomains[0];
+        }
+
+		$this->showSeachForm();
+
+        // Filter
+        $filter=array('username' => $this->filters['username'],
+                      'domain'   => $this->filters['domain'],
+                      'name'     => $this->filters['fullname']
+                      );
+
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'changeDate';
+        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->filters['sortBy'],
+                         'direction' => $this->filters['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
+
+        if (strlen($this->filters['username'])) $this->SOAPEngine->url .= sprintf("&username_filter=%s",urlencode($this->filters['username']));
+        if (strlen($this->filters['domain']))   $this->SOAPEngine->url .= sprintf("&domain_filter=%s",urlencode($this->filters['domain']));
+        if (strlen($this->filters['fullname'])) $this->SOAPEngine->url .= sprintf("&fullname_filter=%s",urlencode($this->filters['fullname']));
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getAccounts($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = $result->total;
+
+            print "
+            <p>
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>SIP account</b></td>
+                <td><b>Timezone</b></td>
+                <td><b>Full name</b></td>
+                <td><b>Email</b></td>
+                <td><b>Caller Id</b></td>
+                <td><b>Last change</b></td>
+                <td><b>Owner</b></td>
+                <td><b>Action</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    if (!$result->accounts[$i]) break;
+    
+                    $account = $result->accounts[$i];
+    
+                    $index=$this->next+$i+1;
+    
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+        			$_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&username_filter=%s&domain_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($account->id->username),
+                    urlencode($account->id->domain)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                    	$_REQUEST['username_filter'] == $account->id->username &&
+                        $_REQUEST['domain_filter'] == $account->id->domain) {
+                		$_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
+
+                    if ($this->SipSettingsPage) {
+
+                        $url=sprintf('%s?account=%s@%s',$this->SipSettingsPage,$account->id->username,$account->id->domain);
+
+                        foreach (array_keys($this->SOAPEngine->extraFormElements) as $element) {
+                            if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
+                            $url  .= sprintf('&%s=%s',$element,urlencode($this->SOAPEngine->extraFormElements[$element]));
+                        }
+
+                        $sip_account=sprintf("
+                        <a href=\"javascript:void(null);\" onClick=\"return window.open('%s', 'SIP_Settings',
+                        'toolbar=1,status=1,menubar=1,scrollbars=1,resizable=1,width=800,height=720')\">
+                        %s@%s</a>",$url,$account->id->username,$account->id->domain);
+                    } else {
+						$sip_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
+                    }
+
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s %s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>
+                    ",
+
+                    $bgcolor,
+                    $index,
+                    $sip_account,
+                    $account->timezone,
+                    $account->firstName,
+                    $account->lastName,
+                    $account->email,
+                    $account->rpid,
+                    $account->changeDate,
+                    $account->owner,
+                    $_url,
+                    $actionText
+                    );
+    
+                    $i++;
+                }
+    
+			}
+
+            print "</table>";
+
+            $this->showPagination($maxrows);
+
+            return true;
+        }
+    }
+
+    function showSeachFormCustom() {
+        printf (" Username: <input type=text size=15 name=username_filter value='%s'>",$this->filters['username']);
+        printf (" Domain: ");
+
+        if ($this->allowedDomains) {
+            $selected_domain[$this->filters['domain']]='selected';
+            printf ("<select name=domain_filter>
+            <option>");
+            foreach ($this->allowedDomains as $_domain) {
+                printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
+            }
+
+            printf ("</select");
+        } else {
+            printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
+        }
+
+        printf (" Full name: <input type=text size=15 name=fullname_filter value='%s'>",$this->filters['fullname']);
+    }
+
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
+
+        if (!strlen($this->filters['username']) || !strlen($this->filters['domain'])) {
+            print "<p><font color=red>Error: missing SIP account username or domain. </font>";
+            return 0;
+        }
+
+        $account=array('username' => $this->filters['username'],
+                     'domain'   => $this->filters['domain']
+        			);
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->deleteAccount($account);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP account %s@%s has been deleted. </font> ",$this->filters['username'],$this->filters['domain']);
+           unset($this->filters);
+           return 1;
+        }
+    }
+
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+
+            printf (" SIP: <input type=text size=15 name=account value='%s'>",$_REQUEST['account']);
+            if (is_array($this->allowedDomains)) {
+            	print "@<select name=domain>";
+                foreach ($this->allowedDomains as $_domain) {
+                    print "<option value=$_domain>$_domain\n";
+                }
+                print "</select>";
+
+            }
+
+            printf (" Pass: <input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
+            printf (" Name: <input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
+            printf (" Email: <input type=text size=15 name=email value='%s'>",$_REQUEST['email']);
+            printf (" CallerId: <input type=text size=11 name=rpid value='%s'>",$_REQUEST['rpid']);
+            printf (" Owner: <input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
+            print " TZ: ";
+
+            global $CDRTool;
+            if ($_REQUEST['timezone']) {
+				$this->timezone=$_REQUEST['timezone'];
+            } else {
+				$this->timezone=$CDRTool['provider']['timezone'];
+            }
+
+            $this->showTimezones();
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+            $this->printHiddenFormElements();
+
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+    	$account_els  = explode("@", trim($_REQUEST['account']));
+
+        $username=$account_els[0];
+
+        if (strlen($account_els[1])) {
+        	$domain=$account_els[1];
+
+        } else if (trim($_REQUEST['domain'])) {
+            $domain=trim($_REQUEST['domain']);
+
+        } else {
+            printf ("<p><font color=red>Error: Missing SIP domain</font>");
+            return false;
+        }
+
+		if (is_array($this->allowedDomains) && !in_array($domain,$this->allowedDomains)) {
+            printf ("<p><font color=red>Error: Missing SIP domain %s is not allowed</font>",$domain);
+            return false;
+        }
+
+        $name_els  = explode(" ", trim($_REQUEST['fullname']));
+
+        $account=array(
+                     'id'     => array('username' => $username,
+                                       'domain'   => $domain
+                                       ),
+                     'firstName'  => $name_els[0],
+                     'lastName'   => $name_els[1],
+                     'password'   => trim($_REQUEST['password']),
+                     'timezone'   => trim($_REQUEST['timezone']),
+                     'email'      => trim($_REQUEST['email']),
+                     'rpid'       => trim($_REQUEST['rpid']),
+                     'owner'      => intval($_REQUEST['owner'])
+        			);
+
+        //print_r($account);
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->addAccount($account);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP account %s@%s has been added. </font>",$alias_els[0],$alias_els[1]);
+        }
+
+        if (strlen(trim($_REQUEST['rpid']))) {
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->addToGroup(array("username" => $account_els[0],"domain"=> $account_els[1]), "free-pstn");
+
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+               printf ("<font color=green>PSTN enabled. </font>");
+            }
+        }
+
+        return 1;
+
+    }
+
+    function getAllowedDomains() {
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclient->getDomains();
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            $this->allowedDomains=$result;
+        }
+    }
+}
+
+class SIPAliases extends Records {
+    var $sortElements=array(
+                            'aliasUsername'  => 'Alias user',
+                            'aliasDomain'    => 'Alias domain',
+                            'targetUsername' => 'Target user',
+                            'targetDomain'   => 'Target domain',
+                            'owner'          => 'Owner'
+                            );
+
+    function SIPAliases(&$SOAPEngine) {
+        $this->filters   = array('aliasUsername'     => trim($_REQUEST['alias_username_filter']),
+                                 'aliasDomain'       => trim($_REQUEST['alias_domain_filter']),
+                                 'targetUsername'    => trim($_REQUEST['target_username_filter']),
+                                 'targetDomain'      => trim($_REQUEST['target_domain_filter'])
+                           );
+
+
+		$this->Records(&$SOAPEngine);
+
+    }
+
+    function listRecords() {
+
+        // Make sure we apply the domain filter from the login credetials
+        if ($this->allowedDomains && !$this->filters['aliasDomain']) {
+        	$this->filters['aliasDomain'] = $this->allowedDomains[0];
+        }
+
+        if ($this->filters['aliasDomain'] && $this->allowedDomains && !in_array($this->filters['aliasDomain'],$this->allowedDomains)) {
+        	$this->filters['aliasDomain'] = $this->allowedDomains[0];
+        }
+
+		$this->showSeachForm();
+
+        // Filter
+        $filter=array('aliasUsername'  => $this->filters['aliasUsername'],
+                      'aliasDomain'    => $this->filters['aliasDomain'],
+                      'targetUsername' => $this->filters['targetUsername'],
+                      'targetDomain'   => $this->filters['targetDomain']
+                      );
+
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'aliasUsername';
+        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->filters['sortBy'],
+                         'direction' => $this->filters['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        $this->SOAPEngine->url=sprintf("?sortBy=%s&sortOrder=%s",urlencode($this->filters['sortBy']),urlencode($this->filters['sortOrder']));
+
+        if (strlen($this->filters['aliasUsername']))  $this->SOAPEngine->url .= sprintf("&alias_username_filter=%s",urlencode($this->filters['aliasUsername']));
+        if (strlen($this->filters['aliasDomain']))    $this->SOAPEngine->url .= sprintf("&alias_domain_filter=%s",urlencode($this->filters['aliasDomain']));
+        if (strlen($this->filters['targetUsername'])) $this->SOAPEngine->url .= sprintf("&target_username_filter=%s",urlencode($this->filters['targetUsername']));
+        if (strlen($this->filters['targetDomain']))   $this->SOAPEngine->url .= sprintf("&target_domain_filter=%s",urlencode($this->filters['targetDomain']));
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getAliases($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = $result->total;
+            //print "<pre>";
+            //print_r($result);
+
+            print "
+            <p>
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>SIP alias</b></td>
+                <td><b>SIP target</b></td>
+                <td><b>Owner</b></td>
+                <td><b>Action</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    if (!$result->aliases[$i]) break;
+    
+                    $alias = $result->aliases[$i];
+    
+                    $index=$this->next+$i+1;
+    
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+        			$_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&alias_username_filter=%s&alias_domain_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($alias->id->username),
+                    urlencode($alias->id->domain)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                    	$_REQUEST['alias_username_filter'] == $alias->id->username &&
+                        $_REQUEST['alias_domain_filter'] == $alias->id->domain) {
+                		$_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s@%s</td>
+                    <td>%s@%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>
+                    ",
+                    $bgcolor,
+                    $index,
+                    $alias->id->username,
+                    $alias->id->domain,
+                    $alias->target->username,
+                    $alias->target->domain,
+                    $alias->owner,
+                    $_url,
+                    $actionText
+                    );
+    
+                    $i++;
+    
+                }
+    
+			}
+
+            print "</table>";
+
+            $this->showPagination($maxrows);
+
+            return true;
+        }
+    }
+
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
+
+        if (!strlen($this->filters['aliasUsername']) || !strlen($this->filters['aliasDomain'])) {
+            print "<p><font color=red>Error: missing SIP alias username or domain. </font>";
+            return 0;
+        }
+
+        $alias=array('username' => $this->filters['aliasUsername'],
+                     'domain'   => $this->filters['aliasDomain']
+        			);
+
+        //print_r($alias);
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->deleteAlias($alias);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP alias %s@%s has been deleted. </font> ",$this->filters['aliasUsername'],$this->filters['aliasDomain']);
+           unset($this->filters);
+           $this->recordDeleted=1;
+           return 1;
+        }
+    }
+
+    function showSeachFormCustom() {
+        printf (" User: <input type=text size=10 name=alias_username_filter value='%s'>",$this->filters['aliasUsername']);
+        printf (" Domain: ");
+
+        if ($this->allowedDomains) {
+            $selected_domain[$this->filters['aliasDomain']]='selected';
+            printf ("<select name=alias_domain_filter>");
+
+            foreach ($this->allowedDomains as $_domain) {
+                printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
+            }
+
+            printf ("</select");
+        } else {
+            printf ("<input type=text size=10 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
+        }
+
+        printf (" Target user: <input type=text size=10 name=target_username_filter value='%s'>",$this->filters['targetUsername']);
+        printf (" Target domain: <input type=text size=10 name=target_domain_filter value='%s'>",$this->filters['targetDomain']);
+
+    }
+
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+
+            printf (" SIP alias: <input type=text size=35 name=alias>");
+            printf (" SIP target: <input type=text size=35 name=target>");
+            printf (" Owner: <input type=text size=10 name=owner>");
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+            $this->printHiddenFormElements();
+
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+    	$alias_els  = explode("@", trim($_REQUEST['alias']));
+        $target_els = explode("@", trim($_REQUEST['target']));
+
+        $alias=array(
+                     'id'     => array('username' => $alias_els[0],
+                                       'domain'   => $alias_els[1]
+                                       ),
+                     'target' => array('username' => $target_els[0],
+                                       'domain'   => $target_els[1]
+                                       ),
+                     'owner'  => intval($_REQUEST['owner'])
+        			);
+
+        //print_r($alias);
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->addAlias($alias);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP alias %s@%s has been added. </font>",$alias_els[0],$alias_els[1]);
+           return 1;
+        }
+    }
+}
+
+class DomainStatistics extends Records {
+
+    var $maxrowsperpage= 200;
+
+    function DomainStatistics(&$SOAPEngine) {
+        $this->filters   = array(
+                           'domain'       => trim($_REQUEST['domain_filter'])
+                           );
+
+		$this->Records(&$SOAPEngine);
+    }
+
+    function listRecords() {
+
+		$this->showSeachForm();
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+		$filter=$this->filters['domain'];
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getDomainStatistics($filter);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = count($result);
+
+            //print_r($result);
+
+            print "
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>SIP domain</b></td>
+                <td><b>SIP subscribers</b></td>
+                <td><b>Online subscribers</b></td>
+                <td><b>Online SIP devices</b></td>
+                <td><b>Action</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    $domain = $result[$i];
+                    if (!strlen($domain->users)) break;
+
+                    $index = $this->next+$i+1;
+    
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+        			$_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($domain->domain)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                        $_REQUEST['domain_filter'] == $domain->domain) {
+                		$_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+                    $bgcolor,
+                    $index,
+                    $domain->domain,
+                    $domain->users,
+                    $domain->onlineUsers,
+                    $domain->onlineDevices,
+                    $_url,
+                    $actionText
+                    );
+
+                    $i++;
+                }
+			}
+
+            print "</table>";
+
+            $this->showPagination($maxrows);
+
+            return true;
+        }
+    }
+
+    function showSeachFormCustom() {
+
+        printf (" Domain: <input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
+
+    }
+
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
+
+        if (!strlen($this->filters['domain']) || !strlen($this->filters['domain'])) {
+            print "<p><font color=red>Error: missing SIP domain. </font>";
+            return 0;
+        }
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->deleteDomain($this->filters['domain']);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP domain %s has been deleted. </font> ",$this->filters['domain']);
+           unset($this->filters);
+           return 1;
+        }
+    }
+
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+
+            printf (" Domain: <input type=text size=20 name=domain>");
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+            $this->printHiddenFormElements();
+
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+
+        $domain=trim($_REQUEST['domain']);
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->addDomain($domain);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP domain %s has been added. </font>",$domain);
+           return 1;
+        }
+    }
+}
+
+class Domains extends Records {
+
+    var $maxrowsperpage= 200;
+
+    function Domains(&$SOAPEngine) {
+        $this->filters   = array(
+                           'domain'       => trim($_REQUEST['domain_filter'])
+                           );
+
+		$this->Records(&$SOAPEngine);
+    }
+
+    function listRecords() {
+
+		$this->showSeachForm();
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+		$filter=$this->filters['domain'];
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getDomains($filter);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = count($result);
+
+            print "
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>SIP domain</b></td>
+                <td><b>Action</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    $domain = $result[$i];
+                    $index = $this->next+$i+1;
+    
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+        			$_url = $this->SOAPEngine->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($domain)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                        $_REQUEST['domain_filter'] == $domain) {
+                		$_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+                    $bgcolor,
+                    $index,
+                    $domain,
+                    $_url,
+                    $actionText
+                    );
+
+                    $i++;
+                }
+			}
+
+            print "</table>";
+
+            $this->showPagination($maxrows);
+
+            return true;
+        }
+    }
+
+    function showSeachFormCustom() {
+
+        printf (" Domain: <input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
+
+    }
+
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
+
+        if (!strlen($this->filters['domain']) || !strlen($this->filters['domain'])) {
+            print "<p><font color=red>Error: missing SIP domain. </font>";
+            return 0;
+        }
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->deleteDomain($this->filters['domain']);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP domain %s has been deleted. </font> ",$this->filters['domain']);
+           unset($this->filters);
+           return 1;
+        }
+    }
+
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+
+            printf (" Domain: <input type=text size=20 name=domain>");
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+            $this->printHiddenFormElements();
+
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+
+        $domain=trim($_REQUEST['domain']);
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->addDomain($domain);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>SIP domain %s has been added. </font>",$domain);
+           return 1;
+        }
+    }
+}
+
+?>
