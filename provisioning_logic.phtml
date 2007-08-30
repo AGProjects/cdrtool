@@ -135,7 +135,6 @@ class Records {
         $this->filters['sortOrder'] = trim($_REQUEST['sortOrder']);
         $this->next                 = $_REQUEST['next'];
 
-		$this->getAllowedDomains();
         $this->url = $this->SOAPEngine->url;
 
     }
@@ -312,19 +311,6 @@ class Records {
     }
 
     function getAllowedDomains() {
-        // Insert credetials
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-        $result     = $this->SOAPEngine->soapclient->getDomains();
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-            $this->allowedDomains=$result;
-        }
     }
 }
 
@@ -347,6 +333,7 @@ class ENUMmappings extends Records {
     }
 
     function listRecords() {
+        $this->getAllowedDomains();
 
 		$this->showSeachForm();
 
@@ -416,6 +403,7 @@ class ENUMmappings extends Records {
                 <td><b>Priority</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Info</b></td>
+                <td><b>Action</b></td>
             </tr>
             ";
 
@@ -451,6 +439,22 @@ class ENUMmappings extends Records {
                     $j=1;
                     foreach ($number->mappings as $_mapping) {
                         if ($j==1) {
+
+        			$_url = $this->url.sprintf("&service=%s&action=Delete&number_filter=%s&tld_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($number->id->number),
+                    urlencode($number->id->tld)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                        $_REQUEST['number_filter'] == $number->id->number &&
+                        $_REQUEST['tld_filter'] == $number->id->tld) {
+                		$_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
                             printf("
                             <tr bgcolor=%s>
                             <td>%s</td>
@@ -463,6 +467,7 @@ class ENUMmappings extends Records {
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
+                            <td><a href=%s>%s</a></td>
                             </tr>",
                             $bgcolor,
                             $index,
@@ -474,7 +479,9 @@ class ENUMmappings extends Records {
                             $_mapping->ttl,
                             $_mapping->priority,
                             $number->owner,
-                            $number->info
+                            $number->info,
+                            $_url,
+                            $actionText
                             );
                         } else {
                             printf("
@@ -521,11 +528,185 @@ class ENUMmappings extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" E.164 number: <input type=text size=10 name=number_filter value='%s'>",$this->filters['number']);
-        printf (" TLD: <input type=text size=10 name=tld_filter value='%s'>",$this->filters['tld']);
+        printf (" E.164 number: <input type=text size=15 name=number_filter value='%s'>",$this->filters['number']);
+        printf (" TLD:");
+        if ($this->allowedDomains) {
+            $selected_tld[$this->filters['tld_filter']]='selected';
+            printf ("<select name=tld_filter>
+            <option>");
+
+            foreach ($this->allowedDomains as $_tld) {
+                printf ("<option value='$_tld' %s>$_tld",$selected_tld[$_tld]);
+            }
+
+            printf ("</select");
+        } else {
+            printf ("<input type=text size=10 name=tld_filter value='%s'>",$this->filters['tld']);
+        }
+
         printf (" Service: <input type=text size=10 name=type_filter value='%s'>",$this->filters['type']);
         printf (" Map to: <input type=text size=10 name=mapto_filter value='%s'>",$this->filters['mapto']);
 
+    }
+
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
+
+        if (!strlen($this->filters['number']) || !strlen($this->filters['tld'])) {
+            print "<p><font color=red>Error: missing ENUM number or TLD </font>";
+            return 0;
+        }
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $enum_id=array('number'=>$this->filters['number'],
+                       'tld'=>$this->filters['tld']);
+        $result     = $this->SOAPEngine->soapclient->deleteNumber($enum_id);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>ENUM number %s hinder %s as been deleted. </font> ",$this->filters['number'],$this->filters['tld']);
+           unset($this->filters);
+           return 1;
+        }
+    }
+
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+            printf (" Number: +<input type=text size=15 name=number>");
+            printf (" Top level domain:");
+            if (is_array($this->allowedDomains)) {
+            	print "<select name=tld>";
+                foreach ($this->allowedDomains as $_tld) {
+                    print "<option value=$_tld>$_tld\n";
+                }
+                print "</select>";
+            } else {
+                print "<input type=text size=15 name=tld>";
+            }
+	        printf (" Service: <input type=text size=5 name=type value='Sip'>");
+    	    printf (" Map to: <input type=text size=25 name=mapto>");
+
+            printf (" TTL: <input type=text size=5 name=ttl value=3600>");
+            printf (" Owner: <input type=text size=5 name=owner>");
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+
+            $this->printHiddenFormElements();
+
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+    function getAllowedDomains() {
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getRanges();
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            foreach($result as $range) {
+            	if (in_array($range->id->tld,$this->allowedDomains)) continue;
+            	$this->allowedDomains[]=$range->id->tld;
+            }
+        }
+    }
+
+    function addRecord() {
+    	$tld    = trim($_REQUEST['tld']);
+        $number = trim($_REQUEST['number']);
+
+		if (!strlen($tld) || !strlen($number)) {
+            printf ("<p><font color=red>Error: Missing TLD or number. </font>");
+            return false;
+        }
+
+		if (!trim($_REQUEST['ttl'])) {
+            $ttl=3600;
+        } else {
+            $ttl=intval(trim($_REQUEST['ttl']));
+        }
+
+        $enum_id=array('number' => $number,
+                       'tld'    => $tld);
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclient->getNumber($enum_id);
+
+                        if (PEAR::isError($result)) {
+                            $error_msg=$result->getMessage();
+                            $error_fault=$result->getFault();
+                            $error_code=$result->getCode();
+    
+                            if ($error_fault->detail->exception->errorcode == "3002") {
+                                // addNumber()
+                                $enum_number=array('id'    => $enum_id,
+                                                   'owner' => intval(trim($_REQUEST['owner'])),
+                                                   'mappings' => array(array('type'=>trim($_REQUEST['type']),
+                                                                             'mapto'=>trim($_REQUEST['mapto']),
+                                                                             'ttl'=>intval(trim($_REQUEST['ttl']))
+                                                                            )
+                                                                       )
+                                                   );
+
+        						$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        						$result     = $this->SOAPEngine->soapclient->addNumber($enum_number);
+
+                                if (PEAR::isError($result)) {
+                                    $error_msg=$result->getMessage();
+                                    $error_fault=$result->getFault();
+                                    $error_code=$result->getCode();
+                            		printf ("<p><font color=red>Error1: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                                    return false;
+                                } else {
+                                    dprint("SOAP addNumber() OK");
+                                }
+    
+                            } else {
+                                // other error is not allowed
+                            	printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                                return false;
+                            }
+                        } else {
+                            // the number exists and we make an update
+                            printf ("<p><font color=red>Error: The number already exists</font>");
+                            return 1;
+                        }
     }
 
 }
@@ -538,11 +719,8 @@ class ENUMranges extends Records {
                             );
 
     function ENUMranges(&$SOAPEngine) {
-        $this->filters   = array('number'       => trim($_REQUEST['number_filter']),
-                                 'tld'          => trim($_REQUEST['tld_filter']),
-                                 'type'         => trim($_REQUEST['type_filter']),
-                                 'mapto'        => trim($_REQUEST['mapto_filter']),
-                                 'owner'        => trim($_REQUEST['owner_filter'])
+        $this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
+                                 'tld'          => trim($_REQUEST['tld_filter'])
                                 );
         
 		$this->Records(&$SOAPEngine);
@@ -566,7 +744,7 @@ class ENUMranges extends Records {
             return false;
         } else {
 
-			$this->rows = $result->total;
+			$this->rows = count($result);
 
             //print "<pre>";
             //print_r($result);
@@ -582,13 +760,13 @@ class ENUMranges extends Records {
                 <td><b>Id</b></th>
                 <td><b>E.164 prefix </b></td>
                 <td><b>Top level domain</b></td>
-                <td><b>DNS name</b></td>
                 <td><b>TTL</b></td>
                 <td><b>Min digits</b></td>
                 <td><b>Max digits</b></td>
                 <td><b>Used</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Info</b></td>
+                <td><b>Action</b></td>
             </tr>
             ";
 
@@ -606,9 +784,7 @@ class ENUMranges extends Records {
 			if ($this->rows) {
                 while ($i < $maxrows)  {
     
-                    if (!$result->numbers[$i]) break;
-    
-                    $number = $result->numbers[$i];
+                    $range = $result[$i];
     
                     $index=$this->next+$i+1;
     
@@ -621,9 +797,20 @@ class ENUMranges extends Records {
                         $bgcolor="white";
                     }
 
-                    $j=1;
-                    foreach ($number->mappings as $_mapping) {
-                        if ($j==1) {
+        			$_url = $this->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&tld_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($range->id->prefix),
+                    urlencode($range->id->tld)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                        $_REQUEST['prefix_filter'] == $range->id->prefix &&
+                        $_REQUEST['tld_filter'] == $range->id->tld) {
+                		$_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
                             printf("
                             <tr bgcolor=%s>
                             <td>%s</td>
@@ -635,44 +822,21 @@ class ENUMranges extends Records {
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
-                            <td>%s</td>
+                    		<td><a href=%s>%s</a></td>
                             </tr>",
                             $bgcolor,
                             $index,
-                            $number->id->number,
-                            $number->id->tld,
-                            $this->tel2enum($number->id->number,$number->id->tld),
-                            ucfirst($_mapping->type),
-                            $_mapping->mapto,
-                            $_mapping->ttl,
-                            $_mapping->priority,
-                            $number->owner,
-                            $number->info
+                            $range->id->prefix,
+                            $range->id->tld,
+                            $range->ttl,
+                            $range->minDigits,
+                            $range->maxDigits,
+                            $range->used,
+                            $range->owner,
+                            $range->info,
+                            $_url,
+                            $actionText
                             );
-                        } else {
-                            printf("
-                            <tr bgcolor=%s>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td></td>
-                            <td></td>
-                            </tr>",
-                            $bgcolor,
-                            ucfirst($_mapping->type),
-                            $_mapping->mapto,
-                            $_mapping->ttl,
-                            $_mapping->priority
-                            );
-
-                        }
-                        $j++;
-                    }
 
                     printf("
                     </tr>
@@ -692,10 +856,120 @@ class ENUMranges extends Records {
         }
     }
 
-    function showSeachFormCustom() {
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
 
+        if (!strlen($this->filters['prefix']) || !strlen($this->filters['tld'])) {
+            print "<p><font color=red>Error: missing ENUM range id </font>";
+            return 0;
+        }
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $rangeId=array('prefix'=>$this->filters['prefix'],
+                       'tld'=>$this->filters['tld']);
+        $result     = $this->SOAPEngine->soapclient->deleteRange($rangeId);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>ENUM range %s under %s has been deleted. </font> ",$this->filters['prefix'],$this->filters['tld']);
+           unset($this->filters);
+           return 1;
+        }
     }
 
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+            printf (" Prefix: +<input type=text size=5 name=prefix>");
+            printf (" Top level domain: <input type=text size=15 name=tld>");
+            printf (" TTL: <input type=text size=5 name=ttl value=3600>");
+            printf (" Min Digits: <input type=text size=3 name=minDigits value=11>");
+            printf (" Max Digits: <input type=text size=3 name=maxDigits value=11>");
+            printf (" Owner: <input type=text size=10 name=owner>");
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+
+            $this->printHiddenFormElements();
+
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+    	$tld    = trim($_REQUEST['tld']);
+        $prefix = trim($_REQUEST['prefix']);
+
+		if (!strlen($tld) || !strlen($prefix)) {
+            printf ("<p><font color=red>Error: Missing TLD or prefix. </font>");
+            return false;
+        }
+
+		if (!trim($_REQUEST['ttl'])) {
+            $ttl=3600;
+        } else {
+            $ttl=intval(trim($_REQUEST['ttl']));
+        }
+        $range=array(
+                     'id'         => array('prefix' => $prefix,
+                                           'tld'    => $tld),
+                     'ttl'        => $ttl,
+                     'minDigits'  => intval(trim($_REQUEST['minDigits'])),
+                     'maxDigits'  => intval(trim($_REQUEST['maxDigits'])),
+                     'owner'      => intval($_REQUEST['owner'])
+        			);
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->addRange($range);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>Range %s under %s has been added. </font>",$prefix,$tld);
+           return 1;
+        }
+    }
+
+    function showSeachFormCustom() {
+		/*
+        printf (" Prefix: <input type=text size=10 name=prefix_filter value='%s'>",$this->filters['prefix']);
+        printf (" TLD: <input type=text size=15 name=tld_filter value='%s'>",$this->filters['tld']);
+        printf (" Owner: <input type=text size=15 name=owner_filter value='%s'>",$this->filters['owner']);
+        */
+    }
 }
 
 class TrustedPeers extends Records {
@@ -1955,7 +2229,8 @@ class SIPAccounts extends Records {
                 <td><b>Timezone</b></td>
                 <td><b>Full name</b></td>
                 <td><b>Email</b></td>
-                <td><b>Caller Id</b></td>
+                <td><b>PSTN CLI</b></td>
+                <td><b>Quota</b></td>
                 <td><b>Last change</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Action</b></td>
@@ -2035,6 +2310,7 @@ class SIPAccounts extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
+                    <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>
                     ",
@@ -2048,6 +2324,7 @@ class SIPAccounts extends Records {
                     $account->lastName,
                     $account->email,
                     $account->rpid,
+                    $account->quota,
                     $account->changeDate,
                     $account->owner,
                     $_url,
@@ -2268,6 +2545,22 @@ class SIPAccounts extends Records {
         }
         return $string;
     }
+    function getAllowedDomains() {
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclient->getDomains();
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            $this->allowedDomains=$result;
+        }
+    }
+
 }
 
 class SIPAliases extends Records {
@@ -2597,6 +2890,22 @@ class SIPAliases extends Records {
            return 1;
         }
     }
+    function getAllowedDomains() {
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclient->getDomains();
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            $this->allowedDomains=$result;
+        }
+    }
+
 }
 
 class DomainStatistics extends Records {
@@ -2851,7 +3160,8 @@ class Domains extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
-                <td><b>SIP domain</b></td>
+                <td><b>Domain</b></td>
+                <td><b>Reseller</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -2899,11 +3209,13 @@ class Domains extends Records {
                     <tr bgcolor=%s>
                     <td>%s</td>
                     <td>%s</td>
+                    <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
                     $index,
                     $domain,
+                    $reseller,
                     $_url,
                     $actionText
                     );

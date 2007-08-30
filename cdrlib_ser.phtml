@@ -4271,7 +4271,6 @@ class SIP_trace {
             //print "<pre>";
             $columns=0;
 
-
             foreach ($result as $_trace) {
 
                 if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->toip,$m)) {
@@ -4311,7 +4310,7 @@ class SIP_trace {
         } else {
             $query="select *,UNIX_TIMESTAMP(date) as timestamp
             from $this->table where callid = '$callid'
-            and traced_user = ''";
+            and traced_user = '' order by id asc";
     
             dprint($query);
     
