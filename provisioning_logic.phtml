@@ -539,7 +539,7 @@ class ENUMmappings extends Records {
                 printf ("<option value='$_tld' %s>$_tld",$selected_tld[$_tld]);
             }
 
-            printf ("</select");
+            printf ("</select>");
         } else {
             printf ("<input type=text size=10 name=tld_filter value='%s'>",$this->filters['tld']);
         }
@@ -2225,12 +2225,11 @@ class SIPAccounts extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>SIP account</b></td>
-                <td><b>Reseller</b></td>
-                <td><b>Timezone</b></td>
-                <td><b>Full name</b></td>
+                <td><b>Name</b></td>
                 <td><b>Email</b></td>
                 <td><b>PSTN CLI</b></td>
                 <td><b>Quota</b></td>
+                <td><b>Groups</b></td>
                 <td><b>Last change</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Action</b></td>
@@ -2299,13 +2298,17 @@ class SIPAccounts extends Records {
 						$sip_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
                     }
 
+                    unset($groups);
+                    foreach ($account->groups as $_grp) {
+                        $groups.=$_grp.' ';
+                    }
+
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
                     <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
                     <td>%s %s</td>
+                    <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -2318,13 +2321,12 @@ class SIPAccounts extends Records {
                     $bgcolor,
                     $index,
                     $sip_account,
-                    $account->reseller,
-                    $account->timezone,
                     $account->firstName,
                     $account->lastName,
                     $account->email,
                     $account->rpid,
                     $account->quota,
+                    $groups,
                     $account->changeDate,
                     $account->owner,
                     $_url,
@@ -2356,12 +2358,12 @@ class SIPAccounts extends Records {
                 printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
             }
 
-            printf ("</select");
+            printf ("</select>");
         } else {
             printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
         }
 
-        printf (" Full name: <input type=text size=15 name=fullname_filter value='%s'>",$this->filters['fullname']);
+        printf (" Name: <input type=text size=15 name=fullname_filter value='%s'>",$this->filters['fullname']);
     }
 
     function deleteRecord() {
@@ -2788,7 +2790,7 @@ class SIPAliases extends Records {
                 printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
             }
 
-            printf ("</select");
+            printf ("</select>");
         } else {
             printf ("<input type=text size=10 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
         }
@@ -2955,7 +2957,6 @@ class DomainStatistics extends Records {
                 <td><b>SIP subscribers</b></td>
                 <td><b>Online subscribers</b></td>
                 <td><b>Online SIP devices</b></td>
-                <td><b>Action</b></td>
             </tr>
             ";
 
@@ -3007,16 +3008,13 @@ class DomainStatistics extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td><a href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
                     $index,
                     $domain->domain,
                     $domain->users,
                     $domain->onlineUsers,
-                    $domain->onlineDevices,
-                    $_url,
-                    $actionText
+                    $domain->onlineDevices
                     );
 
                     $i++;
