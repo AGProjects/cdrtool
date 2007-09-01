@@ -51,7 +51,6 @@ class SOAPEngine {
         if (is_array($this->soapEngines)) {
 
             if (!$service) {
-                // Use first defined service in global.inc
                 $_services     = array_keys($this->services);
                 $_soapids      = array_keys($this->soapEngines);
                 $service       = $_soapids[0].":".$_services[0];
@@ -127,16 +126,24 @@ class Records {
 	var $maxrowsperpage  = '20';
     var $SipSettingsPage = 'sip_settings-dev.phtml';
     var $allowedDomains  = false;
+    var $selectionActive = false;
+    var $selectionKeys   = array();
 
     function Records(&$SOAPEngine) {
     	$this->SOAPEngine=&$SOAPEngine;
 
-        $this->filters['sortBy']    = trim($_REQUEST['sortBy']);
-        $this->filters['sortOrder'] = trim($_REQUEST['sortOrder']);
+        $this->sorting['sortBy']    = trim($_REQUEST['sortBy']);
+        $this->sorting['sortOrder'] = trim($_REQUEST['sortOrder']);
         $this->next                 = $_REQUEST['next'];
 
         $this->url = $this->SOAPEngine->url;
 
+		foreach(array_keys($this->filters) as $_filter) {
+            if (strlen($this->filters[$_filter])) {
+            	$this->selectionActive=true;
+                break;
+            }
+        }
     }
 
     function showPagination($maxrows) {
@@ -150,8 +157,8 @@ class Records {
 
         $this->url .= sprintf("&service=%s&sortBy=%s&sortOrder=%s",
         urlencode($this->SOAPEngine->service),
-        urlencode($this->filters['sortBy']),
-        urlencode($this->filters['sortOrder'])
+        urlencode($this->sorting['sortBy']),
+        urlencode($this->sorting['sortOrder'])
         );
 
         if ($this->next != 0  ) {
@@ -161,7 +168,12 @@ class Records {
             }
             if (!$mod_show_next) $mod_show_next=0;
             $url_prev=$this->url."&next=$mod_show_next";
-            print "<a href=\"$url_prev\">Previous</a> ";
+            $url_begin=$this->url."&next=0";
+
+            if ($mod_show_next/$this->maxrowsperpage >= 1) {
+            	print "<a href=\"$url_begin\">Begin</a> ";
+            }
+            print "<a href=\"$url_prev\">Previous</a>";
         }
         
         print "
@@ -218,10 +230,15 @@ class Records {
         ";
 
         if ($_REQUEST['action'] != 'Delete') $this->showAddForm();
-
+        if ($_REQUEST['action'] != 'PerformActions') {
+        	$this->showActionsForm();
+        }
     }
 
     function listRecords() {
+    }
+
+    function getRecordKeys() {
     }
 
     function addRecord() {
@@ -254,6 +271,7 @@ class Records {
     }
 
     function showAddForm() {
+		if ($this->selectionActive) return;
 	}
 
     function showSortForm() {
@@ -262,7 +280,7 @@ class Records {
             return;
         }
 
-        $selected_sortBy[$this->filters['sortBy']]='selected';
+        $selected_sortBy[$this->sorting['sortBy']]='selected';
 
         //print " Sort ";
 
@@ -272,7 +290,7 @@ class Records {
         }
         print "</select>";
 
-        $selected_sortOrder[$this->filters['sortOrder']]='selected';
+        $selected_sortOrder[$this->sorting['sortOrder']]='selected';
         print "<select name=sortOrder>";
         printf ("<option value='DESC' %s>DESC",$selected_sortOrder['DESC']);
         printf ("<option value='ASC' %s>ASC",$selected_sortOrder['ASC']);
@@ -307,10 +325,37 @@ class Records {
         	if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
             printf ("<input type=hidden name=%s value='%s'>\n",$element,$this->SOAPEngine->extraFormElements[$element]);
         }
-
     }
 
     function getAllowedDomains() {
+    }
+
+
+    function showActionsForm() {
+        if (!$this->selectionActive) {
+            return;
+        }
+
+		$class_name=get_class($this).'Actions';
+
+		if (class_exists($class_name)) {
+            $actions=new $class_name(&$this->SOAPEngine);
+            $actions->showActionsForm($this->filters,$this->sorting);
+        }
+    }
+
+    function performActions() {
+		$this->showSeachForm();
+
+		$this->getRecordKeys();
+    	//print_r($this->selectionKeys);
+
+        $class_name=get_class($this).'Actions';
+
+		if (class_exists($class_name)) {
+            $actions=new $class_name(&$this->SOAPEngine);
+            $actions->performActions(&$this->selectionKeys,$_REQUEST['sub_action'],$_REQUEST['sub_action_parameter']);
+        }
     }
 }
 
@@ -349,11 +394,11 @@ class ENUMmappings extends Records {
                      );
 
         // Order
-        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'changeDate';
-        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'DESC';
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
 
-        $orderBy = array('attribute' => $this->filters['sortBy'],
-                         'direction' => $this->filters['sortOrder']
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
                          );
 
         // Compose query
@@ -580,6 +625,8 @@ class ENUMmappings extends Records {
     }
 
     function showAddForm() {
+		if ($this->selectionActive) return;
+
         print "
         <p>
         <table border=0 class=border width=100%>
@@ -887,6 +934,8 @@ class ENUMranges extends Records {
     }
 
     function showAddForm() {
+		if ($this->selectionActive) return;
+
         print "
         <p>
         <table border=0 class=border width=100%>
@@ -1005,11 +1054,11 @@ class TrustedPeers extends Records {
                      );
 
         // Order
-        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'description';
-        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'ASC';
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'description';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'ASC';
 
-        $orderBy = array('attribute' => $this->filters['sortBy'],
-                         'direction' => $this->filters['sortOrder']
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
                          );
 
         // Compose query
@@ -1133,6 +1182,7 @@ class TrustedPeers extends Records {
     }
 
     function showAddForm() {
+		if ($this->selectionActive) return;
         print "
         <p>
         <table border=0 class=border width=100%>
@@ -1259,11 +1309,11 @@ class GatewayGroups extends Records {
                      );
 
         // Order
-        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'name';
-        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'ASC';
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'name';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'ASC';
 
-        $orderBy = array('attribute' => $this->filters['sortBy'],
-                         'direction' => $this->filters['sortOrder']
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
                          );
 
         // Compose query
@@ -1377,6 +1427,7 @@ class GatewayGroups extends Records {
     }
 
     function showAddForm() {
+		if ($this->selectionActive) return;
         print "
         <p>
         <table border=0 class=border width=100%>
@@ -1505,11 +1556,11 @@ class Gateways extends Records {
                      );
 
         // Order
-        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'name';
-        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'ASC';
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'name';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'ASC';
 
-        $orderBy = array('attribute' => $this->filters['sortBy'],
-                         'direction' => $this->filters['sortOrder']
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
                          );
 
         // Compose query
@@ -1638,6 +1689,7 @@ class Gateways extends Records {
     }
 
     function showAddForm() {
+		if ($this->selectionActive) return;
         print "
         <p>
         <table border=0 class=border width=100%>
@@ -1865,11 +1917,11 @@ class Routes extends Records {
                      );
 
         // Order
-        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'prefix';
-        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'ASC';
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'prefix';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'ASC';
 
-        $orderBy = array('attribute' => $this->filters['sortBy'],
-                         'direction' => $this->filters['sortOrder']
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
                          );
 
         // Compose query
@@ -2001,6 +2053,7 @@ class Routes extends Records {
     }
 
     function showAddForm() {
+		if ($this->selectionActive) return;
         print "
         <p>
         <table border=0 class=border width=100%>
@@ -2134,7 +2187,7 @@ class Routes extends Records {
 }
 
 class SIPAccounts extends Records {
-    var $sortElements=array('changeDate' =>'Change date',
+    var $sortElements=array('changeDate' => 'Change date',
                             'username'   => 'Username',
                             'domain'     => 'Domain',
                             'owner'      => 'Owner'
@@ -2148,6 +2201,66 @@ class SIPAccounts extends Records {
                            );
 
 		$this->Records(&$SOAPEngine);
+
+    }
+
+    function getRecordKeys() {
+
+		if (preg_match("/^(.*)@(.*)$/",$this->filters['username'],$m)) {
+        	$this->filters['username'] = $m[1];
+            $this->filters['domain']   = $m[2];
+        }
+
+        if ($this->filters['domain'] && $this->allowedDomains && !in_array($this->filters['domain'],$this->allowedDomains)) {
+        	$this->filters['domain'] = $this->allowedDomains[0];
+        }
+
+        // Filter
+        $filter=array('username' => $this->filters['username'],
+                      'domain'   => $this->filters['domain'],
+                      'name'     => $this->filters['fullname']
+                      );
+
+        // Range
+        $range=array('start' => 0,
+                     'count' => 1000
+                     );
+
+        // Order
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getAccounts($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+			foreach ($result->accounts as $account) {
+                $this->selectionKeys[]=$account->id->username.'@'.$account->id->domain;
+            }
+
+            return true;
+        }
+
+        return false;
 
     }
 
@@ -2183,11 +2296,11 @@ class SIPAccounts extends Records {
                      );
 
         // Order
-        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'changeDate';
-        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'DESC';
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
 
-        $orderBy = array('attribute' => $this->filters['sortBy'],
-                         'direction' => $this->filters['sortOrder']
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
                          );
 
         // Compose query
@@ -2399,6 +2512,7 @@ class SIPAccounts extends Records {
     }
 
     function showAddForm() {
+		if ($this->selectionActive) return;
         print "
         <p>
         <table border=0 class=border width=100%>
@@ -2613,11 +2727,11 @@ class SIPAliases extends Records {
                      );
 
         // Order
-        if (!$this->filters['sortBy'])    $this->filters['sortBy']    = 'aliasUsername';
-        if (!$this->filters['sortOrder']) $this->filters['sortOrder'] = 'DESC';
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'aliasUsername';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
 
-        $orderBy = array('attribute' => $this->filters['sortBy'],
-                         'direction' => $this->filters['sortOrder']
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
                          );
 
         // Compose query
@@ -2801,6 +2915,7 @@ class SIPAliases extends Records {
     }
 
     function showAddForm() {
+		if ($this->selectionActive) return;
         print "
         <p>
         <table border=0 class=border width=100%>
@@ -3064,6 +3179,7 @@ class DomainStatistics extends Records {
     }
 
     function showAddForm() {
+		if ($this->selectionActive) return;
         print "
         <p>
         <table border=0 class=border width=100%>
@@ -3265,6 +3381,7 @@ class Domains extends Records {
     }
 
     function showAddForm() {
+		if ($this->selectionActive) return;
         print "
         <p>
         <table border=0 class=border width=100%>
@@ -3316,6 +3433,284 @@ class Domains extends Records {
            return 1;
         }
     }
+}
+
+class Actions {
+    var $actions=array();
+
+    function Actions(&$SOAPEngine) {
+		$this->SOAPEngine = $SOAPEngine;
+    }
+
+    function performActions($selectionKeys,$action,$sub_action_parameter) {
+    }
+
+    function showActionsForm($filters,$sorting) {
+        if (!count($this->actions)) return;
+
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=actionform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit value='Perform this action on the selection:'>
+            <input type=hidden name=action value=PerformActions>
+            ";
+
+        print "<select name=sub_action>";
+        foreach (array_keys($this->actions) as $_action) {
+            printf ("<option value='%s'>%s",$_action,$this->actions[$_action]);
+        }
+        print "</select>";
+
+
+            print "
+            <input type=text size=15 name=sub_action_parameter>
+
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+        foreach (array_keys($filters) as $_filter) {
+            printf ("<input type=hidden name='%s_filter' value='%s'>\n", $_filter,$filters[$_filter]);
+        }
+
+        foreach (array_keys($sorting) as $_sorting) {
+            printf ("<input type=hidden name='%s' value='%s'>\n", $_sorting,$sorting[$_sorting]);
+        }
+
+        printf("<input type=hidden name=service value='%s'>",$this->SOAPEngine->service);
+
+        foreach (array_keys($this->SOAPEngine->extraFormElements) as $element) {
+        	if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
+            printf ("<input type=hidden name=%s value='%s'>\n",$element,$this->SOAPEngine->extraFormElements[$element]);
+        }
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+
+    }
+}
+
+class SIPAccountsActions extends Actions {
+    var $actions=array('block'          => 'Block SIP accounts',
+                       'deblock'        => 'Deblock SIP accounts',
+                       'enable_pstn'    => 'Enable access to PSTN for the SIP accounts',
+                       'disable_pstn'   => 'Disable access to PSTN for the SIP accounts',
+                       'deblock_quota'  => 'Deblock SIP accounts blocked by quota',
+                       'prepaid'        => 'Make SIP accounts prepaid',
+                       'postpaid'       => 'Make SIP accounts postpaid',
+                       'delete'         => 'Delete SIP accounts',
+                       'setquota'       => 'Set quota of SIP account to:'
+                       );
+
+    function SIPAccountsActions(&$SOAPEngine) {
+        $this->Actions(&$SOAPEngine);
+    }
+
+    function performActions($selectionKeys,$action,$sub_action_parameter) {
+        print "<ol>";
+        foreach($selectionKeys as $key) {
+            flush();
+            //printf ("<li>Performing action=%s on key=%s",$action,$key);
+            list($username,$domain)=explode('@',$key);
+
+        	$account=array('username' => $username,
+                           'domain'   => $domain
+        			      );
+
+        	if ($action=='block') {
+
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->addToGroup($account,'block');
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+           			printf ("<li><font color=green>SIP account %s has been blocked</font> ",$key);
+        		}
+
+        	} else if ($action=='deblock') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->removeFromGroup($account,'block');
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+           			printf ("<li><font color=green>SIP account %s has been de-blocked</font> ",$key);
+        		}
+        	} else if ($action=='deblock_quota') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->removeFromGroup($account,'quota');
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+           			printf ("<li><font color=green>SIP account %s has been de-blocked </font> ",$key);
+        		}
+        	} else if ($action=='enable_pstn') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->addToGroup($account,'free-pstn');
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+           			printf ("<li><font color=green>SIP account %s has access to the PSTN </font> ",$key);
+        		}
+        	} else if ($action=='delete') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->deleteAccount($account);
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+           			printf ("<li><font color=green>SIP account %s has been deleted </font> ",$key);
+        		}
+        	} else if ($action=='disable_pstn') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->removeFromGroup($account,'free-pstn');
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+           			printf ("<li><font color=green>SIP account %s has been denied access to PSTN </font> ",$key);
+        		}
+        	} else if ($action=='prepaid') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->getAccount($account);
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+                    //print_r($result);
+                    // Sanitize data types due to PHP bugs
+
+                    if (!is_array($result->properties))   $result->properties=array();
+        			if (!is_array($result->groups)) 	  $result->groups=array();
+                    $result->quota=intval($result->quota);
+
+                    $result->prepaid=1;
+        			$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        	$result     = $this->SOAPEngine->soapclient->updateAccount($result);
+
+                    if (PEAR::isError($result)) {
+            			$error_msg  = $result->getMessage();
+            			$error_fault= $result->getFault();
+            			$error_code = $result->getCode();
+            			printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            			break;
+                    } else {
+           				printf ("<li><font color=green>SIP account %s has been set to prepaid </font> ",$key);
+                    }
+        		}
+        	} else if ($action=='postpaid') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->getAccount($account);
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+                    //print_r($result);
+                    // Sanitize data types due to PHP bugs
+
+                    if (!is_array($result->properties))   $result->properties=array();
+        			if (!is_array($result->groups)) 	  $result->groups=array();
+                    $result->quota=intval($result->quota);
+
+                    $result->prepaid=0;
+        			$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        	$result     = $this->SOAPEngine->soapclient->updateAccount($result);
+
+                    if (PEAR::isError($result)) {
+            			$error_msg  = $result->getMessage();
+            			$error_fault= $result->getFault();
+            			$error_code = $result->getCode();
+            			printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            			break;
+                    } else {
+           				printf ("<li><font color=green>SIP account %s has been set to postpaid </font> ",$key);
+                    }
+        		}
+        	} else if ($action=='setquota') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->getAccount($account);
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+                    //print_r($result);
+                    // Sanitize data types due to PHP bugs
+
+                    if (!is_array($result->properties))   $result->properties=array();
+        			if (!is_array($result->groups)) 	  $result->groups=array();
+                    $result->quota=intval($sub_action_parameter);
+
+                    $result->prepaid=0;
+        			$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        	$result     = $this->SOAPEngine->soapclient->updateAccount($result);
+
+                    if (PEAR::isError($result)) {
+            			$error_msg  = $result->getMessage();
+            			$error_fault= $result->getFault();
+            			$error_code = $result->getCode();
+            			printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            			break;
+                    } else {
+           				printf ("<li><font color=green>SIP account %s has quota set to %s </font> ",$key,$sub_action_parameter);
+                    }
+        		}
+            }
+        }
+        print "</ol>";
+
+    }
+
 }
 
 ?>

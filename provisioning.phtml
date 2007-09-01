@@ -13,6 +13,7 @@ if (is_readable("local/header.phtml")) {
     include("header.phtml");
 }
 
+set_time_limit(600);
 $perm->check("admin");
 
 include("provisioning_soap_library.phtml");
@@ -30,7 +31,11 @@ $RECORDS    = new $_class(&$SOAPEngine,$extraFormElements);
 if ($_REQUEST['action']=='Add') $RECORDS->addRecord();
 if ($_REQUEST['action']=='Delete') $RECORDS->deleteRecord();
 
-$RECORDS->listRecords();
+if ($_REQUEST['action']=='PerformActions') {
+	$RECORDS->performActions();
+} else {
+	$RECORDS->listRecords();
+}
 $layout->showFooter();
 
 print "
