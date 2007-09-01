@@ -33,7 +33,7 @@ class SOAPEngine {
                                           )
                         );
 
-    function SOAPEngine($service,$soapEngines,$extraFormElements=array()) {
+    function SOAPEngine($service,$soapEngines,$extraFormElements,$impersonate) {
 
         /*
 
@@ -53,7 +53,7 @@ class SOAPEngine {
             if (!$service) {
                 $_services     = array_keys($this->services);
                 $_soapids      = array_keys($this->soapEngines);
-                $service       = $_soapids[0].":".$_services[0];
+                $service       = $_soapids[0].'@'.$_services[0];
             }
 
             if (is_array($extraFormElements)) {
@@ -62,7 +62,7 @@ class SOAPEngine {
 
             $this->service = $service;
 
-            $_els=explode(":",$this->service);
+            $_els=explode('@',$this->service);
 
             $this->soapEngineId   = $_els[0];
             $this->soapEnginePort = $_els[1];
@@ -74,13 +74,13 @@ class SOAPEngine {
                 $this->skip[$_key]=$this->soapEngines[$_key]['skip'];
             }
 
-			$impersonate=intval($this->soapEngines[$this->soapEngineId]['impersonate']);
+			if (!$impersonate) $this->soapEngines[$this->soapEngineId]['impersonate'];
 
             $this->SOAPlogin = array(
                                    "username"    => $this->soapEngines[$this->soapEngineId]['username'],
                                    "password"    => $this->soapEngines[$this->soapEngineId]['password'],
                                    "admin"       => true,
-                                   "impersonate" => $impersonate
+                                   "impersonate" => intval($impersonate)
                                    );
             $this->SOAPurl=$this->soapEngines[$this->soapEngineId]['url'];
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
@@ -140,9 +140,9 @@ class SOAPEngine {
         	if ($j>1) printf ("<option value=''>--------");
             $k=1;
             foreach (array_keys($this->services) as $_service) {
-                $idx=$_engine.":".$_service;
+                $idx=$_engine.'@'.$_service;
                 if (in_array($_service,$this->skipServices[$_engine])) continue;
-                printf ("<option value='%s:%s' %s>%d.%d %s:%s",$_engine,$_service,$selected_soapEngine[$idx],$j,$k,ucfirst($_service),$this->soapEngines[$_engine]['name']);
+                printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_engine,$_service,$selected_soapEngine[$idx],$j,$k,ucfirst($_service),$this->soapEngines[$_engine]['name']);
                 $k++;
             }
             $j++;
@@ -1804,7 +1804,7 @@ class Gateways extends Records {
             return false;
         }
 
-        $address_els=explode(":",$address);
+        $address_els=explode(':',$address);
 
         if (count($address_els) == 1) {
             $ip=$address_els[0];
