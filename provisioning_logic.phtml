@@ -19,7 +19,7 @@ class SOAPEngine {
                         'enumRanges'    => array('recordsClass' => 'EnumRanges',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
                                           ),
-                        'trustedParties' => array('recordsClass' => 'TrustedPeers',
+                        'trustedPeers' => array('recordsClass' => 'TrustedPeers',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
                         'pstnGateways' => array('recordsClass' => 'Gateways',
@@ -395,6 +395,80 @@ class ENUMmappings extends Records {
                             'owner'      => 'Owner'
                             );
 
+    var $NAPTR_services=array(
+        "sip"    => array("service"=>"sip",
+                              "webname"=>"SIP",
+                              "schemas"=>array("sip:","sips:")),
+        "mailto" => array("service"=>"mailto",
+                              "webname"=>"Email",
+                              "schemas"=>array("mailto:")),
+        "web:http"   => array("service"=>"web:http",
+                              "webname"=>"WEB (http)",
+                              "schemas"=>array("http://")),
+        "web:https"  => array("service"=>"web:https",
+                              "webname"=>"WEB (https)",
+                              "schemas"=>array("https://")),
+        "x-skype:callto" => array("service"=>"x-skype:callto",
+                              "webname"=>"Skype",
+                              "schemas"=>array("callto:")),
+        "h323"   => array("service"=>"h323",
+                              "webname"=>"H323",
+                              "schemas"=>array("h323:")),
+        "iax"    => array("service"=>"iax",
+                              "webname"=>"IAX",
+                              "schemas"=>array("iax:")),
+        "iax2"   => array("service"=>"iax2",
+                              "webname"=>"IAX2",
+                              "schemas"=>array("iax2:")),
+        "mms"    => array("service"=>"mms",
+                              "webname"=>"MMS",
+                              "schemas"=>array("tel:","mailto:")),
+        "sms"    => array("service"=>"sms",
+                              "webname"=>"SMS",
+                              "schemas"=>array("tel:","mailto:")),
+        "ems"    => array("service"=>"ems",
+                              "webname"=>"EMS",
+                              "schemas"=>array("tel:","mailto:")),
+        "im"     => array("service"=>"im",
+                              "webname"=>"IM",
+                              "schemas"=>array("im:")),
+        "npd:tel"   => array("service"=>"npd+tel",
+                              "webname"=>"Portability",
+                              "schemas"=>array("tel:")),
+        "void:mailto"  => array("service"=>"void:mailto",
+                              "webname"=>"VOID(mail)",
+                              "schemas"=>array("mailto:")),
+        "void:http"  => array("service"=>"void:http",
+                              "webname"=>"VOID(http)",
+                              "schemas"=>array("http://")),
+        "void:https" => array("service"=>"void:https",
+                              "webname"=>"VOID(https)",
+                              "schemas"=>array("https://")),
+        "voice"  => array("service"=>"voice",
+                              "webname"=>"Voice",
+                              "schemas"=>array("voice:","tel:")),
+        "tel"    => array("service"=>"tel",
+                              "webname"=>"Tel",
+                              "schemas"=>array("tel:")),
+        "fax:tel"    => array("service"=>"fax:tel",
+                              "webname"=>"Fax",
+                              "schemas"=>array("tel:")),
+        "ifax:mailto"   => array("service"=>"ifax:mailto",
+                              "webname"=>"iFax",
+                              "schemas"=>array("mailto:")),
+        "pres"   => array("service"=>"pres",
+                              "webname"=>"Presence",
+                              "schemas"=>array("pres:")),
+        "ft:ftp"    => array("service"=>"ft:ftp",
+                              "webname"=>"FTP",
+                              "schemas"=>array("ftp://")),
+        "loc:http"  => array("service"=>"loc:http",
+                              "webname"=>"GeoLocation",
+                              "schemas"=>array("http://")),
+        "key:http"  => array("service"=>"key:http",
+                              "webname"=>"Public key",
+                              "schemas"=>array("http://"))
+        );
     function ENUMmappings(&$SOAPEngine) {
         $this->filters   = array('number'       => trim($_REQUEST['number_filter']),
                                  'tld'          => trim($_REQUEST['tld_filter']),
@@ -618,8 +692,22 @@ class ENUMmappings extends Records {
             printf ("<input type=text size=10 name=tld_filter value='%s'>",$this->filters['tld']);
         }
 
-        printf (" Service: <input type=text size=10 name=type_filter value='%s'>",$this->filters['type']);
-        printf (" Map to: <input type=text size=10 name=mapto_filter value='%s'>",$this->filters['mapto']);
+        printf (" Service: ");
+
+                    print "
+                    <select name=type_filter>
+                    <option>
+                    ";
+                    reset($this->NAPTR_services);
+                    $selected_naptr_service[$this->filters['mapto']];
+                    while (list($k,$v) = each($this->NAPTR_services)) {
+                    	printf ("<option value='%s' %s>%s",$k,$selected_naptr_service[$k],$this->NAPTR_services[$k]['webname']);
+                    }
+   
+                    print "
+                    </select>
+                    ";
+        printf (" Map to: <input type=text size=20 name=mapto_filter value='%s'>",$this->filters['mapto']);
 
     }
 
@@ -680,9 +768,19 @@ class ENUMmappings extends Records {
             } else {
                 print "<input type=text size=15 name=tld>";
             }
-	        printf (" Service: <input type=text size=5 name=type value='Sip'>");
-    	    printf (" Map to: <input type=text size=25 name=mapto>");
-
+    	    printf (" Map to:");
+                    print "
+                    <select name=type>
+                    ";
+                    reset($this->NAPTR_services);
+                    while (list($k,$v) = each($this->NAPTR_services)) {
+                    	printf ("<option value='%s' %s>%s",$k,$selected_naptr_service[$k],$this->NAPTR_services[$k]['webname']);
+                    }
+   
+                    print "
+                    </select>
+                    ";
+            printf (" <input type=text size=25 name=mapto>");
             printf (" TTL: <input type=text size=5 name=ttl value=3600>");
             printf (" Owner: <input type=text size=5 name=owner>");
 
@@ -741,6 +839,25 @@ class ENUMmappings extends Records {
         $enum_id=array('number' => $number,
                        'tld'    => $tld);
 
+        $mapto=trim($_REQUEST['mapto']);
+
+        if (preg_match("/^([a-z0-9]+:\/\/)(.*)$/i",$mapto,$m)) {
+        	$_scheme = $m[1];
+            $_value  = $m[2];
+        } else if (preg_match("/^([a-z0-9]+:)(.*)$/i",$mapto,$m)) {
+        	$_scheme = $m[1];
+            $_value  = $m[2];
+        } else {
+            $_scheme = '';
+        	$_value  = $mapto;
+        }
+
+        if (!$_scheme || !in_array($_scheme,$this->NAPTR_services[trim($_REQUEST['type'])]['schemas'])) {
+            $_scheme=$this->NAPTR_services[trim($_REQUEST['type'])]['schemas'][0];
+        }
+
+        $mapto=$_scheme.$_value;
+
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
         $result     = $this->SOAPEngine->soapclient->getNumber($enum_id);
 
@@ -754,7 +871,7 @@ class ENUMmappings extends Records {
                                 $enum_number=array('id'    => $enum_id,
                                                    'owner' => intval(trim($_REQUEST['owner'])),
                                                    'mappings' => array(array('type'=>trim($_REQUEST['type']),
-                                                                             'mapto'=>trim($_REQUEST['mapto']),
+                                                                             'mapto'=>$mapto,
                                                                              'ttl'=>intval(trim($_REQUEST['ttl']))
                                                                             )
                                                                        )
@@ -2585,7 +2702,7 @@ class SIPAccounts extends Records {
             <input type=submit name=action value=Add>
             ";
 
-            printf (" SIP: <input type=text size=15 name=account value='%s'>",$_REQUEST['account']);
+            printf (" SIP: <input type=text size=25 name=account value='%s'>",$_REQUEST['account']);
             if (is_array($this->allowedDomains)) {
             	print "@<select name=domain>";
                 foreach ($this->allowedDomains as $_domain) {
@@ -2596,7 +2713,7 @@ class SIPAccounts extends Records {
             }
 
             printf (" Password: <input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
-            printf (" Name: <input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
+            printf (" Name: <input type=text size=25 name=fullname value='%s'>",$_REQUEST['fullname']);
             printf (" Email: <input type=text size=25 name=email value='%s'>",$_REQUEST['email']);
             //printf (" CallerId: <input type=text size=11 name=rpid value='%s'>",$_REQUEST['rpid']);
             printf (" Owner: <input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
