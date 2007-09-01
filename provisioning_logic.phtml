@@ -69,6 +69,11 @@ class SOAPEngine {
             $this->recordsClass   = $this->services[$this->soapEnginePort]['recordsClass'];
             $this->soapClass      = $this->services[$this->soapEnginePort]['soapClass'];
 
+            foreach(array_keys($this->soapEngines) as $_key ) {
+            	$this->skipServices[$_key]=$this->soapEngines[$_key]['skipServices'];
+                $this->skip[$_key]=$this->soapEngines[$_key]['skip'];
+            }
+
 			$impersonate=intval($this->soapEngines[$this->soapEngineId]['impersonate']);
 
             $this->SOAPlogin = array(
@@ -77,11 +82,8 @@ class SOAPEngine {
                                    "admin"       => true,
                                    "impersonate" => $impersonate
                                    );
-
             $this->SOAPurl=$this->soapEngines[$this->soapEngineId]['url'];
-    
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
-
 
     		// Instantiate the SOAP client
             $this->soapclient = new $this->soapClass($this->SOAPurl);
@@ -89,6 +91,31 @@ class SOAPEngine {
             $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+			$this->soapRemoteId=$this->soapEngines[$this->soapEngineId]['depends'];
+
+            if (strlen($this->soapRemoteId) && in_array($this->soapRemoteId,array_keys($this->soapEngines))) {
+				$this->soapEngineIdRemote = $this->soapEngines[$this->soapRemoteId];
+                $impersonateRemote=intval($this->soapEngines[$this->soapRemoteId]['impersonate']);
+
+    	        $this->SOAPloginRemote = array(
+        	                           "username"    => $this->soapEngines[$this->soapRemoteId]['username'],
+            	                       "password"    => $this->soapEngines[$this->soapRemoteId]['password'],
+                	                   "admin"       => true,
+                    	               "impersonate" => $impersonateRemote
+                                   );
+
+                //print_r($this->SOAPloginRemote);
+            	$this->SOAPurlRemote=$this->soapEngines[$this->soapRemoteId]['url'];
+            	$this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
+
+    			// Instantiate the SOAP client depends
+            	$this->soapclientRemote = new $this->soapClass($this->SOAPurlRemote);
+
+            	$this->soapclientRemote->setOpt('curl', CURLOPT_TIMEOUT,        5);
+            	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+            	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+            }
 
     	} else {
             print "<p><font color=red>Error: No SOAP credentials defined.</font>";
@@ -105,14 +132,16 @@ class SOAPEngine {
     function showEngineSelection() {
 
         $selected_soapEngine[$this->service]='selected';
-
         printf ("<select name=service onChange=\"document.soapengine.submit.disabled = true; location.href = '%s&service=' + this.options[this.selectedIndex].value\">",$this->url);
         $j=1;
         foreach (array_keys($this->soapEngines) as $_engine) {
+        	if ($this->skip[$_engine]) continue;
+
         	if ($j>1) printf ("<option value=''>--------");
             $k=1;
             foreach (array_keys($this->services) as $_service) {
                 $idx=$_engine.":".$_service;
+                if (in_array($_service,$this->skipServices[$_engine])) continue;
                 printf ("<option value='%s:%s' %s>%d.%d %s:%s",$_engine,$_service,$selected_soapEngine[$idx],$j,$k,ucfirst($_service),$this->soapEngines[$_engine]['name']);
                 $k++;
             }
@@ -2494,21 +2523,50 @@ class SIPAccounts extends Records {
                      'domain'   => $this->filters['domain']
         			);
 
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        if (is_object($this->SOAPEngine->soapclientRemote)) {
+            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
+            $resultRemote = $this->SOAPEngine->soapclientRemote->deleteAccount($account);
 
-        $result     = $this->SOAPEngine->soapclient->deleteAccount($account);
+            if (PEAR::isError($resultRemote)) {
+                $error_msg=$resultRemote->getMessage();
+                $error_fault=$resultRemote->getFault();
+                $error_code=$resultRemote->getCode();
+                printf ("<p><font color=red>Remote Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+                $result = $this->SOAPEngine->soapclient->deleteAccount($account);
 
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
+                if (PEAR::isError($result)) {
+                    $error_msg=$result->getMessage();
+                    $error_fault=$result->getFault();
+                    $error_code=$result->getCode();
+                    printf ("<p><font color=red>Local Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                } else {
+           			printf ("<p><font color=green>SIP account %s@%s has been deleted. </font> ",$this->filters['username'],$this->filters['domain']);
+           			unset($this->filters);
+                }
+            }
+
         } else {
-           printf ("<p><font color=green>SIP account %s@%s has been deleted. </font> ",$this->filters['username'],$this->filters['domain']);
-           unset($this->filters);
-           return 1;
+
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result = $this->SOAPEngine->soapclient->deleteAccount($account);
+
+            if (PEAR::isError($result)) {
+                $error_msg=$result->getMessage();
+                $error_fault=$result->getFault();
+                $error_code=$result->getCode();
+                printf ("<p><font color=red>Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+           		printf ("<p><font color=green>SIP account %s@%s has been deleted. </font> ",$this->filters['username'],$this->filters['domain']);
+           		unset($this->filters);
+            }
         }
+
+        return true;
     }
 
     function showAddForm() {
@@ -2613,37 +2671,49 @@ class SIPAccounts extends Records {
 
         //print_r($account);
 
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        if (is_object($this->SOAPEngine->soapclientRemote)) {
+            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
+            $resultRemote = $this->SOAPEngine->soapclientRemote->addAccount($account);
 
-        $result     = $this->SOAPEngine->soapclient->addAccount($account);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-           printf ("<p><font color=green>SIP account %s@%s has been added. </font>",$alias_els[0],$alias_els[1]);
-        }
-
-        if (strlen(trim($_REQUEST['rpid']))) {
-            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-            $result     = $this->SOAPEngine->soapclient->addToGroup(array("username" => $account_els[0],"domain"=> $account_els[1]), "free-pstn");
-
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            if (PEAR::isError($resultRemote)) {
+                $error_msg=$resultRemote->getMessage();
+                $error_fault=$resultRemote->getFault();
+                $error_code=$resultRemote->getCode();
+                printf ("<p><font color=red>Remote Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
-               printf ("<font color=green>PSTN enabled. </font>");
+                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+                $result = $this->SOAPEngine->soapclient->addAccount($account);
+
+                if (PEAR::isError($result)) {
+                    $error_msg=$result->getMessage();
+                    $error_fault=$result->getFault();
+                    $error_code=$result->getCode();
+                    printf ("<p><font color=red>Local Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                } else {
+                    printf ("<p><font color=green>SIP account %s@%s has been added. </font>",$username,$domain);
+                }
+            }
+
+        } else {
+
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result = $this->SOAPEngine->soapclient->addAccount($account);
+
+            if (PEAR::isError($result)) {
+                $error_msg=$result->getMessage();
+                $error_fault=$result->getFault();
+                $error_code=$result->getCode();
+                printf ("<p><font color=red>Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+                printf ("<p><font color=green>SIP account %s@%s has been added. </font>",$username,$domain);
+
             }
         }
 
-        return 1;
-
+        return true;
     }
 
     function RandomPassword($len=11) {
@@ -2661,22 +2731,23 @@ class SIPAccounts extends Records {
         }
         return $string;
     }
+
     function getAllowedDomains() {
-        // Insert credetials
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-        $result     = $this->SOAPEngine->soapclient->getDomains();
+    	//print_r($this->soapclientRemote);
 
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-            $this->allowedDomains=$result;
-        }
-    }
+	        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+    	    $result     = $this->SOAPEngine->soapclient->getDomains();
 
+        	if (PEAR::isError($result)) {
+            	$error_msg  = $result->getMessage();
+	            $error_fault= $result->getFault();
+    	        $error_code = $result->getCode();
+        	    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            	return false;
+	        } else {
+    	        $this->allowedDomains=$result;
+        	}
+     }
 }
 
 class SIPAliases extends Records {
@@ -2873,22 +2944,53 @@ class SIPAliases extends Records {
         			);
 
         //print_r($alias);
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
-        $result     = $this->SOAPEngine->soapclient->deleteAlias($alias);
+        if (is_object($this->SOAPEngine->soapclientRemote)) {
+            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
+            $resultRemote = $this->SOAPEngine->soapclientRemote->deleteAlias($alias);
 
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
+            if (PEAR::isError($resultRemote)) {
+                $error_msg=$resultRemote->getMessage();
+                $error_fault=$resultRemote->getFault();
+                $error_code=$resultRemote->getCode();
+                printf ("<p><font color=red>Remote Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+                $result = $this->SOAPEngine->soapclient->deleteAlias($alias);
+
+                if (PEAR::isError($result)) {
+                    $error_msg=$result->getMessage();
+                    $error_fault=$result->getFault();
+                    $error_code=$result->getCode();
+                    printf ("<p><font color=red>Local Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                } else {
+           			printf ("<p><font color=green>SIP alias %s@%s has been deleted. </font> ",$this->filters['aliasUsername'],$this->filters['aliasDomain']);
+           			unset($this->filters);
+           			$this->recordDeleted=1;
+                }
+            }
+
         } else {
-           printf ("<p><font color=green>SIP alias %s@%s has been deleted. </font> ",$this->filters['aliasUsername'],$this->filters['aliasDomain']);
-           unset($this->filters);
-           $this->recordDeleted=1;
-           return 1;
+
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result = $this->SOAPEngine->soapclient->deleteAlias($alias);
+
+            if (PEAR::isError($result)) {
+                $error_msg=$result->getMessage();
+                $error_fault=$result->getFault();
+                $error_code=$result->getCode();
+                printf ("<p><font color=red>Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+	           	printf ("<p><font color=green>SIP alias %s@%s has been deleted. </font> ",$this->filters['aliasUsername'],$this->filters['aliasDomain']);
+           		unset($this->filters);
+           		$this->recordDeleted=1;
+            }
         }
+
+        return true;
     }
 
     function showSeachFormCustom() {
@@ -3006,6 +3108,49 @@ class SIPAliases extends Records {
            printf ("<p><font color=green>SIP alias %s@%s has been added. </font>",$alias_els[0],$alias_els[1]);
            return 1;
         }
+
+        if (is_object($this->SOAPEngine->soapclientRemote)) {
+            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
+            $resultRemote = $this->SOAPEngine->soapclientRemote->addAlias($alias);
+
+            if (PEAR::isError($resultRemote)) {
+                $error_msg=$resultRemote->getMessage();
+                $error_fault=$resultRemote->getFault();
+                $error_code=$resultRemote->getCode();
+                printf ("<p><font color=red>Remote Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+                $result = $this->SOAPEngine->soapclient->addAlias($alias);
+
+                if (PEAR::isError($result)) {
+                    $error_msg=$result->getMessage();
+                    $error_fault=$result->getFault();
+                    $error_code=$result->getCode();
+                    printf ("<p><font color=red>Local Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                } else {
+		           	printf ("<p><font color=green>SIP alias %s@%s has been added. </font>",$alias_els[0],$alias_els[1]);
+                }
+            }
+
+        } else {
+
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result = $this->SOAPEngine->soapclient->addAlias($alias);
+
+            if (PEAR::isError($result)) {
+                $error_msg=$result->getMessage();
+                $error_fault=$result->getFault();
+                $error_code=$result->getCode();
+                printf ("<p><font color=red>Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+                printf ("<p><font color=green>SIP alias %s@%s has been added. </font>",$alias_els[0],$alias_els[1]);
+            }
+        }
+
+        return true;
     }
     function getAllowedDomains() {
         // Insert credetials
