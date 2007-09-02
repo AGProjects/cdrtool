@@ -3,7 +3,7 @@ include("global.inc");
 
 if ($_REQUEST['public']) {
     $db = new DB_CDRTool;
-    $key="callid-".trim($callid).trim($fromtag);
+    $key="callid-".trim($_REQUEST['callid']).trim($_REQUEST['fromtag']);
     $query=sprintf("select * from memcache where `key` = '%s'",addslashes($key));
     sleep(1);
     dprint($query);
