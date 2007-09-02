@@ -238,7 +238,7 @@ class SIPSettings {
         global $soapEngines;
     	$this->soapEngines=$soapEngines;
 
-        require_once("CDRTool/provisioning_soap_library.phtml");
+        require_once("provisioning_soap_library.phtml");
 
         // Sip, Voicemail and Customer Port share same login
         $this->SOAPurl=$this->soapEngines[$this->soapEngineIdSipPort]['url'];

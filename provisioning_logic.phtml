@@ -2554,7 +2554,8 @@ class SIPAccounts extends Records {
 
                     if ($this->SipSettingsPage) {
 
-                        $url=sprintf('%s?account=%s@%s&rId=%s&soapEngineIdSipPort=%s',$this->SipSettingsPage,$account->id->username,$account->id->domain,$this->reseller,$this->SOAPEngine->soapEngineIdSettingsPage);
+                        $url=sprintf('%s?account=%s@%s&rId=%s&soapEngineIdSipPort=%s',$this->SipSettingsPage,$account->id->username,$account->id->domain,$this->
+                        reseller,$this->SOAPEngine->soapEngineIdSettingsPage);
 
                         foreach (array_keys($this->SOAPEngine->extraFormElements) as $element) {
                             if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
@@ -2592,7 +2593,7 @@ class SIPAccounts extends Records {
                     $bgcolor,
                     $index,
                     $sip_account,
-                    $this->reseller,
+                    $account->reseller,
                     $account->firstName,
                     $account->lastName,
                     $account->email,
