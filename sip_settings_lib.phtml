@@ -1,0 +1,5597 @@
+<?
+define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
+include_once(SMARTY_DIR . 'Smarty.class.php');
+require_once('SOAP/Client.php');
+require_once("phone_images.php");
+
+class SIPSettings {
+	var $soapEngineIdSipPort       = 'mdns';
+    var $soapEngineIdVoicemailPort = 'mdns_vm';
+    var $soapEngineIdCustomerPort  = 'mdns';
+    var $soapEngineIdPresencePort  = 'ssp';
+
+	var $soapClassSipPort          = 'WebService_NGNPro_SipPort';
+    var $soapClassVoicemailPort    = 'WebService_NGNPro_VoicemailPort';
+    var $soapClassCustomerPort     = 'WebService_NGNPro_CustomerPort';
+    var $soapClassPresencePort     = 'WebService_GeckoSIMPLEProxy_PresencePort';
+
+    var $voicemail				   = array('AccessNumber'     => '*70',
+                                           'Table'            => 'voicemail_users',
+										   'Server'           => 'vm.example.com'
+                                           );
+    var $SupportCompany            = "Example company";
+    var $SupportCDRsite            = "https://cdrtool.example.com/CDRTool";
+    var $SupportWEBsite            = "https://www.example.com/help";
+	var $SupportEmail              = "Support <support@example.com>";
+    var $SIPsettingsURL		       = "https://cdrtool.example.com/sip_settings.phtml";
+    var $xcaproot   		       = "https://cdrtool.example.com/xcap-root/";
+    var $templatesPath             = './templates';
+
+    var $changePrivacyAccessNumber = "*67";
+    var $checkPrivacyAccessNumber  = "*68";
+
+    var $SaveSettingsAllowed       = 0;
+    var $CanEditAll        		   = 0;
+
+    var $tab			           = "settings";
+
+    var $phonebook_img             = "<img src=images/pb.gif border=0>";
+    var $call_img                  = "<img src=images/call.gif border=0>";
+    var $delete_img                = "<img src=images/del_pb.gif border=0>";
+    var $privacyGroup              = "anonymous";
+
+    var $ForwardingTargetTypes	   = array("Voicemail","Other","Mobile","Tel","ENUM","Disabled");
+
+    var $groups                    = array();
+
+    var $WEBdictionary             = array(
+                                           'mailto'           ,
+                                           'free-pstn'        ,
+                                           'blocked'          ,
+                                           'sip_password'     ,
+                                           'quota'            ,
+                                           'language'         ,
+                                           'quota_reset'      ,
+                                           'used_quota'       ,
+                                           'voicemail'        ,
+                                           'anonymous'        ,
+                                           'advanced'         ,
+                                           'rpid'             ,
+                                           'timezone'         ,
+                                           'accept'           ,
+                                           'accept_temporary_group' ,
+                                           'accept_temporary_remain'    ,
+                                           'web_timestamp'    ,
+                                           'acceptDailyStartTime' ,
+                                           'acceptDailyStopTime'  ,
+                                           'acceptDailyGroup' ,
+                                           'quickdial'    ,
+                                           'delete_voicemail',
+                                           'voicemail_password',
+                                           'region',
+                                           'answerTimeout',
+                                           'owner',
+                                           'multiTargets'
+                                           );
+            
+    var $presenceStatuses   = array('allow','deny','confirm');
+    var $presenceActivities = array('busy'      => 'buddy_busy.jpg',
+                                    'available' => 'buddy_online.jpg',
+                                    'idle'      => 'buddy_idle.jpg',
+                                    'away'      => 'buddy_away.jpg'
+                                    );
+
+    var $emergencyRegions=array();
+
+	var $answerTimeoutDefault=35;
+
+    var $answerTimeoutEls=array(
+             "5" =>"5 s",
+             "10"=>"10 s",
+             "15"=>"15 s",
+             "20"=>"20 s",
+             "25"=>"25 s",
+             "30"=>"30 s",
+             "35"=>"35 s",
+             "40"=>"40 s",
+             "45"=>"45 s",
+             "50"=>"50 s",
+             "55"=>"55 s",
+             "60"=>"60 s"
+             );
+
+	var $exportFilename = "export.txt";
+
+    function SIPSettings($account='',$loginCredentials) {
+        $debug=sprintf("Initialize class %s(%s)",get_class($this),$account);
+        dprint($debug);
+        dprint_r($loginCredentials);
+
+        $this->rId                = $loginCredentials['reseller'];
+        $this->cId                = $loginCredentials['customer'];
+        $this->loginType          = $loginCredentials['loginType'];
+
+		if (strlen($loginCredentials['soapEngineIdSipPort'])) {
+            $this->soapEngineIdSipPort=$loginCredentials['soapEngineIdSipPort'];
+        }
+
+        $this->settingsPage       = $_SERVER['PHP_SELF'];
+        $this->tab                = $_REQUEST['tab'];
+
+
+        $this->initSoapClient();
+        $this->getAccount($account);
+
+        if ($this->loginType == "admin") {
+            $this->Preferences['CanEditAll'] = 1;
+
+            $this->pageURL=$this->settingsPage."?account=$this->account&adminonly=1&rId=$this->rId&soapEngineIdSipPort=$this->soapEngineIdSipPort";
+            $this->hiddenElements="
+            <input type=hidden name=account value=\"$this->account\">
+            <input type=hidden name=rId value=$this->rId>
+            <input type=hidden name=soapEngineIdSipPort value=$this->soapEngineIdSipPort>
+            <input type=hidden name=adminonly value=1>
+            ";
+
+        } else if ($this->loginType == "reseller") {
+            $this->Preferences['CanEditAll']         = 1;
+
+            $this->pageURL=$this->settingsPage."?account=$this->account&rId=$this->rId";
+            $this->hiddenElements="
+            <input type=hidden name=account value=\"$this->account\">
+            <input type=hidden name=rId value=$this->rId>
+            ";
+        } else {
+            $this->Preferences['LoggedInAsSubscriber'] = 1;
+            $this->Preferences['CanEditAll']           = 0;
+
+            $this->pageURL=$this->settingsPage."?account=$this->account";
+            $this->hiddenElements="
+            <input type=hidden name=account value=\"$this->account\">
+            ";
+        }
+
+        $this->setLanguage();
+
+        $this->PhonebookGroups=array(
+        "vip"       =>sprintf(_("VIP")),
+        "business"  =>sprintf(_("Business")),
+        "coworkers" =>sprintf(_("Coworkers")),
+        "friends"   =>sprintf(_("Friends")),
+        "family"    =>sprintf(_("Family"))
+        );
+
+        // for busy not online or unconditional
+        $this->CallPrefDictionary=array(
+        "FUNC"=>sprintf(_("All calls")),
+        "FNOL"=>sprintf(_("If Not-Online")),
+        "FBUS"=>sprintf(_("If Busy")),
+        "FNOA"=>sprintf(_("If No-Answer")),
+        "FUNV"=>sprintf(_("If Unavailable"))
+        );
+
+        $this->CallPrefDictionaryUNV=array(
+        "FUNV"=>sprintf(_("If Unavailable"))
+        );
+
+        // set on voicemail account when creating voicemail
+        $this->VoicemailCallPrefDictionary=array(
+        "FNOL"=>sprintf(_("If Not-Online")),
+        "FBUS"=>sprintf(_("If Busy")),
+        "FNOA"=>sprintf(_("If No-Answer")),
+        "FUNV"=>sprintf(_("If Unavailable"))
+        );
+
+        $this->acceptDailyProfiles=array('127' => _('Every day'),
+                                       '31'  => _('Weekday'),
+                                       '96'  => _('Weekend'),
+                                       '1'   => _('Monday'),
+                                       '2'   => _('Tuesday'),
+                                       '4'   => _('Wednesday'),
+                                       '8'   => _('Thursday'),
+                                       '16'  => _('Friday'),
+                                       '32'  => _('Saturday'),
+                                       '64'  => _('Sunday')
+                                       );
+
+        if (!$this->username) {
+            dprint ("Record not found.");
+            return false;
+        }
+
+        $this->getResellerSettings();
+
+    	$this->tabs=array('summary'=>_('Info'),
+                    	  'settings'=>_('Settings'),
+                          'locations'=>_('Devices'),
+                          'calls'=>_('Calls')
+                          );
+
+        if ($this->Preferences['advanced']) {
+            // Advanced accounts has access to call control and Phonebook
+        	$this->tabs[phonebook]=_("Contacts");
+        	$this->tabs[accept] =_("Accept");
+        	$this->tabs[reject] =_("Reject");
+
+            if (in_array("free-pstn",$this->groups)) {
+        		$this->tabs[barring]=_("Barring");
+            }
+        }
+
+        //$this->tabs[upgrade]=_("Upgrade");
+
+        if ($this->prepaid) {
+            $this->tabs[prepaid]=_("Prepaid");
+        }
+
+        if ($this->enablePresence) {
+            $this->tabs[presence]=_("Presence");
+        }
+
+        if ($this->domain=="sip2sip.info" || $this->domain=="sipline.nl") {
+        	$this->Preferences['CanEnableAdvanced']=1;
+        }
+
+    }
+
+    function initSoapClient() {
+        global $soapEngines;
+    	$this->soapEngines=$soapEngines;
+
+        require_once("CDRTool/provisioning_soap_library.phtml");
+
+        // Sip, Voicemail and Customer Port share same login
+        $this->SOAPurl=$this->soapEngines[$this->soapEngineIdSipPort]['url'];
+        $this->SOAPlogin = array(
+                               "username"    => $this->soapEngines[$this->soapEngineIdSipPort]['username'],
+                               "password"    => $this->soapEngines[$this->soapEngineIdSipPort]['password'],
+                               "admin"       => true,
+                               "impersonate" => intval($this->rId)
+                               );
+        $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+
+        // Presence
+        $this->SOAPurlPresence=$this->soapEngines[$this->soapEngineIdPresencePort]['url'];
+        $this->SOAPLoginPresence = array(
+                               "username"    => $this->soapEngines[$this->soapEngineIdPresencePort]['username'],
+                               "password"    => $this->soapEngines[$this->soapEngineIdPresencePort]['password'],
+                               );
+        $this->SoapAuthPresence = array('auth', $this->SOAPLoginPresence , 'urn:AGProjects:PresenceEngine', 0, '');
+
+        // Instantiate the SOAP clients
+        $this->SipPort       = new $this->soapClassSipPort($this->SOAPurl);
+        $this->VoicemailPort = new $this->soapClassVoicemailPort($this->SOAPurl);
+        $this->CustomerPort  = new $this->soapClassCustomerPort($this->SOAPurl);
+        $this->PresencePort  = new $this->soapClassPresencePort($this->SOAPurlPresence);
+
+        $this->SipPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+        $this->VoicemailPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+        $this->CustomerPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+        $this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+        $this->soapRemoteId=$this->soapEngines[$this->soapEngineIdSipPort]['depends'];
+
+        if (strlen($this->soapRemoteId) && in_array($this->soapRemoteId,array_keys($this->soapEngines))) {
+            $this->soapEngineIdRemote = $this->soapEngines[$this->soapRemoteId];
+            $impersonateRemote=intval($this->soapEngines[$this->soapRemoteId]['impersonate']);
+
+            $this->SOAPloginRemote = array(
+                                   "username"    => $this->soapEngines[$this->soapRemoteId]['username'],
+                                   "password"    => $this->soapEngines[$this->soapRemoteId]['password'],
+                                   "admin"       => true,
+                                   "impersonate" => $impersonateRemote
+                               );
+
+            //print_r($this->SOAPloginRemote);
+            $this->SOAPurlRemote=$this->soapEngines[$this->soapRemoteId]['url'];
+            $this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
+
+            // Instantiate the SOAP client depends
+            $this->SipPortRemote = new $this->soapClassSipPort($this->SOAPurlRemote);
+
+            $this->SipPortRemote->setOpt('curl', CURLOPT_TIMEOUT,        5);
+            $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+            $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+        }
+
+    }
+
+    function getAccount($account) {
+        dprint("getAccount($account)");
+
+        $this->SipPort->addHeader($this->SoapAuth);
+        list($username,$domain)=explode("@",trim($account));
+
+        $result     = $this->SipPort->getAccount(array("username" =>$username,"domain"   =>$domain));
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        //dprint_r($result);
+
+        $this->owner     = $result->owner;
+
+    	$this->Preferences['SaveSettingsAllowed']=1;
+
+        if (!is_array($result->properties)) $result->properties=array();
+        if (!is_array($result->groups)) $result->groups=array();
+        if (!is_array($result->multiTargets)) $result->multiTargets=array();
+
+		foreach ($result->properties as $_property) {
+        	$this->Preferences[$_property->name]=$_property->value;
+        }
+
+        if (!$this->Preferences['language']) {
+        	$this->Preferences['language'] ='en';
+        }
+
+    	$this->username  = $result->id->username;
+        $this->domain    = $result->id->domain;
+        $this->password  = $result->password;
+        $this->firstName = $result->firstName;
+        $this->lastName  = $result->lastName;
+        $this->rpid      = $result->rpid;
+        $this->owner     = $result->owner;
+        $this->timezone  = $result->timezone;
+        $this->email     = $result->email;
+        $this->groups    = $result->groups;
+        $this->multiTargets    = $result->multiTargets;
+        $this->quickdial = $result->quickdial;
+        $this->quota     = $result->quota;
+        $this->prepaid   = $result->prepaid;
+        $this->region    = $result->region;
+        $this->answerTimeout = $result->answerTimeout;
+
+        $this->account   = $this->username."@".$this->domain;
+        $this->fullName  = $this->firstName." ".$this->lastName;
+        $this->name      = $this->firstName." ".$this->lastName;
+
+		$this->sipId=array("username" => $this->username,
+                           "domain"=> $this->domain
+                           );
+
+		$this->getOwnerSettings();
+
+        $this->result    = $result;
+
+		if (!$this->answerTimeout) {
+        	$this->answerTimeoutWasNotSet=1;
+        	$this->answerTimeout=intval($this->answerTimeoutDefault);
+        }
+
+        //dprint_r($result);
+
+    	//dprint_r($this->Preferences);
+
+    }
+
+	function showAccount() {
+
+        if (!$this->account) {
+            print "<tr><td colspan=>";
+            printf ("Error: SIP account information cannot be retrieved");
+            return 0;
+            print "</td></tr>";
+        }
+
+        print "
+        <SCRIPT>
+        var _action = '';
+        function checkForm(form) {
+            if (_action=='send' && form.mailto.value=='') {
+                window.alert('Please fill in the Email address');
+                form.mailto.focus();
+                return false;
+            } else {
+                return true;
+            }
+        }
+        function saveHandler(elem) {
+            _action = 'save';
+        }
+        function sendHandler(elem) {
+            _action = 'send';
+        }
+        </SCRIPT>
+        ";
+
+        $this->logoTableStart();
+        $this->chapterTableStart();
+
+        print "
+        <tr>
+        <td colspan=2>
+        ";
+
+        $this->showTabs();
+
+        print "
+        </td>
+        </tr>
+        ";
+		$this->showTitleBar();
+
+		if (!array_key_exists($this->tab,$this->tabs)) $this->tab="settings";
+
+        if ($this->tab=="summary")   $this->showSummary();
+        if ($this->tab=="settings")  $this->showSettings();
+        if ($this->tab=="locations") $this->showDeviceLocations();
+        if ($this->tab=="calls")     $this->showLastCalls();
+        if ($this->tab=="phonebook") $this->showPhonebook();
+        if ($this->tab=="prepaid")   $this->showPrepaidForm();
+        if ($this->tab=="upgrade")   $this->showUpgrade();
+        if ($this->tab=="barring")   $this->showBarringPrefixes();
+        if ($this->tab=="reject")    $this->showRejectMembers();
+        if ($this->tab=="accept")    $this->showAcceptRules();
+        if ($this->tab=="presence")  $this->showPresence();
+
+        print "
+        <tr>
+          <td height=30 colspan=2 align=right valign=bottom>";
+
+        if ($this->footerFile) {
+    	    include ("$this->footerFile");
+        } else {
+        	print "<a href=http://ag-projects.com target=agprojects><img src=images/PoweredbyAGProjects.gif border=0></a>";
+        }
+
+    	print "</td>
+        </tr>
+        ";
+
+        print "
+        </table>
+        <p>
+        ";
+    }
+
+    function setLanguage() {
+
+        if ($this->loginType == 'reseller') {
+            $lang=$this->ResellerLanguage;
+        } else if ($this->Preferences['LoggedInAsSubscriber']) {
+            $lang=$this->Preferences['language'];
+        } else {
+            $lang="en";
+        }
+
+        //dprint("Set language to $lang");
+        changeLanguage($lang);
+    }
+
+    function getOwnerSettings() {
+        dprint("getOwnerSettings($this->owner)");
+        if (!$this->owner) {
+            return false;
+        }
+
+        $this->SOAPloginCustomer=array(
+                               "username"    =>"soapadmin",
+                               "password"    =>"troleu",
+                               "admin"       =>true,
+                               "impersonate" =>intval($this->$this->owner)
+        );
+ 
+        $this->SoapAuthCustomer=array('auth', $this->SOAPloginCustomer , 'urn:AGProjects:NGNPro', 0, '');
+ 
+        $this->CustomerPort->addHeader($this->SoapAuthCustomer);
+        //dprint_r($this->CustomerPort);
+        $result     = $this->CustomerPort->getAccount($this->owner);
+ 
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+ 
+        $this->SIP['customer']=array(
+                               "firstName"           => $result->firstName,
+                               "lastName"            => $result->lastName,
+                               "organization"        => $result->organization,
+                               "timezone"            => $result->timezone,
+                               "tel"                 => $result->tel,
+                               "enum"                => $result->enum,
+                               "mobile"              => $result->mobile,
+                               "fax"                 => $result->fax,
+                               "email"               => $result->email,
+                               "web"                 => $result->web
+                               );
+    }
+
+    function getAliases() {
+        // Get Aliases
+        dprint("getAliases()");
+
+		$this->aliases=array();
+
+        $this->SipPort->addHeader($this->SoapAuth);
+		$result     = $this->SipPort->getAliasesForAccount($this->sipId);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        foreach ($result as $_structure) {
+        	if ($_structure->domain == $this->domain) {
+        		$this->aliases[]=$_structure->username."@".$_structure->domain;
+            }
+        }
+
+    }
+
+    function getRatingEntityProfiles() {
+        // Get Aliases
+        dprint("getRatingEntityProfiles()");
+
+		$this->EntityProfiles=array();
+
+        $this->RatingPort->addHeader($this->SoapAuth);
+        $entity="subscriber://".$this->username."@".$this->domain;
+		$result     = $this->RatingPort->getEntityProfiles($entiry);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        $this->EntityProfiles=$result;
+    }
+
+    function setAliases() {
+        // Get Aliases
+        dprint("setAliases()");
+        $aliases_new=$_REQUEST['aliases'];
+        $this->getAliases();
+
+        $aliases_old=$this->aliases;
+
+        $addAliases     = array_unique(array_diff($aliases_new,$aliases_old));
+        $deleteAliases  = array_unique(array_diff($aliases_old,$aliases_new));
+
+        //dprint ("Add aliases:");
+        //dprint_r($addAliases );
+        //dprint ("Delete aliases:");
+        //dprint_r($deleteAliases );
+
+        foreach ($addAliases as $_alias) {
+            $_alias=trim(strtolower($_alias));
+            if (!preg_match("/^[a-z0-9-_.]+$/i",$_alias)) continue;
+            $els=explode("@",$_alias);
+            if (count($els) ==1 ) {
+                $_alias_username=$_alias;
+                $_alias_domain=$this->domain;
+            } else if (count($els) ==2) {
+            	$_alias_username=$els[0];
+                $_alias_domain=$this->domain;
+            } else {
+                continue ;
+            }
+
+            $_aliasObject=array("id"=>array("username"=>$_alias_username,
+                                            "domain"=>$_alias_domain),
+                                "owner"=>intval($this->owner),
+                                "target"=>$this->sipId);
+            dprint_r($_aliasObject);
+
+            if (is_object($this->SipPortRemote)) {
+                dprint("addAliasRemote");
+                $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+                $resultRemote     = $this->SipPortRemote->addAlias($_aliasObject);
+    
+                if (PEAR::isError($resultRemote)) {
+                    $error_msg  = $resultRemote->getMessage();
+                    $error_fault= $resultRemote->getFault();
+                    $error_code = $resultRemote->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                } else {
+    
+                    dprint("addAliasLocal");
+
+    				dprint_r($this->SoapAuth);
+
+                    $this->SipPort->addHeader($this->SoapAuth);
+                    $result     = $this->SipPort->AddAlias($_aliasObject);
+    
+                    if (PEAR::isError($result)) {
+                        $error_msg  = $result->getMessage();
+                        $error_fault= $result->getFault();
+                        $error_code = $result->getCode();
+                        printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        return false;
+                    }
+                }
+    
+            } else {
+                dprint("addAliasLocal");
+    
+                $this->SipPort->addHeader($this->SoapAuth);
+                $result     = $this->SipPort->addAlias($_aliasObject);
+    
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+        }
+
+        foreach ($deleteAliases as $_alias) {
+            $_alias=trim($_alias);
+            if (!strlen($_alias)) continue;
+            $els=explode("@",$_alias);
+            if (count($els) ==1 ) {
+                $_alias_username=$_alias;
+                $_alias_domain=$this->domain;
+            } else if (count($els) ==2) {
+            	$_alias_username=$els[0];
+            	$_alias_domain=$els[1];
+            } else {
+                continue ;
+            }
+
+            $_aliasObject=array("username"=>$_alias_username,
+                                "domain"  =>$_alias_domain
+                               );
+            dprint_r($_aliasObject);
+
+            if (is_object($this->SipPortRemote)) {
+                dprint("deleteAliasRemote");
+                $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+                $resultRemote     = $this->SipPortRemote->deleteAlias($_aliasObject);
+    
+                if (PEAR::isError($resultRemote)) {
+                    $error_msg  = $resultRemote->getMessage();
+                    $error_fault= $resultRemote->getFault();
+                    $error_code = $resultRemote->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                } else {
+    
+                    dprint("deleteAliasLocal");
+    
+                    $this->SipPort->addHeader($this->SoapAuth);
+                    $result     = $this->SipPort->deleteAlias($_aliasObject);
+    
+                    if (PEAR::isError($result)) {
+                        $error_msg  = $result->getMessage();
+                        $error_fault= $result->getFault();
+                        $error_code = $result->getCode();
+                        printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        return false;
+                    }
+                }
+    
+            } else {
+                dprint("deleteAliasLocal");
+    
+                $this->SipPort->addHeader($this->SoapAuth);
+                $result     = $this->SipPort->deleteAlias($_aliasObject);
+    
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+        }
+
+        unset($this->aliases);
+    }
+
+    function getVoicemail () {
+        dprint("getVoicemail()");
+
+        $this->VoicemailPort->addHeader($this->SoapAuth);
+        $result     = $this->VoicemailPort->getAccount($this->sipId);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            if ($error_fault->detail->exception->errorcode != "2000") {
+            	printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            	return false;
+            } else {
+                return true;
+            }
+        }
+
+        $this->voicemail['Mailbox']        = $result->mailbox;
+        $this->voicemail['Password']       = $result->password;
+        $this->voicemail['Name']           = $result->name;
+        $this->voicemail['Email']          = $result->email;
+        $this->voicemail['Info']           = $result->info;
+        $this->voicemail['Options']        = $result->options;
+        $this->voicemail['Account']        = $result->mailbox.'@'.$this->voicemail['Server'];
+
+        // required by SMARTY because it cannot parse arrays
+		$this->voicemailMailbox=$result->mailbox;
+
+        //dprint_r($this->voicemail);
+        return true;
+    }
+
+    function showTitleBar() {
+        print "
+        <tr>
+        <td class=border colspan=2 bgcolor=lightgrey>
+        ";
+
+        print "
+        <table border=0 width=100% cellpadding=1 cellspacing=1 bgcolor=lightgrey>
+        <tr>
+        <td align=left>
+        ";
+        printf (("%s &lt;sip:%s@%s&gt;"),$this->fullName,$this->username,$this->domain);
+        print "
+        </td>
+        <td align=right valign=top>
+        ";
+    
+        if ($this->Preferences['LoggedInAsSubscriber']) {
+            print "<a href=sip_logout.phtml>";
+            print _("Logout");
+            print "</a>";
+        }
+    
+        print "
+        </td>
+        </tr>
+        </table>
+        ";
+        print "
+        </td>
+        </tr>
+        ";
+
+    }
+
+    function getDivertTargets () {
+        dprint("getDivertTargets()");
+
+    	if (!$this->Preferences['advanced']) {
+            return true;
+        }
+        $this->divertTargets[]=array("name"  => _("No diversion"),
+                                      "value" => "",
+                                      "description"  => "Disabled");
+
+        if ($this->voicemail['Account']) {
+        	$vmf=$this->getVoicemailForwarding();
+            if (is_array($vmf)) {
+            	$this->divertTargets[]=$vmf;
+            }
+        }
+
+        if ($this->owner) {
+
+            if (in_array("free-pstn",$this->groups)) {
+
+                if ($this->SIP['customer']['tel']) {
+                    $tel  = preg_replace("/[^\d+]/", "", $this->SIP['customer']['tel']);
+                    $tel_enum = str_replace("+", "00", $tel);
+                    $telf = $tel_enum . "@" . $this->domain;
+                    if (!$seen[$tel_enum] && !in_array($tel_enum,$this->enums)) {
+                        $this->divertTargets[]=array("name"  => sprintf (_("Tel %s"),$tel),
+                                                      "value" => $telf,
+                                                      "description"  => "Tel");
+                    }
+                    $seen[$tel_enum]++;
+                }
+
+                if ($this->SIP['customer']['enum']) {
+                    $tel  = preg_replace("/[^\d+]/", "", $this->SIP['customer']['enum']);
+                    $tel_enum = str_replace("+", "00", $tel);
+                    $telf = $tel_enum . "@" . $this->domain;
+                    if (!$seen[$tel_enum] && !in_array($tel_enum,$this->enums)) {
+                        $this->divertTargets[]=array("name"  => sprintf (_("Tel %s"),$tel),
+                                                      "value" => $telf,
+                                                      "description"  => "ENUM");
+                    }
+                    $seen[$tel_enum]++;
+                }
+
+                if ($this->SIP['customer']['mobile']) {
+                    $tel  = preg_replace("/[^\d+]/", "", $this->SIP['customer']['mobile']);
+                    $tel_enum = str_replace("+", "00", $tel);
+                    $telf = $tel_enum . "@" . $this->domain;
+                    if (!$seen[$tel_enum] && !in_array($tel_enum,$this->enums)) {
+                        $this->divertTargets[]=array("name"  => sprintf (_("Mobile %s"),$tel),
+                                                      "value" => $telf,
+                                                      "description"  => "Mobile");
+                    }
+                    $seen[$tel_enum]++;
+                }
+            }
+
+        }
+
+        $this->divertTargets[]=array("name"  => sprintf (_("Other")),
+                                      "value" => "",
+                                      "description"  => "Other");
+
+        //dprint_r($this->divertTargets);
+
+    }
+
+    function getResellerSettings () {
+
+        dprint("getResellerSettings(rId=$this->rId)");
+
+        $this->logoFile = $this->getFileTemplate("logo.jpg","html");
+        if (!$this->logoFile) {
+            $this->logoFile= $this->getFileTemplate("logo.gif","html");
+        }
+        if (!$this->logoFile) {
+            $this->logoFile= $this->getFileTemplate("logo.png","html");
+        }
+
+        $this->headerFile = $this->getFileTemplate("header.phtml");
+        $this->footerFile = $this->getFileTemplate("footer.phtml");
+        $this->cssFile    = $this->getFileTemplate("main.css");
+
+        $this->SIPACLS['free-pstn']    =array("SERGroup"=>"free-pstn",
+                                            "WEBName" =>   sprintf(_("Access to PSTN")),
+                                            "WEBComment"=> sprintf(_("Caller-ID")),
+                                            "SubscriberMayEditIt"=>"0",
+                                            "SubscriberMaySeeIt"=>1
+                                            );
+
+        $this->SIPACLS['blocked']   =array("SERGroup"=>"blocked",
+                                        "WEBName" =>sprintf(_("Account blocked")),
+                                        "SubscriberMayEditIt"=>"0",
+                                        "SubscriberMaySeeIt"=>0
+                                        );
+
+        if ($this->Preferences['advanced']) {
+            $this->SIPACLS['voicemail']=array("SERGroup"=>"voicemail",
+                                        "WEBName" =>sprintf (_("Voice mailbox")),
+                                        "SubscriberMayEditIt"=>"0",
+                                        "SubscriberMaySeeIt"=>0
+                                        );
+            $this->SIPACLS[$this->privacyGroup]=array("SERGroup"=>$this->privacyGroup,
+                                        "WEBName" =>sprintf (_("Privacy")),
+                                        "WEBComment"=>sprintf(_("Dial %s to change or %s to check status "),$this->changePrivacyAccessNumber, $this->checkPrivacyAccessNumber),
+                                        "SubscriberMaySeeIt"=>1,
+                                        "SubscriberMayEditIt"=>1
+                                        );
+            $this->SIPACLS['anonymous-reject']=array("SERGroup"=>$this->anonymous-reject,
+                                        "WEBName" =>sprintf (_("Reject anonymous callers")),
+                                        "SubscriberMaySeeIt"=>1,
+                                        "SubscriberMayEditIt"=>1
+                                        );
+
+        }
+
+        $this->SIPACLS[prepaid]=array("SERGroup"=>"prepaid",
+                                    "WEBName" =>sprintf (_("Prepaid")),
+                                    "SubscriberMayEditIt"=>"0",
+                                    "SubscriberMaySeeIt"=>0
+                                    );
+ 
+
+    }
+
+    function getDiversions() {
+        dprint("getDiversions()");
+		if (!$this->Preferences['advanced']) {
+            return true;
+        }
+
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->getCallDiversions($this->sipId);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+		reset($this->CallPrefDictionary);
+        foreach(array_keys($this->CallPrefDictionary) as $condition) {
+            $uri=$result->$condition;
+            if ($uri =="<voice-mailbox>") $uri = $this->voicemail['Account'];
+            if (preg_match("/^(sip:|sips:)(.*)$/i",$uri,$m)) {
+                $uri=$m[2];
+            }
+        	$this->CallPrefDbURI[$condition]=$uri;
+            $SIPcache['diversions'][$condition]=$uri;
+        }
+
+        //dprint_r($this->CallPrefDbURI);
+    }
+
+    function getDeviceLocations() {
+
+        if (is_object($this->SipPortRemote)) {
+
+            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            $result     = $this->SipPortRemote->getSipDeviceLocations(array($this->sipId));
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }  else {
+                foreach ($result[0]->locations as $locationStructure) {
+                    $contact=$locationStructure->address.":".$locationStructure->port;
+                    if ($locationStructure->publicAddress) {
+                    	$publicContact=$locationStructure->publicAddress.":".$locationStructure->publicPort;
+                    } else {
+                    	$publicContact=$contact;
+                    }
+
+                    $this->locations[]=array(
+                                             "contact"    	 => $contact,
+                                             "publicContact" => $publicContact,
+                                             "expires"       => $locationStructure->expires,
+                                             "user_agent"    => $locationStructure->userAgent
+                                         );
+                }
+
+                dprint_r($this->locations);
+        
+            }
+
+        } else {
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->getSipDeviceLocations(array($this->sipId));
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }  else {
+                foreach ($result[0]->locations as $locationStructure) {
+                    $contact=$locationStructure->address.":".$locationStructure->port;
+                    if ($locationStructure->publicAddress) {
+                    	$publicContact=$locationStructure->publicAddress.":".$locationStructure->publicPort;
+                    } else {
+                    	$publicContact=$contact;
+                    }
+                    $this->locations[]=array("contact"    => $contact,
+                                             "publicContact"    => $publicContact,
+                                             "expires"    => $locationStructure->expires,
+                                             "user_agent" => $locationStructure->userAgent
+                                         );
+                }
+                dprint_r($this->locations);
+        
+            }
+
+        }
+    }
+
+    function getVoicemailForwarding () {
+        dprint("getVoicemailForwarding()");
+        if (!$this->voicemail['Account']) {
+            return;
+        }
+
+		return array("name"  => sprintf (_("Voice mailbox")),
+            	   "value" => $this->voicemail['Account'],
+                   "description"  => "Voicemail");
+    }
+
+	function showTabs() {
+        print "
+        <table class=border2 border=0 cellspacing=0 cellpadding=0 align=right>
+        <tr>
+        ";
+    
+        $items=0;
+    
+        while (list($k,$v)= each($this->tabs)) {
+            if ($this->tab==$k) {
+                $tabcolor="orange";
+                $fontcolor="white";
+            } else {
+                $tabcolor="#4A69A5";
+                $fontcolor="white";
+            }
+            print "<td class=border2 bgcolor=$tabcolor>&nbsp;";
+            print "<a class=b href=$this->pageURL&tab=$k><font color=$fontcolor>$v</font>";
+            print "&nbsp;</td>";
+        }
+        print "
+        </tr>
+        </table>
+        ";
+    }
+
+    function showSummary() {
+		$this->getVoicemail();
+        $this->getENUMmappings();
+        $this->getAliases();
+
+        print "
+        </td>
+        </tr>
+        ";
+
+        $chapter=sprintf(_("SIP settings"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr>
+        <td class=border>";
+        print _("SIP address");
+        print "
+        </td>
+        <td class=border>$this->account
+        </td>
+        </tr>
+		";
+		print "
+        <tr>
+        <td class=border>";
+        print _("Display name");
+        print "
+        </td>
+        <td class=border>$this->fullName
+        </td>
+        </tr>
+        <tr>
+        <td class=border>";
+        print _("Username");
+        print "
+        </td>
+        <td class=border>$this->username
+        </td>
+        </tr>
+        ";
+        print "
+        <tr>
+        <td class=border>";
+        print "SIP ";
+        print _("Domain");
+        print "
+        </td>
+        <td class=border>$this->domain
+        </td>
+        </tr>
+        ";
+
+        print "
+        <tr>
+        <td class=border>";
+        #print "SIP ";
+        print _("Outbound Proxy");
+        print "
+        </td>
+        <td class=border>$this->proxy
+        </td>
+        </tr>
+        <tr>
+          <td height=3 colspan=2></td>
+        </tr>
+        ";
+
+        if ($this->enablePresence) {
+            $chapter=sprintf(_("Presence settings"));
+            $this->showChapter($chapter);
+
+            print "
+            <tr>
+            	<td class=border>Presence Mode
+            	</td>
+            	<td class=border>Presence agent (RFC3903)
+            	</td>
+            </tr>
+            <tr>
+            	<td class=border>Storage mode
+            	</td>
+            	<td class=border>XCAP (RFC4825)
+            </td>
+            <tr>
+            	<td class=border>XCAP root
+            	</td>
+            	<td class=border>$this->xcaproot
+            </td>
+            <tr>
+            	<td class=border>XCAP authentication
+            	</td>
+            	<td class=border>Use SIP credentials
+            </td>
+            </tr>
+            ";
+
+		}
+
+        $chapter=sprintf(_("ENUM and aliases"));
+        $this->showChapter($chapter);
+
+        $t=0;
+        foreach($this->enums as $e)  {
+            $t++;
+            print "
+            <tr>
+              <td class=border>ENUM $t</td>
+              <td class=border>$e</td>
+            </tr>
+            ";
+        }
+        if (!$t) {
+            print "
+            <tr>
+              <td class=border>ENUM</td>
+              <td class=border>";
+                print _("None");
+                print "
+              </td>
+            </tr>
+            ";
+        }
+
+        $t=0;
+
+        if ($this->Preferences['SaveSettingsAllowed']) {
+
+        print "
+        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        ";
+        }
+
+        foreach($this->aliases as $a)  {
+            $t++;
+
+            print "
+            <tr>
+              <td class=border>";
+                print _("Alias");
+                print "$t
+              </td>
+              <td class=border> <input type=text size=35 name=aliases[] value=\"$a\"></td>
+            </tr>
+            ";
+        }
+
+        if (!$this->skipCheckOwnership) {
+            print "
+            <tr>
+              <td class=border>";
+                print _("New alias");
+                print "
+              </td>
+              <td class=border> <input type=text size=35 name=aliases[]></td>
+            </tr>
+            ";
+		}
+
+        if ($this->Preferences['SaveSettingsAllowed'] && !$this->skipCheckOwnership) {
+        	print "
+	        <tr>
+    	      <td align=left>
+        	    <input type=hidden name=action value=\"set aliases\">
+	        ";
+            print "
+            <input type=submit value=\"";
+            print _("Save aliases");
+            print "\"
+                   onClick=saveHandler(this)>
+            ";
+    	    print "
+        	  </td>
+	          <td align=right>
+    	      </td>
+	        </tr>
+    	    ";
+
+	        print $this->hiddenElements;
+
+        	print "
+	        </form>
+    	    ";
+    	} else  if (!$t && !$this->skipCheckOwnership) {
+            print "
+            <tr>
+              <td class=border>";
+                print _("Aliases");
+                print "
+              </td>
+              <td class=border>";
+                print _("None");
+                print "
+              </td>
+            </tr>
+            ";
+        }
+
+        $chapter=sprintf(_("Notifications address"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr>
+          <td class=border>";
+            print _("Email address");
+            print "
+          </td>
+          <td class=border align=left>";
+
+          if ($this->email) {
+            print "$this->email";
+          } else {
+            print _("Unassigned");
+          }
+          print "
+          </td>
+        </tr>
+        ";
+        print "
+        <tr>
+          <td height=3 colspan=2></td>
+        </tr>
+        ";
+
+        print "
+        <form method=post>";
+
+        print "
+        <tr>
+          <td align=left colspan=2>
+        ";
+
+        if ($this->email)  {
+            printf (_("Email account information to %s"),$this->email);
+            print "
+            <input type=hidden name=action value=\"Send settings\">
+            <input type=submit value=";
+            print _("Send");
+            print ">";
+        }
+        print "
+          </td>
+          <td align=right>";
+            print "
+          </td>
+        </tr>
+        ";
+
+        print $this->hiddenElements;
+
+        print "
+        </form>
+        ";
+
+    }
+
+    function showSettings() {
+
+		$this->getVoicemail();
+        $this->getENUMmappings();
+
+        $this->getDivertTargets();
+        $this->getDiversions();
+
+        print "
+        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        ";
+
+        $chapter=sprintf(_("Account settings"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr>
+        <td class=border>";
+        print _("Password");
+        print "
+        </td>
+        <td class=borderns>";
+
+        print "
+        <SCRIPT>
+        function changePasswordType(input){
+            if(input.type == 'password')
+                input.type = 'text'
+            input.focus()
+        }
+        </SCRIPT>
+        <SCRIPT>
+           var hasFocus = false;
+        
+           function createPasswordField(fieldType){
+               var input = document.getElementById('sip_password_id');
+               password = document.createElement('input');
+                         password.type = fieldType;
+               password.size  = 15;
+               password.name = 'sip_password';
+               password.value = input.value;
+               password.id = 'sip_password_id';
+                     input.parentNode.insertBefore(password,input);
+               input.parentNode.removeChild(input);
+                     if (password.addEventListener){
+                   password.addEventListener('click', pwdClickHandler, false);
+                   password.addEventListener('blur', pwdBlurHandler, false);
+               }
+               else if (password.attachEvent){//IE
+                   password.attachEvent('onclick', pwdClickHandler);
+                   password.attachEvent('onblur', pwdBlurHandler);          }
+               if (fieldType == 'text')
+                   password.focus();
+           }
+        
+           function pwdClickHandler(){
+               if (hasFocus == false){
+                   createPasswordField('text');
+                   hasFocus = true;
+               }
+           }
+        
+           function pwdBlurHandler(){
+               hasFocus = false;
+               createPasswordField('password');
+           }
+           </SCRIPT>
+        ";
+
+        /*
+        if ($this->Preferences['LoggedInAsSubscriber']) {
+        	print "<input class=input100 type=password size=15 name=sip_password value=\"$this->password\">";
+        } else {
+        	print "<input class=input100 type=text size=15 name=sip_password value=\"$this->password\">";
+        }
+        */
+
+        print "<input class=input100 type=password size=15 name=sip_password value=\"$this->password\"> ";
+
+        print _("Language");
+        print "
+        <select name=language>
+        ";
+        $languages=array("en"=>"English",
+                         "nl"=>"Nederlands",
+                         "ro"=>"Romaneste",
+                         "de"=>"Deutsch"
+                         );
+
+        $selected_lang[$this->Preferences['language']]="selected";
+
+        while (list ($value, $name) = each($languages)) {
+             print "<option value=$value $selected_lang[$value]>$name\n";
+        }				
+        print "
+        </select>
+        ";
+
+        print "
+        </td>
+        </tr>
+        ";
+
+        print "
+        <tr>
+        <td class=border>";
+        print _("Timezone");
+        print "
+        </td>
+        <td class=border>
+        ";
+        $this->showTimezones();
+        print " ";
+        $timestamp=time();
+        $LocalTime=getLocalTime($this->timezone,$timestamp);
+        print _("Local time");
+        print ": $LocalTime
+        </td>
+        </tr>
+        ";
+
+        if (count($this->emergencyRegions) > 0) {
+        	print "
+	        <tr>
+    	    <td class=border>";
+        	print _("Location");
+	        print "
+    	    </td>
+        	<td class=border>
+	        ";
+            print "<select name=region>";
+            $selected_region[$this->region]="selected";
+            foreach (array_keys($this->emergencyRegions) as $_region) {
+                printf ("<option value=\"%s\" %s>%s",$_region,$selected_region[$_region],$this->emergencyRegions[$_region]);
+            }
+            print "</select>";
+
+        	print "
+	        </td>
+    	    </tr>
+        	";
+        }
+
+        /*
+        print "
+        <tr>
+        <td class=border>";
+        print _("Language");
+        print "</td>
+        <td class=border>
+        <select name=language>
+        ";
+        $languages=array("en"=>"English",
+                         "nl"=>"Nederlands",
+                         "ro"=>"Romaneste",
+                         "de"=>"Deutsch"
+                         );
+
+        $selected_lang[$this->Preferences['language']]="selected";
+
+        while (list ($value, $name) = each($languages)) {
+             print "<option value=$value $selected_lang[$value]>$name\n";
+        }				
+        print "
+        </select>
+        </td>
+        </tr>
+        ";
+        */
+
+        if ($this->Preferences['CanEditAll'] && in_array("free-pstn",$this->groups)) {
+
+            if (in_array("quota",$this->groups)) {
+            	$td_class="orange";
+            } else {
+            	$td_class="border";
+            }
+
+            print "
+            <tr>
+            <td class=border>";
+            print _("Monthly quota");
+            print "
+            </td>
+            <td class=$td_class>
+            <table cellspacing=0 cellpadding=0 width=100%>
+            <tr>
+            <td>";
+            print "<input type=text size=6 maxsize=6 name=quota value=\"$this->quota\">";
+            print " $this->currency";
+
+            if ($this->quota || in_array("quota",$this->groups)) {
+                $this->getCallStatistics();
+                if ($this->thisMonth['price']) {
+                    print "&nbsp;&nbsp;&nbsp;";
+                    printf (_("This month usage: %.2f %s"),$this->thisMonth['price'], $this->currency);
+                    printf (" / %d ",$this->thisMonth['calls']);
+                    print _("Calls");
+                }
+            }
+
+            print "
+            </td>
+            <td align=right>
+            ";
+            printf ("<input type=hidden name=used_quota value=%s>",$this->thisMonth['price']);
+
+            print _("De-block account");
+
+            print "
+            <input type=checkbox name=quota_reset value=1>
+            </td>
+            </tr>
+            </table>
+            </td>
+            </tr>
+            ";
+        }
+
+        foreach (array_keys($this->SIPACLS) as $key) {
+
+            if ($this->Preferences['LoggedInAsSubscriber'] && !$this->SIPACLS[$key][SubscriberMaySeeIt]) {
+                continue;
+            }
+
+            if ($key=="voicemail") {
+                continue;
+            }
+
+            if ($key=="prepaid") {
+                continue;
+            }
+
+            if (in_array($key,$this->groups)) {
+                $checked_box[$key]="checked";
+            }
+
+            if (!$this->Preferences['CanEditAll'] && !$checked_box[$key] && $key=="free-pstn") {
+                continue;
+            }
+
+            $elementName    = $this->SIPACLS[$key]["WEBName"];
+            $elementComment = $this->SIPACLS[$key]["WEBComment"];
+
+			if (!$this->Preferences['CanEditAll']) {
+                if ($this->SIPACLS[$key]["SubscriberMayEditIt"]) {
+                    $disabled_box = "";
+                } else {
+            		$disabled_box   = "disabled=true";
+                }
+            }
+
+            if ($key=="blocked" && $checked_box[$key]) {
+            	$td_class="orange";
+            } else {
+            	$td_class="border";
+            }
+
+            print "
+            <tr $bgcolor>
+            <td class=border valign=top>$elementName</td>
+            <td class=$td_class>
+            <input type=checkbox value=1 name=$key $checked_box[$key] $disabled_box>
+            ";
+
+            if ($this->Preferences['CanEditAll']) {
+                if ($key=="free-pstn") {
+                    print "$elementComment: <input type=text size=15 maxsize=15 name=rpid value=\"$this->rpid\">";
+                } else if ($key=="multi-targets" && in_array("multi-targets",$this->groups)) {
+                    $t=0;
+                	print "$elementComment";
+
+                    print "<br><table border=0>";
+
+                    print "
+                    <tr>
+                      <td class=border>";
+                        print _("Target");
+                        print "
+                      </td>
+                      <td class=border> <input type=text size=35 name=multiTargets[]></td>
+                    </tr>
+                    ";
+
+                    foreach($this->multiTargets as $a)  {
+                        $t++;
+                        print "
+                        <tr>
+                          <td class=border>";
+                            print _("Target");
+                            print "$t
+                          </td>
+                          <td class=border> <input type=text size=35 name=multiTargets[] value=\"$a\"></td>
+                        </tr>
+                        ";
+                    }
+            
+                    print "</table>";
+
+
+                } else {
+                	print "$elementComment";
+                }
+            } else {
+                if ($key=="free-pstn") {
+                	if ($this->rpid) print "$elementComment: $this->rpid";
+                } else {
+                    print "$elementComment";
+                }
+            }
+
+            print "
+            </td>
+            </tr>
+            ";
+        }
+
+        if ($this->Preferences['CanEditAll']) {
+
+	        // prepaid
+        	if ($this->prepaid) $checked_prepaid="checked";
+
+	        print "
+    	    <tr $bgcolor>
+        	<td class=border>";
+	        print _("Prepaid");
+
+    	    print "</td>
+        	<td class=border>
+	        <input type=checkbox value=1 name=prepaid $checked_prepaid $disabled_box>
+    	    </td>
+        	</tr>
+	        ";
+        }
+
+        $this->showOwner();
+
+        if ($this->Preferences['advanced']) {
+            $this->showQuickDial();
+        	$this->showVoicemail();
+        }
+
+        if (!$this->Preferences['advanced']) {
+            print "
+            <tr>
+            <td class=border>";
+            print _("Advanced options");
+            print "
+            </td>
+            <td class=ag1>";
+            print "<input type=checkbox name=advanced value=1> ";
+            print _("Check this box and click save to enable advanced options");
+            print "
+            </td>
+            </tr>
+            ";
+        }
+
+        if ($this->Preferences['advanced']) {
+        	$chapter=sprintf(_("Divert calls"));
+	        $this->showChapter($chapter);
+
+            $this->showDiversions();
+        }
+
+        $chapter=sprintf(_("Notifications address"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr>
+          <td class=border>";
+            print _("Email address");
+            print "
+          </td>
+          <td class=border align=left>
+            <input type=text size=40 maxsize=255 name=mailto value=\"$this->email\">
+          </td>
+        </tr>
+        ";
+        print "
+        <tr>
+          <td height=3 colspan=2></td>
+        </tr>
+        ";
+
+        print "
+        <tr>
+          <td align=left>
+            <input type=hidden name=action value=\"Save settings\">
+        ";
+
+        if ($this->Preferences['SaveSettingsAllowed']) {
+            print "
+            <input type=submit value=\"";
+            print _("Save");
+            print "\"
+                   onClick=saveHandler(this)>
+            ";
+        }
+        print "
+          </td>
+          <td align=right>
+          </td>
+        </tr>
+        ";
+
+        print $this->hiddenElements;
+
+        print "
+        </form>
+        ";
+
+    }
+
+    function showVoicemail() {
+
+        if ($this->voicemail['Account']) {
+            $checked_voicemail="checked";
+        }
+
+        if (!$this->Preferences['CanEditAll'] && !$this->Preferences['CanEnableAdvanced']) {
+            if ($this->SIPACLS[$key]["SubscriberMayEditIt"]) {
+                $disabled_box = "";
+            } else {
+                $disabled_box   = "disabled=true";
+            }
+        }
+
+        $chapter=sprintf(_("Voicemail"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr $bgcolor>
+        <td class=border>";
+        print _("Enable");
+        print "</td>
+        <td class=border>
+        <input type=checkbox value=1 name=voicemail $checked_voicemail $disabled_box>
+        ";
+
+        if ($this->voicemail['Account'] &&
+        	($this->loginType == 'admin' || $this->loginType == 'reseller')) {
+            printf (" (Mailbox %s) ",$this->voicemail['Account']);
+        }
+
+        print "
+        </td>
+        </tr>
+        ";
+
+    	if ($this->voicemail['Account']) {
+
+        	print "
+            <tr $bgcolor>
+            <td class=border>";
+
+            print _("Delivery");
+            print "</td>
+            <td class=border>
+            ";
+
+            if ($this->voicemail['Options']->delete=="True") {
+                $checked_delete_voicemail="checked";
+                $selected_store_voicemail['email']  ="selected";
+                $selected_store_voicemail['server'] ="";
+            } else {
+                $selected_store_voicemail['email']  ="";
+                $selected_store_voicemail['server'] ="selected";
+            }
+
+            if (!$this->voicemail['DisableOptions']) {
+                print "<select name=delete_voicemail>";
+                $_text=sprintf("Send messages by e-mail to %s",$this->email);
+                printf ("<option value=1 %s>%s",$selected_store_voicemail['email'],$_text);
+                printf ("<option value=0 %s>%s",$selected_store_voicemail['server'],_("Send messages by e-mail and store messages on the server"));
+                print "</select>";
+                print "<br>";
+            } else {
+            	printf (_("Voicemail messages are sent by email to %s"),$this->email);
+            }
+
+            print "
+            </td>
+            </tr>
+            ";
+
+            if (!$this->voicemail['DisableOptions']) {
+
+            print "
+            <tr $bgcolor>
+            <td class=border>";
+
+            print _("Password");
+            print "</td>
+            <td class=border>
+            ";
+
+            printf ("<input type=text size=15 name=voicemail_password value=\"%s\">",$this->voicemail['Password']);
+
+            print "
+            </td>
+            </tr>
+            ";
+            if ($this->voicemail['AccessNumber']) {
+               print "
+               <tr $bgcolor>
+               <td colspan=2 class=border>";
+               printf(_("Dial %s to listen to your messages or change preferences. "),$this->voicemail['AccessNumber']);
+               print "</td>
+               </tr>
+               ";
+        	}
+            }
+    	}
+    }
+
+    function showOwner() {
+
+		if ($this->loginType == 'admin' || $this->loginType == 'reseller') {
+            print "
+            <tr $bgcolor>
+            <td class=border>";
+            print _("Owner");
+            print "</td>
+            <td class=border>
+            <input type=text name=owner size=6 value=\"$this->owner\">
+            ";
+            print "
+            </td>
+            </tr>
+            ";
+        }
+    }
+
+    function showDeviceLocations() {
+        if (in_array("multi-targets",$this->groups)) {
+
+            print "
+            <tr>
+              <td height=3 colspan=2></td>
+            </tr>
+            <tr>
+              <td class=border colspan=2 bgcolor=lightgrey>";
+                print "
+                <table border=0 cellpadding=0 cellspacing=0 width=100%>
+                <tr>
+                <td align=left>
+                ";
+                print "<b>";
+                print _("SIP devices cannot be registered for this SIP account while 'Multiple targets' setting is enabled.");
+                print "</b>
+                </td>
+                <td align=right><b>";
+                print _("");
+                print "</b>
+                </td>
+                </tr>
+                </table>
+                ";
+                print "
+              </td>
+            </tr>
+            ";
+
+            return;
+        }
+
+	    $this->getDeviceLocations();
+
+        if (count($this->locations)) {
+            print "
+            <tr>
+              <td height=3 colspan=2></td>
+            </tr>
+            <tr>
+              <td class=border colspan=2 bgcolor=lightgrey>";
+                print "
+                <table border=0 cellpadding=0 cellspacing=0 width=100%>
+                <tr>
+                <td align=left>
+                ";
+                print "<b>";
+                print _("Online status");
+                print "</b>
+                </td>
+                <td align=right><b>";
+                print _("Expires in");
+                print "</b>
+                </td>
+                </tr>
+                </table>
+                ";
+                print "
+              </td>
+            </tr>
+            ";
+
+            $j=0;
+
+            foreach (array_keys($this->locations) as $location) {
+                $j++;
+                $contact    = $this->locations[$location][contact];
+                $publicContact    = $this->locations[$location][publicContact];
+                $expires    = normalizeTime($this->locations[$location][expires]);
+                $user_agent = $this->locations[$location][user_agent];
+                $UAImage    = getImageForUserAgent($user_agent);
+
+                print "<tr>";
+                print "<td class=border align=center>";
+                if (preg_match("/(unidata|snom|eyebeam|csco)/i",$user_agent,$m)) {
+					$_ua=strtolower($m[1]);
+        			print "<a href=$this->pageURL&tab=phonebook&export=1&userAgent=$_ua target=export>";
+                	print "<img src=\"status/images/30/$UAImage\" border=0>";
+                    print "</a>";
+                } else {
+                	print "<img src=\"status/images/30/$UAImage\" border=0>";
+                }
+                print "</td>";
+                print "<td class=border align=left>";
+                    print "<table border=0 width=100%>";
+                    print "<tr>";
+                        print "<td align=left><i>$user_agent</i></td>";
+                        print "<td align=right>";
+                        print "</td>";
+                    print "</tr>";
+                    print "<tr>";
+                        print "<td align=left>";
+                        print _("Location");
+                        print ": $contact ";
+                        if ($publicContact != $contact) {
+                        	print " ($publicContact)";
+                        }
+                        print "</td>";
+                        print "<td align=right>$expires</td>";
+                    print "</tr>";
+                    print "</table>";
+                print "</td>";
+                print "</tr>";
+            }
+        }
+    }
+
+    function getBarringPrefixes() {
+        dprint("getBarringPrefixes()");
+
+        $this->SipPort->addHeader($this->SoapAuth);
+		$result     = $this->SipPort->getBarringPrefixes($this->sipId);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        $this->barringPrefixes=$result;
+        return true;
+    }
+
+    function setBarringPrefixes() {
+    	dprint("setBarringPrefixes");
+    	$prefixes=array();
+        $barringPrefixes=$_REQUEST['barringPrefixes'];
+
+        foreach ($barringPrefixes as $_prefix) {
+            if (preg_match("/^\+[1-9][0-9]*$/",$_prefix)) {
+            	$prefixes[]=$_prefix;
+            }
+        }
+
+        if (is_object($this->SipPortRemote)) {
+            dprint("setBarringPrefixesRemote");
+            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            $resultRemote     = $this->SipPortRemote->setBarringPrefixes($this->sipId,$prefixes);
+
+            if (PEAR::isError($resultRemote)) {
+                $error_msg  = $resultRemote->getMessage();
+                $error_fault= $resultRemote->getFault();
+                $error_code = $resultRemote->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+
+                dprint("setBarringPrefixesLocal");
+
+                $this->SipPort->addHeader($this->SoapAuth);
+                $result     = $this->SipPort->setBarringPrefixes($this->sipId,$prefixes);
+
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+
+        } else {
+            dprint("setBarringPrefixesLocal");
+
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->setBarringPrefixes($this->sipId,$prefixes);
+
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }
+        }
+    }
+
+    function showBarringPrefixes() {
+        $chapter=sprintf(_("Blocked destinations"));
+        $this->showChapter($chapter);
+
+        print "
+        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        ";
+
+        print "
+        <tr>
+        <td class=border colspan=2 align=left>";
+        print _("You can use this feature to deny calls to expensive or unwanted destinations on the classic telephone network. ");
+        print "<p>";
+        print "
+        </td>
+        </tr>
+        ";
+
+        print "
+        <tr>
+        <td class=border align=left>";
+        print _("Destination prefix");
+        print "</td>";
+        print "<td class=border align=left>
+        <input type=text name=barringPrefixes[]>
+        ";
+        print _("Example: +31900");
+        print "
+        </td>
+        </tr>
+        ";
+
+		if ($this->getBarringPrefixes()) {
+            foreach ($this->barringPrefixes as $_prefix) {
+                print "<tr>";
+                print "<td class=border align=left>";
+                print _("Destination prefix");
+                print "</td>";
+                print "<td class=border align=left>
+                <input type=text name=barringPrefixes[] value=\"$_prefix\">
+                </td>";
+                print "<tr>";
+            }
+        }
+
+        print "
+        <tr>
+          <td align=left>
+            <input type=hidden name=action value=\"set barring prefixes\">
+        ";
+
+        if ($this->Preferences['SaveSettingsAllowed']) {
+            print "
+            <input type=submit value=\"";
+            print _("Save");
+            print "\"
+                   onClick=saveHandler(this)>
+            ";
+        }
+        print "
+          </td>
+          <td align=right>
+          </td>
+        </tr>
+        ";
+
+        print $this->hiddenElements;
+
+        print "
+        </form>
+        ";
+    }
+
+    function saveSettings() {
+        dprint("<b>SIP->saveSettings()</b>");
+        global $Status;
+
+		$this->getVoicemail();
+        $this->getENUMmappings();
+
+        $this->getDivertTargets();
+        $this->getDiversions();
+
+        foreach ($this->WEBdictionary as $el) {
+        	global ${$el};
+            $log=sprintf("%s = %s",$el, ${$el});
+            //dprint ($log);
+        }
+
+  		$newACLarray     = array();
+
+        $result     = $this->result;
+
+        if (!is_array($result->properties))   $result->properties=array();
+        if (!is_array($result->groups)) 	  $result->groups=array();
+
+        if ($mailto && $this->email != $mailto) {
+            $result->email=$mailto;
+            $this->email=$mailto;
+            $this->somethingChanged=1;
+            $this->emailHasChanged=1;
+        }
+
+
+        if (!is_array($result->multiTargets)) $result->multiTargets=array();
+        if (!is_array($multiTargets))         $multiTargets=array();
+
+		sort($result->multiTargets);
+
+        //dprint_r($multiTargets);
+
+        if ($result->multiTargets != $this->newMultiTargets) {
+            $result->multiTargets = $this->newMultiTargets;
+            $this->somethingChanged=1;
+        }
+
+		$this->properties=$result->properties;
+
+		dprint_r($this->Preferences);
+
+        if ($this->Preferences['CanEditAll'] || $this->Preferences['CanEnableAdvanced']) {
+
+            if ($advanced) {
+                if (!$this->Preferences['advanced']) {
+            		$this->setPreference("advanced","1");
+                    $this->somethingChanged=1;
+                }
+    
+                $voicemail=1;
+                $this->SIPACLS[voicemail]=array("SERGroup"=>"voicemail",
+                                            "WEBName" =>sprintf (_("Voice mailbox")),
+                                            "SubscriberMayEditIt"=>"0",
+                                            "SubscriberMaySeeIt"=>0
+                                            );
+            }
+
+            if (!$this->voicemail['Account'] && $voicemail) {
+                dprint ("Lets's create voicemail account");
+                if ($this->createVoicemail()) {
+                    $this->setVoicemailDiversions();
+                    $this->createdVoicemailnow=1;
+                }
+            } else if ($this->voicemail['Account'] && !$voicemail) {
+                if ($this->deleteVoicemail()) {
+                    $this->voicemail['Account']="";
+                }
+            }
+        } else {
+            if ($advanced) {
+            	print _("Not enough credit");
+            }
+        }
+
+        if ($this->Preferences['CanEditAll']) {
+            if ($this->Preferences['CanEditAll']) {
+                if (strcmp($quota,$this->quota) != 0) {
+                    if (!$quota) $quota=0;
+                    $result->quota=intval($quota);
+                    dprint ("change the quota");
+                    $this->somethingChanged=1;
+                }
+
+                if ($quota_reset) {
+                    $result->groups = array_unique(array_diff($this->groups,array('quota')));
+                    $this->somethingChanged=1;
+
+                    if (is_object($this->SipPortRemote)) {
+                        $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+                        $this->SipPortRemote->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain), "quota");
+                    }
+
+                    $this->SipPort->addHeader($this->SoapAuth);
+                    $this->SipPort->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain), "quota");
+                }
+
+                if (strcmp($rpid,$this->rpid) != 0) {
+                    dprint ("change the rpid");
+                    $result->rpid=$rpid;
+                    $this->somethingChanged=1;
+                }
+            }
+
+            dprint ("<table bgcolor=lightgrey><tr><td>$Status</td></tr></table>");
+        }
+
+		if ($this->loginType == 'admin' || $this->loginType == 'reseller') {
+            $owner=intval($owner);
+            if ($owner != $this->owner) {
+	    		$result->owner=$owner;
+    	        $this->somethingChanged=1;
+            }
+        }
+
+        reset($this->SIPACLS);
+
+        foreach (array_keys($this->SIPACLS) as $key) {
+            // $val is set to 1 if web checkbox is ticked
+            $val = $_REQUEST[$key];
+
+            if ($this->Preferences['CanEditAll'] ||
+        		($this->Preferences['LoggedInAsSubscriber'] && $this->SIPACLS[$key][SubscriberMayEditIt])) {
+
+                // toggle prepaid
+                if ($key == "prepaid") $result->prepaid=intval($val);
+
+                if ($val) $newACLarray[]=trim($key);
+
+            } else {
+                // copy old setting if exists
+                if (in_array($key,$this->groups)) {
+                    $newACLarray[]=trim($key);
+                }
+            }
+        }
+
+        $grantACLarray  = array_unique(array_diff($newACLarray,$this->groups));
+        $revokeACLarray = array_unique(array_diff($this->groups,$newACLarray));
+
+        /*
+        dprint_r($this->groups);
+        dprint_r($newACLarray);
+        dprint_r($grantACLarray);
+        dprint_r($revokeACLarray);
+        */
+
+        if (count($revokeACLarray) > 0 || count($grantACLarray)) {
+        	$result->groups=$newACLarray;
+            $this->somethingChanged=1;
+        }
+
+        if ($language && $language != $this->Preferences['language'] ) {
+            if ($this->Preferences['LoggedInAsSubscriber']) {;
+                dprint("Set lang $language");
+                changeLanguage($language);
+            }
+
+            $this->setPreference("language",$language);
+		    $this->somethingChanged=1;
+        }
+
+        if ($sip_password && $sip_password != $this->password) {
+            $result->password=$sip_password;
+	    	$this->somethingChanged=1;
+        }
+
+        if ($timezone && $timezone != $this->timezone) {
+            $result->timezone=$timezone;
+            $this->somethingChanged=1;
+        }
+
+        if ($region != $this->region) {
+            $result->region=$region;
+	    	$this->somethingChanged=1;
+        }
+
+        if ($this->Preferences['advanced']) {
+    
+            if (strcmp($quickdial,$this->quickdial) != 0) {
+            	$result->quickdial=$quickdial;
+            	$this->somethingChanged=1;
+            }
+
+			if (!$this->createdVoicemailnow) {
+            	$this->setDiversions();
+            }
+
+            if ($this->answerTimeoutWasNotSet || $answerTimeout != $this->answerTimeout) {
+                $this->somethingChanged=1;
+            	$result->answerTimeout=intval($answerTimeout);
+            }
+        }
+
+        if ($this->somethingChanged) {
+
+		   	$result->properties=$this->properties;
+
+            if (!$result->quota) $result->quota=0;
+
+ 			dprint_r($result);
+
+            if (is_object($this->SipPortRemote)) {
+                dprint("saveSettingsRemote");
+                // if we have remote SOAP connection defined
+
+        		$this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            	$resultRemote     = $this->SipPortRemote->updateAccount($result);
+
+            	if (PEAR::isError($resultRemote)) {
+                	$error_msg  = $resultRemote->getMessage();
+                	$error_fault= $resultRemote->getFault();
+                	$error_code = $resultRemote->getCode();
+                	printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                	return false;
+            	} else {
+                	dprint("saveSettingsLocal");
+                    $this->SipPort->addHeader($this->SoapAuth);
+                    $result     = $this->SipPort->updateAccount($result);
+        
+                    if (PEAR::isError($result)) {
+                        $error_msg  = $result->getMessage();
+                        $error_fault= $result->getFault();
+                        $error_code = $result->getCode();
+                        printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        return false;
+                    }
+            	}
+
+            } else {
+
+        		$this->SipPort->addHeader($this->SoapAuth);
+            	$result     = $this->SipPort->updateAccount($result);
+    
+            	if (PEAR::isError($result)) {
+               		$error_msg  = $result->getMessage();
+                	$error_fault= $result->getFault();
+                	$error_code = $result->getCode();
+                	printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                	return false;
+            	} else {
+                	dprint("Call updateAccount");
+            	}
+            }
+
+        }
+
+        if ($this->Preferences['CanEditAll'] && $this->voicemail['Account'] && !$this->createdVoicemailnow) {
+            global $delete_voicemail;
+
+			dprint("delete_voicemail=$delete_voicemail");
+            $log=sprintf("delete_voicemail_orig=%s",$this->voicemail['Options']->delete);
+        	dprint($log);
+
+            if (($delete_voicemail && !$this->voicemail['Options']->delete) ||
+            	(!$delete_voicemail && $this->voicemail['Options']->delete)) {
+                $this->voicemail['Options']=array("delete"=>intval($delete_voicemail));
+                $this->voicemailOptionsHaveChanged=1;
+            }
+
+			$voicemail_password=preg_replace("/[^0-9]/","",$voicemail_password);
+
+            if ($this->voicemail['Password'] != $voicemail_password) {
+            	$this->voicemailOptionsHaveChanged=1;
+                $this->voicemail['Password']=$voicemail_password;
+            }
+
+        	if ($this->emailHasChanged || $this->voicemailOptionsHaveChanged) {
+            	$this->updateVoicemail();
+            }
+        }
+
+    }
+
+    function setDiversions() {
+        dprint ("setDiversions()");
+
+		if (!$this->Preferences['advanced']) {
+            return true;
+        }
+
+        foreach (array_keys($this->CallPrefDictionary) as $condition) {
+            $select_name = $condition."_select";
+            $selectedIdx = $_REQUEST[$select_name];
+            $textboxURI  = $_REQUEST[$condition];
+
+
+            if ($textboxURI && !preg_match("/@/",$textboxURI)) {
+                $textboxURI=$textboxURI."@".$this->domain;
+            }
+
+            if (preg_match("/^([\+|0].*)@/",$textboxURI,$m))  {
+                $textboxURI=$m[1]."@".$this->domain;
+            }
+
+            $uri_description = $this->divertTargets[$selectedIdx]['description'];
+
+            if ($uri_description == 'Other' || $textboxURI == "<voice-mailbox>") {
+                $selectedURI = $textboxURI;
+            } else {
+            	$selectedURI = $this->divertTargets[$selectedIdx]['value'];
+            }
+
+            if (!preg_match("/^sips?:/",$selectedURI)) {
+                $uri="sip:".$selectedURI;
+            } else {
+            	$uri = $selectedURI;
+            }
+
+            if (!$this->voicemail['Account'] && $uri_description=='Voicemail') {
+                dprint("No voicemail account found");
+                $uri_description='Disabled';
+            }
+
+            if ($this->CallPrefDbURI[$condition]) {
+
+                if ($uri_description=='Disabled' && $this->CallPrefUriType[$condition]!='Disabled') {
+                    $diversions[$condition]="";
+                } else if ($uri_description!='Disabled' && $selectedURI) {
+                    if (checkURI($selectedURI)) {
+                        if ($this->CallPrefUriType[$condition]=='Disabled') {
+                    		$diversions[$condition]="";
+                        } else {
+                            if ("sip:" . $this->CallPrefDbURI[$condition] != $uri) {
+                                $diversions[$condition]=$uri;
+                            } else {
+			                   	$diversions[$condition]=$this->CallPrefDbURI[$condition];
+                            }
+                        }
+
+                    } else {
+                   		$diversions[$condition]=$this->CallPrefDbURI[$condition];
+                        dprint("Failed to check address $selectedURI");
+                    }
+                }
+            } else if ($uri_description!='Disabled' && $selectedURI) {
+                if (checkURI($selectedURI)) {
+                	$diversions[$condition]=$uri;
+               	} else {
+                   	dprint("Failed to check address $condition=\"$selectedURI\"");
+                   	$diversions[$condition]=$this->CallPrefDbURI[$condition];
+               	}
+            }
+
+            if (!$uri_description) $uri_description="Other";
+
+            if ($uri_description == 'Other') {
+    			if (preg_match("/^(sip:|sips:)(.*)$/",$uri,$m)) {
+                	$last_other=$m[2];
+                } else {
+                	$last_other=$uri;
+                }
+            } else {
+                $last_other = $this->CallPrefLastOther[$condition];
+            }
+
+            $_prefLast   = $condition."_lastOther";
+
+            if ($uri_description=='Other' && $this->Preferences[$_prefLast] != $last_other ) {
+            	$this->setPreference($_prefLast,$last_other);
+            }
+        }
+
+		//dprint_r($this->CallPrefDbURI);
+        //dprint_r($diversions);
+
+        foreach(array_keys($this->CallPrefDbURI) as $key) {
+            if ($this->CallPrefDbURI[$key] != $diversions[$key]) {
+                $divert_changed=1;
+            }
+
+            if ($diversions[$key] && $diversions[$key] != "<voice-mailbox>" && !preg_match("/^sips?:/",$diversions[$key])) {
+            	$diversionsSOAP[$key]="sip:".$diversions[$key];
+                $voicemailUri="sip:".$this->voicemail['Account'];
+                if (!$this->useAbsoluteVoicemailURI && $diversionsSOAP[$key] == $voicemailUri) {
+            		$diversionsSOAP[$key] = "<voice-mailbox>";
+                }
+ 			} else {
+                if ($diversions[$key]) $diversionsSOAP[$key]=$diversions[$key];
+            }
+        }
+
+        if (!is_array($diversionsSOAP) || count($diversionsSOAP) == 0) {
+        	$diversionsSOAP=array("nocondition"=>"empty");
+        }
+
+        if ($divert_changed) {
+        	dprint_r($diversionsSOAP);
+
+            if (is_object($this->SipPortRemote)) {
+                dprint("setDiversionsRemote");
+                // if we have remote SOAP connection defined
+				//dprint_r($result);
+
+        		$this->SipPortRemote->addHeader($this->SoapAuthRemote);
+                $resultRemote     = $this->SipPortRemote->setCallDiversions($this->sipId,$diversionsSOAP);
+
+            	if (PEAR::isError($resultRemote)) {
+                	$error_msg  = $resultRemote->getMessage();
+                	$error_fault= $resultRemote->getFault();
+                	$error_code = $resultRemote->getCode();
+                	printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                	return false;
+            	} else {
+
+	                dprint("setDiversionsLocal");
+
+                    $this->SipPort->addHeader($this->SoapAuth);
+                	$result     = $this->SipPort->setCallDiversions($this->sipId,$diversionsSOAP);
+
+                    if (PEAR::isError($result)) {
+                        $error_msg  = $result->getMessage();
+	                    $error_fault= $result->getFault();
+    	                $error_code = $result->getCode();
+        	            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            	        return false;
+                	}
+            	}
+
+            } else {
+	            dprint("setDiversionsLocal");
+
+                $this->SipPort->addHeader($this->SoapAuth);
+                $result     = $this->SipPort->setCallDiversions($this->sipId,$diversionsSOAP);
+        
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+        }
+    }
+
+    function setDiversion($condition,$uri) {
+        dprint ("setDiversion($condition,$uri)");
+        $condition=trim($condition);
+        $uri=trim($uri);
+        $this->getVoicemail();
+        $this->getDivertTargets();
+
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->getCallDiversions($this->sipId);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        $_uri_saved=$uri;
+
+        if ($_uri_saved == "voicemail") {
+            $uri="";
+            foreach ($this->divertTargets as $target) {
+                if ($target['description'] == 'Voicemail') {
+                    $uri=$target['value'];
+                    break;
+                }
+            }
+        }
+
+        if ($_uri_saved == "mobile") {
+            $uri="";
+            foreach ($this->divertTargets as $target) {
+                dprint_r($target);
+                if ($target['description'] == 'Mobile') {
+                    $uri=$target['value'];
+                    break;
+                }
+            }
+        }
+
+        if ($_uri_saved == "other" && $this->CallPrefLastOther[$condition]) {
+            $uri=$this->CallPrefLastOther[$condition];
+        }
+
+        if (strlen($uri)) {
+        	if (!preg_match("/^(sip:|sips:)/",$uri)) $uri="sip:".$uri;
+        } else {
+            $uri=NULL;
+        }
+
+        reset($this->CallPrefDictionary);
+        foreach(array_keys($this->CallPrefDictionary) as $_condition) {
+            $uri=$result->$_condition;
+            if ($uri =="<voice-mailbox>") $uri = $this->voicemail['Account'];
+            if (preg_match("/^(sip:|sips:)(.*)$/i",$uri,$m)) {
+                $uri=$m[2];
+            }
+            //if (!$uri) $uri=NULL;
+        	$this->CallPrefDbURI[$condition]=$uri;
+        }
+
+		dprint_r($this->CallPrefDbURI);
+
+        if (is_object($this->SipPortRemote)) {
+            dprint("setDiversionsRemote");
+            // if we have remote SOAP connection defined
+            //dprint_r($result);
+
+            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            $resultRemote     = $this->SipPortRemote->setCallDiversions($this->sipId,$result);
+
+            if (PEAR::isError($resultRemote)) {
+                $error_msg  = $resultRemote->getMessage();
+                $error_fault= $resultRemote->getFault();
+                $error_code = $resultRemote->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+
+                dprint("setDiversionsLocal");
+
+                $this->SipPort->addHeader($this->SoapAuth);
+                $result     = $this->SipPort->setCallDiversions($this->sipId,$result);
+
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+
+        } else {
+            dprint("setDiversionsLocal");
+
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->setCallDiversions($this->sipId,$result);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }
+        }
+
+	}
+
+    function setVoicemailDiversions() {
+        dprint ("setVoicemailDiversions()");
+
+		if ($this->getVoicemail()) {
+
+            if (!$this->useAbsoluteVoicemailURI) {
+            	$diversions['FBUS']="<voice-mailbox>";
+            	$diversions['FNOA']="<voice-mailbox>";
+            	$diversions['FNOL']="<voice-mailbox>";
+            } else {
+                $diversions['FBUS']="sip:".$this->voicemail['Account'];
+                $diversions['FNOA']="sip:".$this->voicemail['Account'];
+                $diversions['FNOL']="sip:".$this->voicemail['Account'];
+            }
+
+            if (is_object($this->SipPortRemote)) {
+                dprint("setDiversionsRemote");
+                // if we have remote SOAP connection defined
+				//dprint_r($result);
+
+        		$this->SipPortRemote->addHeader($this->SoapAuthRemote);
+                $resultRemote     = $this->SipPortRemote->setCallDiversions($this->sipId,$diversions);
+
+            	if (PEAR::isError($resultRemote)) {
+                	$error_msg  = $resultRemote->getMessage();
+                	$error_fault= $resultRemote->getFault();
+                	$error_code = $resultRemote->getCode();
+                	printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                	return false;
+            	} else {
+
+	                dprint("setDiversionsLocal");
+
+                    $this->SipPort->addHeader($this->SoapAuth);
+                	$result     = $this->SipPort->setCallDiversions($this->sipId,$diversions);
+
+                    if (PEAR::isError($result)) {
+                        $error_msg  = $result->getMessage();
+	                    $error_fault= $result->getFault();
+    	                $error_code = $result->getCode();
+        	            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            	        return false;
+                	}
+            	}
+
+            } else {
+	            dprint("setDiversionsLocal");
+
+                $this->SipPort->addHeader($this->SoapAuth);
+                $result     = $this->SipPort->setCallDiversions($this->sipId,$diversions);
+        
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+        }
+    }
+
+    function updateVoicemail() {
+        dprint("updateVoicemail()");
+
+        $account=array("sipId"    => $this->sipId,
+                       "email"    => $this->email,
+                       "password" => $this->voicemail['Password'],
+                       "options"  => $this->voicemail['Options']
+                       );
+ 
+        dprint_r($account);
+ 
+        $this->VoicemailPort->addHeader($this->SoapAuth);
+        $result     = $this->VoicemailPort->updateAccount($account);
+ 
+        if (PEAR::isError($result)) {
+            $error_msg=$result->getMessage();
+            $error_fault=$result->getFault();
+            $error_code=$result->getCode();
+            print "$error_msg\n";
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            if (is_object($this->VoicemailPortRemote)) {
+                // if we have remote SOAP connection defined
+                //dprint_r($result);
+
+                dprint("update Voicemail remote");
+
+                $this->VoicemailPortRemote->addHeader($this->SoapAuthRemote);
+                $resultRemote     = $this->VoicemailPortRemote->updateAccount($account);
+
+                if (PEAR::isError($resultRemote)) {
+                    $error_msg  = $resultRemote->getMessage();
+                    $error_fault= $resultRemote->getFault();
+                    $error_code = $resultRemote->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+        }
+ 
+        return true;
+    }
+
+    function createVoicemail() {
+        dprint("creatingVoicemail()");
+
+        $password=$this->RandomPassword();
+        
+        $_account      = array("sipId"    => $this->sipId,
+                               "name"     => $this->fullName,
+                               "password" => $password,
+                               "email"    => $this->email,
+                               "options"  => array("delete"=>1)
+
+        );
+
+        $this->VoicemailPort->addHeader($this->SoapAuth);
+        $result     = $this->VoicemailPort->addAccount($_account);
+
+        if (PEAR::isError($result)) {
+            $error_msg=$result->getMessage();
+            $error_fault=$result->getFault();
+            $error_code=$result->getCode();
+            print "$error_msg\n";
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+
+        } else {
+
+            if (is_object($this->VoicemailPortRemote)) {
+                // if we have remote SOAP connection defined
+
+                $this->VoicemailPort->addHeader($this->SoapAuth);
+                $result     = $this->VoicemailPort->getAccount($this->sipId);
+
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    if ($error_fault->detail->exception->errorcode != "2000") {
+                        printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        return false;
+                    } else {
+                        return true;
+                    }
+                } else {
+                	dprint("create Voicemail remote");
+
+                    $this->VoicemailPortRemote->addHeader($this->SoapAuthRemote);
+                    $resultRemote     = $this->VoicemailPortRemote->addAccount($result);
+    
+                    if (PEAR::isError($resultRemote)) {
+                        $error_msg  = $resultRemote->getMessage();
+                        $error_fault= $resultRemote->getFault();
+                        $error_code = $resultRemote->getCode();
+                        if ($error_fault->detail->exception->errorcode != "2000") {
+                           printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                           return false;
+                        } else {
+                           return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+
+    function deleteVoicemail() {
+        dprint("deleteVoicemail()");
+        
+        $this->VoicemailPort->addHeader($this->SoapAuth);
+        $result     = $this->VoicemailPort->deleteAccount($this->sipId);
+
+        if (PEAR::isError($result)) {
+            $error_msg=$result->getMessage();
+            $error_fault=$result->getFault();
+            $error_code=$result->getCode();
+            print "$error_msg\n";
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            if (is_object($this->VoicemailPortRemote)) {
+                // if we have remote SOAP connection defined
+				//dprint_r($result);
+
+                dprint("delete Voicemail remote");
+                $this->VoicemailPortRemote->addHeader($this->SoapAuthRemote);
+                $resultRemote     = $this->VoicemailPortRemote->deleteAccount($this->sipId);
+
+                if (PEAR::isError($resultRemote)) {
+                    $error_msg  = $resultRemote->getMessage();
+                    $error_fault= $resultRemote->getFault();
+                    $error_code = $resultRemote->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    function setPreference($name,$value) {
+        dprint("setPreference($name,$value)");
+
+        if (!$name) return;
+
+        if (!is_array($this->properties)) {
+            $this->properties=array();
+        }
+
+		foreach (array_keys($this->properties) as $_key) {
+
+           $_prop=$this->properties[$_key];
+            if ($_prop->name == $name) {
+                if (strlen($value)) {
+                    $newProperties[]=array('name'=> $name,
+                                           'value' => $value);
+                }
+                $found=1;
+            } else {
+                $newProperties[]=$_prop;
+            }
+
+        }
+
+        if (!$found) {
+        	$newProperties[]=array('name'  => $name,
+                                   'value' => $value);
+
+        }
+
+	    if ($this->properties!=$newProperties) $this->somethingChanged=1;
+        $this->properties=$newProperties;
+        //dprint_r($this->properties);
+    }
+
+    function showPrepaidForm() {
+        $task = $_REQUEST['task'];
+        $prepaidCard = $_REQUEST['prepaidCard'];
+        $prepaidId   = $_REQUEST['prepaidId'];
+
+        print "
+        <tr>
+        <form action=$this->pageURL method=post>
+        <input type=hidden name=tab value=prepaid>
+        <input type=hidden name=task value=Add>
+        <td class=h colspan=2 align=left> ";
+
+		dprint("prepaidCard=$prepaidCard && prepaidId=$prepaidId");
+
+        if ($prepaidCard && $prepaidId && $result = $this->AddPrepaidBalance($prepaidCard,$prepaidId)) {
+            print "<p><font color=green>";
+            printf (_("Added %d to your account balance. "),$result);
+            print "</font>";
+        }
+
+        print "
+        </td>
+        </tr>
+        ";
+
+		$prepaidAccount=$this->GetPrepaidAccountInfo();
+
+		if ($prepaidAccount) {
+            $chapter=sprintf(_("Current balance"));
+            $this->showChapter($chapter);
+    
+            print "
+            <tr>
+            <td class=h align=left>";
+            dprint_r($prepaidAccount);
+            print _("Balance");
+            print ": $prepaidAccount->balance $this->currency";
+            print "</td><td align=right><nobr>";
+    
+            if ($prepaidAccount->callInProgress) {
+            	$remain=$prepaidAccount->maxSessionTime-$prepaidAccount->sessionTime;
+
+                print "<font color=blue>";
+                print _("Call in progress");
+                print "</font>";
+                $sessionTime=normalizeTime($prepaidAccount->sessionTime);
+                printf (": %s (%s)",$sessionTime,$prepaidAccount->destination);
+            } else {
+                print _("Last call price");
+                printf (": %s (%s)",$prepaidAccount->lastCallPrice,$prepaidAccount->destination);
+            }
+    
+            print "</nobr>
+            </td>
+            </form>
+            </tr>
+            ";
+    
+            $chapter=sprintf(_("Increase balance"));
+            $this->showChapter($chapter);
+    
+            print "
+            <tr>
+            <form action=$this->pageURL method=post>
+            <input type=hidden name=tab value=prepaid>
+            <input type=hidden name=task value=Add>
+            <td class=h align=left><nobr>
+            ";
+            print _("Prepaid card");
+            print "
+            <input type=text size=20 name=prepaidCard>
+            ";
+            print "Id:
+            <input type=text size=10 name=prepaidId>
+            <input type=submit value=";
+            print _("Add");
+            print "></nobr>
+            </td>
+            </form>
+            </tr>
+            ";
+    
+            flush();
+    
+            $this->showBalanceHistory();
+        }
+
+    }
+
+    function GetPrepaidAccountInfo() {
+        dprint("GetPrepaidAccountInfo()");
+        if (is_object($this->SipPortRemote)) {
+            dprint("GetPrepaidAccountInfoRemote");
+            // if we have remote SOAP connection defined
+            //dprint_r($result);
+
+            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            $result     = $this->SipPortRemote->getPrepaidStatus($this->sipId);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }  else {
+                return $result;
+            }
+
+        } else {
+            dprint("GetPrepaidAccountInfoLocal");
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->getPrepaidStatus($this->sipId);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }  else {
+                return $result;
+            }
+        }
+    }
+
+    function AddPrepaidBalance($prepaidCard,$prepaidId) {
+        dprint("AddPrepaidBalance($prepaidCard,$prepaidId)");
+        $card 	 = array("id"     => $prepaidId,
+                         "number" => $prepaidCard);
+
+        if (is_object($this->SipPortRemote)) {
+            dprint("AddPrepaidBalanceRemote($prepaidCard,$prepaidId)");
+
+            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            $result     = $this->SipPortRemote->addBalanceFromVoucher($this->sipId,$card);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }  else {
+                return $result;
+            }
+        } else {
+            dprint("AddPrepaidBalanceLocal($prepaidCard,$prepaidId)");
+
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->addBalance($this->sipId,$card);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }  else {
+                return $result;
+            }
+        }
+    }
+
+    function showBalanceHistory() {
+        $chapter=sprintf(_("Balance history"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr>
+        <td colspan=2>
+        <p>
+        <table width=100% cellpadding=1 cellspacing=1 border=0 bgcolor=lightgrey> ";
+
+        print "<tr bgcolor=#CCCCCC>";
+        print "<td class=h>";
+        print _("Id");
+        print "</td>";
+        print "<td class=h>";
+        print _("Date");
+        print "</td>";
+        print "<td class=h>";
+        print _("Action");
+        print "</td>";
+        print "<td class=h>";
+        print _("Card");
+        print "</td>";
+        print "<td class=h align=right>";
+        print _("Value");
+        print "</td>";
+        print "<td class=h align=right>";
+        print _("Balance");
+        print "</td>";
+        print "</tr>";
+
+        if (is_object($this->SipPortRemote)) {
+            dprint("showBalanceHistoryRemote");
+            // if we have remote SOAP connection defined
+            //dprint_r($result);
+
+            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            $result     = $this->SipPortRemote->getCreditHistory($this->sipId);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            }
+
+        } else {
+            dprint("showBalanceHistoryLocal");
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->getCreditHistory($this->sipId);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                if ($error_fault->detail->exception->errorcode != "2000") {
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                }
+            }
+
+        }
+
+        if (is_array($result)) {
+            foreach ($result as $_line) {
+                $found++;
+                print "
+                <tr bgcolor=white>
+                <td>$found</td>
+                <td>$_line->date</td>
+                <td>$_line->action</td>
+                <td>$_line->number</td>
+                <td align=right>$_line->value</td>
+                <td align=right>$_line->balance</td>
+                </tr>
+                ";
+            }
+        }
+
+        print "
+        </td>
+        </tr>
+        </table>
+        ";
+
+        print "</td></tr>";
+    }
+
+    function showDiversions($conditions) {
+        // for busy not online or unconditional
+        foreach (array_keys($this->CallPrefDictionary) as $condition) {
+        	$_prefName = $condition."_lastOther";
+        	$this->CallPrefLastOther[$condition]= $this->Preferences[$_prefName];
+        }
+
+        if (!$conditions) {
+            $conditions=$this->CallPrefDictionary;
+        }
+
+        foreach (array_keys($conditions) as $condition) {
+            if (in_array("multi-targets",$this->groups) && ($condition == 'FBUS' || $condition == 'FNOA' || $condition == 'FNOL')) {
+                continue;
+            }
+
+            $found++;
+            $rr=floor($found/2);
+            $mod=$found-$rr*2;
+
+            $pref_name  = $conditions[$condition];
+            $pref_value = $this->CallPrefDbURI[$condition];
+
+            $select_name=$condition."_select";
+
+            $set_uri_java="set_uri_" . $condition;
+            $update_text_java="update_text_" . $condition;
+
+            print "
+            <tr valign=top>
+              <td class=border valign=middle>$pref_name</td>
+              <td class=border valign=middle align=left>
+            ";
+
+            $phoneValues = array();
+
+            foreach ($this->divertTargets as $phones) {
+                $phoneValues[] = $phones['value'];
+            }
+
+            $lastOther = $this->CallPrefLastOther[$condition];
+            $otherIdx = count($this->divertTargets) - 1;
+
+            $phoneValues[$otherIdx] = $lastOther;
+
+            $targets = sprintf("'%s'", join("', '", $phoneValues));
+
+            print "
+            <SCRIPT>
+            var ${condition}_other = '$lastOther';
+
+            function $set_uri_java(elem) {
+                var index;
+                var targets = [$targets];
+
+                index = elem.selectedIndex;
+                if (index == $otherIdx) {
+                    document.sipsettings.$condition.value=${condition}_other;
+                    document.sipsettings.$condition.style.display = 'block';
+                } else {
+                    document.sipsettings.$condition.style.display = 'none';
+                    document.sipsettings.$condition.value=targets[index];
+                }
+            }
+
+            function $update_text_java(elem) {
+                ${condition}_other = elem.value;
+            }
+            </SCRIPT>
+            ";
+
+            if (in_array("multi-targets",$this->groups) && ($condition == 'FBUS' || $condition == 'FNOA' || $condition == 'FNOL')) {
+                print "Not possible when 'Multiple targets' is enabled";
+
+            } else {
+
+                print "<table border=0 cellspacing=0 cellpadding=0>
+                <tr><td>";
+    
+                print "<select name=$select_name onChange=$set_uri_java(this)>\n";
+    
+                if ($this->CallPrefDbURI[$condition]) {
+                    $this->CallPrefUriType[$condition]=='Other';
+                } else {
+                    $this->CallPrefUriType[$condition]=='Disabled';
+                }
+    
+                $foundSelected=0;
+                $nr_targets=count($this->divertTargets);
+    
+                foreach ($this->divertTargets as $idx => $phone) {
+    
+                    $name = $phone['name'];
+                    if ($phone['description'] == 'Other')
+                        $value = $lastOther;
+                    else
+                        $value = $phone['value'];
+    
+                    if ($this->CallPrefDbURI[$condition] == "<voice-mailbox>") {
+                        $this->CallPrefDbURI[$condition] = $this->voicemail['Account'];
+                    }
+    
+                    if (!$foundSelected &&
+                        ($this->CallPrefDbURI[$condition]==$phone['value'] || $idx==$nr_targets-1)) {
+                        print "<option value=\"$idx\" selected>$name</option>\n";
+                        $pref_value = $value;
+                        $this->CallPrefUriType[$condition]=$phone['description'];
+                        $foundSelected=1;
+                    } else {
+                        print "<option value=\"$idx\">$name</option>\n";
+                    }
+                }
+    
+                print "</select>";
+    
+                print "
+                </td><td>";
+    
+                if ($this->CallPrefUriType[$condition]=='Other')
+                    $style = "visible";
+                else
+                    $style = "hidden";
+    
+                $pref_value=$this->CallPrefDbURI[$condition];
+    
+                print "
+                    <span>
+                    <td>
+                      <input class=$style type=text size=40
+                             name=$condition value=\"$pref_value\"
+                             onChange=$update_text_java(this)>
+                    </span>
+                    ";
+                if ($condition=="FNOA") {
+                    print " ";
+                    print _("Timeout");
+                    print " ";
+    
+                    $selected_timeout[$this->answerTimeout]="selected";
+    
+                    print "<select name=answerTimeout>";
+                    foreach (array_keys($this->answerTimeoutEls) as $_el) {
+                        printf ("<option value=\"%s\" %s>%s",$_el,$selected_timeout[$_el],$this->answerTimeoutEls[$_el]);
+                    }
+                    print "</select>";
+                } else if ($condition=="FUNC") {
+                    printf (_(" Dial %s + NUMBER to change"),"*21*");
+                }
+    
+                print "
+                </td>
+                </tr>
+                </table>";
+            }
+
+            print "
+
+              </td>
+            </tr>
+            ";
+        }
+    }
+
+    function logoTableStart() {
+        print "
+        <table class=settings border=0 width=650>
+        <tr>
+        <td colspan=2 align=right>
+		";
+        if ($this->logoFile) {
+    	    print "<img src=\"$this->templatesPath/$this->logoFile\" border=0>";
+            print "<p>";
+        }
+
+        print "
+        </td>
+        </tr>
+        </table>
+        ";
+    }
+
+    function chapterTableStart() {
+        print "
+        <table class=settings border=0 width=650>
+        ";
+    }
+
+    function getENUMmappings () {
+    }
+
+    function enum2tel($enum_text) {
+        // transform enum style domain name in forward telephone number
+    
+        $enum_text=trim($enum_text);
+    
+        if (preg_match("/^\+\d+$/",$enum_text)) {
+            return $enum_text;
+        }
+    
+        $z=0;
+        $tel_text="";
+    
+        while ($z < strlen($enum_text)) {
+            $char = substr($enum_text,$z,1);
+            if (preg_match("/[a-zA-Z]/",$char)) {
+                break;
+            } else if (preg_match("/[0-9]/",$char)) {
+                $tel_text=$char.$tel_text;
+                $z++;
+            } else {
+                $z++;
+            }
+        }
+    
+        if ($tel_text) {
+            $tel_text="+".$tel_text;
+            return ($tel_text);
+        } else {
+            return $enum_text;
+        }
+    }
+
+    function showTimezones() {
+        if (!$fp = fopen("timezones", "r")) {
+        	print _("Failed to open timezone file.");
+            return false;
+        }
+        print "<select name=timezone>";
+        print "\n<option>";
+        while ($buffer = fgets($fp,1024)) {
+        	$buffer=trim($buffer);
+            if ($this->timezone==$buffer) {
+                $selected="selected";
+            } else {
+                $selected="";
+            }
+            print "\n<option $selected>";
+            print "$buffer";
+        }
+        fclose($fp);
+        print "</select>";
+    }
+
+    function showQuickDial() {
+        if (!preg_match("/^\d+$/",$this->username)) return 1;
+        print "
+        <tr>
+          <td class=border>";
+            print _("Quick dial");
+            print "
+          </td>
+          <td class=border align=left>
+            <input type=text size=15 maxsize=64 name=quickdial value=\"$this->quickdial\">
+            ";
+            if ($this->quickdial && preg_match("/^$this->quickdial/",$this->username)) {
+                $dial_suffix=strlen($this->username) - strlen($this->quickdial);
+                if ($dial_suffix > 0) {
+                	printf (_("%d digits extension"),$dial_suffix);
+                }
+            }
+            print "
+          </td>
+        </tr>
+        ";
+    }
+
+    function showLastCalls() {
+
+        $this->getCalls();
+
+        if ($this->calls) {
+            $chapter=sprintf(_("Call statistics"));
+            $this->showChapter($chapter);
+
+            $calltime=normalizeTime($this->duration);
+    
+            print "
+            <tr>
+              <td class=border>";
+                if ($this->SupportCDRsite) {
+                    print "<a href=$this->SupportCDRsite target=cdrtool>";
+                    print _("Summary");
+                    print "</a>";
+                } else {
+                    print _("Usage data");
+                }
+                print "
+              </td>
+              <td class=border>";
+              printf (_("%s calls /  %s /  %s / %.2f %s"), $this->calls, $calltime,$this->trafficPrint,$this->price,$this->currency);
+              print "
+
+              </td>
+            </tr>
+            ";
+    
+            print "
+            <tr>
+              <td class=border>";
+                print _("First / Last call");
+                print "
+              </td>
+              <td class=border>
+                $this->firstCall / $this->lastCall
+              </td>
+            </tr>
+            ";
+        }
+
+        if (count($this->calls_received)) {
+            $chapter=sprintf(_("Last received calls"));
+            $this->showChapter($chapter);
+
+            $j=0;
+            foreach (array_keys($this->calls_received) as $call) {
+                $j++;
+
+                $uri         = $this->calls_received[$call][from];
+                $duration 	 = normalizeTime($this->calls_received[$call][duration]);
+                $dialURI     = $this->PhoneDialURL($uri) ;
+				$htmlDate    = $this->colorizeDate($this->calls_received[$call][date]);
+				$htmlURI     = $this->htmlURI($uri);
+				$urlURI	     = urlencode($this->normalizeURI($uri));
+
+                if (!$this->calls_received[$call][duration]) {
+                	$htmlURI = "<font color=red>$htmlURI</font>";
+                }
+
+                print "
+                <tr>
+                <td class=border>$htmlDate</td>
+                <td class=border>
+                <table border=0 width=100% cellspacing=0 cellpadding=0>
+                <tr>
+                <td align=left width=10>$dialURI</td>
+                <td align=right width=40>$duration</td>
+                <td align=right width=10></td>
+                <td align=left><nobr>$htmlURI</nobr></td>
+                ";
+                if ($this->Preferences['advanced']) {
+                	print "<td align=right><a href=$this->pageURL&tab=phonebook&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
+                }
+                print "
+                </tr>
+                </table>";
+                print "</td>
+                </tr>
+                ";
+            }
+        }
+
+
+        if (count($this->calls_placed)) {
+            $chapter=sprintf(_("Last placed calls"));
+            $this->showChapter($chapter);
+
+            $j=0;
+
+            foreach (array_keys($this->calls_placed) as $call) {
+                $j++;
+
+				if ($this->calls_placed[$call][to] == "sip:".$this->voicemail['Account'] ) {
+                    continue;
+                }
+
+                $uri         = $this->calls_placed[$call][to];
+                $price       = $this->calls_placed[$call][price];
+                $status      = $this->calls_placed[$call][status];
+                $duration 	 = normalizeTime($this->calls_placed[$call][duration]);
+                $dialURI     = $this->PhoneDialURL($uri) ;
+				$htmlDate    = $this->colorizeDate($this->calls_placed[$call][date]);
+				$htmlURI     = $this->htmlURI($uri);
+				$urlURI	     = urlencode($this->normalizeURI($uri));
+
+                if ($price) {
+                    $price_print =sprintf(" (%s %s)",$price,$this->currency);
+                } else {
+                    $price_print = '';
+                }
+                print "
+                <tr>
+                <td class=border>$htmlDate</td>
+                <td class=border>
+                <table border=0 width=100% cellspacing=0 cellpadding=0>
+                <tr>
+                <td align=left width=10>$dialURI</td>
+                <td align=right width=40>$duration</td>
+                <td align=right width=10></td>
+                <td align=left><nobr>$htmlURI $price_print</nobr></td>
+                ";
+
+                if ($this->Preferences['advanced']) {
+                	print "<td align=right><a href=$this->pageURL&tab=phonebook&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
+                }
+                print "
+                </tr>
+                </table>";
+                print "</td>
+                </tr>
+                ";
+            }
+        }
+
+    }
+
+    function getCalls () {
+    	dprint("getCalls");
+
+        $fromDate=time()-3600*24*60;
+        $toDate=time();
+
+		$CallQuery=array("fromDate"=>$fromDate,
+                         "toDate"=>$toDate,
+                         "limit"=>15
+                         );
+
+        $CallsQuery=array("placed"=>$CallQuery,
+                          "received"=>$CallQuery
+                          );
+
+        if (is_object($this->SipPortRemote)) {
+            dprint("getCallsRemote");
+            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            $result     = $this->SipPortRemote->getCalls($this->sipId,$CallsQuery);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }
+
+        } else {
+
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->getCalls($this->sipId,$CallsQuery);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }
+        }
+
+        //dprint_r($result);
+
+        // received  calls
+        foreach ($result->received as $callStructure) {
+            $this->calls_received[]=array(
+                                    "from"    =>quoted_printable_decode($callStructure->fromURI),
+                                    "duration"=>$callStructure->duration,
+                                    "status"   => $callStructure->status,
+                                    "date"    =>getLocalTime($this->timezone,$callStructure->startTime)
+                                     );         
+        }
+
+        // placed calls
+        foreach ($result->placed as $callStructure) {
+
+			if ($callStructure->status == 435) continue;
+
+            $this->calls_placed[]=array(
+                                    "to"       => quoted_printable_decode($callStructure->toURI),
+                                    "duration" => $callStructure->duration,
+                                    "price"    => $callStructure->price,
+                                    "status"   => $callStructure->status,
+                                    "date"     => getLocalTime($this->timezone,$callStructure->startTime)
+                                     );         
+        }
+
+    }
+
+    function getCallStatistics () {
+    	dprint("getCallStatistics");
+
+        $fromDate=mktime(0, 0, 0, date("m"), "01", date("Y"));
+        $toDate=time();
+
+		$CallQuery=array("fromDate"=>$fromDate,
+                         "toDate"=>$toDate
+                         );
+
+		$CallQuery=array("limit"=>1
+                         );
+
+        $CallsQuery=array("placed"=>$CallQuery);
+
+        if (is_object($this->SipPortRemote)) {
+            dprint("getCallStatisticsRemote");
+            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            $result     = $this->SipPortRemote->getCallStatistics($this->sipId,$CallsQuery);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }
+
+        } else {
+
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->getCallStatistics($this->sipId,$CallsQuery);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }
+        }
+
+        dprint_r($result);
+
+        $this->thisMonth['calls'] = $result->placed->calls;
+        $this->thisMonth['price'] = $result->placed->price;
+    }
+
+    function addPhonebookEntry() {
+        dprint("addPhonebookEntry()");
+
+        $uri       = trim($_REQUEST['uri']);
+
+        if (!strlen($uri)) return false;
+
+        $phonebookEntry=array('uri'       => $uri);
+
+        if (is_object($this->SipPortRemote)) {
+            dprint("addPhonebookEntryRemote");
+            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            $resultRemote     = $this->SipPortRemote->addPhonebookEntry($this->sipId,$phonebookEntry);
+
+            if (PEAR::isError($resultRemote)) {
+                $error_msg  = $resultRemote->getMessage();
+                $error_fault= $resultRemote->getFault();
+                $error_code = $resultRemote->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+
+                dprint("addPhonebookEntryLocal");
+
+                $this->SipPort->addHeader($this->SoapAuth);
+                $result     = $this->SipPort->addPhonebookEntry($this->sipId,$phonebookEntry);
+
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+
+        } else {
+            dprint("addPhonebookEntryLocal");
+        	$this->SipPort->addHeader($this->SoapAuth);
+	        $result     = $this->SipPort->addPhoneBookEntry($this->sipId,$phonebookEntry);
+
+        	if (PEAR::isError($result)) {
+	            $error_msg  = $result->getMessage();
+    	        $error_fault= $result->getFault();
+        	    $error_code = $result->getCode();
+            	printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+	            return false;
+    	    }
+        }
+
+
+        return true;
+    }
+
+    function updatePhonebookEntry() {
+
+        dprint("updatePhonebookEntry()");
+
+		$firstName = trim($_REQUEST['first_name']);
+        $lastName  = trim($_REQUEST['last_name']);
+        $uri       = trim($_REQUEST['uri']);
+        $group     = trim($_REQUEST['group']);
+
+        $phonebookEntry=array('firstName' => $firstName,
+                              'lastName'  => $lastName,
+                              'uri'       => $uri,
+                              'group'     => $group
+                              );
+
+
+		//dprint_r($phonebookEntry);
+
+        if (is_object($this->SipPortRemote)) {
+            dprint("updatePhonebookEntryRemote");
+            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            $resultRemote     = $this->SipPortRemote->updatePhonebookEntry($this->sipId,$phonebookEntry);
+
+            if (PEAR::isError($resultRemote)) {
+                $error_msg  = $resultRemote->getMessage();
+                $error_fault= $resultRemote->getFault();
+                $error_code = $resultRemote->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+
+                dprint("updatePhonebookEntryLocal");
+
+                $this->SipPort->addHeader($this->SoapAuth);
+                $result     = $this->SipPort->updatePhonebookEntry($this->sipId,$phonebookEntry);
+
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+
+        } else {
+            dprint("updatePhonebookEntryLocal");
+        	$this->SipPort->addHeader($this->SoapAuth);
+	        $result     = $this->SipPort->updatePhoneBookEntry($this->sipId,$phonebookEntry);
+
+        	if (PEAR::isError($result)) {
+	            $error_msg  = $result->getMessage();
+    	        $error_fault= $result->getFault();
+        	    $error_code = $result->getCode();
+            	printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+	            return false;
+    	    }
+        }
+
+        return true;
+
+    }
+
+    function deletePhonebookEntry() {
+        dprint("deletePhonebookEntry()");
+
+        $uri = $_REQUEST['uri'];
+
+        if (is_object($this->SipPortRemote)) {
+            dprint("deletePhonebookEntryRemote");
+            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            $resultRemote     = $this->SipPortRemote->deletePhoneBookEntry($this->sipId,$uri);
+
+            if (PEAR::isError($resultRemote)) {
+                $error_msg  = $resultRemote->getMessage();
+                $error_fault= $resultRemote->getFault();
+                $error_code = $resultRemote->getCode();
+                if ($error_fault->detail->exception->errorcode!="1040") {
+                	printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                	return false;
+                }
+            }
+
+            dprint("deletePhonebookEntryLocal");
+
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->deletePhoneBookEntry($this->sipId,$uri);
+
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }
+
+        } else {
+            dprint("deletePhonebookEntryLocal");
+        	$this->SipPort->addHeader($this->SoapAuth);
+	        $result     = $this->SipPort->deletePhoneBookEntry($this->sipId,$uri);
+
+        	if (PEAR::isError($result)) {
+	            $error_msg  = $result->getMessage();
+    	        $error_fault= $result->getFault();
+        	    $error_code = $result->getCode();
+            	printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+	            return false;
+    	    }
+        }
+
+        return true;
+    }
+
+    function getPhoneBookEntries() {
+        dprint("getPhoneBookEntries()");
+        $search_text = trim($_REQUEST['search_text']);
+        $group       = trim($_REQUEST['group']);
+
+		if (!strlen($search_text)) $search_text="%" ;
+
+        $match=array('uri'       => $search_text,
+                     'firstName' => $search_text,
+                     'lastName'  => $search_text
+                     );
+
+		if (strlen($group)) {
+            if ($group=="empty") {
+                $match['group']='';
+            } else {
+                $match['group']=$group;
+            }
+        }
+
+        $range=array('start'=>0,
+                     'count'=>100);
+
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->getPhoneBookEntries($this->sipId,$match,$range);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        $this->PhonebookEntries=$result->entries;
+        //dprint_r($this->PhonebookEntries);
+    }
+
+    function showPhonebook() {
+        dprint("showPhonebook()");
+
+        $chapter=sprintf(_("Contacts"));
+        $this->showChapter($chapter);
+
+        if (!$this->Preferences['advanced']) {
+            return ;
+        }
+
+        print "
+        <tr>
+        <td class=border colspan=2 align=left>";
+        print _("You can organize, export and group your contacts. ");
+        print _("Groups can be used to Accept selected incoming calls. ");
+        print "
+        </td>
+        </tr>
+        ";
+
+
+        print '
+        <SCRIPT>
+            function toggleVisibility(rowid) {
+                if (document.getElementById) {
+                    row = document.getElementById(rowid);
+                    if (row.style.display == "block") {
+                        row.style.display = "none";
+                    } else {
+                        row.style.display = "block";
+                    }
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        </SCRIPT>
+        ';
+
+        print "<tr><td colspan=2>";
+
+        $adminonly = $_REQUEST['adminonly'];
+        $search_text = $_REQUEST['search_text'];
+        $accept = $_REQUEST['accept']; // selected search group;
+
+        $task = $_REQUEST['task'];
+        $confirm = $_REQUEST['confirm'];
+
+        $group = $_REQUEST['group'];
+        $first_name = $_REQUEST['first_name'];
+        $last_name = $_REQUEST['last_name'];
+        $uri = $_REQUEST['uri'];
+
+        if ($task=="deleteContact" && $confirm) {
+            $this->deletePhonebookEntry();
+            unset($task);
+            unset($confirm);
+        } else if ($task=="update") {
+            $this->updatePhonebookEntry();
+            unset($task);
+        } else if ($task=="add") {
+            $this->addPhonebookEntry();
+            unset($task);
+        }
+
+        $this->getPhoneBookEntries();
+        $maxrowsperpage=250;
+    
+    	$url_string=$this->pageURL."&tab=phonebook";
+
+        print "
+        <p>
+        <table width=100% cellpadding=1 cellspacing=1 border=0>
+        <tr>
+        <form action=$this->pageURL method=post>
+        <input type=hidden name=tab value=phonebook>
+        <input type=hidden name=task value=add>
+        <td class=h align=left valign=top>
+        <input type=submit value=";
+        print _("Add");
+        print ">
+        <input type=text size=20 name=uri>
+        ";
+        print _("(wildcard %)");
+        print "
+        </td>
+        </form>
+        <form action=$this->pageURL method=post>
+        <input type=hidden name=tab value=phonebook>
+        <td class=h align=right valign=top>
+        <input type=text size=20 name=search_text value=\"$search_text\">
+        ";
+
+        $selected[$group]="selected";
+
+        print "<select name=group>";
+        print "<option value=\"\">";
+        foreach(array_keys($this->PhonebookGroups) as $key) {
+            printf ("<option value=\"%s\" %s>%s",$key,$selected[$key],$this->PhonebookGroups[$key]);
+        }
+        print "<option value=\"\">------";
+        printf ("<option value=\"empty\" %s>No group",$selected['empty']);
+
+        print "</select>";
+
+        print "<input type=submit value=";
+        print _("Search");
+        print ">";
+        print "
+        <a href=$this->pageURL&tab=phonebook&export=1 target=export>";
+        print _("Export");
+        print "</a>
+        </td>
+        </form>
+        </tr>
+        </table>
+        ";
+
+        if (count($this->PhonebookEntries)){
+            print "
+            <p>
+            <table width=100% cellpadding=1 cellspacing=1 border=0 bgcolor=lightgrey>
+            <tr bgcolor=#CCCCCC>
+            <td class=h align=right>Id</td>
+            ";
+            print "<td class=h>";
+            print _("Group");
+            print "</td>";
+            print "<td class=h>";
+            print "</td>";
+            print "<td class=h>";
+            print _("Name");
+            print "</td>";
+            print "<td class=h>";
+            print _("Address");
+            print "</td>";
+            print "<td class=h>";
+            print _("Action");
+            print "</td>";
+            print "</tr>";
+    
+            foreach(array_keys($this->PhonebookEntries) as $_entry) {
+        
+                $found=$i+1;
+    
+                $fname    = $this->PhonebookEntries[$_entry]->firstName;
+                $lname    = $this->PhonebookEntries[$_entry]->lastName;
+
+                print "
+                <tr bgcolor=white valign=top>
+                <form name=\"Entry$found\" action=\"$this->pageURL&tab=$this->tab\">
+                $this->hiddenElements
+                <input type=hidden name=tab value=\"$this->tab\">
+                <input type=hidden name=task value=\"update\">
+                ";
+                printf ("<input type=hidden name=uri value=\"%s\">",$this->PhonebookEntries[$_entry]->uri);
+
+                print "<td valign=top>$found</td>
+                <td>";
+
+                printf ("<select name=group onChange=\"location.href='%s&task=update&uri=%s&first_name=%s&last_name=%s&group='+this.options[this.selectedIndex].value\">",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($fname),urlencode($lname));
+        		print "<option value=\"\">";
+        		$selected_grp[$this->PhonebookEntries[$_entry]->group]="selected";
+                foreach(array_keys($this->PhonebookGroups) as $_key) {
+            		printf ("<option value=\"%s\" %s>%s",$_key,$selected_grp[$_key],$this->PhonebookGroups[$_key]);
+        		}
+                unset($selected_grp);
+
+        		print "</select>";
+
+                printf ("</td>
+                <td valign=top>%s</td>
+                <td valign=top>",
+                $this->PhoneDialURL($this->PhonebookEntries[$_entry]->uri));
+
+                if ($fname || $lname) {
+                    print "<a onClick=\"return toggleVisibility('row$found')\" href=#>$fname $lname</a>";
+                } else {
+                    print "<a onClick=\"return toggleVisibility('row$found')\" href=#>Edit</a>";
+                }
+
+                print "
+                <table border=0 class=extrainfo id=row$found cellpadding=0 cellspacing=0 width=100%>
+                    <tr>
+                    <td>";
+                    print _("First");
+                    print "</td>";
+                    print "<td><input type=text name=first_name value=\"$fname\"></td>
+                    </tr>
+                    <tr>
+                    <td>
+                    ";
+                    print _("Last");
+                    print "</td>";
+                    print "<td><input type=text name=last_name value=\"$lname\"></td>";
+                    print "</tr>";
+                    //print "<tr><td><input type=submit value=Save></td></tr>";
+                    print "<tr><td><a href=\"javascript: document.Entry$found.submit()\">Update</a></td></tr>";
+
+                    print "
+                </table>
+                </td>
+                <td valign=top>";
+                print $this->PhonebookEntries[$_entry]->uri;
+
+                print "</td>
+                ";
+
+                if ($task=="deleteContact" && $uri==$this->PhonebookEntries[$_entry]->uri) {
+                    print "
+                    <td bgcolor=red valign=top>
+                    ";
+                    printf ("<a href=%s&task=deleteContact&uri=%s&confirm=1>",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri));
+                    print _("Confirm");
+                } else {
+                    print "
+                    <td valign=top>";
+                    printf ("<a href=%s&task=deleteContact&uri=%s>",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri));
+                    if ($this->delete_img) {
+                        print $this->delete_img;
+                    } else {
+                        print _("Delete");
+                    }
+                }
+                print "</a>";
+                print "</td>
+                </form>
+                </tr>";
+                $i++;
+    
+            }
+    
+            print "</table>";
+            print "
+            <p>
+            <center>
+            <table border=0>
+            <tr>
+            <td>
+            ";
+
+            print "
+            </td>
+            </tr>
+            </table>
+            ";
+        }
+    }
+
+    function exportPhonebook($userAgent) {
+        dprint("exportPhonebook()");
+	    $this->getPhonebookEntries();
+
+        $this->contentType="Content-type: text/csv";
+
+		if (!is_array($this->PhonebookEntries) || !count($this->PhonebookEntries)) return true;
+
+        if (!$userAgent) $userAgent='snom';
+
+        if ($userAgent=='snom') {
+        	$this->exportFilename="tbook.csv";
+            $phonebook.=sprintf("Name,Address,Group\n");
+        } else if ($userAgent == 'eyebeam') {
+            $phonebook.=sprintf("Name,Group Name,SIP URL,Proxy ID\n");
+        } else if ($userAgent == 'csco') {
+        	$this->contentType="Content-type: text/xml";
+        	$this->exportFilename="directory.xml";
+            $phonebook.=sprintf ("<CiscoIPPhoneDirectory>\n\t<Title>%s</Title>\n\t<Prompt>Directory</Prompt>\n",$this->account);
+        } else if ($userAgent == 'unidata') {
+        	$this->exportFilename="phonebook.csv";
+            $phonebook.=sprintf("Index,Name,,,,\n");
+            $phonebook.=sprintf("0,Undefined,,,,\n");
+
+            $z=1;
+            foreach($this->PhonebookGroups as $_group) {
+            	$this->groupIndex[$_group]=$z;
+                $phonebook.=sprintf ("%s,%s,,,,\n",$z,$_group);
+                $z++;
+            }
+
+            $phonebook.=sprintf("\nIndex,Name,RdNm,Tel,Group\n");
+
+        }
+
+        $found=0;
+
+        foreach (array_keys($this->PhonebookEntries) as $_entry) {
+    
+            $fname    = $this->PhonebookEntries[$_entry]->firstName;
+            $lname    = $this->PhonebookEntries[$_entry]->lastName;
+            $uri      = $this->PhonebookEntries[$_entry]->uri;
+            $group    = $this->PhonebookEntries[$_entry]->group;
+
+            if (!preg_match("/[_%]/",$uri)) {
+                $uri=substr($uri,4);
+                $els=explode("@",$uri);
+                if ($els[1]==$this->domain) $uri=$els[0];
+                if ($userAgent=='snom') {
+                    $phonebook.=sprintf ("%s %s,%s,%s\n",$fname,$lname,$uri,$this->PhonebookGroups[$group]);
+                } else if ($userAgent == 'unidata' && $fname && $lname) {
+                    $phonebook.=sprintf ("%s,%s,%s %s,%s,%s\n",$found,$fname,$fname,$lname,$uri,$this->PhonebookGroups[$group]);
+                } else if ($userAgent == 'eyebeam') {
+                    $phonebook.=sprintf ("%s %s,%s,1\n",$fname,$lname,$this->PhonebookEntries[$_entry]->uri,$this->PhonebookGroups[$group]);
+                } else if ($userAgent == 'csco') {
+                    $phonebook.=sprintf ("\n\t<DirectoryEntry>\n\t<Name>%s %s</Name>\n\t<Telephone>%s</Telephone>\n\t</DirectoryEntry>\n",$fname,$lname,$uri);
+                }
+                $found++ ;
+            }
+        }
+
+        if ($userAgent == 'csco') {
+            $phonebook.=sprintf ("\n</CiscoIPPhoneDirectory>\n");
+        }
+
+        Header($this->contentType);
+        $_header=sprintf("Content-Disposition: inline; filename=%s",$this->exportFilename);
+        Header($_header);
+        header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+        header("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+        header("Pragma: no-cache");
+
+        print $phonebook;
+
+    }
+
+    function getRejectMembers() {
+        dprint("getRejectMembers()");
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->getRejectMembers($this->sipId);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        $this->rejectMembers=$result;
+        dprint_r($this->rejectMembers);
+
+        return true;
+    }
+
+
+    function setRejectMembers() {
+
+    	$members=array();
+
+        $rejectMembers=$_REQUEST['rejectMembers'];
+
+        foreach ($rejectMembers as $_member) {
+            if (strlen($_member)) $members[]=$_member;
+        }
+
+        if (is_object($this->SipPortRemote)) {
+            dprint("setRejectMembersRemote");
+            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            $resultRemote     = $this->SipPortRemote->setRejectMembers($this->sipId,$members);
+
+            if (PEAR::isError($resultRemote)) {
+                $error_msg  = $resultRemote->getMessage();
+                $error_fault= $resultRemote->getFault();
+                $error_code = $resultRemote->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+
+                dprint("setRejectMembersLocal");
+
+                $this->SipPort->addHeader($this->SoapAuth);
+                $result     = $this->SipPort->setRejectMembers($this->sipId,$members);
+
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+
+        } else {
+            dprint("setRejectMembersLocal");
+
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->setRejectMembers($this->sipId,$members);
+
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }
+        }
+    }
+
+    function showRejectMembers() {
+        $chapter=sprintf(_("Rejected callers"));
+        $this->showChapter($chapter);
+
+        print "
+        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        ";
+        print "
+        <tr>
+        <td class=border colspan=2 align=left>";
+        print _("Use %Number@% to match PSTN callers and user@domain to match SIP callers");
+        print "
+        </td>
+        </tr>
+        ";
+
+        print "<tr>";
+        print "<td class=border align=left>";
+        print _("SIP caller");
+        print "</td>";
+        print "<td class=border align=left>
+        <input type=text size=35 name=rejectMembers[]>
+        </td>";
+        print "<tr>";
+
+		if ($this->getRejectMembers()) {
+            foreach ($this->rejectMembers as $_member) {
+                print "<tr>";
+                print "<td class=border align=left>";
+                print _("SIP caller");
+                print "</td>";
+                print "<td class=border align=left>
+                <input type=text size=35 name=rejectMembers[] value=\"$_member\">
+                </td>";
+                print "<tr>";
+            }
+        }
+
+        print "
+        <tr>
+          <td align=left>
+            <input type=hidden name=action value=\"set reject members\">
+        ";
+
+        if ($this->Preferences['SaveSettingsAllowed']) {
+            print "
+            <input type=submit value=\"";
+            print _("Save");
+            print "\"
+                   onClick=saveHandler(this)>
+            ";
+        }
+        print "
+          </td>
+          <td align=right>
+          </td>
+        </tr>
+        ";
+
+        print $this->hiddenElements;
+
+        print "
+        </form>
+        ";
+
+    }
+
+
+    function getAcceptRules() {
+
+        dprint("getAcceptRules()");
+
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->getAcceptRules($this->sipId);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+		foreach(array_keys($result->rules->persistent) as $_rule) {
+            $_key=$result->rules->persistent[$_rule]->days;
+        	$this->acceptRules['persistent'][$_key]=array('start' =>$result->rules->persistent[$_rule]->start,
+                                                          'stop'  =>$result->rules->persistent[$_rule]->stop,
+                                                          'groups'=>$result->rules->persistent[$_rule]->groups);
+        }
+
+        $this->acceptRules['temporary']=array('groups'  => $result->rules->temporary->groups,
+                                              'duration'=> $result->rules->temporary->duration
+                                              );
+
+        $this->acceptRules['groups']     = $result->nonEmptyGroups;
+
+        dprint_r($this->acceptRules);
+
+        return true;
+    }
+
+    function setAcceptRules() {
+        dprint("setAcceptRules()");
+        //dprint_r($_REQUEST);
+
+        $persistentAcceptArray=array();
+        $temporaryAcceptArray=array();
+
+        foreach (array_keys($this->acceptDailyProfiles) as $profile) {
+
+            unset($groups);
+
+            $radio_persistentVarName='radio_persistent_'.$profile;
+            $radio_persistent=$_REQUEST[$radio_persistentVarName];
+
+            if ($radio_persistent=="0") {
+            	$groups[]='everybody';
+            } else if ($radio_persistent=="1") {
+            	$groups[]='nobody';
+            } else if ($radio_persistent=="2") {
+            	$groupsVarName='groups_'.$profile;
+            	$groups=$_REQUEST[$groupsVarName];
+            }
+
+            $startVarName='start_'.$profile;
+            $start=$_REQUEST[$startVarName];
+
+            $stopVarName='stop_'.$profile;
+            $stop=$_REQUEST[$stopVarName];
+
+            if (!preg_match("/^[0-2][0-9]:[0-5][0-9]$/",$start) ||
+                !preg_match("/^[0-2][0-9]:[0-5][0-9]$/",$stop) ||
+        		($start=="00:00" &&  $stop=="00:00") ||
+                !$start ||
+                !$stop  ||
+                ($radio_persistent=="2" && (!is_array($groups) || !count($groups) )) ) {
+
+                continue;
+            }
+
+            $persistentAcceptArray[]=array('start'  => $start,
+                                           'stop'   => $stop,
+                                           'groups' => $groups,
+                                           'days'   => intval($profile)
+                                           );
+
+        }
+
+        // temporary
+        $radio_temporary=$_REQUEST['radio_temporary'];
+
+		unset($groups_temporary);
+
+            if ($radio_temporary=="0") {
+            	$groups_temporary[]='everybody';
+            } else if ($radio_temporary=="1") {
+            	$groups_temporary[]='nobody';
+            } else if ($radio_temporary=="2") {
+            	$groups_temporary=$_REQUEST['groups_temporary'];
+            }
+
+		if (!is_array($groups_temporary)) $groups_temporary=array();
+
+        $duration=$_REQUEST['duration'];
+
+		$temporaryAccept=array("groups"  => $groups_temporary,
+                               "duration"=> intval($duration)
+                               );
+
+        // combine persistent and temporary
+
+        $rules=array("persistent" =>$persistentAcceptArray,
+                     "temporary"  =>$temporaryAccept);
+
+        //dprint_r($rules);
+
+        if (is_object($this->SipPortRemote)) {
+            dprint("setAcceptRulesRemote");
+            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+            $resultRemote     = $this->SipPortRemote->setAcceptRules($this->sipId,$rules);
+
+            if (PEAR::isError($resultRemote)) {
+                $error_msg  = $resultRemote->getMessage();
+                $error_fault= $resultRemote->getFault();
+                $error_code = $resultRemote->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+
+                dprint("setAcceptRulesLocal");
+
+                $this->SipPort->addHeader($this->SoapAuth);
+                $result     = $this->SipPort->setAcceptRules($this->sipId,$rules);
+
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+
+        } else {
+            dprint("setAcceptRulesLocal");
+
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->setAcceptRules($this->sipId,$rules);
+
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }
+        }
+
+        return true;
+
+    }
+
+    function showAcceptRules() {
+        $chapter=sprintf(_("Accept rules"));
+        $this->showChapter($chapter);
+
+        $this->getAcceptRules();
+
+        $this->getVoicemail();
+        $this->getDivertTargets();
+        $this->getDiversions();
+
+        print "
+        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        ";
+
+        print "
+        <tr>
+        <td class=border colspan=2 align=left>";
+        print _("You can use these features to accept or reject calls depending on the time of day and caller id. ");
+        print _("You can create custom groups in the Contacts page like Family or Coworkers. ");
+        print _("Rejected calls are diverted based on the Unavailable condition in the settings page. ");
+        print "<p>";
+        print "<p class=desc>";
+        printf (_("Your current timezone is: %s"),$this->timezone);
+        $timestamp=time();
+        $LocalTime=getLocalTime($this->timezone,$timestamp);
+        print " $LocalTime";
+
+        print "
+        </td>
+        </tr>
+        ";
+
+        print "
+        <tr>
+        <td class=ag1 colspan=2 bgcolor=white align=left>";
+        print _("If Unavailable");
+        print " ";
+        print _("divert calls to: ");
+
+        foreach ($this->divertTargets as $idx => $phone) {
+            //dprint_r($phone);
+            if ($this->CallPrefDbURI['FUNV'] == "<voice-mailbox>") {
+                $this->CallPrefDbURI['FUNV'] = $this->voicemail['Account'];
+            }
+
+            if ($this->CallPrefDbURI['FUNV']==$phone['value']) {
+                printf ($phone['name']);
+                break;
+            }
+        }
+
+        print "
+        </td>
+        </tr>
+        ";
+
+        $chapter=sprintf(_("Temporary rule"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr>
+        <td class=border colspan=2 align=left>";
+        print _("This will override the permanent rules for the chosen duration. ");
+        print "
+        </td>
+        </tr>
+        ";
+
+        print "<tr>";
+        print "<td colspan=2 class=border>";
+
+        print "<table border=0 width=100%>
+            <tr>
+            <td>
+            ";
+        print _("Duration:");
+
+        if ($this->acceptRules['temporary']['duration']) {
+            printf ('
+            <script LANGUAGE="JavaScript">
+                var minutes = %s;
+                ID=window.setTimeout("update();", 1000*60);
+                function update() {
+                        minutes--;
+                        document.sipsettings.minutes.value = minutes;
+                        ID=window.setTimeout("update();",1000*60);
+                 }
+
+            </script>
+            ',$this->acceptRules['temporary']['duration']);
+
+                print " <font color=red>";
+                print " <input type=text name=minutes size=3 maxsize=3 value=\"";
+                print $this->acceptRules['temporary']['duration'];
+                print "\" disabled=true>";
+                print " <input type=hidden name=accept_temporary_remain value=\"";
+                print $this->acceptRules['temporary']['duration'];
+                print "\"> ";
+                print "</font>";
+        } else {
+                print "<select name=duration> ";
+                print "<option>";
+                print "<option value=1  >  1";
+                print "<option value=5  >  5";
+                print "<option value=10 > 10";
+                print "<option value=20 > 20";
+                print "<option value=30 > 30";
+                print "<option value=45 > 45";
+                print "<option value=60 > 60";
+                print "<option value=90 > 90";
+                print "<option value=120>120";
+                print "<option value=150>150";
+                print "<option value=180>180";
+                print "<option value=240>240";
+                print "<option value=480>480";
+                print "</select> ";
+        }
+
+        print _("minute(s)");
+
+        $_name="radio_temporary";
+
+        $_checked_everybody="";
+        $_checked_nobody="";
+        $_checked_groups="";
+
+        print "<td>";
+        if (in_array("everybody",$this->acceptRules['temporary']['groups'])) {
+            $_checked_everybody="checked";
+        } else if (in_array("nobody",$this->acceptRules['temporary']['groups'])) {
+            $_checked_nobody="checked";
+        } else if (!in_array('everybody',$this->acceptRules['temporary']['groups']) &&
+                   !in_array('nobody',$this->acceptRules['temporary']['groups']) &&
+                   count($this->acceptRules['temporary']['groups'])) {
+            $_checked_groups="checked";
+        }
+
+        if ($_checked_nobody) {
+            $class_nobody="ag1";
+        } else {
+            $class_nobody="note";
+        }
+
+        printf ("<td class=note><input type=radio name=%s value=0 %s>%s",$_name,$_checked_everybody,_("Everybody"));
+        printf ("<td class=$class_nobody><input type=radio name=%s value=1 %s>%s",$_name,$_checked_nobody,_("Nobody"));
+
+        $c=count($this->acceptRules['groups']);
+
+        if ($_checked_groups) {
+            $class_groups="ag1";
+        } else {
+            $class_groups="note";
+        }
+
+        print "<td class=$class_groups>";
+        dprint_r($this->acceptRules['groups']);
+
+        if (count($this->acceptRules['groups'])>2) {
+
+            printf ("<input type=radio name=%s value=2 %s class=hidden>",$_name,$_checked_groups);
+            $i=0;
+
+            foreach(array_keys($this->acceptRules['groups']) as $_group) {
+                $i++;
+
+                if (preg_match("/(everybody|nobody)/",$this->acceptRules['groups'][$_group])) continue;
+
+                if (in_array($this->acceptRules['groups'][$_group],$this->acceptRules['temporary']['groups'])) {
+                    $_checked="checked";
+                } else {
+                    $_checked="";
+                }
+
+                $_name="groups_temporary[]";
+                printf ("<input type=checkbox name=%s value=%s onClick=\"document.sipsettings.radio_temporary[2].checked=true\" %s>%s ",
+                $_name,
+                $this->acceptRules['groups'][$_group],
+                $_checked,
+                $this->PhonebookGroups[$this->acceptRules['groups'][$_group]]
+                );
+            }
+        }
+
+        print "
+        </tr>
+        </table>
+        ";
+
+        print "
+        </td>
+        </tr>
+
+        ";
+
+        $chapter=sprintf(_("Permanent rules"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr valign=top>
+        <td colspan=2 class=border align=left valign=top>
+        ";
+
+        print "<table border=0 width=100%>";
+        print "<tr bgcolor=lightgrey>
+        <td>";
+        print _("Days");
+        print "</td>
+        <td colspan=2>";
+        print _("Time interval");
+        print "</td>
+        <td colspan=3>";
+        print _("Groups");
+        print "</td>
+        </tr>
+        ";
+
+        foreach (array_keys($this->acceptDailyProfiles) as $profile) {
+
+            if ($this->acceptRules['persistent'][$profile]['start'] || $this->acceptRules['persistent'][$profile]['stop']) {
+                $class="ag1";
+            } else {
+                $class="mhj";
+            }
+            if ($profile==1) {
+                print "<tr><td colspan=6 heigth=5 bgcolor=lightgrey></td></tr>";
+            }
+
+            print "
+            <tr>
+            <td valign=top class=$class>";
+
+            printf ("%s",$this->acceptDailyProfiles[$profile]);
+            unset($selected_StartTime);
+			$selected_StartTime[$this->acceptRules['persistent'][$profile]['start']]="selected";
+            printf ("<td valign=top><select name=start_%s>",$profile);
+
+            $t=0;
+            $j=0;
+
+            print "<option>";
+
+            while ($t<24) {
+                if (!$j) {
+                    if (strlen($t)==1) {
+                        $t1="0".$t.":00";
+                    } else {
+                        $t1=$t.":00";
+                    }
+                    $j++;
+                } else {
+                    if (strlen($t)==1) {
+                        $t1="0".$t.":30";
+                    } else {
+                        $t1=$t.":30";
+                    }
+                    $j=0;
+                    $t++;
+                }
+                print "<option $selected_StartTime[$t1]>$t1";
+            }
+
+            printf ("<option %s>23:59",$selected_StartTime['23:59']);
+            print "</select>";
+
+            unset($selected_StopTime);
+
+            $selected_StopTime[$this->acceptRules['persistent'][$profile]['stop']]="selected";
+            printf ("<td valign=top><select name=stop_%s>",$profile);
+            $t=0;
+            $j=0;
+            print "<option>";
+            while ($t<24) {
+                if (!$j) {
+                    if (strlen($t)==1) {
+                        $t1="0".$t.":00";
+                    } else {
+                        $t1=$t.":00";
+                    }
+                    $j++;
+                } else {
+                    if (strlen($t)==1) {
+                        $t1="0".$t.":30";
+                    } else {
+                        $t1=$t.":30";
+                    }
+                    $j=0;
+                    $t++;
+                }
+                print "<option $selected_StopTime[$t1]> $t1";
+            }
+            printf ("<option %s>23:59",$selected_StopTime['23:59']);
+            print "</select>";
+
+            $_name="radio_persistent_".$profile;
+
+            $_checked_everybody="";
+            $_checked_nobody="";
+            $_checked_groups="";
+
+            if (in_array("everybody",$this->acceptRules['persistent'][$profile]['groups'])) {
+            	$_checked_everybody="checked";
+            } else if (in_array("nobody",$this->acceptRules['persistent'][$profile]['groups'])) {
+            	$_checked_nobody="checked";
+            } else if (!in_array('everybody',$this->acceptRules['persistent'][$profile]['groups']) &&
+                       !in_array('nobody',$this->acceptRules['persistent'][$profile]['groups']) &&
+                       count($this->acceptRules['persistent'][$profile]['groups'])) {
+            	$_checked_groups="checked";
+            } else {
+            	$_checked_everybody="checked";
+            }
+
+            if ($_checked_nobody) {
+                $class_nobody="ag1";
+            } else {
+                $class_nobody="note";
+            }
+
+            printf ("<td class=note><input type=radio name=%s value=0 %s>%s",$_name,$_checked_everybody,_("Everybody"));
+            printf ("<td class=$class_nobody><input type=radio name=%s value=1 %s>%s",$_name,$_checked_nobody,_("Nobody"));
+
+            $c=count($this->acceptRules['groups']);
+
+            if ($_checked_groups) {
+                $class_groups="ag1";
+            } else {
+                $class_groups="note";
+            }
+
+			print "<td class=$class_groups>";
+            if (count($this->acceptRules['groups'])>2) {
+
+                printf ("<input type=radio name=%s value=2 %s class=hidden>",$_name,$_checked_groups);
+                $i=0;
+    
+                foreach(array_keys($this->acceptRules['groups']) as $_group) {
+                    $i++;
+                	if (preg_match("/(everybody|nobody)/",$this->acceptRules['groups'][$_group])) continue;
+
+                    if (in_array($this->acceptRules['groups'][$_group],$this->acceptRules['persistent'][$profile]['groups'])) {
+                        $_checked="checked";
+                    } else {
+                        $_checked="";
+                    }
+    
+                    $_name="groups_".$profile."[]";
+                    printf ("<input type=checkbox name=%s value=%s onClick=\"document.sipsettings.radio_persistent_%s[2].checked=true\" %s>%s ",
+                    $_name,
+                    $this->acceptRules['groups'][$_group],
+                    $profile,
+                    $_checked,
+                    $this->PhonebookGroups[$this->acceptRules['groups'][$_group]]
+                    );
+                }
+            }
+
+            print "
+            </tr>
+            ";
+        }
+
+        print "</table>";
+        print "</td>
+        </tr>";
+
+        print "
+        <tr>
+          <td align=left>
+            <input type=hidden name=action value=\"set accept rules\">
+        ";
+
+        if ($this->Preferences['SaveSettingsAllowed']) {
+            print "
+            <input type=submit value=\"";
+            print _("Save");
+            print "\"
+                   onClick=saveHandler(this)>
+            ";
+        }
+
+        print "
+          </td>
+          <td align=right>
+          </td>
+        </tr>
+        ";
+
+        print $this->hiddenElements;
+        print "
+        </form>
+        ";
+
+    }
+
+    function sendEmail() {
+        dprint ("SIPSettings->sendEmail($this->email)");
+
+		$this->getVoicemail();
+        $this->getENUMmappings();
+        $this->getAliases();
+
+        $this->countAliases=count($this->aliases);
+        $this->voicemailAccessNumber=$this->voicemail['AccessNumber'];
+
+        if (!$this->email) {
+            print "<p><font color=blue>";
+            print _("Please fill in the e-mail address.");
+            print "</font>";
+            return false;
+        }
+
+        $subject = "SIP account settings of $this->name";
+
+        $tpl = $this->getEmailTemplate($this->rId, $this->Preferences['language']);
+
+        if (in_array("free-pstn",$this->groups)) $this->allowPSTN=1;
+
+        $smarty = new Smarty;
+        $smarty->template_dir = '.';
+        //$smarty->use_sub_dirs = true;
+        //$smarty->cache_dir = 'templates_c';
+
+        $smarty->assign('client', $this);
+        $body = $smarty->fetch($tpl);
+
+        if (mail($this->email, $subject, $body, "From: $this->SupportEmail")) {
+            print "<p>";
+            printf (_("SIP settings have been sent to %s"), $this->email);
+        }
+    }
+
+    function checkSettings() {
+        dprint ("SIPSettings->checkSettings()");
+
+        foreach ($this->WEBdictionary as $el) {
+            global ${$el};
+            if (!is_array($_REQUEST[$el])) ${$el}=trim($_REQUEST[$el]);
+        }
+
+        if ($accept_temporary_remain && !is_numeric($accept_temporary_remain)) {
+            $this->error=_("Invalid expiration period. ");
+            return false;
+        }
+
+        if ($quota && !is_numeric($quota) && !is_float($quota)) {
+            $this->error=_("Invalid quota. ");
+            return false;
+        }
+
+        if (!$timezone && !$this->timezone) {
+            $this->error=_("Missing time zone. ");
+            return false;
+        }
+
+        if (!$this->checkEmail($mailto)) {
+            $this->error=_("Invalid e-mail address. ");
+            return false;
+        }
+
+        $rpid=preg_replace("/[^0-9\x]/","",$rpid);
+
+        if (preg_match("/^0+([1-9]\d*)$/",$rpid,$m)) $rpid=$m[1];
+
+        $quickdial=preg_replace("/[^0-9]/","",$quickdial);
+
+        if (!strlen($accept_temporary_group)) $accept_temporary_remain=0;
+        if (!$accept_temporary_remain) $accept_temporary_group="";
+        if (!$anonymous) $anonymous="0";
+
+        $this->newMultiTargets = array();
+
+		foreach ($multiTargets as $_m) {
+            if (strlen($_m) && checkURI($_m)) {
+            	$this->newMultiTargets[]=$_m;
+            }
+        }
+
+        sort($this->newMultiTargets);
+
+        return true;
+    }
+
+    function RandomPassword($len=6) {
+        $alf=array("1","2","3","4","5","6","7","8","9");
+        $i=0;
+        while($i < $len) {
+            srand((double)microtime()*1000000);
+            $randval = rand(0,8);
+            $string="$string"."$alf[$randval]";
+            $i++;
+        }
+        return $string;
+    }
+
+    function cleanURI($uri) {
+        $uri=preg_replace("/.*sips?:([^;><=]+).*/", "\$1", $uri);
+        return urlencode($uri);
+    }
+    
+    function showUpgrade () {
+
+        print "
+        <tr>
+          <td height=3 colspan=2></td>
+        </tr>
+        <tr>
+          <td class=border align=center valign=middle>";
+
+           print "
+           <a href=http://one.address.name target=oneaddress><img src=unsecure/pidn/images/PIDNCard-EN-135.jpg border=0></a>";
+
+            print "
+            <td class=border>
+            <b>Personal SIP domain</b>
+
+            <p>
+            Register your personal Internet Domain with Managed DNS
+            to benefit of the following features:
+
+            <ul>
+            <li>Same address for both email and SIP
+            <li>Voicemail and voice 2 email
+            <li>Privacy control
+            <li>Call forwading
+            <li>Selective call accept
+            <li>Selective call reject
+            <li>Time based forwarding
+            </ul>
+            ";
+
+            global $tlds, $DOMAIN;
+
+            require_once('registrar/registrationwizard.php');
+            $environment = 'production';
+            $regwiz = new RegistrationWizard($DOMAIN, $environment);
+            $regwiz->showSelectDomainForm('dns_register.phtml', true);
+
+            print "
+          </td>
+        </tr>
+        ";
+
+        if ($this->timezone=="Europe/Bucharest" || $this->Preferences['language']=="ro") {
+            print "
+            <tr>
+              <td height=3 colspan=2></td>
+            </tr>
+            <tr>
+              <td class=border align=center>";
+               print "<img src=resellers/template/1745/eurovoice.gif border=0></a>";
+
+                print "
+                <td class=border>
+                <b>Romanian telephone number and calls to and from PSTN </b>
+
+                <p>
+
+				From <a href=http://www.euroweb.ro>Euroweb Romania</a> you may obtain a Romanian
+                telephone number (+40317XXXXX) and route PSTN calls for that number to your
+                SIP device. Eurovoice allows free SIP calls to and out their network using standards
+                like ENUM and SIP and
+                puts no restrictions on access to other networks.
+                <p>
+                For more information see:
+                <a href=http://www.eurovoice.ro target=bpc>http://www.eurovoice.ro</a>
+                ";
+
+                print "
+              </td>
+            </tr>
+            ";
+        }
+
+
+        print "
+        <tr>
+          <td height=3 colspan=2></td>
+        </tr>
+        <tr>
+          <td height=3 colspan=2></td>
+        </tr>
+        <tr>
+          <td class=border align=center>";
+        print "<a href=\"javascript:void(null);\" onClick=\"return window.open('images/snom190_big.jpg', 'SNOM 190',
+        'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=0,width=737,height=492')\">
+        <img src=images/snom190-150p.jpg border=0></a>";
+
+        print "<td class=border>";
+
+        printf (_("%s phone may be shipped without programming
+        to end-users for a real plug-and-play experience. "),"SNOM 190");
+
+        print "<p>";
+
+        printf (_("%s is a high-end SIP phone with multiple lines,
+        audio encryption (Secure RTP), rich codec support
+        (G723, G729, GSM, G722 and G711), has two line LCD
+        display, programmable keys, speaker-phone and a powerful
+        web interface with address book and URL dialing. "),"SNOM 190");
+
+        print "
+        <form action=buy.phtml method=POST target=buy>
+        <select name=service>
+        <option value=voipSnom190>SNOM 190 SIP phone
+        </select>
+        <input type=hidden name=units value=1>
+        <input type=hidden name=service_line value=DNS>
+        <input type=hidden name=action value=Add>
+        <input type=submit value=Order>
+        <input type=hidden name=logonce value=yes>
+        <input type=hidden name=step value=1>
+        </form>
+        ";
+
+            print "
+          </td>
+        </tr>
+        ";
+
+
+    }
+
+    function PhoneDialURL($uri) {
+		$uri=$this->normalizeURI($uri);
+        $uri_print="<a href=sip:$uri>$this->call_img</a>";
+        return $uri_print;
+    }
+
+    function showChapter($chapter) {
+        print "
+        <tr>
+          <td height=3 colspan=2></td>
+        </tr>
+        <tr>
+          <td class=border colspan=2 bgcolor=lightgrey><b>";
+            print $chapter;
+            print "</b>
+          </td>
+        </tr>
+        ";
+	}
+
+    function normalizeURI($uri) {
+    	$uri=quoted_printable_decode($uri);
+
+        $uri=preg_replace("/.*(sips?:[^;><=]+).*/", "\$1", $uri);
+        if (preg_match("/^(sips?:.*):/", $uri, $m)) $uri=$m[1];
+
+        if (preg_match("/^(.*sips?:0\d+)@(.*)(>?)$/",$uri,$m)) {
+        	$uri=$m[1]."@".$this->domain.$m[3];
+        }
+        return $uri;
+    }
+
+    function htmlURI($uri) {
+        if (preg_match("/^sips?:00(\d+)@/",$uri,$m)) {
+            $uri="+".$m[1];
+        }
+        return htmlentities($uri);
+    }
+
+    function colorizeDate($call_date) {
+	  	list($date,$time)=explode(" ",$call_date);
+
+        if ($date== Date("Y-m-d",time())) {
+            $datePrint="<b><font color=green>".sprintf(_("Today"))."</font></b> ".$time;
+        } else if ($date== Date("Y-m-d",time()-3600*24)) {
+            $datePrint="<font color=blue>".sprintf(_("Yesterday"))."</font> ".$time;
+        } else {
+            $datePrint=$call_date;
+        }
+        return $datePrint;
+    }
+
+    function checkEmail($email) {
+        dprint ("<b>checkEmail($email) </b>");
+        $regexp = "/^([a-z0-9][a-z0-9_.-]*)@([a-z0-9][a-z0-9-]*\.)+([a-z]{2,})$/i";
+        if (stristr($email,"-.") ||
+            !preg_match($regexp, $email)) {
+            return false;
+        }
+        return true;
+    }
+
+    function showPresence() {
+
+        $this->getPresenceWatchers();
+        $this->getPresenceRules();
+        $this->getPresenceInformation();
+
+        if ($this->Preferences['SaveSettingsAllowed']) {
+            print "
+            <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+            ";
+        }
+
+        $chapter=sprintf(_("Published information"));
+        $this->showChapter($chapter);
+
+        printf ("
+        <tr>
+        <td class=border>Note</td>
+        <td class=border>Activity</td>
+        </tr>");
+
+        printf ("
+        <tr>
+          <td class=border><input type=text size=50 name=note value='%s'>
+          <td class=border>
+          <select name=activity>
+        <option>
+        ",$this->presentity['note']);
+
+		$selected_activity[$this->presentity['activity']]='selected';
+
+        foreach (array_keys($this->presenceActivities) as $_activity) {
+            printf ("<option %s value='%s'>%s",$selected_activity[$_activity],$_activity,ucfirst($_activity));
+        }
+        print "</select>";
+
+        if ($this->presenceActivities[$this->presentity['activity']]) {
+        	printf ("<img src=images/%s border=0>",$this->presenceActivities[$this->presentity['activity']]);
+        }
+
+        print "
+          </td>
+        </tr>
+        ";
+
+        $chapter=sprintf(_("Watchers"));
+        $this->showChapter($chapter);
+
+        $j=0;
+		foreach (array_keys($this->presenceWatchers) as $_watcher) {
+            $j++;
+
+            $online_icon='';
+
+            if ($this->presenceWatchers[$_watcher]['online'] == 1) {
+                $online_icon="<img src=images/buddy_online.jpg border=0>";
+            } else {
+                $online_icon="<img src=images/buddy_offline.jpg border=0>";
+            }
+
+            if ($this->presenceWatchers[$_watcher]['status'] == 'deny') {
+                $online_icon="<img src=images/buddy_banned.jpg border=0>";
+                $color='red';
+            } else if ($this->presenceWatchers[$_watcher]['status'] == 'confirm') {
+                $color='blue';
+            } else {
+                $color='green';
+            }
+
+            printf ("
+            <tr>
+            <input type=hidden name=watcher[] value=%s>
+            <td class=border><font color=%s>%s</font></td>
+            <td class=border>
+            <select name=watcher_status[]>
+            ", $_watcher,$color,$_watcher);
+
+            unset($selected);
+            $selected[$this->presenceWatchers[$_watcher]['status']]='selected';
+
+            foreach ($this->presenceStatuses as $_status) {
+                printf ("<option %s value=%s>%s",$selected[$_status],$_status,ucfirst($_status));
+            }
+
+            print "
+            </select>
+            $online_icon
+            </td>
+            </tr>
+            ";
+        }
+
+        $chapter=sprintf(_("Rules"));
+        $this->showChapter($chapter);
+
+        $j=0;
+		foreach (array_keys($this->presenceRules) as $_key) {
+            $j++;
+
+			foreach ($this->presenceRules[$_key] as $_tmp) {
+
+				if ($this->presenceWatchers[$_tmp]['status'] == $_key) continue;
+
+                printf ("
+                <tr>
+                <input type=hidden name=watcher[] value=%s>
+                <td class=border>%s</td>
+                <td class=border>
+                <select name=watcher_status[]>
+                ",$_tmp,$_tmp);
+
+                unset($selected);
+                $selected[$_key]='selected';
+
+                foreach ($this->presenceStatuses as $_status) {
+                    printf ("<option %s value=%s>%s",$selected[$_status],$_status,ucfirst($_status));
+                }
+                print "
+            	<option value=delete>Delete
+                </select>
+                ";
+
+		        if ($_key == 'deny') {
+                	print "<img src=images/buddy_banned.jpg border=0>";
+                }
+                print "
+                </td>
+                </tr>
+                ";
+        	}
+        }
+
+        printf ("
+        <tr>
+        <td class=border><input type=text name=watcher[]></td>
+        <td class=border>
+        <select name=watcher_status[]>
+        ");
+        $selected['deny']='selected';
+        foreach ($this->presenceStatuses as $_status) {
+            printf ("<option %s value=%s>%s",$selected[$_status],$_status,ucfirst($_status));
+        }
+
+        print "
+        </select>
+        </td>
+        </tr>
+        ";
+
+        print "
+        <tr>
+          <td align=left>
+            <input type=hidden name=action value=\"set presence\">
+        ";
+
+        if ($this->Preferences['SaveSettingsAllowed']) {
+            print "
+            <input type=submit value=\"";
+            print _("Save");
+            print "\"
+                   onClick=saveHandler(this)>
+            ";
+        }
+        print "
+          </td>
+          <td align=right>
+          </td>
+        </tr>
+        ";
+
+        print $this->hiddenElements;
+
+        print "
+        </form>
+        ";
+
+    }
+
+    function setPresence() {
+
+        // publish information
+        $this->setPresenceInformation();
+
+        // set policy
+    	unset($policy);
+        foreach ($this->presenceStatuses as $_status) {
+            $policy[$_status]=array();
+        }
+
+        $j=0;
+        foreach($_REQUEST['watcher'] as $_w) {
+            if (!strlen($_w)) continue;
+            if (!strstr($_w,'@')) {
+            	if ($_REQUEST['watcher_status'][$j] == 'delete') continue;
+                $domain_policy[$_REQUEST['watcher_status'][$j]][]=$_w;
+            }
+            $j++;
+        }
+
+        $j=0;
+        foreach($_REQUEST['watcher'] as $_w) {
+            if (!strlen($_w)) continue;
+
+         	if ($_REQUEST['watcher_status'][$j] == 'delete') continue;
+
+            $status=$_REQUEST['watcher_status'][$j];
+            list($u,$d)=explode('@',$_w);
+            if (!in_array($d,$domain_policy[$status])) {
+            	$policy[$status][]=$_w;
+            }
+            $j++;
+        }
+
+        $this->PresencePort->addHeader($this->SoapAuthPresence);
+        $result = $this->PresencePort->setPolicy(array("username" =>$this->username,"domain"   =>$this->domain),$this->password,$policy);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+    }
+
+    function getPresenceWatchers () {
+        $this->PresencePort->addHeader($this->SoapAuthPresence);
+        $result = $this->PresencePort->getWatchers(array("username" =>$this->username,"domain"   =>$this->domain));
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        foreach ($result as $_watcher) {
+        	$this->presenceWatchers[$_watcher->id]['status']=$_watcher->status;
+            $this->presenceWatchers[$_watcher->id]['online']=$_watcher->online;
+            $this->watchersOnline=0;
+            if ($this->presenceWatchers[$_watcher->id]['online']) {
+                $this->watchersOnline++;
+            }
+        }
+    }
+
+    function getPresenceInformation() {
+        $this->PresencePort->addHeader($this->SoapAuthPresence);
+        $result = $this->PresencePort->getPresenceInformation(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+		$this->presentity['activity'] = $result->activity;
+        $this->presentity['note']     = $result->note;
+	}
+
+    function setPresenceInformation() {
+
+        $presentity['activity'] = $_REQUEST['activity'];
+        $presentity['note']     = $_REQUEST['note'];
+
+		if (strlen($presentity['activity']) && strlen($presentity['note'])) {
+	        $this->PresencePort->addHeader($this->SoapAuthPresence);
+        	$result = $this->PresencePort->setPresenceInformation(array("username" =>$this->username,"domain"   =>$this->domain),$this->password, $presentity);
+		} else if (!strlen($presentity['note'])) {
+    	    $this->PresencePort->addHeader($this->SoapAuthPresence);
+        	$result = $this->PresencePort->deletePresenceInformation(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
+        } else {
+            return true;
+        }
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        return true;
+	}
+
+    function getPresenceRules () {
+        $this->PresencePort->addHeader($this->SoapAuthPresence);
+        $result = $this->PresencePort->getPolicy(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+		foreach ($this->presenceStatuses as $_status) {
+        	$this->presenceRules[$_status] = $result->$_status;
+        }
+    }
+
+    function getFileTemplate($name, $type="file") {
+    
+        //dprint("getFileTemplate($name, $type)");
+    
+        if (file_exists("$this->templatesPath/$this->rId/$name")) {
+            $value="$this->rId/$name";
+        } elseif (file_exists("$this->templatesPath/default/$name")) {
+            $value="default/$name";
+        } else {
+            $value=0;
+        }
+        //dprint("value=$value");
+    
+        if ($value) {
+            if ($type=="file") {
+                $ret=$this->templatesPath."/".$value;
+            } else {
+                $ret=$value;
+            }
+        } else {
+            $ret = 0;
+        }
+    
+        return $ret;
+    }
+    
+    function getEmailTemplate($language='en') {
+        $file = "sip_settings_email_$language.tpl";
+        $file2 = "sip_settings_email.tpl";
+    
+        if (file_exists("$this->templatesPath/$this->rId/$file")) {
+            return "$this->templatesPath/$this->rId/$file";
+        } elseif (file_exists("$this->templatesPath/$this->rId/$file2")) {
+            return "$this->templatesPath/$this->rId/$file2";
+        } elseif (file_exists("$this->templatesPath/default/$file")) {
+            return "$this->templatesPath/default/$file";
+        } elseif (file_exists("$this->templatesPath/default/$file2")) {
+            return "$this->templatesPath/default/$file2";
+        } else {
+            return false;
+        }
+    }
+    
+
+}
+
+function normalizeURI($uri) {
+    $uri=quoted_printable_decode($uri);
+    if (preg_match("/^(.*<sips?:.*)@(.*>)/",$uri,$m)) {
+        if (preg_match("/^(.*):/U",$m[2],$p)){
+            $uri=$m[1]."@".$p[1].">";
+        } else {
+            $uri=$m[1]."@".$m[2];
+        }
+    } else if (preg_match("/^(sips?:.*)[=:;]/U",$uri,$p)) {
+        $uri=$p[1];
+    }
+
+    return $uri;
+}
+
+function normalizeTime($period) {
+    $sec=$period%60;
+    $min=floor($period/60);
+    $h=floor($min/60);
+
+    if (!$period) return ;
+
+    if ($h>0) {
+        $min=$min-60*$h;
+    }
+    if ($h >= 1) {
+        return sprintf('%dh%02d\'%02d"', $h, $min, $sec);
+    } else {
+        return sprintf('%d\'%02d"', $min, $sec);
+    }
+}
+
+function getImageForUserAgent($agent) {
+    global $userAgentImages;
+
+    foreach ($userAgentImages as $agentRegexp => $image) {
+        if (preg_match("/$agentRegexp/i", $agent)) {
+            return $image;
+        }
+    }
+
+    return "unknown.png";
+}
+
+function checkSIPURI($uri) {
+    if ($uri == "<voice-mailbox>") return true;
+
+    $regexp = "/^sips?:([a-z0-9][a-z0-9_.-]*)@([a-z0-9][a-z0-9-]*\.)+([a-z0-9]{2,})$/i";
+    if (stristr($contact,"-.") || !preg_match($regexp, $uri)) {
+        return false;
+    }
+    return true;
+}
+
+function checkURI($uri) {
+    //dprint ("<b>checkURI($uri) </b>");
+    if ($uri == "<voice-mailbox>") return true;
+
+    if (preg_match("/^(sip:|sips:)(.*)$/",$uri,$m)) $uri=$m[2];
+
+    $regexp = "/^(\+?[a-z0-9*][a-z0-9_.*-]*)@([a-z0-9][a-z0-9-]*\.)+(([a-z]{2,})|(\d+))$/i";
+    if (stristr($uri,"-.") ||
+        !preg_match($regexp, $uri)) {
+        print "Invalid URI \"$uri\". ";
+        return false;
+    }
+    return true;
+}
+
+function checkPhonebookURI($uri) {
+    $regexp = "/^sip:([a-z0-9%_.-]*)@([a-z0-9%.-]*)$/i";
+    if (stristr($contact,"-.") || !preg_match($regexp, $uri)) {
+        print "Invalid URI \"$uri\". ";
+        return false;
+    }
+    return true;
+}
+
+function getLocalTime($timezone,$timestamp) {
+    $tz=getenv('TZ');
+    putenv("TZ=$timezone");
+	$LocalTime=date("Y-m-d H:i:s", $timestamp);
+    putenv("TZ=$tz");
+    return $LocalTime;
+}
+
+?>

@@ -1,0 +1,53 @@
+<?
+include("./global.inc");
+page_open(
+            array("sess" => "CDRTool_Session",
+                  "auth" => "CDRTool_Auth",
+                  "perm" => "CDRTool_Perm"));
+
+$title="SIP settings page";
+
+if (is_readable("local/header.phtml")) {
+    include("local/header.phtml");
+} else {
+    include("header.phtml");
+}
+
+set_time_limit(600);
+$perm->check("admin");
+
+$verbose=1;
+require_once('sip_settings_lib.phtml');
+list($username,$domain)=explode("@",$account);
+
+if ($domain=='umts.ro') {
+	$_class='SIPSettingsDev';
+} else {
+	$_class='SIPSettings';
+}
+
+$_reseller_class=$_class.$rId;
+
+if (class_exists($_reseller_class)) {
+	$SIPSettings_class=$_reseller_class;
+} else {
+	$SIPSettings_class=$_class;
+}
+
+$loginCredentials=array(
+                        'loginType'           => 'admin',
+                        'reseller'            => $_REQUEST['rId'],
+                        'soapEngineIdSipPort' => $_REQUEST['soapEngineIdSipPort']
+                        );
+
+require_once("sip_settings_logic.phtml");
+
+if (!$export) {
+    print "
+    </body>
+    </html>
+    ";
+}
+
+page_close();
+?>
