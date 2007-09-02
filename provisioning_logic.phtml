@@ -33,7 +33,7 @@ class SOAPEngine {
                                           )
                         );
 
-    function SOAPEngine($service,$soapEngines,$extraFormElements,$impersonate) {
+    function SOAPEngine($service,$soapEngines,$extraFormElements,$reseller) {
 
         /*
 
@@ -65,6 +65,8 @@ class SOAPEngine {
             $_els=explode('@',$this->service);
 
             $this->soapEngineId   = $_els[0];
+            $this->soapEngineIdSettingsPage=$this->soapEngineId;
+
             $this->soapEnginePort = $_els[1];
             $this->recordsClass   = $this->services[$this->soapEnginePort]['recordsClass'];
             $this->soapClass      = $this->services[$this->soapEnginePort]['soapClass'];
@@ -74,14 +76,22 @@ class SOAPEngine {
                 $this->skip[$_key]=$this->soapEngines[$_key]['skip'];
             }
 
-			if (!$impersonate) $this->soapEngines[$this->soapEngineId]['impersonate'];
+			if (!$impersonate) {
+            	$this->reseller=$this->soapEngines[$this->soapEngineId]['impersonate'];
+            } else {
+            	$this->reseller=$reseller;
+            }
 
+			if (strlen($this->soapEngines[$this->soapEngineId]['soapEngineIdSettingsPage'])) {
+            	$this->soapEngineIdSettingsPage=$this->soapEngines[$this->soapEngineId]['soapEngineIdSettingsPage'];
+            }
             $this->SOAPlogin = array(
                                    "username"    => $this->soapEngines[$this->soapEngineId]['username'],
                                    "password"    => $this->soapEngines[$this->soapEngineId]['password'],
                                    "admin"       => true,
-                                   "impersonate" => intval($impersonate)
+                                   "impersonate" => intval($this->reseller)
                                    );
+
             $this->SOAPurl=$this->soapEngines[$this->soapEngineId]['url'];
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
@@ -153,7 +163,7 @@ class SOAPEngine {
 
 class Records {
 	var $maxrowsperpage  = '20';
-    var $SipSettingsPage = 'sip_settings-dev.phtml';
+    var $SipSettingsPage = 'sip_settings.phtml';
     var $allowedDomains  = false;
     var $selectionActive = false;
     var $selectionKeys   = array();
@@ -164,6 +174,8 @@ class Records {
         $this->sorting['sortBy']    = trim($_REQUEST['sortBy']);
         $this->sorting['sortOrder'] = trim($_REQUEST['sortOrder']);
         $this->next                 = $_REQUEST['next'];
+
+		$this->reseller=$this->SOAPEngine->reseller;
 
         $this->url = $this->SOAPEngine->url;
 
@@ -2542,7 +2554,7 @@ class SIPAccounts extends Records {
 
                     if ($this->SipSettingsPage) {
 
-                        $url=sprintf('%s?account=%s@%s',$this->SipSettingsPage,$account->id->username,$account->id->domain);
+                        $url=sprintf('%s?account=%s@%s&rId=%s&soapEngineIdSipPort=%s',$this->SipSettingsPage,$account->id->username,$account->id->domain,$this->reseller,$this->SOAPEngine->soapEngineIdSettingsPage);
 
                         foreach (array_keys($this->SOAPEngine->extraFormElements) as $element) {
                             if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
@@ -2564,8 +2576,8 @@ class SIPAccounts extends Records {
 
                     printf("
                     <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td>%s</td>
+                    <td>%s </td>
+                    <td>%s (%s)</td>
                     <td>%s %s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -2580,6 +2592,7 @@ class SIPAccounts extends Records {
                     $bgcolor,
                     $index,
                     $sip_account,
+                    $this->reseller,
                     $account->firstName,
                     $account->lastName,
                     $account->email,
@@ -3591,7 +3604,7 @@ class Domains extends Records {
                     $bgcolor,
                     $index,
                     $domain,
-                    $reseller,
+                    $this->reseller,
                     $_url,
                     $actionText
                     );
