@@ -4195,7 +4195,7 @@ class SIP_trace {
         global $DATASOURCES, $auth;
         $this->cdrtool  = new DB_CDRTool();
 
-        global $soapEngines;
+    	require(soap_engines.inc);
         $this->soapEngines = $soapEngines;
 
 		if (strlen($DATASOURCES[$cdr_source]['enableThor'])) {
@@ -4203,18 +4203,18 @@ class SIP_trace {
         }
 
         if ($this->enableThor) {
-        	if ($DATASOURCES[$cdr_source]['soapEngineId']) {
-            	$this->soapEngineId=$DATASOURCES[$cdr_source]['soapEngineId'];
+        	if ($DATASOURCES[$cdr_source]['SoapEngineId']) {
+            	$this->SoapEngineId=$DATASOURCES[$cdr_source]['SoapEngineId'];
 
 		        require_once("provisioning_lib.phtml");
 
                 $this->SOAPlogin = array(
-                                       "username"    => $this->soapEngines[$this->soapEngineId]['username'],
-                                       "password"    => $this->soapEngines[$this->soapEngineId]['password'],
+                                       "username"    => $this->soapEngines[$this->SoapEngineId]['username'],
+                                       "password"    => $this->soapEngines[$this->SoapEngineId]['password'],
                                        "admin"       => true
                                        );
     
-                $this->SOAPurl=$this->soapEngines[$this->soapEngineId]['url'];
+                $this->SOAPurl=$this->soapEngines[$this->SoapEngineId]['url'];
         
                 $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
     

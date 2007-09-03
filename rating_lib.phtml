@@ -2679,26 +2679,30 @@ class SERQuota {
 
  		dprint_r($this->notificationAddresses);
 
-        if ($DATASOURCES[$this->cdr_source]['SOAPUsername'] &&
-            $DATASOURCES[$this->cdr_source]['SOAPPassword'] &&
-            $DATASOURCES[$this->cdr_source]['SOAPURL'] ) {
+        if ($DATASOURCES[$this->cdr_source]['SoapEngineId']) {
 
-			$this->NGNProURL=$DATASOURCES[$this->cdr_source]['SOAPURL'];
+            require_once("provisioning_soap_library.phtml");
+            require("soap_engines.inc");
 
-    		//syslog(LOG_NOTICE, "SOAP/XML URL: $this->NGNProURL");
+            if (in_array($SoapEngineId,array_keys($soapEngines))) {
+        
+                $this->SOAPurl  = $soapEngines[$SoapEngineId]['url'];
+                $this->SOAPlogin = array(
+                                           "username"    => $soapEngines[$SoapEngineId]['username'],
+                                           "password"    => $soapEngines[$SoapEngineId]['password'],
+                                           "admin"       => $soapEngines[$SoapEngineId]['admin']
+                                           );
+        
+                $this->SoapAuth=array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
-            $this->SOAPlogin=array(
-                                   "username"    =>$DATASOURCES[$this->cdr_source]['SOAPUsername'],
-                                   "password"    =>$DATASOURCES[$this->cdr_source]['SOAPPassword'],
-                                   "admin"       =>$DATASOURCES[$this->cdr_source]['SOAPAdmin']
-                                   );
+                $this->soapclient  = new WebService_NGNPro_SipPort($this->SOAPurl);
 
-            $this->SoapAuth=array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+                $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+                $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+                $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT, 2);
+        
+            }
     
-            $this->soapclient = new NGNProSip($this->NGNProURL);
-            $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT, 5);
-            $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-            $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
         }
 
         $this->initOK=1;
@@ -4458,31 +4462,6 @@ class RatingEngine {
                 syslog(LOG_NOTICE, $log);
             return 0;
         }
-    }
-}
-
-// class that connects to NGN-Pro to block/unblock accounts
-
-class NGNProSip extends SOAP_Client {
-    function NGNProSip($SOAPURL) {
-        $this->SOAP_Client($SOAPURL, 0);
-    }
-
-    function &addToGroup($sipId, $group) {
-        return $this->call("addToGroup", 
-                        $v = array("sipId"=>$sipId, "group"=>$group), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &removeFromGroup($sipId, $group) {
-        return $this->call("removeFromGroup", 
-                        $v = array("sipId"=>$sipId, "group"=>$group), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
     }
 }
 

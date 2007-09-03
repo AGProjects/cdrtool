@@ -93,6 +93,7 @@ class SOAPEngine {
                                    );
 
             $this->SOAPurl=$this->soapEngines[$this->soapEngineId]['url'];
+            printf ("Connection to NGN-Pro at <a href=%swsdl target=wsdl>%s</a> ",$this->SOAPurl,$this->SOAPurl);
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
     		// Instantiate the SOAP client
@@ -117,6 +118,8 @@ class SOAPEngine {
 
                 //print_r($this->SOAPloginRemote);
             	$this->SOAPurlRemote=$this->soapEngines[$this->soapRemoteId]['url'];
+            	printf ("and syncronize writes to NGN-Pro at <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
+
             	$this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
 
     			// Instantiate the SOAP client depends
@@ -140,8 +143,8 @@ class SOAPEngine {
     }
 
     function showEngineSelection() {
-
         $selected_soapEngine[$this->service]='selected';
+
         printf ("<select name=service onChange=\"document.soapengine.submit.disabled = true; location.href = '%s&service=' + this.options[this.selectedIndex].value\">",$this->url);
         $j=1;
         foreach (array_keys($this->soapEngines) as $_engine) {
@@ -395,7 +398,7 @@ class Records {
 
 		if (class_exists($class_name)) {
             $actions=new $class_name(&$this->SOAPEngine);
-            $actions->performActions(&$this->selectionKeys,$_REQUEST['sub_action'],$_REQUEST['sub_action_parameter']);
+            $actions->performActions(&$this->selectionKeys,$_REQUEST['sub_action'],trim($_REQUEST['sub_action_parameter']));
         }
     }
 }
@@ -536,7 +539,7 @@ class ENUMmappings extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
 
@@ -744,7 +747,7 @@ class ENUMmappings extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>ENUM number %s hinder %s as been deleted. </font> ",$this->filters['number'],$this->filters['tld']);
@@ -823,7 +826,7 @@ class ENUMmappings extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
             foreach($result as $range) {
@@ -904,7 +907,7 @@ class ENUMmappings extends Records {
     
                             } else {
                                 // other error is not allowed
-                            	printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                            	printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                                 return false;
                             }
                         } else {
@@ -945,7 +948,7 @@ class ENUMranges extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
 
@@ -1082,7 +1085,7 @@ class ENUMranges extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>ENUM range %s under %s has been deleted. </font> ",$this->filters['prefix'],$this->filters['tld']);
@@ -1162,7 +1165,7 @@ class ENUMranges extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>Range %s under %s has been added. </font>",$prefix,$tld);
@@ -1235,7 +1238,7 @@ class TrustedPeers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
 
@@ -1399,7 +1402,7 @@ class TrustedPeers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>Trusted peers %s has been added. </font>",$ipaddress);
@@ -1426,7 +1429,7 @@ class TrustedPeers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>Trusted peer %s has been deleted. </font> ",$this->filters['ip']);
@@ -1489,7 +1492,7 @@ class GatewayGroups extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
 
@@ -1637,7 +1640,7 @@ class GatewayGroups extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>Gateway group %s has been added. </font>",$name);
@@ -1664,7 +1667,7 @@ class GatewayGroups extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>Gateway %s has been deleted. </font> ",$this->filters['group']);
@@ -1737,7 +1740,7 @@ class Gateways extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
 
@@ -1885,7 +1888,7 @@ class Gateways extends Records {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
-                printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
             	print "<select name=group> ";
@@ -1972,7 +1975,7 @@ class Gateways extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>Gateway %s has been added. </font>",$address);
@@ -1999,7 +2002,7 @@ class Gateways extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>Gateway %s has been deleted. </font> ",$this->filters['address']);
@@ -2051,7 +2054,7 @@ class Routes extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
             $this->gatewayGroups=$result->groups;
@@ -2099,7 +2102,7 @@ class Routes extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
 
@@ -2284,7 +2287,7 @@ class Routes extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>Route %s has been added. </font>",$prefix);
@@ -2320,7 +2323,7 @@ class Routes extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>Route %s has been deleted. </font> ",$this->filters['prefix']);
@@ -2408,7 +2411,7 @@ class SIPAccounts extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
 			foreach ($result->accounts as $account) {
@@ -2481,7 +2484,7 @@ class SIPAccounts extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
 
@@ -2662,9 +2665,11 @@ class SIPAccounts extends Records {
                 $error_msg=$resultRemote->getMessage();
                 $error_fault=$resultRemote->getFault();
                 $error_code=$resultRemote->getCode();
-                printf ("<p><font color=red>Remote Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
+           		printf ("<p><font color=green>SIP account %s@%s has been deleted from %s </font> ",$this->filters['username'],$this->filters['domain'],$this->SOAPEngine->SOAPurlRemote);
+
                 $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
                 $result = $this->SOAPEngine->soapclient->deleteAccount($account);
 
@@ -2672,10 +2677,10 @@ class SIPAccounts extends Records {
                     $error_msg=$result->getMessage();
                     $error_fault=$result->getFault();
                     $error_code=$result->getCode();
-                    printf ("<p><font color=red>Local Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                     return false;
                 } else {
-           			printf ("<p><font color=green>SIP account %s@%s has been deleted. </font> ",$this->filters['username'],$this->filters['domain']);
+           			printf ("<p><font color=green>SIP account %s@%s has been deleted from %s. </font> ",$this->filters['username'],$this->filters['domain'],$this->SOAPEngine->SOAPurl);
            			unset($this->filters);
                 }
             }
@@ -2689,7 +2694,7 @@ class SIPAccounts extends Records {
                 $error_msg=$result->getMessage();
                 $error_fault=$result->getFault();
                 $error_code=$result->getCode();
-                printf ("<p><font color=red>Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
            		printf ("<p><font color=green>SIP account %s@%s has been deleted. </font> ",$this->filters['username'],$this->filters['domain']);
@@ -2810,9 +2815,11 @@ class SIPAccounts extends Records {
                 $error_msg=$resultRemote->getMessage();
                 $error_fault=$resultRemote->getFault();
                 $error_code=$resultRemote->getCode();
-                printf ("<p><font color=red>Remote Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
+            	printf ("<p><font color=green>SIP account %s@%s has been added at %s </font>",$username,$domain,$this->SOAPEngine->SOAPurlRemote);
+
                 $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
                 $result = $this->SOAPEngine->soapclient->addAccount($account);
 
@@ -2820,10 +2827,18 @@ class SIPAccounts extends Records {
                     $error_msg=$result->getMessage();
                     $error_fault=$result->getFault();
                     $error_code=$result->getCode();
-                    printf ("<p><font color=red>Local Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+
+                    // Atttempt to roll back remote
+			        $deleteAccount=array('username' => $username,
+                                         'domain'   => $domain);
+
+		            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
+        		    $resultRemote = $this->SOAPEngine->soapclientRemote->deleteAccount($deleteAccount);
+
                     return false;
                 } else {
-                    printf ("<p><font color=green>SIP account %s@%s has been added. </font>",$username,$domain);
+                    printf ("<p><font color=green>SIP account %s@%s has been added at %s </font>",$username,$domain,$this->SOAPEngine->SOAPurl);
                 }
             }
 
@@ -2836,7 +2851,7 @@ class SIPAccounts extends Records {
                 $error_msg=$result->getMessage();
                 $error_fault=$result->getFault();
                 $error_code=$result->getCode();
-                printf ("<p><font color=red>Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
                 printf ("<p><font color=green>SIP account %s@%s has been added. </font>",$username,$domain);
@@ -2873,7 +2888,7 @@ class SIPAccounts extends Records {
             	$error_msg  = $result->getMessage();
 	            $error_fault= $result->getFault();
     	        $error_code = $result->getCode();
-        	    printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+        	    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             	return false;
 	        } else {
     	        $this->allowedDomains=$result;
@@ -2957,7 +2972,7 @@ class SIPAliases extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
 
@@ -3084,7 +3099,7 @@ class SIPAliases extends Records {
                 $error_msg=$resultRemote->getMessage();
                 $error_fault=$resultRemote->getFault();
                 $error_code=$resultRemote->getCode();
-                printf ("<p><font color=red>Remote Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
                 $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -3094,7 +3109,7 @@ class SIPAliases extends Records {
                     $error_msg=$result->getMessage();
                     $error_fault=$result->getFault();
                     $error_code=$result->getCode();
-                    printf ("<p><font color=red>Local Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                     return false;
                 } else {
            			printf ("<p><font color=green>SIP alias %s@%s has been deleted. </font> ",$this->filters['aliasUsername'],$this->filters['aliasDomain']);
@@ -3112,7 +3127,7 @@ class SIPAliases extends Records {
                 $error_msg=$result->getMessage();
                 $error_fault=$result->getFault();
                 $error_code=$result->getCode();
-                printf ("<p><font color=red>Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
 	           	printf ("<p><font color=green>SIP alias %s@%s has been deleted. </font> ",$this->filters['aliasUsername'],$this->filters['aliasDomain']);
@@ -3225,20 +3240,6 @@ class SIPAliases extends Records {
         			);
 
         //print_r($alias);
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
-        $result     = $this->SOAPEngine->soapclient->addAlias($alias);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-           printf ("<p><font color=green>SIP alias %s@%s has been added. </font>",$alias_els[0],$alias_els[1]);
-           return 1;
-        }
 
         if (is_object($this->SOAPEngine->soapclientRemote)) {
             $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
@@ -3248,9 +3249,11 @@ class SIPAliases extends Records {
                 $error_msg=$resultRemote->getMessage();
                 $error_fault=$resultRemote->getFault();
                 $error_code=$resultRemote->getCode();
-                printf ("<p><font color=red>Remote Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
+		    	printf ("<p><font color=green>SIP alias %s@%s has been added at %s </font>",$username,$domain,$this->SOAPEngine->SOAPurlRemote);
+
                 $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
                 $result = $this->SOAPEngine->soapclient->addAlias($alias);
 
@@ -3258,10 +3261,18 @@ class SIPAliases extends Records {
                     $error_msg=$result->getMessage();
                     $error_fault=$result->getFault();
                     $error_code=$result->getCode();
-                    printf ("<p><font color=red>Local Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+
+                    // Atttempt to roll back remote
+        			$deleteAlias=array('username' => $username,
+                                       'domain'   => $domain);
+
+		            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
+        		    $resultRemote = $this->SOAPEngine->soapclientRemote->deleteAlias($deleteAlias);
+
                     return false;
                 } else {
-		           	printf ("<p><font color=green>SIP alias %s@%s has been added. </font>",$alias_els[0],$alias_els[1]);
+		           	printf ("<p><font color=green>SIP alias %s@%s has been added at %s </font>",$username,$domain,$this->SOAPEngine->SOAPurl);
                 }
             }
 
@@ -3274,10 +3285,10 @@ class SIPAliases extends Records {
                 $error_msg=$result->getMessage();
                 $error_fault=$result->getFault();
                 $error_code=$result->getCode();
-                printf ("<p><font color=red>Soap error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
-                printf ("<p><font color=green>SIP alias %s@%s has been added. </font>",$alias_els[0],$alias_els[1]);
+                printf ("<p><font color=green>SIP alias %s@%s has been added. </font>",$username,$domain);
             }
         }
 
@@ -3292,7 +3303,7 @@ class SIPAliases extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
             $this->allowedDomains=$result;
@@ -3328,7 +3339,7 @@ class DomainStatistics extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
 
@@ -3445,47 +3456,13 @@ class DomainStatistics extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>SIP domain %s has been deleted. </font> ",$this->filters['domain']);
            unset($this->filters);
            return 1;
         }
-    }
-
-    function showAddForm() {
-		if ($this->selectionActive) return;
-        print "
-        <p>
-        <table border=0 class=border width=100%>
-        <tr>
-            ";
-            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-            print "
-        	<td align=left>
-            ";
-
-            print "
-            <input type=submit name=action value=Add>
-            ";
-
-            printf (" Domain: <input type=text size=20 name=domain>");
-
-            print "
-	        </td>
-        	<td align=right>
-            ";
-            print "
-	        </td>
-            ";
-            $this->printHiddenFormElements();
-
-            print "
-            </form>
-        </tr>
-        </table>
-        ";
     }
 
     function addRecord() {
@@ -3500,7 +3477,7 @@ class DomainStatistics extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>SIP domain %s has been added. </font>",$domain);
@@ -3536,7 +3513,7 @@ class Domains extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
 
@@ -3647,7 +3624,7 @@ class Domains extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>SIP domain %s has been deleted. </font> ",$this->filters['domain']);
@@ -3702,7 +3679,7 @@ class Domains extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
            printf ("<p><font color=green>SIP domain %s has been added. </font>",$domain);
@@ -3787,7 +3764,9 @@ class SIPAccountsActions extends Actions {
                        'prepaid'        => 'Make SIP accounts prepaid',
                        'postpaid'       => 'Make SIP accounts postpaid',
                        'delete'         => 'Delete SIP accounts',
-                       'setquota'       => 'Set quota of SIP account to:'
+                       'setquota'       => 'Set quota of SIP account to:',
+                       'rpidasusername' => 'Set PSTN caller ID as the username',
+                       'prefixtorpid'   => 'Add to PSTN caller ID this prefix:'
                        );
 
     function SIPAccountsActions(&$SOAPEngine) {
@@ -3967,7 +3946,6 @@ class SIPAccountsActions extends Actions {
         			if (!is_array($result->groups)) 	  $result->groups=array();
                     $result->quota=intval($sub_action_parameter);
 
-                    $result->prepaid=0;
         			$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 		        	$result     = $this->SOAPEngine->soapclient->updateAccount($result);
 
@@ -3979,6 +3957,75 @@ class SIPAccountsActions extends Actions {
             			break;
                     } else {
            				printf ("<li><font color=green>SIP account %s has quota set to %s </font> ",$key,$sub_action_parameter);
+                    }
+        		}
+        	} else if ($action=='rpidasusername') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->getAccount($account);
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+                    //print_r($result);
+                    // Sanitize data types due to PHP bugs
+
+                    if (!is_array($result->properties))   $result->properties=array();
+        			if (!is_array($result->groups)) 	  $result->groups=array();
+                    if (is_numeric($username)) $result->rpid=$username;
+                    $result->quota=intval($result->quota);
+
+        			$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        	$result     = $this->SOAPEngine->soapclient->updateAccount($result);
+
+                    if (PEAR::isError($result)) {
+            			$error_msg  = $result->getMessage();
+            			$error_fault= $result->getFault();
+            			$error_code = $result->getCode();
+            			printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            			break;
+                    } else {
+           				printf ("<li><font color=green>SIP account %s has PSTN caller ID set to %s </font> ",$key,$username);
+                    }
+        		}
+        	} else if ($action=='prefixtorpid') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->getAccount($account);
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+                    //print_r($result);
+                    // Sanitize data types due to PHP bugs
+
+                    if (!is_array($result->properties))   $result->properties=array();
+        			if (!is_array($result->groups)) 	  $result->groups=array();
+                    if (is_numeric($sub_action_parameter)) {
+                    	$result->rpid=$sub_action_parameter.$result->rpid;
+                    } else {
+            			printf ("<font color=red>Error: '%s' must be numeric</font>",$sub_action_parameter);
+                        continue;
+                    }
+                    $result->quota=intval($result->quota);
+
+        			$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        	$result     = $this->SOAPEngine->soapclient->updateAccount($result);
+
+                    if (PEAR::isError($result)) {
+            			$error_msg  = $result->getMessage();
+            			$error_fault= $result->getFault();
+            			$error_code = $result->getCode();
+            			printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            			break;
+                    } else {
+           				printf ("<li><font color=green>SIP account %s has PSTN caller ID set to %s%s </font> ",$key,$sub_action_parameter,$result->rpid);
                     }
         		}
             }

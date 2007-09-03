@@ -29,7 +29,6 @@ class SIPstatistics {
         if (is_array($CDRTool['StatisticsPresentities'])) {
         	$this->StatisticsPresentities = $CDRTool['StatisticsPresentities'];
         }
-
 	}
 
     function getSipEnabledZones () {
@@ -76,7 +75,7 @@ class SIPstatistics {
             }
         }
 
-        //print_r($this->SipEnabledZones);
+        //dprint_r($this->SipEnabledZones);
         //dprint_r($this->statistics);
 
     }
@@ -409,7 +408,6 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
             }
 
         	fwrite($handle,"{$key}\t\t{$online_users}\t\t{$sessions}\t\t{$caller}\t{$called}\n");
-
             if (in_array($key,array_keys($this->StatisticsPresentities))) {
 
                 if (!$online_users) {
@@ -419,7 +417,8 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
                 }
 
                 $note=sprintf("%s: Sessions %d, Online %d",$key, $sessions,$online_users);
-    			$this->publishPresence ($this->StatisticsPresentities[$key]['SOAPEngine'],
+
+                $this->publishPresence ($this->StatisticsPresentities[$key]['SoapEngineId'],
                                         $this->StatisticsPresentities[$key]['SIPaccount'],
                                         $note,
                                         $activity);
@@ -618,20 +617,33 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         //dprint_r($this->online);
 	}
 
-    function publishPresence ($SOAPEngine,$SIPaccount,$note,$activity) {
+    function publishPresence ($SoapEngineId,$SIPaccount,$note,$activity) {
 
-		require_once("provisioning_lib.phtml");
+		require_once("provisioning_soap_library.phtml");
+        require("soap_engines.inc");
 
-        $this->PresencePort  = new WebService_GeckoSIMPLEProxy_PresencePort($SOAPEngine['url']);
+        $this->soapEngines = $soapEngines;
+
+        if (!in_array($SoapEngineId,array_keys($this->soapEngines))) {
+            print "Error: SoapEngineId '$SoapEngineId' does not exist.\n";
+            return false;
+        }
+
+		$this->SOAPurl       = $this->soapEngines[$SoapEngineId]['url'];
+        $this->PresencePort  = new WebService_GeckoSIMPLEProxy_PresencePort($this->SOAPurl);
 
         $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+        $this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT, 1);
 
-        $this->SOAPLoginPresence = array("username"    => $SOAPEngine['username'],
-                                         "password"    => $SOAPEngine['password']
-                                        );
+        $this->SOAPloginPresence = array(
+                                   "username"    => $this->soapEngines[$SoapEngineId]['username'],
+                                   "password"    => $this->soapEngines[$SoapEngineId]['password'],
+                                   "admin"       => true
+                                   );
 
-        $this->SoapAuthPresence = array('auth', $this->SOAPLoginPresence , 'urn:AGProjects:PresenceEngine', 0, '');
-    
+        $this->SoapAuthPresence = array('auth', $this->SOAPloginPresence, 'urn:AGProjects:PresenceEngine', 0, '');
+
         $allowed_activities=array('open',
                                   'idle',
                                   'busy',
