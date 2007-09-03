@@ -1,6 +1,10 @@
 <?
 include("global.inc");
 
+$errorReporting = (E_ALL & ~(E_NOTICE | E_WARNING));
+//$errorReporting = 1; // temporary until warnings are fixed
+error_reporting($errorReporting);
+
 if ($_REQUEST['public']) {
     $db = new DB_CDRTool;
     $key="callid-".trim($_REQUEST['callid']).trim($_REQUEST['fromtag']);
@@ -19,6 +23,7 @@ if ($_REQUEST['public']) {
 } else {
 	$authorize=1;
 }
+//print "debug" ;
 
 if ($authorize==1) {
 	page_open(array(
