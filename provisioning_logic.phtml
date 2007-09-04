@@ -738,23 +738,56 @@ class ENUMmappings extends Records {
             return 0;
         }
 
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
         $enum_id=array('number'=>$this->filters['number'],
                        'tld'=>$this->filters['tld']);
-        $result     = $this->SOAPEngine->soapclient->deleteNumber($enum_id);
 
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
+        if (is_object($this->SOAPEngine->soapclientRemote)) {
+            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
+            $resultRemote = $this->SOAPEngine->soapclientRemote->deleteNumber($enum_id);
+
+            if (PEAR::isError($resultRemote)) {
+                $error_msg=$resultRemote->getMessage();
+                $error_fault=$resultRemote->getFault();
+                $error_code=$resultRemote->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+            	printf ("<p><font color=green>ENUM number %s under %s has been deleted from %s. </font> ",$this->filters['number'],$this->filters['tld'],$this->SOAPEngine->SOAPurlRemote);
+
+                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+                $result = $this->SOAPEngine->soapclient->deleteNumber($enum_id);
+
+                if (PEAR::isError($result)) {
+                    $error_msg=$result->getMessage();
+                    $error_fault=$result->getFault();
+                    $error_code=$result->getCode();
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                } else {
+                    printf ("<p><font color=green>ENUM number %s under %s has been deleted from %s. </font> ",$this->filters['number'],$this->filters['tld'],$this->SOAPEngine->SOAPurl);
+                    unset($this->filters);
+                }
+            }
+
         } else {
-           printf ("<p><font color=green>ENUM number %s hinder %s as been deleted. </font> ",$this->filters['number'],$this->filters['tld']);
-           unset($this->filters);
-           return 1;
+
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result = $this->SOAPEngine->soapclient->deleteNumber($enum_id);
+
+            if (PEAR::isError($result)) {
+                $error_msg=$result->getMessage();
+                $error_fault=$result->getFault();
+                $error_code=$result->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+            	printf ("<p><font color=green>ENUM number %s under %s has been deleted</font> ",$this->filters['number'],$this->filters['tld']);
+           		unset($this->filters);
+            }
         }
+
+        return true;
+
     }
 
     function showAddForm() {
@@ -874,50 +907,85 @@ class ENUMmappings extends Records {
 
         $mapto=$_scheme.$_value;
 
+        $enum_number=array('id'    => $enum_id,
+                           'owner' => intval(trim($_REQUEST['owner'])),
+                           'mappings' => array(array('type'  => trim($_REQUEST['type']),
+                                                     'mapto' => $mapto,
+                                                     'ttl'   => intval(trim($_REQUEST['ttl']))
+                                                    )
+                                               )
+                           );
+
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
         $result     = $this->SOAPEngine->soapclient->getNumber($enum_id);
 
+        if (PEAR::isError($result)) {
+            $error_msg=$result->getMessage();
+            $error_fault=$result->getFault();
+            $error_code=$result->getCode();
+
+            if ($error_fault->detail->exception->errorcode == "3002") {
+                if (is_object($this->SOAPEngine->soapclientRemote)) {
+                    $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
+                    $resultRemote = $this->SOAPEngine->soapclientRemote->addNumber($enum_number);
+        
+                    if (PEAR::isError($resultRemote)) {
+                        $error_msg=$resultRemote->getMessage();
+                        $error_fault=$resultRemote->getFault();
+                        $error_code=$resultRemote->getCode();
+                        printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        return false;
+                    } else {
+                        printf ("<p><font color=green>Number %s under %s has been added at %s. </font>",$number,$tld,$this->SOAPEngine->SOAPurlRemote);
+                        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+                        $result = $this->SOAPEngine->soapclient->addNumber($enum_number);
+        
                         if (PEAR::isError($result)) {
                             $error_msg=$result->getMessage();
                             $error_fault=$result->getFault();
                             $error_code=$result->getCode();
-    
-                            if ($error_fault->detail->exception->errorcode == "3002") {
-                                // addNumber()
-                                $enum_number=array('id'    => $enum_id,
-                                                   'owner' => intval(trim($_REQUEST['owner'])),
-                                                   'mappings' => array(array('type'=>trim($_REQUEST['type']),
-                                                                             'mapto'=>$mapto,
-                                                                             'ttl'=>intval(trim($_REQUEST['ttl']))
-                                                                            )
-                                                                       )
-                                                   );
-
-        						$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-        						$result     = $this->SOAPEngine->soapclient->addNumber($enum_number);
-
-                                if (PEAR::isError($result)) {
-                                    $error_msg=$result->getMessage();
-                                    $error_fault=$result->getFault();
-                                    $error_code=$result->getCode();
-                            		printf ("<p><font color=red>Error1: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                                    return false;
-                                } else {
-                                    dprint("SOAP addNumber() OK");
-                                }
-    
-                            } else {
-                                // other error is not allowed
-                            	printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                                return false;
-                            }
+                            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+        
+                            // Atttempt to roll back remote
+        
+                            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
+                            $resultRemote = $this->SOAPEngine->soapclientRemote->deleteNumber($enumId);
+        
+                            return false;
                         } else {
-                            // the number exists and we make an update
-                            printf ("<p><font color=red>Error: The number already exists</font>");
-                            return 1;
+                            printf ("<p><font color=green>Number %s under %s has been added at %s. </font>",$number,$tld,$this->SOAPEngine->SOAPurl);
                         }
-    }
+                    }
+        
+                } else {
+        
+                    $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+                    $result = $this->SOAPEngine->soapclient->addNumber($enum_number);
+        
+                    if (PEAR::isError($result)) {
+                        $error_msg=$result->getMessage();
+                        $error_fault=$result->getFault();
+                        $error_code=$result->getCode();
+                        printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        return false;
+                    } else {
+                        printf ("<p><font color=green>Number %s under %s has been added </font>",$number,$tld);
+        
+                    }
+                }
 
+            } else {
+                // other error is not allowed
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }
+        } else {
+            // the number exists and we make an update
+            printf ("<p><font color=red>Error: ENUM number %s already exists</font>",$number);
+            return false;
+        }
+    	return true;
+    }
 }
 
 class ENUMranges extends Records {
@@ -1076,23 +1144,56 @@ class ENUMranges extends Records {
             return 0;
         }
 
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
         $rangeId=array('prefix'=>$this->filters['prefix'],
                        'tld'=>$this->filters['tld']);
-        $result     = $this->SOAPEngine->soapclient->deleteRange($rangeId);
 
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
+        if (is_object($this->SOAPEngine->soapclientRemote)) {
+            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
+            $resultRemote = $this->SOAPEngine->soapclientRemote->deleteRange($rangeId);
+
+            if (PEAR::isError($resultRemote)) {
+                $error_msg=$resultRemote->getMessage();
+                $error_fault=$resultRemote->getFault();
+                $error_code=$resultRemote->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+            	printf ("<p><font color=green>ENUM range %s under %s has been deleted from %s. </font> ",$this->filters['prefix'],$this->filters['tld'],$this->SOAPEngine->SOAPurlRemote);
+
+                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+                $result = $this->SOAPEngine->soapclient->deleteRange($rangeId);
+
+                if (PEAR::isError($result)) {
+                    $error_msg=$result->getMessage();
+                    $error_fault=$result->getFault();
+                    $error_code=$result->getCode();
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                } else {
+                    printf ("<p><font color=green>ENUM range %s under %s has been deleted from %s. </font> ",$this->filters['prefix'],$this->filters['tld'],$this->SOAPEngine->SOAPurl);
+                    unset($this->filters);
+                }
+            }
+
         } else {
-           printf ("<p><font color=green>ENUM range %s under %s has been deleted. </font> ",$this->filters['prefix'],$this->filters['tld']);
-           unset($this->filters);
-           return 1;
+
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result = $this->SOAPEngine->soapclient->deleteRange($rangeId);
+
+            if (PEAR::isError($result)) {
+                $error_msg=$result->getMessage();
+                $error_fault=$result->getFault();
+                $error_code=$result->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+            	printf ("<p><font color=green>ENUM range %s under %s has been deleted</font> ",$this->filters['prefix'],$this->filters['tld']);
+           		unset($this->filters);
+            }
         }
+
+        return true;
+
     }
 
     function showAddForm() {
@@ -1149,6 +1250,7 @@ class ENUMranges extends Records {
         } else {
             $ttl=intval(trim($_REQUEST['ttl']));
         }
+
         $range=array(
                      'id'         => array('prefix' => $prefix,
                                            'tld'    => $tld),
@@ -1158,20 +1260,59 @@ class ENUMranges extends Records {
                      'owner'      => intval($_REQUEST['owner'])
         			);
 
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        if (is_object($this->SOAPEngine->soapclientRemote)) {
+            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
+            $resultRemote = $this->SOAPEngine->soapclientRemote->addRange($range);
 
-        $result     = $this->SOAPEngine->soapclient->addRange($range);
+            if (PEAR::isError($resultRemote)) {
+                $error_msg=$resultRemote->getMessage();
+                $error_fault=$resultRemote->getFault();
+                $error_code=$resultRemote->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+           	 	printf ("<p><font color=green>Range %s under %s has been added at %s. </font>",$prefix,$tld,$this->SOAPEngine->SOAPurlRemote);
+                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+                $result = $this->SOAPEngine->soapclient->addRange($range);
 
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
+                if (PEAR::isError($result)) {
+                    $error_msg=$result->getMessage();
+                    $error_fault=$result->getFault();
+                    $error_code=$result->getCode();
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+
+                    // Atttempt to roll back remote
+                    $deleteRange=array('prefix'=>$prefix,
+                                       'tld'=>$tld);
+
+		            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
+        		    $resultRemote = $this->SOAPEngine->soapclientRemote->deleteRange($deleteRange);
+
+                    return false;
+                } else {
+           			printf ("<p><font color=green>Range %s under %s has been added at %s </font>",$prefix,$tld,$this->SOAPEngine->SOAPurl);
+                }
+            }
+
         } else {
-           printf ("<p><font color=green>Range %s under %s has been added. </font>",$prefix,$tld);
-           return 1;
+
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result = $this->SOAPEngine->soapclient->addRange($range);
+
+            if (PEAR::isError($result)) {
+                $error_msg=$result->getMessage();
+                $error_fault=$result->getFault();
+                $error_code=$result->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+           		printf ("<p><font color=green>Range %s under %s has been added </font>",$prefix,$tld);
+
+            }
         }
+
+        return true;
+
     }
 
     function showSeachFormCustom() {
