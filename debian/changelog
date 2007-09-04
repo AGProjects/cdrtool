@@ -1,9 +1,9 @@
 cdrtool (5.2.5) unstable; urgency=low
 
   * Replaced multiple SOAP definitions from global.inc with a pointer 
-    to and entry from the $soapEngines defined in soap_engines.inc
+    to an entry from the $soapEngines defined in soap_engines.inc
   * Fixed read of HTTP vars in sip trace, public traces are now visible 
-    when gloabl vars are turned off
+    when global vars are turned off
 
  -- Adrian Georgescu <ag@ag-projects.com>  Mon, 03 Sep 2007 12:13:57 +0200
 
