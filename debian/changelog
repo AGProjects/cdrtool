@@ -1,3 +1,10 @@
+cdrtool (5.2.6) unstable; urgency=low
+
+  * Log in syslog the duration of reloading of the rating tables and 
+   of the sip accounts into memcacche
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 04 Sep 2007 19:06:31 +0200
+
 cdrtool (5.2.5) unstable; urgency=low
 
   * Replaced multiple SOAP definitions from global.inc with a pointer 

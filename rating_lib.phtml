@@ -2709,6 +2709,8 @@ class SERQuota {
     }
 
     function LoadAccounts() {
+        $b=time();
+
         if (!$this->AccountsDBClass) {
             print("Info: No database defined for SIP accounts.\n");
             return 0;
@@ -2799,10 +2801,18 @@ class SERQuota {
         	$this->SaveAccountsToCache();
         }
 
-        return count($this->Accounts);
+        $count=count($this->Accounts);
+
+        $e=time();
+        $d=$e-$b;
+
+        if ($d >0 ) syslog(LOG_NOTICE, "Loaded $count SIP accounts in $d seconds");
+
+        return $count;
     }
 
     function SaveAccountsToCache() {
+        $b=time();
 
 		unset($mc_value);
 
@@ -2831,6 +2841,12 @@ class SERQuota {
             print $log;
             syslog(LOG_NOTICE,$log);
         }
+
+        $e=time();
+        $d=$e-$b;
+
+        if ($d >0 ) syslog(LOG_NOTICE, "Saved SIP accounts to memcache in $d seconds");
+
     }
 
     function LoadAccountsfromCache() {
