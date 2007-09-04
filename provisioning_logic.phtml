@@ -76,7 +76,7 @@ class SOAPEngine {
                 $this->skip[$_key]=$this->soapEngines[$_key]['skip'];
             }
 
-			if (!$impersonate) {
+			if (!$reseller) {
             	$this->reseller=$this->soapEngines[$this->soapEngineId]['impersonate'];
             } else {
             	$this->reseller=$reseller;
@@ -85,6 +85,7 @@ class SOAPEngine {
 			if (strlen($this->soapEngines[$this->soapEngineId]['soapEngineIdSettingsPage'])) {
             	$this->soapEngineIdSettingsPage=$this->soapEngines[$this->soapEngineId]['soapEngineIdSettingsPage'];
             }
+
             $this->SOAPlogin = array(
                                    "username"    => $this->soapEngines[$this->soapEngineId]['username'],
                                    "password"    => $this->soapEngines[$this->soapEngineId]['password'],
@@ -2554,11 +2555,10 @@ class SIPAccounts extends Records {
                         $actionText = "Delete";
                     }
 
-
                     if ($this->SipSettingsPage) {
 
-                        $url=sprintf('%s?account=%s@%s&rId=%s&soapEngineIdSipPort=%s',$this->SipSettingsPage,$account->id->username,$account->id->domain,$this->
-                        reseller,$this->SOAPEngine->soapEngineIdSettingsPage);
+                        $url=sprintf('%s?account=%s@%s&rId=%s&soapEngineIdSipPort=%s',$this->SipSettingsPage,$account->id->username,$account->id->domain,
+                        $this->reseller,$this->SOAPEngine->soapEngineIdSettingsPage);
 
                         foreach (array_keys($this->SOAPEngine->extraFormElements) as $element) {
                             if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
@@ -2578,6 +2578,13 @@ class SIPAccounts extends Records {
                         $groups.=$_grp.' ';
                     }
 
+					if ($account->reseller) {
+                        // Use the reseller of the record
+                        $_reseller=$account->reseller;
+                    } else {
+                        // use the reseller from the soap engine
+                        $_reseller=$this->reseller;
+                    }
                     printf("
                     <tr bgcolor=%s>
                     <td>%s </td>
@@ -2596,7 +2603,7 @@ class SIPAccounts extends Records {
                     $bgcolor,
                     $index,
                     $sip_account,
-                    $account->reseller,
+                    $_reseller,
                     $account->firstName,
                     $account->lastName,
                     $account->email,

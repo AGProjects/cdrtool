@@ -215,11 +215,8 @@ $DATASOURCES=array(
                     			    		),
                     "UserQuotaClass"     => "SERQuota",
                     "UserQuotaNotify"    => "0",	// send e-mail notifications when quota is exceeded
+                    "SoapEngineId"       => '',
                     "EnableNetworkRating"=> "1",
-                    "SOAPUsername"       => "",    // used by Multimedia Service Platform
-                    "SOAPPassword"       => "",    // used by Multimedia Service Platform
-                    "SOAPAdmin"          => false, // used by Multimedia Service Platform
-                    "SOAPURL"            => "",    // used by Multimedia Service Platform
                     "domainTranslation"  => array(
                                                   "gw02.domain.com"      => "pstn.domain.com" // translate Realm
                                                   ),
@@ -282,7 +279,7 @@ $DATASOURCES=array(
 "sip_trace_thor"   =>array(
                     "name"               => "SIP trace Thor",
                     "enableThor"         => true,
-                    "soapEngineId"       => "id",   
+                    "SoapEngineId"       => "id",   
                     "invisible"          => 1 
                     )
                     
