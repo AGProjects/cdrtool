@@ -1,0 +1,10 @@
+<?
+// Used by MSP
+$soapEngines=array(
+                           'sp' => array('name'=> 'SOAP Engine',
+                                         'username'=> 'username',
+                                         'password'=> 'password',
+                                         'url'     => 'http://example.com:9200/'
+                                         )
+                          );
+?>
