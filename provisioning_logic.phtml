@@ -3865,8 +3865,10 @@ class Actions {
             ";
 
         print "<select name=sub_action>";
+        $j=0;
         foreach (array_keys($this->actions) as $_action) {
-            printf ("<option value='%s'>%s",$_action,$this->actions[$_action]);
+            $j++;
+            printf ("<option value='%s'>%d. %s",$_action,$j,$this->actions[$_action]);
         }
         print "</select>";
 
@@ -3914,7 +3916,10 @@ class SIPAccountsActions extends Actions {
                        'delete'         => 'Delete SIP accounts',
                        'setquota'       => 'Set quota of SIP account to:',
                        'rpidasusername' => 'Set PSTN caller ID as the username',
-                       'prefixtorpid'   => 'Add to PSTN caller ID this prefix:'
+                       'prefixtorpid'   => 'Add to PSTN caller ID this prefix:',
+                       'addtogroup'     => 'Add SIP accounts to group:',
+                       'removefromgroup'=> 'Remove SIP accounts from group:',
+                       'addbalance'     => 'Add to prepaid balance value:'
                        );
 
     function SIPAccountsActions(&$SOAPEngine) {
@@ -3959,6 +3964,40 @@ class SIPAccountsActions extends Actions {
             		break;
         		} else {
            			printf ("<li><font color=green>SIP account %s has been de-blocked</font> ",$key);
+        		}
+        	} else if ($action=='removefromgroup') {
+            	if (!strlen($sub_action_parameter)) {
+            		printf ("<li><font color=red>Error: you must enter a group name</font>");
+                    break;
+                }
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->removeFromGroup($account,$sub_action_parameter);
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+           			printf ("<li><font color=green>SIP account %s is removed from group %s</font> ",$key,$sub_action_parameter);
+        		}
+        	} else if ($action=='addtogroup') {
+            	if (!strlen($sub_action_parameter)) {
+            		printf ("<li><font color=red>Error: you must enter a group name</font>");
+                    break;
+                }
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->addToGroup($account,$sub_action_parameter);
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+           			printf ("<li><font color=green>SIP account %s is now in group %s</font> ",$key,$sub_action_parameter);
         		}
         	} else if ($action=='deblock_quota') {
         		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -4176,6 +4215,41 @@ class SIPAccountsActions extends Actions {
            				printf ("<li><font color=green>SIP account %s has PSTN caller ID set to %s%s </font> ",$key,$sub_action_parameter,$result->rpid);
                     }
         		}
+        	} else if ($action=='addbalance') {
+            	if (!is_numeric($sub_action_parameter)) {
+            		printf ("<li><font color=red>Error: you must enter a positive balance</font>");
+                    break;
+                }
+
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->getAccount($account);
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+                }
+
+				if (!$result->prepaid) {
+            		printf ("<li><font color=red>Info: SIP account %s is not prepaid, no action performed</font>",$key);
+                    continue;
+                }
+
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->addBalance($account,$sub_action_parameter);
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+           			printf ("<li><font color=green>SIP account %s balance has been increased with %s</font> ",$key,$sub_action_parameter);
+        		}
+
             }
         }
         print "</ol>";
