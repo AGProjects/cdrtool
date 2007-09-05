@@ -104,6 +104,13 @@ class SOAPEngine {
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
+    		// Instantiate the SOAP client for Execute wrapper
+            $this->soapclientExecute = new $this->soapClass($this->SOAPurl);
+
+            $this->soapclientExecute->setOpt('curl', CURLOPT_TIMEOUT,        5);
+            $this->soapclientExecute->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+            $this->soapclientExecute->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
 			$this->soapRemoteId=$this->soapEngines[$this->soapEngineId]['depends'];
 
             if (strlen($this->soapRemoteId) && in_array($this->soapRemoteId,array_keys($this->soapEngines))) {
@@ -187,6 +194,7 @@ class SOAPEngine {
             print "<font color=red>Error: no function name supplied</font>";
             return false;
         }
+
         if (is_object($this->soapclientRemote)) {
 
             $this->soapclientRemote->addHeader($this->SoapAuthRemote);
@@ -201,8 +209,8 @@ class SOAPEngine {
             } else {
             	printf ("<p><font color=green>%s %s </font>",$function['commit']['logs']['success'],$this->SOAPurlRemote);
 
-	     		$this->soapclient->addHeader($this->SoapAuth);
-            	$result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
+	     		$this->soapclientExecute->addHeader($this->SoapAuth);
+            	$result = call_user_func_array(array($this->soapclientExecute,$function['commit']['name']),$function['commit']['parameters']);
 
                 if (PEAR::isError($result)) {
                     $error_msg=$result->getMessage();
@@ -227,14 +235,16 @@ class SOAPEngine {
 
                     return false;
                 } else {
-                    printf ("<p><font color=green>%s %s </font>",$function['commit']['logs']['success'],$this->SOAPurl);
+                    if ($function['commit']['logs']['success']) {
+                    	printf ("<p><font color=green>%s %s </font>",$function['commit']['logs']['success'],$this->SOAPurl);
+                    }
                 }
             }
 
         } else {
 
-	     	$this->soapclient->addHeader($this->SoapAuth);
-            $result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
+	     	$this->soapclientExecute->addHeader($this->SoapAuth);
+            $result = call_user_func_array(array($this->soapclientExecute,$function['commit']['name']),$function['commit']['parameters']);
 
             if (PEAR::isError($result)) {
                 $error_msg=$result->getMessage();
@@ -243,7 +253,9 @@ class SOAPEngine {
                 printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
-                printf ("<p><font color=green>%s </font>",$function['commit']['logs']['success']);
+            	if ($function['commit']['logs']['success']) {
+                	printf ("<p><font color=green>%s </font>",$function['commit']['logs']['success']);
+                }
             }
         }
         return true;
@@ -834,7 +846,9 @@ class ENUMmappings extends Records {
 
                         );
 
-        $this->SOAPEngine->execute($function);
+        if ($this->SOAPEngine->execute($function)) {
+           unset($this->filters);
+        }
 
         return true;
 
@@ -1164,7 +1178,9 @@ class ENUMranges extends Records {
                                             )
      
                         );
-        $this->SOAPEngine->execute($function);
+        if ($this->SOAPEngine->execute($function)) {
+           unset($this->filters);
+        }
 
         return true;
 
@@ -2752,7 +2768,9 @@ class SIPAccounts extends Records {
 
                         );
 
-        $this->SOAPEngine->execute($function);
+        if ($this->SOAPEngine->execute($function)) {
+           unset($this->filters);
+        }
 
         return true;
     }
@@ -2897,14 +2915,16 @@ class SIPAccounts extends Records {
     function getAllowedDomains() {
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        //print_r($this->SOAPEngine->soapclient->headersOut);
+
         $result     = $this->SOAPEngine->soapclient->getDomains();
     
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
+            printf ("<p><font color=red>Error in getAllowedDomains from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            //return false;
         } else {
             $this->allowedDomains=$result;
         }
@@ -3104,51 +3124,16 @@ class SIPAliases extends Records {
                      'domain'   => $this->filters['aliasDomain']
         			);
 
-        //print_r($alias);
+        $function=array('commit'   => array('name'       => 'deleteAlias',
+                                            'parameters' => array($alias),
+                                            'logs'       => array('success' => sprintf('<li>SIP alias %s@%s has been deleted',$this->filters['aliasUsername'],$this->filters['aliasDomain'])
+                                                                  )
+                                           )
 
-        if (is_object($this->SOAPEngine->soapclientRemote)) {
-            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
-            $resultRemote = $this->SOAPEngine->soapclientRemote->deleteAlias($alias);
+                        );
 
-            if (PEAR::isError($resultRemote)) {
-                $error_msg=$resultRemote->getMessage();
-                $error_fault=$resultRemote->getFault();
-                $error_code=$resultRemote->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-                $result = $this->SOAPEngine->soapclient->deleteAlias($alias);
-
-                if (PEAR::isError($result)) {
-                    $error_msg=$result->getMessage();
-                    $error_fault=$result->getFault();
-                    $error_code=$result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                } else {
-           			printf ("<p><font color=green>SIP alias %s@%s has been deleted. </font> ",$this->filters['aliasUsername'],$this->filters['aliasDomain']);
-           			unset($this->filters);
-           			$this->recordDeleted=1;
-                }
-            }
-
-        } else {
-
-            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-            $result = $this->SOAPEngine->soapclient->deleteAlias($alias);
-
-            if (PEAR::isError($result)) {
-                $error_msg=$result->getMessage();
-                $error_fault=$result->getFault();
-                $error_code=$result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-	           	printf ("<p><font color=green>SIP alias %s@%s has been deleted. </font> ",$this->filters['aliasUsername'],$this->filters['aliasDomain']);
-           		unset($this->filters);
-           		$this->recordDeleted=1;
-            }
+        if ($this->SOAPEngine->execute($function)) {
+           unset($this->filters);
         }
 
         return true;
