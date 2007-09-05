@@ -1796,8 +1796,27 @@ class CDR {
                                           'cNumber'         => $this->cNumber,
                                           'destinationName' => $this->destinationName
                                           );
-    
+
+                    $RateDictionaryDebug=array(
+                                          'id'              => $this->id,
+                                          'timestamp'       => $this->timestamp,
+                                          'duration'        => $this->duration,
+                                          'DestinationId'   => $this->DestinationId,
+                                          'inputTraffic'    => $this->inputTraffic,
+                                          'outputTraffic'   => $this->outputTraffic,
+                                          'BillingPartyId'  => $this->BillingPartyId,
+                                          'domain'          => $this->domain,
+                                          'gateway'         => $this->gateway,
+                                          'applicationType' => $this->applicationType,
+                                          'aNumber'         => $this->aNumber,
+                                          'cNumber'         => $this->cNumber,
+                                          'destinationName' => $this->destinationName
+                                          );
+
+			        dprint_r($RateDictionaryDebug);
+
                     $Rate->calculate(&$RateDictionary);
+
                 }
 
                 /*

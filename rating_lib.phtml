@@ -188,6 +188,7 @@ class Rate {
         dprint("Billing start time: $this->startTimeBilling");
         dprint("BillingPartyId: $this->BillingPartyId");
         dprint("Billing domain: $this->domain");
+        dprint("Billing gateway: $this->gateway");
 
 		if (!$this->GetProfiles()) {
             return 0;
@@ -665,7 +666,7 @@ class Rate {
 
         if (!$this->rateValues) {
         	$this->rateNotFound=true;
-            $log=sprintf("Error: Cannot find rates for callid=%s, %s, destination=%s, profile=%s, app=%s",
+            $log=sprintf("Error: Cannot find rates for callid=%s, customer %s, destination=%s, profile=%s, app=%s",
             $this->callId,$this->CustomerProfile,$this->DestinationId,$this->profileName,$this->applicationType);
             dprint($log);
             $subject=$this->CDRS->CDRTool['provider']['service']." - CDRTool rating problem";

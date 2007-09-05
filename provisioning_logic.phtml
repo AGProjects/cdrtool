@@ -163,6 +163,91 @@ class SOAPEngine {
         }
         printf ("</select>");
     }
+
+    function execute($function) {
+
+        /*
+        $function=array('commit'   => array('name'       => 'addAccount',
+                                            'parameters' => array($param1,$param2),
+                                            'logs'       => array('success' => 'The function was a success',
+                                                                  'failure' => 'The function has failed'
+                                                                  )
+                                           ),
+                        'rollback' => array('name'       => 'addAccount',
+                                            'parameters' => array($param1,$param2),
+                                            'logs'       => array('success' => 'The function was a success',
+                                                                  'failure' => 'The function has failed'
+                                                                  )
+                                           )
+
+                        );
+        */
+
+        if (!$function['commit']['name']) {
+            print "<font color=red>Error: no function name supplied</font>";
+            return false;
+        }
+        if (is_object($this->soapclientRemote)) {
+
+            $this->soapclientRemote->addHeader($this->SoapAuthRemote);
+            $resultRemote = call_user_func_array(array($this->soapclientRemote,$function['commit']['name']),$function['commit']['parameters']);
+
+            if (PEAR::isError($resultRemote)) {
+                $error_msg=$resultRemote->getMessage();
+                $error_fault=$resultRemote->getFault();
+                $error_code=$resultRemote->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+            	printf ("<p><font color=green>%s %s </font>",$function['commit']['logs']['success'],$this->SOAPurlRemote);
+
+	     		$this->soapclient->addHeader($this->SoapAuth);
+            	$result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
+
+                if (PEAR::isError($result)) {
+                    $error_msg=$result->getMessage();
+                    $error_fault=$result->getFault();
+                    $error_code=$result->getCode();
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+
+					if ($function['rollback']['name']) {
+            			$this->soapclientRemote->addHeader($this->SoapAuthRemote);
+            			$resultRemote = call_user_func_array(array($this->soapclientRemote,$function['rollback']['name']),$function['rollback']['parameters']);
+
+                        if (PEAR::isError($result)) {
+                            $error_msg=$result->getMessage();
+                            $error_fault=$result->getFault();
+                            $error_code=$result->getCode();
+                            printf ("<p><font color=red>Error roll back at %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        } else {
+            				printf ("<p><font color=green>Rolled back action at %s </font>",$this->SOAPurlRemote);
+                        }
+
+                    }
+
+                    return false;
+                } else {
+                    printf ("<p><font color=green>%s %s </font>",$function['commit']['logs']['success'],$this->SOAPurl);
+                }
+            }
+
+        } else {
+
+	     	$this->soapclient->addHeader($this->SoapAuth);
+            $result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
+
+            if (PEAR::isError($result)) {
+                $error_msg=$result->getMessage();
+                $error_fault=$result->getFault();
+                $error_code=$result->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+                printf ("<p><font color=green>%s </font>",$function['commit']['logs']['success']);
+            }
+        }
+        return true;
+    }
 }
 
 class Records {
@@ -741,50 +826,15 @@ class ENUMmappings extends Records {
         $enum_id=array('number'=>$this->filters['number'],
                        'tld'=>$this->filters['tld']);
 
-        if (is_object($this->SOAPEngine->soapclientRemote)) {
-            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
-            $resultRemote = $this->SOAPEngine->soapclientRemote->deleteNumber($enum_id);
+        $function=array('commit'   => array('name'       => 'deleteNumber',
+                                            'parameters' => array($enum_id),
+                                            'logs'       => array('success' => sprintf('<li>ENUM number %s under %s has been deleted',$this->filters['number'],$this->filters['tld'])
+                                                                  )
+                                           )
 
-            if (PEAR::isError($resultRemote)) {
-                $error_msg=$resultRemote->getMessage();
-                $error_fault=$resultRemote->getFault();
-                $error_code=$resultRemote->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-            	printf ("<p><font color=green>ENUM number %s under %s has been deleted from %s. </font> ",$this->filters['number'],$this->filters['tld'],$this->SOAPEngine->SOAPurlRemote);
+                        );
 
-                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-                $result = $this->SOAPEngine->soapclient->deleteNumber($enum_id);
-
-                if (PEAR::isError($result)) {
-                    $error_msg=$result->getMessage();
-                    $error_fault=$result->getFault();
-                    $error_code=$result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                } else {
-                    printf ("<p><font color=green>ENUM number %s under %s has been deleted from %s. </font> ",$this->filters['number'],$this->filters['tld'],$this->SOAPEngine->SOAPurl);
-                    unset($this->filters);
-                }
-            }
-
-        } else {
-
-            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-            $result = $this->SOAPEngine->soapclient->deleteNumber($enum_id);
-
-            if (PEAR::isError($result)) {
-                $error_msg=$result->getMessage();
-                $error_fault=$result->getFault();
-                $error_code=$result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-            	printf ("<p><font color=green>ENUM number %s under %s has been deleted</font> ",$this->filters['number'],$this->filters['tld']);
-           		unset($this->filters);
-            }
-        }
+        $this->SOAPEngine->execute($function);
 
         return true;
 
@@ -925,59 +975,19 @@ class ENUMmappings extends Records {
             $error_code=$result->getCode();
 
             if ($error_fault->detail->exception->errorcode == "3002") {
-                if (is_object($this->SOAPEngine->soapclientRemote)) {
-                    $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
-                    $resultRemote = $this->SOAPEngine->soapclientRemote->addNumber($enum_number);
-        
-                    if (PEAR::isError($resultRemote)) {
-                        $error_msg=$resultRemote->getMessage();
-                        $error_fault=$resultRemote->getFault();
-                        $error_code=$resultRemote->getCode();
-                        printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                        return false;
-                    } else {
-                        printf ("<p><font color=green>Number %s under %s has been added at %s. </font>",$number,$tld,$this->SOAPEngine->SOAPurlRemote);
-                        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-                        $result = $this->SOAPEngine->soapclient->addNumber($enum_number);
-        
-                        if (PEAR::isError($result)) {
-                            $error_msg=$result->getMessage();
-                            $error_fault=$result->getFault();
-                            $error_code=$result->getCode();
-                            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-        
-                            // Atttempt to roll back remote
-        
-                            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
-                            $resultRemote = $this->SOAPEngine->soapclientRemote->deleteNumber($enumId);
-        
-                            return false;
-                        } else {
-                            printf ("<p><font color=green>Number %s under %s has been added at %s. </font>",$number,$tld,$this->SOAPEngine->SOAPurl);
-                        }
-                    }
-        
-                } else {
-        
-                    $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-                    $result = $this->SOAPEngine->soapclient->addNumber($enum_number);
-        
-                    if (PEAR::isError($result)) {
-                        $error_msg=$result->getMessage();
-                        $error_fault=$result->getFault();
-                        $error_code=$result->getCode();
-                        printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                        return false;
-                    } else {
-                        printf ("<p><font color=green>Number %s under %s has been added </font>",$number,$tld);
-        
-                    }
-                }
 
-            } else {
-                // other error is not allowed
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
+                $function=array('commit'   => array('name'       => 'addNumber',
+                                                    'parameters' => array($enum_number),
+                                                    'logs'       => array('success' => sprintf('<li>ENUM number %s under %s has been added',$this->filters['number'],$this->filters['tld'])
+                                                                          ),
+                                'rollback' => array('name'       => 'deleteNumber',
+                                                     'parameters' => array($enumId)
+                                                    )
+                                                    )
+             
+                                );
+             
+                $this->SOAPEngine->execute($function);
             }
         } else {
             // the number exists and we make an update
@@ -1147,50 +1157,14 @@ class ENUMranges extends Records {
         $rangeId=array('prefix'=>$this->filters['prefix'],
                        'tld'=>$this->filters['tld']);
 
-        if (is_object($this->SOAPEngine->soapclientRemote)) {
-            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
-            $resultRemote = $this->SOAPEngine->soapclientRemote->deleteRange($rangeId);
-
-            if (PEAR::isError($resultRemote)) {
-                $error_msg=$resultRemote->getMessage();
-                $error_fault=$resultRemote->getFault();
-                $error_code=$resultRemote->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-            	printf ("<p><font color=green>ENUM range %s under %s has been deleted from %s. </font> ",$this->filters['prefix'],$this->filters['tld'],$this->SOAPEngine->SOAPurlRemote);
-
-                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-                $result = $this->SOAPEngine->soapclient->deleteRange($rangeId);
-
-                if (PEAR::isError($result)) {
-                    $error_msg=$result->getMessage();
-                    $error_fault=$result->getFault();
-                    $error_code=$result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                } else {
-                    printf ("<p><font color=green>ENUM range %s under %s has been deleted from %s. </font> ",$this->filters['prefix'],$this->filters['tld'],$this->SOAPEngine->SOAPurl);
-                    unset($this->filters);
-                }
-            }
-
-        } else {
-
-            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-            $result = $this->SOAPEngine->soapclient->deleteRange($rangeId);
-
-            if (PEAR::isError($result)) {
-                $error_msg=$result->getMessage();
-                $error_fault=$result->getFault();
-                $error_code=$result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-            	printf ("<p><font color=green>ENUM range %s under %s has been deleted</font> ",$this->filters['prefix'],$this->filters['tld']);
-           		unset($this->filters);
-            }
-        }
+        $function=array('commit'   => array('name'       => 'deleteRange',
+                                            'parameters' => array($rangeId),
+                                            'logs'       => array('success' => sprintf('<li>ENUM range %s under %s has been deleted',$this->filters['prefix'],$this->filters['tld'])
+                                                                  )
+                                            )
+     
+                        );
+        $this->SOAPEngine->execute($function);
 
         return true;
 
@@ -1260,56 +1234,21 @@ class ENUMranges extends Records {
                      'owner'      => intval($_REQUEST['owner'])
         			);
 
-        if (is_object($this->SOAPEngine->soapclientRemote)) {
-            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
-            $resultRemote = $this->SOAPEngine->soapclientRemote->addRange($range);
+        $deleteRange=array('prefix'=>$prefix,
+                           'tld'=>$tld);
 
-            if (PEAR::isError($resultRemote)) {
-                $error_msg=$resultRemote->getMessage();
-                $error_fault=$resultRemote->getFault();
-                $error_code=$resultRemote->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-           	 	printf ("<p><font color=green>Range %s under %s has been added at %s. </font>",$prefix,$tld,$this->SOAPEngine->SOAPurlRemote);
-                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-                $result = $this->SOAPEngine->soapclient->addRange($range);
-
-                if (PEAR::isError($result)) {
-                    $error_msg=$result->getMessage();
-                    $error_fault=$result->getFault();
-                    $error_code=$result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
-                    // Atttempt to roll back remote
-                    $deleteRange=array('prefix'=>$prefix,
-                                       'tld'=>$tld);
-
-		            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
-        		    $resultRemote = $this->SOAPEngine->soapclientRemote->deleteRange($deleteRange);
-
-                    return false;
-                } else {
-           			printf ("<p><font color=green>Range %s under %s has been added at %s </font>",$prefix,$tld,$this->SOAPEngine->SOAPurl);
-                }
-            }
-
-        } else {
-
-            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-            $result = $this->SOAPEngine->soapclient->addRange($range);
-
-            if (PEAR::isError($result)) {
-                $error_msg=$result->getMessage();
-                $error_fault=$result->getFault();
-                $error_code=$result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-           		printf ("<p><font color=green>Range %s under %s has been added </font>",$prefix,$tld);
-
-            }
-        }
+        $function=array('commit'   => array('name'       => 'addNumber',
+                                            'parameters' => array($range),
+                                            'logs'       => array('success' => sprintf('<li>ENUM range %s under %s has been added',$this->filters['prefix'],$this->filters['tld'])
+                                                                  ),
+                        'rollback' => array('name'       => 'deleteRange',
+                                             'parameters' => array($deleteRange)
+                                            )
+                                            )
+     
+                        );
+     
+        $this->SOAPEngine->execute($function);
 
         return true;
 
@@ -2805,50 +2744,15 @@ class SIPAccounts extends Records {
                      'domain'   => $this->filters['domain']
         			);
 
-        if (is_object($this->SOAPEngine->soapclientRemote)) {
-            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
-            $resultRemote = $this->SOAPEngine->soapclientRemote->deleteAccount($account);
+        $function=array('commit'   => array('name'       => 'deleteAccount',
+                                            'parameters' => array($account),
+                                            'logs'       => array('success' => sprintf('<li>SIP account %s@%s has been deleted',$this->filters['username'],$this->filters['domain'])
+                                                                  )
+                                           )
 
-            if (PEAR::isError($resultRemote)) {
-                $error_msg=$resultRemote->getMessage();
-                $error_fault=$resultRemote->getFault();
-                $error_code=$resultRemote->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-           		printf ("<p><font color=green>SIP account %s@%s has been deleted from %s </font> ",$this->filters['username'],$this->filters['domain'],$this->SOAPEngine->SOAPurlRemote);
+                        );
 
-                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-                $result = $this->SOAPEngine->soapclient->deleteAccount($account);
-
-                if (PEAR::isError($result)) {
-                    $error_msg=$result->getMessage();
-                    $error_fault=$result->getFault();
-                    $error_code=$result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                } else {
-           			printf ("<p><font color=green>SIP account %s@%s has been deleted from %s. </font> ",$this->filters['username'],$this->filters['domain'],$this->SOAPEngine->SOAPurl);
-           			unset($this->filters);
-                }
-            }
-
-        } else {
-
-            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-            $result = $this->SOAPEngine->soapclient->deleteAccount($account);
-
-            if (PEAR::isError($result)) {
-                $error_msg=$result->getMessage();
-                $error_fault=$result->getFault();
-                $error_code=$result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-           		printf ("<p><font color=green>SIP account %s@%s has been deleted. </font> ",$this->filters['username'],$this->filters['domain']);
-           		unset($this->filters);
-            }
-        }
+        $this->SOAPEngine->execute($function);
 
         return true;
     }
@@ -2954,58 +2858,22 @@ class SIPAccounts extends Records {
         			);
 
         //print_r($account);
+        $deleteAccount=array('username' => $username,
+                             'domain'   => $domain);
 
-        if (is_object($this->SOAPEngine->soapclientRemote)) {
-            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
-            $resultRemote = $this->SOAPEngine->soapclientRemote->addAccount($account);
 
-            if (PEAR::isError($resultRemote)) {
-                $error_msg=$resultRemote->getMessage();
-                $error_fault=$resultRemote->getFault();
-                $error_code=$resultRemote->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-            	printf ("<p><font color=green>SIP account %s@%s has been added at %s </font>",$username,$domain,$this->SOAPEngine->SOAPurlRemote);
-
-                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-                $result = $this->SOAPEngine->soapclient->addAccount($account);
-
-                if (PEAR::isError($result)) {
-                    $error_msg=$result->getMessage();
-                    $error_fault=$result->getFault();
-                    $error_code=$result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
-                    // Atttempt to roll back remote
-			        $deleteAccount=array('username' => $username,
-                                         'domain'   => $domain);
-
-		            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
-        		    $resultRemote = $this->SOAPEngine->soapclientRemote->deleteAccount($deleteAccount);
-
-                    return false;
-                } else {
-                    printf ("<p><font color=green>SIP account %s@%s has been added at %s </font>",$username,$domain,$this->SOAPEngine->SOAPurl);
-                }
-            }
-
-        } else {
-
-            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-            $result = $this->SOAPEngine->soapclient->addAccount($account);
-
-            if (PEAR::isError($result)) {
-                $error_msg=$result->getMessage();
-                $error_fault=$result->getFault();
-                $error_code=$result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-                printf ("<p><font color=green>SIP account %s@%s has been added. </font>",$username,$domain);
-
-            }
-        }
+        $function=array('commit'   => array('name'       => 'addAccount',
+                                            'parameters' => array($account),
+                                            'logs'       => array('success' => sprintf('<li>SIP account %s@%s has been added',$username,$domain)
+                                                                  ),
+                        'rollback' => array('name'       => 'deleteAlias',
+                                             'parameters' => array($deleteAccount)
+                                            )
+                                            )
+     
+                        );
+     
+        $this->SOAPEngine->execute($function);
 
         return true;
     }
@@ -3027,20 +2895,19 @@ class SIPAccounts extends Records {
     }
 
     function getAllowedDomains() {
-    	//print_r($this->soapclientRemote);
 
-	        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-    	    $result     = $this->SOAPEngine->soapclient->getDomains();
-
-        	if (PEAR::isError($result)) {
-            	$error_msg  = $result->getMessage();
-	            $error_fault= $result->getFault();
-    	        $error_code = $result->getCode();
-        	    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            	return false;
-	        } else {
-    	        $this->allowedDomains=$result;
-        	}
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclient->getDomains();
+    
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            $this->allowedDomains=$result;
+        }
      }
 }
 
@@ -3389,59 +3256,25 @@ class SIPAliases extends Records {
 
         //print_r($alias);
 
-        if (is_object($this->SOAPEngine->soapclientRemote)) {
-            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
-            $resultRemote = $this->SOAPEngine->soapclientRemote->addAlias($alias);
+        $deleteAlias=array('username' => $username,
+                           'domain'   => $domain);
 
-            if (PEAR::isError($resultRemote)) {
-                $error_msg=$resultRemote->getMessage();
-                $error_fault=$resultRemote->getFault();
-                $error_code=$resultRemote->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-		    	printf ("<p><font color=green>SIP alias %s@%s has been added at %s </font>",$username,$domain,$this->SOAPEngine->SOAPurlRemote);
-
-                $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-                $result = $this->SOAPEngine->soapclient->addAlias($alias);
-
-                if (PEAR::isError($result)) {
-                    $error_msg=$result->getMessage();
-                    $error_fault=$result->getFault();
-                    $error_code=$result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
-                    // Atttempt to roll back remote
-        			$deleteAlias=array('username' => $username,
-                                       'domain'   => $domain);
-
-		            $this->SOAPEngine->soapclientRemote->addHeader($this->SOAPEngine->SoapAuthRemote);
-        		    $resultRemote = $this->SOAPEngine->soapclientRemote->deleteAlias($deleteAlias);
-
-                    return false;
-                } else {
-		           	printf ("<p><font color=green>SIP alias %s@%s has been added at %s </font>",$username,$domain,$this->SOAPEngine->SOAPurl);
-                }
-            }
-
-        } else {
-
-            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-            $result = $this->SOAPEngine->soapclient->addAlias($alias);
-
-            if (PEAR::isError($result)) {
-                $error_msg=$result->getMessage();
-                $error_fault=$result->getFault();
-                $error_code=$result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-                printf ("<p><font color=green>SIP alias %s@%s has been added. </font>",$username,$domain);
-            }
-        }
+        $function=array('commit'   => array('name'       => 'addAlias',
+                                            'parameters' => array($alias),
+                                            'logs'       => array('success' => sprintf('<li>SIP alias %s@%s has been added',$username,$domain)
+                                                                  ),
+                        'rollback' => array('name'       => 'deleteAlias',
+                                             'parameters' => array($deleteAlias)
+                                            )
+                                            )
+     
+                        );
+     
+        $this->SOAPEngine->execute($function);
 
         return true;
     }
+
     function getAllowedDomains() {
         // Insert credetials
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -3931,7 +3764,7 @@ class SIPAccountsActions extends Actions {
         foreach($selectionKeys as $key) {
             flush();
             //printf ("<li>Performing action=%s on key=%s",$action,$key);
-            list($username,$domain)=explode('@',$key);
+            list($username,$domain)=explode('@',trim($key));
 
         	$account=array('username' => $username,
                            'domain'   => $domain
@@ -3939,118 +3772,108 @@ class SIPAccountsActions extends Actions {
 
         	if ($action=='block') {
 
-        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        $result     = $this->SOAPEngine->soapclient->addToGroup($account,'block');
+                $function=array('commit'   => array('name'       => 'addToGroup',
+                                                    'parameters' => array($account,'block'),
+                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has been blocked',$key)
+                                                                          )
+                                                   )
+        
+                                );
 
-        		if (PEAR::isError($result)) {
-            		$error_msg  = $result->getMessage();
-            		$error_fault= $result->getFault();
-            		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            		break;
-        		} else {
-           			printf ("<li><font color=green>SIP account %s has been blocked</font> ",$key);
-        		}
+                $this->SOAPEngine->execute($function);
 
         	} else if ($action=='deblock') {
-        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        $result     = $this->SOAPEngine->soapclient->removeFromGroup($account,'block');
 
-        		if (PEAR::isError($result)) {
-            		$error_msg  = $result->getMessage();
-            		$error_fault= $result->getFault();
-            		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            		break;
-        		} else {
-           			printf ("<li><font color=green>SIP account %s has been de-blocked</font> ",$key);
-        		}
+                $function=array('commit'   => array('name'       => 'removeFromGroup',
+                                                    'parameters' => array($account,'block'),
+                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has been de-blocked',$key)
+                                                                          )
+                                                   )
+        
+                                );
+
+                $this->SOAPEngine->execute($function);
+
         	} else if ($action=='removefromgroup') {
             	if (!strlen($sub_action_parameter)) {
             		printf ("<li><font color=red>Error: you must enter a group name</font>");
                     break;
                 }
-        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        $result     = $this->SOAPEngine->soapclient->removeFromGroup($account,$sub_action_parameter);
 
-        		if (PEAR::isError($result)) {
-            		$error_msg  = $result->getMessage();
-            		$error_fault= $result->getFault();
-            		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            		break;
-        		} else {
-           			printf ("<li><font color=green>SIP account %s is removed from group %s</font> ",$key,$sub_action_parameter);
-        		}
+                $function=array('commit'   => array('name'       => 'removeFromGroup',
+                                                    'parameters' => array($account,$sub_action_parameter),
+                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has been removed from group',$key,$sub_action_parameter)
+                                                                          )
+                                                   )
+        
+                                );
+
+                $this->SOAPEngine->execute($function);
+
         	} else if ($action=='addtogroup') {
             	if (!strlen($sub_action_parameter)) {
             		printf ("<li><font color=red>Error: you must enter a group name</font>");
                     break;
                 }
-        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        $result     = $this->SOAPEngine->soapclient->addToGroup($account,$sub_action_parameter);
 
-        		if (PEAR::isError($result)) {
-            		$error_msg  = $result->getMessage();
-            		$error_fault= $result->getFault();
-            		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            		break;
-        		} else {
-           			printf ("<li><font color=green>SIP account %s is now in group %s</font> ",$key,$sub_action_parameter);
-        		}
+                $function=array('commit'   => array('name'       => 'addToGroup',
+                                                    'parameters' => array($account,$sub_action_parameter),
+                                                    'logs'       => array('success' => sprintf('<li>SIP account %s is now in group %s',$key,$sub_action_parameter)
+                                                                          )
+                                                   )
+        
+                                );
+
+                $this->SOAPEngine->execute($function);
+
         	} else if ($action=='deblock_quota') {
-        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        $result     = $this->SOAPEngine->soapclient->removeFromGroup($account,'quota');
 
-        		if (PEAR::isError($result)) {
-            		$error_msg  = $result->getMessage();
-            		$error_fault= $result->getFault();
-            		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            		break;
-        		} else {
-           			printf ("<li><font color=green>SIP account %s has been de-blocked </font> ",$key);
-        		}
-        	} else if ($action=='enable_pstn') {
-        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        $result     = $this->SOAPEngine->soapclient->addToGroup($account,'free-pstn');
+                $function=array('commit'   => array('name'       => 'removeFromGroup',
+                                                    'parameters' => array($account,'quota'),
+                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has been deblocked from quota',$key)
+                                                                          )
+                                                   )
+        
+                                );
 
-        		if (PEAR::isError($result)) {
-            		$error_msg  = $result->getMessage();
-            		$error_fault= $result->getFault();
-            		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            		break;
-        		} else {
-           			printf ("<li><font color=green>SIP account %s has access to the PSTN </font> ",$key);
-        		}
-        	} else if ($action=='delete') {
-        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        $result     = $this->SOAPEngine->soapclient->deleteAccount($account);
+                $this->SOAPEngine->execute($function);
 
-        		if (PEAR::isError($result)) {
-            		$error_msg  = $result->getMessage();
-            		$error_fault= $result->getFault();
-            		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            		break;
-        		} else {
-           			printf ("<li><font color=green>SIP account %s has been deleted </font> ",$key);
-        		}
         	} else if ($action=='disable_pstn') {
-        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        $result     = $this->SOAPEngine->soapclient->removeFromGroup($account,'free-pstn');
 
-        		if (PEAR::isError($result)) {
-            		$error_msg  = $result->getMessage();
-            		$error_fault= $result->getFault();
-            		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            		break;
-        		} else {
-           			printf ("<li><font color=green>SIP account %s has been denied access to PSTN </font> ",$key);
-        		}
+                $function=array('commit'   => array('name'       => 'removeFromGroup',
+                                                    'parameters' => array($account,'free-pstn'),
+                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has no access to the PSTN',$key)
+                                                                          )
+                                                   )
+        
+                                );
+
+                $this->SOAPEngine->execute($function);
+
+        	} else if ($action=='enable_pstn') {
+
+                $function=array('commit'   => array('name'       => 'addToGroup',
+                                                    'parameters' => array($account,'free-pstn'),
+                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has access to the PSTN',$key)
+                                                                          )
+                                                   )
+        
+                                );
+
+                $this->SOAPEngine->execute($function);
+
+        	} else if ($action=='delete') {
+
+                $function=array('commit'   => array('name'       => 'deleteAccount',
+                                                    'parameters' => array($account),
+                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has been deleted',$key)
+                                                                          )
+                                                   )
+        
+                                );
+
+                $this->SOAPEngine->execute($function);
+
         	} else if ($action=='prepaid') {
         		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 		        $result     = $this->SOAPEngine->soapclient->getAccount($account);
@@ -4070,18 +3893,16 @@ class SIPAccountsActions extends Actions {
                     $result->quota=intval($result->quota);
 
                     $result->prepaid=1;
-        			$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        	$result     = $this->SOAPEngine->soapclient->updateAccount($result);
 
-                    if (PEAR::isError($result)) {
-            			$error_msg  = $result->getMessage();
-            			$error_fault= $result->getFault();
-            			$error_code = $result->getCode();
-            			printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            			break;
-                    } else {
-           				printf ("<li><font color=green>SIP account %s has been set to prepaid </font> ",$key);
-                    }
+                    $function=array('commit'   => array('name'       => 'updateAccount',
+                                                        'parameters' => array($result),
+                                                        'logs'       => array('success' => sprintf('<li>SIP account %s is now prepaid',$key)
+                                                                              )
+                                                       )
+            
+                                    );
+                	$this->SOAPEngine->execute($function);
+
         		}
         	} else if ($action=='postpaid') {
         		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -4102,18 +3923,16 @@ class SIPAccountsActions extends Actions {
                     $result->quota=intval($result->quota);
 
                     $result->prepaid=0;
-        			$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        	$result     = $this->SOAPEngine->soapclient->updateAccount($result);
 
-                    if (PEAR::isError($result)) {
-            			$error_msg  = $result->getMessage();
-            			$error_fault= $result->getFault();
-            			$error_code = $result->getCode();
-            			printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            			break;
-                    } else {
-           				printf ("<li><font color=green>SIP account %s has been set to postpaid </font> ",$key);
-                    }
+                    $function=array('commit'   => array('name'       => 'updateAccount',
+                                                        'parameters' => array($result),
+                                                        'logs'       => array('success' => sprintf('<li>SIP account %s is now postpaid',$key)
+                                                                              )
+                                                       )
+            
+                                    );
+                	$this->SOAPEngine->execute($function);
+
         		}
         	} else if ($action=='setquota') {
         		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -4133,18 +3952,15 @@ class SIPAccountsActions extends Actions {
         			if (!is_array($result->groups)) 	  $result->groups=array();
                     $result->quota=intval($sub_action_parameter);
 
-        			$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        	$result     = $this->SOAPEngine->soapclient->updateAccount($result);
+                    $function=array('commit'   => array('name'       => 'updateAccount',
+                                                        'parameters' => array($result),
+                                                        'logs'       => array('success' => sprintf('<li>SIP account %s has quota set to %s',$key,$sub_action_parameter)
+                                                                              )
+                                                       )
+            
+                                    );
+                	$this->SOAPEngine->execute($function);
 
-                    if (PEAR::isError($result)) {
-            			$error_msg  = $result->getMessage();
-            			$error_fault= $result->getFault();
-            			$error_code = $result->getCode();
-            			printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            			break;
-                    } else {
-           				printf ("<li><font color=green>SIP account %s has quota set to %s </font> ",$key,$sub_action_parameter);
-                    }
         		}
         	} else if ($action=='rpidasusername') {
         		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -4165,18 +3981,15 @@ class SIPAccountsActions extends Actions {
                     if (is_numeric($username)) $result->rpid=$username;
                     $result->quota=intval($result->quota);
 
-        			$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        	$result     = $this->SOAPEngine->soapclient->updateAccount($result);
+                    $function=array('commit'   => array('name'       => 'updateAccount',
+                                                        'parameters' => array($result),
+                                                        'logs'       => array('success' => sprintf('<li>SIP account %s has PSTN caller ID set to %s',$key,$sub_action_parameter)
+                                                                              )
+                                                       )
+            
+                                    );
+                	$this->SOAPEngine->execute($function);
 
-                    if (PEAR::isError($result)) {
-            			$error_msg  = $result->getMessage();
-            			$error_fault= $result->getFault();
-            			$error_code = $result->getCode();
-            			printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            			break;
-                    } else {
-           				printf ("<li><font color=green>SIP account %s has PSTN caller ID set to %s </font> ",$key,$username);
-                    }
         		}
         	} else if ($action=='prefixtorpid') {
         		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -4202,18 +4015,15 @@ class SIPAccountsActions extends Actions {
                     }
                     $result->quota=intval($result->quota);
 
-        			$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        	$result     = $this->SOAPEngine->soapclient->updateAccount($result);
+                    $function=array('commit'   => array('name'       => 'updateAccount',
+                                                        'parameters' => array($result),
+                                                        'logs'       => array('success' => sprintf('<li>SIP account %s has PSTN caller ID set to %s%s ',$key,$sub_action_parameter,$result->rpid)
+                                                                              )
+                                                       )
+            
+                                    );
+                	$this->SOAPEngine->execute($function);
 
-                    if (PEAR::isError($result)) {
-            			$error_msg  = $result->getMessage();
-            			$error_fault= $result->getFault();
-            			$error_code = $result->getCode();
-            			printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            			break;
-                    } else {
-           				printf ("<li><font color=green>SIP account %s has PSTN caller ID set to %s%s </font> ",$key,$sub_action_parameter,$result->rpid);
-                    }
         		}
         	} else if ($action=='addbalance') {
             	if (!is_numeric($sub_action_parameter)) {
@@ -4237,18 +4047,14 @@ class SIPAccountsActions extends Actions {
                     continue;
                 }
 
-        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-		        $result     = $this->SOAPEngine->soapclient->addBalance($account,$sub_action_parameter);
-
-        		if (PEAR::isError($result)) {
-            		$error_msg  = $result->getMessage();
-            		$error_fault= $result->getFault();
-            		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            		break;
-        		} else {
-           			printf ("<li><font color=green>SIP account %s balance has been increased with %s</font> ",$key,$sub_action_parameter);
-        		}
+                $function=array('commit'   => array('name'       => 'addBalance',
+                                                    'parameters' => array($account,$sub_action_parameter),
+                                                    'logs'       => array('success' => sprintf('<li>SIP account %s balance has been increased with %s',$key,$sub_action_parameter)
+                                                                          )
+                                                   )
+        
+                                );
+                $this->SOAPEngine->execute($function);
 
             }
         }

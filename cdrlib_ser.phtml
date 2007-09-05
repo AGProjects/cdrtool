@@ -2232,7 +2232,10 @@ class CDR_ser_radius extends CDR {
 
 		$this->domainNormalized=strtolower($this->domainNormalized);
 
-        if (!$this->BillingPartyId) $this->BillingPartyId=$this->aNumberPrint;
+        if (!$this->BillingPartyId || $this->BillingPartyId== 'n/a') {
+        	$this->BillingPartyId=$this->aNumberPrint;
+        }
+
 		$this->BillingPartyId=strtolower($this->BillingPartyId);
 
 		$this->BillingPartyIdPrint=$this->BillingPartyId;
