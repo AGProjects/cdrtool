@@ -79,7 +79,7 @@ class SOAPEngine {
                 $this->skip[$_key]=$this->soapEngines[$_key]['skip'];
             }
 
-            $this->enableResellers= $this->soapEngines[$this->soapEngineId]['enableResellers'];
+            $this->enableResellers = $this->soapEngines[$this->soapEngineId]['enableResellers'];
 
 			if (!$reseller) {
             	$this->reseller=$this->soapEngines[$this->soapEngineId]['impersonate'];
@@ -577,7 +577,7 @@ class Records {
 
 class ENUMmappings extends Records {
     var $sortElements=array('changeDate' => 'Change date',
-                            'number'     => 'E.164 number',
+                            'number'     => 'Number',
                             'tld'        => 'TLD',
                             'owner'      => 'Owner'
                             );
@@ -656,6 +656,7 @@ class ENUMmappings extends Records {
                               "webname"=>"Public key",
                               "schemas"=>array("http://"))
         );
+
     function ENUMmappings(&$SOAPEngine) {
         $this->filters   = array('number'       => trim($_REQUEST['number_filter']),
                                  'tld'          => trim($_REQUEST['tld_filter']),
@@ -727,13 +728,14 @@ class ENUMmappings extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
-                <td><b>E.164 number</b></td>
+                <td><b>Number</b></td>
                 <td><b>Top level domain</b></td>
                 <td><b>DNS name</b></td>
-                <td><b>Service</b></td>
+                <td><b>Customer</b></td>
+                <td><b>Srv</b></td>
                 <td><b>Map to</b></td>
                 <td><b>TTL</b></td>
-                <td><b>Priority</b></td>
+                <td><b>Prio</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Info</b></td>
                 <td><b>Action</b></td>
@@ -773,20 +775,20 @@ class ENUMmappings extends Records {
                     foreach ($number->mappings as $_mapping) {
                         if ($j==1) {
 
-        			$_url = $this->url.sprintf("&service=%s&action=Delete&number_filter=%s&tld_filter=%s",
-                    urlencode($this->SOAPEngine->service),
-                    urlencode($number->id->number),
-                    urlencode($number->id->tld)
-                    );
-
-                    if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['number_filter'] == $number->id->number &&
-                        $_REQUEST['tld_filter'] == $number->id->tld) {
-                		$_url .= "&confirm=1";
-                        $actionText = "<font color=red>Confirm</font>";
-                    } else {
-                        $actionText = "Delete";
-                    }
+                            $_url = $this->url.sprintf("&service=%s&action=Delete&number_filter=%s&tld_filter=%s",
+                            urlencode($this->SOAPEngine->service),
+                            urlencode($number->id->number),
+                            urlencode($number->id->tld)
+                            );
+        
+                            if ($_REQUEST['action'] == 'Delete' &&
+                                $_REQUEST['number_filter'] == $number->id->number &&
+                                $_REQUEST['tld_filter'] == $number->id->tld) {
+                                $_url .= "&confirm=1";
+                                $actionText = "<font color=red>Confirm</font>";
+                            } else {
+                                $actionText = "Delete";
+                            }
 
                             printf("
                             <tr bgcolor=%s>
@@ -794,6 +796,7 @@ class ENUMmappings extends Records {
                             <td>+%s</td>
                             <td>%s</td>
                             <td>%s</td>
+                            <td>%s.%s</td>
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
@@ -807,6 +810,8 @@ class ENUMmappings extends Records {
                             $number->id->number,
                             $number->id->tld,
                             $this->tel2enum($number->id->number,$number->id->tld),
+                            $number->reseller,
+                            $number->customer,
                             ucfirst($_mapping->type),
                             $_mapping->mapto,
                             $_mapping->ttl,
@@ -819,6 +824,7 @@ class ENUMmappings extends Records {
                         } else {
                             printf("
                             <tr bgcolor=%s>
+                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
@@ -861,7 +867,7 @@ class ENUMmappings extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" E.164 number: <input type=text size=15 name=number_filter value='%s'>",$this->filters['number']);
+        printf (" Number: <input type=text size=15 name=number_filter value='%s'>",$this->filters['number']);
         printf (" TLD:");
         if ($this->allowedDomains) {
             $selected_tld[$this->filters['tld_filter']]='selected';
@@ -912,7 +918,7 @@ class ENUMmappings extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteNumber',
                                             'parameters' => array($enum_id),
-                                            'logs'       => array('success' => sprintf('<li>ENUM number %s under %s has been deleted',$this->filters['number'],$this->filters['tld'])
+                                            'logs'       => array('success' => sprintf('<li>ENUM number +%s under %s has been deleted',$this->filters['number'],$this->filters['tld'])
                                                                   )
                                            )
 
@@ -1084,13 +1090,9 @@ class ENUMmappings extends Records {
 
                 $function=array('commit'   => array('name'       => 'addNumber',
                                                     'parameters' => array($enum_number),
-                                                    'logs'       => array('success' => sprintf('<li>ENUM number %s under %s has been added',$this->filters['number'],$this->filters['tld'])
-                                                                          ),
+                                                    'logs'       => array('success' => sprintf('<li>ENUM number +%s under %s has been added',$number,$tld))),
                                 'rollback' => array('name'       => 'deleteNumber',
-                                                     'parameters' => array($enumId)
-                                                    )
-                                                    )
-             
+                                                    'parameters' => array($enumId))
                                 );
              
                 $this->SOAPEngine->execute($function);
@@ -1106,9 +1108,8 @@ class ENUMmappings extends Records {
 
 class ENUMranges extends Records {
     var $sortElements=array('changeDate' => 'Change date',
-                            'number'     => 'E.164 number',
-                            'tld'        => 'TLD',
-                            'owner'      => 'Owner'
+                            'number'     => 'Number',
+                            'tld'        => 'TLD'
                             );
 
     function ENUMranges(&$SOAPEngine) {
@@ -1151,8 +1152,9 @@ class ENUMranges extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
-                <td><b>E.164 prefix </b></td>
+                <td><b>Prefix </b></td>
                 <td><b>Top level domain</b></td>
+                <td><b>Customer</b></td>
                 <td><b>TTL</b></td>
                 <td><b>Min digits</b></td>
                 <td><b>Max digits</b></td>
@@ -1209,6 +1211,7 @@ class ENUMranges extends Records {
                             <td>%s</td>
                             <td>+%s</td>
                             <td>%s</td>
+                            <td>%s.%s</td>
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
@@ -1221,6 +1224,8 @@ class ENUMranges extends Records {
                             $index,
                             $range->id->prefix,
                             $range->id->tld,
+                            $range->customer,
+                            $range->reseller,
                             $range->ttl,
                             $range->minDigits,
                             $range->maxDigits,
@@ -1356,23 +1361,19 @@ class ENUMranges extends Records {
                      'ttl'        => $ttl,
                      'minDigits'  => intval(trim($_REQUEST['minDigits'])),
                      'maxDigits'  => intval(trim($_REQUEST['maxDigits'])),
-                     'customer' => intval($customer),
-                     'reseller' => intval($reseller),
+                     'customer'   => intval($customer),
+                     'reseller'   => intval($reseller),
                      'owner'      => intval($_REQUEST['owner'])
         			);
 
         $deleteRange=array('prefix'=>$prefix,
                            'tld'=>$tld);
 
-        $function=array('commit'   => array('name'       => 'addNumber',
+        $function=array('commit'   => array('name'       => 'addRange',
                                             'parameters' => array($range),
-                                            'logs'       => array('success' => sprintf('<li>ENUM range %s under %s has been added',$this->filters['prefix'],$this->filters['tld'])
-                                                                  ),
+                                            'logs'       => array('success' => sprintf('<li>ENUM range +%s under %s has been added',$this->filters['prefix'],$this->filters['tld']))),
                         'rollback' => array('name'       => 'deleteRange',
-                                             'parameters' => array($deleteRange)
-                                            )
-                                            )
-     
+                                            'parameters' => array($deleteRange))
                         );
      
         $this->SOAPEngine->execute($function);
@@ -2578,8 +2579,7 @@ class Routes extends Records {
 class SIPAccounts extends Records {
     var $sortElements=array('changeDate' => 'Change date',
                             'username'   => 'Username',
-                            'domain'     => 'Domain',
-                            'owner'      => 'Owner'
+                            'domain'     => 'Domain'
                             );
 
     function SIPAccounts(&$SOAPEngine) {
@@ -3036,13 +3036,9 @@ class SIPAccounts extends Records {
 
         $function=array('commit'   => array('name'       => 'addAccount',
                                             'parameters' => array($account),
-                                            'logs'       => array('success' => sprintf('<li>SIP account %s@%s has been added',$username,$domain)
-                                                                  ),
+                                            'logs'       => array('success' => sprintf('<li>SIP account %s@%s has been added',$username,$domain))),
                         'rollback' => array('name'       => 'deleteAlias',
-                                             'parameters' => array($deleteAccount)
-                                            )
-                                            )
-     
+                                            'parameters' => array($deleteAccount))
                         );
      
         $this->SOAPEngine->execute($function);
@@ -3090,8 +3086,7 @@ class SIPAliases extends Records {
                             'aliasUsername'  => 'Alias user',
                             'aliasDomain'    => 'Alias domain',
                             'targetUsername' => 'Target user',
-                            'targetDomain'   => 'Target domain',
-                            'owner'          => 'Owner'
+                            'targetDomain'   => 'Target domain'
                             );
 
     function SIPAliases(&$SOAPEngine) {
@@ -3425,13 +3420,9 @@ class SIPAliases extends Records {
 
         $function=array('commit'   => array('name'       => 'addAlias',
                                             'parameters' => array($alias),
-                                            'logs'       => array('success' => sprintf('<li>SIP alias %s@%s has been added',$username,$domain)
-                                                                  ),
+                                            'logs'       => array('success' => sprintf('<li>SIP alias %s@%s has been added',$username,$domain))),
                         'rollback' => array('name'       => 'deleteAlias',
-                                             'parameters' => array($deleteAlias)
-                                            )
-                                            )
-     
+                                            'parameters' => array($deleteAlias))
                         );
      
         $this->SOAPEngine->execute($function);
@@ -3727,8 +3718,8 @@ class Domains extends Records {
                     $bgcolor,
                     $index,
                     $domain,
-                    $this->customer,
-                    $this->reseller,
+                    $domain->customer,
+                    $domain->reseller,
                     $_url,
                     $actionText
                     );
