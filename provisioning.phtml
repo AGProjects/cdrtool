@@ -26,7 +26,7 @@ $layout->showTopMenu();
 
 $SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines);
 $_class     = $SOAPEngine->recordsClass;
-$RECORDS    = new $_class(&$SOAPEngine,$extraFormElements);
+$RECORDS    = new $_class(&$SOAPEngine,true);
 
 if ($_REQUEST['action']=='Add') $RECORDS->addRecord();
 if ($_REQUEST['action']=='Delete') $RECORDS->deleteRecord();

@@ -255,14 +255,14 @@ class Records {
     var $resellers       = array();
     var $customers       = array();
 
-    function Records(&$SOAPEngine) {
+    function Records(&$SOAPEngine,$adminonly) {
     	$this->SOAPEngine=&$SOAPEngine;
 
         $this->sorting['sortBy']    = trim($_REQUEST['sortBy']);
         $this->sorting['sortOrder'] = trim($_REQUEST['sortOrder']);
 
         $this->next                 = $_REQUEST['next'];
-        $this->adminonly            = trim($_REQUEST['adminonly']);
+        $this->adminonly            = $adminonly;
 
 		$this->reseller = $this->SOAPEngine->reseller;
         $this->url      = $this->SOAPEngine->url;
@@ -283,6 +283,10 @@ class Records {
 
         if ($this->filters['reseller']) {
         	$this->url .= sprintf('&filter_reseller=%s',$this->filters['reseller']);
+        }
+
+        if ($this->adminonly) {
+        	$this->url .= sprintf('&adminonly=%s',$this->adminonly);
         }
 
         $this->getResellers();
@@ -315,6 +319,7 @@ class Records {
         		$this->showCustomerForm();
             }
         } else {
+            printf ("Reseller: %s",$this->reseller);
         	$this->showCustomerForm();
         }
     }
@@ -493,6 +498,9 @@ class Records {
 
     function printHiddenFormElements () {
         printf("<input type=hidden name=service value='%s'>",$this->SOAPEngine->service);
+        if ($this->adminonly) {
+        	printf("<input type=hidden name=adminonly value='%s'>",$this->adminonly);
+        }
 
         foreach (array_keys($this->SOAPEngine->extraFormElements) as $element) {
         	if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
@@ -657,14 +665,14 @@ class ENUMmappings extends Records {
                               "schemas"=>array("http://"))
         );
 
-    function ENUMmappings(&$SOAPEngine) {
+    function ENUMmappings(&$SOAPEngine,$adminonly) {
         $this->filters   = array('number'       => trim($_REQUEST['number_filter']),
                                  'tld'          => trim($_REQUEST['tld_filter']),
                                  'type'         => trim($_REQUEST['type_filter']),
                                  'mapto'        => trim($_REQUEST['mapto_filter']),
                                  'owner'        => trim($_REQUEST['owner_filter'])
                                 );
-		$this->Records(&$SOAPEngine);
+		$this->Records(&$SOAPEngine,$adminonly);
     }
 
     function listRecords() {
@@ -1112,12 +1120,12 @@ class ENUMranges extends Records {
                             'tld'        => 'TLD'
                             );
 
-    function ENUMranges(&$SOAPEngine) {
+    function ENUMranges(&$SOAPEngine,$adminonly) {
         $this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
                                  'tld'          => trim($_REQUEST['tld_filter'])
                                 );
         
-		$this->Records(&$SOAPEngine);
+		$this->Records(&$SOAPEngine,$adminonly);
     }
 
     function listRecords() {
@@ -1398,12 +1406,12 @@ class TrustedPeers extends Records {
                             'ip' =>'IP address'
                             );
 
-    function TrustedPeers(&$SOAPEngine) {
+    function TrustedPeers(&$SOAPEngine,$adminonly) {
     	$this->filters   = array('ip'     => trim($_REQUEST['ip_filter']),
                                  'description'  => trim($_REQUEST['description_filter'])
                                  );
 
-		$this->Records(&$SOAPEngine);
+		$this->Records(&$SOAPEngine,$adminonly);
     }
 
     function listRecords() {
@@ -1679,11 +1687,11 @@ class GatewayGroups extends Records {
                             'name'   => 'Name'
                             );
 
-    function GatewayGroups(&$SOAPEngine) {
+    function GatewayGroups(&$SOAPEngine,$adminonly) {
     	$this->filters   = array('group'   => trim($_REQUEST['group_filter'])
                                  );
 
-		$this->Records(&$SOAPEngine);
+		$this->Records(&$SOAPEngine,$adminonly);
     }
 
     function listRecords() {
@@ -1924,12 +1932,12 @@ class Gateways extends Records {
                             'prefix' => 'Prefix'
                             );
 
-    function Gateways(&$SOAPEngine) {
+    function Gateways(&$SOAPEngine,$adminonly) {
     	$this->filters   = array('name'   => trim($_REQUEST['name_filter']),
                                  'group'  => trim($_REQUEST['group_filter'])
                                  );
 
-		$this->Records(&$SOAPEngine);
+		$this->Records(&$SOAPEngine,$adminonly);
     }
 
     function listRecords() {
@@ -2260,13 +2268,13 @@ class Routes extends Records {
                             'priority'     => 'Priority'
                             );
 
-    function Routes(&$SOAPEngine) {
+    function Routes(&$SOAPEngine,$adminonly) {
     	$this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
                                  'gatewayGroup' => trim($_REQUEST['gatewayGroup_filter']),
                                  'fromURI'      => trim($_REQUEST['fromURI_filter'])
                                  );
 
-		$this->Records(&$SOAPEngine);
+		$this->Records(&$SOAPEngine,$adminonly);
     }
 
     function listRecords() {
@@ -2586,14 +2594,14 @@ class SIPAccounts extends Records {
                             'domain'     => 'Domain'
                             );
 
-    function SIPAccounts(&$SOAPEngine) {
+    function SIPAccounts(&$SOAPEngine,$adminonly) {
 
         $this->filters = array('username' => trim($_REQUEST['username_filter']),
                                'domain'   => trim($_REQUEST['domain_filter']),
                                'fullname' => trim($_REQUEST['fullname_filter'])
                               );
 
-		$this->Records(&$SOAPEngine);
+		$this->Records(&$SOAPEngine,$adminonly);
 
     }
 
@@ -3093,7 +3101,7 @@ class SIPAliases extends Records {
                             'targetDomain'   => 'Target domain'
                             );
 
-    function SIPAliases(&$SOAPEngine) {
+    function SIPAliases(&$SOAPEngine,$adminonly) {
         $this->filters   = array('aliasUsername'     => trim($_REQUEST['alias_username_filter']),
                                  'aliasDomain'       => trim($_REQUEST['alias_domain_filter']),
                                  'targetUsername'    => trim($_REQUEST['target_username_filter']),
@@ -3101,7 +3109,7 @@ class SIPAliases extends Records {
                            );
 
 
-		$this->Records(&$SOAPEngine);
+		$this->Records(&$SOAPEngine,$adminonly);
 
     }
 
@@ -3456,12 +3464,12 @@ class DomainStatistics extends Records {
 
     var $maxrowsperpage= 200;
 
-    function DomainStatistics(&$SOAPEngine) {
+    function DomainStatistics(&$SOAPEngine,$adminonly) {
         $this->filters   = array(
                            'domain'       => trim($_REQUEST['domain_filter'])
                            );
 
-		$this->Records(&$SOAPEngine);
+		$this->Records(&$SOAPEngine,$adminonly);
     }
 
     function listRecords() {
@@ -3630,12 +3638,12 @@ class Domains extends Records {
 
     var $maxrowsperpage= 200;
 
-    function Domains(&$SOAPEngine) {
+    function Domains(&$SOAPEngine,$adminonly) {
         $this->filters   = array(
                            'domain'       => trim($_REQUEST['domain_filter'])
                            );
 
-		$this->Records(&$SOAPEngine);
+		$this->Records(&$SOAPEngine,$adminonly);
     }
 
     function listRecords() {
@@ -3851,12 +3859,12 @@ class Customers extends Records {
 
     var $maxrowsperpage= 200;
 
-    function Customers(&$SOAPEngine) {
+    function Customers(&$SOAPEngine,$adminonly) {
         $this->filters   = array(
                            'id'       => trim($_REQUEST['id_filter'])
                            );
 
-		$this->Records(&$SOAPEngine);
+		$this->Records(&$SOAPEngine,$adminonly);
     }
 
     function listRecords() {
@@ -4011,7 +4019,7 @@ class Customers extends Records {
 class Actions {
     var $actions=array();
 
-    function Actions(&$SOAPEngine) {
+    function Actions(&$SOAPEngine,$adminonly) {
 		$this->SOAPEngine = $SOAPEngine;
     }
 
@@ -4094,8 +4102,8 @@ class SIPAccountsActions extends Actions {
                        'addbalance'     => 'Add to prepaid balance value:'
                        );
 
-    function SIPAccountsActions(&$SOAPEngine) {
-        $this->Actions(&$SOAPEngine);
+    function SIPAccountsActions(&$SOAPEngine,$adminonly) {
+        $this->Actions(&$SOAPEngine,$adminonly);
     }
 
     function performActions($selectionKeys,$action,$sub_action_parameter) {
