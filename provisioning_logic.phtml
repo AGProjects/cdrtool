@@ -311,6 +311,9 @@ class Records {
         printf ("</select>");
         if ($this->adminonly) {
         	$this->showResellerForm();
+            if ($this->filters['reseller']) {
+        		$this->showCustomerForm();
+            }
         } else {
         	$this->showCustomerForm();
         }
@@ -341,9 +344,9 @@ class Records {
             $url_begin=$this->url."&next=0";
 
             if ($mod_show_next/$this->maxrowsperpage >= 1) {
-            	printf ("<a href='%s'>Begin</a>",$url_begin);
+            	printf ("<a href='%s'>Begin</a> ",$url_begin);
             }
-            printf ("<a href='%s'>Previous</a>",$url_prev);
+            printf ("<a href='%s'>Previous</a> ",$url_prev);
         }
         
         print "
@@ -354,7 +357,7 @@ class Records {
         if ($this->next + $this->maxrowsperpage < $this->rows)  {
             $show_next = $this->maxrowsperpage + $this->next;
             $url_next  = $this->url."&next=$show_next";
-            printf ("<a href='%s'>Next</a>",$url_next);
+            printf ("<a href='%s'>Next</a> ",$url_next);
         }
 
         print "
@@ -530,6 +533,8 @@ class Records {
 
     function getCustomers() {
     	if (!$this->SOAPEngine->enableResellers) return;
+        if ($this->filters['reseller']) {
+        }
     }
 
     function getResellers() {
@@ -537,8 +542,6 @@ class Records {
         if (!$this->adminonly) {
         	return;
         }
-
-        //print "getResellers()";
     }
 
     function showCustomerForm() {
@@ -548,7 +551,7 @@ class Records {
             print "<select name=filter_customer>";
             print "<option>";
             foreach (array_keys($this->customers) as $_res) {
-                printf ("<option value='%s' %s>%s\n",$_res,$select_customer[$_res],$this->customers[$_res]);
+                printf ("<option value='%s' %s>%s. %s\n",$_res,$select_customer[$_res],$_res,$this->customers[$_res]);
             }
             print "</select>";
         } else {
@@ -556,14 +559,14 @@ class Records {
         }
     }
 
-    function showResellerForm() {
+    function showResellerForm($name='filter_reseller') {
     	print " Reseller:";
         if (count($this->resellers) && count($this->resellers) < 200) {
             $select_reseller[$this->filters['reseller']]='selected';
             print "<select name=filter_reseller>";
             print "<option>";
             foreach (array_keys($this->resellers) as $_res) {
-                printf ("<option value='%s' %s>%s\n",$_res,$select_reseller[$reseller],$this->resellers[$_res]);
+                printf ("<option value='%s' %s>%s. %s\n",$_res,$select_reseller[$reseller],$_res,$this->resellers[$_res]);
             }
             print "</select>";
         } else {
@@ -964,6 +967,13 @@ class ENUMmappings extends Records {
                     ";
             printf (" <input type=text size=25 name=mapto>");
             printf (" TTL: <input type=text size=5 name=ttl value=3600>");
+            if ($this->adminonly) {
+            	$this->showResellerForm('reseller');
+            	$this->showCustomerForm('customer');
+            } else {
+            	$this->showCustomerForm('customer');
+            }
+
             printf (" Owner: <input type=text size=5 name=owner>");
 
             print "
@@ -1012,6 +1022,17 @@ class ENUMmappings extends Records {
             return false;
         }
 
+        if ($this->adminonly) {
+        	$reseller = trim($_REQUEST['reseller']);
+        	$customer = trim($_REQUEST['customer']);
+        } else {
+        	$reseller = $this->reseller;
+        	$customer = trim($_REQUEST['customer']);
+            if (!$customer || !in_array($customer,array_keys($this->customers))) {
+                $customer=$reseller;
+            }
+        }
+
 		if (!trim($_REQUEST['ttl'])) {
             $ttl=3600;
         } else {
@@ -1040,8 +1061,10 @@ class ENUMmappings extends Records {
 
         $mapto=$_scheme.$_value;
 
-        $enum_number=array('id'    => $enum_id,
-                           'owner' => intval(trim($_REQUEST['owner'])),
+        $enum_number=array('id'       => $enum_id,
+                           'owner'    => intval(trim($_REQUEST['owner'])),
+                           'customer' => intval($customer),
+                           'reseller' => intval($reseller),
                            'mappings' => array(array('type'  => trim($_REQUEST['type']),
                                                      'mapto' => $mapto,
                                                      'ttl'   => intval(trim($_REQUEST['ttl']))
@@ -1276,7 +1299,13 @@ class ENUMranges extends Records {
             printf (" TTL: <input type=text size=5 name=ttl value=3600>");
             printf (" Min Digits: <input type=text size=3 name=minDigits value=11>");
             printf (" Max Digits: <input type=text size=3 name=maxDigits value=11>");
-            printf (" Owner: <input type=text size=10 name=owner>");
+            if ($this->adminonly) {
+            	$this->showResellerForm('reseller');
+            	$this->showCustomerForm('customer');
+            } else {
+            	$this->showCustomerForm('customer');
+            }
+            printf (" Owner: <input type=text size=5 name=owner>");
 
             print "
 	        </td>
@@ -1304,6 +1333,17 @@ class ENUMranges extends Records {
             return false;
         }
 
+        if ($this->adminonly) {
+        	$reseller = trim($_REQUEST['reseller']);
+        	$customer = trim($_REQUEST['customer']);
+        } else {
+        	$reseller = $this->reseller;
+        	$customer = trim($_REQUEST['customer']);
+            if (!$customer || !in_array($customer,array_keys($this->customers))) {
+                $customer=$reseller;
+            }
+        }
+
 		if (!trim($_REQUEST['ttl'])) {
             $ttl=3600;
         } else {
@@ -1316,6 +1356,8 @@ class ENUMranges extends Records {
                      'ttl'        => $ttl,
                      'minDigits'  => intval(trim($_REQUEST['minDigits'])),
                      'maxDigits'  => intval(trim($_REQUEST['maxDigits'])),
+                     'customer' => intval($customer),
+                     'reseller' => intval($reseller),
                      'owner'      => intval($_REQUEST['owner'])
         			);
 
@@ -1525,7 +1567,14 @@ class TrustedPeers extends Records {
             ";
             printf (" IP address: <input type=text size=20 name=ipaddress>");
             printf (" Description: <input type=text size=30 name=description>");
-            printf (" Owner: <input type=text size=10 name=owner>");
+            if ($this->adminonly) {
+            	$this->showResellerForm('reseller');
+            	$this->showCustomerForm('customer');
+            } else {
+            	$this->showCustomerForm('customer');
+            }
+
+            printf (" Owner: <input type=text size=5 name=owner>");
 
             print "
 	        </td>
@@ -1549,6 +1598,17 @@ class TrustedPeers extends Records {
         $description = trim($_REQUEST['description']);
         $owner       = trim($_REQUEST['owner']);
 
+        if ($this->adminonly) {
+        	$reseller = trim($_REQUEST['reseller']);
+        	$customer = trim($_REQUEST['customer']);
+        } else {
+        	$reseller = $this->reseller;
+        	$customer = trim($_REQUEST['customer']);
+            if (!$customer || !in_array($customer,array_keys($this->customers))) {
+                $customer=$reseller;
+            }
+        }
+
 		if (!strlen($ipaddress) || !strlen($description)) {
             printf ("<p><font color=red>Error: Missing IP or description. </font>");
             return false;
@@ -1557,7 +1617,9 @@ class TrustedPeers extends Records {
         $peer=array(
                      'ip'          => $ipaddress,
                      'description' => $description,
-                     'owner'       => intval($_REQUEST['owner'])
+                     'owner'       => intval($_REQUEST['owner']),
+                     'customer'    => intval($customer),
+                     'reseller'    => intval($reseller)
         			);
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -2665,6 +2727,7 @@ class SIPAccounts extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>SIP account</b></td>
+                <td><b>Customer</b></td>
                 <td><b>Name</b></td>
                 <td><b>Email</b></td>
                 <td><b>PSTN CLI</b></td>
@@ -2754,7 +2817,8 @@ class SIPAccounts extends Records {
                     printf("
                     <tr bgcolor=%s>
                     <td>%s </td>
-                    <td>%s (%s.%s)</td>
+                    <td>%s</td>
+                    <td>%s.%s</td>
                     <td>%s %s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -2862,7 +2926,7 @@ class SIPAccounts extends Records {
             <input type=submit name=action value=Add>
             ";
 
-            printf (" SIP: <input type=text size=25 name=account value='%s'>",$_REQUEST['account']);
+            printf (" SIP: <input type=text size=15 name=account value='%s'>",$_REQUEST['account']);
             if (is_array($this->allowedDomains)) {
             	print "@<select name=domain>";
                 foreach ($this->allowedDomains as $_domain) {
@@ -2872,11 +2936,17 @@ class SIPAccounts extends Records {
 
             }
 
-            printf (" Password: <input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
-            printf (" Name: <input type=text size=25 name=fullname value='%s'>",$_REQUEST['fullname']);
-            printf (" Email: <input type=text size=25 name=email value='%s'>",$_REQUEST['email']);
+            printf (" Pass: <input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
+            printf (" Name: <input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
+            printf (" Email: <input type=text size=15 name=email value='%s'>",$_REQUEST['email']);
             //printf (" CallerId: <input type=text size=11 name=rpid value='%s'>",$_REQUEST['rpid']);
-            printf (" Owner: <input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
+            if ($this->adminonly) {
+            	$this->showResellerForm('reseller');
+            	$this->showCustomerForm('customer');
+            } else {
+            	$this->showCustomerForm('customer');
+            }
+            printf (" Owner: <input type=text size=6 name=owner value='%s'>",$_REQUEST['owner']);
             /*
             print " TZ: ";
 
@@ -2901,6 +2971,17 @@ class SIPAccounts extends Records {
 
     function addRecord() {
     	$account_els  = explode("@", trim($_REQUEST['account']));
+
+        if ($this->adminonly) {
+        	$reseller = trim($_REQUEST['reseller']);
+        	$customer = trim($_REQUEST['customer']);
+        } else {
+        	$reseller = $this->reseller;
+        	$customer = trim($_REQUEST['customer']);
+            if (!$customer || !in_array($customer,array_keys($this->customers))) {
+                $customer=$reseller;
+            }
+        }
 
         $username=$account_els[0];
 
@@ -2943,7 +3024,9 @@ class SIPAccounts extends Records {
                      'password'   => $password,
                      'timezone'   => $timezone,
                      'email'      => trim($_REQUEST['email']),
-                     'owner'      => intval($_REQUEST['owner'])
+                     'owner'      => intval($_REQUEST['owner']),
+                     'customer'   => intval($customer),
+                     'reseller'   => intval($reseller)
         			);
 
         //print_r($account);
@@ -3096,6 +3179,7 @@ class SIPAliases extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>SIP alias</b></td>
+                <td><b>Customer</b></td>
                 <td><b>SIP target</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Action</b></td>
@@ -3149,7 +3233,8 @@ class SIPAliases extends Records {
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
-                    <td>%s@%s (%s.%s)</td>
+                    <td>%s@%s</td>
+                    <td>%s.%s</td>
                     <td>%s@%s</td>
                     <td>%s</td>
                     <td><a href=%s>%s</a></td>
@@ -3262,7 +3347,15 @@ class SIPAliases extends Records {
             }
 
             printf (" SIP target: <input type=text size=35 name=target>");
-            printf (" Owner: <input type=text size=10 name=owner>");
+
+            if ($this->adminonly) {
+            	$this->showResellerForm('reseller');
+            	$this->showCustomerForm('customer');
+            } else {
+            	$this->showCustomerForm('customer');
+            }
+
+            printf (" Owner: <input type=text size=6 name=owner>");
 
             print "
 	        </td>
@@ -3302,6 +3395,17 @@ class SIPAliases extends Records {
             return false;
         }
 
+        if ($this->adminonly) {
+        	$reseller = trim($_REQUEST['reseller']);
+        	$customer = trim($_REQUEST['customer']);
+        } else {
+        	$reseller = $this->reseller;
+        	$customer = trim($_REQUEST['customer']);
+            if (!$customer || !in_array($customer,array_keys($this->customers))) {
+                $customer=$reseller;
+            }
+        }
+
         $alias=array(
                      'id'     => array('username' => $username,
                                        'domain'   => $domain
@@ -3309,7 +3413,9 @@ class SIPAliases extends Records {
                      'target' => array('username' => $target_els[0],
                                        'domain'   => $target_els[1]
                                        ),
-                     'owner'  => intval($_REQUEST['owner'])
+                     'owner'  => intval($_REQUEST['owner']),
+                     'customer'   => intval($customer),
+                     'reseller'   => intval($reseller)
         			);
 
         //print_r($alias);
@@ -3567,7 +3673,7 @@ class Domains extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>Domain</b></td>
-                <td><b>Reseller</b></td>
+                <td><b>Customer</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -3615,12 +3721,13 @@ class Domains extends Records {
                     <tr bgcolor=%s>
                     <td>%s</td>
                     <td>%s</td>
-                    <td>%s</td>
+                    <td>%s.%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
                     $index,
                     $domain,
+                    $this->customer,
                     $this->reseller,
                     $_url,
                     $actionText
@@ -3690,6 +3797,13 @@ class Domains extends Records {
 
             printf (" Domain: <input type=text size=20 name=domain>");
 
+            if ($this->adminonly) {
+            	$this->showResellerForm('reseller');
+            	$this->showCustomerForm('customer');
+            } else {
+            	$this->showCustomerForm('customer');
+            }
+
             print "
 	        </td>
         	<td align=right>
@@ -3708,7 +3822,18 @@ class Domains extends Records {
 
     function addRecord() {
 
-        $domain=trim($_REQUEST['domain']);
+        $domain   = trim($_REQUEST['domain']);
+
+        if ($this->adminonly) {
+        	$reseller = trim($_REQUEST['reseller']);
+        	$customer = trim($_REQUEST['customer']);
+        } else {
+        	$reseller = $this->reseller;
+        	$customer = trim($_REQUEST['customer']);
+            if (!$customer || !in_array($customer,array_keys($this->customers))) {
+                $customer=$reseller;
+            }
+        }
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
