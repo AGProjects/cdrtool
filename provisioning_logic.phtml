@@ -30,6 +30,9 @@ class SOAPEngine {
                                           ),
                         'pstnRoutes' => array('recordsClass' => 'Routes',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
+                                          ),
+                        'customers'  => array('recordsClass' => 'Customers',
+                                           'soapClass'    => 'WebService_NGNPro_CustomerPort'
                                           )
                         );
 
@@ -75,6 +78,8 @@ class SOAPEngine {
             	$this->skipServices[$_key]=$this->soapEngines[$_key]['skipServices'];
                 $this->skip[$_key]=$this->soapEngines[$_key]['skip'];
             }
+
+            $this->enableResellers= $this->soapEngines[$this->soapEngineId]['enableResellers'];
 
 			if (!$reseller) {
             	$this->reseller=$this->soapEngines[$this->soapEngineId]['impersonate'];
@@ -148,27 +153,6 @@ class SOAPEngine {
             if (!strlen($this->extraFormElements[$element])) continue;
             $this->url  .= sprintf('&%s=%s',$element,urlencode($this->extraFormElements[$element]));
         }
-    }
-
-    function showEngineSelection() {
-        $selected_soapEngine[$this->service]='selected';
-
-        printf ("<select name=service onChange=\"document.soapengine.submit.disabled = true; location.href = '%s&service=' + this.options[this.selectedIndex].value\">",$this->url);
-        $j=1;
-        foreach (array_keys($this->soapEngines) as $_engine) {
-        	if ($this->skip[$_engine]) continue;
-
-        	if ($j>1) printf ("<option value=''>--------");
-            $k=1;
-            foreach (array_keys($this->services) as $_service) {
-                $idx=$_engine.'@'.$_service;
-                if (in_array($_service,$this->skipServices[$_engine])) continue;
-                printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_engine,$_service,$selected_soapEngine[$idx],$j,$k,ucfirst($_service),$this->soapEngines[$_engine]['name']);
-                $k++;
-            }
-            $j++;
-        }
-        printf ("</select>");
     }
 
     function execute($function) {
@@ -268,17 +252,20 @@ class Records {
     var $allowedDomains  = false;
     var $selectionActive = false;
     var $selectionKeys   = array();
+    var $resellers       = array();
+    var $customers       = array();
 
     function Records(&$SOAPEngine) {
     	$this->SOAPEngine=&$SOAPEngine;
 
         $this->sorting['sortBy']    = trim($_REQUEST['sortBy']);
         $this->sorting['sortOrder'] = trim($_REQUEST['sortOrder']);
+
         $this->next                 = $_REQUEST['next'];
+        $this->adminonly            = trim($_REQUEST['adminonly']);
 
-		$this->reseller=$this->SOAPEngine->reseller;
-
-        $this->url = $this->SOAPEngine->url;
+		$this->reseller = $this->SOAPEngine->reseller;
+        $this->url      = $this->SOAPEngine->url;
 
 		foreach(array_keys($this->filters) as $_filter) {
             if (strlen($this->filters[$_filter])) {
@@ -286,7 +273,49 @@ class Records {
                 break;
             }
         }
+
+        $this->filters['customer']=trim($_REQUEST['filter_customer']);
+        $this->filters['reseller']=trim($_REQUEST['filter_reseller']);
+
+        if ($this->filters['customer']) {
+        	$this->url .= sprintf('&filter_customer=%s',$this->filters['customer']);
+        }
+
+        if ($this->filters['reseller']) {
+        	$this->url .= sprintf('&filter_reseller=%s',$this->filters['reseller']);
+        }
+
+        $this->getResellers();
+        $this->getCustomers();
+
     }
+
+    function showEngineSelection() {
+        $selected_soapEngine[$this->SOAPEngine->service]='selected';
+
+        printf ("<select name=service onChange=\"document.soapengine.submit.disabled = true; location.href = '%s&service=' + this.options[this.selectedIndex].value\">",$this->url);
+        $j=1;
+        foreach (array_keys($this->SOAPEngine->soapEngines) as $_engine) {
+        	if ($this->skip[$_engine]) continue;
+
+        	if ($j>1) printf ("<option value=''>--------");
+            $k=1;
+            foreach (array_keys($this->SOAPEngine->services) as $_service) {
+                $idx=$_engine.'@'.$_service;
+                if (in_array($_service,$this->SOAPEngine->skipServices[$_engine])) continue;
+                printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_engine,$_service,$selected_soapEngine[$idx],$j,$k,ucfirst($_service),$this->SOAPEngine->soapEngines[$_engine]['name']);
+                $k++;
+            }
+            $j++;
+        }
+        printf ("</select>");
+        if ($this->adminonly) {
+        	$this->showResellerForm();
+        } else {
+        	$this->showCustomerForm();
+        }
+    }
+
 
     function showPagination($maxrows) {
 
@@ -302,7 +331,6 @@ class Records {
         urlencode($this->sorting['sortBy']),
         urlencode($this->sorting['sortOrder'])
         );
-
         if ($this->next != 0  ) {
             $show_next=$this->maxrowsperpage-$this->next;
             if  ($show_next < 0)  {
@@ -313,9 +341,9 @@ class Records {
             $url_begin=$this->url."&next=0";
 
             if ($mod_show_next/$this->maxrowsperpage >= 1) {
-            	print "<a href=\"$url_begin\">Begin</a> ";
+            	printf ("<a href='%s'>Begin</a>",$url_begin);
             }
-            print "<a href=\"$url_prev\">Previous</a>";
+            printf ("<a href='%s'>Previous</a>",$url_prev);
         }
         
         print "
@@ -326,7 +354,7 @@ class Records {
         if ($this->next + $this->maxrowsperpage < $this->rows)  {
             $show_next = $this->maxrowsperpage + $this->next;
             $url_next  = $this->url."&next=$show_next";
-            print "<a href=\"$url_next\">Next</a>";
+            printf ("<a href='%s'>Next</a>",$url_next);
         }
 
         print "
@@ -349,7 +377,7 @@ class Records {
             print "
         	<td align=left>
             ";
-            $this->SOAPEngine->showEngineSelection();
+            $this->showEngineSelection();
 
             $this->showSeachFormCustom();
 
@@ -499,6 +527,49 @@ class Records {
             $actions->performActions(&$this->selectionKeys,$_REQUEST['sub_action'],trim($_REQUEST['sub_action_parameter']));
         }
     }
+
+    function getCustomers() {
+    	if (!$this->SOAPEngine->enableResellers) return;
+    }
+
+    function getResellers() {
+    	if (!$this->SOAPEngine->enableResellers) return;
+        if (!$this->adminonly) {
+        	return;
+        }
+
+        //print "getResellers()";
+    }
+
+    function showCustomerForm() {
+    	print " Customer:";
+        if (count($this->customers) && count($this->customers) < 200) {
+			$select_customer[$this->filters['customer']]='selected';
+            print "<select name=filter_customer>";
+            print "<option>";
+            foreach (array_keys($this->customers) as $_res) {
+                printf ("<option value='%s' %s>%s\n",$_res,$select_customer[$_res],$this->customers[$_res]);
+            }
+            print "</select>";
+        } else {
+            printf ("<input type=text size=6 name=filter_customer value='%s'>",$this->filters['customer']);
+        }
+    }
+
+    function showResellerForm() {
+    	print " Reseller:";
+        if (count($this->resellers) && count($this->resellers) < 200) {
+            $select_reseller[$this->filters['reseller']]='selected';
+            print "<select name=filter_reseller>";
+            print "<option>";
+            foreach (array_keys($this->resellers) as $_res) {
+                printf ("<option value='%s' %s>%s\n",$_res,$select_reseller[$reseller],$this->resellers[$_res]);
+            }
+            print "</select>";
+        } else {
+            printf ("<input type=text size=6 name=filter_reseller value='%s'>",$this->filters['reseller']);
+        }
+    }
 }
 
 class ENUMmappings extends Records {
@@ -589,7 +660,6 @@ class ENUMmappings extends Records {
                                  'mapto'        => trim($_REQUEST['mapto_filter']),
                                  'owner'        => trim($_REQUEST['owner_filter'])
                                 );
-        
 		$this->Records(&$SOAPEngine);
     }
 
@@ -603,7 +673,6 @@ class ENUMmappings extends Records {
                       'type'   => $this->filters['type'],
                       'mapto'  => $this->filters['mapto']
                       );
-
         // Range
         $range=array('start' => intval($this->next),
                      'count' => intval($this->maxrowsperpage)
@@ -2453,10 +2522,10 @@ class SIPAccounts extends Records {
 
     function SIPAccounts(&$SOAPEngine) {
 
-        $this->filters   = array('username'     => trim($_REQUEST['username_filter']),
-                           'domain'       => trim($_REQUEST['domain_filter']),
-                           'fullname'     => trim($_REQUEST['fullname_filter'])
-                           );
+        $this->filters = array('username' => trim($_REQUEST['username_filter']),
+                               'domain'   => trim($_REQUEST['domain_filter']),
+                               'fullname' => trim($_REQUEST['fullname_filter'])
+                              );
 
 		$this->Records(&$SOAPEngine);
 
@@ -2681,10 +2750,11 @@ class SIPAccounts extends Records {
                         // use the reseller from the soap engine
                         $_reseller=$this->reseller;
                     }
+
                     printf("
                     <tr bgcolor=%s>
                     <td>%s </td>
-                    <td>%s (%s)</td>
+                    <td>%s (%s.%s)</td>
                     <td>%s %s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -2700,6 +2770,7 @@ class SIPAccounts extends Records {
                     $index,
                     $sip_account,
                     $_reseller,
+                    $this->customer,
                     $account->firstName,
                     $account->lastName,
                     $account->email,
@@ -3078,7 +3149,7 @@ class SIPAliases extends Records {
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
-                    <td>%s@%s</td>
+                    <td>%s@%s (%s.%s)</td>
                     <td>%s@%s</td>
                     <td>%s</td>
                     <td><a href=%s>%s</a></td>
@@ -3088,6 +3159,8 @@ class SIPAliases extends Records {
                     $index,
                     $alias->id->username,
                     $alias->id->domain,
+                    $alias->customer,
+                    $alias->reseller,
                     $alias->target->username,
                     $alias->target->domain,
                     $alias->owner,
@@ -3649,6 +3722,167 @@ class Domains extends Records {
             return false;
         } else {
            printf ("<p><font color=green>SIP domain %s has been added. </font>",$domain);
+           return 1;
+        }
+    }
+}
+
+class Customers extends Records {
+
+    var $maxrowsperpage= 200;
+
+    function Customers(&$SOAPEngine) {
+        $this->filters   = array(
+                           'id'       => trim($_REQUEST['id_filter'])
+                           );
+
+		$this->Records(&$SOAPEngine);
+    }
+
+    function listRecords() {
+
+		$this->showSeachForm();
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getCustomers();
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			$this->rows = count($result);
+
+            print "
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>CustomerId</b></td>
+                <td><b>ResellerId</b></td>
+                <td><b>Name</b></td>
+                <td><b>Organization</b></td>
+                <td><b>E-mail</b></td>
+                <td><b>Telephone</b></td>
+                <td><b>Web</b></td>
+                <td><b>Action</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+			if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    $customer = $result[$i];
+                    $index = $this->next+$i+1;
+    
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                    	$bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+        			$_url = $this->url.sprintf("&service=%s&action=Delete",
+                    urlencode($this->SOAPEngine->service)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                        $_REQUEST['domain_filter'] == $domain) {
+                		$_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+                    $bgcolor,
+                    $index,
+                    $customer->id,
+                    $customer->reseller,
+                    $customer->name,
+                    $customer->organization,
+                    $customer->email,
+                    $customer->tel,
+                    $customer->web,
+                    $_url,
+                    $actionText
+                    );
+
+                    $i++;
+                }
+			}
+
+            print "</table>";
+
+            $this->showPagination($maxrows);
+
+            return true;
+        }
+    }
+
+    function showSeachFormCustom() {
+
+        printf (" Customer Id: <input type=text size=15 name=id_filter value='%s'>",$this->filters['id']);
+
+    }
+
+    function deleteRecord() {
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return 1;
+        }
+
+        if (!strlen($this->filters['id']) || !strlen($this->filters['id'])) {
+            print "<p><font color=red>Error: missing customer id. </font>";
+            return 0;
+        }
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        $result     = $this->SOAPEngine->soapclient->deleteDomain($this->filters['id']);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+           printf ("<p><font color=green>Customer id %s has been deleted. </font> ",$this->filters['id']);
+           unset($this->filters);
            return 1;
         }
     }
