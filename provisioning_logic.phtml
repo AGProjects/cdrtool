@@ -1,38 +1,38 @@
 <?
 class SOAPEngine {
     var $services=array(
-                        'sipAccounts'     => array('recordsClass' => 'SipAccounts',
+                        'Accounts'     => array('recordsClass' => 'SipAccounts',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
-                        'sipAliases'    => array('recordsClass' => 'SipAliases',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                        'Customers'  => array('recordsClass' => 'Customers',
+                                           'soapClass'    => 'WebService_NGNPro_CustomerPort'
                                           ),
-                        'sipDomains'    => array('recordsClass' => 'Domains',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort'
-                                          ),
-                        'sipUsage'    => array('recordsClass' => 'DomainStatistics',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort'
-                                          ),
-                        'enumMappings'    => array('recordsClass' => 'EnumMappings',
+                        'Numbers'    => array('recordsClass' => 'EnumMappings',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
                                           ),
-                        'enumRanges'    => array('recordsClass' => 'EnumRanges',
-                                           'soapClass'    => 'WebService_NGNPro_EnumPort'
-                                          ),
-                        'trustedPeers' => array('recordsClass' => 'TrustedPeers',
+                        'Aliases'    => array('recordsClass' => 'SipAliases',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
-                        'pstnGateways' => array('recordsClass' => 'Gateways',
+                        'Domains'    => array('recordsClass' => 'Domains',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                                          ),
+                        'Usage'    => array('recordsClass' => 'DomainStatistics',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                                          ),
+                        'Ranges'    => array('recordsClass' => 'EnumRanges',
+                                           'soapClass'    => 'WebService_NGNPro_EnumPort'
+                                          ),
+                        'Peers' => array('recordsClass' => 'TrustedPeers',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                                          ),
+                        'Gateways' => array('recordsClass' => 'Gateways',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                            ),
-                        'pstnGwGroups' => array('recordsClass' => 'GatewayGroups',
+                        'Gateway-groups' => array('recordsClass' => 'GatewayGroups',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                           ),
-                        'pstnRoutes' => array('recordsClass' => 'Routes',
+                        'Routes' => array('recordsClass' => 'Routes',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
-                                          ),
-                        'customers'  => array('recordsClass' => 'Customers',
-                                           'soapClass'    => 'WebService_NGNPro_CustomerPort'
                                           )
                         );
 
@@ -555,7 +555,7 @@ class Records {
             }
             print "</select>";
         } else {
-            printf ("<input type=text size=6 name=filter_customer value='%s'>",$this->filters['customer']);
+            printf ("<input type=text size=5 name=filter_customer value='%s'>",$this->filters['customer']);
         }
     }
 
@@ -570,7 +570,7 @@ class Records {
             }
             print "</select>";
         } else {
-            printf ("<input type=text size=6 name=filter_reseller value='%s'>",$this->filters['reseller']);
+            printf ("<input type=text size=5 name=filter_reseller value='%s'>",$this->filters['reseller']);
         }
     }
 }
@@ -731,7 +731,7 @@ class ENUMmappings extends Records {
                 <td><b>Number</b></td>
                 <td><b>Top level domain</b></td>
                 <td><b>DNS name</b></td>
-                <td><b>Customer</b></td>
+                <td><b>Operator</b></td>
                 <td><b>Srv</b></td>
                 <td><b>Map to</b></td>
                 <td><b>TTL</b></td>
@@ -1154,7 +1154,7 @@ class ENUMranges extends Records {
                 <td><b>Id</b></th>
                 <td><b>Prefix </b></td>
                 <td><b>Top level domain</b></td>
-                <td><b>Customer</b></td>
+                <td><b>Operator</b></td>
                 <td><b>TTL</b></td>
                 <td><b>Min digits</b></td>
                 <td><b>Max digits</b></td>
@@ -1462,6 +1462,7 @@ class TrustedPeers extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>IP address</b></td>
+                <td><b>Operator</b></td>
                 <td><b>Protocol</b></td>
                 <td><b>From pattern</b></td>
                 <td><b>Description</b></td>
@@ -1516,6 +1517,7 @@ class TrustedPeers extends Records {
                     <tr bgcolor=%s>
                     <td>%s</td>
                     <td>%s</td>
+                    <td>%s.%s</td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -1525,6 +1527,8 @@ class TrustedPeers extends Records {
                     $bgcolor,
                     $index,
                     $peer->ip,
+                    $peer->reseller,
+                    $peer->customer,
                     $peer->protocol,
                     $peer->fromPattern,
                     $peer->description,
@@ -2727,10 +2731,10 @@ class SIPAccounts extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>SIP account</b></td>
-                <td><b>Customer</b></td>
+                <td><b>Operator</b></td>
                 <td><b>Name</b></td>
                 <td><b>Email</b></td>
-                <td><b>PSTN CLI</b></td>
+                <td><b>Caller Id</b></td>
                 <td><b>Quota</b></td>
                 <td><b>Groups</b></td>
                 <td><b>Last change</b></td>
@@ -2946,7 +2950,7 @@ class SIPAccounts extends Records {
             } else {
             	$this->showCustomerForm('customer');
             }
-            printf (" Owner: <input type=text size=6 name=owner value='%s'>",$_REQUEST['owner']);
+            printf (" Owner: <input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
             /*
             print " TZ: ";
 
@@ -3174,7 +3178,7 @@ class SIPAliases extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>SIP alias</b></td>
-                <td><b>Customer</b></td>
+                <td><b>Operator</b></td>
                 <td><b>SIP target</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Action</b></td>
@@ -3350,7 +3354,7 @@ class SIPAliases extends Records {
             	$this->showCustomerForm('customer');
             }
 
-            printf (" Owner: <input type=text size=6 name=owner>");
+            printf (" Owner: <input type=text size=5 name=owner>");
 
             print "
 	        </td>
@@ -3664,7 +3668,7 @@ class Domains extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>Domain</b></td>
-                <td><b>Customer</b></td>
+                <td><b>Operator</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -4041,15 +4045,15 @@ class Actions {
         print "</select>";
 
 
-            print "
-            <input type=text size=15 name=sub_action_parameter>
+        print "
+        <input type=text size=15 name=sub_action_parameter>
+        </td>
+        <td align=right>
+        ";
+        print "
+	    </td>
+        ";
 
-	        </td>
-        	<td align=right>
-            ";
-            print "
-	        </td>
-            ";
         foreach (array_keys($filters) as $_filter) {
             printf ("<input type=hidden name='%s_filter' value='%s'>\n", $_filter,$filters[$_filter]);
         }
