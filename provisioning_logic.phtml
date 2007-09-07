@@ -39,7 +39,7 @@ class SOAPEngine {
                                           )
                         );
 
-    function SOAPEngine($service,$soapEngines,$extraFormElements,$reseller=0,$adminonly=1) {
+    function SOAPEngine($service,$soapEngines,$extraFormElements,$reseller=0,$adminonly=0) {
 
         /*
 
@@ -52,7 +52,7 @@ class SOAPEngine {
                                                  ),
         */
 
-        $this->adminonly = $adminonly;
+        if (strlen($adminonly)) $this->adminonly = $adminonly;
 
         $this->soapEngines = $soapEngines;
 
@@ -413,9 +413,6 @@ class Records {
         ";
 
         if ($_REQUEST['action'] != 'Delete') $this->showAddForm();
-        if ($_REQUEST['action'] != 'PerformActions') {
-        	$this->showActionsForm();
-        }
     }
 
     function listRecords() {
@@ -620,6 +617,10 @@ class Domains extends Records {
         } else {
 
 			$this->rows = count($result);
+
+     		if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+                $this->showActionsForm();
+            }
 
             print "
             <table border=0 align=center>
@@ -950,6 +951,11 @@ class SIPAccounts extends Records {
         } else {
 
 			$this->rows = $result->total;
+
+            if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+                $this->showActionsForm();
+            }
+
             print "
             <p>
             <table border=0 align=center>
@@ -1020,13 +1026,10 @@ class SIPAccounts extends Records {
                     }
 
                     if ($this->SipSettingsPage) {
-
                         $url=sprintf('%s?account=%s@%s&rId=%s&soapEngineIdSipPort=%s',$this->SipSettingsPage,$account->id->username,$account->id->domain,
-                        $this->reseller,$this->SOAPEngine->soapEngineIdSettingsPage);
+                        $account->reseller,$this->SOAPEngine->soapEngineIdSettingsPage);
 
-                        if ($this->adminonly) {
-                        	$url  .= sprintf('&adminonly=%s',$this->adminonly);
-                        }
+                        if ($this->adminonly) $url  .= sprintf('&adminonly=%s',$this->adminonly);
 
                         foreach (array_keys($this->SOAPEngine->extraFormElements) as $element) {
                             if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
@@ -1041,10 +1044,9 @@ class SIPAccounts extends Records {
 						$sip_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
                     }
 
+
                     unset($groups);
-                    foreach ($account->groups as $_grp) {
-                        $groups.=$_grp.' ';
-                    }
+                    foreach ($account->groups as $_grp) $groups.=$_grp.' ';
 
                     printf("
                     <tr bgcolor=%s>
@@ -1399,8 +1401,10 @@ class SIPAliases extends Records {
         } else {
 
 			$this->rows = $result->total;
-            //print "<pre>";
-            //print_r($result);
+
+     		if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+                $this->showActionsForm();
+            }
 
             print "
             <p>
@@ -1721,8 +1725,9 @@ class ENUMranges extends Records {
 
 			$this->rows = count($result);
 
-            //print "<pre>";
-            //print_r($result);
+     		if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+                $this->showActionsForm();
+            }
 
             print "
             <p>
@@ -2115,8 +2120,9 @@ class ENUMmappings extends Records {
 
 			$this->rows = $result->total;
 
-            //print "<pre>";
-            //print_r($result);
+     		if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+                $this->showActionsForm();
+            }
 
             print "
             <p>
@@ -2567,6 +2573,10 @@ class TrustedPeers extends Records {
         } else {
 
 			$this->rows = $result->total;
+
+     		if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+                $this->showActionsForm();
+            }
 
             print "
             <table border=0 align=center>
@@ -4036,28 +4046,36 @@ class Actions {
 
     function Actions(&$SOAPEngine) {
 		$this->SOAPEngine = $SOAPEngine;
+        $this->adminonly=$this->SOAPEngine->adminonly;
     }
 
     function performActions($selectionKeys,$action,$sub_action_parameter) {
     }
 
-    function showActionsForm($filters,$sorting) {
+    function showActionsForm($filters,$sorting,$hideParameter=false) {
         if (!count($this->actions)) return;
 
         print "
         <p>
         <table border=0 class=border width=100%>
         <tr>
-            ";
-            printf ("<form method=post name=actionform action=%s>",$_SERVER['PHP_SELF']);
-            print "
-        	<td align=left>
-            ";
+        ";
 
+        printf ("<form method=post name=actionform action=%s>",$_SERVER['PHP_SELF']);
+        print "
+        <td align=left>
+        ";
+
+        print "
+        <input type=submit value='Perform this action on the selection:'>
+        <input type=hidden name=action value=PerformActions>
+        ";
+        if ($this->adminonly) {
             print "
-            <input type=submit value='Perform this action on the selection:'>
-            <input type=hidden name=action value=PerformActions>
+            <input type=hidden name=adminonly value=$this->adminonly>
             ";
+        }
+
 
         print "<select name=sub_action>";
         $j=0;
@@ -4068,8 +4086,12 @@ class Actions {
         print "</select>";
 
 
+		if (!$hideParameter) {
+        	print "
+        	<input type=text size=15 name=sub_action_parameter>
+        	";
+        }
         print "
-        <input type=text size=15 name=sub_action_parameter>
         </td>
         <td align=right>
         ";
@@ -4419,6 +4441,43 @@ class SIPAccountsActions extends Actions {
                 $this->SOAPEngine->execute($function);
 
             }
+        }
+        print "</ol>";
+
+    }
+
+}
+
+class SIPAliasesActions extends Actions {
+    var $actions=array(
+                       'delete'         => 'Delete SIP aliases'
+                       );
+
+    function SIPAliases(&$SOAPEngine) {
+        $this->Actions(&$SOAPEngine);
+    }
+
+    function performActions($selectionKeys,$action,$sub_action_parameter) {
+        print "<ol>";
+        foreach($selectionKeys as $key) {
+            flush();
+
+            //printf ("<li>Performing action=%s on key=%s",$action,$key);
+            list($username,$domain)=explode('@',trim($key));
+
+            $alias=array('username' => $username,
+                         'domain'   => $domain
+                        );
+    
+            $function=array('commit'   => array('name'       => 'deleteAlias',
+                                                'parameters' => array($alias),
+                                                'logs'       => array('success' => sprintf('<li>SIP alias %s@%s has been deleted',$username,$domain)
+                                                                      )
+                                               )
+    
+                            );
+
+            $this->SOAPEngine->execute($function);
         }
         print "</ol>";
 
