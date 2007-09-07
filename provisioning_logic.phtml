@@ -22,7 +22,7 @@ class SOAPEngine {
                         'ENUM Ranges'    => array('recordsClass' => 'EnumRanges',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
                                           ),
-                        'Customers'      => array('recordsClass' => 'Customers',
+                        'Operators'      => array('recordsClass' => 'Customers',
                                            'soapClass'    => 'WebService_NGNPro_CustomerPort'
                                           ),
                         'Trusted Peers'  => array('recordsClass' => 'TrustedPeers',
@@ -146,6 +146,14 @@ class SOAPEngine {
             	$this->soapclientRemote->setOpt('curl', CURLOPT_TIMEOUT,        5);
             	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+            }
+
+	    	if ($this->enableResellers) {
+	            $this->soapclientCustomers = new WebService_NGNPro_CustomerPort($this->SOAPurl);
+    	        $this->soapclientCustomers->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        	    $this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+            	$this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
             }
 
     	} else {
@@ -279,24 +287,17 @@ class Records {
             }
         }
 
-        $this->filters['customer']=trim($_REQUEST['filter_customer']);
-        $this->filters['reseller']=trim($_REQUEST['filter_reseller']);
-
-        if ($this->filters['customer']) {
-        	$this->url .= sprintf('&filter_customer=%s',$this->filters['customer']);
-        }
-
-        if ($this->filters['reseller']) {
-        	$this->url .= sprintf('&filter_reseller=%s',$this->filters['reseller']);
-        }
-
         if ($this->adminonly) {
         	$this->url .= sprintf('&adminonly=%s',$this->adminonly);
         }
 
+        $this->filters['customer']=trim($_REQUEST['customer_filter']);
+        $this->filters['reseller']=trim($_REQUEST['reseller_filter']);
+
         $this->getResellers();
         $this->getCustomers();
 
+        //printf ('<p>%s',$this->url);
     }
 
     function showEngineSelection() {
@@ -318,13 +319,18 @@ class Records {
             $j++;
         }
         printf ("</select>");
+
+        print "Operator:";
+
         if ($this->adminonly) {
         	$this->showResellerForm();
             if ($this->filters['reseller']) {
+            	print ".";
         		$this->showCustomerForm();
             }
         } else {
-            printf ("Reseller: %s",$this->reseller);
+            printf ("%s",$this->reseller);
+            print ".";
         	$this->showCustomerForm();
         }
     }
@@ -339,19 +345,29 @@ class Records {
         <td>
         ";
 
-        $this->url .= sprintf("&service=%s&sortBy=%s&sortOrder=%s",
+        $url .= $this->url.sprintf("&service=%s&sortBy=%s&sortOrder=%s",
         urlencode($this->SOAPEngine->service),
         urlencode($this->sorting['sortBy']),
         urlencode($this->sorting['sortOrder'])
         );
+
+        if ($this->filters['customer']) {
+        	$url .= sprintf('&customer_filter=%s',$this->filters['customer']);
+        }
+
+        if ($this->filters['reseller']) {
+        	$url .= sprintf('&reseller_filter=%s',$this->filters['reseller']);
+        }
+
+
         if ($this->next != 0  ) {
             $show_next=$this->maxrowsperpage-$this->next;
             if  ($show_next < 0)  {
                 $mod_show_next  =  $show_next-2*$show_next;
             }
             if (!$mod_show_next) $mod_show_next=0;
-            $url_prev=$this->url."&next=$mod_show_next";
-            $url_begin=$this->url."&next=0";
+            $url_prev=$url."&next=$mod_show_next";
+            $url_begin=$url."&next=0";
 
             if ($mod_show_next/$this->maxrowsperpage >= 1) {
             	printf ("<a href='%s'>Begin</a> ",$url_begin);
@@ -366,7 +382,7 @@ class Records {
 
         if ($this->next + $this->maxrowsperpage < $this->rows)  {
             $show_next = $this->maxrowsperpage + $this->next;
-            $url_next  = $this->url."&next=$show_next";
+            $url_next  = $url."&next=$show_next";
             printf ("<a href='%s'>Next</a> ",$url_next);
         }
 
@@ -500,6 +516,7 @@ class Records {
 
     function printHiddenFormElements () {
         printf("<input type=hidden name=service value='%s'>",$this->SOAPEngine->service);
+
         if ($this->adminonly) {
         	printf("<input type=hidden name=adminonly value='%s'>",$this->adminonly);
         }
@@ -508,6 +525,17 @@ class Records {
         	if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
             printf ("<input type=hidden name=%s value='%s'>\n",$element,$this->SOAPEngine->extraFormElements[$element]);
         }
+
+        /*
+        if ($this->filters['customer']) {
+        	printf("<input type=hidden name=customer_filter value='%s'>",$this->filters['customer']);
+        }
+
+        if ($this->filters['reseller']) {
+        	printf("<input type=hidden name=reseller_filter value='%s'>",$this->filters['reseller']);
+        }
+        */
+
     }
 
     function getAllowedDomains() {
@@ -543,7 +571,58 @@ class Records {
 
     function getCustomers() {
     	if (!$this->SOAPEngine->enableResellers) return;
-        if ($this->filters['reseller']) {
+
+        if (!$this->filters['reseller']) {
+            return;
+        }
+
+        // Filter
+        $filter=array('reseller'=>intval($this->filters['reseller']));
+
+        $range=array('start' => 0,
+                     'count' => 100
+                     );
+
+        // Order
+        $orderBy = array('attribute' => 'customer',
+                         'direction' => 'ASC'
+                         );
+
+        // Compose query
+        $Query=array('filter'     => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        // Insert credetials
+        $this->SOAPEngine->soapclientCustomers->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclientCustomers->getCustomers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+            if ($result->total > $range['count']) return;
+
+			if ($range['count'] <= $result->total) {
+                $max=$range['count'];
+            } else {
+            	$max=$result->total;
+            }
+
+            $i=0;
+            while ($i < $max)  {
+                $customer=$result->accounts[$i];
+            	$this->customers[$customer->id] = $customer->firstName.' '.$customer->lastName;
+            	$i++;
+            }
+            return true;
         }
     }
 
@@ -555,32 +634,30 @@ class Records {
     }
 
     function showCustomerForm() {
-    	print " Customer:";
         if (count($this->customers) && count($this->customers) < 200) {
 			$select_customer[$this->filters['customer']]='selected';
-            print "<select name=filter_customer>";
+            print "<select name=customer_filter>";
             print "<option>";
             foreach (array_keys($this->customers) as $_res) {
-                printf ("<option value='%s' %s>%s. %s\n",$_res,$select_customer[$_res],$_res,$this->customers[$_res]);
+                printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_customer[$_res],$_res,$this->customers[$_res]);
             }
             print "</select>";
         } else {
-            printf ("<input type=text size=5 name=filter_customer value='%s'>",$this->filters['customer']);
+            printf ("<input type=text size=5 name=customer_filter value='%s'>",$this->filters['customer']);
         }
     }
 
-    function showResellerForm($name='filter_reseller') {
-    	print " Reseller:";
+    function showResellerForm($name='reseller_filter') {
         if (count($this->resellers) && count($this->resellers) < 200) {
             $select_reseller[$this->filters['reseller']]='selected';
-            print "<select name=filter_reseller>";
+            print "<select name=reseller_filter>";
             print "<option>";
             foreach (array_keys($this->resellers) as $_res) {
-                printf ("<option value='%s' %s>%s. %s\n",$_res,$select_reseller[$reseller],$_res,$this->resellers[$_res]);
+                printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_reseller[$reseller],$_res,$this->resellers[$_res]);
             }
             print "</select>";
         } else {
-            printf ("<input type=text size=5 name=filter_reseller value='%s'>",$this->filters['reseller']);
+            printf ("<input type=text size=5 name=reseller_filter value='%s'>",$this->filters['reseller']);
         }
     }
 }
@@ -590,6 +667,7 @@ class Domains extends Records {
     var $maxrowsperpage= 200;
 
     function Domains(&$SOAPEngine) {
+
         $this->filters   = array(
                            'domain'       => trim($_REQUEST['domain_filter'])
                            );
@@ -755,8 +833,11 @@ class Domains extends Records {
 
             printf (" Domain: <input type=text size=20 name=domain>");
 
+            print "Operator:";
+
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
+                print ".";
             	$this->showCustomerForm('customer');
             } else {
             	$this->showCustomerForm('customer');
@@ -1175,8 +1256,10 @@ class SIPAccounts extends Records {
             printf (" Name: <input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
             printf (" Email: <input type=text size=15 name=email value='%s'>",$_REQUEST['email']);
             //printf (" CallerId: <input type=text size=11 name=rpid value='%s'>",$_REQUEST['rpid']);
+            print "Operator:";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
+                print ".";
             	$this->showCustomerForm('customer');
             } else {
             	$this->showCustomerForm('customer');
@@ -1585,8 +1668,10 @@ class SIPAliases extends Records {
 
             printf (" Target: <input type=text size=35 name=target>");
 
+            print "Operator:";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
+                print ".";
             	$this->showCustomerForm('customer');
             } else {
             	$this->showCustomerForm('customer');
@@ -1890,8 +1975,10 @@ class ENUMranges extends Records {
             printf (" TTL: <input type=text size=5 name=ttl value=3600>");
             printf (" Min Digits: <input type=text size=3 name=minDigits value=11>");
             printf (" Max Digits: <input type=text size=3 name=maxDigits value=11>");
+            print "Operator:";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
+                print ".";
             	$this->showCustomerForm('customer');
             } else {
             	$this->showCustomerForm('customer');
@@ -2378,8 +2465,10 @@ class ENUMmappings extends Records {
                     ";
             printf (" <input type=text size=25 name=mapto>");
             printf (" TTL: <input type=text size=5 name=ttl value=3600>");
+            print "Operator:";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
+                print ".";
             	$this->showCustomerForm('customer');
             } else {
             	$this->showCustomerForm('customer');
@@ -2697,13 +2786,14 @@ class TrustedPeers extends Records {
             ";
             printf (" IP address: <input type=text size=20 name=ipaddress>");
             printf (" Description: <input type=text size=30 name=description>");
+            print "Operator:";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
+                print ".";
             	$this->showCustomerForm('customer');
             } else {
             	$this->showCustomerForm('customer');
             }
-
             printf (" Owner: <input type=text size=5 name=owner>");
 
             print "
@@ -3726,6 +3816,7 @@ class DomainStatistics extends Records {
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
 		$filter=$this->filters['domain'];
+
         // Call function
         $result     = $this->SOAPEngine->soapclient->getDomainStatistics($filter);
 
@@ -3882,11 +3973,17 @@ class DomainStatistics extends Records {
 
 class Customers extends Records {
 
-    var $maxrowsperpage= 200;
+    var $maxrowsperpage= 20;
+    var $sortElements=array(
+                            'customer'   => 'Customer',
+                            'reseller'   => 'Reseller',
+                            'username'   => 'Username'
+                            );
 
     function Customers(&$SOAPEngine) {
         $this->filters   = array(
-                           'id'       => trim($_REQUEST['id_filter'])
+                           'username'   => trim($_REQUEST['username_filter']),
+                           'id'         => trim($_REQUEST['id_filter'])
                            );
 
 		$this->Records(&$SOAPEngine);
@@ -3894,13 +3991,41 @@ class Customers extends Records {
 
     function listRecords() {
 
+        // Filter
+        $filter=array('username'  => $this->filters['username'],
+                      'customer'  => intval($this->filters['id']),
+                      'reseller'  => intval($this->filters['reseller'])
+                      );
+
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'customer';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'     => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        if (strlen($this->filters['username'])) $this->url .= sprintf("&username_filter=%s",urlencode($this->filters['username']));
+        if (strlen($this->filters['id'])) $this->url .= sprintf("&id_filter=%s",urlencode($this->filters['id']));
+
 		$this->showSeachForm();
 
         // Insert credetials
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
         // Call function
-        $result     = $this->SOAPEngine->soapclient->getCustomers();
+        $result     = $this->SOAPEngine->soapclient->getCustomers($Query);
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -3910,7 +4035,11 @@ class Customers extends Records {
             return false;
         } else {
 
-			$this->rows = count($result);
+			$this->rows = $result->total;
+
+            if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+                $this->showActionsForm();
+            }
 
             print "
             <table border=0 align=center>
@@ -3920,8 +4049,7 @@ class Customers extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
-                <td><b>CustomerId</b></td>
-                <td><b>ResellerId</b></td>
+                <td><b>Operator</b></td>
                 <td><b>Name</b></td>
                 <td><b>Organization</b></td>
                 <td><b>E-mail</b></td>
@@ -3942,10 +4070,16 @@ class Customers extends Records {
 
             $i=0;
 
+			//print "<pre>";
+            //print_r($result);
+
 			if ($this->rows) {
                 while ($i < $maxrows)  {
+
+                    if (!$result->accounts[$i]) break;
     
-                    $customer = $result[$i];
+                    $customer = $result->accounts[$i];
+
                     $index = $this->next+$i+1;
     
                     $rr=floor($index/2);
@@ -3972,9 +4106,8 @@ class Customers extends Records {
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
+                    <td>%s.%s</td>
+                    <td>%s %s</td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -3983,9 +4116,10 @@ class Customers extends Records {
                     </tr>",
                     $bgcolor,
                     $index,
-                    $customer->id,
                     $customer->reseller,
-                    $customer->name,
+                    $customer->id,
+                    $customer->firstName,
+                    $customer->lastName,
                     $customer->organization,
                     $customer->email,
                     $customer->tel,
@@ -4007,9 +4141,8 @@ class Customers extends Records {
     }
 
     function showSeachFormCustom() {
-
-        printf (" Customer Id: <input type=text size=15 name=id_filter value='%s'>",$this->filters['id']);
-
+        printf (" Customer: <input type=text size=6 name=id_filter value='%s'>",$this->filters['id']);
+        printf (" Username: <input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
     }
 
     function deleteRecord() {
