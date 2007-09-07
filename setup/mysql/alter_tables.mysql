@@ -428,3 +428,6 @@ alter table billing_rates add  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscr
 5.2.1
 Apply again the MySQL stored procedures to radius database from:
 setup/radius/OpenSER/radius_accounting.proc
+
+5.2.7
+alter table auth_user add column reseller bigint unsigned not null;

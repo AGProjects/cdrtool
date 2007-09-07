@@ -244,6 +244,7 @@ class CDRTool_Auth extends Auth {
             $CDRTool['filter']['gateway']    = $this->db->f('gatewayFilter');
             $CDRTool['filter']['compid']     = $this->db->f('compidFilter');
             $CDRTool['filter']['cscode']     = $this->db->f('cscodeFilter');
+            $CDRTool['reseller']             = $this->db->f('reseller');
             
             if ($this->db->f('only_after_date') && $this->db->f('only_after_date') != "0000-00-00") {
             	$CDRTool[filter][after_date]=$this->db->f('only_after_date');
@@ -271,9 +272,11 @@ class CDRTool_Auth extends Auth {
                     return false;
                 }
             }
-        }
-    }
+    	}
+  	}
+
   }
+
 }
 
 class CDRTool_Perm extends Perm {

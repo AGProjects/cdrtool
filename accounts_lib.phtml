@@ -72,6 +72,13 @@ $f->add_element(array(	"name"=>"domainFilter",
 			"maxlength"=>"255",
 			"size"=>"60"
 			));
+$f->add_element(array(	"name"=>"reseller",
+			"type"=>"text",
+			"maxlength"=>"255",
+			"size"=>"11",
+			"valid_regex"=>"^[0-9]*$",
+            "valid_e"=>"Reseller must be a number"
+			));
 $f->add_element(array(	"name"=>"gatewayFilter",
 			"type"=>"text",
 			"maxlength"=>"255",
@@ -170,7 +177,8 @@ function showForm($id="") {
                   "serviceFilter",
                   "compidFilter",
                   "cscodeFilter",
-                  "afterDateFilter");
+                  "afterDateFilter",
+                  "reseller");
             $f->freeze($ff);
         }
 
@@ -331,6 +339,18 @@ function showForm($id="") {
            <td colspan=2 valign=top><font color=$labelcolor>
            ";
            $f->show_element("expire","");
+           print "
+           </font>
+           </td>  
+           </tr>  
+           ";
+           print "
+           <tr>   
+           <td valign=top><font color=$labelcolor>
+           Reseller Id </td>
+           <td colspan=2 valign=top><font color=$labelcolor>
+           ";
+           $f->show_element("reseller","");
            print "
            </font>
            </td>  

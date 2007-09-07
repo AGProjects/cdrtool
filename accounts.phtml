@@ -27,6 +27,7 @@ $compidFilter    = $_REQUEST['compidFilter'];
 $aNumberFilter   = $_REQUEST['aNumberFilter'];
 $cscodeFilter    = $_REQUEST['cscodeFilter'];
 $afterDateFilter = $_REQUEST['afterDateFilter'];
+$reseller        = $_REQUEST['reseller'];
 
 $perms           = $_REQUEST['perms'];
 $sources         = $_REQUEST['sources'];
@@ -108,7 +109,8 @@ if ($action == "edit" && $id) {
                     compidFilter    = '%s',
                     aNumberFilter   = '%s',
                     cscodeFilter    = '%s',
-                    afterDateFilter = '%s'
+                    afterDateFilter = '%s',
+                    reseller        = '%s'
                     ",
                 	addslashes($perms_text),
 	                addslashes($sources_text),
@@ -119,7 +121,8 @@ if ($action == "edit" && $id) {
                     addslashes($compidFilter),
                     addslashes($aNumberFilter),
                     addslashes($cscodeFilter),
-                    addslashes($afterDateFilter)
+                    addslashes($afterDateFilter),
+                    addslashes($reseller)
 
                     );
                 }
@@ -189,6 +192,8 @@ if ($action == "edit" && $id) {
         $compidFilter     = $db->f('compidFilter');
         $cscodeFilter     = $db->f('cscodeFilter');
         $afterDateFilter  = $db->f('afterDateFilter');
+        $reseller         = $db->f('reseller');
+
         showForm($id);
     }
 
@@ -231,8 +236,10 @@ if ($action == "edit" && $id) {
             compidFilter,
             cscodeFilter,
             gatewayFilter,
-            afterDateFilter
+            afterDateFilter,
+            reseller
             ) values (
+            '%s',
             '%s',
             '%s',
             '%s',
@@ -267,7 +274,8 @@ if ($action == "edit" && $id) {
             addslashes($compidFilter),
             addslashes($cscodeFilter),
         	addslashes($gatewayFilter),
-            addslashes($afterDateFilter)
+            addslashes($afterDateFilter),
+            addslashes($reseller)
             );
 
             dprint($query);

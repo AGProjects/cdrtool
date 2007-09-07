@@ -1,42 +1,45 @@
 <?
 class SOAPEngine {
+    var $adminonly = 0;
+    var $reseller  = 0;
+
     var $services=array(
-                        'Accounts'     => array('recordsClass' => 'SipAccounts',
+                        'SIP accounts'     => array('recordsClass' => 'SipAccounts',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
-                        'Customers'  => array('recordsClass' => 'Customers',
+                        'SIP Aliases'    => array('recordsClass' => 'SipAliases',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                                          ),
+                        'SIP Domains'    => array('recordsClass' => 'Domains',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                                          ),
+                        'SIP Usage'       => array('recordsClass' => 'DomainStatistics',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                                          ),
+                        'ENUM Numbers'    => array('recordsClass' => 'EnumMappings',
+                                           'soapClass'    => 'WebService_NGNPro_EnumPort'
+                                          ),
+                        'ENUM Ranges'    => array('recordsClass' => 'EnumRanges',
+                                           'soapClass'    => 'WebService_NGNPro_EnumPort'
+                                          ),
+                        'Customers'      => array('recordsClass' => 'Customers',
                                            'soapClass'    => 'WebService_NGNPro_CustomerPort'
                                           ),
-                        'Numbers'    => array('recordsClass' => 'EnumMappings',
-                                           'soapClass'    => 'WebService_NGNPro_EnumPort'
-                                          ),
-                        'Aliases'    => array('recordsClass' => 'SipAliases',
+                        'Trusted Peers'  => array('recordsClass' => 'TrustedPeers',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
-                        'Domains'    => array('recordsClass' => 'Domains',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort'
-                                          ),
-                        'Usage'    => array('recordsClass' => 'DomainStatistics',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort'
-                                          ),
-                        'Ranges'    => array('recordsClass' => 'EnumRanges',
-                                           'soapClass'    => 'WebService_NGNPro_EnumPort'
-                                          ),
-                        'Peers' => array('recordsClass' => 'TrustedPeers',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort'
-                                          ),
-                        'Gateways' => array('recordsClass' => 'Gateways',
+                        'PSTN Gateways'  => array('recordsClass' => 'Gateways',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                            ),
-                        'Gateway-groups' => array('recordsClass' => 'GatewayGroups',
+                        'Gateway groups' => array('recordsClass' => 'GatewayGroups',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                           ),
-                        'Routes' => array('recordsClass' => 'Routes',
+                        'PSTN Routes'    => array('recordsClass' => 'Routes',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                           )
                         );
 
-    function SOAPEngine($service,$soapEngines,$extraFormElements,$reseller) {
+    function SOAPEngine($service,$soapEngines,$extraFormElements,$reseller=0,$adminonly=1) {
 
         /*
 
@@ -48,6 +51,8 @@ class SOAPEngine {
                                                  'impersonate' => 1745
                                                  ),
         */
+
+        $this->adminonly = $adminonly;
 
         $this->soapEngines = $soapEngines;
 
@@ -81,9 +86,9 @@ class SOAPEngine {
 
             $this->enableResellers = $this->soapEngines[$this->soapEngineId]['enableResellers'];
 
-			if (!$reseller) {
+			if (!$reseller && $this->soapEngines[$this->soapEngineId]['impersonate']) {
             	$this->reseller=$this->soapEngines[$this->soapEngineId]['impersonate'];
-            } else {
+            } else if (strlen($reseller)) {
             	$this->reseller=$reseller;
             }
 
@@ -99,7 +104,7 @@ class SOAPEngine {
                                    );
 
             $this->SOAPurl=$this->soapEngines[$this->soapEngineId]['url'];
-            printf ("<p>Connection to NGN-Pro at <a href=%swsdl target=wsdl>%s</a> ",$this->SOAPurl,$this->SOAPurl);
+            printf ("<p>Connection to NGN-Pro at <a href=%swsdl target=wsdl>%s</a> as %s/%s",$this->SOAPurl,$this->SOAPurl,$this->soapEngines[$this->soapEngineId]['username'],$this->reseller);
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
     		// Instantiate the SOAP client
@@ -255,17 +260,17 @@ class Records {
     var $resellers       = array();
     var $customers       = array();
 
-    function Records(&$SOAPEngine,$adminonly) {
+    function Records(&$SOAPEngine) {
     	$this->SOAPEngine=&$SOAPEngine;
 
         $this->sorting['sortBy']    = trim($_REQUEST['sortBy']);
         $this->sorting['sortOrder'] = trim($_REQUEST['sortOrder']);
 
-        $this->next                 = $_REQUEST['next'];
-        $this->adminonly            = $adminonly;
+        $this->next       = $_REQUEST['next'];
 
-		$this->reseller = $this->SOAPEngine->reseller;
-        $this->url      = $this->SOAPEngine->url;
+        $this->adminonly  = $this->SOAPEngine->adminonly;
+		$this->reseller   = $this->SOAPEngine->reseller;
+        $this->url        = $this->SOAPEngine->url;
 
 		foreach(array_keys($this->filters) as $_filter) {
             if (strlen($this->filters[$_filter])) {
@@ -300,7 +305,7 @@ class Records {
         printf ("<select name=service onChange=\"document.soapengine.submit.disabled = true; location.href = '%s&service=' + this.options[this.selectedIndex].value\">",$this->url);
         $j=1;
         foreach (array_keys($this->SOAPEngine->soapEngines) as $_engine) {
-        	if ($this->skip[$_engine]) continue;
+        	if ($this->SOAPEngine->skip[$_engine]) continue;
 
         	if ($j>1) printf ("<option value=''>--------");
             $k=1;
@@ -587,12 +592,12 @@ class Domains extends Records {
 
     var $maxrowsperpage= 200;
 
-    function Domains(&$SOAPEngine,$adminonly) {
+    function Domains(&$SOAPEngine) {
         $this->filters   = array(
                            'domain'       => trim($_REQUEST['domain_filter'])
                            );
 
-		$this->Records(&$SOAPEngine,$adminonly);
+		$this->Records(&$SOAPEngine);
     }
 
     function listRecords() {
@@ -810,14 +815,14 @@ class SIPAccounts extends Records {
                             'domain'     => 'Domain'
                             );
 
-    function SIPAccounts(&$SOAPEngine,$adminonly) {
+    function SIPAccounts(&$SOAPEngine) {
 
         $this->filters = array('username' => trim($_REQUEST['username_filter']),
                                'domain'   => trim($_REQUEST['domain_filter']),
                                'fullname' => trim($_REQUEST['fullname_filter'])
                               );
 
-		$this->Records(&$SOAPEngine,$adminonly);
+		$this->Records(&$SOAPEngine);
 
     }
 
@@ -977,6 +982,9 @@ class SIPAccounts extends Records {
             }
 
             $i=0;
+
+			//print "<pre>";
+            //print_r($result->accounts);
 
 			if ($this->rows) {
                 while ($i < $maxrows)  {
@@ -1319,7 +1327,7 @@ class SIPAliases extends Records {
                             'targetDomain'   => 'Target domain'
                             );
 
-    function SIPAliases(&$SOAPEngine,$adminonly) {
+    function SIPAliases(&$SOAPEngine) {
         $this->filters   = array('aliasUsername'     => trim($_REQUEST['alias_username_filter']),
                                  'aliasDomain'       => trim($_REQUEST['alias_domain_filter']),
                                  'targetUsername'    => trim($_REQUEST['target_username_filter']),
@@ -1327,7 +1335,7 @@ class SIPAliases extends Records {
                            );
 
 
-		$this->Records(&$SOAPEngine,$adminonly);
+		$this->Records(&$SOAPEngine);
 
     }
 
@@ -1685,12 +1693,12 @@ class ENUMranges extends Records {
                             'tld'        => 'TLD'
                             );
 
-    function ENUMranges(&$SOAPEngine,$adminonly) {
+    function ENUMranges(&$SOAPEngine) {
         $this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
                                  'tld'          => trim($_REQUEST['tld_filter'])
                                 );
         
-		$this->Records(&$SOAPEngine,$adminonly);
+		$this->Records(&$SOAPEngine);
     }
 
     function listRecords() {
@@ -2048,14 +2056,14 @@ class ENUMmappings extends Records {
                               "schemas"=>array("http://"))
         );
 
-    function ENUMmappings(&$SOAPEngine,$adminonly) {
+    function ENUMmappings(&$SOAPEngine) {
         $this->filters   = array('number'       => trim($_REQUEST['number_filter']),
                                  'tld'          => trim($_REQUEST['tld_filter']),
                                  'type'         => trim($_REQUEST['type_filter']),
                                  'mapto'        => trim($_REQUEST['mapto_filter']),
                                  'owner'        => trim($_REQUEST['owner_filter'])
                                 );
-		$this->Records(&$SOAPEngine,$adminonly);
+		$this->Records(&$SOAPEngine);
     }
 
     function listRecords() {
@@ -2505,12 +2513,12 @@ class TrustedPeers extends Records {
                             'ip' =>'IP address'
                             );
 
-    function TrustedPeers(&$SOAPEngine,$adminonly) {
+    function TrustedPeers(&$SOAPEngine) {
     	$this->filters   = array('ip'     => trim($_REQUEST['ip_filter']),
                                  'description'  => trim($_REQUEST['description_filter'])
                                  );
 
-		$this->Records(&$SOAPEngine,$adminonly);
+		$this->Records(&$SOAPEngine);
     }
 
     function listRecords() {
@@ -2787,11 +2795,11 @@ class GatewayGroups extends Records {
                             'name'   => 'Name'
                             );
 
-    function GatewayGroups(&$SOAPEngine,$adminonly) {
+    function GatewayGroups(&$SOAPEngine) {
     	$this->filters   = array('group'   => trim($_REQUEST['group_filter'])
                                  );
 
-		$this->Records(&$SOAPEngine,$adminonly);
+		$this->Records(&$SOAPEngine);
     }
 
     function listRecords() {
@@ -3032,12 +3040,12 @@ class Gateways extends Records {
                             'prefix' => 'Prefix'
                             );
 
-    function Gateways(&$SOAPEngine,$adminonly) {
+    function Gateways(&$SOAPEngine) {
     	$this->filters   = array('name'   => trim($_REQUEST['name_filter']),
                                  'group'  => trim($_REQUEST['group_filter'])
                                  );
 
-		$this->Records(&$SOAPEngine,$adminonly);
+		$this->Records(&$SOAPEngine);
     }
 
     function listRecords() {
@@ -3368,13 +3376,13 @@ class Routes extends Records {
                             'priority'     => 'Priority'
                             );
 
-    function Routes(&$SOAPEngine,$adminonly) {
+    function Routes(&$SOAPEngine) {
     	$this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
                                  'gatewayGroup' => trim($_REQUEST['gatewayGroup_filter']),
                                  'fromURI'      => trim($_REQUEST['fromURI_filter'])
                                  );
 
-		$this->Records(&$SOAPEngine,$adminonly);
+		$this->Records(&$SOAPEngine);
     }
 
     function listRecords() {
@@ -3692,12 +3700,12 @@ class DomainStatistics extends Records {
 
     var $maxrowsperpage= 200;
 
-    function DomainStatistics(&$SOAPEngine,$adminonly) {
+    function DomainStatistics(&$SOAPEngine) {
         $this->filters   = array(
                            'domain'       => trim($_REQUEST['domain_filter'])
                            );
 
-		$this->Records(&$SOAPEngine,$adminonly);
+		$this->Records(&$SOAPEngine);
     }
 
     function listRecords() {
@@ -3866,12 +3874,12 @@ class Customers extends Records {
 
     var $maxrowsperpage= 200;
 
-    function Customers(&$SOAPEngine,$adminonly) {
+    function Customers(&$SOAPEngine) {
         $this->filters   = array(
                            'id'       => trim($_REQUEST['id_filter'])
                            );
 
-		$this->Records(&$SOAPEngine,$adminonly);
+		$this->Records(&$SOAPEngine);
     }
 
     function listRecords() {
@@ -4026,7 +4034,7 @@ class Customers extends Records {
 class Actions {
     var $actions=array();
 
-    function Actions(&$SOAPEngine,$adminonly) {
+    function Actions(&$SOAPEngine) {
 		$this->SOAPEngine = $SOAPEngine;
     }
 
@@ -4109,8 +4117,8 @@ class SIPAccountsActions extends Actions {
                        'addbalance'     => 'Add to prepaid balance value:'
                        );
 
-    function SIPAccountsActions(&$SOAPEngine,$adminonly) {
-        $this->Actions(&$SOAPEngine,$adminonly);
+    function SIPAccountsActions(&$SOAPEngine) {
+        $this->Actions(&$SOAPEngine);
     }
 
     function performActions($selectionKeys,$action,$sub_action_parameter) {

@@ -14,7 +14,7 @@ if (is_readable("local/header.phtml")) {
 }
 
 set_time_limit(600);
-$perm->check("admin");
+//$perm->check("admin");
 
 require_once("provisioning_soap_library.phtml");
 require_once("provisioning_logic.phtml");
@@ -24,13 +24,19 @@ $layout->showTopMenu();
 
 // $soapEngines must be defined in global.inc
 
-$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines);
+global $CDRTool;
+
+if ($CDRTool['reseller']) {
+	$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,'',$CDRTool['reseller'],0);
+} else {
+	$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,'','',1);
+}
+
 $_class     = $SOAPEngine->recordsClass;
-$RECORDS    = new $_class(&$SOAPEngine,true);
+$RECORDS    = new $_class(&$SOAPEngine);
 
 if ($_REQUEST['action']=='Add') $RECORDS->addRecord();
 if ($_REQUEST['action']=='Delete') $RECORDS->deleteRecord();
-
 if ($_REQUEST['action']=='PerformActions') {
 	$RECORDS->performActions();
 } else {
