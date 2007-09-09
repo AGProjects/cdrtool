@@ -1,7 +1,7 @@
 <?
 class SOAPEngine {
-    var $adminonly = 0;
-    var $reseller  = 0;
+    var $adminonly     = 0;
+    var $reseller      = 0;
 
     var $services=array(
                         'SIP accounts'     => array('recordsClass' => 'SipAccounts',
@@ -41,8 +41,9 @@ class SOAPEngine {
 
     function SOAPEngine($service,$soapEngines,$extraFormElements,$reseller=0,$adminonly=0) {
 
-        /*
+        //print("<p>Init SOAP engine class");
 
+        /*
         $soapEngines=array(
                                    'mdns' => array('name'=> 'Managed DNS',
                                                  'username'=> 'soapadmin',
@@ -85,6 +86,8 @@ class SOAPEngine {
             }
 
             $this->enableResellers = $this->soapEngines[$this->soapEngineId]['enableResellers'];
+            $this->defaultEnumTLD  = $this->soapEngines[$this->soapEngineId]['defaultEnumTLD'];
+
 
 			if (!$reseller && $this->soapEngines[$this->soapEngineId]['impersonate']) {
             	$this->reseller=$this->soapEngines[$this->soapEngineId]['impersonate'];
@@ -113,13 +116,6 @@ class SOAPEngine {
             $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-
-    		// Instantiate the SOAP client for Execute wrapper
-            $this->soapclientExecute = new $this->soapClass($this->SOAPurl);
-
-            $this->soapclientExecute->setOpt('curl', CURLOPT_TIMEOUT,        5);
-            $this->soapclientExecute->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-            $this->soapclientExecute->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
 			$this->soapRemoteId=$this->soapEngines[$this->soapEngineId]['depends'];
 
@@ -153,7 +149,6 @@ class SOAPEngine {
     	        $this->soapclientCustomers->setOpt('curl', CURLOPT_TIMEOUT,        5);
         	    $this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             	$this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-
             }
 
     	} else {
@@ -195,6 +190,7 @@ class SOAPEngine {
         if (is_object($this->soapclientRemote)) {
 
             $this->soapclientRemote->addHeader($this->SoapAuthRemote);
+
             $resultRemote = call_user_func_array(array($this->soapclientRemote,$function['commit']['name']),$function['commit']['parameters']);
 
             if (PEAR::isError($resultRemote)) {
@@ -206,8 +202,8 @@ class SOAPEngine {
             } else {
             	printf ("<p><font color=green>%s %s </font>",$function['commit']['logs']['success'],$this->SOAPurlRemote);
 
-	     		$this->soapclientExecute->addHeader($this->SoapAuth);
-            	$result = call_user_func_array(array($this->soapclientExecute,$function['commit']['name']),$function['commit']['parameters']);
+                $this->soapclient->addHeader($this->SoapAuth);
+            	$result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
 
                 if (PEAR::isError($result)) {
                     $error_msg=$result->getMessage();
@@ -216,7 +212,10 @@ class SOAPEngine {
                     printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
 
 					if ($function['rollback']['name']) {
+
             			$this->soapclientRemote->addHeader($this->SoapAuthRemote);
+                        $this->counterRemote++;
+
             			$resultRemote = call_user_func_array(array($this->soapclientRemote,$function['rollback']['name']),$function['rollback']['parameters']);
 
                         if (PEAR::isError($result)) {
@@ -240,8 +239,8 @@ class SOAPEngine {
 
         } else {
 
-	     	$this->soapclientExecute->addHeader($this->SoapAuth);
-            $result = call_user_func_array(array($this->soapclientExecute,$function['commit']['name']),$function['commit']['parameters']);
+	     	$this->soapclient->addHeader($this->SoapAuth);
+            $result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
 
             if (PEAR::isError($result)) {
                 $error_msg=$result->getMessage();
@@ -255,12 +254,13 @@ class SOAPEngine {
                 }
             }
         }
+
         return true;
     }
 }
 
 class Records {
-	var $maxrowsperpage  = '20';
+	var $maxrowsperpage  = '15';
     var $SipSettingsPage = 'sip_settings.phtml';
     var $allowedDomains  = false;
     var $selectionActive = false;
@@ -292,7 +292,13 @@ class Records {
         }
 
         $this->filters['customer']=trim($_REQUEST['customer_filter']);
-        $this->filters['reseller']=trim($_REQUEST['reseller_filter']);
+
+        if (!$this->adminonly && $this->reseller) {
+            // Force filter if reseller
+        	$this->filters['reseller']=$this->reseller;
+        } else {
+        	$this->filters['reseller']=trim($_REQUEST['reseller_filter']);
+        }
 
         $this->getResellers();
         $this->getCustomers();
@@ -338,6 +344,13 @@ class Records {
 
     function showPagination($maxrows) {
 
+        $url .= $this->url.'&'.$this->addFiltersToURL().
+        sprintf("&service=%s&sortBy=%s&sortOrder=%s",
+        urlencode($this->SOAPEngine->service),
+        urlencode($this->sorting['sortBy']),
+        urlencode($this->sorting['sortOrder'])
+        );
+
         print "
         <p>
         <table border=0 align=center>
@@ -345,34 +358,18 @@ class Records {
         <td>
         ";
 
-        $url .= $this->url.sprintf("&service=%s&sortBy=%s&sortOrder=%s",
-        urlencode($this->SOAPEngine->service),
-        urlencode($this->sorting['sortBy']),
-        urlencode($this->sorting['sortOrder'])
-        );
-
-        if ($this->filters['customer']) {
-        	$url .= sprintf('&customer_filter=%s',$this->filters['customer']);
-        }
-
-        if ($this->filters['reseller']) {
-        	$url .= sprintf('&reseller_filter=%s',$this->filters['reseller']);
-        }
-
-
         if ($this->next != 0  ) {
             $show_next=$this->maxrowsperpage-$this->next;
             if  ($show_next < 0)  {
                 $mod_show_next  =  $show_next-2*$show_next;
             }
             if (!$mod_show_next) $mod_show_next=0;
-            $url_prev=$url."&next=$mod_show_next";
-            $url_begin=$url."&next=0";
 
             if ($mod_show_next/$this->maxrowsperpage >= 1) {
-            	printf ("<a href='%s'>Begin</a> ",$url_begin);
+            	printf ("<a href='%s&next=0'>Begin</a> ",$url);
             }
-            printf ("<a href='%s'>Previous</a> ",$url_prev);
+
+            printf ("<a href='%s&next=%s'>Previous</a> ",$url,$mod_show_next);
         }
         
         print "
@@ -382,8 +379,8 @@ class Records {
 
         if ($this->next + $this->maxrowsperpage < $this->rows)  {
             $show_next = $this->maxrowsperpage + $this->next;
-            $url_next  = $url."&next=$show_next";
-            printf ("<a href='%s'>Next</a> ",$url_next);
+
+            printf ("<a href='%s&next=%s'>Next</a> ",$url,$show_next);
         }
 
         print "
@@ -659,6 +656,26 @@ class Records {
         } else {
             printf ("<input type=text size=5 name=reseller_filter value='%s'>",$this->filters['reseller']);
         }
+    }
+
+    function addFiltersToURL() {
+
+        /*
+        print "<pre>";
+		print_r($this->filters);
+        print "</pre>";
+        */
+
+        $j=0;
+		foreach(array_keys($this->filters) as $filter) {
+        	if (strlen(trim($this->filters[$filter]))) {
+                if ($j) $url .='&';
+            	$url .= sprintf('%s_filter=%s',$filter,urlencode(trim($this->filters[$filter])));
+            }
+            $j++;
+        }
+
+        return $url;
     }
 }
 
@@ -958,14 +975,15 @@ class SIPAccounts extends Records {
             return false;
         } else {
 			foreach ($result->accounts as $account) {
-                $this->selectionKeys[]=$account->id->username.'@'.$account->id->domain;
+                $this->selectionKeys[]=array('username' => $account->id->username,
+                                             'domain'   => $account->id->domain
+                                             );
             }
 
             return true;
         }
 
         return false;
-
     }
 
     function listRecords() {
@@ -1012,10 +1030,6 @@ class SIPAccounts extends Records {
                         'orderBy' => $orderBy,
                         'range'   => $range
                         );
-
-        if (strlen($this->filters['username'])) $this->url .= sprintf("&username_filter=%s",urlencode($this->filters['username']));
-        if (strlen($this->filters['domain']))   $this->url .= sprintf("&domain_filter=%s",urlencode($this->filters['domain']));
-        if (strlen($this->filters['fullname'])) $this->url .= sprintf("&fullname_filter=%s",urlencode($this->filters['fullname']));
 
         // Insert credetials
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -1213,7 +1227,7 @@ class SIPAccounts extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteAccount',
                                             'parameters' => array($account),
-                                            'logs'       => array('success' => sprintf('<li>SIP account %s@%s has been deleted',$this->filters['username'],$this->filters['domain'])
+                                            'logs'       => array('success' => sprintf('<p>SIP account %s@%s has been deleted',$this->filters['username'],$this->filters['domain'])
                                                                   )
                                            )
 
@@ -1359,7 +1373,7 @@ class SIPAccounts extends Records {
 
         $function=array('commit'   => array('name'       => 'addAccount',
                                             'parameters' => array($account),
-                                            'logs'       => array('success' => sprintf('<li>SIP account %s@%s has been added',$username,$domain))),
+                                            'logs'       => array('success' => sprintf('<p>SIP account %s@%s has been added',$username,$domain))),
                         'rollback' => array('name'       => 'deleteAlias',
                                             'parameters' => array($deleteAccount))
                         );
@@ -1419,10 +1433,69 @@ class SIPAliases extends Records {
                                  'targetDomain'      => trim($_REQUEST['target_domain_filter'])
                            );
 
-
 		$this->Records(&$SOAPEngine);
 
     }
+
+    function getRecordKeys() {
+        // Make sure we apply the domain filter from the login credetials
+        if ($this->allowedDomains && !$this->filters['aliasDomain']) {
+        	//$this->filters['aliasDomain'] = $this->allowedDomains[0];
+        }
+
+        if ($this->filters['aliasDomain'] && $this->allowedDomains && !in_array($this->filters['aliasDomain'],$this->allowedDomains)) {
+        	$this->filters['aliasDomain'] = $this->allowedDomains[0];
+        }
+
+        // Filter
+        $filter=array('aliasUsername'  => $this->filters['aliasUsername'],
+                      'aliasDomain'    => $this->filters['aliasDomain'],
+                      'targetUsername' => $this->filters['targetUsername'],
+                      'targetDomain'   => $this->filters['targetDomain']
+                      );
+
+        // Range
+        $range=array('start' => 0,
+                     'count' => 1000
+                     );
+
+        // Order
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'aliasUsername';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        //print_r($Query);
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getAliases($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+			foreach ($result->aliases as $alias) {
+                $this->selectionKeys[]=array('username' => $alias->id->username,
+                                             'domain'   => $alias->id->domain);
+            }
+
+            return true;
+        }
+    }
+
 
     function listRecords() {
         $this->getAllowedDomains();
@@ -1463,11 +1536,6 @@ class SIPAliases extends Records {
                         'orderBy' => $orderBy,
                         'range'   => $range
                         );
-
-        if (strlen($this->filters['aliasUsername']))  $this->url .= sprintf("&alias_username_filter=%s",urlencode($this->filters['aliasUsername']));
-        if (strlen($this->filters['aliasDomain']))    $this->url .= sprintf("&alias_domain_filter=%s",urlencode($this->filters['aliasDomain']));
-        if (strlen($this->filters['targetUsername'])) $this->url .= sprintf("&target_username_filter=%s",urlencode($this->filters['targetUsername']));
-        if (strlen($this->filters['targetDomain']))   $this->url .= sprintf("&target_domain_filter=%s",urlencode($this->filters['targetDomain']));
 
         // Insert credetials
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -1604,7 +1672,7 @@ class SIPAliases extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteAlias',
                                             'parameters' => array($alias),
-                                            'logs'       => array('success' => sprintf('<li>SIP alias %s@%s has been deleted',$this->filters['aliasUsername'],$this->filters['aliasDomain'])
+                                            'logs'       => array('success' => sprintf('<p>SIP alias %s@%s has been deleted',$this->filters['aliasUsername'],$this->filters['aliasDomain'])
                                                                   )
                                            )
 
@@ -1748,7 +1816,7 @@ class SIPAliases extends Records {
 
         $function=array('commit'   => array('name'       => 'addAlias',
                                             'parameters' => array($alias),
-                                            'logs'       => array('success' => sprintf('<li>SIP alias %s@%s has been added',$username,$domain))),
+                                            'logs'       => array('success' => sprintf('<p>SIP alias %s@%s has been added',$username,$domain))),
                         'rollback' => array('name'       => 'deleteAlias',
                                             'parameters' => array($deleteAlias))
                         );
@@ -1824,7 +1892,7 @@ class ENUMranges extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>Prefix </b></td>
-                <td><b>Top level domain</b></td>
+                <td><b>TLD</b></td>
                 <td><b>Operator</b></td>
                 <td><b>TTL</b></td>
                 <td><b>Min digits</b></td>
@@ -1941,7 +2009,7 @@ class ENUMranges extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteRange',
                                             'parameters' => array($rangeId),
-                                            'logs'       => array('success' => sprintf('<li>ENUM range %s under %s has been deleted',$this->filters['prefix'],$this->filters['tld'])
+                                            'logs'       => array('success' => sprintf('<p>ENUM range +%s under %s has been deleted',$this->filters['prefix'],$this->filters['tld'])
                                                                   )
                                             )
      
@@ -1970,11 +2038,11 @@ class ENUMranges extends Records {
             print "
             <input type=submit name=action value=Add>
             ";
-            printf (" Prefix: +<input type=text size=5 name=prefix>");
-            printf (" Top level domain: <input type=text size=15 name=tld>");
-            printf (" TTL: <input type=text size=5 name=ttl value=3600>");
-            printf (" Min Digits: <input type=text size=3 name=minDigits value=11>");
-            printf (" Max Digits: <input type=text size=3 name=maxDigits value=11>");
+            printf ("Prefix: +<input type=text size=5 name=prefix> ");
+            printf ("TLD: <input type=text size=15 name=tld> ");
+            printf ("TTL: <input type=text size=5 name=ttl value=3600> ");
+            printf ("Min Digits: <input type=text size=3 name=minDigits value=11> ");
+            printf ("Max Digits: <input type=text size=3 name=maxDigits value=11> ");
             print "Operator:";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
@@ -2006,7 +2074,15 @@ class ENUMranges extends Records {
     	$tld    = trim($_REQUEST['tld']);
         $prefix = trim($_REQUEST['prefix']);
 
-		if (!strlen($tld) || !strlen($prefix)) {
+        if (!strlen($tld)) {
+            if (strlen($this->SOAPEngine->defaultEnumTLD)) {
+                $tld=$this->SOAPEngine->defaultEnumTLD;
+            } else {
+        		$tld='e164.arpa';
+            }
+        }
+
+		if (!strlen($tld) || !strlen($prefix) || !is_numeric($prefix)) {
             printf ("<p><font color=red>Error: Missing TLD or prefix. </font>");
             return false;
         }
@@ -2045,7 +2121,7 @@ class ENUMranges extends Records {
 
         $function=array('commit'   => array('name'       => 'addRange',
                                             'parameters' => array($range),
-                                            'logs'       => array('success' => sprintf('<li>ENUM range +%s under %s has been added',$this->filters['prefix'],$this->filters['tld']))),
+                                            'logs'       => array('success' => sprintf('<p>ENUM range +%s under %s has been added',$prefix,$tld))),
                         'rollback' => array('name'       => 'deleteRange',
                                             'parameters' => array($deleteRange))
                         );
@@ -2187,10 +2263,6 @@ class ENUMmappings extends Records {
                      'range'   => $range
                      );
 
-        if (strlen($this->filters['number'])) $this->url .= sprintf("&number_filter=%s",urlencode($this->filters['number']));
-        if (strlen($this->filters['type']))   $this->url .= sprintf("&type_filter=%s",urlencode($this->filters['type']));
-        if (strlen($this->filters['mapto']))  $this->url .= sprintf("&mapto_filter=%s",urlencode($this->filters['mapto']));
-
         // Insert credetials
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
@@ -2221,7 +2293,7 @@ class ENUMmappings extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>Number</b></td>
-                <td><b>Top level domain</b></td>
+                <td><b>TLD</b></td>
                 <td><b>DNS name</b></td>
                 <td><b>Operator</b></td>
                 <td><b>Srv</b></td>
@@ -2359,7 +2431,7 @@ class ENUMmappings extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" Number: <input type=text size=15 name=number_filter value='%s'>",$this->filters['number']);
+        printf (" Number:<input type=text size=15 name=number_filter value='%s'>",$this->filters['number']);
         printf (" TLD:");
         if ($this->allowedDomains) {
             $selected_tld[$this->filters['tld_filter']]='selected';
@@ -2375,7 +2447,7 @@ class ENUMmappings extends Records {
             printf ("<input type=text size=10 name=tld_filter value='%s'>",$this->filters['tld']);
         }
 
-        printf (" Service: ");
+        printf (" Srv:");
 
                     print "
                     <select name=type_filter>
@@ -2390,7 +2462,7 @@ class ENUMmappings extends Records {
                     print "
                     </select>
                     ";
-        printf (" Map to: <input type=text size=20 name=mapto_filter value='%s'>",$this->filters['mapto']);
+        printf (" <nobr>Map to:<input type=text size=20 name=mapto_filter value='%s'></nobr>",$this->filters['mapto']);
 
     }
 
@@ -2410,7 +2482,7 @@ class ENUMmappings extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteNumber',
                                             'parameters' => array($enum_id),
-                                            'logs'       => array('success' => sprintf('<li>ENUM number +%s under %s has been deleted',$this->filters['number'],$this->filters['tld'])
+                                            'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been deleted',$this->filters['number'],$this->filters['tld'])
                                                                   )
                                            )
 
@@ -2441,7 +2513,7 @@ class ENUMmappings extends Records {
             <input type=submit name=action value=Add>
             ";
             printf (" Number: +<input type=text size=15 name=number>");
-            printf (" Top level domain:");
+            printf (" TLD:");
             if (is_array($this->allowedDomains)) {
             	print "<select name=tld>";
                 foreach ($this->allowedDomains as $_tld) {
@@ -2509,6 +2581,10 @@ class ENUMmappings extends Records {
             foreach($result as $range) {
             	if (in_array($range->id->tld,$this->allowedDomains)) continue;
             	$this->allowedDomains[]=$range->id->tld;
+                $seen[$range->id->tld]++;
+            }
+            if (strlen($this->SOAPEngine->defaultEnumTLD) && !$seen[$this->SOAPEngine->defaultEnumTLD]) {
+            	$this->allowedDomains[]=$this->SOAPEngine->defaultEnumTLD;
             }
         }
     }
@@ -2517,7 +2593,15 @@ class ENUMmappings extends Records {
     	$tld    = trim($_REQUEST['tld']);
         $number = trim($_REQUEST['number']);
 
-		if (!strlen($tld) || !strlen($number)) {
+        if (!strlen($tld)) {
+            if (strlen($this->SOAPEngine->defaultEnumTLD)) {
+                $tld=$this->SOAPEngine->defaultEnumTLD;
+            } else {
+        		$tld='e164.arpa';
+            }
+        }
+
+		if (!strlen($tld) || !strlen($number) || !is_numeric($number)) {
             printf ("<p><font color=red>Error: Missing TLD or number. </font>");
             return false;
         }
@@ -2585,7 +2669,7 @@ class ENUMmappings extends Records {
 
                 $function=array('commit'   => array('name'       => 'addNumber',
                                                     'parameters' => array($enum_number),
-                                                    'logs'       => array('success' => sprintf('<li>ENUM number +%s under %s has been added',$number,$tld))),
+                                                    'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been added',$number,$tld))),
                                 'rollback' => array('name'       => 'deleteNumber',
                                                     'parameters' => array($enumId))
                                 );
@@ -2598,6 +2682,53 @@ class ENUMmappings extends Records {
             return false;
         }
     	return true;
+    }
+
+    function getRecordKeys() {
+
+        // Filter
+        $filter=array('number' => $this->filters['number'],
+                      'type'   => $this->filters['type'],
+                      'mapto'  => $this->filters['mapto']
+                      );
+        // Range
+        $range=array('start' => 0,
+                     'count' => 1000
+                     );
+
+        // Order
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getNumbers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+			foreach ($result->numbers as $number) {
+                $this->selectionKeys[]=array('number' => $number->id->number,
+                                             'tld'    => $number->id->tld);
+            }
+            return true;
+        }
     }
 }
 
@@ -2646,9 +2777,6 @@ class TrustedPeers extends Records {
                         'orderBy' => $orderBy,
                         'range'   => $range
                         );
-
-        if (strlen($this->filters['ip'])) $this->url .= sprintf("&ip_filter=%s",urlencode($this->filters['ip']));
-        if (strlen($this->filters['description'])) $this->url .= sprintf("&description_filter=%s",urlencode($this->filters['description']));
 
         // Call function
         $result     = $this->SOAPEngine->soapclient->getTrustedPeers($Query);
@@ -2932,8 +3060,6 @@ class GatewayGroups extends Records {
                         'range'   => $range
                         );
 
-        if (strlen($this->filters['group'])) $this->url .= sprintf("&group_filter=%s",urlencode($this->filters['group']));
-
         // Call function
         $result     = $this->SOAPEngine->soapclient->getGatewayGroups($Query);
 
@@ -2947,9 +3073,6 @@ class GatewayGroups extends Records {
 
 			$this->rows = $result->total;
 
-            print "<pre>";
-            //print_r($result);
-            print "</pre>";
             print "
             <table border=0 align=center>
             <tr><td>$this->rows records found</td></tr>
@@ -3179,9 +3302,6 @@ class Gateways extends Records {
                         'range'   => $range
                         );
 
-        if (strlen($this->filters['name'])) $this->url .= sprintf("&name_filter=%s",urlencode($this->filters['name']));
-        if (strlen($this->filters['group'])) $this->url .= sprintf("&group_filter=%s",urlencode($this->filters['group']));
-
         // Call function
         $result     = $this->SOAPEngine->soapclient->getGateways($Query);
 
@@ -3195,9 +3315,6 @@ class Gateways extends Records {
 
 			$this->rows = $result->total;
 
-            print "<pre>";
-            //print_r($result);
-            print "</pre>";
             print "
             <table border=0 align=center>
             <tr><td>$this->rows records found</td></tr>
@@ -3540,10 +3657,6 @@ class Routes extends Records {
                         'range'   => $range
                         );
 
-        if (strlen($this->filters['prefix'])) $this->url .= sprintf("&prefix_filter=%s",urlencode($this->filters['prefix']));
-        if (strlen($this->filters['gatewayGroup'])) $this->url .= sprintf("&gatewayGroup_filter=%s",urlencode($this->filters['gatewayGroup']));
-        if (strlen($this->filters['fromURI'])) $this->url .= sprintf("&fromURI_filter=%s",urlencode($this->filters['fromURI']));
-
         // Call function
         $result     = $this->SOAPEngine->soapclient->getRoutes($Query);
 
@@ -3557,9 +3670,6 @@ class Routes extends Records {
 
 			$this->rows = $result->total;
 
-            print "<pre>";
-            //print_r($result);
-            print "</pre>";
             print "
             <table border=0 align=center>
             <tr><td>$this->rows records found</td></tr>
@@ -4016,9 +4126,6 @@ class Customers extends Records {
                         'range'   => $range
                         );
 
-        if (strlen($this->filters['username'])) $this->url .= sprintf("&username_filter=%s",urlencode($this->filters['username']));
-        if (strlen($this->filters['id'])) $this->url .= sprintf("&id_filter=%s",urlencode($this->filters['id']));
-
 		$this->showSeachForm();
 
         // Insert credetials
@@ -4069,9 +4176,6 @@ class Customers extends Records {
             }
 
             $i=0;
-
-			//print "<pre>";
-            //print_r($result);
 
 			if ($this->rows) {
                 while ($i < $maxrows)  {
@@ -4179,7 +4283,7 @@ class Actions {
 
     function Actions(&$SOAPEngine) {
 		$this->SOAPEngine = $SOAPEngine;
-        $this->adminonly=$this->SOAPEngine->adminonly;
+        $this->adminonly  = $this->SOAPEngine->adminonly;
     }
 
     function performActions($selectionKeys,$action,$sub_action_parameter) {
@@ -4277,21 +4381,26 @@ class SIPAccountsActions extends Actions {
     }
 
     function performActions($selectionKeys,$action,$sub_action_parameter) {
+        if (!in_array($action,array_keys($this->actions))) {
+            print "<font color=red>Error: Invalid action $action</font>";
+        	return false;
+        }
+
         print "<ol>";
         foreach($selectionKeys as $key) {
-            flush();
-            //printf ("<li>Performing action=%s on key=%s",$action,$key);
-            list($username,$domain)=explode('@',trim($key));
 
-        	$account=array('username' => $username,
-                           'domain'   => $domain
+            flush();
+            //printf ("Performing action=%s on key=%s",$action,$key);
+
+        	$account=array('username' => $key['username'],
+                           'domain'   => $key['domain']
         			      );
 
         	if ($action=='block') {
 
                 $function=array('commit'   => array('name'       => 'addToGroup',
                                                     'parameters' => array($account,'block'),
-                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has been blocked',$key)
+                                                    'logs'       => array('success' => sprintf('SIP account %s@%s has been blocked',$key['username'],$key['domain'])
                                                                           )
                                                    )
         
@@ -4303,7 +4412,7 @@ class SIPAccountsActions extends Actions {
 
                 $function=array('commit'   => array('name'       => 'removeFromGroup',
                                                     'parameters' => array($account,'block'),
-                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has been de-blocked',$key)
+                                                    'logs'       => array('success' => sprintf('SIP account %s@%s has been de-blocked',$key['username'],$key['domain'])
                                                                           )
                                                    )
         
@@ -4313,13 +4422,13 @@ class SIPAccountsActions extends Actions {
 
         	} else if ($action=='removefromgroup') {
             	if (!strlen($sub_action_parameter)) {
-            		printf ("<li><font color=red>Error: you must enter a group name</font>");
+            		printf ("<font color=red>Error: you must enter a group name</font>");
                     break;
                 }
 
                 $function=array('commit'   => array('name'       => 'removeFromGroup',
                                                     'parameters' => array($account,$sub_action_parameter),
-                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has been removed from group',$key,$sub_action_parameter)
+                                                    'logs'       => array('success' => sprintf('SIP account %s@%s has been removed from group',$key['username'],$key['domain'],$sub_action_parameter)
                                                                           )
                                                    )
         
@@ -4329,13 +4438,13 @@ class SIPAccountsActions extends Actions {
 
         	} else if ($action=='addtogroup') {
             	if (!strlen($sub_action_parameter)) {
-            		printf ("<li><font color=red>Error: you must enter a group name</font>");
+            		printf ("<font color=red>Error: you must enter a group name</font>");
                     break;
                 }
 
                 $function=array('commit'   => array('name'       => 'addToGroup',
                                                     'parameters' => array($account,$sub_action_parameter),
-                                                    'logs'       => array('success' => sprintf('<li>SIP account %s is now in group %s',$key,$sub_action_parameter)
+                                                    'logs'       => array('success' => sprintf('SIP account %s@%s is now in group %s',$key['username'],$key['domain'],$sub_action_parameter)
                                                                           )
                                                    )
         
@@ -4347,7 +4456,7 @@ class SIPAccountsActions extends Actions {
 
                 $function=array('commit'   => array('name'       => 'removeFromGroup',
                                                     'parameters' => array($account,'quota'),
-                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has been deblocked from quota',$key)
+                                                    'logs'       => array('success' => sprintf('SIP account %s@%s has been deblocked from quota',$key['username'],$key['domain'])
                                                                           )
                                                    )
         
@@ -4359,7 +4468,7 @@ class SIPAccountsActions extends Actions {
 
                 $function=array('commit'   => array('name'       => 'removeFromGroup',
                                                     'parameters' => array($account,'free-pstn'),
-                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has no access to the PSTN',$key)
+                                                    'logs'       => array('success' => sprintf('SIP account %s@%s has no access to the PSTN',$key['username'],$key['domain'])
                                                                           )
                                                    )
         
@@ -4371,7 +4480,7 @@ class SIPAccountsActions extends Actions {
 
                 $function=array('commit'   => array('name'       => 'addToGroup',
                                                     'parameters' => array($account,'free-pstn'),
-                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has access to the PSTN',$key)
+                                                    'logs'       => array('success' => sprintf('SIP account %s@%s has access to the PSTN',$key['username'],$key['domain'])
                                                                           )
                                                    )
         
@@ -4383,7 +4492,7 @@ class SIPAccountsActions extends Actions {
 
                 $function=array('commit'   => array('name'       => 'deleteAccount',
                                                     'parameters' => array($account),
-                                                    'logs'       => array('success' => sprintf('<li>SIP account %s has been deleted',$key)
+                                                    'logs'       => array('success' => sprintf('SIP account %s@%s has been deleted',$key['username'],$key['domain'])
                                                                           )
                                                    )
         
@@ -4399,7 +4508,7 @@ class SIPAccountsActions extends Actions {
             		$error_msg  = $result->getMessage();
             		$error_fault= $result->getFault();
             		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             		break;
         		} else {
                     //print_r($result);
@@ -4413,7 +4522,7 @@ class SIPAccountsActions extends Actions {
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
-                                                        'logs'       => array('success' => sprintf('<li>SIP account %s is now prepaid',$key)
+                                                        'logs'       => array('success' => sprintf('SIP account %s@%s is now prepaid',$key['username'],$key['domain'])
                                                                               )
                                                        )
             
@@ -4429,7 +4538,7 @@ class SIPAccountsActions extends Actions {
             		$error_msg  = $result->getMessage();
             		$error_fault= $result->getFault();
             		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             		break;
         		} else {
                     //print_r($result);
@@ -4443,7 +4552,7 @@ class SIPAccountsActions extends Actions {
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
-                                                        'logs'       => array('success' => sprintf('<li>SIP account %s is now postpaid',$key)
+                                                        'logs'       => array('success' => sprintf('SIP account %s@%s is now postpaid',$key['username'],$key['domain'])
                                                                               )
                                                        )
             
@@ -4459,7 +4568,7 @@ class SIPAccountsActions extends Actions {
             		$error_msg  = $result->getMessage();
             		$error_fault= $result->getFault();
             		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             		break;
         		} else {
                     //print_r($result);
@@ -4471,7 +4580,7 @@ class SIPAccountsActions extends Actions {
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
-                                                        'logs'       => array('success' => sprintf('<li>SIP account %s has quota set to %s',$key,$sub_action_parameter)
+                                                        'logs'       => array('success' => sprintf('SIP account %s@%s has quota set to %s',$key['username'],$key['domain'],$sub_action_parameter)
                                                                               )
                                                        )
             
@@ -4487,7 +4596,7 @@ class SIPAccountsActions extends Actions {
             		$error_msg  = $result->getMessage();
             		$error_fault= $result->getFault();
             		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             		break;
         		} else {
                     //print_r($result);
@@ -4500,7 +4609,7 @@ class SIPAccountsActions extends Actions {
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
-                                                        'logs'       => array('success' => sprintf('<li>SIP account %s has PSTN caller ID set to %s',$key,$sub_action_parameter)
+                                                        'logs'       => array('success' => sprintf('SIP account %s@%s has PSTN caller ID set to %s',$key['username'],$key['domain'],$sub_action_parameter)
                                                                               )
                                                        )
             
@@ -4516,7 +4625,7 @@ class SIPAccountsActions extends Actions {
             		$error_msg  = $result->getMessage();
             		$error_fault= $result->getFault();
             		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             		break;
         		} else {
                     //print_r($result);
@@ -4534,7 +4643,7 @@ class SIPAccountsActions extends Actions {
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
-                                                        'logs'       => array('success' => sprintf('<li>SIP account %s has PSTN caller ID set to %s%s ',$key,$sub_action_parameter,$result->rpid)
+                                                        'logs'       => array('success' => sprintf('SIP account %s@%s has PSTN caller ID set to %s%s ',$key['username'],$key['domain'],$sub_action_parameter,$result->rpid)
                                                                               )
                                                        )
             
@@ -4544,7 +4653,7 @@ class SIPAccountsActions extends Actions {
         		}
         	} else if ($action=='addbalance') {
             	if (!is_numeric($sub_action_parameter)) {
-            		printf ("<li><font color=red>Error: you must enter a positive balance</font>");
+            		printf ("<font color=red>Error: you must enter a positive balance</font>");
                     break;
                 }
 
@@ -4555,18 +4664,18 @@ class SIPAccountsActions extends Actions {
             		$error_msg  = $result->getMessage();
             		$error_fault= $result->getFault();
             		$error_code = $result->getCode();
-            		printf ("<li><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             		break;
                 }
 
 				if (!$result->prepaid) {
-            		printf ("<li><font color=red>Info: SIP account %s is not prepaid, no action performed</font>",$key);
+            		printf ("<font color=red>Info: SIP account %s@%s is not prepaid, no action performed</font>",$key['username'],$key['domain']);
                     continue;
                 }
 
                 $function=array('commit'   => array('name'       => 'addBalance',
                                                     'parameters' => array($account,$sub_action_parameter),
-                                                    'logs'       => array('success' => sprintf('<li>SIP account %s balance has been increased with %s',$key,$sub_action_parameter)
+                                                    'logs'       => array('success' => sprintf('SIP account %s@%s balance has been increased with %s',$key['username'],$key['domain'],$sub_action_parameter)
                                                                           )
                                                    )
         
@@ -4591,27 +4700,78 @@ class SIPAliasesActions extends Actions {
     }
 
     function performActions($selectionKeys,$action,$sub_action_parameter) {
+        if (!in_array($action,array_keys($this->actions))) {
+            print "<font color=red>Error: Invalid action $action</font>";
+        	return false;
+        }
+
         print "<ol>";
         foreach($selectionKeys as $key) {
             flush();
 
-            //printf ("<li>Performing action=%s on key=%s",$action,$key);
-            list($username,$domain)=explode('@',trim($key));
-
-            $alias=array('username' => $username,
-                         'domain'   => $domain
+            //printf ("Performing action=%s on key=%s",$action,$key);
+            $alias=array('username' => $key['username'],
+                         'domain'   => $key['domain']
                         );
-    
-            $function=array('commit'   => array('name'       => 'deleteAlias',
-                                                'parameters' => array($alias),
-                                                'logs'       => array('success' => sprintf('<li>SIP alias %s@%s has been deleted',$username,$domain)
-                                                                      )
-                                               )
-    
-                            );
 
-            $this->SOAPEngine->execute($function);
+        	if ($action=='delete') {
+    
+                $function=array('commit'   => array('name'       => 'deleteAlias',
+                                                    'parameters' => array($alias),
+                                                    'logs'       => array('success' => sprintf('SIP alias %s@%s has been deleted',$key['username'],$key['domain'])
+                                                                          )
+                                                   )
+        
+                                );
+    
+                //$this->SOAPEngine->execute($function);
+            }
         }
+        print "</ol>";
+
+    }
+
+}
+
+class ENUMMappingsActions extends Actions {
+    var $actions=array(
+                       'delete'         => 'Delete ENUM mappings'
+                       );
+
+    function ENUMMappingsActions(&$SOAPEngine) {
+        $this->Actions(&$SOAPEngine);
+    }
+
+    function performActions($selectionKeys,$action,$sub_action_parameter) {
+        if (!in_array($action,array_keys($this->actions))) {
+            print "<font color=red>Error: Invalid action $action</font>";
+        	return false;
+        }
+
+        print "<ol>";
+        foreach($selectionKeys as $key) {
+            flush();
+
+
+        	if ($action=='delete') {
+
+                //printf ("Performing action=%s on key=%s",$action,$key);
+                $enum_id=array('number' => $key['number'],
+                               'tld'    => $key['tld']
+                               );
+
+                $function=array('commit'   => array('name'       => 'deleteNumber',
+                                                    'parameters' => array($enum_id),
+                                                    'logs'       => array('success' => sprintf('ENUM number +%s under %s has been deleted',$key['number'],$key['tld'])
+                                                                          )
+                                                   )
+        
+                                );
+    
+                $this->SOAPEngine->execute($function);
+            }
+        }
+
         print "</ol>";
 
     }

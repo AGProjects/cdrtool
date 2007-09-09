@@ -1,9 +1,32 @@
 <?
-class WebService_NGNPro_SipPort extends SOAP_Client
+class SOAP_Client_Custom extends SOAP_Client {
+	function addHeader(&$soap_value) {
+        # add a new header to the message
+
+		if (is_array($soap_value)) {
+            foreach ($this->headersOut as $_header) {
+                if ($_header->name == $soap_value[0]) {
+                    return true;
+                }
+            }
+        }
+
+        if (is_a($soap_value,'soap_header')) {
+            $this->headersOut[] =& $soap_value;
+        } else if (gettype($soap_value) == 'array') {
+            // name, value, namespace, mustunderstand, actor
+            $this->headersOut[] =& new SOAP_Header($soap_value[0], NULL, $soap_value[1], $soap_value[2], $soap_value[3]);;
+        } else {
+            $this->_raiseSoapFault("Don't understand the header info you provided.  Must be array or SOAP_Header.");
+        }
+    }
+}
+
+class WebService_NGNPro_SipPort extends SOAP_Client_Custom
 {
     function WebService_NGNPro_SipPort($url)
 {
-        $this->SOAP_Client($url, 0);
+        $this->SOAP_Client_Custom($url, 0);
     }
     function &addDomain($domain) {
         return $this->call("addDomain", 
@@ -427,11 +450,11 @@ class WebService_NGNPro_SipPort extends SOAP_Client
                             'use'=>'encoded' ));
     }
 }
-class WebService_NGNPro_VoicemailPort extends SOAP_Client
+class WebService_NGNPro_VoicemailPort extends SOAP_Client_Custom
 {
     function WebService_NGNPro_VoicemailPort($url)
 {
-        $this->SOAP_Client($url, 0);
+        $this->SOAP_Client_Custom($url, 0);
     }
     function &addAccount($account) {
         // account is a ComplexType VoicemailAccount,
@@ -486,11 +509,11 @@ class WebService_NGNPro_VoicemailPort extends SOAP_Client
                             'use'=>'encoded' ));
     }
 }
-class WebService_NGNPro_EnumPort extends SOAP_Client
+class WebService_NGNPro_EnumPort extends SOAP_Client_Custom
 {
     function WebService_NGNPro_EnumPort($url)
 {
-        $this->SOAP_Client($url, 0);
+        $this->SOAP_Client_Custom($url, 0);
     }
     function &addRange($range) {
         // range is a ComplexType EnumRange,
@@ -578,11 +601,11 @@ class WebService_NGNPro_EnumPort extends SOAP_Client
                             'use'=>'encoded' ));
     }
 }
-class WebService_NGNPro_RatingPort extends SOAP_Client
+class WebService_NGNPro_RatingPort extends SOAP_Client_Custom
 {
     function WebService_NGNPro_RatingPort($url)
 {
-        $this->SOAP_Client($url, 0);
+        $this->SOAP_Client_Custom($url, 0);
     }
     function &setEntityProfiles($profiles) {
         // profiles is a ComplexType RatingEntityProfiles,
@@ -612,11 +635,11 @@ class WebService_NGNPro_RatingPort extends SOAP_Client
                             'use'=>'encoded' ));
     }
 }
-class WebService_NGNPro_CustomerPort extends SOAP_Client
+class WebService_NGNPro_CustomerPort extends SOAP_Client_Custom
 {
     function WebService_NGNPro_CustomerPort($url)
 {
-        $this->SOAP_Client($url, 0);
+        $this->SOAP_Client_Custom($url, 0);
     }
     function &addAccount($account) {
         // account is a ComplexType CustomerAccount,
@@ -680,11 +703,11 @@ class WebService_NGNPro_CustomerPort extends SOAP_Client
     }
 
 }
-class WebService_NGNPro_NetworkPort extends SOAP_Client
+class WebService_NGNPro_NetworkPort extends SOAP_Client_Custom
 {
     function WebService_NGNPro_NetworkPort($url)
 {
-        $this->SOAP_Client($url, 0);
+        $this->SOAP_Client_Custom($url, 0);
     }
     function &addGateway($gateway) {
         // gateway is a ComplexType Gateway,
@@ -777,11 +800,11 @@ class WebService_NGNPro_NetworkPort extends SOAP_Client
                             'use'=>'encoded' ));
     }
 }
-class WebService_GeckoSIMPLEProxy_PresencePort extends SOAP_Client
+class WebService_GeckoSIMPLEProxy_PresencePort extends SOAP_Client_Custom
 {
     function WebService_GeckoSIMPLEProxy_PresencePort($url)
 {
-        $this->SOAP_Client($url, 0);
+        $this->SOAP_Client_Custom($url, 0);
     }
     function &setPresenceInformation($sipId, $password, $information) {
         // information is a ComplexType PresenceInformation,
