@@ -4248,7 +4248,7 @@ class Customers extends Records {
 
         // Filter
         $filter=array('username'  => $this->filters['username'],
-                      'customer'  => intval($this->filters['id']),
+                      'customer'  => intval($this->filters['customer']),
                       'reseller'  => intval($this->filters['reseller'])
                       );
 
@@ -4340,12 +4340,13 @@ class Customers extends Records {
                         $bgcolor="white";
                     }
 
-        			$_url = $this->url.sprintf("&service=%s&action=Delete",
-                    urlencode($this->SOAPEngine->service)
+        			$_url = $this->url.sprintf("&service=%s&action=Delete&customer_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($customer->id)
                     );
 
                     if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['domain_filter'] == $domain) {
+                        $_REQUEST['customer_filter'] == $customer->id) {
                 		$_url .= "&confirm=1";
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
@@ -4390,7 +4391,9 @@ class Customers extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Customer: <input type=text size=6 name=id_filter value='%s'>",$this->filters['id']);
+        if (!$this->filters['reseller']) {
+        	printf (" Customer: <input type=text size=6 name=customer_filter value='%s'>",$this->filters['customer']);
+        }
         printf (" Username: <input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
     }
 
@@ -4400,14 +4403,15 @@ class Customers extends Records {
             return 1;
         }
 
-        if (!strlen($this->filters['id']) || !strlen($this->filters['id'])) {
+        if (!strlen($this->filters['customer']) || !strlen($this->filters['customer'])) {
             print "<p><font color=red>Error: missing customer id. </font>";
             return 0;
         }
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
-        $result     = $this->SOAPEngine->soapclient->deleteDomain($this->filters['id']);
+        /*
+        $result     = $this->SOAPEngine->soapclient->deleteCustomer($this->filters['customer']);
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -4416,10 +4420,12 @@ class Customers extends Records {
             printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
-           printf ("<p><font color=green>Customer id %s has been deleted. </font> ",$this->filters['id']);
+           printf ("<p><font color=green>Customer id %s has been deleted. </font> ",$this->filters['customer']);
            unset($this->filters);
            return 1;
         }
+        */
+
     }
 }
 
