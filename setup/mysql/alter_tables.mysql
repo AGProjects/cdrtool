@@ -431,3 +431,4 @@ setup/radius/OpenSER/radius_accounting.proc
 
 5.2.7
 alter table auth_user add column reseller bigint unsigned not null;
+alter table auth_user add column soapEngines varchar(255) not null;

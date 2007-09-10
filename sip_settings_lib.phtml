@@ -76,7 +76,7 @@ class SIPSettings {
             
     var $presenceStatuses   = array('allow','deny','confirm');
     var $presenceActivities = array('busy'      => 'buddy_busy.jpg',
-                                    'available' => 'buddy_online.jpg',
+                                    'open'      => 'buddy_online.jpg',
                                     'idle'      => 'buddy_idle.jpg',
                                     'away'      => 'buddy_away.jpg'
                                     );
@@ -252,11 +252,6 @@ class SIPSettings {
 
         // Presence
         $this->SOAPurlPresence=$this->soapEngines[$this->soapEngineIdPresencePort]['url'];
-        $this->SOAPLoginPresence = array(
-                               "username"    => $this->soapEngines[$this->soapEngineIdPresencePort]['username'],
-                               "password"    => $this->soapEngines[$this->soapEngineIdPresencePort]['password'],
-                               );
-        $this->SoapAuthPresence = array('auth', $this->SOAPLoginPresence , 'urn:AGProjects:PresenceEngine', 0, '');
 
         // Instantiate the SOAP clients
         $this->SipPort       = new $this->soapClassSipPort($this->SOAPurl);
@@ -5372,14 +5367,6 @@ class SIPSettings {
             $j++;
         }
 
-        /*
-        print "Set policy";
-        print "<pre>";
-        print_r($policy);
-        print "</pre>";
-        */
-
-        $this->PresencePort->addHeader($this->SoapAuthPresence);
         $result = $this->PresencePort->setPolicy(array("username" =>$this->username,"domain"   =>$this->domain),$this->password,$policy);
 
         if (PEAR::isError($result)) {
@@ -5393,7 +5380,6 @@ class SIPSettings {
     }
 
     function getPresenceWatchers () {
-        $this->PresencePort->addHeader($this->SoapAuthPresence);
         $result = $this->PresencePort->getWatchers(array("username" =>$this->username,"domain"   =>$this->domain));
 
         if (PEAR::isError($result)) {
@@ -5412,15 +5398,9 @@ class SIPSettings {
                 $this->watchersOnline++;
             }
         }
-        /*
-        print "<pre>";
-        print_r($result);
-        print "</pre>";
-        */
     }
 
     function getPresenceInformation() {
-        $this->PresencePort->addHeader($this->SoapAuthPresence);
         $result = $this->PresencePort->getPresenceInformation(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
 
         if (PEAR::isError($result)) {
@@ -5441,10 +5421,8 @@ class SIPSettings {
         $presentity['note']     = $_REQUEST['note'];
 
 		if (strlen($presentity['activity']) && strlen($presentity['note'])) {
-	        $this->PresencePort->addHeader($this->SoapAuthPresence);
         	$result = $this->PresencePort->setPresenceInformation(array("username" =>$this->username,"domain"   =>$this->domain),$this->password, $presentity);
 		} else if (!strlen($presentity['note'])) {
-    	    $this->PresencePort->addHeader($this->SoapAuthPresence);
         	$result = $this->PresencePort->deletePresenceInformation(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
         } else {
             return true;
@@ -5462,7 +5440,6 @@ class SIPSettings {
 	}
 
     function getPresenceRules () {
-        $this->PresencePort->addHeader($this->SoapAuthPresence);
         $result = $this->PresencePort->getPolicy(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
 
         if (PEAR::isError($result)) {
@@ -5476,12 +5453,6 @@ class SIPSettings {
 		foreach ($this->presenceStatuses as $_status) {
         	$this->presenceRules[$_status] = $result->$_status;
         }
-
-        /*
-        print "<pre>";
-        print_r($this->presenceRules);
-        print "</pre>";
-        */
     }
 
     function getFileTemplate($name, $type="file") {
