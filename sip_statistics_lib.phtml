@@ -630,7 +630,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         }
 
 		$this->SOAPurl       = $this->soapEngines[$SoapEngineId]['url'];
-        $this->PresencePort  = new WebService_GeckoSIMPLEProxy_PresencePort($this->SOAPurl);
+        $this->PresencePort  = new WebService_SoapSIMPLEProxy_PresencePort($this->SOAPurl);
 
         $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
