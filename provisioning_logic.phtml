@@ -1056,7 +1056,9 @@ class SIPAccounts extends Records {
         // Filter
         $filter=array('username' => $this->filters['username'],
                       'domain'   => $this->filters['domain'],
-                      'name'     => $this->filters['fullname']
+                      'name'     => $this->filters['fullname'],
+                      'customer' => intval($this->filters['customer']),
+                      'reseller' => intval($this->filters['reseller'])
                       );
 
         // Range
@@ -1585,7 +1587,10 @@ class SIPAliases extends Records {
         $filter=array('aliasUsername'  => $this->filters['aliasUsername'],
                       'aliasDomain'    => $this->filters['aliasDomain'],
                       'targetUsername' => $this->filters['targetUsername'],
-                      'targetDomain'   => $this->filters['targetDomain']
+                      'targetDomain'   => $this->filters['targetDomain'],
+                      'customer' => intval($this->filters['customer']),
+                      'reseller' => intval($this->filters['reseller'])
+
                       );
 
         // Range
@@ -2313,7 +2318,9 @@ class ENUMmappings extends Records {
         // Filter
         $filter=array('number' => $this->filters['number'],
                       'type'   => $this->filters['type'],
-                      'mapto'  => $this->filters['mapto']
+                      'mapto'  => $this->filters['mapto'],
+                      'customer' => intval($this->filters['customer']),
+                      'reseller' => intval($this->filters['reseller'])
                       );
         // Range
         $range=array('start' => intval($this->next),
