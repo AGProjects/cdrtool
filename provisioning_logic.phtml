@@ -111,6 +111,8 @@ class SOAPEngine {
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
     		// Instantiate the SOAP client
+            if (!class_exists($this->soapClass)) return ;
+
             $this->soapclient = new $this->soapClass($this->SOAPurl);
 
             $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
@@ -713,7 +715,7 @@ class Domains extends Records {
 
 			$this->rows = count($result);
 
-     		if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+     		if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
             }
 
@@ -1047,7 +1049,7 @@ class SIPAccounts extends Records {
 
 			$this->rows = $result->total;
 
-            if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+            if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
             }
 
@@ -1311,6 +1313,7 @@ class SIPAccounts extends Records {
         } else {
         	$reseller = $this->reseller;
         	$customer = trim($_REQUEST['customer']);
+
             if (!$customer || !in_array($customer,array_keys($this->customers))) {
                 $customer=$reseller;
             }
@@ -1553,7 +1556,7 @@ class SIPAliases extends Records {
 
 			$this->rows = $result->total;
 
-     		if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+     		if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
             }
 
@@ -1878,7 +1881,7 @@ class ENUMranges extends Records {
 
 			$this->rows = count($result);
 
-     		if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+     		if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
             }
 
@@ -2234,6 +2237,7 @@ class ENUMmappings extends Records {
 		$this->Records(&$SOAPEngine);
     }
 
+
     function listRecords() {
         $this->getAllowedDomains();
 
@@ -2279,7 +2283,7 @@ class ENUMmappings extends Records {
 
 			$this->rows = $result->total;
 
-     		if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+     		if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
             }
 
@@ -2337,22 +2341,25 @@ class ENUMmappings extends Records {
 
                     $j=1;
                     foreach ($number->mappings as $_mapping) {
+                        $_url = $this->url.sprintf("&service=%s&action=Delete&number_filter=%s&tld_filter=%s&mapto_filter=%s",
+                        urlencode($this->SOAPEngine->service),
+                        urlencode($number->id->number),
+                        urlencode($number->id->tld),
+                        urlencode($_mapping->mapto)
+                        );
+    
+                        if ($_REQUEST['action'] == 'Delete' &&
+                            $_REQUEST['number_filter'] == $number->id->number &&
+                            $_REQUEST['tld_filter'] == $number->id->tld &&
+                            $_REQUEST['mapto_filter'] == $_mapping->mapto) {
+                            $_url .= "&confirm=1";
+                            $actionText = "<font color=red>Confirm</font>";
+                        } else {
+                            $actionText = "Delete";
+                        }
+
                         if ($j==1) {
 
-                            $_url = $this->url.sprintf("&service=%s&action=Delete&number_filter=%s&tld_filter=%s",
-                            urlencode($this->SOAPEngine->service),
-                            urlencode($number->id->number),
-                            urlencode($number->id->tld)
-                            );
-        
-                            if ($_REQUEST['action'] == 'Delete' &&
-                                $_REQUEST['number_filter'] == $number->id->number &&
-                                $_REQUEST['tld_filter'] == $number->id->tld) {
-                                $_url .= "&confirm=1";
-                                $actionText = "<font color=red>Confirm</font>";
-                            } else {
-                                $actionText = "Delete";
-                            }
 
                             printf("
                             <tr bgcolor=%s>
@@ -2399,14 +2406,16 @@ class ENUMmappings extends Records {
                             <td>%s</td>
                             <td></td>
                             <td></td>
+                            <td><a href=%s>%s</a></td>
                             </tr>",
                             $bgcolor,
                             ucfirst($_mapping->type),
                             $_mapping->mapto,
                             $_mapping->ttl,
-                            $_mapping->priority
+                            $_mapping->priority,
+                            $_url,
+                            $actionText
                             );
-
                         }
                         $j++;
                     }
@@ -2427,6 +2436,58 @@ class ENUMmappings extends Records {
 
             return true;
         }
+    }
+
+    function getLastNumber() {
+
+        // Filter
+        $filter=array('number' => ''
+                      );
+        // Range
+        $range=array('start' => 0,
+                     'count' => 1
+                     );
+
+        // Order
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getNumbers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+			if ($result->total) {
+            	$number = array('number'   => $result->numbers[0]->id->number,
+                                'tld'      => $result->numbers[0]->id->tld,
+                                'mappings' => $result->numbers[0]->mappings
+                                );
+
+                return $number;
+            }
+
+        }
+
+        return false;
     }
 
     function showSeachFormCustom() {
@@ -2480,16 +2541,48 @@ class ENUMmappings extends Records {
         $enum_id=array('number'=>$this->filters['number'],
                        'tld'=>$this->filters['tld']);
 
-        $function=array('commit'   => array('name'       => 'deleteNumber',
-                                            'parameters' => array($enum_id),
-                                            'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been deleted',$this->filters['number'],$this->filters['tld'])
-                                                                  )
-                                           )
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclient->getNumber($enum_id);
 
-                        );
+        if (!PEAR::isError($result)) {
+            // the number exists and we make an update
+            $result_new=$result;
 
-        if ($this->SOAPEngine->execute($function)) {
-           unset($this->filters);
+            if (count($result->mappings) > 1) {
+                foreach ($result->mappings as $_mapping) {
+                    if ($_mapping->mapto != $this->filters['mapto']) {
+                        $mappings_new[]=array('type'     => $_mapping->type,
+                                              'mapto'    => $_mapping->mapto,
+                                              'ttl'      => $_mapping->ttl,
+                                              'priority' => $_mapping->priority
+                                          );
+                    }
+                }
+    
+                $result_new->mappings=$mappings_new;
+    
+                $function=array('commit'   => array('name'       => 'updateNumber',
+                                                    'parameters' => array($result_new),
+                                                    'logs'       => array('success' => sprintf('<p>ENUM mapping %s has been deleted',$this->filters['mapto']))),
+                                'rollback' => array('name'       => 'updateNumber',
+                                                    'parameters' => array($result))
+                                );
+    
+            } else {
+                $function=array('commit'   => array('name'       => 'deleteNumber',
+                                                    'parameters' => array($enum_id),
+                                                    'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been deleted',$this->filters['number'],$this->filters['tld']))),
+                                'rollback' => array('name'       => 'addNumber',
+                                                    'parameters' => array($result))
+                                );
+            }
+
+            $this->SOAPEngine->execute($function);
+
+            unset($this->filters);
+
+        } else {
+            return false;
         }
 
         return true;
@@ -2547,6 +2640,7 @@ class ENUMmappings extends Records {
             }
 
             printf (" Owner: <input type=text size=5 name=owner>");
+            printf (" Prio: <input type=text size=3 name=priority>");
 
             print "
 	        </td>
@@ -2590,8 +2684,8 @@ class ENUMmappings extends Records {
     }
 
     function addRecord() {
-    	$tld    = trim($_REQUEST['tld']);
-        $number = trim($_REQUEST['number']);
+    	$tld      = trim($_REQUEST['tld']);
+        $number   = trim($_REQUEST['number']);
 
         if (!strlen($tld)) {
             if (strlen($this->SOAPEngine->defaultEnumTLD)) {
@@ -2624,6 +2718,12 @@ class ENUMmappings extends Records {
             $ttl=intval(trim($_REQUEST['ttl']));
         }
 
+		if (!trim($_REQUEST['priority'])) {
+            $priority=5;
+        } else {
+            $priority=intval(trim($_REQUEST['priority']));
+        }
+
         $enum_id=array('number' => $number,
                        'tld'    => $tld);
 
@@ -2640,6 +2740,18 @@ class ENUMmappings extends Records {
         	$_value  = $mapto;
         }
 
+		if (!$_value) {
+            $lastNumber=$this->getLastNumber();
+            foreach($lastNumber['mappings'] as $_mapping) {
+                if ($_mapping->type == trim($_REQUEST['type'])) {
+                    if (preg_match("/^(.*)@(.*)$/",$_mapping->mapto,$m)) {
+        				$_value = $number.'@'.$m[2];
+                    	break;
+                	}
+                }
+            }
+        }
+
         if (!$_scheme || !in_array($_scheme,$this->NAPTR_services[trim($_REQUEST['type'])]['schemas'])) {
             $_scheme=$this->NAPTR_services[trim($_REQUEST['type'])]['schemas'][0];
         }
@@ -2650,9 +2762,10 @@ class ENUMmappings extends Records {
                            'owner'    => intval(trim($_REQUEST['owner'])),
                            'customer' => intval($customer),
                            'reseller' => intval($reseller),
-                           'mappings' => array(array('type'  => trim($_REQUEST['type']),
-                                                     'mapto' => $mapto,
-                                                     'ttl'   => intval(trim($_REQUEST['ttl']))
+                           'mappings' => array(array('type'     => trim($_REQUEST['type']),
+                                                     'mapto'    => $mapto,
+                                                     'ttl'      => $ttl,
+                                                     'priority' => $priority
                                                     )
                                                )
                            );
@@ -2678,7 +2791,39 @@ class ENUMmappings extends Records {
             }
         } else {
             // the number exists and we make an update
-            printf ("<p><font color=red>Error: ENUM number %s already exists</font>",$number);
+            $result_new=$result;
+            foreach ($result->mappings as $_mapping) {
+                $mappings_new[]=array('type'     => $_mapping->type,
+                                      'mapto'    => $_mapping->mapto,
+                                      'ttl'      => $_mapping->ttl,
+                                      'priority' => $_mapping->priority
+                                      );
+
+                if ($_mapping->mapto == $mapto) {
+            		printf ("<p><font color=blue>Info: ENUM mapping %s for number %s already exists</font>",$mapto,$number);
+                    return true;
+                    break;
+                }
+            }
+
+			$mappings_new[]=array('type'  => trim($_REQUEST['type']),
+                                                            'mapto'   => $mapto,
+                                                            'ttl'     => intval(trim($_REQUEST['ttl'])),
+                                                            'priority'=> intval(trim($_REQUEST['priority'])),
+
+                                                            );
+            // add mapping
+            $result_new->mappings=$mappings_new;
+
+            $function=array('commit'   => array('name'       => 'updateNumber',
+                                                'parameters' => array($result_new),
+                                                'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been updated',$number,$tld))),
+                            'rollback' => array('name'       => 'updateNumber',
+                                                'parameters' => array($result))
+                            );
+             
+            $this->SOAPEngine->execute($function);
+
             return false;
         }
     	return true;
@@ -2791,7 +2936,7 @@ class TrustedPeers extends Records {
 
 			$this->rows = $result->total;
 
-     		if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+     		if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
             }
 
@@ -4144,7 +4289,7 @@ class Customers extends Records {
 
 			$this->rows = $result->total;
 
-            if ($this->rows && $_REQUEST['action'] != 'PerformActions') {
+            if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
             }
 
@@ -4276,6 +4421,86 @@ class Customers extends Records {
            return 1;
         }
     }
+}
+
+class recordsGenerator  {
+    function recordsGenerator() {
+    }
+
+    function showAddForm() {
+        print "
+        <p>
+        <table border=0 class=border width=100%>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+        	<td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Generate>
+            ";
+
+            printf (" Name: <input type=text size=20 name=name>");
+
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getGatewayGroups();
+
+            printf (" Group: ");
+
+            // Compose query
+            $Query=array('filter'  => array('name'=>''),
+                         'orderBy' => array('attribute' => 'name',
+                                            'direction' => 'ASC'
+                                      ),
+                         'range'   => array('start' => 0,
+			                                'count' => 1000)
+                         );
+
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getGatewayGroups($Query);
+
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+            	print "<select name=group> ";
+                foreach ($result->groups as $_grp) {
+                	printf ("<option value='%s'>%s",$_grp,$_grp);
+                }
+            	printf (" </select>");
+            }
+            printf (" Address: <input type=text size=25 name=address>");
+            printf (" Strip: <select name=strip>");
+            $t=0;
+            while ($t<10) {
+                print "<option value=$t>$t";
+                $t++;
+            }
+
+            print "</select>";
+            printf (" Prefix: <input type=text size=5 name=prefix>");
+
+            print "
+	        </td>
+        	<td align=right>
+            ";
+            print "
+	        </td>
+            ";
+            $this->printHiddenFormElements();
+
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
 }
 
 class Actions {
