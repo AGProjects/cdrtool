@@ -13,7 +13,7 @@ class SIPSettings {
 	var $soapClassSipPort          = 'WebService_NGNPro_SipPort';
     var $soapClassVoicemailPort    = 'WebService_NGNPro_VoicemailPort';
     var $soapClassCustomerPort     = 'WebService_NGNPro_CustomerPort';
-    var $soapClassPresencePort     = 'WebService_GeckoSIMPLEProxy_PresencePort';
+    var $soapClassPresencePort     = 'WebService_SoapSIMPLEProxy_PresencePort';
 
     var $voicemail				   = array('AccessNumber'     => '*70',
                                            'Table'            => 'voicemail_users',
@@ -356,7 +356,7 @@ class SIPSettings {
         $this->quota     = $result->quota;
         $this->prepaid   = $result->prepaid;
         $this->region    = $result->region;
-        $this->answerTimeout = $result->answerTimeout;
+        $this->answerTimeout = intval($result->answerTimeout);
 
         $this->account   = $this->username."@".$this->domain;
         $this->fullName  = $this->firstName." ".$this->lastName;
@@ -2276,6 +2276,8 @@ class SIPSettings {
             	$result->answerTimeout=intval($answerTimeout);
             }
         }
+
+		$result->answerTimeout=intval($result->answerTimeout);
 
         if ($this->somethingChanged) {
 
@@ -5256,7 +5258,9 @@ class SIPSettings {
 
 			foreach ($this->presenceRules[$_key] as $_tmp) {
 
-				if ($this->presenceWatchers[$_tmp]['status'] == $_key) continue;
+				if (in_array($_tmp,array_keys($this->presenceWatchers))) {
+                    continue;
+                }
 
                 printf ("
                 <tr>
@@ -5368,6 +5372,13 @@ class SIPSettings {
             $j++;
         }
 
+        /*
+        print "Set policy";
+        print "<pre>";
+        print_r($policy);
+        print "</pre>";
+        */
+
         $this->PresencePort->addHeader($this->SoapAuthPresence);
         $result = $this->PresencePort->setPolicy(array("username" =>$this->username,"domain"   =>$this->domain),$this->password,$policy);
 
@@ -5401,6 +5412,11 @@ class SIPSettings {
                 $this->watchersOnline++;
             }
         }
+        /*
+        print "<pre>";
+        print_r($result);
+        print "</pre>";
+        */
     }
 
     function getPresenceInformation() {
@@ -5460,6 +5476,12 @@ class SIPSettings {
 		foreach ($this->presenceStatuses as $_status) {
         	$this->presenceRules[$_status] = $result->$_status;
         }
+
+        /*
+        print "<pre>";
+        print_r($this->presenceRules);
+        print "</pre>";
+        */
     }
 
     function getFileTemplate($name, $type="file") {

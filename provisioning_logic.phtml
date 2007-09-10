@@ -498,7 +498,7 @@ class Records {
             return false;
         }
         print "<select name=timezone>";
-        print "\n<option>";
+        print "<option>";
         while ($buffer = fgets($fp,1024)) {
         	$buffer=trim($buffer);
             if ($this->timezone==$buffer) {
@@ -506,11 +506,11 @@ class Records {
             } else {
                 $selected="";
             }
-            print "\n<option $selected>";
-            print "$buffer";
+            printf ("<option %s>%s>",$selected,$buffer);
         }
-        fclose($fp);
         print "</select>";
+        fclose($fp);
+
     }
 
     function printHiddenFormElements () {
@@ -524,16 +524,6 @@ class Records {
         	if (!strlen($this->SOAPEngine->extraFormElements[$element])) continue;
             printf ("<input type=hidden name=%s value='%s'>\n",$element,$this->SOAPEngine->extraFormElements[$element]);
         }
-
-        /*
-        if ($this->filters['customer']) {
-        	printf("<input type=hidden name=customer_filter value='%s'>",$this->filters['customer']);
-        }
-
-        if ($this->filters['reseller']) {
-        	printf("<input type=hidden name=reseller_filter value='%s'>",$this->filters['reseller']);
-        }
-        */
 
     }
 
@@ -630,33 +620,88 @@ class Records {
         if (!$this->adminonly) {
         	return;
         }
+        // Filter
+        $filter=array('reseller'=>intval($this->filters['reseller']));
+
+        $range=array('start' => 0,
+                     'count' => 200
+                     );
+
+        // Order
+        $orderBy = array('attribute' => 'customer',
+                         'direction' => 'ASC'
+                         );
+
+        // Compose query
+        $Query=array('filter'     => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        // Insert credetials
+        $this->SOAPEngine->soapclientCustomers->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclientCustomers->getResellers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+            //if ($result->total > $range['count']) return;
+
+			if ($range['count'] <= $result->total) {
+                $max=$range['count'];
+            } else {
+            	$max=$result->total;
+            }
+
+            $i=0;
+            while ($i < $max)  {
+                $reseller = $result->accounts[$i];
+
+                if (strlen($reseller->organization) && $reseller->organization!= 'N/A') {
+            		$this->resellers[$reseller->id] = $reseller->organization;
+                } else {
+            		$this->resellers[$reseller->id] = $reseller->firstName.' '.$reseller->lastName;
+                }
+            	$i++;
+            }
+
+            //print_r($this->resellers);
+            return true;
+        }
     }
 
-    function showCustomerForm() {
+    function showCustomerForm($name='customer_filter') {
         if (count($this->customers) && count($this->customers) < 200) {
 			$select_customer[$this->filters['customer']]='selected';
-            print "<select name=customer_filter>";
+            printf ("<select name=%s>",$name);
             print "<option>";
             foreach (array_keys($this->customers) as $_res) {
                 printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_customer[$_res],$_res,$this->customers[$_res]);
             }
             print "</select>";
         } else {
-            printf ("<input type=text size=5 name=customer_filter value='%s'>",$this->filters['customer']);
+            printf ("<input type=text size=5 name=%s value='%s'>",$name,$this->filters['customer']);
         }
     }
 
     function showResellerForm($name='reseller_filter') {
         if (count($this->resellers) && count($this->resellers) < 200) {
             $select_reseller[$this->filters['reseller']]='selected';
-            print "<select name=reseller_filter>";
+            printf ("<select name=%s>",$name);
             print "<option>";
             foreach (array_keys($this->resellers) as $_res) {
-                printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_reseller[$reseller],$_res,$this->resellers[$_res]);
+                printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_reseller[$_res],$_res,$this->resellers[$_res]);
             }
             print "</select>";
         } else {
-            printf ("<input type=text size=5 name=reseller_filter value='%s'>",$this->filters['reseller']);
+            printf ("<input type=text size=5 name=%s value='%s'>",$name,$this->filters['reseller']);
         }
     }
 
@@ -1272,7 +1317,11 @@ class SIPAccounts extends Records {
             printf (" Name: <input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
             printf (" Email: <input type=text size=15 name=email value='%s'>",$_REQUEST['email']);
             //printf (" CallerId: <input type=text size=11 name=rpid value='%s'>",$_REQUEST['rpid']);
-            print "Operator:";
+            printf ("<nobr>Owner: <input type=text size=5 name=owner value='%s'></nobr> ",$_REQUEST['owner']);
+            printf ("<nobr>PSTN: <input type=checkbox name=pstn value=1></nobr> ");
+            printf ("<nobr>Quota: <input type=text size=5 name=quota value='%s'></nobr> ",$_REQUEST['quota']);
+            printf ("<nobr>Prepaid: <input type=checkbox name=prepaid value=1></nobr> ");
+            print "<nobr>Operator:";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
                 print ".";
@@ -1280,7 +1329,7 @@ class SIPAccounts extends Records {
             } else {
             	$this->showCustomerForm('customer');
             }
-            printf (" Owner: <input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
+            print "</nobr>";
             /*
             print " TZ: ";
 
@@ -1339,6 +1388,18 @@ class SIPAccounts extends Records {
 
         $name_els  = explode(" ", trim($_REQUEST['fullname']));
 
+		if (strlen($name_els[0])) {
+            $firstName=$name_els[0];
+        } else {
+            $firstName='Account';
+        }
+
+		if (strlen($name_els[1])) {
+            $lastName=$name_els[1];
+        } else {
+            $lastName=$username;
+        }
+
 		if (strlen(trim($_REQUEST['timezone']))) {
             $timezone=trim($_REQUEST['timezone']);
         } else {
@@ -1351,22 +1412,28 @@ class SIPAccounts extends Records {
             $password=$this->RandomPassword(6);
         }
 
-		$email=trim($_REQUEST['email']);
+		$groups=array();
+		if($_REQUEST['pstn']) $groups[]='free-pstn';
 
+		$email=trim($_REQUEST['email']);
     	$regexp = "/^([a-z0-9][a-z0-9_.-]*)@([a-z0-9][a-z0-9-]*\.)+([a-z0-9]{2,})$/i";
         if (!preg_match($regexp, $uri)) $email=$username.'@'.$domain;
 
         $account=array(
                      'id'     => array('username' => $username,
                                        'domain'   => $domain),
-                     'firstName'  => $name_els[0],
-                     'lastName'   => $name_els[1],
+                     'firstName'  => $firstName,
+                     'lastName'   => $lastName,
                      'password'   => $password,
                      'timezone'   => $timezone,
                      'email'      => $email,
                      'owner'      => intval($_REQUEST['owner']),
                      'customer'   => intval($customer),
-                     'reseller'   => intval($reseller)
+                     'reseller'   => intval($reseller),
+                     'groups'     => $groups,
+                     'prepaid'    => intval($_REQUEST['prepaid']),
+                     'quota'      => intval($_REQUEST['quota']),
+                     'region'     => ''
         			);
 
         //print_r($account);
@@ -4232,13 +4299,13 @@ class Customers extends Records {
     var $sortElements=array(
                             'customer'   => 'Customer',
                             'reseller'   => 'Reseller',
-                            'username'   => 'Username'
+                            'username'   => 'Username',
+							'changeDate' => 'Change date'
                             );
 
     function Customers(&$SOAPEngine) {
         $this->filters   = array(
-                           'username'   => trim($_REQUEST['username_filter']),
-                           'id'         => trim($_REQUEST['id_filter'])
+                           'username'   => trim($_REQUEST['username_filter'])
                            );
 
 		$this->Records(&$SOAPEngine);
@@ -4410,8 +4477,7 @@ class Customers extends Records {
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
-        /*
-        $result     = $this->SOAPEngine->soapclient->deleteCustomer($this->filters['customer']);
+        $result     = $this->SOAPEngine->soapclient->deleteAccount(intval($this->filters['customer']));
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -4424,8 +4490,6 @@ class Customers extends Records {
            unset($this->filters);
            return 1;
         }
-        */
-
     }
 }
 

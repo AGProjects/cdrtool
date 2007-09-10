@@ -696,7 +696,7 @@ class WebService_NGNPro_CustomerPort extends SOAP_Client_Custom
         $query =& new SOAP_Value('query','{urn:AGProjects:NGNPro}CustomerQuery',$query);
         return $this->call("getResellers", 
                         $v = array("query"=>$query), 
-                        array('namespace'=>'urn:AGProjects:NGNPro',
+                        array('namespace'=>'urn:AGProjects:NGNPro:Customer',
                             'soapaction'=>'',
                             'style'=>'rpc',
                             'use'=>'' ));
@@ -800,19 +800,19 @@ class WebService_NGNPro_NetworkPort extends SOAP_Client_Custom
                             'use'=>'encoded' ));
     }
 }
-class WebService_GeckoSIMPLEProxy_PresencePort extends SOAP_Client_Custom
+class WebService_SoapSIMPLEProxy_PresencePort extends SOAP_Client_Custom
 {
-    function WebService_GeckoSIMPLEProxy_PresencePort($url)
+    function WebService_SoapSIMPLEProxy_PresencePort($url)
 {
         $this->SOAP_Client_Custom($url, 0);
     }
     function &setPresenceInformation($sipId, $password, $information) {
         // information is a ComplexType PresenceInformation,
         //refer to wsdl for more info
-        $information =& new SOAP_Value('information','{urn:AGProjects:GeckoSIMPLEProxy}PresenceInformation',$information);
+        $information =& new SOAP_Value('information','{urn:AGProjects:SoapSIMPLEProxy}PresenceInformation',$information);
         return $this->call("setPresenceInformation", 
                         $v = array("sipId"=>$sipId, "password"=>$password, "information"=>$information), 
-                        array('namespace'=>'urn:AGProjects:GeckoSIMPLEProxy:Presence',
+                        array('namespace'=>'urn:AGProjects:SoapSIMPLEProxy:Presence',
                             'soapaction'=>'',
                             'style'=>'rpc',
                             'use'=>'encoded' ));
@@ -820,7 +820,7 @@ class WebService_GeckoSIMPLEProxy_PresencePort extends SOAP_Client_Custom
     function &getPresenceInformation($sipId, $password) {
         return $this->call("getPresenceInformation", 
                         $v = array("sipId"=>$sipId, "password"=>$password), 
-                        array('namespace'=>'urn:AGProjects:GeckoSIMPLEProxy:Presence',
+                        array('namespace'=>'urn:AGProjects:SoapSIMPLEProxy:Presence',
                             'soapaction'=>'',
                             'style'=>'rpc',
                             'use'=>'encoded' ));
@@ -828,7 +828,7 @@ class WebService_GeckoSIMPLEProxy_PresencePort extends SOAP_Client_Custom
     function &deletePresenceInformation($sipId, $password) {
         return $this->call("deletePresenceInformation", 
                         $v = array("sipId"=>$sipId, "password"=>$password), 
-                        array('namespace'=>'urn:AGProjects:GeckoSIMPLEProxy:Presence',
+                        array('namespace'=>'urn:AGProjects:SoapSIMPLEProxy:Presence',
                             'soapaction'=>'',
                             'style'=>'rpc',
                             'use'=>'encoded' ));
@@ -836,10 +836,10 @@ class WebService_GeckoSIMPLEProxy_PresencePort extends SOAP_Client_Custom
     function &getWatchers($presentityId) {
         // presentityId is a ComplexType SipId,
         //refer to wsdl for more info
-        $presentityId =& new SOAP_Value('presentityId','{urn:AGProjects:GeckoSIMPLEProxy}SipId',$presentityId);
+        $presentityId =& new SOAP_Value('presentityId','{urn:AGProjects:SoapSIMPLEProxy}SipId',$presentityId);
         return $this->call("getWatchers", 
                         $v = array("presentityId"=>$presentityId), 
-                        array('namespace'=>'urn:AGProjects:GeckoSIMPLEProxy:Presence',
+                        array('namespace'=>'urn:AGProjects:SoapSIMPLEProxy:Presence',
                             'soapaction'=>'',
                             'style'=>'rpc',
                             'use'=>'encoded' ));
@@ -847,10 +847,10 @@ class WebService_GeckoSIMPLEProxy_PresencePort extends SOAP_Client_Custom
     function &setPolicy($sipId, $password, $policy) {
         // policy is a ComplexType PresencePolicy,
         //refer to wsdl for more info
-        $policy =& new SOAP_Value('policy','{urn:AGProjects:GeckoSIMPLEProxy}PresencePolicy',$policy);
+        $policy =& new SOAP_Value('policy','{urn:AGProjects:SoapSIMPLEProxy}PresencePolicy',$policy);
         return $this->call("setPolicy", 
                         $v = array("sipId"=>$sipId, "password"=>$password, "policy"=>$policy), 
-                        array('namespace'=>'urn:AGProjects:GeckoSIMPLEProxy:Presence',
+                        array('namespace'=>'urn:AGProjects:SoapSIMPLEProxy:Presence',
                             'soapaction'=>'',
                             'style'=>'rpc',
                             'use'=>'encoded' ));
@@ -858,7 +858,7 @@ class WebService_GeckoSIMPLEProxy_PresencePort extends SOAP_Client_Custom
     function &getPolicy($sipId, $password) {
         return $this->call("getPolicy", 
                         $v = array("sipId"=>$sipId, "password"=>$password), 
-                        array('namespace'=>'urn:AGProjects:GeckoSIMPLEProxy:Presence',
+                        array('namespace'=>'urn:AGProjects:SoapSIMPLEProxy:Presence',
                             'soapaction'=>'',
                             'style'=>'rpc',
                             'use'=>'encoded' ));
