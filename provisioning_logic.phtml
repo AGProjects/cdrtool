@@ -38,7 +38,8 @@ class recordGenerator extends SOAPEngine {
     }
 
     function generateRecords() {
-        print "<p>Generating records:";
+        print "<p>Generating records
+        <ol>";
 
         if (!$this->checkGenerateRequest()) return false;
 
@@ -48,20 +49,25 @@ class recordGenerator extends SOAPEngine {
 
             $number   = sprintf("%.0f", $this->start_padded + $i);
             $username = substr($number,$this->template['strip_digits']);
+			$mapto    = 'sip:'.$username.'@'.$this->template['domain'];
+
+            print "<li>";
+            printf ('Generating number +%s with mapping %s ',$number,$mapto);
+            flush();
 
             $enumMapping = array('tld'    => $this->template['tld'],
                                  'number' => $number,
                                  'type'   => 'sip',
-                                 'mapto'  => $username.'@'.$this->template['domain'],
+                                 'mapto'  => $mapto,
                                  'owner'  => $this->template['owner']
                                 );
 
             if ($this->template['create_sip']) {
                 $groups=array();
                 if ($this->template['pstn']) $groups[]='free-pstn';
+            	printf ('and sip account %s@%s ',$username,$this->template['domain']);
     
-                $sipAccount = array('username' => $username,
-                                    'domain'   => $this->template['domain'],
+                $sipAccount = array('account'  => $username.'@'.$this->template['domain'],
                                     'owner'    => $this->template['owner'],
                                     'quota'    => $this->template['quota'],
                                     'prepaid'  => $this->template['prepaid'],
@@ -72,23 +78,24 @@ class recordGenerator extends SOAPEngine {
                 unset($sipAccount);
             }
 
-            if (!$this->enumRecords->addRecord($enumMapping)) {
-                return false;
-            }
+            if (is_array($enumMapping)) $this->enumRecords->addRecord($enumMapping);
+            if (is_array($sipAccount))  $this->sipRecords->addRecord($sipAccount);
 
-            if (is_array($sipAccount)) {
-                if (!$this->sipRecords->addRecord($sipAccount)) {
+                    /*
+                    // try roll-back
+                    $dictionary=array('number'  => $number,
+                                      'tld'     => $this->template['tld'],
+                                      'mapto'   => $mapto,
+                                      'confirm' => 1
+                                      );
+
+                    $this->enumRecords->deleteRecord($dictionary);
                     return false;
-                }
-            }
-
-            //print_r($enumMapping);
-            //print_r($sipAccount);
-
+                    */
             $i++;
-
         }
 
+        print "</ol>";
         return true;
 	}
 
@@ -173,7 +180,7 @@ class recordGenerator extends SOAPEngine {
         <td>
         <font color=white>
         <b>";
-        print _("ENUM record generator");
+        print _("Record generator");
         print "</b>
         </font>
         </td>
@@ -302,7 +309,7 @@ class recordGenerator extends SOAPEngine {
             <td colspan=2>
             ";
             print "<b>";
-            print _("SIP record template");
+            print _("SIP account template");
             print "</b>";
             print "</td>
             </tr>
@@ -461,6 +468,7 @@ class recordGenerator extends SOAPEngine {
 }
 
 class SOAPEngine {
+    var $version       = 1;
     var $adminonly     = 0;
     var $reseller      = 0;
 
@@ -546,7 +554,10 @@ class SOAPEngine {
                 $this->skip[$_key]=$this->soapEngines[$_key]['skip'];
             }
 
-            $this->enableResellers = $this->soapEngines[$this->soapEngineId]['enableResellers'];
+            if (strlen($this->soapEngines[$this->soapEngineId]['version'])) {
+            	$this->version = $this->soapEngines[$this->soapEngineId]['version'];
+            }
+
             $this->defaultEnumTLD  = $this->soapEngines[$this->soapEngineId]['defaultEnumTLD'];
 
 
@@ -611,7 +622,7 @@ class SOAPEngine {
             	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
             }
 
-	    	if ($this->enableResellers) {
+	    	if ($this->version > 1) {
 	            $this->soapclientCustomers = new WebService_NGNPro_CustomerPort($this->SOAPurl);
     	        $this->soapclientCustomers->setOpt('curl', CURLOPT_TIMEOUT,        5);
         	    $this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
@@ -734,10 +745,11 @@ class Records {
     var $selectionKeys   = array();
     var $resellers       = array();
     var $customers       = array();
-    var $recordGenerator =false;
+    var $recordGenerator = false;
 
     function Records(&$SOAPEngine) {
-    	$this->SOAPEngine=&$SOAPEngine;
+    	$this->SOAPEngine = &$SOAPEngine;
+        $this->version    = $this->SOAPEngine->version;
 
         $this->sorting['sortBy']    = trim($_REQUEST['sortBy']);
         $this->sorting['sortOrder'] = trim($_REQUEST['sortOrder']);
@@ -794,7 +806,7 @@ class Records {
         }
         printf ("</select>");
 
-        print "Operator:";
+        print "OP";
 
         if ($this->adminonly) {
         	$this->showResellerForm();
@@ -1240,6 +1252,7 @@ class Domains extends Records {
                 <td><b>Id</b></th>
                 <td><b>Domain</b></td>
                 <td><b>Operator</b></td>
+                <td><b>Last change</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -1288,6 +1301,7 @@ class Domains extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s.%s</td>
+                    <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
@@ -1295,6 +1309,7 @@ class Domains extends Records {
                     $domain,
                     $domain->customer,
                     $domain->reseller,
+                    $domain->changeDate,
                     $_url,
                     $actionText
                     );
@@ -1313,7 +1328,7 @@ class Domains extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" Domain: <input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
+        printf (" Domain<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
 
     }
 
@@ -1361,9 +1376,9 @@ class Domains extends Records {
             <input type=submit name=action value=Add>
             ";
 
-            printf (" Domain: <input type=text size=20 name=domain>");
+            printf (" Domain<input type=text size=20 name=domain>");
 
-            print "Operator:";
+            print "OP";
 
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
@@ -1706,7 +1721,7 @@ class SIPAccounts extends Records {
     }
 
     function showSeachFormCustom() {
-        printf ("User: <input type=text size=15 name=username_filter value='%s'>",$this->filters['username']);
+        printf ("User<input type=text size=15 name=username_filter value='%s'>",$this->filters['username']);
         printf ("@");
 
         if ($this->allowedDomains) {
@@ -1722,7 +1737,7 @@ class SIPAccounts extends Records {
             printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
         }
 
-        printf (" Name: <input type=text size=15 name=fullname_filter value='%s'>",$this->filters['fullname']);
+        printf (" Name<input type=text size=15 name=fullname_filter value='%s'>",$this->filters['fullname']);
     }
 
     function deleteRecord() {
@@ -1771,7 +1786,7 @@ class SIPAccounts extends Records {
             <input type=submit name=action value=Add>
             ";
 
-            printf (" User: <input type=text size=15 name=account value='%s'>",$_REQUEST['account']);
+            printf (" User<input type=text size=15 name=account value='%s'>",$_REQUEST['account']);
             if (is_array($this->allowedDomains)) {
             	print "@<select name=domain>";
                 foreach ($this->allowedDomains as $_domain) {
@@ -1781,15 +1796,15 @@ class SIPAccounts extends Records {
 
             }
 
-            printf (" Pass: <input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
-            printf (" Name: <input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
-            printf (" Email: <input type=text size=15 name=email value='%s'>",$_REQUEST['email']);
-            //printf (" CallerId: <input type=text size=11 name=rpid value='%s'>",$_REQUEST['rpid']);
-            printf ("<nobr>Owner: <input type=text size=5 name=owner value='%s'></nobr> ",$_REQUEST['owner']);
-            printf ("<nobr>PSTN: <input type=checkbox name=pstn value=1></nobr> ");
-            printf ("<nobr>Quota: <input type=text size=5 name=quota value='%s'></nobr> ",$_REQUEST['quota']);
-            printf ("<nobr>Prepaid: <input type=checkbox name=prepaid value=1></nobr> ");
-            print "<nobr>Operator:";
+            printf (" Pass<input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
+            printf (" Name<input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
+            printf (" Email<input type=text size=15 name=email value='%s'>",$_REQUEST['email']);
+            //printf (" CallerId<input type=text size=11 name=rpid value='%s'>",$_REQUEST['rpid']);
+            printf ("<nobr>Owner<input type=text size=5 name=owner value='%s'></nobr> ",$_REQUEST['owner']);
+            printf ("<nobr>PSTN<input type=checkbox name=pstn value=1></nobr> ");
+            printf ("<nobr>Quota<input type=text size=5 name=quota value='%s'></nobr> ",$_REQUEST['quota']);
+            printf ("<nobr>Prepaid<input type=checkbox name=prepaid value=1></nobr> ");
+            print "<nobr>OP";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
                 print ".";
@@ -2158,6 +2173,7 @@ class SIPAliases extends Records {
                 <td><b>Operator</b></td>
                 <td><b>Target</b></td>
                 <td><b>Owner</b></td>
+                <td><b>Last change</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -2213,6 +2229,7 @@ class SIPAliases extends Records {
                     <td>%s.%s</td>
                     <td>%s@%s</td>
                     <td>%s</td>
+                    <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>
                     ",
@@ -2225,6 +2242,7 @@ class SIPAliases extends Records {
                     $alias->target->username,
                     $alias->target->domain,
                     $alias->owner,
+                    $alias->changeDate,
                     $_url,
                     $actionText
                     );
@@ -2277,7 +2295,7 @@ class SIPAliases extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" User: <input type=text size=10 name=alias_username_filter value='%s'>",$this->filters['aliasUsername']);
+        printf (" Alias<input type=text size=10 name=alias_username_filter value='%s'>",$this->filters['aliasUsername']);
         printf ("@");
 
         if ($this->allowedDomains) {
@@ -2294,7 +2312,7 @@ class SIPAliases extends Records {
             printf ("<input type=text size=10 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
         }
 
-        printf (" Target: <input type=text size=10 name=target_username_filter value='%s'>",$this->filters['targetUsername']);
+        printf (" Target<input type=text size=10 name=target_username_filter value='%s'>",$this->filters['targetUsername']);
         printf (" @<input type=text size=10 name=target_domain_filter value='%s'>",$this->filters['targetDomain']);
 
     }
@@ -2315,7 +2333,7 @@ class SIPAliases extends Records {
             <input type=submit name=action value=Add>
             ";
 
-            printf (" Alias: <input type=text size=15 name=alias>");
+            printf (" Alias<input type=text size=15 name=alias>");
 
             if (is_array($this->allowedDomains)) {
             	print "@<select name=domain>";
@@ -2325,9 +2343,9 @@ class SIPAliases extends Records {
                 print "</select>";
             }
 
-            printf (" Target: <input type=text size=35 name=target>");
+            printf (" Target<input type=text size=35 name=target>");
 
-            print "Operator:";
+            print "OP";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
                 print ".";
@@ -2336,7 +2354,7 @@ class SIPAliases extends Records {
             	$this->showCustomerForm('customer');
             }
 
-            printf (" Owner: <input type=text size=5 name=owner>");
+            printf (" Owner<input type=text size=5 name=owner>");
 
             print "
 	        </td>
@@ -2451,11 +2469,38 @@ class ENUMranges extends Records {
 
 		$this->showSeachForm();
 
-        // Insert credetials
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		if ($this->version > 1) {
+        // Filter
+        $filter=array('prefix'   => $this->filters['prefix'],
+                      'tld'      => $this->filters['tld'],
+                      'customer' => intval($this->filters['customer']),
+                      'reseller' => intval($this->filters['reseller'])
+                      );
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
 
-        // Call function
-        $result     = $this->SOAPEngine->soapclient->getRanges();
+        // Order
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclient->getRanges($Query);
+
+        } else {
+        	$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        	$result     = $this->SOAPEngine->soapclient->getRanges();
+        }
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -2465,7 +2510,11 @@ class ENUMranges extends Records {
             return false;
         } else {
 
-			$this->rows = count($result);
+			if ($this->version > 1) {
+				$this->rows = $result->total;
+            } else {
+				$this->rows = count($result);
+            }
 
      		if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
@@ -2507,8 +2556,12 @@ class ENUMranges extends Records {
 			if ($this->rows) {
                 while ($i < $maxrows)  {
     
-                    $range = $result[$i];
-    
+					if ($this->version > 1) {
+                    	$range = $result->ranges[$i];
+                    } else {
+                    	$range = $result[$i];
+                    }
+
                     $index=$this->next+$i+1;
     
                     $rr=floor($index/2);
@@ -2536,7 +2589,7 @@ class ENUMranges extends Records {
                     }
 
                     if (strlen($this->SOAPEngine->recordGenerator)) {
-                        $range_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s>%s</a>',$this->url,$this->SOAPEngine->recordGenerator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->id->prefix);
+                        $range_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s target=generator>%s</a>',$this->url,$this->SOAPEngine->recordGenerator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->id->prefix);
                     } else {
                     	$range_link=$range->id->prefix;
                     }
@@ -2634,12 +2687,12 @@ class ENUMranges extends Records {
             print "
             <input type=submit name=action value=Add>
             ";
-            printf ("Prefix: +<input type=text size=5 name=prefix> ");
-            printf ("TLD: <input type=text size=15 name=tld> ");
-            printf ("TTL: <input type=text size=5 name=ttl value=3600> ");
-            printf ("Min Digits: <input type=text size=3 name=minDigits value=11> ");
-            printf ("Max Digits: <input type=text size=3 name=maxDigits value=11> ");
-            print "Operator:";
+            printf ("Prefix +<input type=text size=5 name=prefix> ");
+            printf ("TLD<input type=text size=15 name=tld> ");
+            printf ("TTL<input type=text size=5 name=ttl value=3600> ");
+            printf ("Min Digits<input type=text size=3 name=minDigits value=11> ");
+            printf ("Max Digits<input type=text size=3 name=maxDigits value=11> ");
+            print "OP";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
                 print ".";
@@ -2647,7 +2700,7 @@ class ENUMranges extends Records {
             } else {
             	$this->showCustomerForm('customer');
             }
-            printf (" Owner: <input type=text size=5 name=owner>");
+            printf (" Owner<input type=text size=5 name=owner>");
 
             print "
 	        </td>
@@ -2728,9 +2781,9 @@ class ENUMranges extends Records {
 
     function showSeachFormCustom() {
 		/*
-        printf (" Prefix: <input type=text size=10 name=prefix_filter value='%s'>",$this->filters['prefix']);
-        printf (" TLD: <input type=text size=15 name=tld_filter value='%s'>",$this->filters['tld']);
-        printf (" Owner: <input type=text size=15 name=owner_filter value='%s'>",$this->filters['owner']);
+        printf (" Prefix<input type=text size=10 name=prefix_filter value='%s'>",$this->filters['prefix']);
+        printf (" TLD<input type=text size=15 name=tld_filter value='%s'>",$this->filters['tld']);
+        printf (" Owner<input type=text size=15 name=owner_filter value='%s'>",$this->filters['owner']);
         */
     }
 }
@@ -2900,7 +2953,7 @@ class ENUMmappings extends Records {
                 <td><b>TTL</b></td>
                 <td><b>Prio</b></td>
                 <td><b>Owner</b></td>
-                <td><b>Info</b></td>
+                <td><b>Last change</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -2983,7 +3036,7 @@ class ENUMmappings extends Records {
                             $_mapping->ttl,
                             $_mapping->priority,
                             $number->owner,
-                            $number->info,
+                            $_mapping->lastChange,
                             $_url,
                             $actionText
                             );
@@ -2999,7 +3052,7 @@ class ENUMmappings extends Records {
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
-                            <td></td>
+                            <td>%s</td>
                             <td></td>
                             <td><a href=%s>%s</a></td>
                             </tr>",
@@ -3008,6 +3061,7 @@ class ENUMmappings extends Records {
                             $_mapping->mapto,
                             $_mapping->ttl,
                             $_mapping->priority,
+                            $_mapping->lastChange,
                             $_url,
                             $actionText
                             );
@@ -3087,8 +3141,8 @@ class ENUMmappings extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" Number:<input type=text size=15 name=number_filter value='%s'>",$this->filters['number']);
-        printf (" TLD:");
+        printf (" Number<input type=text size=15 name=number_filter value='%s'>",$this->filters['number']);
+        printf (" TLD");
         if ($this->allowedDomains) {
             $selected_tld[$this->filters['tld_filter']]='selected';
             printf ("<select name=tld_filter>
@@ -3103,10 +3157,8 @@ class ENUMmappings extends Records {
             printf ("<input type=text size=10 name=tld_filter value='%s'>",$this->filters['tld']);
         }
 
-        printf (" Srv:");
-
-                    print "
-                    <select name=type_filter>
+        printf (" Srv");
+                    print "<select name=type_filter>
                     <option>
                     ";
                     reset($this->NAPTR_services);
@@ -3118,23 +3170,42 @@ class ENUMmappings extends Records {
                     print "
                     </select>
                     ";
-        printf (" <nobr>Map to:<input type=text size=20 name=mapto_filter value='%s'></nobr>",$this->filters['mapto']);
+        printf (" <nobr>Map to<input type=text size=20 name=mapto_filter value='%s'></nobr>",$this->filters['mapto']);
 
     }
 
-    function deleteRecord() {
-        if (!$_REQUEST['confirm']) {
+    function deleteRecord($dictionary=array()) {
+
+        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return 1;
         }
 
-        if (!strlen($this->filters['number']) || !strlen($this->filters['tld'])) {
+        if ($dictionary['number']) {
+            $number=$dictionary['number'];
+        } else {
+            $number=$this->filters['number'];
+        }
+
+        if ($dictionary['tld']) {
+            $tld=$dictionary['tld'];
+        } else {
+            $tld=$this->filters['tld'];
+        }
+
+        if ($dictionary['mapto']) {
+            $mapto=$dictionary['mapto'];
+        } else {
+            $mapto=$this->filters['mapto'];
+        }
+
+        if (!strlen($number) || !strlen($tld)) {
             print "<p><font color=red>Error: missing ENUM number or TLD </font>";
             return 0;
         }
 
-        $enum_id=array('number'=>$this->filters['number'],
-                       'tld'=>$this->filters['tld']);
+        $enum_id=array('number'=>$number,
+                       'tld'=>$tld);
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
         $result     = $this->SOAPEngine->soapclient->getNumber($enum_id);
@@ -3145,7 +3216,7 @@ class ENUMmappings extends Records {
 
             if (count($result->mappings) > 1) {
                 foreach ($result->mappings as $_mapping) {
-                    if ($_mapping->mapto != $this->filters['mapto']) {
+                    if ($_mapping->mapto != $mapto) {
                         $mappings_new[]=array('type'     => $_mapping->type,
                                               'mapto'    => $_mapping->mapto,
                                               'ttl'      => $_mapping->ttl,
@@ -3158,7 +3229,7 @@ class ENUMmappings extends Records {
     
                 $function=array('commit'   => array('name'       => 'updateNumber',
                                                     'parameters' => array($result_new),
-                                                    'logs'       => array('success' => sprintf('<p>ENUM mapping %s has been deleted',$this->filters['mapto']))),
+                                                    'logs'       => array('success' => sprintf('<p>ENUM mapping %s has been deleted',$mapto))),
                                 'rollback' => array('name'       => 'updateNumber',
                                                     'parameters' => array($result))
                                 );
@@ -3166,7 +3237,7 @@ class ENUMmappings extends Records {
             } else {
                 $function=array('commit'   => array('name'       => 'deleteNumber',
                                                     'parameters' => array($enum_id),
-                                                    'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been deleted',$this->filters['number'],$this->filters['tld']))),
+                                                    'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been deleted',$number,$tld))),
                                 'rollback' => array('name'       => 'addNumber',
                                                     'parameters' => array($result))
                                 );
@@ -3201,8 +3272,8 @@ class ENUMmappings extends Records {
             print "
             <input type=submit name=action value=Add>
             ";
-            printf (" Number: +<input type=text size=15 name=number>");
-            printf (" TLD:");
+            printf (" Number +<input type=text size=15 name=number>");
+            printf (" TLD");
             if (is_array($this->allowedDomains)) {
             	print "<select name=tld>";
                 foreach ($this->allowedDomains as $_tld) {
@@ -3212,9 +3283,8 @@ class ENUMmappings extends Records {
             } else {
                 print "<input type=text size=15 name=tld>";
             }
-    	    printf (" Map to:");
-                    print "
-                    <select name=type>
+    	    printf (" Map to");
+                    print "<select name=type>
                     ";
                     reset($this->NAPTR_services);
                     while (list($k,$v) = each($this->NAPTR_services)) {
@@ -3225,8 +3295,8 @@ class ENUMmappings extends Records {
                     </select>
                     ";
             printf (" <input type=text size=25 name=mapto>");
-            printf (" TTL: <input type=text size=5 name=ttl value=3600>");
-            print "Operator:";
+            printf (" TTL<input type=text size=5 name=ttl value=3600>");
+            print "OP";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
                 print ".";
@@ -3235,8 +3305,8 @@ class ENUMmappings extends Records {
             	$this->showCustomerForm('customer');
             }
 
-            printf (" Owner: <input type=text size=5 name=owner>");
-            printf (" Prio: <input type=text size=3 name=priority>");
+            printf (" Owner<input type=text size=5 name=owner>");
+            printf (" Prio<input type=text size=3 name=priority>");
 
             print "
 	        </td>
@@ -3688,9 +3758,9 @@ class TrustedPeers extends Records {
             print "
             <input type=submit name=action value=Add>
             ";
-            printf (" IP address: <input type=text size=20 name=ipaddress>");
-            printf (" Description: <input type=text size=30 name=description>");
-            print "Operator:";
+            printf (" IP address<input type=text size=20 name=ipaddress>");
+            printf (" Description<input type=text size=30 name=description>");
+            print "OP";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
                 print ".";
@@ -3698,7 +3768,7 @@ class TrustedPeers extends Records {
             } else {
             	$this->showCustomerForm('customer');
             }
-            printf (" Owner: <input type=text size=5 name=owner>");
+            printf (" Owner<input type=text size=5 name=owner>");
 
             print "
 	        </td>
@@ -3951,7 +4021,7 @@ class GatewayGroups extends Records {
             <input type=submit name=action value=Add>
             ";
 
-            printf (" Name: <input type=text size=20 name=name>");
+            printf (" Name<input type=text size=20 name=name>");
 
             $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
             $result     = $this->SOAPEngine->soapclient->getGatewayGroups();
@@ -4025,7 +4095,7 @@ class GatewayGroups extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Group: <input type=text size=15 name=group_filter value='%s'>",$this->filters['group']);
+        printf (" Group<input type=text size=15 name=group_filter value='%s'>",$this->filters['group']);
     }
 
 }
@@ -4207,7 +4277,7 @@ class Gateways extends Records {
             <input type=submit name=action value=Add>
             ";
 
-            printf (" Name: <input type=text size=20 name=name>");
+            printf (" Name<input type=text size=20 name=name>");
 
             $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
             $result     = $this->SOAPEngine->soapclient->getGatewayGroups();
@@ -4239,7 +4309,7 @@ class Gateways extends Records {
                 }
             	printf (" </select>");
             }
-            printf (" Address: <input type=text size=25 name=address>");
+            printf (" Address<input type=text size=25 name=address>");
             printf (" Strip: <select name=strip>");
             $t=0;
             while ($t<10) {
@@ -4248,7 +4318,7 @@ class Gateways extends Records {
             }
 
             print "</select>";
-            printf (" Prefix: <input type=text size=5 name=prefix>");
+            printf (" Prefix<input type=text size=5 name=prefix>");
 
             print "
 	        </td>
@@ -4354,8 +4424,8 @@ class Gateways extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Name: <input type=text size=15 name=name_filter value='%s'>",$this->filters['name']);
-        printf (" Group: <input type=text size=15 name=group_filter value='%s'>",$this->filters['group']);
+        printf (" Name<input type=text size=15 name=name_filter value='%s'>",$this->filters['name']);
+        printf (" Group<input type=text size=15 name=group_filter value='%s'>",$this->filters['group']);
     }
 
 }
@@ -4564,7 +4634,7 @@ class Routes extends Records {
             <input type=submit name=action value=Add>
             ";
 
-            printf (" Prefix: <input type=text size=20 name=prefix>");
+            printf (" Prefix<input type=text size=20 name=prefix>");
 
             printf (" Group: ");
 
@@ -4573,8 +4643,8 @@ class Routes extends Records {
                 printf ("<option value='%s'>%s",$_grp,$_grp);
             }
             printf (" </select>");
-            printf (" From: <input type=text size=25 name=fromURI>");
-            printf (" Priority: <input type=text size=5 name=priority>");
+            printf (" From<input type=text size=25 name=fromURI>");
+            printf (" Priority<input type=text size=5 name=priority>");
 
             print "
 	        </td>
@@ -4668,7 +4738,7 @@ class Routes extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Prefix: <input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
+        printf (" Prefix<input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
         print "<select name=gatewayGroup_filter>
         	<option>";
 		$selected_gatewayGroups[$this->filters['gatewayGroup']]='selected';
@@ -4677,7 +4747,7 @@ class Routes extends Records {
         }
         printf (" </select>");
 
-        printf (" From URI: <input type=text size=15 name=fromURI_filter value='%s'>",$this->filters['fromURI']);
+        printf (" From URI<input type=text size=15 name=fromURI_filter value='%s'>",$this->filters['fromURI']);
     }
 
 }
@@ -4804,7 +4874,7 @@ class DomainStatistics extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" Domain: <input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
+        printf (" Domain<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
 
     }
 
@@ -5023,9 +5093,9 @@ class Customers extends Records {
 
     function showSeachFormCustom() {
         if (!$this->filters['reseller']) {
-        	printf (" Customer: <input type=text size=6 name=customer_filter value='%s'>",$this->filters['customer']);
+        	printf (" Customer<input type=text size=6 name=customer_filter value='%s'>",$this->filters['customer']);
         }
-        printf (" Username: <input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
+        printf (" Username<input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
     }
 
     function deleteRecord() {
@@ -5076,7 +5146,7 @@ class recordsGenerator  {
             <input type=submit name=action value=Generate>
             ";
 
-            printf (" Name: <input type=text size=20 name=name>");
+            printf (" Name<input type=text size=20 name=name>");
 
             $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
             $result     = $this->SOAPEngine->soapclient->getGatewayGroups();
@@ -5108,7 +5178,7 @@ class recordsGenerator  {
                 }
             	printf (" </select>");
             }
-            printf (" Address: <input type=text size=25 name=address>");
+            printf (" Address<input type=text size=25 name=address>");
             printf (" Strip: <select name=strip>");
             $t=0;
             while ($t<10) {
@@ -5117,7 +5187,7 @@ class recordsGenerator  {
             }
 
             print "</select>";
-            printf (" Prefix: <input type=text size=5 name=prefix>");
+            printf (" Prefix<input type=text size=5 name=prefix>");
 
             print "
 	        </td>
@@ -5247,6 +5317,7 @@ class SIPAccountsActions extends Actions {
 
         print "<ol>";
         foreach($selectionKeys as $key) {
+            print "<li>";
 
             flush();
             //printf ("Performing action=%s on key=%s",$action,$key);
@@ -5565,6 +5636,7 @@ class SIPAliasesActions extends Actions {
 
         print "<ol>";
         foreach($selectionKeys as $key) {
+            print "<li>";
             flush();
 
             //printf ("Performing action=%s on key=%s",$action,$key);
@@ -5609,7 +5681,7 @@ class ENUMMappingsActions extends Actions {
         print "<ol>";
         foreach($selectionKeys as $key) {
             flush();
-
+            print "<li>";
 
         	if ($action=='delete') {
 

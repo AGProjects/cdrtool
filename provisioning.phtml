@@ -26,12 +26,38 @@ $layout->showTopMenu();
 
 global $CDRTool;
 
-if ($CDRTool['reseller']) {
-	$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,'',$CDRTool['reseller'],0);
+if ($_REQUEST['generatorId']) {
+	if ($CDRTool['reseller']) {
+    	$generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,,$CDRTool['reseller'],1);
+	} else {
+    	$generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,,,1);
+		$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,,,1);
+	}
+    if ($_REQUEST['action']=='Generate') {
+        $generator->generateRecords();
+        $generator->showGeneratorForm();
+    } else {
+        $generator->showGeneratorForm();
+    }
 } else {
-	$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,'','',1);
-}
+	if ($CDRTool['reseller']) {
+		$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,,$CDRTool['reseller'],0);
+	} else {
+		$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,,,1);
+	}
 
+    $_class     = $SOAPEngine->recordsClass;
+    $RECORDS    = new $_class(&$SOAPEngine);
+    
+    if ($_REQUEST['action']=='Add')    $RECORDS->addRecord();
+    if ($_REQUEST['action']=='Delete') $RECORDS->deleteRecord();
+    if ($_REQUEST['action']=='PerformActions') {
+        $RECORDS->performActions();
+    } else {
+        $RECORDS->listRecords();
+    }
+    
+}
 $_class     = $SOAPEngine->recordsClass;
 $RECORDS    = new $_class(&$SOAPEngine);
 
