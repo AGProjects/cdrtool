@@ -4,6 +4,7 @@ class recordGenerator extends SOAPEngine {
 
     function recordGenerator($generatorId,$recordGenerators,$soapEngines,$extraFormElements,$impersonate,$adminonly) {
     	$this->recordGenerators = $recordGenerators;
+        $this->generatorId=$generatorId;
 
 		$keys = array_keys($this->recordGenerators);
 		if (!$generatorId) $generatorId=$keys[0];
@@ -11,30 +12,20 @@ class recordGenerator extends SOAPEngine {
 		if (!in_array($generatorId,array_keys($this->recordGenerators))) {
             return false;
         }
-        $this->service=$generatorId;
 
-        // sip port
+        // sip zones
         $sipEngine           = $this->recordGenerators[$generatorId]['sipEngineId'].'@'.'SIP accounts';
         $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$extraFormElements,$impersonate,$adminonly);
 		$_sip_class          = $this->SipSOAPEngine->recordsClass;
 		$this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
+        $this->sipRecords->getAllowedDomains();
 
-        // enum ,mappings
+        // enum mappings
         $enumEngine           = $this->recordGenerators[$generatorId]['enumEngineId'].'@'.'ENUM Numbers';
         $this->EnumSOAPEngine = new SOAPEngine($enumEngine,$soapEngines,$extraFormElements,$impersonate,$adminonly);
 		$_enum_class          = $this->EnumSOAPEngine->recordsClass;
 		$this->enumRecords    = new $_enum_class(&$this->EnumSOAPEngine);
-
-        // enum ranges
-        $enumEngine           = $this->recordGenerators[$generatorId]['enumEngineId'].'@'.'ENUM Ranges';
-        $this->EnumSOAPEngine = new SOAPEngine($enumEngine,$soapEngines,$extraFormElements,$impersonate,$adminonly);
-		$_enum_class          = $this->EnumSOAPEngine->recordsClass;
-		$this->enumRanges     = new $_enum_class(&$this->EnumSOAPEngine);
-
-		//print_r($this->enumRecords->SOAPEngine);
-        $this->sipRecords->getAllowedDomains();
         $this->enumRecords->getAllowedDomains();
-
     }
 
     function generateRecords() {
@@ -81,17 +72,6 @@ class recordGenerator extends SOAPEngine {
             if (is_array($enumMapping)) $this->enumRecords->addRecord($enumMapping);
             if (is_array($sipAccount))  $this->sipRecords->addRecord($sipAccount);
 
-                    /*
-                    // try roll-back
-                    $dictionary=array('number'  => $number,
-                                      'tld'     => $this->template['tld'],
-                                      'mapto'   => $mapto,
-                                      'confirm' => 1
-                                      );
-
-                    $this->enumRecords->deleteRecord($dictionary);
-                    return false;
-                    */
             $i++;
         }
 
@@ -443,16 +423,10 @@ class recordGenerator extends SOAPEngine {
         </tr>
         </table>
         ";
-
-        /*
-        print "<pre>";
-        print_r($this->sipRecords);
-        print_r($this->enumRecords);
-        */
     }
 
     function printHiddenFormElements () {
-        printf("<input type=hidden name=service value='%s'>",$this->service);
+        printf("<input type=hidden name=generatorId value='%s'>",$this->generatorId);
 
         if ($this->adminonly) {
         	printf("<input type=hidden name=adminonly value='%s'>",$this->adminonly);
@@ -509,8 +483,6 @@ class SOAPEngine {
                         );
 
     function SOAPEngine($service,$soapEngines,$extraFormElements,$reseller=0,$adminonly=0) {
-
-        //print("<p>Init SOAP engine class");
 
         /*
         $soapEngines=array(
@@ -1185,12 +1157,6 @@ class Records {
 
     function addFiltersToURL() {
 
-        /*
-        print "<pre>";
-		print_r($this->filters);
-        print "</pre>";
-        */
-
         $j=0;
 		foreach(array_keys($this->filters) as $filter) {
         	if (strlen(trim($this->filters[$filter]))) {
@@ -1813,11 +1779,6 @@ class SIPAccounts extends Records {
             	$this->showCustomerForm('customer');
             }
             print "</nobr>";
-            /*
-            print " TZ: ";
-
-            $this->showTimezones();
-            */
 
             print "
 	        </td>
@@ -2452,10 +2413,6 @@ class SIPAliases extends Records {
 }
 
 class ENUMranges extends Records {
-    var $sortElements=array('changeDate' => 'Change date',
-                            'number'     => 'Number',
-                            'tld'        => 'TLD'
-                            );
 
     function ENUMranges(&$SOAPEngine) {
         $this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
@@ -2463,40 +2420,49 @@ class ENUMranges extends Records {
                                 );
         
 		$this->Records(&$SOAPEngine);
+
+        if ($this->version > 1) {
+        	$this->sortElements=array('changeDate' => 'Change date',
+                  	        	      'prefix'     => 'Prefix',
+                    	        	  'tld'        => 'TLD'
+	                        	     );
+        }
     }
 
     function listRecords() {
+        $this->getAllowedDomains();
 
 		$this->showSeachForm();
 
 		if ($this->version > 1) {
-        // Filter
-        $filter=array('prefix'   => $this->filters['prefix'],
-                      'tld'      => $this->filters['tld'],
-                      'customer' => intval($this->filters['customer']),
-                      'reseller' => intval($this->filters['reseller'])
-                      );
-        // Range
-        $range=array('start' => intval($this->next),
-                     'count' => intval($this->maxrowsperpage)
-                     );
-
-        // Order
-        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
-        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
-
-        $orderBy = array('attribute' => $this->sorting['sortBy'],
-                         'direction' => $this->sorting['sortOrder']
+            // Filter
+            $filter=array('prefix'   => $this->filters['prefix'],
+                          'tld'      => $this->filters['tld'],
+                          'customer' => intval($this->filters['customer']),
+                          'reseller' => intval($this->filters['reseller'])
+                          );
+            // Range
+            $range=array('start' => intval($this->next),
+                         'count' => intval($this->maxrowsperpage)
                          );
-
-        // Compose query
-        $Query=array('filter'  => $filter,
-                     'orderBy' => $orderBy,
-                     'range'   => $range
-                     );
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-        $result     = $this->SOAPEngine->soapclient->getRanges($Query);
-
+    
+            // Order
+            if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+            if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+    
+            $orderBy = array('attribute' => $this->sorting['sortBy'],
+                             'direction' => $this->sorting['sortOrder']
+                             );
+    
+            // Compose query
+            $Query=array('filter'  => $filter,
+                         'orderBy' => $orderBy,
+                         'range'   => $range
+                         );
+    
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getRanges($Query);
+    
         } else {
         	$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
         	$result     = $this->SOAPEngine->soapclient->getRanges();
@@ -2536,13 +2502,12 @@ class ENUMranges extends Records {
                 <td><b>Min digits</b></td>
                 <td><b>Max digits</b></td>
                 <td><b>Used</b></td>
-                <td><b>Owner</b></td>
-                <td><b>Info</b></td>
+                <td><b>Last change</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
 
-            if (!$this->next)  $this->next=0;
+     		if (!$this->next)  $this->next=0;
 
             if ($this->rows > $this->maxrowsperpage)  {
                 $maxrows = $this->maxrowsperpage + $this->next;
@@ -2557,7 +2522,9 @@ class ENUMranges extends Records {
                 while ($i < $maxrows)  {
     
 					if ($this->version > 1) {
+                    	if (!$result->ranges[$i]) break;
                     	$range = $result->ranges[$i];
+
                     } else {
                     	$range = $result[$i];
                     }
@@ -2605,21 +2572,19 @@ class ENUMranges extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
                     $index,
                     $range_link,
                     $range->id->tld,
-                    $range->customer,
                     $range->reseller,
+                    $range->customer,
                     $range->ttl,
                     $range->minDigits,
                     $range->maxDigits,
                     $range->used,
-                    $range->owner,
-                    $range->info,
+                    $range->changeDate,
                     $_url,
                     $actionText
                     );
@@ -2661,14 +2626,10 @@ class ENUMranges extends Records {
                                             'logs'       => array('success' => sprintf('<p>ENUM range +%s under %s has been deleted',$this->filters['prefix'],$this->filters['tld'])
                                                                   )
                                             )
-     
                         );
-        if ($this->SOAPEngine->execute($function)) {
-           	unset($this->filters);
-        	return true;
-        } else {
-        	return false;
-        }
+
+        unset($this->filters);
+        return $this->SOAPEngine->execute($function);
     }
 
     function showAddForm() {
@@ -2688,7 +2649,19 @@ class ENUMranges extends Records {
             <input type=submit name=action value=Add>
             ";
             printf ("Prefix +<input type=text size=5 name=prefix> ");
-            printf ("TLD<input type=text size=15 name=tld> ");
+            printf (" TLD");
+            /*
+            if (is_array($this->allowedDomains)) {
+            	print "<select name=tld>";
+                foreach ($this->allowedDomains as $_tld) {
+                    print "<option value=$_tld>$_tld\n";
+                }
+                print "</select>";
+            } else {
+                print "<input type=text size=15 name=tld>";
+            }
+            */
+                print "<input type=text size=15 name=tld>";
             printf ("TTL<input type=text size=5 name=ttl value=3600> ");
             printf ("Min Digits<input type=text size=3 name=minDigits value=11> ");
             printf ("Max Digits<input type=text size=3 name=maxDigits value=11> ");
@@ -2700,7 +2673,7 @@ class ENUMranges extends Records {
             } else {
             	$this->showCustomerForm('customer');
             }
-            printf (" Owner<input type=text size=5 name=owner>");
+            //printf ("Info<input type=text size=15 name=info> ");
 
             print "
 	        </td>
@@ -2722,6 +2695,7 @@ class ENUMranges extends Records {
     function addRecord() {
     	$tld    = trim($_REQUEST['tld']);
         $prefix = trim($_REQUEST['prefix']);
+        $info   = trim($_REQUEST['info']);
 
         if (!strlen($tld)) {
             if (strlen($this->SOAPEngine->defaultEnumTLD)) {
@@ -2761,8 +2735,7 @@ class ENUMranges extends Records {
                      'minDigits'  => intval(trim($_REQUEST['minDigits'])),
                      'maxDigits'  => intval(trim($_REQUEST['maxDigits'])),
                      'customer'   => intval($customer),
-                     'reseller'   => intval($reseller),
-                     'owner'      => intval($_REQUEST['owner'])
+                     'reseller'   => intval($reseller)
         			);
 
         $deleteRange=array('prefix'=>$prefix,
@@ -2780,14 +2753,94 @@ class ENUMranges extends Records {
     }
 
     function showSeachFormCustom() {
-		/*
-        printf (" Prefix<input type=text size=10 name=prefix_filter value='%s'>",$this->filters['prefix']);
-        printf (" TLD<input type=text size=15 name=tld_filter value='%s'>",$this->filters['tld']);
-        printf (" Owner<input type=text size=15 name=owner_filter value='%s'>",$this->filters['owner']);
-        */
+        if ($this->version > 1) {
+        	printf (" Prefix<input type=text size=10 name=prefix_filter value='%s'>",$this->filters['prefix']);
+            printf (" TLD");
+            if ($this->allowedDomains) {
+                $selected_tld[$this->filters['tld_filter']]='selected';
+                printf ("<select name=tld_filter>
+                <option>");
+    
+                foreach ($this->allowedDomains as $_tld) {
+                    printf ("<option value='$_tld' %s>$_tld",$selected_tld[$_tld]);
+                }
+    
+                printf ("</select>");
+            } else {
+                printf ("<input type=text size=10 name=tld_filter value='%s'>",$this->filters['tld']);
+            }
+        }
+    }
+
+    function getAllowedDomains() {
+        // Insert credetials
+		if ($this->version > 1) {
+            // Filter
+            $filter=array('prefix'   => '');
+            // Range
+            $range=array('start' => 0,
+                         'count' => 200
+                         );
+    
+            // Order
+            if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+            if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+    
+            $orderBy = array('attribute' => $this->sorting['sortBy'],
+                             'direction' => $this->sorting['sortOrder']
+                             );
+    
+            // Compose query
+            $Query=array('filter'  => $filter,
+                         'orderBy' => $orderBy,
+                         'range'   => $range
+                         );
+    
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getRanges($Query);
+    
+        } else {
+        	$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        	$result     = $this->SOAPEngine->soapclient->getRanges();
+        }
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+			if ($this->version > 1) {
+                foreach($result->ranges as $range) {
+                    $this->ranges[]=array('prefix'    => $range->id->prefix,
+                                          'tld'       => $range->id->tld,
+                                          'minDigits' => $range->minDigits,
+                                          'maxDigits' => $range->maxDigits
+                                          );
+                    if (in_array($range->id->tld,$this->allowedDomains)) continue;
+                    $this->allowedDomains[]=$range->id->tld;
+                    $seen[$range->id->tld]++;
+                }
+            } else {
+                foreach($result as $range) {
+                    $this->ranges[]=array('prefix'    => $range->id->prefix,
+                                          'tld'       => $range->id->tld,
+                                          'minDigits' => $range->minDigits,
+                                          'maxDigits' => $range->maxDigits
+                                          );
+                    if (in_array($range->id->tld,$this->allowedDomains)) continue;
+                    $this->allowedDomains[]=$range->id->tld;
+                    $seen[$range->id->tld]++;
+                }
+            }
+
+            if (strlen($this->SOAPEngine->defaultEnumTLD) && !$seen[$this->SOAPEngine->defaultEnumTLD]) {
+            	$this->allowedDomains[]=$this->SOAPEngine->defaultEnumTLD;
+            }
+        }
     }
 }
-
 
 class ENUMmappings extends Records {
     var $sortElements=array('changeDate' => 'Change date',
@@ -3243,12 +3296,8 @@ class ENUMmappings extends Records {
                                 );
             }
 
-            if ($this->SOAPEngine->execute($function)) {
-                unset($this->filters);
-                return true;
-            } else {
-                return false;
-            }
+            unset($this->filters);
+            return $this->SOAPEngine->execute($function);
 
         } else {
             return false;
@@ -3326,11 +3375,39 @@ class ENUMmappings extends Records {
     }
 
     function getAllowedDomains() {
-        // Insert credetials
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
-        // Call function
-        $result     = $this->SOAPEngine->soapclient->getRanges();
+		if ($this->version > 1) {
+            // Filter
+            $filter=array('prefix'   => $this->filters['prefix'],
+                          'tld'      => $this->filters['tld'],
+                          'customer' => intval($this->filters['customer']),
+                          'reseller' => intval($this->filters['reseller'])
+                          );
+            // Range
+            $range=array('start' => 0,
+                         'count' => 200
+                         );
+    
+            // Order
+            if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+            if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+    
+            $orderBy = array('attribute' => $this->sorting['sortBy'],
+                             'direction' => $this->sorting['sortOrder']
+                             );
+    
+            // Compose query
+            $Query=array('filter'  => $filter,
+                         'orderBy' => $orderBy,
+                         'range'   => $range
+                         );
+    
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getRanges($Query);
+    
+        } else {
+        	$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        	$result     = $this->SOAPEngine->soapclient->getRanges();
+        }
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -3339,15 +3416,28 @@ class ENUMmappings extends Records {
             printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
-            foreach($result as $range) {
-                $this->ranges[]=array('prefix'    => $range->id->prefix,
-                                      'tld'       => $range->id->tld,
-                                      'minDigits' => $range->minDigits,
-                                      'maxDigits' => $range->maxDigits
-                                      );
-            	if (in_array($range->id->tld,$this->allowedDomains)) continue;
-            	$this->allowedDomains[]=$range->id->tld;
-                $seen[$range->id->tld]++;
+			if ($this->version > 1) {
+                foreach($result->ranges as $range) {
+                    $this->ranges[]=array('prefix'    => $range->id->prefix,
+                                          'tld'       => $range->id->tld,
+                                          'minDigits' => $range->minDigits,
+                                          'maxDigits' => $range->maxDigits
+                                          );
+                    if (in_array($range->id->tld,$this->allowedDomains)) continue;
+                    $this->allowedDomains[]=$range->id->tld;
+                    $seen[$range->id->tld]++;
+                }
+            } else {
+                foreach($result as $range) {
+                    $this->ranges[]=array('prefix'    => $range->id->prefix,
+                                          'tld'       => $range->id->tld,
+                                          'minDigits' => $range->minDigits,
+                                          'maxDigits' => $range->maxDigits
+                                          );
+                    if (in_array($range->id->tld,$this->allowedDomains)) continue;
+                    $this->allowedDomains[]=$range->id->tld;
+                    $seen[$range->id->tld]++;
+                }
             }
             if (strlen($this->SOAPEngine->defaultEnumTLD) && !$seen[$this->SOAPEngine->defaultEnumTLD]) {
             	$this->allowedDomains[]=$this->SOAPEngine->defaultEnumTLD;
@@ -3381,12 +3471,24 @@ class ENUMmappings extends Records {
         }
 
         if ($this->adminonly) {
-        	$reseller = trim($_REQUEST['reseller']);
-        	$customer = trim($_REQUEST['customer']);
+        	if ($dictionary['reseller']) {
+                $reseller=$dictionary['reseller'];
+            } else {
+            	$reseller = trim($_REQUEST['reseller']);
+            }
+        	if ($dictionary['customer']) {
+                $customer=$dictionary['customer'];
+            } else {
+            	$customer = trim($_REQUEST['customer']);
+            }
             if (!$customer) $customer=$reseller;
         } else {
         	$reseller = $this->reseller;
-        	$customer = trim($_REQUEST['customer']);
+        	if ($dictionary['customer']) {
+                $customer=$dictionary['customer'];
+            } else {
+            	$customer = trim($_REQUEST['customer']);
+            }
             if (!$customer || !in_array($customer,array_keys($this->customers))) {
                 $customer=$reseller;
             }
