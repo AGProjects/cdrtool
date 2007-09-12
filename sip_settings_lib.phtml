@@ -5,10 +5,6 @@ require_once('SOAP/Client.php');
 require_once("phone_images.php");
 
 class SIPSettings {
-	var $soapEngineIdSipPort       = 'mdns';
-    var $soapEngineIdVoicemailPort = 'mdns_vm';
-    var $soapEngineIdCustomerPort  = 'mdns';
-    var $soapEngineIdPresencePort  = 'ssp';
 
 	var $soapClassSipPort          = 'WebService_NGNPro_SipPort';
     var $soapClassVoicemailPort    = 'WebService_NGNPro_VoicemailPort';
@@ -19,6 +15,7 @@ class SIPSettings {
                                            'Table'            => 'voicemail_users',
 										   'Server'           => 'vm.example.com'
                                            );
+
     var $SupportCompany            = "Example company";
     var $SupportCDRsite            = "https://cdrtool.example.com/CDRTool";
     var $SupportWEBsite            = "https://www.example.com/help";
@@ -45,27 +42,27 @@ class SIPSettings {
     var $groups                    = array();
 
     var $WEBdictionary             = array(
-                                           'mailto'           ,
-                                           'free-pstn'        ,
-                                           'blocked'          ,
-                                           'sip_password'     ,
-                                           'quota'            ,
-                                           'language'         ,
-                                           'quota_reset'      ,
-                                           'used_quota'       ,
-                                           'voicemail'        ,
-                                           'anonymous'        ,
-                                           'advanced'         ,
-                                           'rpid'             ,
-                                           'timezone'         ,
-                                           'accept'           ,
-                                           'accept_temporary_group' ,
-                                           'accept_temporary_remain'    ,
-                                           'web_timestamp'    ,
-                                           'acceptDailyStartTime' ,
-                                           'acceptDailyStopTime'  ,
-                                           'acceptDailyGroup' ,
-                                           'quickdial'    ,
+                                           'mailto',
+                                           'free-pstn',
+                                           'blocked',
+                                           'sip_password',
+                                           'quota',
+                                           'language',
+                                           'quota_reset',
+                                           'used_quota',
+                                           'voicemail',
+                                           'anonymous',
+                                           'advanced',
+                                           'rpid',
+                                           'timezone',
+                                           'accept',
+                                           'accept_temporary_group',
+                                           'accept_temporary_remain',
+                                           'web_timestamp',
+                                           'acceptDailyStartTime',
+                                           'acceptDailyStopTime',
+                                           'acceptDailyGroup',
+                                           'quickdial',
                                            'delete_voicemail',
                                            'voicemail_password',
                                            'region',
@@ -225,7 +222,7 @@ class SIPSettings {
         }
 
         if ($this->enablePresence) {
-            $this->tabs[presence]=_("Presence");
+        	$this->tabs[presence]=_("Presence");
         }
 
         if ($this->domain=="sip2sip.info" || $this->domain=="sipline.nl") {
@@ -255,9 +252,48 @@ class SIPSettings {
 
         // Instantiate the SOAP clients
         $this->SipPort       = new $this->soapClassSipPort($this->SOAPurl);
-        $this->VoicemailPort = new $this->soapClassVoicemailPort($this->SOAPurl);
-        $this->CustomerPort  = new $this->soapClassCustomerPort($this->SOAPurl);
-        $this->PresencePort  = new $this->soapClassPresencePort($this->SOAPurlPresence);
+
+		if (strlen($this->soapEngines[$this->soapEngineIdSipPort]['voicemailEngineId'])) {
+        	$this->SOAPurlVoicemail = $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['voicemailEngineId']]['url'];
+            $this->SOAPloginVoicemail = array(
+                                   "username"    => $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['voicemailEngineId']]['username'],
+                                   "password"    => $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['voicemailEngineId']]['password'],
+                                   "admin"       => true,
+                                   "impersonate" => intval($this->rId)
+                                   );
+
+            $this->SoapAuthVoicemail = array('auth', $this->SOAPloginVoicemail , 'urn:AGProjects:NGNPro', 0, '');
+        } else {
+        	$this->SOAPurlVoicemail  = $this->SOAPurl;
+            $this->SoapAuthVoicemail = $this->SoapAuth;
+        }
+
+		if (strlen($this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['presenceEngineId']])) {
+        	$this->SOAPurlPresence = $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['presenceEngineId']]['url'];
+        	$this->PresencePort    = new $this->soapClassPresencePort($this->SOAPurlPresence);
+        	$this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+        }
+
+		if (strlen($this->soapEngines[$this->soapEngineIdSipPort]['customerEngineId'])) {
+        	$this->SOAPurlCustomer = $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['customerEngineId']]['url'];
+            $this->SOAPloginCustomer = array(
+                                   "username"    => $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['customerEngineId']]['username'],
+                                   "password"    => $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['customerEngineId']]['password'],
+                                   "admin"       => true,
+                                   "impersonate" => intval($this->rId)
+                                   );
+
+            $this->SoapAuthCustomer = array('auth', $this->SOAPloginCustomer , 'urn:AGProjects:NGNPro', 0, '');
+        } else {
+        	$this->SOAPurlCustomer  = $this->SOAPurl;
+            $this->SoapAuthCustomer = $this->SoapAuth;
+        }
+
+
+        $this->VoicemailPort = new $this->soapClassVoicemailPort($this->SOAPurlVoicemail);
+        $this->CustomerPort  = new $this->soapClassCustomerPort($this->SOAPurlCustomer);
 
         $this->SipPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
         $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
@@ -270,10 +306,6 @@ class SIPSettings {
         $this->CustomerPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
         $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-
-        $this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT,        5);
-        $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-        $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
         $this->soapRemoteId=$this->soapEngines[$this->soapEngineIdSipPort]['depends'];
 
@@ -476,15 +508,6 @@ class SIPSettings {
             return false;
         }
 
-        $this->SOAPloginCustomer=array(
-                               "username"    =>"soapadmin",
-                               "password"    =>"troleu",
-                               "admin"       =>true,
-                               "impersonate" =>intval($this->$this->owner)
-        );
- 
-        $this->SoapAuthCustomer=array('auth', $this->SOAPloginCustomer , 'urn:AGProjects:NGNPro', 0, '');
- 
         $this->CustomerPort->addHeader($this->SoapAuthCustomer);
         //dprint_r($this->CustomerPort);
         $result     = $this->CustomerPort->getAccount($this->owner);
@@ -706,7 +729,7 @@ class SIPSettings {
     function getVoicemail () {
         dprint("getVoicemail()");
 
-        $this->VoicemailPort->addHeader($this->SoapAuth);
+        $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
         $result     = $this->VoicemailPort->getAccount($this->sipId);
 
         if (PEAR::isError($result)) {
@@ -2700,7 +2723,7 @@ class SIPSettings {
  
         dprint_r($account);
  
-        $this->VoicemailPort->addHeader($this->SoapAuth);
+        $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
         $result     = $this->VoicemailPort->updateAccount($account);
  
         if (PEAR::isError($result)) {
@@ -2746,7 +2769,7 @@ class SIPSettings {
 
         );
 
-        $this->VoicemailPort->addHeader($this->SoapAuth);
+        $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
         $result     = $this->VoicemailPort->addAccount($_account);
 
         if (PEAR::isError($result)) {
@@ -2762,7 +2785,7 @@ class SIPSettings {
             if (is_object($this->VoicemailPortRemote)) {
                 // if we have remote SOAP connection defined
 
-                $this->VoicemailPort->addHeader($this->SoapAuth);
+                $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
                 $result     = $this->VoicemailPort->getAccount($this->sipId);
 
                 if (PEAR::isError($result)) {
@@ -2803,7 +2826,7 @@ class SIPSettings {
     function deleteVoicemail() {
         dprint("deleteVoicemail()");
         
-        $this->VoicemailPort->addHeader($this->SoapAuth);
+        $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
         $result     = $this->VoicemailPort->deleteAccount($this->sipId);
 
         if (PEAR::isError($result)) {

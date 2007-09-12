@@ -465,9 +465,6 @@ class SOAPEngine {
                         'ENUM Ranges'    => array('recordsClass' => 'EnumRanges',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
                                           ),
-                        'Operators'      => array('recordsClass' => 'Customers',
-                                           'soapClass'    => 'WebService_NGNPro_CustomerPort'
-                                          ),
                         'Trusted Peers'  => array('recordsClass' => 'TrustedPeers',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
@@ -479,7 +476,10 @@ class SOAPEngine {
                                           ),
                         'PSTN Routes'    => array('recordsClass' => 'Routes',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
-                                          )
+                                          ),
+                        'Operators'     => array('recordsClass' => 'Customers',
+                                           'soapClass'    => 'WebService_NGNPro_CustomerPort'
+                                           )
                         );
 
     function SOAPEngine($service,$soapEngines,$extraFormElements,$reseller=0,$adminonly=0) {
@@ -531,7 +531,6 @@ class SOAPEngine {
             }
 
             $this->defaultEnumTLD  = $this->soapEngines[$this->soapEngineId]['defaultEnumTLD'];
-
 
 			if (!$reseller && $this->soapEngines[$this->soapEngineId]['impersonate']) {
             	$this->reseller=$this->soapEngines[$this->soapEngineId]['impersonate'];
@@ -771,6 +770,7 @@ class Records {
             foreach (array_keys($this->SOAPEngine->services) as $_service) {
                 $idx=$_engine.'@'.$_service;
                 if (in_array($_service,$this->SOAPEngine->skipServices[$_engine])) continue;
+                if ($_engine == 'Operators' && $this->version <= 1) continue;
                 printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_engine,$_service,$selected_soapEngine[$idx],$j,$k,ucfirst($_service),$this->SOAPEngine->soapEngines[$_engine]['name']);
                 $k++;
             }
@@ -1009,7 +1009,7 @@ class Records {
     }
 
     function getCustomers() {
-    	if (!$this->SOAPEngine->enableResellers) return;
+    	if (!$this->version <= 1 ) return;
 
         if (!$this->filters['reseller']) {
             return;
@@ -1066,7 +1066,7 @@ class Records {
     }
 
     function getResellers() {
-    	if (!$this->SOAPEngine->enableResellers) return;
+    	if (!$this->version <= 1 ) return;
         if (!$this->adminonly) {
         	return;
         }
@@ -1216,8 +1216,10 @@ class Domains extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
+                ";
+                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                print"
                 <td><b>Domain</b></td>
-                <td><b>Operator</b></td>
                 <td><b>Last change</b></td>
                 <td><b>Action</b></td>
             </tr>
@@ -1262,23 +1264,40 @@ class Domains extends Records {
                         $actionText = "Delete";
                     }
 
+                    if ($this->version > 1) {
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s.%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+                    $bgcolor,
+                    $index,
+                    $domain->customer,
+                    $domain->reseller,
+                    $domain,
+                    $domain->changeDate,
+                    $_url,
+                    $actionText
+                    );
+                    } else {
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
                     <td>%s</td>
-                    <td>%s.%s</td>
                     <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
                     $index,
                     $domain,
-                    $domain->customer,
-                    $domain->reseller,
                     $domain->changeDate,
                     $_url,
                     $actionText
                     );
+                    }
 
                     $i++;
                 }
@@ -1556,8 +1575,10 @@ class SIPAccounts extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
+                ";
+                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                print"
                 <td><b>SIP account</b></td>
-                <td><b>Operator</b></td>
                 <td><b>Name</b></td>
                 <td><b>Email</b></td>
                 <td><b>Caller Id</b></td>
@@ -1616,9 +1637,15 @@ class SIPAccounts extends Records {
                         $actionText = "Delete";
                     }
 
+					if ($account->reseller) {
+                    	$resellerSipSettingsPage=$account->reseller;
+                    } else {
+                    	$resellerSipSettingsPage=$this->reseller;
+                    }
+
                     if ($this->SipSettingsPage) {
                         $url=sprintf('%s?account=%s@%s&rId=%s&soapEngineIdSipPort=%s',$this->SipSettingsPage,$account->id->username,$account->id->domain,
-                        $account->reseller,$this->SOAPEngine->soapEngineIdSettingsPage);
+                        $resellerSipSettingsPage,$this->SOAPEngine->soapEngineIdSettingsPage);
 
                         if ($this->adminonly) $url  .= sprintf('&adminonly=%s',$this->adminonly);
 
@@ -1639,11 +1666,13 @@ class SIPAccounts extends Records {
                     unset($groups);
                     foreach ($account->groups as $_grp) $groups.=$_grp.' ';
 
+                    if ($this->version > 1) {
+
                     printf("
                     <tr bgcolor=%s>
                     <td>%s </td>
-                    <td>%s</td>
                     <td>%s.%s</td>
+                    <td>%s</td>
                     <td>%s %s</td>
                     <td><a href=mailto:%s>%s</a></td>
                     <td>%s</td>
@@ -1654,12 +1683,11 @@ class SIPAccounts extends Records {
                     <td><a href=%s>%s</a></td>
                     </tr>
                     ",
-
                     $bgcolor,
                     $index,
-                    $sip_account,
                     $account->reseller,
                     $account->customer,
+                    $sip_account,
                     $account->firstName,
                     $account->lastName,
                     $account->email,
@@ -1672,7 +1700,38 @@ class SIPAccounts extends Records {
                     $_url,
                     $actionText
                     );
-    
+                    } else {
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s </td>
+                    <td>%s</td>
+                    <td>%s %s</td>
+                    <td><a href=mailto:%s>%s</a></td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>
+                    ",
+                    $bgcolor,
+                    $index,
+                    $sip_account,
+                    $account->firstName,
+                    $account->lastName,
+                    $account->email,
+                    $account->email,
+                    $account->rpid,
+                    $account->quota,
+                    $groups,
+                    $account->changeDate,
+                    $account->owner,
+                    $_url,
+                    $actionText
+                    );
+                    }
+
                     $i++;
                 }
     
@@ -2130,8 +2189,10 @@ class SIPAliases extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
+                ";
+                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                print"
                 <td><b>Alias</b></td>
-                <td><b>Operator</b></td>
                 <td><b>Target</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Last change</b></td>
@@ -2183,11 +2244,37 @@ class SIPAliases extends Records {
                         $actionText = "Delete";
                     }
 
+                    if ($this->version > 1) {
+
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s.%s</td>
+                    <td>%s@%s</td>
+                    <td>%s@%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>
+                    ",
+                    $bgcolor,
+                    $index,
+                    $alias->customer,
+                    $alias->reseller,
+                    $alias->id->username,
+                    $alias->id->domain,
+                    $alias->target->username,
+                    $alias->target->domain,
+                    $alias->owner,
+                    $alias->changeDate,
+                    $_url,
+                    $actionText
+                    );
+                    } else {
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
                     <td>%s@%s</td>
-                    <td>%s.%s</td>
                     <td>%s@%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -2198,8 +2285,6 @@ class SIPAliases extends Records {
                     $index,
                     $alias->id->username,
                     $alias->id->domain,
-                    $alias->customer,
-                    $alias->reseller,
                     $alias->target->username,
                     $alias->target->domain,
                     $alias->owner,
@@ -2207,7 +2292,7 @@ class SIPAliases extends Records {
                     $_url,
                     $actionText
                     );
-    
+                    }
                     $i++;
     
                 }
@@ -2495,9 +2580,11 @@ class ENUMranges extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
+                ";
+                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                print"
                 <td><b>Prefix </b></td>
                 <td><b>TLD</b></td>
-                <td><b>Operator</b></td>
                 <td><b>TTL</b></td>
                 <td><b>Min digits</b></td>
                 <td><b>Max digits</b></td>
@@ -2561,12 +2648,40 @@ class ENUMranges extends Records {
                     	$range_link=$range->id->prefix;
                     }
 
+                    if ($this->version > 1) {
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s.%s</td>
+                    <td>+%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+                    $bgcolor,
+                    $index,
+                    $range->reseller,
+                    $range->customer,
+                    $range_link,
+                    $range->id->tld,
+                    $range->ttl,
+                    $range->minDigits,
+                    $range->maxDigits,
+                    $range->used,
+                    $range->changeDate,
+                    $_url,
+                    $actionText
+                    );
+                    } else {
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
                     <td>+%s</td>
                     <td>%s</td>
-                    <td>%s.%s</td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -2578,8 +2693,6 @@ class ENUMranges extends Records {
                     $index,
                     $range_link,
                     $range->id->tld,
-                    $range->reseller,
-                    $range->customer,
                     $range->ttl,
                     $range->minDigits,
                     $range->maxDigits,
@@ -2589,6 +2702,7 @@ class ENUMranges extends Records {
                     $actionText
                     );
 
+                    }
                     printf("
                     </tr>
                     ");
@@ -2997,10 +3111,12 @@ class ENUMmappings extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
+                ";
+                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                print"
                 <td><b>Number</b></td>
                 <td><b>TLD</b></td>
                 <td><b>DNS name</b></td>
-                <td><b>Operator</b></td>
                 <td><b>Srv</b></td>
                 <td><b>Map to</b></td>
                 <td><b>TTL</b></td>
@@ -3061,14 +3177,46 @@ class ENUMmappings extends Records {
 
                         if ($j==1) {
 
+                    		if ($this->version > 1) {
 
+                            printf("
+                            <tr bgcolor=%s>
+                            <td>%s</td>
+                            <td>%s.%s</td>
+                            <td>+%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td><a href=%s>%s</a></td>
+                            </tr>",
+                            $bgcolor,
+                            $index,
+                            $number->reseller,
+                            $number->customer,
+                            $number->id->number,
+                            $number->id->tld,
+                            $this->tel2enum($number->id->number,$number->id->tld),
+                            ucfirst($_mapping->type),
+                            $_mapping->mapto,
+                            $_mapping->ttl,
+                            $_mapping->priority,
+                            $number->owner,
+                            $_mapping->lastChange,
+                            $_url,
+                            $actionText
+                            );
+                            } else {
                             printf("
                             <tr bgcolor=%s>
                             <td>%s</td>
                             <td>+%s</td>
                             <td>%s</td>
                             <td>%s</td>
-                            <td>%s.%s</td>
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
@@ -3082,8 +3230,6 @@ class ENUMmappings extends Records {
                             $number->id->number,
                             $number->id->tld,
                             $this->tel2enum($number->id->number,$number->id->tld),
-                            $number->reseller,
-                            $number->customer,
                             ucfirst($_mapping->type),
                             $_mapping->mapto,
                             $_mapping->ttl,
@@ -3093,7 +3239,9 @@ class ENUMmappings extends Records {
                             $_url,
                             $actionText
                             );
+                            }
                         } else {
+                    		if ($this->version > 1) {
                             printf("
                             <tr bgcolor=%s>
                             <td></td>
@@ -3118,6 +3266,31 @@ class ENUMmappings extends Records {
                             $_url,
                             $actionText
                             );
+                            } else {
+                            printf("
+                            <tr bgcolor=%s>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td></td>
+                            <td><a href=%s>%s</a></td>
+                            </tr>",
+                            $bgcolor,
+                            ucfirst($_mapping->type),
+                            $_mapping->mapto,
+                            $_mapping->ttl,
+                            $_mapping->priority,
+                            $_mapping->lastChange,
+                            $_url,
+                            $actionText
+                            );
+                            }
                         }
                         $j++;
                     }
@@ -3751,8 +3924,10 @@ class TrustedPeers extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
+                ";
+                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                print"
                 <td><b>IP address</b></td>
-                <td><b>Operator</b></td>
                 <td><b>Protocol</b></td>
                 <td><b>From pattern</b></td>
                 <td><b>Description</b></td>
@@ -3803,11 +3978,36 @@ class TrustedPeers extends Records {
                         $actionText = "Delete";
                     }
 
+               		if ($this->version > 1) {
+
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s.%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+                    $bgcolor,
+                    $index,
+                    $peer->reseller,
+                    $peer->customer,
+                    $peer->ip,
+                    $peer->protocol,
+                    $peer->fromPattern,
+                    $peer->description,
+                    $peer->owner,
+                    $_url,
+                    $actionText
+                    );
+                    } else {
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
                     <td>%s</td>
-                    <td>%s.%s</td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -3817,8 +4017,6 @@ class TrustedPeers extends Records {
                     $bgcolor,
                     $index,
                     $peer->ip,
-                    $peer->reseller,
-                    $peer->customer,
                     $peer->protocol,
                     $peer->fromPattern,
                     $peer->description,
@@ -3827,6 +4025,7 @@ class TrustedPeers extends Records {
                     $actionText
                     );
 
+                    }
                     printf("
                     </tr>
                     ");
@@ -5104,7 +5303,9 @@ class Customers extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
-                <td><b>Operator</b></td>
+                ";
+                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                print"
                 <td><b>Name</b></td>
                 <td><b>Organization</b></td>
                 <td><b>E-mail</b></td>
@@ -5402,6 +5603,7 @@ class SIPAccountsActions extends Actions {
                        'setquota'       => 'Set quota of SIP account to:',
                        'rpidasusername' => 'Set PSTN caller ID as the username',
                        'prefixtorpid'   => 'Add to PSTN caller ID this prefix:',
+                       'rmdsfromrpid'   => 'Remove from PSTN caller ID digits:',
                        'addtogroup'     => 'Add SIP accounts to group:',
                        'removefromgroup'=> 'Remove SIP accounts from group:',
                        'addbalance'     => 'Add to prepaid balance value:'
@@ -5548,7 +5750,8 @@ class SIPAccountsActions extends Actions {
 
                     if (!is_array($result->properties))   $result->properties=array();
         			if (!is_array($result->groups)) 	  $result->groups=array();
-                    $result->quota=intval($result->quota);
+                    $result->quota         = intval($result->quota);
+                    $result->answerTimeout = intval($result->answerTimeout);
 
                     $result->prepaid=1;
 
@@ -5577,7 +5780,8 @@ class SIPAccountsActions extends Actions {
 
                     if (!is_array($result->properties))   $result->properties=array();
         			if (!is_array($result->groups)) 	  $result->groups=array();
-                    $result->quota=intval($result->quota);
+                    $result->quota         = intval($result->quota);
+                    $result->answerTimeout = intval($result->answerTimeout);
 
                     $result->prepaid=0;
 
@@ -5607,11 +5811,51 @@ class SIPAccountsActions extends Actions {
 
                     if (!is_array($result->properties))   $result->properties=array();
         			if (!is_array($result->groups)) 	  $result->groups=array();
-                    $result->quota=intval($sub_action_parameter);
+                    $result->quota         = intval($sub_action_parameter);
+                    $result->answerTimeout = intval($result->answerTimeout);
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
                                                         'logs'       => array('success' => sprintf('SIP account %s@%s has quota set to %s',$key['username'],$key['domain'],$sub_action_parameter)
+                                                                              )
+                                                       )
+            
+                                    );
+                	$this->SOAPEngine->execute($function);
+
+        		}
+                
+        	} else if ($action=='rmdsfromrpid') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->getAccount($account);
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+                    //print_r($result);
+                    // Sanitize data types due to PHP bugs
+
+                    if (!is_array($result->properties)) $result->properties=array();
+        			if (!is_array($result->groups)) 	$result->groups=array();
+                    if (is_numeric($sub_action_parameter) && strlen($result->rpid) > $sub_action_parameter) {
+                        printf("%s %s",$result->rpid,$sub_action_parameter);
+                    	$result->rpid=substr($result->rpid,$sub_action_parameter);
+                        printf("%s %s",$result->rpid,$sub_action_parameter);
+                    } else {
+            			printf ("<font color=red>Error: '%s' must be numeric and less than caller if length</font>",$sub_action_parameter);
+                        continue;
+                    }
+
+                    $result->quota         = intval($result->quota);
+                    $result->answerTimeout = intval($result->answerTimeout);
+
+                    $function=array('commit'   => array('name'       => 'updateAccount',
+                                                        'parameters' => array($result),
+                                                        'logs'       => array('success' => sprintf('SIP account %s@%s has PSTN caller ID set to %s',$key['username'],$key['domain'],$result->rpid)
                                                                               )
                                                        )
             
@@ -5633,14 +5877,16 @@ class SIPAccountsActions extends Actions {
                     //print_r($result);
                     // Sanitize data types due to PHP bugs
 
-                    if (!is_array($result->properties))   $result->properties=array();
-        			if (!is_array($result->groups)) 	  $result->groups=array();
-                    if (is_numeric($username)) $result->rpid=$username;
-                    $result->quota=intval($result->quota);
+                    if (!is_array($result->properties)) $result->properties=array();
+        			if (!is_array($result->groups)) 	$result->groups=array();
+                    if (is_numeric($key['username']))   $result->rpid=$key['username'];
+
+                    $result->quota         = intval($result->quota);
+                    $result->answerTimeout = intval($result->answerTimeout);
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
-                                                        'logs'       => array('success' => sprintf('SIP account %s@%s has PSTN caller ID set to %s',$key['username'],$key['domain'],$sub_action_parameter)
+                                                        'logs'       => array('success' => sprintf('SIP account %s@%s has PSTN caller ID set to %s',$key['username'],$key['domain'],$key['username'])
                                                                               )
                                                        )
             
@@ -5670,11 +5916,12 @@ class SIPAccountsActions extends Actions {
             			printf ("<font color=red>Error: '%s' must be numeric</font>",$sub_action_parameter);
                         continue;
                     }
-                    $result->quota=intval($result->quota);
+                    $result->quota         = intval($result->quota);
+                    $result->answerTimeout = intval($result->answerTimeout);
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
-                                                        'logs'       => array('success' => sprintf('SIP account %s@%s has PSTN caller ID set to %s%s ',$key['username'],$key['domain'],$sub_action_parameter,$result->rpid)
+                                                        'logs'       => array('success' => sprintf('SIP account %s@%s has PSTN caller ID set to %s ',$key['username'],$key['domain'],$result->rpid)
                                                                               )
                                                        )
             
