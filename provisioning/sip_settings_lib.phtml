@@ -116,7 +116,6 @@ class SIPSettings {
         $this->settingsPage       = $_SERVER['PHP_SELF'];
         $this->tab                = $_REQUEST['tab'];
 
-
         $this->initSoapClient();
         $this->getAccount($account);
 
@@ -873,14 +872,7 @@ class SIPSettings {
 
         dprint("getResellerSettings(reseller=$this->reseller)");
 
-        $this->logoFile = $this->getFileTemplate("logo.jpg","html");
-        if (!$this->logoFile) {
-            $this->logoFile= $this->getFileTemplate("logo.gif","html");
-        }
-        if (!$this->logoFile) {
-            $this->logoFile= $this->getFileTemplate("logo.png","html");
-        }
-
+        $this->logoFile   = $this->getFileTemplate("logo","logo");
         $this->headerFile = $this->getFileTemplate("header.phtml");
         $this->footerFile = $this->getFileTemplate("footer.phtml");
         $this->cssFile    = $this->getFileTemplate("main.css");
@@ -3320,8 +3312,10 @@ class SIPSettings {
         <tr>
         <td colspan=2 align=right>
 		";
+        dprint ("here we have logo");
         if ($this->logoFile) {
-    	    print "<img src=\"$this->templatesPath/$this->logoFile\" border=0>";
+        	dprint("lg=$this->logoFile");
+    	    print "<img src=./$this->logoFile border=0>";
             print "<p>";
         }
 
@@ -5487,28 +5481,34 @@ class SIPSettings {
 
     function getFileTemplate($name, $type="file") {
     
-        //dprint("getFileTemplate($name, $type)");
-    
-        if (file_exists("$this->templatesPath/$this->reseller/$name")) {
-            $value="$this->reseller/$name";
-        } elseif (file_exists("$this->templatesPath/default/$name")) {
-            $value="default/$name";
-        } else {
-            $value=0;
-        }
-        //dprint("value=$value");
-    
-        if ($value) {
-            if ($type=="file") {
-                $ret=$this->templatesPath."/".$value;
-            } else {
-                $ret=$value;
+        dprint("getFileTemplate(name=$name, type=$type, path=$this->templatesPath)");
+
+        if ($type=='logo') {
+            $extensions=array('png','gif','jpg');
+            foreach ($extensions as $_ext) {
+
+				$file=$this->templatesPath.'/'.$this->reseller.'/'.$name.'.'.$_ext;
+                dprint("Trying $file ");
+            	if (file_exists($file)) return $file;
             }
+            foreach ($extensions as $_ext) {
+            	if (file_exists("$this->templatesPath/default/$name.$_ext")) {
+                    return "$this->templatesPath/default/$name.$_ext";
+                }
+            }
+            return false;
+
         } else {
-            $ret = 0;
+            if (file_exists("$this->templatesPath/$this->reseller/$name")) {
+                return "$this->templatesPath/$this->reseller/$name";
+                dprint("Found $this->reseller/$name");
+            } elseif (file_exists("$this->templatesPath/default/$name")) {
+                return "$this->templatesPath/default/$name";
+            } else {
+                dprint("$name not found");
+                return false;
+            }
         }
-    
-        return $ret;
     }
     
     function getEmailTemplate($language='en') {
