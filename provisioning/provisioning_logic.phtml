@@ -1173,6 +1173,17 @@ class Records {
 
         return $url;
     }
+
+    function printFiltersToForm() {
+		foreach(array_keys($this->filters) as $filter) {
+        	if (strlen(trim($this->filters[$filter]))) {
+            	printf("<input type=hidden name=%s_filter value='%s'>",$filter,trim($this->filters[$filter]));
+            }
+        }
+    }
+
+    function updateRecord () {
+    }
 }
 
 class Domains extends Records {
@@ -5259,7 +5270,11 @@ class Customers extends Records {
                                                                'category' => 'sip'),
                                  'sip_proxy_server'   => array('name'     => 'SIP Proxy server address',
                                                                'category' => 'sip'),
-                                 'support_web_site'   => array('name'     => 'Support web site',
+                                 'support_web'        => array('name'     => 'Support web site',
+                                                               'category' => 'sip'),
+                                 'support_email'      => array('name'     => 'Support email address',
+                                                               'category' => 'sip'),
+                                 'support_cdrtool'    => array('name'     => 'CDRTool address',
                                                                'category' => 'sip'),
                                  'default_sip_domain' => array('name'     => 'Default SIP domain',
                                                                'category' => 'sip'),
@@ -5268,6 +5283,25 @@ class Customers extends Records {
                                  'default_enum_tld'   => array('name'     => 'Default ENUM Top Level Domain',
                                                                'category' => 'sip')
                                  );
+    var $customerFields=array(
+                              'id',
+                              'username',
+                              'reseller',
+                              'firstName',
+                              'lastName',
+                              'organization',
+                              'tel',
+                              'fax',
+                              'sip',
+                              'mobile',
+                              'email',
+                              'web',
+                              'address',
+                              'postcode',
+                              'city',
+                              'state',
+                              'country'
+                              );
 
     function Customers(&$SOAPEngine) {
         $this->filters   = array(
@@ -5421,6 +5455,10 @@ class Customers extends Records {
 
             $this->showPagination($maxrows);
 
+			if ($this->rows == 1 ) {
+                $this->showCustomer($customer->id);
+            }
+
             return true;
         }
     }
@@ -5457,6 +5495,132 @@ class Customers extends Records {
            printf ("<p><font color=green>Customer id %s has been deleted. </font> ",$this->filters['customer']);
            unset($this->filters);
            return 1;
+        }
+    }
+
+    function getCustomer($id) {
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclient->getAccount(intval($id));
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+        	return $result;
+        }
+    }
+
+    function showCustomer($id) {
+        $customerInfo=$this->getCustomer($id);
+
+
+        print "<table border=0 cellpadding=10>";
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "<input type=hidden name=action value=Update>";
+        print "
+        <tr>
+        <td valign=top>
+        <h3>Customer data</h3>
+        <table border=1>";
+        printf ("<tr bgcolor=lightgrey>
+        <td class=border>Property</td>
+        <td class=border>Value</td>
+        </tr>");
+        foreach ($this->customerFields as $item) {
+            printf ("<tr>
+            <td class=border>%s</td>
+            <td class=border>%s</td>
+            </tr>",
+            ucfirst($item),
+            $customerInfo->$item
+            );
+        }
+        
+        print "
+        </table>
+        ";
+
+        /*
+        print "<pre>";
+        print_r($customerInfo);
+        print "</pre>";
+        */
+
+        print "</td>
+        <td valign=top>
+        <h3>Customer properties</h3>
+        <table border=1>";
+        printf ("<tr bgcolor=lightgrey>
+        <td class=border>Category</td>
+        <td class=border>Property</td>
+        <td class=border>Value</td>
+        </tr>");
+
+        foreach (array_keys($this->preferenceItems) as $item) {
+            printf ("<tr><td class=border>%s</td>
+            <td class=border>%s</td>
+            <td class=border><input type=text name='%s_form' value='%s'></td>
+            </tr>",
+            ucfirst($this->preferenceItems[$item]['category']),
+            $item,
+            $item,
+            $customerInfo->preferences[$item]['value']
+            );
+        }
+
+        print "<tr>
+        <td colspan=3 class=border><input type=submit value=Update>
+        </td></tr>";
+        print "
+        </table>
+        </td>
+        </tr>
+        </table>
+        ";
+        $this->printFiltersToForm();
+
+        $this->printHiddenFormElements();
+
+        print "</form>";
+    }
+
+
+    function updateRecord () {
+        print "<p>Updating customer ...";
+        if (!$_REQUEST['customer_filter']) return;
+        $customerInfo=$this->getCustomer($_REQUEST['customer_filter']);
+        foreach (array_keys($this->preferenceItems) as $item) {
+            $var_name=$item.'_form';
+            $properties[]=array('name'     => $item,
+                                 'value'    => trim($_REQUEST[$var_name]),
+                                 'category' => $this->preferenceItems[$item]['category']
+                                 );
+
+        }
+
+        /*
+        print "<pre>";
+        print_r($properties);
+        print "</pre>";
+        */
+
+        $customerInfo->properties=$properties;
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclient->updateAccount($customerInfo);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+        	return true;
         }
     }
 }

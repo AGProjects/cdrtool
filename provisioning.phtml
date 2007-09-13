@@ -54,6 +54,8 @@ if ($_REQUEST['generatorId']) {
     
     if ($_REQUEST['action']=='Add')    $RECORDS->addRecord();
     if ($_REQUEST['action']=='Delete') $RECORDS->deleteRecord();
+        if ($_REQUEST['action']=='Update') $RECORDS->updateRecord();
+
     if ($_REQUEST['action']=='PerformActions') {
         $RECORDS->performActions();
     } else {

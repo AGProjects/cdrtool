@@ -2682,7 +2682,7 @@ class SERQuota {
 
         if ($DATASOURCES[$this->cdr_source]['SoapEngineId']) {
 
-            require_once("provisioning_soap_library.phtml");
+            require_once("provisioning/provisioning_soap_library.phtml");
             require("soap_engines.inc");
 
             if (in_array($SoapEngineId,array_keys($soapEngines))) {
