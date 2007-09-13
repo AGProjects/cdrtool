@@ -5243,6 +5243,32 @@ class Customers extends Records {
 							'changeDate' => 'Change date'
                             );
 
+    var $preferenceItems = array('sip_credit'         => array('name'     => 'Credit for SIP account creation',
+                                                               'category' => 'admin'),
+                                 'enum_credit'        => array('name'     => 'Credit for ENUM numbers creation',
+                                                               'category' => 'admin'),
+                                 'sipa_credit'        => array('name'     => 'Credit for SIP alias creation',
+                                                               'category' => 'admin'),
+                                 'pstn_access'        => array('name'     => 'Access to PSTN',
+                                                               'category' => 'admin'),
+                                 'language'           => array('name'     => 'Language',
+                                                               'category' => 'general'),
+                                 'timezone'           => array('name'     => 'Timezone',
+                                                               'category' => 'general'),
+                                 'voicemail_server'   => array('name'     => 'Voicemail server address',
+                                                               'category' => 'sip'),
+                                 'sip_proxy_server'   => array('name'     => 'SIP Proxy server address',
+                                                               'category' => 'sip'),
+                                 'support_web_site'   => array('name'     => 'Support web site',
+                                                               'category' => 'sip'),
+                                 'default_sip_domain' => array('name'     => 'Default SIP domain',
+                                                               'category' => 'sip'),
+                                 'default_enum_range' => array('name'     => 'Default ENUM range',
+                                                               'category' => 'sip'),
+                                 'default_enum_tld'   => array('name'     => 'Default ENUM Top Level Domain',
+                                                               'category' => 'sip')
+                                 );
+
     function Customers(&$SOAPEngine) {
         $this->filters   = array(
                            'username'   => trim($_REQUEST['username_filter'])
