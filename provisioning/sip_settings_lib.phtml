@@ -12,7 +12,6 @@ class SIPSettings {
     var $soapClassPresencePort     = 'WebService_SoapSIMPLEProxy_PresencePort';
 
     var $voicemail				   = array('AccessNumber'     => '*70',
-                                           'Table'            => 'voicemail_users',
 										   'Server'           => 'vm.example.com'
                                            );
 
@@ -104,13 +103,15 @@ class SIPSettings {
         dprint($debug);
         dprint_r($loginCredentials);
 
-        $this->rId                = $loginCredentials['reseller'];
-        $this->cId                = $loginCredentials['customer'];
+        $this->reseller           = $loginCredentials['reseller'];
+        $this->customer           = $loginCredentials['customer'];
         $this->loginType          = $loginCredentials['loginType'];
 
 		if (strlen($loginCredentials['soapEngineIdSipPort'])) {
             $this->soapEngineIdSipPort=$loginCredentials['soapEngineIdSipPort'];
         }
+
+        dprint("Using engine: $this->soapEngineIdSipPort");
 
         $this->settingsPage       = $_SERVER['PHP_SELF'];
         $this->tab                = $_REQUEST['tab'];
@@ -122,10 +123,10 @@ class SIPSettings {
         if ($this->loginType == "admin") {
             $this->Preferences['CanEditAll'] = 1;
 
-            $this->pageURL=$this->settingsPage."?account=$this->account&adminonly=1&rId=$this->rId&soapEngineIdSipPort=$this->soapEngineIdSipPort";
+            $this->pageURL=$this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&soapEngineIdSipPort=$this->soapEngineIdSipPort";
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
-            <input type=hidden name=rId value=$this->rId>
+            <input type=hidden name=reseller value=$this->reseller>
             <input type=hidden name=soapEngineIdSipPort value=$this->soapEngineIdSipPort>
             <input type=hidden name=adminonly value=1>
             ";
@@ -133,10 +134,10 @@ class SIPSettings {
         } else if ($this->loginType == "reseller") {
             $this->Preferences['CanEditAll']         = 1;
 
-            $this->pageURL=$this->settingsPage."?account=$this->account&rId=$this->rId";
+            $this->pageURL=$this->settingsPage."?account=$this->account&reseller=$this->reseller";
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
-            <input type=hidden name=rId value=$this->rId>
+            <input type=hidden name=reseller value=$this->reseller>
             ";
         } else {
             $this->Preferences['LoggedInAsSubscriber'] = 1;
@@ -243,7 +244,7 @@ class SIPSettings {
                                "username"    => $this->soapEngines[$this->soapEngineIdSipPort]['username'],
                                "password"    => $this->soapEngines[$this->soapEngineIdSipPort]['password'],
                                "admin"       => true,
-                               "impersonate" => intval($this->rId)
+                               "impersonate" => intval($this->reseller)
                                );
         $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
@@ -254,12 +255,13 @@ class SIPSettings {
         $this->SipPort       = new $this->soapClassSipPort($this->SOAPurl);
 
 		if (strlen($this->soapEngines[$this->soapEngineIdSipPort]['voicemailEngineId'])) {
-        	$this->SOAPurlVoicemail = $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['voicemailEngineId']]['url'];
+        	$voicemailId=$this->soapEngines[$this->soapEngineIdSipPort]['voicemailEngineId'];
+        	$this->SOAPurlVoicemail = $this->soapEngines[$voicemailId]['url'];
             $this->SOAPloginVoicemail = array(
-                                   "username"    => $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['voicemailEngineId']]['username'],
-                                   "password"    => $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['voicemailEngineId']]['password'],
+                                   "username"    => $this->soapEngines[$voicemailId]['username'],
+                                   "password"    => $this->soapEngines[$voicemailId]['password'],
                                    "admin"       => true,
-                                   "impersonate" => intval($this->rId)
+                                   "impersonate" => intval($this->reseller)
                                    );
 
             $this->SoapAuthVoicemail = array('auth', $this->SOAPloginVoicemail , 'urn:AGProjects:NGNPro', 0, '');
@@ -281,16 +283,21 @@ class SIPSettings {
             $this->SOAPloginCustomer = array(
                                    "username"    => $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['customerEngineId']]['username'],
                                    "password"    => $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['customerEngineId']]['password'],
-                                   "admin"       => true,
-                                   "impersonate" => intval($this->rId)
+                                   "admin"       => true
                                    );
 
             $this->SoapAuthCustomer = array('auth', $this->SOAPloginCustomer , 'urn:AGProjects:NGNPro', 0, '');
         } else {
         	$this->SOAPurlCustomer  = $this->SOAPurl;
-            $this->SoapAuthCustomer = $this->SoapAuth;
-        }
+            $this->SOAPloginCustomer = array(
+                                   "username"    => $this->soapEngines[$this->soapEngineIdSipPort]['username'],
+                                   "password"    => $this->soapEngines[$this->soapEngineIdSipPort]['password'],
+                                   "admin"       => true
+                                   );
 
+            $this->SoapAuthCustomer = array('auth', $this->SOAPloginCustomer , 'urn:AGProjects:NGNPro', 0, '');
+            $this->SoapAuthCustomer = $this->SoapAuthCustomer;
+        }
 
         $this->VoicemailPort = new $this->soapClassVoicemailPort($this->SOAPurlVoicemail);
         $this->CustomerPort  = new $this->soapClassCustomerPort($this->SOAPurlCustomer);
@@ -337,9 +344,9 @@ class SIPSettings {
     function getAccount($account) {
         dprint("getAccount($account)");
 
-        $this->SipPort->addHeader($this->SoapAuth);
         list($username,$domain)=explode("@",trim($account));
 
+        $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getAccount(array("username" =>$username,"domain"   =>$domain));
 
         if (PEAR::isError($result)) {
@@ -491,11 +498,11 @@ class SIPSettings {
     function setLanguage() {
 
         if ($this->loginType == 'reseller') {
-            $lang=$this->ResellerLanguage;
+            $lang = $this->ResellerLanguage;
         } else if ($this->Preferences['LoggedInAsSubscriber']) {
-            $lang=$this->Preferences['language'];
+            $lang = $this->Preferences['language'];
         } else {
-            $lang="en";
+            $lang = "en";
         }
 
         //dprint("Set language to $lang");
@@ -864,7 +871,7 @@ class SIPSettings {
 
     function getResellerSettings () {
 
-        dprint("getResellerSettings(rId=$this->rId)");
+        dprint("getResellerSettings(reseller=$this->reseller)");
 
         $this->logoFile = $this->getFileTemplate("logo.jpg","html");
         if (!$this->logoFile) {
@@ -4904,7 +4911,7 @@ class SIPSettings {
 
         $subject = "SIP account settings of $this->name";
 
-        $tpl = $this->getEmailTemplate($this->rId, $this->Preferences['language']);
+        $tpl = $this->getEmailTemplate($this->reseller, $this->Preferences['language']);
 
         if (in_array("free-pstn",$this->groups)) $this->allowPSTN=1;
 
@@ -5482,8 +5489,8 @@ class SIPSettings {
     
         //dprint("getFileTemplate($name, $type)");
     
-        if (file_exists("$this->templatesPath/$this->rId/$name")) {
-            $value="$this->rId/$name";
+        if (file_exists("$this->templatesPath/$this->reseller/$name")) {
+            $value="$this->reseller/$name";
         } elseif (file_exists("$this->templatesPath/default/$name")) {
             $value="default/$name";
         } else {
@@ -5508,10 +5515,10 @@ class SIPSettings {
         $file = "sip_settings_email_$language.tpl";
         $file2 = "sip_settings_email.tpl";
     
-        if (file_exists("$this->templatesPath/$this->rId/$file")) {
-            return "$this->templatesPath/$this->rId/$file";
-        } elseif (file_exists("$this->templatesPath/$this->rId/$file2")) {
-            return "$this->templatesPath/$this->rId/$file2";
+        if (file_exists("$this->templatesPath/$this->reseller/$file")) {
+            return "$this->templatesPath/$this->reseller/$file";
+        } elseif (file_exists("$this->templatesPath/$this->reseller/$file2")) {
+            return "$this->templatesPath/$this->reseller/$file2";
         } elseif (file_exists("$this->templatesPath/default/$file")) {
             return "$this->templatesPath/default/$file";
         } elseif (file_exists("$this->templatesPath/default/$file2")) {

@@ -2,7 +2,7 @@
 class recordGenerator extends SOAPEngine {
 	var $template=array();
 
-    function recordGenerator($generatorId,$recordGenerators,$soapEngines,$extraFormElements,$impersonate,$adminonly) {
+    function recordGenerator($generatorId,$recordGenerators,$soapEngines,$extraFormElements,$loginCredentials) {
     	$this->recordGenerators = $recordGenerators;
         $this->generatorId=$generatorId;
 
@@ -15,14 +15,14 @@ class recordGenerator extends SOAPEngine {
 
         // sip zones
         $sipEngine           = $this->recordGenerators[$generatorId]['sipEngineId'].'@'.'SIP accounts';
-        $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$extraFormElements,$impersonate,$adminonly);
+        $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$extraFormElements,$loginCredentials);
 		$_sip_class          = $this->SipSOAPEngine->recordsClass;
 		$this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
         $this->sipRecords->getAllowedDomains();
 
         // enum mappings
         $enumEngine           = $this->recordGenerators[$generatorId]['enumEngineId'].'@'.'ENUM Numbers';
-        $this->EnumSOAPEngine = new SOAPEngine($enumEngine,$soapEngines,$extraFormElements,$impersonate,$adminonly);
+        $this->EnumSOAPEngine = new SOAPEngine($enumEngine,$soapEngines,$extraFormElements,$loginCredentials);
 		$_enum_class          = $this->EnumSOAPEngine->recordsClass;
 		$this->enumRecords    = new $_enum_class(&$this->EnumSOAPEngine);
         $this->enumRecords->getAllowedDomains();
@@ -115,13 +115,13 @@ class recordGenerator extends SOAPEngine {
 
         // check ENUM TLD
         list($prefix,$tld)=explode('@',trim($_REQUEST['range']));
-        $this->template['prefix'] = intval($prefix);
-        $this->template['tld']    = $tld;
 
-        $this->template['quota'] = intval($_REQUEST['quota']);
-        $this->template['owner'] = intval($_REQUEST['owner']);
-        $this->template['pstn'] = intval($_REQUEST['pstn']);
-        $this->template['prepaid'] = intval($_REQUEST['prepaid']);
+        $this->template['prefix']   = intval($prefix);
+        $this->template['tld']      = $tld;
+        $this->template['quota']    = intval($_REQUEST['quota']);
+        $this->template['owner']    = intval($_REQUEST['owner']);
+        $this->template['pstn']     = intval($_REQUEST['pstn']);
+        $this->template['prepaid']  = intval($_REQUEST['prepaid']);
         $this->template['password'] = trim($_REQUEST['password']);
 
         ///////////////////////////////////////
@@ -138,12 +138,9 @@ class recordGenerator extends SOAPEngine {
         $maxNumbers         = pow(10,$digits-strlen($this->template['nr_start']));
 
         if ($maxNumbers < $this->template['nr_records']) {
-            printf ("Error: Insufficient available numbers in range, requested = %d, available = %d",$this->template['nr_records'],$maxNumbers);
+            printf ("Error: Insufficient numbers in range, requested = %d, available = %d",$this->template['nr_records'],$maxNumbers);
             return false;
         }
-
-        //printf ("start_padded = %s\n",$this->start_padded);
-        //printf ("top          = %s\n",$this->top);
 
         return true;
     }
@@ -445,6 +442,7 @@ class SOAPEngine {
     var $version       = 1;
     var $adminonly     = 0;
     var $reseller      = 0;
+    var $loginType     = 'reseller';
 
     var $services=array(
                         'SIP accounts'     => array('recordsClass' => 'SipAccounts',
@@ -482,7 +480,7 @@ class SOAPEngine {
                                            )
                         );
 
-    function SOAPEngine($service,$soapEngines,$extraFormElements,$reseller=0,$adminonly=0) {
+    function SOAPEngine($service,$soapEngines,$extraFormElements,$loginCredentials) {
 
         /*
         $soapEngines=array(
@@ -494,7 +492,9 @@ class SOAPEngine {
                                                  ),
         */
 
-        if (strlen($adminonly)) $this->adminonly = $adminonly;
+        if ($loginCredentials['loginType'] == 'admin') $this->adminonly = 1;
+
+		$this->loginType = $loginCredentials['loginType'];
 
         $this->soapEngines = $soapEngines;
 
@@ -532,10 +532,14 @@ class SOAPEngine {
 
             $this->defaultEnumTLD  = $this->soapEngines[$this->soapEngineId]['defaultEnumTLD'];
 
-			if (!$reseller && $this->soapEngines[$this->soapEngineId]['impersonate']) {
-            	$this->reseller=$this->soapEngines[$this->soapEngineId]['impersonate'];
-            } else if (strlen($reseller)) {
-            	$this->reseller=$reseller;
+			if (!$loginCredentials['reseller'] && $this->soapEngines[$this->soapEngineId]['impersonate']) {
+            	$this->reseller = $this->soapEngines[$this->soapEngineId]['impersonate'];
+            } else if (strlen($loginCredentials['reseller'])) {
+            	$this->reseller = $loginCredentials['reseller'];
+            }
+
+            if (strlen($loginCredentials['customer'])) {
+            	$this->reseller = $loginCredentials['customer'];
             }
 
 			if (strlen($this->soapEngines[$this->soapEngineId]['soapEngineIdSettingsPage'])) {
@@ -730,6 +734,7 @@ class Records {
         $this->adminonly  = $this->SOAPEngine->adminonly;
 		$this->reseller   = $this->SOAPEngine->reseller;
         $this->url        = $this->SOAPEngine->url;
+		$this->loginType  = $this->SOAPEngine->loginType;
 
 		foreach(array_keys($this->filters) as $_filter) {
             if (strlen($this->filters[$_filter])) {
@@ -1644,7 +1649,7 @@ class SIPAccounts extends Records {
                     }
 
                     if ($this->SipSettingsPage) {
-                        $url=sprintf('%s?account=%s@%s&rId=%s&soapEngineIdSipPort=%s',$this->SipSettingsPage,$account->id->username,$account->id->domain,
+                        $url=sprintf('%s?account=%s@%s&reseller=%s&soapEngineIdSipPort=%s',$this->SipSettingsPage,$account->id->username,$account->id->domain,
                         $resellerSipSettingsPage,$this->SOAPEngine->soapEngineIdSettingsPage);
 
                         if ($this->adminonly) $url  .= sprintf('&adminonly=%s',$this->adminonly);
@@ -2259,8 +2264,8 @@ class SIPAliases extends Records {
                     ",
                     $bgcolor,
                     $index,
-                    $alias->customer,
                     $alias->reseller,
+                    $alias->customer,
                     $alias->id->username,
                     $alias->id->domain,
                     $alias->target->username,

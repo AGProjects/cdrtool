@@ -21,12 +21,12 @@ set_time_limit(600);
 $perm->check("admin");
 
 //$verbose=1;
-require_once('sip_settings_lib.phtml');
+require_once('provisioning/sip_settings_lib.phtml');
 list($username,$domain)=explode("@",$account);
 
 $_class='SIPSettings';
 
-$_reseller_class=$_class.$rId;
+$_reseller_class=$_class.$_REQUEST['reseller'];
 
 if (class_exists($_reseller_class)) {
 	$SIPSettings_class=$_reseller_class;
@@ -36,11 +36,11 @@ if (class_exists($_reseller_class)) {
 
 $loginCredentials=array(
                         'loginType'           => 'admin',
-                        'reseller'            => $_REQUEST['rId'],
+                        'reseller'            => $_REQUEST['reseller'],
                         'soapEngineIdSipPort' => $_REQUEST['soapEngineIdSipPort']
                         );
 
-require_once("sip_settings_logic.phtml");
+require_once("provisioning/sip_settings_logic.phtml");
 
 if (!$export) {
     print "

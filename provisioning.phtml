@@ -16,8 +16,8 @@ if (is_readable("local/header.phtml")) {
 set_time_limit(600);
 //$perm->check("admin");
 
-require_once("provisioning_soap_library.phtml");
-require_once("provisioning_logic.phtml");
+require_once("provisioning/provisioning_soap_library.phtml");
+require_once("provisioning/provisioning_logic.phtml");
 
 $layout = new pageLayoutLocal();
 $layout->showTopMenu();
@@ -26,13 +26,21 @@ $layout->showTopMenu();
 
 global $CDRTool;
 
+if ($CDRTool['reseller']) {
+	$loginCredentials=array(
+                        'reseller'           => $CDRTool['reseller'],
+                        'loginType'          => 'reseller'
+                        );
+} else {
+	$loginCredentials=array(
+                        'loginType'          => 'admin'
+                        );
+}
+
+$extraFormElements=array();
+
 if ($_REQUEST['generatorId']) {
-	if ($CDRTool['reseller']) {
-    	$generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,,$CDRTool['reseller'],1);
-	} else {
-    	$generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,,,1);
-		$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,,,1);
-	}
+    $generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,$extraFormElements,$loginCredentials);
     if ($_REQUEST['action']=='Generate') {
         $generator->generateRecords();
         $generator->showGeneratorForm();
@@ -40,12 +48,7 @@ if ($_REQUEST['generatorId']) {
         $generator->showGeneratorForm();
     }
 } else {
-	if ($CDRTool['reseller']) {
-		$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,,$CDRTool['reseller'],0);
-	} else {
-		$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,,,1);
-	}
-
+	$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,$extraFormElements,$loginCredentials);
     $_class     = $SOAPEngine->recordsClass;
     $RECORDS    = new $_class(&$SOAPEngine);
     
@@ -57,16 +60,6 @@ if ($_REQUEST['generatorId']) {
         $RECORDS->listRecords();
     }
     
-}
-$_class     = $SOAPEngine->recordsClass;
-$RECORDS    = new $_class(&$SOAPEngine);
-
-if ($_REQUEST['action']=='Add') $RECORDS->addRecord();
-if ($_REQUEST['action']=='Delete') $RECORDS->deleteRecord();
-if ($_REQUEST['action']=='PerformActions') {
-	$RECORDS->performActions();
-} else {
-	$RECORDS->listRecords();
 }
 $layout->showFooter();
 
