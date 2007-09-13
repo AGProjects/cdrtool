@@ -103,6 +103,8 @@ class SIPSettings {
         dprint($debug);
         dprint_r($loginCredentials);
 
+		$this->loginCredentials = &$loginCredentials;
+
         $this->reseller           = $loginCredentials['reseller'];
         $this->customer           = $loginCredentials['customer'];
         $this->loginType          = $loginCredentials['loginType'];
@@ -239,12 +241,23 @@ class SIPSettings {
 
         // Sip, Voicemail and Customer Port share same login
         $this->SOAPurl=$this->soapEngines[$this->soapEngineIdSipPort]['url'];
-        $this->SOAPlogin = array(
-                               "username"    => $this->soapEngines[$this->soapEngineIdSipPort]['username'],
-                               "password"    => $this->soapEngines[$this->soapEngineIdSipPort]['password'],
-                               "admin"       => true,
-                               "impersonate" => intval($this->reseller)
-                               );
+
+        if (strlen($this->loginCredentials['soapUsername'])) {
+            $this->SOAPlogin = array(
+                                   "username"    => $this->loginCredentials['soapUsername'],
+                                   "password"    => $this->loginCredentials['soapPassword'],
+                                   "admin"       => false
+                                   );
+
+        } else {
+            $this->SOAPlogin = array(
+                                   "username"    => $this->soapEngines[$this->soapEngineIdSipPort]['username'],
+                                   "password"    => $this->soapEngines[$this->soapEngineIdSipPort]['password'],
+                                   "admin"       => true,
+                                   "impersonate" => intval($this->reseller)
+                                   );
+        }
+
         $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
         // Presence

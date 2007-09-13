@@ -532,33 +532,54 @@ class SOAPEngine {
 
             $this->defaultEnumTLD  = $this->soapEngines[$this->soapEngineId]['defaultEnumTLD'];
 
-			if (!$loginCredentials['reseller'] && $this->soapEngines[$this->soapEngineId]['impersonate']) {
-            	$this->reseller = $this->soapEngines[$this->soapEngineId]['impersonate'];
-            } else if (strlen($loginCredentials['reseller'])) {
-            	$this->reseller = $loginCredentials['reseller'];
-            }
-
-            if (strlen($loginCredentials['customer'])) {
-            	$this->reseller = $loginCredentials['customer'];
-            }
-
 			if (strlen($this->soapEngines[$this->soapEngineId]['soapEngineIdSettingsPage'])) {
             	$this->soapEngineIdSettingsPage=$this->soapEngines[$this->soapEngineId]['soapEngineIdSettingsPage'];
+            }
+
+			if (strlen($this->soapEngines[$this->soapEngineId]['SipSettingsPage'])) {
+            	$this->SipSettingsPage=$this->soapEngines[$this->soapEngineId]['SipSettingsPage'];
             }
 
 			if (strlen($this->soapEngines[$this->soapEngineId]['recordGenerator'])) {
             	$this->recordGenerator=$this->soapEngines[$this->soapEngineId]['recordGenerator'];
             }
 
-            $this->SOAPlogin = array(
-                                   "username"    => $this->soapEngines[$this->soapEngineId]['username'],
-                                   "password"    => $this->soapEngines[$this->soapEngineId]['password'],
-                                   "admin"       => true,
-                                   "impersonate" => intval($this->reseller)
-                                   );
+            if (strlen($loginCredentials['reseller'])) {
+            	$this->reseller = $loginCredentials['reseller'];
+            } else if ($this->adminonly && $_REQUEST['reseller_filter']){
+                $this->reseller = $_REQUEST['reseller_filter'];
+            }
+
+            if (strlen($loginCredentials['customer'])) {
+            	$this->customer = $loginCredentials['customer'];
+            } else if ($this->adminonly && $_REQUEST['customer_filter']){
+            	$this->customer = $_REQUEST['customer_filter'];
+            }
+
+            if (strlen($loginCredentials['soapUsername'])) {
+            	$this->soapUsername=$loginCredentials['soapUsername'];
+            } else if ($this->adminonly) {
+				$this->soapUsername=$this->soapEngines[$this->soapEngineId]['username'];
+            }
+
+			//print_r($loginCredentials);
+            if (strlen($loginCredentials['soapUsername'])) {
+                $this->SOAPlogin = array(
+                                       "username"    => $this->soapUsername,
+                                       "password"    => $loginCredentials['soapPassword'],
+                                       "admin"       => false
+                                       );
+            } else {
+                $this->SOAPlogin = array(
+                                       "username"    => $this->soapUsername,
+                                       "password"    => $this->soapEngines[$this->soapEngineId]['password'],
+                                       "admin"       => true,
+                                       "impersonate" => intval($this->reseller)
+                                       );
+            }
 
             $this->SOAPurl=$this->soapEngines[$this->soapEngineId]['url'];
-            printf ("Connection to %s at <a href=%swsdl target=wsdl>%s</a> as %s/%s ",$this->soapClass,$this->SOAPurl,$this->SOAPurl,$this->soapEngines[$this->soapEngineId]['username'],$this->reseller);
+            printf ("<p>Connection to %s at <a href=%swsdl target=wsdl>%s</a> as %s/%s ",$this->soapClass,$this->SOAPurl,$this->SOAPurl,$this->soapUsername,$this->reseller);
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
     		// Instantiate the SOAP client
@@ -749,16 +770,23 @@ class Records {
 
         $this->filters['customer']=trim($_REQUEST['customer_filter']);
 
+        /*
         if (!$this->adminonly && $this->reseller) {
             // Force filter if reseller
         	$this->filters['reseller']=$this->reseller;
         } else {
         	$this->filters['reseller']=trim($_REQUEST['reseller_filter']);
         }
+        */
+
+        if ($this->adminonly) {
+        	$this->filters['reseller']=trim($_REQUEST['reseller_filter']);
+        }
 
         $this->getResellers();
         $this->getCustomers();
 
+        if (strlen($this->SOAPEngine->SipSettingsPage)) $this->SipSettingsPage=$this->SOAPEngine->SipSettingsPage;
         //printf ('<p>%s',$this->url);
     }
 
@@ -1147,6 +1175,7 @@ class Records {
     }
 
     function showResellerForm($name='reseller_filter') {
+        if (!$this->adminonly) return;
         if (count($this->resellers) && count($this->resellers) < 200) {
             $select_reseller[$this->filters['reseller']]='selected';
             printf ("<select name=%s>",$name);
@@ -1660,7 +1689,8 @@ class SIPAccounts extends Records {
                     }
 
                     if ($this->SipSettingsPage) {
-                        $url=sprintf('%s?account=%s@%s&reseller=%s&soapEngineIdSipPort=%s',$this->SipSettingsPage,$account->id->username,$account->id->domain,
+                        $url=sprintf('%s?account=%s@%s&reseller=%s&soapEngineIdSipPort=%s',
+                        $this->SipSettingsPage,$account->id->username,$account->id->domain,
                         $resellerSipSettingsPage,$this->SOAPEngine->soapEngineIdSettingsPage);
 
                         if ($this->adminonly) $url  .= sprintf('&adminonly=%s',$this->adminonly);
@@ -1900,9 +1930,7 @@ class SIPAccounts extends Records {
         		$customer = trim($_REQUEST['customer']);
             }
 
-            if (!$customer || !in_array($customer,array_keys($this->customers))) {
-                $customer=$reseller;
-            }
+            if (!$customer) $customer=$reseller;
         }
 
         $username=$account_els[0];
@@ -5254,13 +5282,17 @@ class Customers extends Records {
 							'changeDate' => 'Change date'
                             );
 
-    var $preferenceItems = array('sip_credit'         => array('name'     => 'Credit for SIP account creation',
-                                                               'category' => 'admin'),
-                                 'enum_credit'        => array('name'     => 'Credit for ENUM numbers creation',
+    var $propertiesItems = array('sip_credit'         => array('name'     => 'Credit for SIP account creation',
                                                                'category' => 'admin'),
                                  'sipa_credit'        => array('name'     => 'Credit for SIP alias creation',
                                                                'category' => 'admin'),
+                                 'enum_range_credit'  => array('name'     => 'Credit for ENUM range creation',
+                                                               'category' => 'admin'),
+                                 'enum_number_credit' => array('name'     => 'Credit for ENUM numbers creation',
+                                                               'category' => 'admin'),
                                  'pstn_access'        => array('name'     => 'Access to PSTN',
+                                                               'category' => 'admin'),
+                                 'soap_engines'       => array('name'     => 'SOAP engines',
                                                                'category' => 'admin'),
                                  'language'           => array('name'     => 'Language',
                                                                'category' => 'general'),
@@ -5274,7 +5306,9 @@ class Customers extends Records {
                                                                'category' => 'sip'),
                                  'support_email'      => array('name'     => 'Support email address',
                                                                'category' => 'sip'),
-                                 'support_cdrtool'    => array('name'     => 'CDRTool address',
+                                 'cdrtool_address'    => array('name'     => 'CDRTool address',
+                                                               'category' => 'sip'),
+                                 'sip_settings_page'  => array('name'     => 'SIP settings page',
                                                                'category' => 'sip'),
                                  'default_sip_domain' => array('name'     => 'Default SIP domain',
                                                                'category' => 'sip'),
@@ -5283,10 +5317,9 @@ class Customers extends Records {
                                  'default_enum_tld'   => array('name'     => 'Default ENUM Top Level Domain',
                                                                'category' => 'sip')
                                  );
+
     var $customerFields=array(
-                              'id',
                               'username',
-                              'reseller',
                               'firstName',
                               'lastName',
                               'organization',
@@ -5305,7 +5338,8 @@ class Customers extends Records {
 
     function Customers(&$SOAPEngine) {
         $this->filters   = array(
-                           'username'   => trim($_REQUEST['username_filter'])
+                           'username'       => trim($_REQUEST['username_filter']),
+                           'only_resellers' => trim($_REQUEST['only_resellers_filter'])
                            );
 
 		$this->Records(&$SOAPEngine);
@@ -5344,7 +5378,11 @@ class Customers extends Records {
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
         // Call function
-        $result     = $this->SOAPEngine->soapclient->getCustomers($Query);
+        if ($this->adminonly && $this->filters['only_resellers']) {
+        	$result     = $this->SOAPEngine->soapclient->getResellers($Query);
+        } else {
+        	$result     = $this->SOAPEngine->soapclient->getCustomers($Query);
+        }
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -5453,10 +5491,11 @@ class Customers extends Records {
 
             print "</table>";
 
-            $this->showPagination($maxrows);
 
 			if ($this->rows == 1 ) {
                 $this->showCustomer($customer->id);
+            } else {
+            	$this->showPagination($maxrows);
             }
 
             return true;
@@ -5468,6 +5507,10 @@ class Customers extends Records {
         	printf (" Customer<input type=text size=6 name=customer_filter value='%s'>",$this->filters['customer']);
         }
         printf (" Username<input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
+        if ($this->adminonly) {
+            if ($this->filters['only_resellers']) $check_only_resellers_filter='checked';
+        	printf (" Resellers<input type=checkbox name=only_resellers_filter value=1 %s>",$check_only_resellers_filter);
+        }
     }
 
     function deleteRecord() {
@@ -5515,31 +5558,45 @@ class Customers extends Records {
     }
 
     function showCustomer($id) {
-        $customerInfo=$this->getCustomer($id);
 
+        if (!$customerInfo = $this->getCustomer($id)) {
+            return false;
+        }
 
         print "<table border=0 cellpadding=10>";
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-        print "<input type=hidden name=action value=Update>";
         print "
         <tr>
         <td valign=top>
         <h3>Customer data</h3>
         <table border=1>";
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "<input type=hidden name=action value=Update>";
+        print "<input type=hidden name=section value=customer_data>";
+
+        print "<tr>
+        <td colspan=2 class=border><input type=submit value=Update>
+        </td></tr>";
+
         printf ("<tr bgcolor=lightgrey>
-        <td class=border>Property</td>
+        <td class=border>Field</td>
         <td class=border>Value</td>
         </tr>");
         foreach ($this->customerFields as $item) {
             printf ("<tr>
             <td class=border>%s</td>
-            <td class=border>%s</td>
+            <td class=border><input name=%s_form size=30 type=text value='%s'></td>
             </tr>",
             ucfirst($item),
+            $item,
             $customerInfo->$item
             );
         }
-        
+
+        $this->printFiltersToForm();
+
+        $this->printHiddenFormElements();
+
+        print "</form>";
         print "
         </table>
         ";
@@ -5550,65 +5607,90 @@ class Customers extends Records {
         print "</pre>";
         */
 
+		foreach ($customerInfo->properties as $_property) {
+            if (in_array($_property->name,array_keys($this->propertiesItems))) {
+        		$this->propertiesItems[$_property->name]['value']=$_property->value;
+            }
+        }
+
+
         print "</td>
         <td valign=top>
         <h3>Customer properties</h3>
         <table border=1>";
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "<input type=hidden name=action value=Update>";
+        print "<input type=hidden name=section value=customer_properties>";
+        print "<tr>
+        <td colspan=4 class=border><input type=submit value=Update>
+        </td></tr>";
+
         printf ("<tr bgcolor=lightgrey>
-        <td class=border>Category</td>
         <td class=border>Property</td>
         <td class=border>Value</td>
+        <td class=border>Description</td>
         </tr>");
 
-        foreach (array_keys($this->preferenceItems) as $item) {
-            printf ("<tr><td class=border>%s</td>
+        foreach (array_keys($this->propertiesItems) as $item) {
+        	$item_print=ucfirst (preg_replace("/_/"," ",$item));
+            printf ("<tr>
             <td class=border>%s</td>
-            <td class=border><input type=text name='%s_form' value='%s'></td>
+            <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
+            <td class=border>%s</td>
             </tr>",
-            ucfirst($this->preferenceItems[$item]['category']),
+            $item_print,
             $item,
-            $item,
-            $customerInfo->preferences[$item]['value']
+            $this->propertiesItems[$item]['value'],
+            $this->propertiesItems[$item]['name']
             );
         }
 
-        print "<tr>
-        <td colspan=3 class=border><input type=submit value=Update>
-        </td></tr>";
+        $this->printFiltersToForm();
+
+        $this->printHiddenFormElements();
+
+        print "</form>";
+
         print "
         </table>
         </td>
         </tr>
         </table>
         ";
-        $this->printFiltersToForm();
-
-        $this->printHiddenFormElements();
-
-        print "</form>";
     }
 
-
     function updateRecord () {
-        print "<p>Updating customer ...";
-        if (!$_REQUEST['customer_filter']) return;
-        $customerInfo=$this->getCustomer($_REQUEST['customer_filter']);
-        foreach (array_keys($this->preferenceItems) as $item) {
-            $var_name=$item.'_form';
-            $properties[]=array('name'     => $item,
-                                 'value'    => trim($_REQUEST[$var_name]),
-                                 'category' => $this->preferenceItems[$item]['category']
-                                 );
+        //print "<p>Updating customer ...";
 
+        if (!$_REQUEST['customer_filter']) return;
+
+        if (!$customerInfo=$this->getCustomer($_REQUEST['customer_filter'])) {
+            return false;
+        }
+
+		if ($_REQUEST['section'] == 'customer_properties') {
+            foreach (array_keys($this->propertiesItems) as $item) {
+                $var_name=$item.'_form';
+                $properties[]=array('name'     => $item,
+                                     'value'    => trim($_REQUEST[$var_name]),
+                                     'category' => $this->propertiesItems[$item]['category']
+                                     );
+    
+            }
+            $customerInfo->properties=$properties;
+        } else {
+            foreach ($this->customerFields as $item) {
+                $var_name=$item.'_form';
+                $customer->$item = trim($_REQUEST[$var_name]);
+
+            }
         }
 
         /*
         print "<pre>";
-        print_r($properties);
+        print_r($customer);
         print "</pre>";
         */
-
-        $customerInfo->properties=$properties;
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
         $result     = $this->SOAPEngine->soapclient->updateAccount($customerInfo);
