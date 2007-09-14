@@ -15,15 +15,15 @@ cdrtool (5.2.7) unstable; urgency=low
     3. reload the stored procedures
     setup/radius/OpenSER/radius_accounting.proc
 
-    4. update both OpenSER and Freeradius dictionary with: ATTRIBUTE ENUMtld
-       232 string
+    4. update both OpenSER and Freeradius dictionary with:
+    ATTRIBUTE       ENUM-TLD               232     strin
 
     5. update Freeradius configuration with the new configuration from:
         setup/radius/OpenSER/radius_accounting.conf
 
     6. Set up OpenSER to log the new Radius attribute ENUMtld
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 14 Sep 2007 13:57:16 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 14 Sep 2007 14:32:49 +0200
 
 cdrtool (5.2.6) unstable; urgency=low
 

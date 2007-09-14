@@ -463,6 +463,9 @@ class SOAPEngine {
                         'ENUM Ranges'    => array('recordsClass' => 'EnumRanges',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
                                           ),
+                        'Customer'     => array('recordsClass' => 'Customers',
+                                           'soapClass'    => 'WebService_NGNPro_CustomerPort'
+                                           ),
                         'Trusted Peers'  => array('recordsClass' => 'TrustedPeers',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
@@ -474,10 +477,7 @@ class SOAPEngine {
                                           ),
                         'PSTN Routes'    => array('recordsClass' => 'Routes',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
-                                          ),
-                        'Operators'     => array('recordsClass' => 'Customers',
-                                           'soapClass'    => 'WebService_NGNPro_CustomerPort'
-                                           )
+                                          )
                         );
 
     function SOAPEngine($service,$soapEngines,$extraFormElements,$loginCredentials) {
