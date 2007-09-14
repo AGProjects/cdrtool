@@ -6451,9 +6451,11 @@ class recordsGenerator  {
 
 class Actions {
     var $actions=array();
+    var $version = 1;
 
     function Actions(&$SOAPEngine) {
 		$this->SOAPEngine = $SOAPEngine;
+        $this->version    = $this->SOAPEngine->version;
         $this->adminonly  = $this->SOAPEngine->adminonly;
     }
 
@@ -6545,11 +6547,15 @@ class SIPAccountsActions extends Actions {
                        'rmdsfromrpid'   => 'Remove from PSTN caller ID digits:',
                        'addtogroup'     => 'Add SIP accounts to group:',
                        'removefromgroup'=> 'Remove SIP accounts from group:',
-                       'addbalance'     => 'Add to prepaid balance value:'
+                       'addbalance'     => 'Add to prepaid balance value:',
+                       'changeowner'    => 'Change owner to:'
                        );
 
     function SIPAccountsActions(&$SOAPEngine) {
         $this->Actions(&$SOAPEngine);
+        if ($this->version > 1) {
+            $this->actions['changecustomer']='Change customer to:';
+        }
     }
 
     function performActions($selectionKeys,$action,$sub_action_parameter) {
@@ -6861,6 +6867,76 @@ class SIPAccountsActions extends Actions {
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
                                                         'logs'       => array('success' => sprintf('SIP account %s@%s has PSTN caller ID set to %s ',$key['username'],$key['domain'],$result->rpid)
+                                                                              )
+                                                       )
+            
+                                    );
+                	$this->SOAPEngine->execute($function);
+
+        		}
+        	} else if ($action=='changecustomer' && $this->version > 1) {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->getAccount($account);
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+                    //print_r($result);
+                    // Sanitize data types due to PHP bugs
+
+                    if (!is_array($result->properties))   $result->properties=array();
+        			if (!is_array($result->groups)) 	  $result->groups=array();
+                    if (is_numeric($sub_action_parameter)) {
+                    	$result->customer=intval($sub_action_parameter);
+                    } else {
+            			printf ("<font color=red>Error: '%s' must be numeric</font>",$sub_action_parameter);
+                        continue;
+                    }
+                    $result->quota         = intval($result->quota);
+                    $result->answerTimeout = intval($result->answerTimeout);
+
+                    $function=array('commit'   => array('name'       => 'updateAccount',
+                                                        'parameters' => array($result),
+                                                        'logs'       => array('success' => sprintf('SIP account %s@%s has customer set to %s ',$key['username'],$key['domain'],$result->customer)
+                                                                              )
+                                                       )
+            
+                                    );
+                	$this->SOAPEngine->execute($function);
+
+        		}
+        	} else if ($action=='changeowner') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $result     = $this->SOAPEngine->soapclient->getAccount($account);
+
+        		if (PEAR::isError($result)) {
+            		$error_msg  = $result->getMessage();
+            		$error_fault= $result->getFault();
+            		$error_code = $result->getCode();
+            		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+                    //print_r($result);
+                    // Sanitize data types due to PHP bugs
+
+                    if (!is_array($result->properties))   $result->properties=array();
+        			if (!is_array($result->groups)) 	  $result->groups=array();
+                    if (is_numeric($sub_action_parameter)) {
+                    	$result->owner=intval($sub_action_parameter);
+                    } else {
+            			printf ("<font color=red>Error: '%s' must be numeric</font>",$sub_action_parameter);
+                        continue;
+                    }
+                    $result->quota         = intval($result->quota);
+                    $result->answerTimeout = intval($result->answerTimeout);
+
+                    $function=array('commit'   => array('name'       => 'updateAccount',
+                                                        'parameters' => array($result),
+                                                        'logs'       => array('success' => sprintf('SIP account %s@%s has owner set to %s ',$key['username'],$key['domain'],$result->customer)
                                                                               )
                                                        )
             
