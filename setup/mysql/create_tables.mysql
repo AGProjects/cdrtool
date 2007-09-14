@@ -175,6 +175,20 @@ CREATE TABLE `billing_profiles` (
   KEY `name_idx` (`name`)
 )  DEFAULT CHARSET=latin1;
 
+
+DROP TABLE IF EXISTS `billing_enum_tlds`;
+CREATE TABLE `billing_enum_tlds` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `gateway` varchar(50) NOT NULL default '',
+  `domain` varchar(50) NOT NULL default '',
+  `subscriber` varchar(50) NOT NULL default '',
+  `enum_tld` varchar(100) NOT NULL,
+  `discount` varchar(25) NOT NULL default '',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `enum_idx` (`gateway`,`domain`,`subscriber`,`enum_tld`),
+  KEY `tld_idx` (`enum_tld`)
+)  DEFAULT CHARSET=latin1;
+
 --
 -- Table structure for table `billing_profilesNGN`
 --
