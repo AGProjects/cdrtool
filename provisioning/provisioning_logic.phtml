@@ -454,9 +454,6 @@ class SOAPEngine {
                         'SIP Domains'    => array('recordsClass' => 'Domains',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
-                        'SIP Usage'       => array('recordsClass' => 'DomainStatistics',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort'
-                                          ),
                         'ENUM Numbers'    => array('recordsClass' => 'EnumMappings',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
                                           ),
@@ -811,7 +808,8 @@ class Records {
         }
         printf ("</select>");
 
-        print "OP";
+        if ($this->version > 1) {
+        print "Customer";
 
         if ($this->adminonly) {
         	$this->showResellerForm();
@@ -823,6 +821,7 @@ class Records {
             printf ("%s",$this->reseller);
             print ".";
         	$this->showCustomerForm();
+        }
         }
     }
 
@@ -1481,7 +1480,7 @@ class Domains extends Records {
 
             printf (" Domain<input type=text size=20 name=domain>");
 
-            print "OP";
+            print "Customer";
 
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
@@ -2009,7 +2008,8 @@ class SIPAccounts extends Records {
             printf ("<nobr>PSTN<input type=checkbox name=pstn value=1></nobr> ");
             printf ("<nobr>Quota<input type=text size=5 name=quota value='%s'></nobr> ",$_REQUEST['quota']);
             printf ("<nobr>Prepaid<input type=checkbox name=prepaid value=1></nobr> ");
-            print "<nobr>OP";
+            print "<nobr>";
+            print "Customer";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
                 print ".";
@@ -2599,7 +2599,7 @@ class SIPAliases extends Records {
 
             printf (" Target<input type=text size=35 name=target>");
 
-            print "OP";
+            print "Customer";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
                 print ".";
@@ -3017,7 +3017,7 @@ class ENUMranges extends Records {
             printf ("TTL<input type=text size=5 name=ttl value=3600> ");
             printf ("Min Digits<input type=text size=3 name=minDigits value=11> ");
             printf ("Max Digits<input type=text size=3 name=maxDigits value=11> ");
-            print "OP";
+            print "Customer";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
                 print ".";
@@ -3756,7 +3756,7 @@ class ENUMmappings extends Records {
                     ";
             printf (" <input type=text size=25 name=mapto>");
             printf (" TTL<input type=text size=5 name=ttl value=3600>");
-            print "OP";
+            print "Customer";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
                 print ".";
@@ -4299,7 +4299,7 @@ class TrustedPeers extends Records {
             ";
             printf (" IP address<input type=text size=20 name=ipaddress>");
             printf (" Description<input type=text size=30 name=description>");
-            print "OP";
+            print "Customer";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
                 print ".";

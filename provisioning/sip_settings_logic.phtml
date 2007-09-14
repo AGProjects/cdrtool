@@ -1,7 +1,7 @@
 <?
 
 // Generic code for all sip settings pages
-$SIPSettings = new $SIPSettings_class($account,$loginCredentials);
+$SIPSettings = new $SIPSettings_class($account,$loginCredentials,$soapEngines);
 
 if (!$export) {
     $title  = "SIP settings of $account";
@@ -16,9 +16,9 @@ if ($action=="Save settings") {
         $SIPSettings->saveSettings();
         unset($SIPSettings);
         if (in_array($domain,$freeDomains)) {
-            $SIPSettings = new $SIPSettings_class($account,$loginCredentials);
+            $SIPSettings = new $SIPSettings_class($account,$loginCredentials,$soapEngines);
         } else {
-            $SIPSettings = new $SIPSettings_class($account,$loginCredentials);
+            $SIPSettings = new $SIPSettings_class($account,$loginCredentials,$soapEngines);
         }
     } else {
         print "<font color=red>";

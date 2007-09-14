@@ -1,8 +1,6 @@
 <?
 define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
 include_once(SMARTY_DIR . 'Smarty.class.php');
-require_once('SOAP/Client.php');
-require_once("phone_images.php");
 
 class SIPSettings {
 
@@ -98,16 +96,32 @@ class SIPSettings {
 
 	var $exportFilename = "export.txt";
 
-    function SIPSettings($account='',$loginCredentials) {
+    function SIPSettings($account='',$loginCredentials,$soapEngines) {
+    	$this->soapEngines        = $soapEngines;
+
         $debug=sprintf("Initialize class %s(%s)",get_class($this),$account);
         dprint($debug);
         dprint_r($loginCredentials);
 
-		$this->loginCredentials = &$loginCredentials;
+		$this->loginCredentials   = &$loginCredentials;
 
-        $this->reseller           = $loginCredentials['reseller'];
-        $this->customer           = $loginCredentials['customer'];
         $this->loginType          = $loginCredentials['loginType'];
+
+        if ($this->loginType == "admin") {
+            if ($_REQUEST['reseller']) {
+            	$this->reseller = $_REQUEST['reseller'];
+            } else {
+            	$this->reseller = $loginCredentials['reseller'];
+            }
+            if ($_REQUEST['customer']) {
+            	$this->customer = $_REQUEST['customer'];
+            } else {
+            	$this->customer = $loginCredentials['customer'];
+            }
+        } else {
+        	$this->reseller           = $loginCredentials['reseller'];
+        	$this->customer           = $loginCredentials['customer'];
+        }
 
 		if (strlen($loginCredentials['soapEngineIdSipPort'])) {
             $this->soapEngineIdSipPort=$loginCredentials['soapEngineIdSipPort'];
@@ -119,6 +133,7 @@ class SIPSettings {
         $this->tab                = $_REQUEST['tab'];
 
         $this->initSoapClient();
+
         $this->getAccount($account);
 
         if ($this->loginType == "admin") {
@@ -234,9 +249,8 @@ class SIPSettings {
     }
 
     function initSoapClient() {
-        global $soapEngines;
-    	$this->soapEngines=$soapEngines;
 
+		require_once('SOAP/Client.php');
         require_once("provisioning_soap_library.phtml");
 
         // Sip, Voicemail and Customer Port share same login
@@ -2110,7 +2124,6 @@ class SIPSettings {
 
     function saveSettings() {
         dprint("<b>SIP->saveSettings()</b>");
-        global $Status;
 
 		$this->getVoicemail();
         $this->getENUMmappings();
@@ -2119,7 +2132,7 @@ class SIPSettings {
         $this->getDiversions();
 
         foreach ($this->WEBdictionary as $el) {
-        	global ${$el};
+        	${$el} = $_REQUEST[$el];
             $log=sprintf("%s = %s",$el, ${$el});
             //dprint ($log);
         }
@@ -2217,7 +2230,6 @@ class SIPSettings {
                 }
             }
 
-            dprint ("<table bgcolor=lightgrey><tr><td>$Status</td></tr></table>");
         }
 
 		if ($this->loginType == 'admin' || $this->loginType == 'reseller') {
@@ -2363,9 +2375,8 @@ class SIPSettings {
         }
 
         if ($this->Preferences['CanEditAll'] && $this->voicemail['Account'] && !$this->createdVoicemailnow) {
-            global $delete_voicemail;
+            $delete_voicemail = $_REQUEST['delete_voicemail'];
 
-			dprint("delete_voicemail=$delete_voicemail");
             $log=sprintf("delete_voicemail_orig=%s",$this->voicemail['Options']->delete);
         	dprint($log);
 
@@ -4940,8 +4951,7 @@ class SIPSettings {
         dprint ("SIPSettings->checkSettings()");
 
         foreach ($this->WEBdictionary as $el) {
-            global ${$el};
-            if (!is_array($_REQUEST[$el])) ${$el}=trim($_REQUEST[$el]);
+            ${$el}=trim($_REQUEST[$el]);
         }
 
         if ($accept_temporary_remain && !is_numeric($accept_temporary_remain)) {
@@ -5005,126 +5015,6 @@ class SIPSettings {
     }
     
     function showUpgrade () {
-
-        print "
-        <tr>
-          <td height=3 colspan=2></td>
-        </tr>
-        <tr>
-          <td class=border align=center valign=middle>";
-
-           print "
-           <a href=http://one.address.name target=oneaddress><img src=unsecure/pidn/images/PIDNCard-EN-135.jpg border=0></a>";
-
-            print "
-            <td class=border>
-            <b>Personal SIP domain</b>
-
-            <p>
-            Register your personal Internet Domain with Managed DNS
-            to benefit of the following features:
-
-            <ul>
-            <li>Same address for both email and SIP
-            <li>Voicemail and voice 2 email
-            <li>Privacy control
-            <li>Call forwading
-            <li>Selective call accept
-            <li>Selective call reject
-            <li>Time based forwarding
-            </ul>
-            ";
-
-            global $tlds, $DOMAIN;
-
-            require_once('registrar/registrationwizard.php');
-            $environment = 'production';
-            $regwiz = new RegistrationWizard($DOMAIN, $environment);
-            $regwiz->showSelectDomainForm('dns_register.phtml', true);
-
-            print "
-          </td>
-        </tr>
-        ";
-
-        if ($this->timezone=="Europe/Bucharest" || $this->Preferences['language']=="ro") {
-            print "
-            <tr>
-              <td height=3 colspan=2></td>
-            </tr>
-            <tr>
-              <td class=border align=center>";
-               print "<img src=resellers/template/1745/eurovoice.gif border=0></a>";
-
-                print "
-                <td class=border>
-                <b>Romanian telephone number and calls to and from PSTN </b>
-
-                <p>
-
-				From <a href=http://www.euroweb.ro>Euroweb Romania</a> you may obtain a Romanian
-                telephone number (+40317XXXXX) and route PSTN calls for that number to your
-                SIP device. Eurovoice allows free SIP calls to and out their network using standards
-                like ENUM and SIP and
-                puts no restrictions on access to other networks.
-                <p>
-                For more information see:
-                <a href=http://www.eurovoice.ro target=bpc>http://www.eurovoice.ro</a>
-                ";
-
-                print "
-              </td>
-            </tr>
-            ";
-        }
-
-
-        print "
-        <tr>
-          <td height=3 colspan=2></td>
-        </tr>
-        <tr>
-          <td height=3 colspan=2></td>
-        </tr>
-        <tr>
-          <td class=border align=center>";
-        print "<a href=\"javascript:void(null);\" onClick=\"return window.open('images/snom190_big.jpg', 'SNOM 190',
-        'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=0,width=737,height=492')\">
-        <img src=images/snom190-150p.jpg border=0></a>";
-
-        print "<td class=border>";
-
-        printf (_("%s phone may be shipped without programming
-        to end-users for a real plug-and-play experience. "),"SNOM 190");
-
-        print "<p>";
-
-        printf (_("%s is a high-end SIP phone with multiple lines,
-        audio encryption (Secure RTP), rich codec support
-        (G723, G729, GSM, G722 and G711), has two line LCD
-        display, programmable keys, speaker-phone and a powerful
-        web interface with address book and URL dialing. "),"SNOM 190");
-
-        print "
-        <form action=buy.phtml method=POST target=buy>
-        <select name=service>
-        <option value=voipSnom190>SNOM 190 SIP phone
-        </select>
-        <input type=hidden name=units value=1>
-        <input type=hidden name=service_line value=DNS>
-        <input type=hidden name=action value=Add>
-        <input type=submit value=Order>
-        <input type=hidden name=logonce value=yes>
-        <input type=hidden name=step value=1>
-        </form>
-        ";
-
-            print "
-          </td>
-        </tr>
-        ";
-
-
     }
 
     function PhoneDialURL($uri) {
@@ -5577,7 +5467,48 @@ function normalizeTime($period) {
 }
 
 function getImageForUserAgent($agent) {
-    global $userAgentImages;
+// array with mappings between User Agents and images
+    if (file_exists("phone_images.php")) {
+		include_once("phone_images.php");
+    } else {
+		$userAgentImages = array("Asterisk"       => "asterisk.png",
+                         "AVM FRITZ"      => "avm-fritzbox-wlan.png",
+                         "Cisco ATA"      => "cisco-ata.png",
+                         "Cisco.*Gateway" => "cisco.png",
+                         "CSCO"           => "cisco-7960.png",
+                         "DrayTek"        => "draytek-vigor2600vg.png",
+                         "eStara"         => "eStara.png",
+                         "Eyebeam"        => "eyebeam.png",
+                         "Grandstream"    => "handytone.png",
+                         "ipDialog"       => "ipDialog.png",
+                         "Linksys"        => "linksys-pap2.png",
+                         "Session.*Wave"  => "session.png",
+                         "SIPPS"          => "sipps.png",
+                         "Sipura"         => "spa2000.png",
+                         "sjphone"        => "sjphone.png",
+                         "Snom100"        => "snom100.png",
+                         "Snom(190|200)"  => "snom200.png",
+                         "Snom320"        => "snom320.png",
+                         "Snom360"        => "snom360.png",
+                         "snomSoft"       => "snom360.png",
+                         "Talkin"         => "xten.png",
+                         "unidata"        => "hitachi-wip5000.png",
+                         "Vizufon"        => "vizufon.png",
+                         "voipster"       => "zoep.png",
+                         "Windows RTC"    => "messenger.png",
+                         "X-Lite"         => "xten.png",
+                         "X-PRO"          => "xten.png",
+                         "ZyXEL P2000W"   => "zyxel-p2000.png",
+                         "-IMVP"          => "innomedia-mta5000.png",
+                         "3610\/"         => "siemens-3610.png",
+                         "cirpack"        => "cirpack.png",
+                         "Brcm-Callctrl"  => "webstarepx2203.png",
+                         "Audiocodes-Sip-Gateway-MP" => "audiocodes-mp124.png",
+                         "Nokia"	  => "nokia.png",
+                         "CopperJet"	  => "copperjet16162p.png",
+                         "Ekiga"	  => "ekiga.png"
+                         );
+    }
 
     foreach ($userAgentImages as $agentRegexp => $image) {
         if (preg_match("/$agentRegexp/i", $agent)) {
