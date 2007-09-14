@@ -1,3 +1,15 @@
+cdrtool (5.2.7) unstable; urgency=low
+
+  * Renamed OpenSER radius table Framed-Protocol to ENUMtld to accomodate
+    discounts by ENUM top level domain. This requires majo changes to the database 
+    structures and the following chnages must be applied in sequence:
+    1. rename the column FramedProtocol to ENUM tld in all radius tables, this 
+    operation can take long time depending on the number of records in the table
+    2. apply the changes from setup/mysql/alter_tables.mysql
+    3. reload the stored procedures setup/radius/OpenSER/radius_accounting.proc
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 14 Sep 2007 13:45:52 +0200
+
 cdrtool (5.2.6) unstable; urgency=low
 
   * Log in syslog the duration of reloading of the rating tables and 

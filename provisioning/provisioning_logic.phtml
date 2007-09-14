@@ -1241,16 +1241,17 @@ class Domains extends Records {
         } else {
     		$this->maxrowsperpage = 10000;
         }
-
     }
 
     function listRecords() {
 
+        $this->showSeachForm();
+    
 		if ($this->version > 1) {
 
             // Filter
             $filter=array(
-                          'domain'    => intval($this->filters['domain']),
+                          'domain'    => $this->filters['domain'],
                           'customer'  => intval($this->filters['customer']),
                           'reseller'  => intval($this->filters['reseller'])
                           );
@@ -1262,7 +1263,7 @@ class Domains extends Records {
     
             // Order
             if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
-            if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'Desc';
+            if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
     
             $orderBy = array('attribute' => $this->sorting['sortBy'],
                              'direction' => $this->sorting['sortOrder']
@@ -1273,8 +1274,6 @@ class Domains extends Records {
                             'orderBy' => $orderBy,
                             'range'   => $range
                             );
-    
-            $this->showSeachForm();
     
             // Insert credetials
             $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -1356,6 +1355,37 @@ class Domains extends Records {
                         $bgcolor="white";
                     }
 
+                    if ($this->version > 1) {
+        			$_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($domain->domain)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                        $_REQUEST['domain_filter'] == $domain->domain) {
+                		$_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td>%s.%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+                    $bgcolor,
+                    $index,
+                    $domain->reseller,
+                    $domain->customer,
+                    $domain->domain,
+                    $domain->changeDate,
+                    $_url,
+                    $actionText
+                    );
+                    } else {
         			$_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($domain)
@@ -1368,26 +1398,6 @@ class Domains extends Records {
                     } else {
                         $actionText = "Delete";
                     }
-
-                    if ($this->version > 1) {
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td>%s.%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>",
-                    $bgcolor,
-                    $index,
-                    $domain->customer,
-                    $domain->reseller,
-                    $domain,
-                    $domain->changeDate,
-                    $_url,
-                    $actionText
-                    );
-                    } else {
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
@@ -1507,14 +1517,20 @@ class Domains extends Records {
         } else {
         	$reseller = $this->reseller;
         	$customer = trim($_REQUEST['customer']);
-            if (!$customer || !in_array($customer,array_keys($this->customers))) {
-                $customer=$reseller;
-            }
+            if (!$customer) $customer=$reseller;
         }
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
-        $result     = $this->SOAPEngine->soapclient->addDomain($domain);
+        if ($this->version  >1 ) {
+            $domainStructure=array('domain'   => $domain,
+                                   'customer' => intval($customer),
+                                   'reseller' => intval($reseller)
+                                   );
+        	$result     = $this->SOAPEngine->soapclient->addDomain($domainStructure);
+        } else {
+        	$result     = $this->SOAPEngine->soapclient->addDomain($domain);
+        }
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -1527,6 +1543,61 @@ class Domains extends Records {
            return true;
         }
     }
+
+    function getRecordKeys() {
+
+		if ($this->version > 1) {
+            // Filter
+            $filter=array(
+                          'domain'    => $this->filters['domain'],
+                          'customer'  => intval($this->filters['customer']),
+                          'reseller'  => intval($this->filters['reseller'])
+                          );
+    
+            // Range
+            $range=array('start' => intval($this->next),
+                         'count' => intval($this->maxrowsperpage)
+                         );
+    
+            // Order
+            if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+            if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+    
+            $orderBy = array('attribute' => $this->sorting['sortBy'],
+                             'direction' => $this->sorting['sortOrder']
+                             );
+
+            // Compose query
+            $Query=array('filter'     => $filter,
+                            'orderBy' => $orderBy,
+                            'range'   => $range
+                            );
+    
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getDomains($Query);
+
+		} else {
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getDomains();
+        }
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error in getAllowedDomains from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            //return false;
+        } else {
+			if ($this->version > 1) {
+				foreach ($result->domains as $_domain) {
+            		$this->selectionKeys[]=$_domain->domain;
+                }
+            } else {
+            	$this->selectionKeys[]=$result;
+            }
+        }
+   }
+
 }
 
 class SIPAccounts extends Records {
@@ -2128,11 +2199,35 @@ class SIPAccounts extends Records {
 
     function getAllowedDomains() {
 
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-        //print_r($this->SOAPEngine->soapclient->headersOut);
+		if ($this->version > 1) {
 
-        $result     = $this->SOAPEngine->soapclient->getDomains();
+            // Filter
+            $filter=array(
+                          'domain'    => ''
+                          );
     
+            // Range
+            $range=array('start' => 0,
+                         'count' => 1000
+                         );
+    
+            $orderBy = array('attribute' => 'domain',
+                             'direction' => 'ASC'
+                             );
+    
+            // Compose query
+            $Query=array('filter'     => $filter,
+                            'orderBy' => $orderBy,
+                            'range'   => $range
+                            );
+    
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getDomains($Query);
+		} else {
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getDomains();
+        }
+
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
@@ -2140,7 +2235,13 @@ class SIPAccounts extends Records {
             printf ("<p><font color=red>Error in getAllowedDomains from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             //return false;
         } else {
-            $this->allowedDomains=$result;
+			if ($this->version > 1) {
+				foreach ($result->domains as $_domain) {
+            		$this->allowedDomains[]=$_domain->domain;
+                }
+            } else {
+            	$this->allowedDomains=$result;
+            }
         }
      }
 }
@@ -2587,9 +2688,34 @@ class SIPAliases extends Records {
     }
 
     function getAllowedDomains() {
-        // Insert credetials
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-        $result     = $this->SOAPEngine->soapclient->getDomains();
+		if ($this->version > 1) {
+
+            // Filter
+            $filter=array(
+                          'domain'    => ''
+                          );
+    
+            // Range
+            $range=array('start' => 0,
+                         'count' => 1000
+                         );
+    
+            $orderBy = array('attribute' => 'domain',
+                             'direction' => 'ASC'
+                             );
+    
+            // Compose query
+            $Query=array('filter'     => $filter,
+                            'orderBy' => $orderBy,
+                            'range'   => $range
+                            );
+    
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getDomains($Query);
+		} else {
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getDomains();
+        }
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -2598,10 +2724,15 @@ class SIPAliases extends Records {
             printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
-            $this->allowedDomains=$result;
+			if ($this->version > 1) {
+				foreach ($result->domains as $_domain) {
+            		$this->allowedDomains[]=$_domain->domain;
+                }
+            } else {
+            	$this->allowedDomains=$result;
+            }
         }
     }
-
 }
 
 class ENUMranges extends Records {
@@ -5339,10 +5470,9 @@ class Customers extends Records {
 
     var $maxrowsperpage= 20;
     var $sortElements=array(
-                            'customer'   => 'Customer',
-                            'reseller'   => 'Reseller',
+							'changeDate' => 'Change date',
                             'username'   => 'Username',
-							'changeDate' => 'Change date'
+                            'customer'   => 'Customer'
                             );
 
     var $propertiesItems = array('sip_credit'         => array('name'     => 'Credit for SIP account creation',
@@ -5353,13 +5483,17 @@ class Customers extends Records {
                                                                'category' => 'admin'),
                                  'enum_number_credit' => array('name'     => 'Credit for ENUM numbers creation',
                                                                'category' => 'admin'),
+                                 'comp_code'          => array('name'     => 'Billing code for invoicing',
+                                                               'category' => 'admin'),
+                                 'billing_email'      => array('name'     => 'Email address for invoicing',
+                                                               'category' => 'admin'),
+                                 'registrar_id'       => array('name'     => 'Registrar id for domain registration',
+                                                               'category' => 'admin'),
                                  'pstn_access'        => array('name'     => 'Access to PSTN',
                                                                'category' => 'admin'),
                                  'soap_engines'       => array('name'     => 'SOAP engines',
                                                                'category' => 'admin'),
                                  'language'           => array('name'     => 'Language',
-                                                               'category' => 'general'),
-                                 'timezone'           => array('name'     => 'Timezone',
                                                                'category' => 'general'),
                                  'voicemail_server'   => array('name'     => 'Voicemail server address',
                                                                'category' => 'sip'),
@@ -5386,22 +5520,360 @@ class Customers extends Records {
                               'reseller'
                               );
     var $customerFields=array(
-                              'username',
-                              'firstName',
-                              'lastName',
-                              'organization',
-                              'tel',
-                              'fax',
-                              'sip',
-                              'mobile',
-                              'email',
-                              'web',
-                              'address',
-                              'postcode',
-                              'city',
-                              'state',
-                              'country'
+                              'aliasOf'     => array('type'=>'integer'),
+                              'username'    => array('type'=>'string'),
+                              'password'    => array('type'=>'string',
+                                                     'name'=>'Password'),
+                              'firstName'   => array('type'=>'string',
+                                                     'name'=>'First name'),
+                              'lastName'    => array('type'=>'string',
+                                                     'name'=>'Last name'),
+                              'organization'=> array('type'=>'string'),
+                              'vatNumber'   => array('type'=>'string',
+                                                     'name'=>'VAT number'),
+                              'tel'         => array('type'=>'string'),
+                              'fax'         => array('type'=>'string'),
+                              'sip'         => array('type'=>'string'),
+                              'enum'        => array('type'=>'string'),
+                              'mobile'      => array('type'=>'string'),
+                              'email'       => array('type'=>'string'),
+                              'web'         => array('type'=>'string'),
+                              'address'     => array('type'=>'text'),
+                              'postcode'    => array('type'=>'string'),
+                              'city'        => array('type'=>'string'),
+                              'state'       => array('type'=>'string'),
+                              'country'     => array('type'=>'string'),
+                              'timezone'    => array('type'=>'string')
                               );
+
+        var $states=array(
+        array("label"=>"", "value"=>"N/A"),
+        array("label"=>"-- CANADA --", "value"=>"-"),
+        array("label"=>"Alberta", "value"=>"AB"),
+        array("label"=>"British Columbia", "value"=>"BC"),
+        array("label"=>"Manitoba", "value"=>"MB"),
+        array("label"=>"New Brunswick", "value"=>"NB"),
+        array("label"=>"Newfoundland/Labrador", "value"=>"NL"),
+        array("label"=>"Northwest Territory", "value"=>"NT"),
+        array("label"=>"Nova Scotia", "value"=>"NS"),
+        array("label"=>"Nunavut", "value"=>"NU"),
+        array("label"=>"Ontario", "value"=>"ON"),
+        array("label"=>"Prince Edward Island", "value"=>"PE"),
+        array("label"=>"Quebec", "value"=>"QC"),
+        array("label"=>"Saskatchewan", "value"=>"SN"),
+        array("label"=>"Yukon", "value"=>"YT"),
+        array("label"=>"---- US -----", "value"=>"-"),
+        array("label"=>"Alabama", "value"=>"AL"),
+        array("label"=>"Alaska", "value"=>"AK"),
+        array("label"=>"American Samoa", "value"=>"AS"),
+        array("label"=>"Arizona", "value"=>"AZ"),
+        array("label"=>"Arkansas", "value"=>"AR"),
+        array("label"=>"California", "value"=>"CA"),
+        array("label"=>"Canal Zone", "value"=>"CZ"),
+        array("label"=>"Colorado", "value"=>"CO"),
+        array("label"=>"Connecticut", "value"=>"CT"),
+        array("label"=>"Delaware", "value"=>"DE"),
+        array("label"=>"District of Columbia", "value"=>"DC"),
+        array("label"=>"Florida", "value"=>"FL"),
+        array("label"=>"Georgia", "value"=>"GA"),
+        array("label"=>"Guam", "value"=>"GU"),
+        array("label"=>"Hawaii", "value"=>"HI"),
+        array("label"=>"Idaho", "value"=>"ID"),
+        array("label"=>"Illinois", "value"=>"IL"),
+        array("label"=>"Indiana", "value"=>"IN"),
+        array("label"=>"Iowa", "value"=>"IA"),
+        array("label"=>"Kansas", "value"=>"KS"),
+        array("label"=>"Kentucky", "value"=>"KY"),
+        array("label"=>"Louisiana", "value"=>"LA"),
+        array("label"=>"Maine", "value"=>"ME"),
+        array("label"=>"Mariana Islands", "value"=>"MP"),
+        array("label"=>"Maryland", "value"=>"MD"),
+        array("label"=>"Massachusetts", "value"=>"MA"),
+        array("label"=>"Michigan", "value"=>"MI"),
+        array("label"=>"Minnesota", "value"=>"MN"),
+        array("label"=>"Mississippi", "value"=>"MS"),
+        array("label"=>"Missouri", "value"=>"MO"),
+        array("label"=>"Montana", "value"=>"MT"),
+        array("label"=>"Nebraska", "value"=>"NE"),
+        array("label"=>"Nevada", "value"=>"NV"),
+        array("label"=>"New Hampshire", "value"=>"NH"),
+        array("label"=>"New Jersey", "value"=>"NJ"),
+        array("label"=>"New Mexico", "value"=>"NM"),
+        array("label"=>"New York", "value"=>"NY"),
+        array("label"=>"North Carolina", "value"=>"NC"),
+        array("label"=>"North Dakota", "value"=>"ND"),
+        array("label"=>"Ohio", "value"=>"OH"),
+        array("label"=>"Oklahoma", "value"=>"OK"),
+        array("label"=>"Oregon", "value"=>"OR"),
+        array("label"=>"Pennsylvania", "value"=>"PA"),
+        array("label"=>"Puerto Rico", "value"=>"PR"),
+        array("label"=>"Rhode Island", "value"=>"RI"),
+        array("label"=>"South Carolina", "value"=>"SC"),
+        array("label"=>"South Dakota", "value"=>"SD"),
+        array("label"=>"Tennessee", "value"=>"TN"),
+        array("label"=>"Texas", "value"=>"TX"),
+        array("label"=>"Utah", "value"=>"UT"),
+        array("label"=>"Vermont", "value"=>"VT"),
+        array("label"=>"Virgin Islands", "value"=>"VI"),
+        array("label"=>"Virginia", "value"=>"VA"),
+        array("label"=>"Washington", "value"=>"WA"),
+        array("label"=>"West Virginia", "value"=>"WV"),
+        array("label"=>"Wisconsin", "value"=>"WI"),
+        array("label"=>"Wyoming", "value"=>"WY"),
+        array("label"=>"APO", "value"=>"AP"),
+        array("label"=>"AEO", "value"=>"AE"),
+        array("label"=>"AAO", "value"=>"AA"),
+        array("label"=>"FPO", "value"=>"FP")
+        );
+        
+        var $countries=array(
+        array("label"=>"Ascension Island",	"value"=>"AC"),
+        array("label"=>"Afghanistan",		"value"=>"AF"),
+        array("label"=>"Albania",		"value"=>"AL"),
+        array("label"=>"Algeria",		"value"=>"DZ"),
+        array("label"=>"American Samoa",	"value"=>"AS"),
+        array("label"=>"Andorra",		"value"=>"AD"),
+        array("label"=>"Angola",		"value"=>"AO"),
+        array("label"=>"Anguilla",		"value"=>"AI"),
+        array("label"=>"Antarctica",		"value"=>"AQ"),
+        array("label"=>"Antigua And Barbuda",	"value"=>"AG"),
+        array("label"=>"Argentina",		"value"=>"AR"),
+        array("label"=>"Armenia",		"value"=>"AM"),
+        array("label"=>"Aruba",			"value"=>"AW"),
+        array("label"=>"Australia",		"value"=>"AU"),
+        array("label"=>"Austria",		"value"=>"AT"),
+        array("label"=>"Azerbaijan",		"value"=>"AZ"),
+        array("label"=>"Bahamas",		"value"=>"BS"),
+        array("label"=>"Bahrain",		"value"=>"BH"),
+        array("label"=>"Bangladesh",	        "value"=>"BD"),
+        array("label"=>"Barbados",	        "value"=>"BB"),
+        array("label"=>"Belarus",	        "value"=>"BY"),
+        array("label"=>"Belgium",	        "value"=>"BE"),
+        array("label"=>"Belize",	        "value"=>"BZ"),
+        array("label"=>"Benin",		        "value"=>"BJ"),
+        array("label"=>"Bermuda",	        "value"=>"BM"),
+        array("label"=>"Bhutan",	        "value"=>"BT"),
+        array("label"=>"Bolivia",	        "value"=>"BO"),
+        array("label"=>"Bosnia And Herzegowina","value"=>"BA"),
+        array("label"=>"Botswana",		"value"=>"BW"),
+        array("label"=>"Bouvet Island",		"value"=>"BV"),
+        array("label"=>"Brazil",		"value"=>"BR"),
+        array("label"=>"British Indian Ocean Territory",	"value"=>"IO"),
+        array("label"=>"Brunei Darussalam",	"value"=>"BN"),
+        array("label"=>"Bulgaria",	        "value"=>"BG"),
+        array("label"=>"Burkina Faso",	        "value"=>"BF"),
+        array("label"=>"Burundi",	        "value"=>"BI"),
+        array("label"=>"Cambodia",	        "value"=>"KH"),
+        array("label"=>"Cameroon",	        "value"=>"CM"),
+        array("label"=>"Canada",	        "value"=>"CA"),
+        array("label"=>"Cape Verde",	        "value"=>"CV"),
+        array("label"=>"Cayman Islands",        "value"=>"KY"),
+        array("label"=>"Central African Republic",	"value"=>"CF"),
+        array("label"=>"Chad",			"value"=>"TD"),
+        array("label"=>"Chile",			"value"=>"CL"),
+        array("label"=>"China",			"value"=>"CN"),
+        array("label"=>"Christmas Island",	"value"=>"CX"),
+        array("label"=>"Cocos (Keeling) Islands",	"value"=>"CC"),
+        array("label"=>"Colombia",		"value"=>"CO"),
+        array("label"=>"Comoros",		"value"=>"KM"),
+        array("label"=>"Congo",			"value"=>"CG"),
+        array("label"=>"Congo, Democratic People's Republic",	"value"=>"CD"),
+        array("label"=>"Cook Islands", 		"value"=>"CK"),
+        array("label"=>"Costa Rica",		"value"=>"CR"),
+        array("label"=>"Cote d'Ivoire",		"value"=>"CI"),
+        array("label"=>"Croatia (local name: Hrvatska)",	"value"=>"HR"),
+        array("label"=>"Cuba",		"value"=>"CU"),
+        array("label"=>"Cyprus",	"value"=>"CY"),
+        array("label"=>"Czech Republic","value"=>"CZ"),
+        array("label"=>"Denmark",	"value"=>"DK"),
+        array("label"=>"Djibouti",	"value"=>"DJ"),
+        array("label"=>"Dominica",	"value"=>"DM"),
+        array("label"=>"Dominican Republic",	"value"=>"DO"),
+        array("label"=>"East Timor",	"value"=>"TP"),
+        array("label"=>"Ecuador",	"value"=>"EC"),
+        array("label"=>"Egypt",		"value"=>"EG"),
+        array("label"=>"El Salvador",	"value"=>"SV"),
+        array("label"=>"Equatorial Guinea",	"value"=>"GQ"),
+        array("label"=>"Eritrea",	"value"=>"ER"),
+        array("label"=>"Estonia",	"value"=>"EE"),
+        array("label"=>"Ethiopia",	"value"=>"ET"),
+        array("label"=>"Falkland Islands (Malvinas)",	"value"=>"FK"),
+        array("label"=>"Faroe Islands",	"value"=>"FO"),
+        array("label"=>"Fiji",		"value"=>"FJ"),
+        array("label"=>"Finland",	"value"=>"FI"),
+        array("label"=>"France",	"value"=>"FR"),
+        array("label"=>"French Guiana",	"value"=>"GF"),
+        array("label"=>"French Polynesia",	"value"=>"PF"),
+        array("label"=>"French Southern Territories",	"value"=>"TF"),
+        array("label"=>"Gabon",		"value"=>"GA"),
+        array("label"=>"Gambia",	"value"=>"GM"),
+        array("label"=>"Georgia",	"value"=>"GE"),
+        array("label"=>"Germany",	"value"=>"DE"),
+        array("label"=>"Ghana",	"value"=>"GH"),
+        array("label"=>"Gibraltar",	"value"=>"GI"),
+        array("label"=>"Greece",	"value"=>"GR"),
+        array("label"=>"Greenland",	"value"=>"GL"),
+        array("label"=>"Grenada",	"value"=>"GD"),
+        array("label"=>"Guadeloupe",	"value"=>"GP"),
+        array("label"=>"Guam",	"value"=>"GU"),
+        array("label"=>"Guatemala",	"value"=>"GT"),
+        array("label"=>"Guernsey",	"value"=>"GG"),
+        array("label"=>"Guinea",	"value"=>"GN"),
+        array("label"=>"Guinea-Bissau",	"value"=>"GW"),
+        array("label"=>"Guyana",	"value"=>"GY"),
+        array("label"=>"Haiti",	"value"=>"HT"),
+        array("label"=>"Heard And Mc Donald Islands",	"value"=>"HM"),
+        array("label"=>"Honduras",	"value"=>"HN"),
+        array("label"=>"Hong Kong",	"value"=>"HK"),
+        array("label"=>"Hungary",	"value"=>"HU"),
+        array("label"=>"Iceland",	"value"=>"IS"),
+        array("label"=>"India",	"value"=>"IN"),
+        array("label"=>"Indonesia",	"value"=>"ID"),
+        array("label"=>"Iran (Islamic Republic Of)",	"value"=>"IR"),
+        array("label"=>"Iraq",	"value"=>"IQ"),
+        array("label"=>"Ireland",	"value"=>"IE"),
+        array("label"=>"Isle of Man",	"value"=>"IM"),
+        array("label"=>"Israel",	"value"=>"IL"),
+        array("label"=>"Italy",	"value"=>"IT"),
+        array("label"=>"Jamaica",	"value"=>"JM"),
+        array("label"=>"Japan",	"value"=>"JP"),
+        array("label"=>"Jersey",	"value"=>"JE"),
+        array("label"=>"Jordan",	"value"=>"JO"),
+        array("label"=>"Kazakhstan",	"value"=>"KZ"),
+        array("label"=>"Kenya",	"value"=>"KE"),
+        array("label"=>"Kiribati",	"value"=>"KI"),
+        array("label"=>"Korea, Democratic People's Republic Of",	"value"=>"KP"),
+        array("label"=>"Korea, Republic Of",	"value"=>"KR"),
+        array("label"=>"Kuwait",	"value"=>"KW"),
+        array("label"=>"Kyrgyzstan",	"value"=>"KG"),
+        array("label"=>"Lao People's Democratic Republic",	"value"=>"LA"),
+        array("label"=>"Latvia",	"value"=>"LV"),
+        array("label"=>"Lebanon",	"value"=>"LB"),
+        array("label"=>"Lesotho",	"value"=>"LS"),
+        array("label"=>"Liberia",	"value"=>"LR"),
+        array("label"=>"Libyan Arab Jamahiriya",	"value"=>"LY"),
+        array("label"=>"Liechtenstein",	"value"=>"LI"),
+        array("label"=>"Lithuania",	"value"=>"LT"),
+        array("label"=>"Luxembourg",	"value"=>"LU"),
+        array("label"=>"Macau",	"value"=>"MO"),
+        array("label"=>"Macedonia, The Former Yugoslav",	"value"=>"MK"),
+        array("label"=>"Of",	"value"=>"Republic"),
+        array("label"=>"Madagascar",	"value"=>"MG"),
+        array("label"=>"Malawi",	"value"=>"MW"),
+        array("label"=>"Malaysia",	"value"=>"MY"),
+        array("label"=>"Maldives",	"value"=>"MV"),
+        array("label"=>"Mali",	"value"=>"ML"),
+        array("label"=>"Malta",	"value"=>"MT"),
+        array("label"=>"Marshall Islands",	"value"=>"MH"),
+        array("label"=>"Martinique",	"value"=>"MQ"),
+        array("label"=>"Mauritania",	"value"=>"MR"),
+        array("label"=>"Mauritius",	"value"=>"MU"),
+        array("label"=>"Mayotte",	"value"=>"YT"),
+        array("label"=>"Mexico",	"value"=>"MX"),
+        array("label"=>"Micronesia, Federated States Of",	"value"=>"FM"),
+        array("label"=>"Moldova, Republic Of",	"value"=>"MD"),
+        array("label"=>"Monaco",	"value"=>"MC"),
+        array("label"=>"Mongolia",	"value"=>"MN"),
+        array("label"=>"Montserrat",	"value"=>"MS"),
+        array("label"=>"Morocco",	"value"=>"MA"),
+        array("label"=>"Mozambique",	"value"=>"MZ"),
+        array("label"=>"Myanmar",	"value"=>"MM"),
+        array("label"=>"Namibia",	"value"=>"NA"),
+        array("label"=>"Nauru",	"value"=>"NR"),
+        array("label"=>"Nepal",	"value"=>"NP"),
+        array("label"=>"Netherlands",	"value"=>"NL"),
+        array("label"=>"Netherlands Antilles",	"value"=>"AN"),
+        array("label"=>"New Caledonia",	"value"=>"NC"),
+        array("label"=>"New Zealand",	"value"=>"NZ"),
+        array("label"=>"Nicaragua",	"value"=>"NI"),
+        array("label"=>"Niger",	"value"=>"NE"),
+        array("label"=>"Nigeria",	"value"=>"NG"),
+        array("label"=>"Niue",	"value"=>"NU"),
+        array("label"=>"Norfolk Island",	"value"=>"NF"),
+        array("label"=>"Northern Mariana Islands",	"value"=>"MP"),
+        array("label"=>"Norway",	"value"=>"NO"),
+        array("label"=>"Oman",	"value"=>"OM"),
+        array("label"=>"Pakistan",	"value"=>"PK"),
+        array("label"=>"Palau",	"value"=>"PW"),
+        array("label"=>"Palestinian Territories",	"value"=>"PS"),
+        array("label"=>"Panama",	"value"=>"PA"),
+        array("label"=>"Papua New Guinea",	"value"=>"PG"),
+        array("label"=>"Paraguay",	"value"=>"PY"),
+        array("label"=>"Peru",	"value"=>"PE"),
+        array("label"=>"Philippines",	"value"=>"PH"),
+        array("label"=>"Pitcairn",	"value"=>"PN"),
+        array("label"=>"Poland",	"value"=>"PL"),
+        array("label"=>"Portugal",	"value"=>"PT"),
+        array("label"=>"Puerto Rico",	"value"=>"PR"),
+        array("label"=>"Qatar",	"value"=>"QA"),
+        array("label"=>"Reunion",	"value"=>"RE"),
+        array("label"=>"Romania",	"value"=>"RO"),
+        array("label"=>"Russian Federation",	"value"=>"RU"),
+        array("label"=>"Rwanda",	"value"=>"RW"),
+        array("label"=>"Saint Kitts And Nevis",	"value"=>"KN"),
+        array("label"=>"Saint Lucia",	"value"=>"LC"),
+        array("label"=>"Saint Vincent And The Grenadines",	"value"=>"VC"),
+        array("label"=>"Samoa",	"value"=>"WS"),
+        array("label"=>"San Marino",	"value"=>"SM"),
+        array("label"=>"Sao Tome And Principe",	"value"=>"ST"),
+        array("label"=>"Saudi Arabia",	"value"=>"SA"),
+        array("label"=>"Senegal",	"value"=>"SN"),
+        array("label"=>"Seychelles",	"value"=>"SC"),
+        array("label"=>"Sierra Leone",	"value"=>"SL"),
+        array("label"=>"Singapore",	"value"=>"SG"),
+        array("label"=>"Slovakia (Slovak Republic)",	"value"=>"SK"),
+        array("label"=>"Slovenia",	"value"=>"SI"),
+        array("label"=>"Solomon Islands",	"value"=>"SB"),
+        array("label"=>"Somalia",	"value"=>"SO"),
+        array("label"=>"South Africa",	"value"=>"ZA"),
+        array("label"=>"South Georgia And South Sandwich",	"value"=>"GS"),
+        array("label"=>"Spain",	"value"=>"ES"),
+        array("label"=>"Sri Lanka",	"value"=>"LK"),
+        array("label"=>"St. Helena",	"value"=>"SH"),
+        array("label"=>"St. Pierre And Miquelon",	"value"=>"PM"),
+        array("label"=>"Sudan",	"value"=>"SD"),
+        array("label"=>"Suriname",	"value"=>"SR"),
+        array("label"=>"Svalbard And Jan Mayen Islands",	"value"=>"SJ"),
+        array("label"=>"Swaziland",	"value"=>"SZ"),
+        array("label"=>"Sweden",	"value"=>"SE"),
+        array("label"=>"Switzerland",	"value"=>"CH"),
+        array("label"=>"Syrian Arab Republic",	"value"=>"SY"),
+        array("label"=>"Taiwan, Province Of China",	"value"=>"TW"),
+        array("label"=>"Tajikistan",	"value"=>"TJ"),
+        array("label"=>"Tanzania, United Republic Of",	"value"=>"TZ"),
+        array("label"=>"Thailand",	"value"=>"TH"),
+        array("label"=>"Togo",	"value"=>"TG"),
+        array("label"=>"Tokelau",	"value"=>"TK"),
+        array("label"=>"Tonga",	"value"=>"TO"),
+        array("label"=>"Trinidad And Tobago",	"value"=>"TT"),
+        array("label"=>"Tunisia",	"value"=>"TN"),
+        array("label"=>"Turkey",	"value"=>"TR"),
+        array("label"=>"Turkmenistan",	"value"=>"TM"),
+        array("label"=>"Turks And Caicos Islands",	"value"=>"TC"),
+        array("label"=>"Tuvalu",	"value"=>"TV"),
+        array("label"=>"Uganda",	"value"=>"UG"),
+        array("label"=>"Ukraine",	"value"=>"UA"),
+        array("label"=>"United Arab Emirates",	"value"=>"AE"),
+        array("label"=>"United Kingdom",	"value"=>"UK"),
+        array("label"=>"United States",	"value"=>"US"),
+        array("label"=>"United States Minor Outlying Islands",	"value"=>"UM"),
+        array("label"=>"Uruguay",	"value"=>"UY"),
+        array("label"=>"Uzbekistan",	"value"=>"UZ"),
+        array("label"=>"Vanuatu",	"value"=>"VU"),
+        array("label"=>"Vatican City State (Holy See)",	"value"=>"VA"),
+        array("label"=>"Venezuela",	"value"=>"VE"),
+        array("label"=>"Viet Nam",	"value"=>"VN"),
+        array("label"=>"Virgin Islands (British)",	"value"=>"VG"),
+        array("label"=>"Virgin Islands (U.S.)",	"value"=>"VI"),
+        array("label"=>"Wallis And Futuna Islands",	"value"=>"WF"),
+        array("label"=>"Western Sahara",	"value"=>"EH"),
+        array("label"=>"Yemen",	"value"=>"YE"),
+        array("label"=>"Yugoslavia",	"value"=>"YU"),
+        array("label"=>"Zaire",	"value"=>"ZR"),
+        array("label"=>"Zambia",	"value"=>"ZM"),
+        array("label"=>"Zimbabwe",	"value"=>"ZW"),
+        array("label"=>"Undefined",	"value"=>"N/A")
+        );
 
     function Customers(&$SOAPEngine) {
         $this->filters   = array(
@@ -5527,10 +5999,15 @@ class Customers extends Records {
                         $actionText = "Delete";
                     }
 
+        			$_customer_url = $this->url.sprintf("&service=%s&customer_filter=%s",
+                    urlencode($this->SOAPEngine->service),
+                    urlencode($customer->id)
+                    );
+
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
-                    <td>%s.%s</td>
+                    <td><a href=%s>%s.%s</a></td>
                     <td>%s %s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -5540,6 +6017,7 @@ class Customers extends Records {
                     </tr>",
                     $bgcolor,
                     $index,
+                    $_customer_url,
                     $customer->reseller,
                     $customer->id,
                     $customer->firstName,
@@ -5635,7 +6113,7 @@ class Customers extends Records {
         <tr>
         <td valign=top>
         <h3>Customer data</h3>
-        <table border=1>";
+        <table border=0>";
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
         print "<input type=hidden name=section value=customer_data>";
@@ -5657,15 +6135,88 @@ class Customers extends Records {
             $customer->$item
             );
         }
-        foreach ($this->customerFields as $item) {
-            printf ("<tr>
-            <td class=border>%s</td>
-            <td class=border><input name=%s_form size=30 type=text value='%s'></td>
-            </tr>",
-            ucfirst($item),
-            $item,
-            $customer->$item
-            );
+        foreach (array_keys($this->customerFields) as $item) {
+            if ($this->customerFields[$item]['name']) {
+                $item_name=$this->customerFields[$item]['name'];
+            } else {
+            	$item_name=ucfirst($item);
+            }
+
+            if ($item=='timezone') {
+                printf ("<tr>
+                <td class=border>%s</td>",
+                $item_name
+                );
+                print "<td class=border>";
+
+                $this->showTimezones($customer->$item);
+
+                print "</td>
+                </tr>
+                ";
+            } else if ($item=='country') {
+                printf ("<tr>
+                <td class=border>%s</td>",
+                $item_name
+                );
+                print "<td class=border>
+                <select name=country_form>";
+
+				$selected_country[$customer->country]='selected';
+
+                foreach ($this->countries as $_country) {
+                    printf ("<option value='%s' %s>%s",$_country['value'],$selected_country[$_country['value']],$_country['label']);
+                }
+
+                print "
+                </select>
+                </td>
+                </tr>
+                ";
+
+
+            } else if ($item=='state') {
+                printf ("<tr>
+                <td class=border>%s</td>",
+                $item_name
+                );
+
+                print "<td class=border>
+                <select name=state_form>";
+
+				$selected_state[$customer->state]='selected';
+
+                foreach ($this->states as $_state) {
+                    printf ("<option value='%s' %s>%s",$_state['value'],$selected_state[$_state['value']],$_state['label']);
+                }
+
+                print "
+                </select>
+                </td>
+                </tr>
+                ";
+
+            } else {
+                if ($this->customerFields[$item]['type'] == 'text') {
+                    printf ("<tr>
+                    <td class=border>%s</td>
+                    <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $customer->$item
+                    );
+                } else {
+                    printf ("<tr>
+                    <td class=border>%s</td>
+                    <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $customer->$item
+                    );
+                }
+            }
         }
 
         $this->printFiltersToForm();
@@ -5693,7 +6244,7 @@ class Customers extends Records {
         print "</td>
         <td valign=top>
         <h3>Customer properties</h3>
-        <table border=1>";
+        <table border=0>";
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
         print "<input type=hidden name=section value=customer_properties>";
@@ -5744,6 +6295,8 @@ class Customers extends Records {
             return false;
         }
 
+		$properties=array();
+
 		if ($_REQUEST['section'] == 'customer_properties') {
             foreach (array_keys($this->propertiesItems) as $item) {
                 $var_name=$item.'_form';
@@ -5753,14 +6306,24 @@ class Customers extends Records {
                                      );
     
             }
+
             $customer->properties=$properties;
+
         } else {
-            foreach ($this->customerFields as $item) {
+            foreach (array_keys($this->customerFields) as $item) {
                 $var_name=$item.'_form';
                 //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
-                $customer->$item = trim($_REQUEST[$var_name]);
-
+                if ($this->customerFields[$item]['type'] == 'integer') {
+                	$customer->$item = intval($_REQUEST[$var_name]);
+                } else {
+                	$customer->$item = trim($_REQUEST[$var_name]);
+                }
             }
+
+            foreach ($customer->properties as $_property) {
+        		$properties[]=$_property;
+        	}
+            $customer->properties=$properties;
         }
 
         /*
@@ -5781,6 +6344,28 @@ class Customers extends Records {
         } else {
         	return true;
         }
+    }
+
+    function showTimezones($timezone) {
+        if (!$fp = fopen("timezones", "r")) {
+        	print _("Failed to open timezone file.");
+            return false;
+        }
+
+        print "<select name=timezone_form>";
+        print "\n<option>";
+        while ($buffer = fgets($fp,1024)) {
+        	$buffer=trim($buffer);
+            if ($timezone==$buffer) {
+                $selected="selected";
+            } else {
+                $selected="";
+            }
+            print "\n<option $selected>";
+            print "$buffer";
+        }
+        fclose($fp);
+        print "</select>";
     }
 }
 

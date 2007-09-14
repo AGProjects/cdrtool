@@ -5,6 +5,7 @@ class CDRS_ser_radius extends CDRS {
     var $domain_table          = "domain";
     var $subscriber_table      = "subscriber";
     var $enable_thor           = false;
+    var $ENUMtld               = '';
 
     var $CDRFields=array('id'   	       => 'RadAcctId',
                          'callId'          => 'AcctSessionId',
@@ -39,7 +40,8 @@ class CDRS_ser_radius extends CDRS {
                          'DestinationId'   => 'DestinationId',
                          'BillingId'       => 'BillingId',
                          'MediaTimeout'    => 'MediaInfo',
-                         'RTPStatistics'   => 'RTPStatistics'
+                         'RTPStatistics'   => 'RTPStatistics',
+                         'ENUMtld'         => 'ENUMtld'
                          );
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
@@ -1877,7 +1879,7 @@ class CDRS_ser_radius extends CDRS {
             "Client-IP-Address"          => "ClientIPAddress",
             "NAS-Port-Id"                => "NASPortId",
             "Service-Type"               => "ServiceType",
-            "Framed-Protocol"            => "FramedProtocol",
+            "ENUMtld"            => "ENUMtld",
             "Framed-IP-Address"          => "FramedIPAddress",
             "Acct-Unique-Session-Id"     => "AcctUniqueId",
             "Connect-Info"               => "ConnectInfo_stop",
@@ -1950,7 +1952,7 @@ class CDRS_ser_radius extends CDRS {
                 CallingStationId,
                 AcctTerminateCause,
                 ServiceType,
-                FramedProtocol,
+                ENUMtld,
                 FramedIPAddress,
                 AcctStartDelay,
                 AcctStopDelay,
@@ -1980,7 +1982,7 @@ class CDRS_ser_radius extends CDRS {
                 '%{Calling-Station-Id}',
                 '%{Sip-Response-Code}',
                 '%{Service-Type}',
-                '%{Framed-Protocol}',
+                '%{ENUMtld}',
                 '%{Framed-IP-Address}',
                 '%{Acct-Delay-Time}',
                 '0',
@@ -2037,7 +2039,7 @@ class CDRS_ser_radius extends CDRS {
                 AcctSessionId, AcctUniqueId, UserName, Realm, NASIPAddress,
                 NASPortId, AcctStartTime, AcctStopTime, AcctSessionTime,
                 AcctInputOctets, AcctOutputOctets, CalledStationId,
-                CallingStationId, AcctTerminateCause, ServiceType, FramedProtocol,
+                CallingStationId, AcctTerminateCause, ServiceType, ENUMtld,
                 FramedIPAddress, AcctStartDelay, AcctStopDelay,
                 SipResponseCode, SipMethod, SipTranslatedRequestURI, SipToTag, SipFromTag,
                 SipRPID, SourceIP, SourcePort, CanonicalURI)
@@ -2045,7 +2047,7 @@ class CDRS_ser_radius extends CDRS {
                 '%{SQL-User-Name}', SUBSTRING_INDEX('%{SQL-User-Name}', '@',-1),
                 '%{NAS-IP-Address}', '%{NAS-Port}', '%S', '%S', '0', '0', '0',
                 '%{Called-Station-Id}', '%{Calling-Station-Id}',
-                '%{Sip-Response-Code}', '%{Service-Type}', '%{Framed-Protocol}',
+                '%{Sip-Response-Code}', '%{Service-Type}', '%{ENUMtld}',
                 '%{Framed-IP-Address}', '%{Acct-Delay-Time}',
                 '0','%{Sip-Response-Code}', '%{Sip-Method}',
                 '%{Sip-Translated-Request-URI}', MD5(RAND()), '%{Sip-From-Tag}',
@@ -2359,7 +2361,8 @@ class CDR_ser_radius extends CDR {
  								  'From'            => $this->BillingPartyId,
                                   'To'              => $this->DestinationForRating,
                                   'Gateway'         => $this->gateway,
-                                  'Application'     => $this->applicationType
+                                  'Application'     => $this->applicationType,
+                                  'ENUMtld'         => $this->ENUMtld
                                   );
 
         $this->traceIn();

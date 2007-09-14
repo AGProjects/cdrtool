@@ -6,6 +6,7 @@ class Rate {
     var $durationPeriodRated    = 60;    // in seconds
     var $trafficSizeRated       = 1024;  // in KBytes, default 1MByte
 	var $minimumDuration        = 0;      // minimum duration to rate, if call is shorter the price is zero
+	var $ENUMtld                = '';
 
     function Rate(&$parent) {
         $this->CDRS = &$parent->CDRS;
@@ -62,10 +63,8 @@ class Rate {
             return $this->RatingTables->customers[$this->gateway]['timezone'];
 
         } else {
-
             dprint("Found billing party = default");
         	return $this->CDRS->CDRTool['provider']['timezone'];
-
         }
     }
 
@@ -157,6 +156,7 @@ class Rate {
         $this->destinationName   = $dictionary['destinationName'];
         $this->aNumber           = $dictionary['aNumber'];
         $this->cNumber           = $dictionary['cNumber'];
+        $this->ENUMtld           = $dictionary['ENUMtld'];
         //////////////////////////////////////////////////////////
 
         if (!$this->duration) $this->duration = 0;
@@ -189,6 +189,7 @@ class Rate {
         dprint("BillingPartyId: $this->BillingPartyId");
         dprint("Billing domain: $this->domain");
         dprint("Billing gateway: $this->gateway");
+        dprint("Billing ENUMtld: $this->ENUMtld");
 
 		if (!$this->GetProfiles()) {
             return 0;
@@ -1102,6 +1103,31 @@ class RatingTables {
 
                                                                   )
                                                    ),
+                           "billing_enum_tlds"=>array("name"=>"ENUM TLDs",
+                                                 "keys"=>array("id"),
+                                                 "exceptions" =>array(),
+                                                 "size"=>6,
+                                                 "domainFilterColumn"=>"domain",
+                                                 "fields"=>array(
+                                                 				 "gateway"=>array("size"=>15,
+                                                                                  "name"=>"Gateway"
+                                                                                ),
+                                                                 "domain"=>array("size"=>15,
+                                                                 				 "name"=>"Domain"
+                                                                                 ),
+                                                                 "subscriber"=>array("size"=>15,
+                                                                 				 "name"=>"Subscriber"
+                                                                                 ),
+                                                 				 "enum_tld"=>array("size"=>35,
+                                                                                  "name"=>"ENUM TLD"
+                                                                                ),
+                                                                 "discount"=>array("size"=>10,
+                                                                 				 "name"=>"Discount"
+                                                                                 )
+
+                                                 				)
+
+                                                 ),
                            "prepaid"=>array("name"=>"Prepaid",
                                                  "keys"=>array("id"),
                                                  "size"=>15,
@@ -2247,6 +2273,7 @@ class RatingTables {
         $loaded['rates']        = $this->LoadRatesTable();
         $loaded['ratesHistory'] = $this->LoadRatesHistoryTable();
         $loaded['holidays']     = $this->LoadHolidaysTable();
+        $loaded['enumTlds']     = $this->LoadENUMtldsTable();
 
         foreach(array_keys($loaded) as $_load) {
         	syslog(LOG_NOTICE, "Loaded $loaded[$_load] $_load");
@@ -2432,6 +2459,34 @@ class RatingTables {
         return $i;
     }
 
+    function LoadENUMtldsTable() {
+        $query="select * from billing_enum_tlds";
+        if (!$this->cdrtool->query($query)) {
+            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+            return false;
+        }
+
+        $i=0;
+        $rows=$this->cdrtool->num_rows();
+        while($this->cdrtool->next_record()) {
+            if ($this->cdrtool->Record['enum_tld'] && $this->cdrtool->Record['discount']) {
+                $i++;
+                $_app=$this->cdrtool->Record['application'];
+                if (!strlen($_app)) $_app='audio';
+
+                $_ENUMtlds[$this->cdrtool->Record['enum_tld']]=
+                array(
+                     "discount"    => $this->cdrtool->Record['discount']
+                );
+            }
+        }
+
+		$this->ENUMtlds = $_ENUMtlds;
+        $this->ENUMtldsCount = $i;
+        dprint("Loaded $i ENUM tlds");
+        return $i;
+    }
+
     function LoadRatesHistoryTable() {
         $query="select *,
         UNIX_TIMESTAMP(startDate) as startDateTimestamp,
@@ -2551,6 +2606,13 @@ class RatingTables {
         	$profiles=$profiles.$key."\n";
         }
         return $profiles;
+    }
+
+    function showENUMtlds() {
+        foreach (array_keys($this->ENUMtlds) as $key) {
+        	$ENUMtlds=$ENUMtlds.$key."\n";
+        }
+        return $ENUMtlds;
     }
 
     function showRates() {
@@ -3912,6 +3974,7 @@ class RatingEngine {
         "ShowCustomers Filter=123@example.com\n".
         "ShowRates\n".
         "ShowProfiles\n".
+        "ShowENUMtlds\n".
         "ReloadPrepaidAccounts Account=abc@example.com\n".
         "ShowPrepaidAccounts Filter=123@example.com\n".
         "ShowMemory\n".
@@ -4432,6 +4495,8 @@ class RatingEngine {
             return trim($this->CDRS->RatingTables->showCustomers($NetFields['filter']));
         } else if ($NetFields['action'] == "showprofiles") {
             return trim($this->CDRS->RatingTables->showProfiles());
+        } else if ($NetFields['action'] == "showenumtlds") {
+            return trim($this->CDRS->RatingTables->showENUMtlds());
         } else if ($NetFields['action'] == "showrates") {
             return trim($this->CDRS->RatingTables->showRates());
         } else if ($NetFields['action'] == "version") {

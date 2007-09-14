@@ -1637,7 +1637,6 @@ class CDR {
     var $inputTrafficField    = "AcctInputOctets";
     var $outputTrafficField   = "AcctOutputOctets";
     var $serviceTypeField     = "ServiceType";
-    var $protocolField        = "FramedProtocol";
     var $cNumberField         = "CalledStationId";
     var $aNumberField         = "CallingStationId";
     var $disconnectField      = "H323DisconnectCause";
@@ -1794,7 +1793,8 @@ class CDR {
                                           'applicationType' => $this->applicationType,
                                           'aNumber'         => $this->aNumber,
                                           'cNumber'         => $this->cNumber,
-                                          'destinationName' => $this->destinationName
+                                          'destinationName' => $this->destinationName,
+                                          'ENUMtld'         => $this->ENUMtld
                                           );
 
                     $RateDictionaryDebug=array(
@@ -1810,7 +1810,8 @@ class CDR {
                                           'applicationType' => $this->applicationType,
                                           'aNumber'         => $this->aNumber,
                                           'cNumber'         => $this->cNumber,
-                                          'destinationName' => $this->destinationName
+                                          'destinationName' => $this->destinationName,
+                                          'ENUMtld'         => $this->ENUMtld
                                           );
 
 			        dprint_r($RateDictionaryDebug);
