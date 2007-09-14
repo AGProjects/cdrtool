@@ -1211,33 +1211,83 @@ class Records {
         }
     }
 
+    function getRecord () {
+    }
+
     function updateRecord () {
     }
+
+    function showRecord () {
+    }
+
 }
 
 class Domains extends Records {
 
-    var $maxrowsperpage= 200;
-
     function Domains(&$SOAPEngine) {
 
-        $this->filters   = array(
-                           'domain'       => trim($_REQUEST['domain_filter'])
-                           );
-
 		$this->Records(&$SOAPEngine);
+
+        if ($this->version > 1) {
+            // keep default maxrowsperpage
+        	$this->sortElements=array('changeDate' => 'Change date',
+                  	        	      'domain'     => 'Domain'
+	                        	     );
+
+            $this->filters   = array(
+                               'domain'       => trim($_REQUEST['domain_filter'])
+                               );
+
+        } else {
+    		$this->maxrowsperpage = 10000;
+        }
+
     }
 
     function listRecords() {
 
-		$this->showSeachForm();
+		if ($this->version > 1) {
 
-        // Insert credetials
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
-		$filter=$this->filters['domain'];
-        // Call function
-        $result     = $this->SOAPEngine->soapclient->getDomains($filter);
+            // Filter
+            $filter=array(
+                          'domain'    => intval($this->filters['domain']),
+                          'customer'  => intval($this->filters['customer']),
+                          'reseller'  => intval($this->filters['reseller'])
+                          );
+    
+            // Range
+            $range=array('start' => intval($this->next),
+                         'count' => intval($this->maxrowsperpage)
+                         );
+    
+            // Order
+            if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+            if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'Desc';
+    
+            $orderBy = array('attribute' => $this->sorting['sortBy'],
+                             'direction' => $this->sorting['sortOrder']
+                             );
+    
+            // Compose query
+            $Query=array('filter'     => $filter,
+                            'orderBy' => $orderBy,
+                            'range'   => $range
+                            );
+    
+            $this->showSeachForm();
+    
+            // Insert credetials
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+    
+            // Call function
+            $result     = $this->SOAPEngine->soapclient->getDomains($Query);
+		} else {
+            // Insert credetials
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+    
+            // Call function
+            $result     = $this->SOAPEngine->soapclient->getDomains();
+        }
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -1247,7 +1297,11 @@ class Domains extends Records {
             return false;
         } else {
 
-			$this->rows = count($result);
+			if ($this->version > 1) {
+				$this->rows = $result->total;
+            } else {
+				$this->rows = count($result);
+            }
 
      		if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
@@ -1283,8 +1337,14 @@ class Domains extends Records {
 
 			if ($this->rows) {
                 while ($i < $maxrows)  {
-    
-                    $domain = $result[$i];
+
+					if ($this->version > 1) {
+                    	if (!$result->domains[$i]) break;
+                    	$domain = $result->domains[$i];
+                    } else {
+                    	$domain = $result[$i];
+                    }
+
                     $index = $this->next+$i+1;
     
                     $rr=floor($index/2);
@@ -1350,7 +1410,9 @@ class Domains extends Records {
 
             print "</table>";
 
-            $this->showPagination($maxrows);
+	        if ($this->version > 1) {
+            	$this->showPagination($maxrows);
+            }
 
             return true;
         }
@@ -1358,8 +1420,9 @@ class Domains extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" Domain<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
-
+        if ($this->version > 1) {
+        	printf (" Domain<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
+        }
     }
 
     function deleteRecord() {
@@ -5318,6 +5381,10 @@ class Customers extends Records {
                                                                'category' => 'sip')
                                  );
 
+    var $customerFieldsReadOnly=array(
+                              'id',
+                              'reseller'
+                              );
     var $customerFields=array(
                               'username',
                               'firstName',
@@ -5493,7 +5560,7 @@ class Customers extends Records {
 
 
 			if ($this->rows == 1 ) {
-                $this->showCustomer($customer->id);
+                $this->showRecord($customer->id);
             } else {
             	$this->showPagination($maxrows);
             }
@@ -5557,9 +5624,9 @@ class Customers extends Records {
         }
     }
 
-    function showCustomer($id) {
+    function showRecord($id) {
 
-        if (!$customerInfo = $this->getCustomer($id)) {
+        if (!$customer = $this->getCustomer($id)) {
             return false;
         }
 
@@ -5581,6 +5648,15 @@ class Customers extends Records {
         <td class=border>Field</td>
         <td class=border>Value</td>
         </tr>");
+        foreach ($this->customerFieldsReadOnly as $item) {
+            printf ("<tr>
+            <td class=border>%s</td>
+            <td class=border>%s</td>
+            </tr>",
+            ucfirst($item),
+            $customer->$item
+            );
+        }
         foreach ($this->customerFields as $item) {
             printf ("<tr>
             <td class=border>%s</td>
@@ -5588,7 +5664,7 @@ class Customers extends Records {
             </tr>",
             ucfirst($item),
             $item,
-            $customerInfo->$item
+            $customer->$item
             );
         }
 
@@ -5603,11 +5679,11 @@ class Customers extends Records {
 
         /*
         print "<pre>";
-        print_r($customerInfo);
+        print_r($customer);
         print "</pre>";
         */
 
-		foreach ($customerInfo->properties as $_property) {
+		foreach ($customer->properties as $_property) {
             if (in_array($_property->name,array_keys($this->propertiesItems))) {
         		$this->propertiesItems[$_property->name]['value']=$_property->value;
             }
@@ -5664,7 +5740,7 @@ class Customers extends Records {
 
         if (!$_REQUEST['customer_filter']) return;
 
-        if (!$customerInfo=$this->getCustomer($_REQUEST['customer_filter'])) {
+        if (!$customer=$this->getCustomer($_REQUEST['customer_filter'])) {
             return false;
         }
 
@@ -5677,10 +5753,11 @@ class Customers extends Records {
                                      );
     
             }
-            $customerInfo->properties=$properties;
+            $customer->properties=$properties;
         } else {
             foreach ($this->customerFields as $item) {
                 $var_name=$item.'_form';
+                //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
                 $customer->$item = trim($_REQUEST[$var_name]);
 
             }
@@ -5693,7 +5770,7 @@ class Customers extends Records {
         */
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-        $result     = $this->SOAPEngine->soapclient->updateAccount($customerInfo);
+        $result     = $this->SOAPEngine->soapclient->updateAccount($customer);
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
