@@ -7,6 +7,8 @@ class Rate {
     var $trafficSizeRated       = 1024;  // in KBytes, default 1MByte
 	var $minimumDuration        = 0;      // minimum duration to rate, if call is shorter the price is zero
 	var $ENUMtld                = '';
+	var $ENUMdiscount           = 0;     // how much percentage to substract from the final price
+	var $price                  = 0;
 
     function Rate(&$parent) {
         $this->CDRS = &$parent->CDRS;
@@ -118,9 +120,6 @@ class Rate {
     function calculate(&$dictionary) {
         dprint("<b>Rate->calculate(&dictionary)</b>");
 
-        $this->price=0;
-        $this->ENUMdiscount=0;
-
 		if ($this->duration > $this->minimumDuration) return 0;
 
         $log='Calculate dictionary: ';
@@ -170,7 +169,6 @@ class Rate {
         	$this->ENUMdiscount = $this->RatingTables->ENUMtlds[$this->ENUMtld]['discount'];
             if (!is_numeric($this->ENUMdiscount ) || $this->ENUMdiscount <0 || $this->ENUMdiscount >100) {
   				syslog(LOG_NOTICE, "Error: ENUM discount for tld $this->ENUMtld must be between 0 and 100");
-                $this->ENUMdiscount=0;
             }
         }
 
@@ -238,7 +236,8 @@ class Rate {
                 "         App: $this->applicationType\n".
                 " Destination: $this->DestinationId ($this->destinationNamePrint)\n".
                 "    Customer: $this->CustomerProfile\n";
-            if ($this->ENUMtld) {
+
+            if ($this->ENUMtld && $this->ENUMtld != 'n/a') {
             $this->rateInfo .= 
     
                 "    ENUM tld: $this->ENUMtld\n".
