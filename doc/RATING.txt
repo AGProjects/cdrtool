@@ -171,7 +171,20 @@ the destination ID and billing party found in previous steps.
    else 
         Price = 0
 
-7. Save the calculated price, Billing Party and Destination Id for each call
+
+   ENUM discounts
+   --------------
+
+   The ratign engine can apply the discount associated with the ENUM top
+   level domain that returned the final destination.
+
+   Price = Price - Price * ENUM discount /100
+
+   To apply ENUM based discounts, the ENUM TLD must be saved with each CDR
+   and the TLDs with their corespondent discounts must be provisioned in the
+   Rating tables section.
+
+8. Save the calculated price, Billing Party and Destination Id for each call
    in the CDRs. Having the price stored in database, it is possible to build
    statistics to display consolidated revenues per country code, network or
    subscriber.
@@ -230,8 +243,8 @@ The results of the import operation is logged in the database and can be
 viewed in the Log section of the web interface and syslog.
 
 
-Rating database tables
-----------------------
+Rating tables
+--------------
 
 To see the tables structures use describe table_name after connecting to
 cdrtool database. Run show tables and describe table_name:
@@ -342,6 +355,19 @@ prepaid
 | call_in_progress |
 | last_call_price  |
 +------------------+
+
+billing_enum_tlds
++-------------+
+| Field       |
++-------------+
+| id          | 
+| gateway     | 
+| domain      | 
+| subscriber  | 
+| enum_tld    | 
+| e164_regexp | 
+| discount    | 
++-------------+
 
 
 Rating tables management
@@ -469,9 +495,10 @@ The rating engine does not calculate rates based on the outbound carriers or
 outbound gateways, the rates are based per calling party and not per called
 party.
 
-Price discounts must be applied outside CDRTool, in the billing system that
-prints the actual invoices. CDRTool has no possibility to rate only calls
-after X minutes per month for subscriber Y, all calls are rated uniformly.
+Price discounts (except those on ENUM tld) must be applied outside CDRTool,
+in the billing system that prints the actual invoices. CDRTool has no
+possibility to rate only calls after X minutes per month for subscriber Y,
+all calls are rated uniformly.
 
 
 Performance
