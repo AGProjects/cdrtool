@@ -4,26 +4,45 @@ cdrtool (5.2.7) unstable; urgency=low
     discounts by ENUM top level domain. This requires changes to the database
     structures and the following changes must be applied in sequence:
 
-    1. rename the column FramedProtocol to ENUM tld in all radiusYYYMMDD
-    tables. Tthis operation can take a long time to complete depending on
-    the number of records in the table Beware that during the modification
-    of radiusYYYMMDD tables no accounting records can be written to the
-    database (the database table is locked)
+    1. Set up OpenSER to log the new Radius attribute ENUMtld
+       modparam("acc", "radius_extra",       "Sip-RPid=$avp(s:rpid); \
+                                             ...   
+                                             ENUM-TLD=$avp(s:enum_tld)")
 
-    alter table radacct change column FramedProtocol ENUMtld varchar(64) not NULL;
 
-    2. apply the changes from setup/mysql/alter_tables.mysql
+      if (enum_query("e164.arpa.")) {
+            xlog("L_INFO", "Found E2U+sip address in e164.arpa: $ru");
+            avp_delete("$avp(s:enum_tld)/g");
+            avp_write("e164.arpa", "$avp(s:enum_tld)");
+       }
+
+    2. update both OpenSER dictionary with:
+    ATTRIBUTE       ENUM-TLD               232     strin
 
     3. reload the stored procedures
     setup/radius/OpenSER/radius_accounting.proc
 
-    4. update both OpenSER and Freeradius dictionary with:
+    4. update Freeradius dictionary with:
     ATTRIBUTE       ENUM-TLD               232     strin
 
     5. update Freeradius configuration with the new configuration from:
         setup/radius/OpenSER/radius_accounting.conf
+       
+    6. restart Feeradius server 
 
-    6. Set up OpenSER to log the new Radius attribute ENUMtld
+    7. rename the column FramedProtocol to ENUM tld in all radiusYYYMMDD
+    tables. Tthis operation can take a long time to complete depending on
+    the number of records in the table Beware that during the modification
+    of radiusYYYMMDD tables no accounting records can be written to the
+    database (the database table is locked). When using table auto-rotation
+    and stored procedures, it is best to implement these changes in the
+    first day of the month imediately after the table rotation moment.
+
+    alter table radacct change column FramedProtocol ENUMtld varchar(64) not NULL;
+
+    8. apply the changes from setup/mysql/alter_tables.mysql
+
+  * Removed unused SOAP directory
 
  -- Adrian Georgescu <ag@ag-projects.com>  Fri, 14 Sep 2007 14:32:49 +0200
 

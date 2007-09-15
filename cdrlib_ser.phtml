@@ -63,7 +63,8 @@ class CDRS_ser_radius extends CDRS {
                                       'applicationType' => 'SipApplicationType',
                                       'BillingPartyId'  => 'UserName',
                                       'price'           => 'Price',
-                                      'DestinationId'   => 'DestinationId'
+                                      'DestinationId'   => 'DestinationId',
+                                      'ENUMtld'         => 'ENUMtld'
                                       );
 
     var $GROUPBY=array('UserName'             => 'SIP Billing Party',
@@ -2274,7 +2275,7 @@ class CDR_ser_radius extends CDR {
 
 		$this->CanonicalURIPrint=$this->CanonicalURI;
 
-        $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->CanonicalURI,"destination",$this->BillingPartyId,$this->domain,$this->gateway);
+        $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->CanonicalURI,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
         $this->CanonicalURINormalized       = $NormalizedNumber['Normalized'];
         $this->CanonicalURIUsername         = $NormalizedNumber['username'];
         $this->CanonicalURIDomain           = $NormalizedNumber['domain'];
@@ -2288,7 +2289,7 @@ class CDR_ser_radius extends CDR {
         dprint ("id = $this->DestinationId, name=$this->destinationName");
 
         dprint("<b>Dialed URI: $this->cNumber</b>");
-		$NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->cNumber,"destination",$this->BillingPartyId,$this->domain,$this->gateway);
+		$NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->cNumber,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
         $this->cNumberNormalized            = $NormalizedNumber['Normalized'];
         $this->cNumberUsername              = $NormalizedNumber['username'];
         $this->cNumberDomain                = $NormalizedNumber['domain'];
@@ -2298,7 +2299,7 @@ class CDR_ser_radius extends CDR {
         // Next hop is real destination after all lookups including DNS
 
         dprint("<b>Next hop: $this->RemoteAddress</b>");
-        $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->RemoteAddress,"destination",$this->BillingPartyId,$this->domain,$this->gateway);
+        $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->RemoteAddress,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
         $this->RemoteAddressPrint           = $NormalizedNumber['NumberPrint'];
         $this->RemoteAddressNormalized      = $NormalizedNumber['Normalized'];
         $this->RemoteAddressDestinationId   = $NormalizedNumber['DestinationId'];
@@ -2543,6 +2544,16 @@ class CDR_ser_radius extends CDR {
                 <td></td>
                 <td>Destination: </td>
                 <td>$this->destinationName ($this->DestinationId)</td>
+            </tr>
+            ";
+        }
+
+        if ($this->ENUMtld) {
+            $CallInfoVerbose.= "
+            <tr>
+                <td></td>
+                <td>ENUM TLD: </td>
+                <td>$this->ENUMtld</td>
             </tr>
             ";
         }

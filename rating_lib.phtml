@@ -73,7 +73,7 @@ class Rate {
         //dprint_r($RateDictionary);
         $cmd="ShowPrice";
         foreach (array_keys(&$RateDictionary) as $key) {
-            $cmd=$cmd." ".$key."=".$RateDictionary[$key]." ";
+            $cmd .=" ".$key."=".$RateDictionary[$key]." ";
         }
 
         dprint("command: $cmd");
@@ -119,8 +119,16 @@ class Rate {
         dprint("<b>Rate->calculate(&dictionary)</b>");
 
         $this->price=0;
+        $this->ENUMdiscount=0;
 
 		if ($this->duration > $this->minimumDuration) return 0;
+
+        $log='Calculate dictionary: ';
+		foreach (array_keys($dictionary) as $entry) {
+            $log.= sprintf("%s=%s ",$entry,$dictionary[$entry]);
+        }
+
+  		syslog(LOG_NOTICE, $log);
 
         //dprint_r($dictionary);
 
@@ -157,6 +165,15 @@ class Rate {
         $this->aNumber           = $dictionary['aNumber'];
         $this->cNumber           = $dictionary['cNumber'];
         $this->ENUMtld           = $dictionary['ENUMtld'];
+
+		if ($this->ENUMtld) {
+        	$this->ENUMdiscount = $this->RatingTables->ENUMtlds[$this->ENUMtld]['discount'];
+            if (!is_numeric($this->ENUMdiscount ) || $this->ENUMdiscount <0 || $this->ENUMdiscount >100) {
+  				syslog(LOG_NOTICE, "Error: ENUM discount for tld $this->ENUMtld must be between 0 and 100");
+                $this->ENUMdiscount=0;
+            }
+        }
+
         //////////////////////////////////////////////////////////
 
         if (!$this->duration) $this->duration = 0;
@@ -221,7 +238,13 @@ class Rate {
                 "         App: $this->applicationType\n".
                 " Destination: $this->DestinationId ($this->destinationNamePrint)\n".
                 "    Customer: $this->CustomerProfile\n";
+            if ($this->ENUMtld) {
+            $this->rateInfo .= 
     
+                "    ENUM tld: $this->ENUMtld\n".
+                "    ENUM discount: $this->ENUMdiscount%\n";
+            }
+
             if ($this->increment > 1) {
                 $this->rateInfo .= 
                 "    Increment: $this->increment s\n";
@@ -380,6 +403,16 @@ class Rate {
         }
 
         $this->rateInfo=trim($this->rateInfo);
+
+		if ($this->ENUMdiscount) {
+			$this->priceBeforeDiscount=sprintf("%.4f",$this->price);
+            $this->price = $this->price - $this->price*$this->ENUMdiscount/100;
+			$this->price=sprintf("%.4f",$this->price);
+                $this->rateInfo .=
+                "\n--\n".
+                "       Total: $this->priceBeforeDiscount\n".
+                "  Total after discount: $this->price\n";
+        }
 
 		$this->price=sprintf("%.4f",$this->price);
 
@@ -1120,6 +1153,9 @@ class RatingTables {
                                                                                  ),
                                                  				 "enum_tld"=>array("size"=>35,
                                                                                   "name"=>"ENUM TLD"
+                                                                                ),
+                                                 				 "e164_regexp"=>array("size"=>35,
+                                                                                  "name"=>"E164 regexp"
                                                                                 ),
                                                                  "discount"=>array("size"=>10,
                                                                  				 "name"=>"Discount"
@@ -2469,14 +2505,15 @@ class RatingTables {
         $i=0;
         $rows=$this->cdrtool->num_rows();
         while($this->cdrtool->next_record()) {
-            if ($this->cdrtool->Record['enum_tld'] && $this->cdrtool->Record['discount']) {
+            if ($this->cdrtool->Record['enum_tld']) {
                 $i++;
                 $_app=$this->cdrtool->Record['application'];
                 if (!strlen($_app)) $_app='audio';
 
                 $_ENUMtlds[$this->cdrtool->Record['enum_tld']]=
                 array(
-                     "discount"    => $this->cdrtool->Record['discount']
+                     "discount"    => $this->cdrtool->Record['discount'],
+                     "e164_regexp" => $this->cdrtool->Record['e164_regexp']
                 );
             }
         }
@@ -3763,10 +3800,16 @@ class RatingEngine {
     function reloadRatingTables () {
         $b=time();
 
-        if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete('destinations');
+        if (is_object($this->CDRS->mc)) {
+        	$this->CDRS->mc->delete('destinations');
+            $this->CDRS->mc->delete('ENUMtlds');
+        }
 
         $i=$this->CDRS->LoadDestinations();
         syslog(LOG_NOTICE, "Loaded $i destinations");
+
+        $i=$this->CDRS->LoadENUMtlds();
+        syslog(LOG_NOTICE, "Loaded $i ENUMtlds");
 
         $this->CDRS->RatingTables->LoadRatingTables();
         $this->loadPrepaidAccounts();
@@ -4429,7 +4472,8 @@ class RatingEngine {
                               $this->CDRS->CDRFields['inputTraffic']    => $NetFields['inputTraffic'],
                               $this->CDRS->CDRFields['outputTraffic']   => $NetFields['outputTraffic'],
                               $this->CDRS->CDRFields['applicationType'] => $application,
-                              $this->CDRS->CDRFields['gateway']         => $NetFields['gateway']
+                              $this->CDRS->CDRFields['gateway']         => $NetFields['gateway'],
+                              $this->CDRS->CDRFields['ENUMtld']         => $NetFields['enumtld']
                               );
 
             // Init CDR
@@ -4450,7 +4494,8 @@ class RatingEngine {
                                   'applicationType' => $CDR->applicationType,
                                   'aNumber'         => $CDR->aNumber,
                                   'cNumber'         => $CDR->cNumber,
-                                  'destinationName' => $CDR->destinationName
+                                  'destinationName' => $CDR->destinationName,
+                                  'ENUMtld'         => $CDR->ENUMtld
                                   );
 
             $Rate = new Rate(&$CDR);

@@ -439,6 +439,7 @@ CREATE TABLE `billing_enum_tlds` (
   `domain` varchar(50) NOT NULL default '',
   `subscriber` varchar(50) NOT NULL default '',
   `enum_tld` varchar(100) NOT NULL,
+  `e164_regexp` varchar(100) NOT NULL,
   `discount` varchar(25) NOT NULL default '',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `enum_idx` (`gateway`,`domain`,`subscriber`,`enum_tld`),

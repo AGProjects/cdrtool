@@ -236,6 +236,7 @@ class CDRS {
 
         $this->LoadDisconnectCodes();
         $this->LoadDestinations();
+        $this->LoadENUMtlds();
         $this->LoadDomains();
         $this->getCDRtables();
 
@@ -406,6 +407,55 @@ class CDRS {
 
 		$c=$this->destinationsCount + $this->sipDestinationsCount;
         return $c;
+    }
+
+    function LoadENUMtlds() {
+        //dprint("CDRS->LoadENUMtlds()\n");
+
+		$_ENUMtlds =array();
+
+        if (is_object($this->mc) && $_value = $this->mc->get('ENUMtlds')) {
+
+			$_ENUMtlds=json_decode($_value,true);
+
+            $this->ENUMtlds    = &$_ENUMtlds;
+            $c=count($this->ENUMtlds);
+    
+            dprint("Loaded $c ENUM tlds from memory\n");
+
+        } else {
+
+            $query="select * from billing_enum_tlds";
+
+            dprint($query);
+            $this->cdrtool->query($query);
+
+            $mc_value = "\n";
+
+            while($this->cdrtool->next_record()) {
+
+                $_ENUMtlds[trim($this->cdrtool->Record['enum_tld'])]=
+                		array('discount'    => trim($this->cdrtool->Record['discount']),
+                              'e164_regexp' => trim($this->cdrtool->Record['e164_regexp'])
+                             );
+            }
+
+            if (is_object($this->mc)) {
+            	if ($this->mc->set('ENUMtlds',json_encode($_ENUMtlds),0,0)) {
+                	$log=sprintf("Saved %d ENUM TLDs in memcache key ENUMtlds",$this->ENUMtldCount);
+            		syslog(LOG_NOTICE, $log);
+                }
+            }
+
+            $this->ENUMtlds    = &$_ENUMtlds;
+            $c=count($this->ENUMtlds);
+    
+            dprint("Loaded $c ENUM tlds from database\n");
+
+        }
+
+        //dprint_r($this->ENUMtlds);
+        return count($this->ENUMtlds);
     }
 
     function LoadDisconnectCodes() {
@@ -943,8 +993,8 @@ class CDRS {
         return 1;
     }
 
-    function NormalizeNumber($Number,$type="destination",$subscriber="",$domain="",$gateway="",$CountryCode="") {
-        dprint("CDRS->NormalizeNumber($Number,type=$type,subscriber=$subscriber,domain=$domain,gateway=$gateway,CountryCode=$CountryCode)");
+    function NormalizeNumber($Number,$type="destination",$subscriber="",$domain="",$gateway="",$CountryCode="",$ENUMtld="") {
+        dprint("CDRS->NormalizeNumber($Number,type=$type,subscriber=$subscriber,domain=$domain,gateway=$gateway,CountryCode=$CountryCode,ENUMtld=$ENUMtld)");
 
         $this->CSCODE="";
 
@@ -1018,12 +1068,12 @@ class CDRS {
 
 			if (!$CountryCode) $CountryCode=$this->CDRTool['normalize']['defaultCountryCode'];
 
-            $E164 =  new $E164_class($this->intAccessCode, $this->natAccessCode,$CountryCode);
+            $E164 =  new $E164_class($this->intAccessCode, $this->natAccessCode,$CountryCode,$this->ENUMtlds[$ENUMtld]['e164_regexp']);
 
             $NumberStack['E164']=$E164->E164Format($NumberStack['username']);
         }
 
-        if ($type=="destination" && $NumberStack[E164]) {
+        if ($type=="destination" && $NumberStack['E164']) {
             // lookup destination id for the E164 number
             $dst_struct                     = $this->getDestinationId($NumberStack[E164],$subscriber,$domain,$gateway);
             $NumberStack['DestinationId']   = $dst_struct[0];
@@ -1031,11 +1081,17 @@ class CDRS {
 
             $NumberStack['NumberPrint']     = "+".$NumberStack[E164];
 
+            if (!$ENUMtld) {
             $NumberStack['Normalized']      = $this->intAccessCode.
                                               $NumberStack['E164'].
                                               $NumberStack['delimiter'].
                                               $NumberStack['domain'];
-
+            } else {
+            $NumberStack['Normalized']      =
+                                              $NumberStack['username'].
+                                              $NumberStack['delimiter'].
+                                              $NumberStack['domain'];
+            }
         } else {
             $dst_struct                     = $this->getDestinationId($Number,$subscriber,$domain,$gateway);
             $NumberStack['DestinationId']   = $dst_struct[0];
@@ -1603,18 +1659,20 @@ class CDRS_unknown extends CDRS {
 }
 
 class E164_Europe extends E164 {
-    function E164_Europe ($intAccessCode='00', $natAccessCode='0',$CountryCode='') {
+    function E164_Europe ($intAccessCode='00', $natAccessCode='0',$CountryCode='',$ENUMtldRegexp="([1-9][0-9]{7,})") {
         $this->regexp_international = "/^".$intAccessCode."([1-9][0-9]{5,})\$/";
         $this->regexp_national      = "/^".$natAccessCode."([1-9][0-9]{3,})\$/";
-        $this->CountryCode          = $CountryCode;
+        $this->CountryCode          = trim($CountryCode);
+        $this->ENUMtldRegexp        = trim($ENUMtldRegexp);
     }
 }
 
 class E164_US extends E164 {
-    function E164_US($intAccessCode='011', $natAccessCode='[1-9][0-9]{2}',$CountryCode='') {
+    function E164_US($intAccessCode='011', $natAccessCode='[1-9][0-9]{2}',$CountryCode='',$ENUMtldRegexp="([1-9][0-9]{7,})") {
         $this->regexp_international = "/^".$intAccessCode."([1-9][0-9]{5,})\$/";
         $this->regexp_national      = "/^".$natAccessCode."([0-9]{3,})\$/";
-        $this->CountryCode          = $CountryCode;
+        $this->CountryCode          = trim($CountryCode);
+        $this->ENUMtldRegexp        = trim($ENUMtldRegexp);
     }
 }
 

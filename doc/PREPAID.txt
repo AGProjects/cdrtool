@@ -8,11 +8,7 @@ call status and terminates calls by sending BYEs to both SIP end-points. The
 call control module communicates with both the SIP Proxy and CDRTool using
 an API described below. 
 
-2. SOAP/XML provisioning interface - manages the creation and crediting of
-prepaid accounts from external systems (remote web front-ends). The prepaid
-accounts can be also managed in the Rating tables web interface.
-
-3. CDRTool rating engine - provides session locking, calculates maximum
+2. CDRTool rating engine - provides session locking, calculates maximum
 session time based on user balance and destination using the same algorithm
 as the postpaid engine and debits the subscriber balance.
 

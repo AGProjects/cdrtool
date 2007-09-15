@@ -790,17 +790,19 @@ function changeLanguage() {
 class E164 {
     // Class that helps normalization of a telephone number in E164 format
 
-    // Based on this normalization CDRTool rating engine decides whether
+    // Based on this normalization, CDRTool rating engine decides whether
     // to consider the session a PSTN destination and rate it according
     // to the PSTN rating plan
 
-    function E164($intAccessCode='00', $natAccessCode='0',$CountryCode='') {
+    function E164($intAccessCode='00', $natAccessCode='0',$CountryCode='',$ENUMtldRegexp="") {
         $this->regexp_international = "/^".$intAccessCode."([0-9]{5,})\$/";
         $this->regexp_national      = "/^".$natAccessCode."([0-9]{3,})\$/";
-        $this->CountryCode          = $CountryCode;
+        $this->CountryCode          = trim($CountryCode);
+        $this->ENUMtldRegexp        = trim($ENUMtldRegexp);
     }
 
     function E164Format($Number) {
+        //dprint "E164Format($Number,ENUMtldRegexp=$this->ENUMtldRegexp)";
         // This function returns the full E164 format for a PSTN number without leading zero or +
         // E164 = Country Code + Network Code + Subscriber Number
         // Example: 31208015100 is an E164 number from Holland (country code 31)
@@ -814,9 +816,16 @@ class E164 {
             // Add default country code
             dprint("$Number is a national number");
             return $this->CountryCode.$m[1];
-        } else {
-            return ;
-        }
+        } else if (strlen($this->ENUMtldRegexp)) {
+            $_regexp="/^".$this->ENUMtldRegexp."\$/";
+            if (preg_match($_regexp,$Number,$m)) {
+            	dprint("$Number is an ENUM number that matched $_regexp");
+                return $m[1];
+            } else {
+                dprint ("No match for $_regexp");
+            }
+        } 
+        return false;
     }
 }
 
