@@ -1,7 +1,4 @@
 <?
-define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
-include_once(SMARTY_DIR . 'Smarty.class.php');
-
 class SIPSettings {
 
 	var $soapClassSipPort          = 'WebService_NGNPro_SipPort';
@@ -785,7 +782,6 @@ class SIPSettings {
         $this->voicemail['Options']        = $result->options;
         $this->voicemail['Account']        = $result->mailbox.'@'.$this->voicemail['Server'];
 
-        // required by SMARTY because it cannot parse arrays
 		$this->voicemailMailbox=$result->mailbox;
 
         //dprint_r($this->voicemail);
@@ -4933,8 +4929,12 @@ class SIPSettings {
 
         if (in_array("free-pstn",$this->groups)) $this->allowPSTN=1;
 
+		define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
+		include_once(SMARTY_DIR . 'Smarty.class.php');
+
         $smarty = new Smarty;
         $smarty->template_dir = '.';
+
         //$smarty->use_sub_dirs = true;
         //$smarty->cache_dir = 'templates_c';
 
