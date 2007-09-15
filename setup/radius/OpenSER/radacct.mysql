@@ -19,7 +19,7 @@ CREATE TABLE `radacct` (
   `CallingStationId` varchar(50) NOT NULL default '',
   `AcctTerminateCause` varchar(32) NOT NULL default '',
   `ServiceType` varchar(32) default NULL,
-  `ENUMtld` varchar(32) default NULL,
+  `ENUMtld` varchar(64) default NULL,
   `FramedIPAddress` varchar(15) NOT NULL default '',
   `AcctStartDelay` int(12) default NULL,
   `AcctStopDelay` int(12) default NULL,

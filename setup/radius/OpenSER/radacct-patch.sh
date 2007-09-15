@@ -48,6 +48,7 @@ alter table $radacct change column AcctSessionId AcctSessionId varchar(255) not 
 alter table $radacct change column NASPortType NASPortType varchar(255) not null;
 alter table $radacct change column NASPortId NASPortId varchar(50) not null;
 alter table $radacct change column AcctUniqueId AcctUniqueId varchar(255) not null;
+alter table $radacct change column FramedProtocol ENUMtld varchar(64) not null;
 
 alter table $radacct add unique sess_id(AcctSessionId(128),SipFromTag,SipToTag) ;
 

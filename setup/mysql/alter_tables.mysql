@@ -432,6 +432,7 @@ setup/radius/OpenSER/radius_accounting.proc
 5.2.7
 alter table auth_user add column reseller bigint unsigned not null;
 alter table auth_user add column soapEngines varchar(255) not null;
+
 CREATE TABLE `billing_enum_tlds` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
   `gateway` varchar(50) NOT NULL default '',
@@ -443,3 +444,6 @@ CREATE TABLE `billing_enum_tlds` (
   UNIQUE KEY `enum_idx` (`gateway`,`domain`,`subscriber`,`enum_tld`),
   KEY `tld_idx` (`enum_tld`)
 );
+
+alter table radius.radacct change column FramedProtocol ENUMtld varchar(64) not NULL;
+

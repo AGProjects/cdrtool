@@ -10,6 +10,8 @@ cdrtool (5.2.7) unstable; urgency=low
     of radiusYYYMMDD tables no accounting records can be written to the
     database (the database table is locked)
 
+    alter table radacct change column FramedProtocol ENUMtld varchar(64) not NULL;
+
     2. apply the changes from setup/mysql/alter_tables.mysql
 
     3. reload the stored procedures
