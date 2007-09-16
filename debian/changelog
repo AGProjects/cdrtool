@@ -1,10 +1,11 @@
 cdrtool (5.3.0) unstable; urgency=low
 
   * Renamed OpenSER radius table Framed-Protocol to ENUMtld to accomodate
-    discounts by ENUM top level domain. This requires changes to the database
-    structures and the following changes must be applied in sequence:
+    discounts based on ENUM top level domain. This functionality requires
+    changes to the database structures and reconfigure several components:
 
-    1. Set up OpenSER to log the new Radius attribute ENUMtld
+    1. Setup OpenSER to log a new Radius attribute ENUM-TLD:
+
        modparam("acc", "radius_extra",       "Sip-RPid=$avp(s:rpid); \
                                              ...
                                              ENUM-TLD=$avp(s:enum_tld)")
@@ -16,29 +17,32 @@ cdrtool (5.3.0) unstable; urgency=low
             avp_write("e164.arpa", "$avp(s:enum_tld)");
        }
 
-    2. update both OpenSER dictionary with:
-    ATTRIBUTE       ENUM-TLD               232     strin
+    2. update OpenSER radius dictionary with:
 
-    3. reload the stored procedures
+    ATTRIBUTE       ENUM-TLD               232     string
+
+    3. reload the SQL stored procedures into the radius database from:
+
     setup/radius/OpenSER/radius_accounting.proc
 
-    4. update Freeradius dictionary with:
-    ATTRIBUTE       ENUM-TLD               232     strin
+    4. update Freeradius OpenSER dictionary with:
+
+    ATTRIBUTE       ENUM-TLD               232     string
 
     5. update Freeradius configuration with the new configuration from:
+
         setup/radius/OpenSER/radius_accounting.conf
 
     6. restart Feeradius server
 
-    7. rename the column FramedProtocol to ENUM tld in all radiusYYYMMDD
-    tables. Tthis operation can take a long time to complete depending on
-    the number of records in the table Beware that during the modification
-    of radiusYYYMMDD tables no accounting records can be written to the
-    database (the database table is locked). When using table auto-rotation
-    and stored procedures, it is best to implement these changes in the
-    first day of the month imediately after the table rotation moment.
+    7. rename the column FramedProtocol to ENUMtld in all radiusYYYYMMDD
+    tables. This operation can take a long time to complete depending on the
+    number of records in the table. During this modification no accounting
+    records can be written to the table. When using table auto-rotation with
+    SQL stored procedures, it is best to apply these changes in the first
+    day of the month imediately after the table rotation moment.
 
-    alter table radacct change column FramedProtocol ENUMtld varchar(64) not NULL;
+    alter table radacctYYYMMDD change column FramedProtocol ENUMtld varchar(64) not NULL;
 
     8. apply the changes from setup/mysql/alter_tables.mysql
 
