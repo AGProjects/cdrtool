@@ -460,7 +460,7 @@ class SOAPEngine {
                         'ENUM Ranges'    => array('recordsClass' => 'EnumRanges',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
                                           ),
-                        'Customer'     => array('recordsClass' => 'Customers',
+                        'Customers'     => array('recordsClass' => 'Customers',
                                            'soapClass'    => 'WebService_NGNPro_CustomerPort'
                                            ),
                         'Trusted Peers'  => array('recordsClass' => 'TrustedPeers',
@@ -800,7 +800,7 @@ class Records {
             foreach (array_keys($this->SOAPEngine->services) as $_service) {
                 $idx=$_engine.'@'.$_service;
                 if (in_array($_service,$this->SOAPEngine->skipServices[$_engine])) continue;
-                if ($_engine == 'Operators' && $this->version <= 1) continue;
+                if ($_engine == 'Customers' && $this->version <= 1) continue;
                 printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_engine,$_service,$selected_soapEngine[$idx],$j,$k,ucfirst($_service),$this->SOAPEngine->soapEngines[$_engine]['name']);
                 $k++;
             }
@@ -1314,7 +1314,7 @@ class Domains extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                if ($this->version > 1) print "<td><b>Customer</b></td>";
                 print"
                 <td><b>Domain</b></td>
                 <td><b>Last change</b></td>
@@ -1367,16 +1367,23 @@ class Domains extends Records {
                     } else {
                         $actionText = "Delete";
                     }
+
+                    $_customer_url = $this->url.sprintf("&service=%s@Customers&customer_filter=%s",
+                    urlencode($this->SOAPEngine->soapEngineId),
+                    urlencode($domain->customer)
+                    );
+
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
-                    <td>%s.%s</td>
+                    <td><a href=%s>%s.%s</a></td>
                     <td>%s</td>
                     <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
                     $index,
+                    $_customer_url,
                     $domain->reseller,
                     $domain->customer,
                     $domain->domain,
@@ -1606,7 +1613,6 @@ class SIPAccounts extends Records {
                             );
 
     function SIPAccounts(&$SOAPEngine) {
-
         $this->filters = array('username' => trim($_REQUEST['username_filter']),
                                'domain'   => trim($_REQUEST['domain_filter']),
                                'fullname' => trim($_REQUEST['fullname_filter'])
@@ -1630,7 +1636,10 @@ class SIPAccounts extends Records {
         // Filter
         $filter=array('username' => $this->filters['username'],
                       'domain'   => $this->filters['domain'],
-                      'name'     => $this->filters['fullname']
+                      'name'     => $this->filters['fullname'],
+                      'owner'    => intval($this->filters['owner']),
+                      'customer' => intval($this->filters['customer']),
+                      'reseller' => intval($this->filters['reseller'])
                       );
 
         // Range
@@ -1701,6 +1710,7 @@ class SIPAccounts extends Records {
         $filter=array('username' => $this->filters['username'],
                       'domain'   => $this->filters['domain'],
                       'name'     => $this->filters['fullname'],
+                      'owner'    => intval($this->filters['owner']),
                       'customer' => intval($this->filters['customer']),
                       'reseller' => intval($this->filters['reseller'])
                       );
@@ -1754,7 +1764,7 @@ class SIPAccounts extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                if ($this->version > 1) print "<td><b>Customer</b></td>";
                 print"
                 <td><b>SIP account</b></td>
                 <td><b>Name</b></td>
@@ -1846,11 +1856,16 @@ class SIPAccounts extends Records {
                     foreach ($account->groups as $_grp) $groups.=$_grp.' ';
 
                     if ($this->version > 1) {
+        			$_customer_url = $this->url.sprintf("&service=%s@Customers&customer_filter=%s",
+                    urlencode($this->SOAPEngine->soapEngineId),
+                    urlencode($account->customer)
+                    );
+
 
                     printf("
                     <tr bgcolor=%s>
                     <td>%s </td>
-                    <td>%s.%s</td>
+                    <td><a href=%s>%s.%s</a></td>
                     <td>%s</td>
                     <td>%s %s</td>
                     <td><a href=mailto:%s>%s</a></td>
@@ -1864,6 +1879,7 @@ class SIPAccounts extends Records {
                     ",
                     $bgcolor,
                     $index,
+                    $_customer_url,
                     $account->reseller,
                     $account->customer,
                     $sip_account,
@@ -2279,7 +2295,10 @@ class SIPAliases extends Records {
         $filter=array('aliasUsername'  => $this->filters['aliasUsername'],
                       'aliasDomain'    => $this->filters['aliasDomain'],
                       'targetUsername' => $this->filters['targetUsername'],
-                      'targetDomain'   => $this->filters['targetDomain']
+                      'targetDomain'   => $this->filters['targetDomain'],
+                      'owner'          => intval($this->filters['owner']),
+                      'customer'       => intval($this->filters['customer']),
+                      'reseller'       => intval($this->filters['reseller'])
                       );
 
         // Range
@@ -2344,8 +2363,9 @@ class SIPAliases extends Records {
                       'aliasDomain'    => $this->filters['aliasDomain'],
                       'targetUsername' => $this->filters['targetUsername'],
                       'targetDomain'   => $this->filters['targetDomain'],
-                      'customer' => intval($this->filters['customer']),
-                      'reseller' => intval($this->filters['reseller'])
+                      'owner'          => intval($this->filters['owner']),
+                      'customer'       => intval($this->filters['customer']),
+                      'reseller'       => intval($this->filters['reseller'])
 
                       );
 
@@ -2398,7 +2418,7 @@ class SIPAliases extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                if ($this->version > 1) print "<td><b>Customer</b></td>";
                 print"
                 <td><b>Alias</b></td>
                 <td><b>Target</b></td>
@@ -2454,10 +2474,15 @@ class SIPAliases extends Records {
 
                     if ($this->version > 1) {
 
+        			$_customer_url = $this->url.sprintf("&service=%s@Customers&customer_filter=%s",
+                    urlencode($this->SOAPEngine->soapEngineId),
+                    urlencode($alias->customer)
+                    );
+
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
-                    <td>%s.%s</td>
+                    <td><a href=%s>%s.%s</a></td>
                     <td>%s@%s</td>
                     <td>%s@%s</td>
                     <td>%s</td>
@@ -2467,6 +2492,7 @@ class SIPAliases extends Records {
                     ",
                     $bgcolor,
                     $index,
+                    $_customer_url,
                     $alias->reseller,
                     $alias->customer,
                     $alias->id->username,
@@ -2761,9 +2787,10 @@ class ENUMranges extends Records {
             // Filter
             $filter=array('prefix'   => $this->filters['prefix'],
                           'tld'      => $this->filters['tld'],
-                          'customer' => intval($this->filters['customer']),
-                          'reseller' => intval($this->filters['reseller'])
+  	                      'customer' => intval($this->filters['customer']),
+    	                  'reseller' => intval($this->filters['reseller'])
                           );
+
             // Range
             $range=array('start' => intval($this->next),
                          'count' => intval($this->maxrowsperpage)
@@ -2819,7 +2846,7 @@ class ENUMranges extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                if ($this->version > 1) print "<td><b>Customer</b></td>";
                 print"
                 <td><b>Prefix </b></td>
                 <td><b>TLD</b></td>
@@ -2887,10 +2914,15 @@ class ENUMranges extends Records {
                     }
 
                     if ($this->version > 1) {
+        			$_customer_url = $this->url.sprintf("&service=%s@Customers&customer_filter=%s",
+                    urlencode($this->SOAPEngine->soapEngineId),
+                    urlencode($range->customer)
+                    );
+                    
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
-                    <td>%s.%s</td>
+                    <td><a href=%s>%s.%s</a></td>
                     <td>+%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -2902,6 +2934,7 @@ class ENUMranges extends Records {
                     </tr>",
                     $bgcolor,
                     $index,
+                    $_customer_url,
                     $range->reseller,
                     $range->customer,
                     $range_link,
@@ -3108,13 +3141,14 @@ class ENUMranges extends Records {
         if ($this->version > 1) {
         	printf (" Prefix<input type=text size=10 name=prefix_filter value='%s'>",$this->filters['prefix']);
             printf (" TLD");
+
             if ($this->allowedDomains) {
-                $selected_tld[$this->filters['tld_filter']]='selected';
+                $selected_tld[$this->filters['tld']]='selected';
                 printf ("<select name=tld_filter>
                 <option>");
     
                 foreach ($this->allowedDomains as $_tld) {
-                    printf ("<option value='$_tld' %s>$_tld",$selected_tld[$_tld]);
+                    printf ("<option value='%s' %s>%s",$_tld,$selected_tld[$_tld],$_tld);
                 }
     
                 printf ("</select>");
@@ -3294,10 +3328,11 @@ class ENUMmappings extends Records {
 
 		$this->showSeachForm();
 
-        // Filter
-        $filter=array('number' => $this->filters['number'],
-                      'type'   => $this->filters['type'],
-                      'mapto'  => $this->filters['mapto'],
+        $filter=array('number'   => $this->filters['number'],
+        			  'tld'      => $this->filters['tld'],
+                      'type'     => $this->filters['type'],
+                      'mapto'    => $this->filters['mapto'],
+                      'owner'    => intval($this->filters['owner']),
                       'customer' => intval($this->filters['customer']),
                       'reseller' => intval($this->filters['reseller'])
                       );
@@ -3350,7 +3385,7 @@ class ENUMmappings extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                if ($this->version > 1) print "<td><b>Customer</b></td>";
                 print"
                 <td><b>Number</b></td>
                 <td><b>TLD</b></td>
@@ -3416,11 +3451,15 @@ class ENUMmappings extends Records {
                         if ($j==1) {
 
                     		if ($this->version > 1) {
+        					$_customer_url = $this->url.sprintf("&service=%s@Customers&customer_filter=%s",
+                    		urlencode($this->SOAPEngine->soapEngineId),
+                    		urlencode($number->customer)
+                    		);
 
                             printf("
                             <tr bgcolor=%s>
                             <td>%s</td>
-                            <td>%s.%s</td>
+                            <td><a href=%s>%s.%s</a></td>
                             <td>+%s</td>
                             <td>%s</td>
                             <td>%s</td>
@@ -3434,6 +3473,7 @@ class ENUMmappings extends Records {
                             </tr>",
                             $bgcolor,
                             $index,
+                            $_customer_url,
                             $number->reseller,
                             $number->customer,
                             $number->id->number,
@@ -3608,7 +3648,7 @@ class ENUMmappings extends Records {
         printf (" Number<input type=text size=15 name=number_filter value='%s'>",$this->filters['number']);
         printf (" TLD");
         if ($this->allowedDomains) {
-            $selected_tld[$this->filters['tld_filter']]='selected';
+            $selected_tld[$this->filters['tld']]='selected';
             printf ("<select name=tld_filter>
             <option>");
 
@@ -4047,6 +4087,7 @@ class ENUMmappings extends Records {
 
         // Filter
         $filter=array('number' => $this->filters['number'],
+                      'tld'    => $this->filters['tld'],
                       'type'   => $this->filters['type'],
                       'mapto'  => $this->filters['mapto']
                       );
@@ -4163,7 +4204,7 @@ class TrustedPeers extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                if ($this->version > 1) print "<td><b>Customer</b></td>";
                 print"
                 <td><b>IP address</b></td>
                 <td><b>Protocol</b></td>
@@ -5878,6 +5919,10 @@ class Customers extends Records {
     function Customers(&$SOAPEngine) {
         $this->filters   = array(
                            'username'       => trim($_REQUEST['username_filter']),
+                           'firstName'      => trim($_REQUEST['firstName_filter']),
+                           'lastName'       => trim($_REQUEST['lastName_filter']),
+                           'email'          => trim($_REQUEST['email_filter']),
+                           'organization'   => trim($_REQUEST['organization_filter']),
                            'only_resellers' => trim($_REQUEST['only_resellers_filter'])
                            );
 
@@ -5887,9 +5932,13 @@ class Customers extends Records {
     function listRecords() {
 
         // Filter
-        $filter=array('username'  => $this->filters['username'],
-                      'customer'  => intval($this->filters['customer']),
-                      'reseller'  => intval($this->filters['reseller'])
+        $filter=array('username'     => $this->filters['username'],
+                      'firstName'    => $this->filters['firstName'],
+                      'lastName'     => $this->filters['lastName'],
+                      'email'        => $this->filters['email'],
+                      'organization' => $this->filters['organization'],
+                      'customer'     => intval($this->filters['customer']),
+                      'reseller'     => intval($this->filters['reseller'])
                       );
 
         // Range
@@ -5946,7 +5995,7 @@ class Customers extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) print "<td><b>Operator</b></td>";
+                if ($this->version > 1) print "<td><b>Customer</b></td>";
                 print"
                 <td><b>Name</b></td>
                 <td><b>Organization</b></td>
@@ -6070,7 +6119,6 @@ class Customers extends Records {
         }
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
         $result     = $this->SOAPEngine->soapclient->deleteAccount(intval($this->filters['customer']));
 
         if (PEAR::isError($result)) {
@@ -7029,7 +7077,9 @@ class SIPAliasesActions extends Actions {
 
 class ENUMMappingsActions extends Actions {
     var $actions=array(
-                       'delete'         => 'Delete ENUM mappings'
+                       'delete'         => 'Delete ENUM mappings',
+                       'changettl'      => 'Change TTL to:',
+                       'changeowner'    => 'Change owner to:'
                        );
 
     function ENUMMappingsActions(&$SOAPEngine) {
@@ -7047,13 +7097,12 @@ class ENUMMappingsActions extends Actions {
             flush();
             print "<li>";
 
+            $enum_id=array('number' => $key['number'],
+                           'tld'    => $key['tld']
+                          );
         	if ($action=='delete') {
 
                 //printf ("Performing action=%s on key=%s",$action,$key);
-                $enum_id=array('number' => $key['number'],
-                               'tld'    => $key['tld']
-                               );
-
                 $function=array('commit'   => array('name'       => 'deleteNumber',
                                                     'parameters' => array($enum_id),
                                                     'logs'       => array('success' => sprintf('ENUM number +%s under %s has been deleted',$key['number'],$key['tld'])
@@ -7063,6 +7112,70 @@ class ENUMMappingsActions extends Actions {
                                 );
     
                 $this->SOAPEngine->execute($function);
+            } else if ($action  == 'changettl') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $number     = $this->SOAPEngine->soapclient->getNumber($enum_id);
+
+        		if (PEAR::isError($number)) {
+            		$error_msg  = $number->getMessage();
+            		$error_fault= $number->getFault();
+            		$error_code = $number->getCode();
+            		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+            		foreach ($number->mappings as $_property) {
+        				$mappings[]=$_property;
+        			}
+            		$number->mappings=$mappings;
+
+                    if (is_numeric($sub_action_parameter)) {
+                    	$number->ttl=intval($sub_action_parameter);
+                    } else {
+            			printf ("<font color=red>Error: TTL '%s' must be numeric</font>",$sub_action_parameter);
+                        continue;
+                    }
+
+                    $function=array('commit'   => array('name'       => 'updateNumber',
+                                                        'parameters' => array($number),
+                                                        'logs'       => array('success' => sprintf('ENUM number %s@%s has now TTL %d',$key['number'],$key['tld'],intval($sub_action_parameter))
+                                                                              )
+                                                       )
+            
+                                    );
+                	$this->SOAPEngine->execute($function);
+        		}
+            } else if ($action  == 'changeowner') {
+        		$this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+		        $number     = $this->SOAPEngine->soapclient->getNumber($enum_id);
+
+        		if (PEAR::isError($number)) {
+            		$error_msg  = $number->getMessage();
+            		$error_fault= $number->getFault();
+            		$error_code = $number->getCode();
+            		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            		break;
+        		} else {
+            		foreach ($number->mappings as $_property) {
+        				$mappings[]=$_property;
+        			}
+            		$number->mappings=$mappings;
+
+                    if (is_numeric($sub_action_parameter)) {
+                    	$number->owner=intval($sub_action_parameter);
+                    } else {
+            			printf ("<font color=red>Error: Owner '%s' must be numeric</font>",$sub_action_parameter);
+                        continue;
+                    }
+
+                    $function=array('commit'   => array('name'       => 'updateNumber',
+                                                        'parameters' => array($number),
+                                                        'logs'       => array('success' => sprintf('ENUM number %s@%s has owner set to  %d',$key['number'],$key['tld'],intval($sub_action_parameter))
+                                                                              )
+                                                       )
+            
+                                    );
+                	$this->SOAPEngine->execute($function);
+        		}
             }
         }
 
