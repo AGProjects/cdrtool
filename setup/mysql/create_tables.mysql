@@ -104,13 +104,13 @@ CREATE TABLE `auth_user` (
   `serviceFilter` varchar(255) NOT NULL default '',
   `aNumberFilter` varchar(255) NOT NULL default '',
   `afterDateFilter` varchar(255) NOT NULL default '',
+  `soapFilter` varchar(255) not null default '',
   `sources` varchar(255) NOT NULL default '',
   `otp_enable` enum('0','1') NOT NULL default '0',
   `otp_rcpt` varchar(255) NOT NULL default '',
   `otp_expire` datetime NOT NULL default '0000-00-00 00:00:00',
   `otp_passwd` varchar(255) NOT NULL default '',
   `reseller` bigint(20) unsigned NOT NULL,
-  `soapEngines` varchar(255) not null,
   PRIMARY KEY  (`user_id`),
   UNIQUE KEY `k_username` (`username`)
 )  DEFAULT CHARSET=latin1;

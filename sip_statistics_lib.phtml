@@ -619,8 +619,8 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
 
     function publishPresence ($SoapEngineId,$SIPaccount,$note,$activity) {
 
-		require_once("provisioning/provisioning_soap_library.phtml");
-        require("soap_engines.inc");
+		require_once("provisioning/ngnpro_soap_library.phtml");
+        require_once("provisioning/ngnpro_engines.inc");
 
         $this->soapEngines = $soapEngines;
 

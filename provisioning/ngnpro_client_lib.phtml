@@ -489,9 +489,10 @@ class SOAPEngine {
                                                  ),
         */
 
-        if ($loginCredentials['loginType'] == 'admin') $this->adminonly = 1;
 
-		$this->loginType = $loginCredentials['loginType'];
+		$this->loginCredentials = $loginCredentials;
+
+        if ($this->loginCredentials['loginType'] == 'admin') $this->adminonly = 1;
 
         $this->soapEngines = $soapEngines;
 
@@ -603,7 +604,7 @@ class SOAPEngine {
 
                 //print_r($this->SOAPloginRemote);
             	$this->SOAPurlRemote=$this->soapEngines[$this->soapRemoteId]['url'];
-            	printf ("and syncronize writes at <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
+            	//printf ("and syncronize writes at <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
 
             	$this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
 
@@ -665,9 +666,9 @@ class SOAPEngine {
             $resultRemote = call_user_func_array(array($this->soapclientRemote,$function['commit']['name']),$function['commit']['parameters']);
 
             if (PEAR::isError($resultRemote)) {
-                $error_msg=$resultRemote->getMessage();
-                $error_fault=$resultRemote->getFault();
-                $error_code=$resultRemote->getCode();
+                $error_msg   = $resultRemote->getMessage();
+                $error_fault = $resultRemote->getFault();
+                $error_code  = $resultRemote->getCode();
                 printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
@@ -677,9 +678,9 @@ class SOAPEngine {
             	$result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
 
                 if (PEAR::isError($result)) {
-                    $error_msg=$result->getMessage();
-                    $error_fault=$result->getFault();
-                    $error_code=$result->getCode();
+                    $error_msg   = $result->getMessage();
+                    $error_fault = $result->getFault();
+                    $error_code  = $result->getCode();
                     printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
 
 					if ($function['rollback']['name']) {
@@ -697,7 +698,6 @@ class SOAPEngine {
                         } else {
             				printf ("<p><font color=green>Rolled back action at %s </font>",$this->SOAPurlRemote);
                         }
-
                     }
 
                     return false;
@@ -714,9 +714,9 @@ class SOAPEngine {
             $result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
 
             if (PEAR::isError($result)) {
-                $error_msg=$result->getMessage();
-                $error_fault=$result->getFault();
-                $error_code=$result->getCode();
+                $error_msg   = $result->getMessage();
+                $error_fault = $result->getFault();
+                $error_code  = $result->getCode();
                 printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
@@ -741,8 +741,9 @@ class Records {
     var $recordGenerator = false;
 
     function Records(&$SOAPEngine) {
-    	$this->SOAPEngine = &$SOAPEngine;
-        $this->version    = $this->SOAPEngine->version;
+    	$this->SOAPEngine       = &$SOAPEngine;
+        $this->version          = &$this->SOAPEngine->version;
+        $this->loginCredentials = &$this->SOAPEngine->loginCredentials;
 
         $this->sorting['sortBy']    = trim($_REQUEST['sortBy']);
         $this->sorting['sortOrder'] = trim($_REQUEST['sortOrder']);
@@ -752,7 +753,6 @@ class Records {
         $this->adminonly  = $this->SOAPEngine->adminonly;
 		$this->reseller   = $this->SOAPEngine->reseller;
         $this->url        = $this->SOAPEngine->url;
-		$this->loginType  = $this->SOAPEngine->loginType;
 
 		foreach(array_keys($this->filters) as $_filter) {
             if (strlen($this->filters[$_filter])) {
@@ -763,28 +763,23 @@ class Records {
 
         if ($this->adminonly) {
         	$this->url .= sprintf('&adminonly=%s',$this->adminonly);
+            if ($this->loginCredentials['reseller']) {
+        		$this->filters['reseller']=$this->loginCredentials['reseller'];
+            } else {
+        		$this->filters['reseller']=trim($_REQUEST['reseller_filter']);
+            }
         }
 
-        $this->filters['customer']=trim($_REQUEST['customer_filter']);
-
-        /*
-        if (!$this->adminonly && $this->reseller) {
-            // Force filter if reseller
-        	$this->filters['reseller']=$this->reseller;
+        if ($this->loginCredentials['customer']) {
+        	$this->filters['customer'] = $this->loginCredentials['customer'];
         } else {
-        	$this->filters['reseller']=trim($_REQUEST['reseller_filter']);
-        }
-        */
-
-        if ($this->adminonly) {
-        	$this->filters['reseller']=trim($_REQUEST['reseller_filter']);
+        	$this->filters['customer'] = trim($_REQUEST['customer_filter']);
         }
 
         $this->getResellers();
         $this->getCustomers();
 
         if (strlen($this->SOAPEngine->SipSettingsPage)) $this->SipSettingsPage=$this->SOAPEngine->SipSettingsPage;
-        //printf ('<p>%s',$this->url);
     }
 
     function showEngineSelection() {
@@ -863,7 +858,6 @@ class Records {
 
         if ($this->next + $this->maxrowsperpage < $this->rows)  {
             $show_next = $this->maxrowsperpage + $this->next;
-
             printf ("<a href='%s&next=%s'>Next</a> ",$url,$show_next);
         }
 
@@ -1160,31 +1154,39 @@ class Records {
     }
 
     function showCustomerForm($name='customer_filter') {
-        if (count($this->customers) && count($this->customers) < 200) {
-			$select_customer[$this->filters['customer']]='selected';
-            printf ("<select name=%s>",$name);
-            print "<option>";
-            foreach (array_keys($this->customers) as $_res) {
-                printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_customer[$_res],$_res,$this->customers[$_res]);
-            }
-            print "</select>";
+        if ($this->loginCredentials['customer']) {
+            printf (" %s",$this->loginCredentials['customer']);
         } else {
-            printf ("<input type=text size=5 name=%s value='%s'>",$name,$this->filters['customer']);
+            if (count($this->customers)) {
+                $select_customer[$this->filters['customer']]='selected';
+                printf ("<select name=%s>",$name);
+                print "<option>";
+                foreach (array_keys($this->customers) as $_res) {
+                    printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_customer[$_res],$_res,$this->customers[$_res]);
+                }
+                print "</select>";
+            } else {
+                printf ("<input type=text size=5 name=%s value='%s'>",$name,$this->filters['customer']);
+            }
         }
     }
 
     function showResellerForm($name='reseller_filter') {
         if (!$this->adminonly) return;
-        if (count($this->resellers) && count($this->resellers) < 200) {
-            $select_reseller[$this->filters['reseller']]='selected';
-            printf ("<select name=%s>",$name);
-            print "<option>";
-            foreach (array_keys($this->resellers) as $_res) {
-                printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_reseller[$_res],$_res,$this->resellers[$_res]);
-            }
-            print "</select>";
+        if ($this->loginCredentials['reseller']) {
+            printf (" %s",$this->loginCredentials['reseller']);
         } else {
-            printf ("<input type=text size=5 name=%s value='%s'>",$name,$this->filters['reseller']);
+            if (count($this->resellers)) {
+                $select_reseller[$this->filters['reseller']]='selected';
+                printf ("<select name=%s>",$name);
+                print "<option>";
+                foreach (array_keys($this->resellers) as $_res) {
+                    printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_reseller[$_res],$_res,$this->resellers[$_res]);
+                }
+                print "</select>";
+            } else {
+                printf ("<input type=text size=5 name=%s value='%s'>",$name,$this->filters['reseller']);
+            }
         }
     }
 
@@ -1629,10 +1631,6 @@ class SIPAccounts extends Records {
             $this->filters['domain']   = $m[2];
         }
 
-        if ($this->filters['domain'] && $this->allowedDomains && !in_array($this->filters['domain'],$this->allowedDomains)) {
-        	$this->filters['domain'] = $this->allowedDomains[0];
-        }
-
         // Filter
         $filter=array('username' => $this->filters['username'],
                       'domain'   => $this->filters['domain'],
@@ -1693,15 +1691,6 @@ class SIPAccounts extends Records {
 		if (preg_match("/^(.*)@(.*)$/",$this->filters['username'],$m)) {
         	$this->filters['username'] = $m[1];
             $this->filters['domain']   = $m[2];
-        }
-
-        // Make sure we apply the domain filter from the login credetials
-        if ($this->allowedDomains && !$this->filters['domain']) {
-        	//$this->filters['domain'] = $this->allowedDomains[0];
-        }
-
-        if ($this->filters['domain'] && $this->allowedDomains && !in_array($this->filters['domain'],$this->allowedDomains)) {
-        	$this->filters['domain'] = $this->allowedDomains[0];
         }
 
 		$this->showSeachForm();
@@ -1945,14 +1934,18 @@ class SIPAccounts extends Records {
         printf ("@");
 
         if ($this->allowedDomains) {
-            $selected_domain[$this->filters['domain']]='selected';
-            printf ("<select name=domain_filter>
-            <option>");
-            foreach ($this->allowedDomains as $_domain) {
-                printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
+            if ($this->filters['domain'] && !in_array($this->filters['domain'],$this->allowedDomains)) {
+    
+                $selected_domain[$this->filters['domain']]='selected';
+                printf ("<select name=domain_filter>
+                <option>");
+                foreach ($this->allowedDomains as $_domain) {
+                    printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
+                }
+                printf ("</select>");
+            } else {
+            	printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
             }
-
-            printf ("</select>");
         } else {
             printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
         }
@@ -2282,14 +2275,6 @@ class SIPAliases extends Records {
     }
 
     function getRecordKeys() {
-        // Make sure we apply the domain filter from the login credetials
-        if ($this->allowedDomains && !$this->filters['aliasDomain']) {
-        	//$this->filters['aliasDomain'] = $this->allowedDomains[0];
-        }
-
-        if ($this->filters['aliasDomain'] && $this->allowedDomains && !in_array($this->filters['aliasDomain'],$this->allowedDomains)) {
-        	$this->filters['aliasDomain'] = $this->allowedDomains[0];
-        }
 
         // Filter
         $filter=array('aliasUsername'  => $this->filters['aliasUsername'],
@@ -2348,13 +2333,6 @@ class SIPAliases extends Records {
         $this->getAllowedDomains();
 
         // Make sure we apply the domain filter from the login credetials
-        if ($this->allowedDomains && !$this->filters['aliasDomain']) {
-        	//$this->filters['aliasDomain'] = $this->allowedDomains[0];
-        }
-
-        if ($this->filters['aliasDomain'] && $this->allowedDomains && !in_array($this->filters['aliasDomain'],$this->allowedDomains)) {
-        	$this->filters['aliasDomain'] = $this->allowedDomains[0];
-        }
 
 		$this->showSeachForm();
 
@@ -2579,15 +2557,19 @@ class SIPAliases extends Records {
         printf ("@");
 
         if ($this->allowedDomains) {
-            $selected_domain[$this->filters['aliasDomain']]='selected';
-            printf ("<select name=alias_domain_filter>
-            <option>");
-
-            foreach ($this->allowedDomains as $_domain) {
-                printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
+            if ($this->filters['aliasDomain'] && !in_array($this->filters['aliasDomain'],$this->allowedDomains)) {
+            	printf ("<input type=text size=10 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
+            } else {
+                $selected_domain[$this->filters['aliasDomain']]='selected';
+                printf ("<select name=alias_domain_filter>
+                <option>");
+    
+                foreach ($this->allowedDomains as $_domain) {
+                    printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
+                }
+    
+                printf ("</select>");
             }
-
-            printf ("</select>");
         } else {
             printf ("<input type=text size=10 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
         }
@@ -5937,6 +5919,7 @@ class Customers extends Records {
                       'lastName'     => $this->filters['lastName'],
                       'email'        => $this->filters['email'],
                       'organization' => $this->filters['organization'],
+                      'only_resellers' => $this->filters['only_resellers'],
                       'customer'     => intval($this->filters['customer']),
                       'reseller'     => intval($this->filters['reseller'])
                       );
@@ -6098,7 +6081,7 @@ class Customers extends Records {
 
     function showSeachFormCustom() {
         if (!$this->filters['reseller']) {
-        	printf (" Customer<input type=text size=6 name=customer_filter value='%s'>",$this->filters['customer']);
+        	printf (".<input type=text size=6 name=customer_filter value='%s'>",$this->filters['customer']);
         }
         printf (" Username<input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
         if ($this->adminonly) {

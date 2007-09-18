@@ -22,6 +22,7 @@ $perm->check("admin");
 
 //$verbose=1;
 require_once('provisioning/sip_settings_lib.phtml');
+
 list($username,$domain)=explode("@",$account);
 
 $_class='SIPSettings';
@@ -40,9 +41,48 @@ $loginCredentials=array(
                         'soapEngineIdSipPort' => $_REQUEST['soapEngineIdSipPort']
                         );
 
-require_once("provisioning/sip_settings_logic.phtml");
+$SIPSettings = new $SIPSettings_class($account,$loginCredentials,$soapEngines);
 
 if (!$export) {
+    $title  = "SIP settings of $account";
+    $header = $SIPSettings->headerFile;
+    $css    = $SIPSettings->cssFile;
+    include($header);
+    include($css);
+}
+
+if ($action=="Save settings") {
+    if ($SIPSettings->checkSettings()) {
+        $SIPSettings->saveSettings();
+        unset($SIPSettings);
+        if (in_array($domain,$freeDomains)) {
+            $SIPSettings = new $SIPSettings_class($account,$loginCredentials,$soapEngines);
+        } else {
+            $SIPSettings = new $SIPSettings_class($account,$loginCredentials,$soapEngines);
+        }
+    } else {
+        print "<font color=red>";
+        printf (_("Error: %s"),$SIPSettings->error);
+        print "</font>";
+    }
+} else if ($action=="set barring prefixes") {
+    $SIPSettings->setBarringPrefixes();
+} else if ($action=="set presence") {
+    $SIPSettings->setPresence();
+} else if ($action=="set reject members") {
+    $SIPSettings->setRejectMembers();
+} else if ($action=="set accept rules") {
+    $SIPSettings->setAcceptRules();
+} else if ($action=="set aliases") {
+    $SIPSettings->setAliases();
+} else if ($action=="Send settings") {
+    $SIPSettings->sendEmail();
+} else if ($tab=="phonebook" && $export) {
+    $SIPSettings->exportPhonebook($userAgent);
+}
+
+if (!$export) {
+	$SIPSettings->showAccount();
     print "
     </body>
     </html>

@@ -4218,12 +4218,12 @@ class SIP_trace {
         }
 
         if ($this->enableThor) {
-    		include('soap_engines.inc');
+    		include_once('provisioning/ngnpro_engines.inc');
 
         	if ($DATASOURCES[$cdr_source]['SoapEngineId'] && in_array($DATASOURCES[$cdr_source]['SoapEngineId'],array_keys($soapEngines))) {
             	$this->SoapEngineId=$DATASOURCES[$cdr_source]['SoapEngineId'];
 
-		        require_once("provisioning_lib.phtml");
+		        require_once("provisioning/ngnpro_client_lib.phtml");
 
                 $this->SOAPlogin = array(
                                        "username"    => $soapEngines[$this->SoapEngineId]['username'],

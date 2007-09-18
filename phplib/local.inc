@@ -244,6 +244,7 @@ class CDRTool_Auth extends Auth {
             $CDRTool['filter']['gateway']    = $this->db->f('gatewayFilter');
             $CDRTool['filter']['compid']     = $this->db->f('compidFilter');
             $CDRTool['filter']['cscode']     = $this->db->f('cscodeFilter');
+            $CDRTool['filter']['soap']       = $this->db->f('soapFilter');
             $CDRTool['reseller']             = $this->db->f('reseller');
             
             if ($this->db->f('only_after_date') && $this->db->f('only_after_date') != "0000-00-00") {
@@ -282,14 +283,15 @@ class CDRTool_Auth extends Auth {
 class CDRTool_Perm extends Perm {
   var $classname = "CDRTool_Perm";
   var $permissions = array(
-            "admin"       	=> 1,
-            "callsearch"  	=> 2,
-            "statistics"  	=> 4,
-            "sqlquery"    	=> 8,
+            "admin"         => 1,
+            "callsearch"    => 2,
+            "statistics"    => 4,
+            "sqlquery"      => 8,
             "soapclient"    => 16,
             "rates"         => 32,
             "showCallerId"  => 64,
-            "showPrice"     => 128
+            "showPrice"     => 128,
+            "provisioning"  => 256
             );
 
   function perm_invalid($does_have, $must_have) {
@@ -614,6 +616,10 @@ class pageLayout {
             print " | <a href=status/sip_online.phtml target=siponline>Registrar</a>";
             print " | <a href=status/media_sessions.phtml target=mediasessions>Media</a>";
             print " | <a href=status/usage/index.phtml target=usage>Usage</a>";
+        }
+        
+        if ($perm->have_perm("provisioning")) {
+            print " | <a href=provisioning.phtml>Provisioning</a>";
         }
 
         print " | <a href=log.phtml>Log</a>";

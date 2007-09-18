@@ -14,10 +14,11 @@ if (is_readable("local/header.phtml")) {
 }
 
 set_time_limit(600);
-//$perm->check("admin");
+$perm->check("provisioning");
 
-require_once("provisioning/provisioning_soap_library.phtml");
-require_once("provisioning/provisioning_logic.phtml");
+require_once("provisioning/ngnpro_soap_library.phtml");
+require_once("provisioning/ngnpro_client_lib.phtml");
+include_once("provisioning/ngnpro_engines.inc");
 
 $layout = new pageLayoutLocal();
 $layout->showTopMenu();
@@ -29,13 +30,29 @@ global $CDRTool;
 if ($CDRTool['reseller']) {
 	$loginCredentials=array(
                         'reseller'           => $CDRTool['reseller'],
-                        'loginType'          => 'reseller'
+                        'loginType'          => 'admin'
                         );
 } else {
 	$loginCredentials=array(
                         'loginType'          => 'admin'
                         );
 }
+
+if (strlen($CDRTool['filter']['soap'])) {
+    $allowedEngines=explode(' ',trim($CDRTool['filter']['soap']));
+	foreach(array_keys($soapEngines) as $_engine) {
+        foreach ($allowedEngines as $_allowed) {
+            if ($_engine == $_allowed) {
+                $soapEngines_checked[$_allowed]=$soapEngines[$_allowed];
+                continue;
+            }
+        }
+    }
+
+    $soapEngines=$soapEngines_checked;
+}
+
+//print_r($loginCredentials);
 
 $extraFormElements=array();
 
