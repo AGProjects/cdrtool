@@ -445,34 +445,45 @@ class SOAPEngine {
     var $loginType     = 'reseller';
 
     var $services=array(
-                        'SIP accounts'     => array('recordsClass' => 'SipAccounts',
+                        'sip_accounts'     => array(
+                                           'recordsClass' => 'SipAccounts',
+                                           'name'         => 'SIP accounts',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
-                        'SIP Aliases'    => array('recordsClass' => 'SipAliases',
+                        'sip_aliases'    => array('recordsClass' => 'SipAliases',
+                                           'name'         => 'SIP Aliases',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
-                        'SIP Domains'    => array('recordsClass' => 'Domains',
+                        'sip_domains'    => array('recordsClass' => 'Domains',
+                                           'name'         => 'SIP Domains',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
-                        'ENUM Numbers'    => array('recordsClass' => 'EnumMappings',
+                        'enum_numbers'    => array('recordsClass' => 'EnumMappings',
+                                           'name'         => 'ENUM Numbers',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
                                           ),
-                        'ENUM Ranges'    => array('recordsClass' => 'EnumRanges',
+                        'enum_ranges'    => array('recordsClass' => 'EnumRanges',
+                                           'name'         => 'ENUM Ranges',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
                                           ),
-                        'Customers'     => array('recordsClass' => 'Customers',
+                        'customers'     => array('recordsClass' => 'Customers',
+                                           'name'         => 'Customers',
                                            'soapClass'    => 'WebService_NGNPro_CustomerPort'
                                            ),
-                        'Trusted Peers'  => array('recordsClass' => 'TrustedPeers',
+                        'trusted_peers'  => array('recordsClass' => 'TrustedPeers',
+                                           'name'         => 'Trusted Peers',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                           ),
-                        'PSTN Gateways'  => array('recordsClass' => 'Gateways',
+                        'pstn_gateways'  => array('recordsClass' => 'Gateways',
+                                           'name'         => 'PSTN Gateways',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                            ),
-                        'Gateway groups' => array('recordsClass' => 'GatewayGroups',
+                        'pstn_gateway_groups' => array('recordsClass' => 'GatewayGroups',
+                                           'name'         => 'Gateway groups',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                           ),
-                        'PSTN Routes'    => array('recordsClass' => 'Routes',
+                        'pstn_routes'    => array('recordsClass' => 'Routes',
+                                           'name'         => 'PSTN Routes',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                           )
                         );
@@ -501,7 +512,7 @@ class SOAPEngine {
             if (!$service) {
                 $_services     = array_keys($this->services);
                 $_soapids      = array_keys($this->soapEngines);
-                $service       = $_soapids[0].'@'.$_services[0];
+                $service       = $_services[0].'@'.$_soapids[0];
             }
 
             if (is_array($extraFormElements)) {
@@ -512,10 +523,10 @@ class SOAPEngine {
 
             $_els=explode('@',$this->service);
 
-            $this->soapEngineId   = $_els[0];
+            $this->soapEngineId   = $_els[1];
             $this->soapEngineIdSettingsPage=$this->soapEngineId;
 
-            $this->soapEnginePort = $_els[1];
+            $this->soapEnginePort = $_els[0];
             $this->recordsClass   = $this->services[$this->soapEnginePort]['recordsClass'];
             $this->soapClass      = $this->services[$this->soapEnginePort]['soapClass'];
 
@@ -796,7 +807,7 @@ class Records {
                 $idx=$_engine.'@'.$_service;
                 if (in_array($_service,$this->SOAPEngine->skipServices[$_engine])) continue;
                 if ($_engine == 'Customers' && $this->version <= 1) continue;
-                printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_engine,$_service,$selected_soapEngine[$idx],$j,$k,ucfirst($_service),$this->SOAPEngine->soapEngines[$_engine]['name']);
+                printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_service,$_engine,$selected_soapEngine[$idx],$j,$k,$this->SOAPEngine->services[$_service]['name'],$this->SOAPEngine->soapEngines[$_engine]['name']);
                 $k++;
             }
             $j++;
@@ -1370,7 +1381,7 @@ class Domains extends Records {
                         $actionText = "Delete";
                     }
 
-                    $_customer_url = $this->url.sprintf("&service=%s@Customers&customer_filter=%s",
+                    $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                     urlencode($this->SOAPEngine->soapEngineId),
                     urlencode($domain->customer)
                     );
@@ -1845,7 +1856,7 @@ class SIPAccounts extends Records {
                     foreach ($account->groups as $_grp) $groups.=$_grp.' ';
 
                     if ($this->version > 1) {
-        			$_customer_url = $this->url.sprintf("&service=%s@Customers&customer_filter=%s",
+        			$_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                     urlencode($this->SOAPEngine->soapEngineId),
                     urlencode($account->customer)
                     );
@@ -2452,7 +2463,7 @@ class SIPAliases extends Records {
 
                     if ($this->version > 1) {
 
-        			$_customer_url = $this->url.sprintf("&service=%s@Customers&customer_filter=%s",
+        			$_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                     urlencode($this->SOAPEngine->soapEngineId),
                     urlencode($alias->customer)
                     );
@@ -2896,7 +2907,7 @@ class ENUMranges extends Records {
                     }
 
                     if ($this->version > 1) {
-        			$_customer_url = $this->url.sprintf("&service=%s@Customers&customer_filter=%s",
+        			$_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                     urlencode($this->SOAPEngine->soapEngineId),
                     urlencode($range->customer)
                     );
@@ -3433,7 +3444,7 @@ class ENUMmappings extends Records {
                         if ($j==1) {
 
                     		if ($this->version > 1) {
-        					$_customer_url = $this->url.sprintf("&service=%s@Customers&customer_filter=%s",
+        					$_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                     		urlencode($this->SOAPEngine->soapEngineId),
                     		urlencode($number->customer)
                     		);
