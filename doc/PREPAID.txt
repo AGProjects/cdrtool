@@ -41,7 +41,7 @@ To request the maximum time for a session, the following request must be
 sent to CDRTool rating engine on one line:
 
 MaxSessionTime From=sip:123@example.com To=sip:0031650222@example.com
-Duration=7200 Gateway=81.20.68.10 Lock=1\n
+Duration=7200 Gateway=81.20.68.10 ENUMtl=tld.com Lock=1\n
 
 Duration is a limit imposed to the time allowed, in case you want to limit
 the call time to a maximum duration. This will be a top limit for the call's
@@ -53,6 +53,9 @@ sometimes we only need to peek at the time but not actually start a call and
 lock the user. When the call starts the account should always be locked. To
 may actually be sip:number@domain;param=value so you must extract the
 username part which is the number From is a sip URI which can be "full name"
+
+ENUMtld parameter is optional but if present discounts based on ENUM can be
+applied (see RATING.txt for more information on ENUM discounts).
 
 Call control expects a reply like below:
 

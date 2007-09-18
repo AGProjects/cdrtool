@@ -175,7 +175,7 @@ the destination ID and billing party found in previous steps.
    ENUM discounts
    --------------
 
-   The ratign engine can apply the discount associated with the ENUM top
+   The rating engine can apply a discount associated with the ENUM top
    level domain that returned the final destination.
 
    Price = Price - Price * ENUM discount /100
@@ -394,8 +394,19 @@ fairly easy to modify an exported batch file into an external
 application and load it back into CDRTool.
 
 
+Network rating engine
+---------------------
+
+The network rating engine is daemon that listens for commands on a TCP
+socket and returns responses by using a line protocol. It is used to cache
+in memory the content of the rating tables stored in the MySQL database. The
+CDR normalization process uses transparently this engine to achieve high
+speed during the rating phase of the normalization process. It is not
+necessary to directly interact with the network rating engine.
+
+
 Reloading rating tables
-------------------------
+-----------------------
 
 From cdrtool version 3.2  the rating tables are no longer loaded from
 database into memory during each normalization. The network rating engine is
@@ -544,4 +555,3 @@ The pre-calculated maximum duration of prepaid calls may be affected by
 rating plans with custom time increments and minimum charged durations. Do
 not use minimum durations or custom increments for customers using the
 prepaid application.
-
