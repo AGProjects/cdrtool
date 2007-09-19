@@ -446,5 +446,7 @@ CREATE TABLE `billing_enum_tlds` (
   KEY `tld_idx` (`enum_tld`)
 );
 
-alter table radius.radacct change column FramedProtocol ENUMtld varchar(64) not NULL;
+INSERT into billing_enum_tlds (enum_tld,e164_regexp,discount) values ('e164.example.com','([1-9][0-9]{7,})','25');
+
+alter table radius.radacctYYYMMDD change column FramedProtocol ENUMtld varchar(64) not NULL;
 

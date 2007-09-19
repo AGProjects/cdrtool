@@ -184,6 +184,7 @@ the destination ID and billing party found in previous steps.
    and the TLDs with their corespondent discounts must be provisioned in the
    Rating tables section.
 
+
 8. Save the calculated price, Billing Party and Destination Id for each call
    in the CDRs. Having the price stored in database, it is possible to build
    statistics to display consolidated revenues per country code, network or
@@ -392,6 +393,40 @@ The content of the rating tables can be exported into comma separated
 files. The CSV format has the same structure as the import file, is
 fairly easy to modify an exported batch file into an external
 application and load it back into CDRTool.
+
+
+ENUM TLD discounts
+-------------------
+
+To apply discounts based on ENUM tlds certain conditions must be met.
+
+1. The username part of the result of the ENUM lookup must be numeric and
+   contain a fully qualified E164 number, optional with a numeric prefix.
+
+   Example:
+
+   The user dialed 020800001, the SIP Proxy has normalized the destination
+   based on local policy by stripping 0 and country code 31 to obtain a
+   fully qualified E164 number 3120800001, than it performed ENUM lookup
+   under top level domain e164.example.com for +3120800001 and the ENUM
+   server has returned the destination sip:01131208000011@gateway.example.com
+
+   In the CDR, ENUMtld is stored as e164.example.com
+
+   The rating logic will check if the TLD exists in the rating_enum_tlds
+   table. If it does, the rating engine will try to match the regexp field
+   against the username part of the destination from the ENUM response,
+   which has been saved in the Canonical URI. The match must return a fully
+   qualified E164 number.
+
+2. In the ENUM tld table you must provision:
+
+    - TLD: e164.example.com
+    - Regexp: 011([1-9][0-9]{7,})
+    - Discount: 25
+
+   The paranthezis of the Regexp field indicate the E164 number returned by
+   the match.
 
 
 Network rating engine

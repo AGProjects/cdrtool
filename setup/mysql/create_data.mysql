@@ -116,3 +116,5 @@ INSERT INTO isdncause VALUES (0,'Normal release');
 INSERT INTO settings (var_name,var_description) values ('reloadRating','Rating tables have changed');
 insert into settings (billing_party,var_name,var_value) values ('domain.com','providerName','Provider Name');
 insert into settings (billing_party,var_name,var_value) values ('domain.com','fromEmail','support@example.com');
+INSERT into billing_enum_tlds (enum_tld,e164_regexp,discount) values ('e164.example.com','([1-9][0-9]{7,})','25');
+
