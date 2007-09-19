@@ -30,26 +30,13 @@ global $CDRTool;
 if ($CDRTool['reseller']) {
 	$loginCredentials=array(
                         'reseller'           => $CDRTool['reseller'],
-                        'loginType'          => 'admin'
+                        'loginType'          => 'admin',
+                        'soapFilter'         => $CDRTool['filter']['soap']
                         );
 } else {
 	$loginCredentials=array(
                         'loginType'          => 'admin'
                         );
-}
-
-if (strlen($CDRTool['filter']['soap'])) {
-    $allowedEngines=explode(' ',trim($CDRTool['filter']['soap']));
-	foreach(array_keys($soapEngines) as $_engine) {
-        foreach ($allowedEngines as $_allowed) {
-            if ($_engine == $_allowed) {
-                $soapEngines_checked[$_allowed]=$soapEngines[$_allowed];
-                continue;
-            }
-        }
-    }
-
-    $soapEngines=$soapEngines_checked;
 }
 
 //print_r($loginCredentials);

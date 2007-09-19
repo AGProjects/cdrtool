@@ -443,6 +443,7 @@ class SOAPEngine {
     var $adminonly     = 0;
     var $reseller      = 0;
     var $loginType     = 'reseller';
+	var $allowedPorts  = array();
 
     var $services=array(
                         'sip_accounts'     => array(
@@ -488,6 +489,38 @@ class SOAPEngine {
                                           )
                         );
 
+    function getSoapEngineAllowed($soapEngines,$filter) {
+    	$_filter_els=explode(" ",trim($filter));
+		foreach(array_keys($soapEngines) as $_engine) {
+            //dprint("check engine $_engine");
+        	foreach ($_filter_els as $_filter) {
+                //dprint("check filter $_filter");
+
+                unset($_allowed_engine);
+                $_allowed_ports=array();
+
+                list($_allowed_engine,$_allowed_ports_els) = explode(":",$_filter);
+
+                //dprint ("_allowed_engine=$_allowed_engine, _allowed_ports=$_allowed_ports_els");
+                if ($_allowed_ports_els) {
+                	$_allowed_ports = explode(",",$_allowed_ports_els);
+                }
+
+            	if ($_engine == $_allowed_engine) {
+                	$soapEngines_checked[$_engine]=$soapEngines[$_engine];
+                    $this->allowedPorts[$_engine]=$_allowed_ports;
+                	continue;
+            	} else {
+                    //dprint ("$_engine != $_allowed_engine");
+                }
+        	}
+    	}
+
+		//dprint_r($soapEngines_checked);
+
+        return $soapEngines_checked;
+    }
+
     function SOAPEngine($service,$soapEngines,$extraFormElements,$loginCredentials) {
 
         /*
@@ -505,7 +538,11 @@ class SOAPEngine {
 
         if ($this->loginCredentials['loginType'] == 'admin') $this->adminonly = 1;
 
-        $this->soapEngines = $soapEngines;
+        if (strlen($this->loginCredentials['soapFilter'])) {
+            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->loginCredentials['soapFilter']);
+        } else {
+        	$this->soapEngines = $soapEngines;
+        }
 
         if (is_array($this->soapEngines)) {
 
@@ -526,12 +563,18 @@ class SOAPEngine {
             $this->soapEngineId   = $_els[1];
             $this->soapEngineIdSettingsPage=$this->soapEngineId;
 
-            $this->soapEnginePort = $_els[0];
-            $this->recordsClass   = $this->services[$this->soapEnginePort]['recordsClass'];
-            $this->soapClass      = $this->services[$this->soapEnginePort]['soapClass'];
+            if (count($this->allowedPorts[$this->soapEngineId]) > 1 && in_array($_els[0],$this->allowedPorts[$this->soapEngineId])) {
+            	$this->soapEnginePort = $_els[0];
+            	$this->recordsClass   = $this->services[$this->soapEnginePort]['recordsClass'];
+            	$this->soapClass      = $this->services[$this->soapEnginePort]['soapClass'];
+            }  else {
+            	$this->soapEnginePort = $_els[0];
+            	$this->recordsClass   = $this->services[$this->soapEnginePort]['recordsClass'];
+            	$this->soapClass      = $this->services[$this->soapEnginePort]['soapClass'];
+            }
 
             foreach(array_keys($this->soapEngines) as $_key ) {
-            	$this->skipServices[$_key]=$this->soapEngines[$_key]['skipServices'];
+            	$this->skipEngines[$_key]=$this->soapEngines[$_key]['skipEngines'];
                 $this->skip[$_key]=$this->soapEngines[$_key]['skip'];
             }
 
@@ -804,8 +847,9 @@ class Records {
         	if ($j>1) printf ("<option value=''>--------");
             $k=1;
             foreach (array_keys($this->SOAPEngine->services) as $_service) {
-                $idx=$_engine.'@'.$_service;
-                if (in_array($_service,$this->SOAPEngine->skipServices[$_engine])) continue;
+                $idx=$_service.'@'.$_engine;
+                if (in_array($_service,$this->SOAPEngine->skipEngines[$_engine])) continue;
+                if (count($this->SOAPEngine->allowedPorts[$_engine]) > 1 && !in_array($_service,$this->SOAPEngine->allowedPorts[$_engine])) continue;
                 if ($_engine == 'Customers' && $this->version <= 1) continue;
                 printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_service,$_engine,$selected_soapEngine[$idx],$j,$k,$this->SOAPEngine->services[$_service]['name'],$this->SOAPEngine->soapEngines[$_engine]['name']);
                 $k++;
@@ -6170,7 +6214,7 @@ class Customers extends Records {
         </tr>");
         foreach ($this->customerFieldsReadOnly as $item) {
             printf ("<tr>
-            <td class=border>%s</td>
+            <td class=border valign=top>%s</td>
             <td class=border>%s</td>
             </tr>",
             ucfirst($item),
@@ -6186,7 +6230,7 @@ class Customers extends Records {
 
             if ($item=='timezone') {
                 printf ("<tr>
-                <td class=border>%s</td>",
+                <td class=border valign=top>%s</td>",
                 $item_name
                 );
                 print "<td class=border>";
@@ -6198,7 +6242,7 @@ class Customers extends Records {
                 ";
             } else if ($item=='country') {
                 printf ("<tr>
-                <td class=border>%s</td>",
+                <td class=border valign=top>%s</td>",
                 $item_name
                 );
                 print "<td class=border>
@@ -6219,7 +6263,7 @@ class Customers extends Records {
 
             } else if ($item=='state') {
                 printf ("<tr>
-                <td class=border>%s</td>",
+                <td class=border valign=top>%s</td>",
                 $item_name
                 );
 
@@ -6241,7 +6285,7 @@ class Customers extends Records {
             } else {
                 if ($this->customerFields[$item]['type'] == 'text') {
                     printf ("<tr>
-                    <td class=border>%s</td>
+                    <td class=border valign=top>%s</td>
                     <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
                     </tr>",
                     $item_name,
@@ -6250,7 +6294,7 @@ class Customers extends Records {
                     );
                 } else {
                     printf ("<tr>
-                    <td class=border>%s</td>
+                    <td class=border valign=top>%s</td>
                     <td class=border><input name=%s_form size=30 type=text value='%s'></td>
                     </tr>",
                     $item_name,
