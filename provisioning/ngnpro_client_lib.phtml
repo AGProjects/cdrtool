@@ -1740,7 +1740,6 @@ class SIPAccounts extends Records {
     }
 
     function listRecords() {
-
         $this->getAllowedDomains();
 
 		if (preg_match("/^(.*)@(.*)$/",$this->filters['username'],$m)) {
@@ -1990,7 +1989,8 @@ class SIPAccounts extends Records {
 
         if ($this->allowedDomains) {
             if ($this->filters['domain'] && !in_array($this->filters['domain'],$this->allowedDomains)) {
-    
+            	printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
+            } else {
                 $selected_domain[$this->filters['domain']]='selected';
                 printf ("<select name=domain_filter>
                 <option>");
@@ -1998,8 +1998,6 @@ class SIPAccounts extends Records {
                     printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
                 }
                 printf ("</select>");
-            } else {
-            	printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
             }
         } else {
             printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
@@ -2142,11 +2140,6 @@ class SIPAccounts extends Records {
 
         } else {
             printf ("<p><font color=red>Error: Missing SIP domain</font>");
-            return false;
-        }
-
-		if (is_array($this->allowedDomains) && !in_array($domain,$this->allowedDomains)) {
-            printf ("<p><font color=red>Error: SIP domain %s is not allowed</font>",$domain);
             return false;
         }
 
@@ -2307,6 +2300,7 @@ class SIPAccounts extends Records {
             	$this->allowedDomains=$result;
             }
         }
+
      }
 }
 
