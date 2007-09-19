@@ -182,7 +182,8 @@ the destination ID and billing party found in previous steps.
 
    To apply ENUM based discounts, the ENUM TLD must be saved with each CDR
    and the TLDs with their corespondent discounts must be provisioned in the
-   Rating tables section.
+   Rating tables section. See ENUM TLD discounts section for more
+   information.
 
 
 8. Save the calculated price, Billing Party and Destination Id for each call
@@ -396,9 +397,9 @@ application and load it back into CDRTool.
 
 
 ENUM TLD discounts
--------------------
+------------------
 
-To apply discounts based on ENUM tlds certain conditions must be met.
+To apply discounts based on ENUM certain conditions must be met.
 
 1. The username part of the result of the ENUM lookup must be numeric and
    contain a fully qualified E164 number, optional with a numeric prefix.
@@ -406,27 +407,31 @@ To apply discounts based on ENUM tlds certain conditions must be met.
    Example:
 
    The user dialed 020800001, the SIP Proxy has normalized the destination
-   based on local policy by stripping 0 and country code 31 to obtain a
-   fully qualified E164 number 3120800001, than it performed ENUM lookup
-   under top level domain e164.example.com for +3120800001 and the ENUM
-   server has returned the destination sip:01131208000011@gateway.example.com
+   based on local policy by stripping 0 and adding country code 31 to obtain
+   the fully qualified E164 number 3120800001, than it performed an ENUM
+   lookup under top level domain e164.example.com for +3120800001. The ENUM
+   server responsable for e164.example.com returned a response with the
+   destination sip:01131208000011@gateway.example.com
 
    In the CDR, ENUMtld is stored as e164.example.com
 
-   The rating logic will check if the TLD exists in the rating_enum_tlds
-   table. If it does, the rating engine will try to match the regexp field
-   against the username part of the destination from the ENUM response,
-   which has been saved in the Canonical URI. The match must return a fully
-   qualified E164 number.
+   The rating logic checks if the TLD exists in the billing_enum_tlds table. 
+   If it does, the rating engine tries to match the regexp field against the
+   username part of the destination from the ENUM response, which has been
+   saved in the Canonical URI. The match must return a fully qualified E164
+   number otherwise the call is considered to have ended to a no E164
+   destination and the call will be free of charge.
 
-2. In the ENUM tld table you must provision:
+2. In the ENUM tld table you must provision (for the example above):
 
     - TLD: e164.example.com
     - Regexp: 011([1-9][0-9]{7,})
     - Discount: 25
 
    The paranthezis of the Regexp field indicate the E164 number returned by
-   the match.
+   the match and discount is a percentage that will be substracted form the
+   total price of the call. The formula is described in the PSTN rating
+   section.
 
 
 Network rating engine
