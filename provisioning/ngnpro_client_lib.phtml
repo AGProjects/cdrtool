@@ -1,11 +1,14 @@
 <?
 class recordGenerator extends SOAPEngine {
-	var $template=array();
+	var $template     = array();
+    var $allowedPorts = array();
 
     function recordGenerator($generatorId,$recordGenerators,$soapEngines,$extraFormElements,$loginCredentials) {
     	$this->recordGenerators = $recordGenerators;
         $this->generatorId      = $generatorId;
+		$this->loginCredentials = $loginCredentials;
 
+        dprint_r($this->loginCredentials);
 		$keys = array_keys($this->recordGenerators);
 		if (!$generatorId) $generatorId=$keys[0];
 
@@ -13,29 +16,53 @@ class recordGenerator extends SOAPEngine {
             return false;
         }
 
-        // sip zones
-        $sipEngine           = 'sip_accounts@'.$this->recordGenerators[$generatorId]['sipEngineId'];
-        $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$extraFormElements,$loginCredentials);
-		$_sip_class          = $this->SipSOAPEngine->recordsClass;
-		$this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
-        $this->sipRecords->getAllowedDomains();
+        if (strlen($this->loginCredentials['soapFilter'])) {
+            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->loginCredentials['soapFilter']);
+        } else {
+        	$this->soapEngines = $soapEngines;
+        }
 
-        // enum mappings
-        $enumEngine           = 'enum_numbers@'.$this->recordGenerators[$generatorId]['enumEngineId'];
-        $this->EnumSOAPEngine = new SOAPEngine($enumEngine,$soapEngines,$extraFormElements,$loginCredentials);
-		$_enum_class          = $this->EnumSOAPEngine->recordsClass;
-		$this->enumRecords    = new $_enum_class(&$this->EnumSOAPEngine);
-        $this->enumRecords->getAllowedDomains();
+        if (in_array($this->recordGenerators[$generatorId]['sipEngineId'],array_keys($this->soapEngines))) {
+            // sip zones
+            if (count($this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngineId']]) > 1 && !in_array('sip_accounts',$this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngineId']])) {
+                // sip port not available
+            } else {
+                print "<p>sip port is available";
+
+                $sipEngine           = 'sip_accounts@'.$this->recordGenerators[$generatorId]['sipEngineId'];
+                $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$extraFormElements,$loginCredentials);
+                $_sip_class          = $this->SipSOAPEngine->recordsClass;
+                $this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
+                $this->sipRecords->getAllowedDomains();
+            }
+        }
+
+        if (in_array($this->recordGenerators[$generatorId]['enumEngineId'],array_keys($this->soapEngines))) {
+            if (count($this->allowedPorts[$this->recordGenerators[$generatorId]['enumEngineId']]) > 1 && !in_array('enum_numbers',$this->allowedPorts[$this->recordGenerators[$generatorId]['enumEngineId']])) {
+                // enum port not available
+            } else {
+                // enum mappings
+                $enumEngine           = 'enum_numbers@'.$this->recordGenerators[$generatorId]['enumEngineId'];
+                $this->EnumSOAPEngine = new SOAPEngine($enumEngine,$soapEngines,$extraFormElements,$loginCredentials);
+                $_enum_class          = $this->EnumSOAPEngine->recordsClass;
+                $this->enumRecords    = new $_enum_class(&$this->EnumSOAPEngine);
+                $this->enumRecords->getAllowedDomains();
+            }
+        }
 
 		if ($_REQUEST['reseller_filter']) $this->template['reseller']=intval($_REQUEST['reseller_filter']);
         if ($_REQUEST['customer_filter']) $this->template['customer']=intval($_REQUEST['customer_filter']);
     }
 
     function generateRecords() {
+
+        print "<p>";
+        if (!$this->checkGenerateRequest()) {
+        	return false;
+        }
         print "<p>Generating records
         <ol>";
 
-        if (!$this->checkGenerateRequest()) return false;
 
         $i=0;
 
@@ -92,7 +119,7 @@ class recordGenerator extends SOAPEngine {
 
         $nr_records=trim($_REQUEST['nr_records']);
         if (!is_numeric($nr_records) || $nr_records < 1 || $nr_records > 200) {
-            print "Error: number of records must be a number between 1 and 200.";
+            print "<font color=red>Error: number of records must be a number between 1 and 200</font>";
             return false;
         }
         $this->template['nr_records'] = $nr_records;
@@ -100,7 +127,7 @@ class recordGenerator extends SOAPEngine {
         // length of generated record
         $len=trim($_REQUEST['len']);
         if (!is_numeric($len) || $len < 4 || $len > 15) {
-            print "Error: number length must be a number between 4 and 15.";
+            print "<font color=red>Error: number length must be a number between 4 and 15</font>";
             return false;
         }
         $this->template['len'] = $len;
@@ -108,14 +135,14 @@ class recordGenerator extends SOAPEngine {
         // sip domain
         $domain=trim($_REQUEST['domain']);
         if (!strlen($domain)) {
-            print "Error: SIP domain missing";
+            print "<font color=red>Error: SIP domain missing</font>";
             return false;
         }
         $this->template['domain'] = $domain;
 
         $nr_start=trim($_REQUEST['nr_start']);
         if (strlen($nr_start) && !is_numeric($nr_start)) {
-            print "Error: Prefix must be numeric";
+            print "<font color=red>Error: Prefix must be numeric</font>";
             return false;
         }
         $this->template['nr_start'] = $nr_start;
@@ -145,7 +172,7 @@ class recordGenerator extends SOAPEngine {
         $maxNumbers         = pow(10,$digits-strlen($this->template['nr_start']));
 
         if ($maxNumbers < $this->template['nr_records']) {
-            printf ("Error: Insufficient numbers in range, requested = %d, available = %d",$this->template['nr_records'],$maxNumbers);
+            printf ("<font color=red>Error: Insufficient numbers in range, requested = %d, available = %d</font>",$this->template['nr_records'],$maxNumbers);
             return false;
         }
 
@@ -458,6 +485,38 @@ class recordGenerator extends SOAPEngine {
 
     }
 
+    function getSoapEngineAllowed($soapEngines,$filter) {
+    	$_filter_els=explode(" ",trim($filter));
+		foreach(array_keys($soapEngines) as $_engine) {
+            //dprint("check engine $_engine");
+        	foreach ($_filter_els as $_filter) {
+                //dprint("check filter $_filter");
+
+                unset($_allowed_engine);
+                $_allowed_ports=array();
+
+                list($_allowed_engine,$_allowed_ports_els) = explode(":",$_filter);
+
+                //dprint ("_allowed_engine=$_allowed_engine, _allowed_ports=$_allowed_ports_els");
+                if ($_allowed_ports_els) {
+                	$_allowed_ports = explode(",",$_allowed_ports_els);
+                }
+
+            	if ($_engine == $_allowed_engine) {
+                	$soapEngines_checked[$_engine]=$soapEngines[$_engine];
+                    $this->allowedPorts[$_engine]=$_allowed_ports;
+                	continue;
+            	} else {
+                    //dprint ("$_engine != $_allowed_engine");
+                }
+        	}
+    	}
+
+		//dprint_r($soapEngines_checked);
+
+        return $soapEngines_checked;
+    }
+
 }
 
 class SOAPEngine {
@@ -557,6 +616,12 @@ class SOAPEngine {
 
 
 		$this->loginCredentials = $loginCredentials;
+
+		if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
+            unset($this->loginCredentials['customer']);
+        }
+
+        dprint_r($this->loginCredentials);
 
         if ($this->loginCredentials['loginType'] == 'admin') $this->adminonly = 1;
 
@@ -881,19 +946,19 @@ class Records {
         printf ("</select>");
 
         if ($this->version > 1) {
-        print "Customer";
-
-        if ($this->adminonly) {
-        	$this->showResellerForm();
-            if ($this->filters['reseller']) {
-            	print ".";
-        		$this->showCustomerForm();
+            print "Customer ";
+    
+            if ($this->adminonly) {
+                $this->showResellerForm();
+                if ($this->filters['reseller']) {
+                    print ".";
+                    $this->showCustomerForm();
+                }
+            } else {
+                printf ("%s",$this->reseller);
+                print ".";
+                $this->showCustomerForm();
             }
-        } else {
-            printf ("%s",$this->reseller);
-            print ".";
-        	$this->showCustomerForm();
-        }
         }
     }
 
@@ -3099,7 +3164,7 @@ class ENUMranges extends Records {
                 print "<input type=text size=15 name=tld>";
             }
             */
-                print "<input type=text size=15 name=tld>";
+            print "<input type=text size=15 name=tld>";
             printf ("TTL<input type=text size=5 name=ttl value=3600> ");
             printf ("Min Digits<input type=text size=3 name=minDigits value=11> ");
             printf ("Max Digits<input type=text size=3 name=maxDigits value=11> ");
@@ -3553,7 +3618,7 @@ class ENUMmappings extends Records {
                             $_mapping->ttl,
                             $_mapping->priority,
                             $number->owner,
-                            $_mapping->changeDate,
+                            $number->changeDate,
                             $_url,
                             $actionText
                             );
@@ -3607,7 +3672,7 @@ class ENUMmappings extends Records {
                             $_mapping->mapto,
                             $_mapping->ttl,
                             $_mapping->priority,
-                            $_mapping->changeDate,
+                            $number->changeDate,
                             $_url,
                             $actionText
                             );
@@ -6163,9 +6228,6 @@ class Customers extends Records {
     }
 
     function showSeachFormCustom() {
-        if (!$this->filters['reseller']) {
-        	printf (".<input type=text size=6 name=customer_filter value='%s'>",$this->filters['customer']);
-        }
         printf (" Username<input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
         if ($this->adminonly) {
             if ($this->filters['only_resellers']) $check_only_resellers_filter='checked';
