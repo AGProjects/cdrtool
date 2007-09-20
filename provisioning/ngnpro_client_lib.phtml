@@ -14,14 +14,14 @@ class recordGenerator extends SOAPEngine {
         }
 
         // sip zones
-        $sipEngine           = $this->recordGenerators[$generatorId]['sipEngineId'].'@'.'SIP accounts';
+        $sipEngine           = 'sip_accounts@'.$this->recordGenerators[$generatorId]['sipEngineId'];
         $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$extraFormElements,$loginCredentials);
 		$_sip_class          = $this->SipSOAPEngine->recordsClass;
 		$this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
         $this->sipRecords->getAllowedDomains();
 
         // enum mappings
-        $enumEngine           = $this->recordGenerators[$generatorId]['enumEngineId'].'@'.'ENUM Numbers';
+        $enumEngine           = 'enum_numbers@'.$this->recordGenerators[$generatorId]['enumEngineId'];
         $this->EnumSOAPEngine = new SOAPEngine($enumEngine,$soapEngines,$extraFormElements,$loginCredentials);
 		$_enum_class          = $this->EnumSOAPEngine->recordsClass;
 		$this->enumRecords    = new $_enum_class(&$this->EnumSOAPEngine);
