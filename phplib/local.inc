@@ -606,20 +606,20 @@ class pageLayout {
         "; 
 
         if ($perm->have_perm("callsearch")) {  
-            print " <a href=callsearch.phtml>Search</a> ";
+            print " <a href=callsearch.phtml>CDRs</a> ";
         }
         if ($perm->have_perm("rates")) {
             print " | <a href=rating_tables.phtml>Rating</a>";
         }
         
-        if ($perm->have_perm("statistics")) {
-            print " | <a href=status/sip_online.phtml target=siponline>Registrar</a>";
-            print " | <a href=status/media_sessions.phtml target=mediasessions>Media</a>";
-            print " | <a href=status/usage/index.phtml target=usage>Usage</a>";
+        if ($perm->have_perm("provisioning")) {
+            print " | <a href=provisioning.phtml>SIP/ENUM</a>";
         }
         
-        if ($perm->have_perm("provisioning")) {
-            print " | <a href=provisioning.phtml>Provisioning</a>";
+        if ($perm->have_perm("statistics")) {
+            print " | <a href=status/sip_online.phtml target=siponline>Registrar</a>";
+            print " | <a href=status/media_sessions.phtml target=mediasessions>Sessions</a>";
+            print " | <a href=status/usage/index.phtml target=usage>Statistics</a>";
         }
 
         print " | <a href=log.phtml>Log</a>";
@@ -627,15 +627,12 @@ class pageLayout {
         
         $now_print=Date("Y-m-d H:i:s",time());
         $tz=$CDRTool['provider']['timezone'];
-        print " | $now_print ($tz) ver. <a href=doc/changelog target=changelog>$version</a>";
+        print " | $now_print | <a href=doc/changelog target=changelog>v. $version</a>";
         print "
         </td>
         <td align=right>
         ";
-        print "<b>$loginname ";
-        if ($loginName) print "($loginName)";
-        print "</b> ";
-        print "<a href=logout.phtml target=_top>Logout</a>";
+        printf ("<a href=logout.phtml target=_top><b>Logout %s</b></a>",$loginname);
         print "
         </tr>
         </table>

@@ -1374,7 +1374,7 @@ class Domains extends Records {
                 if ($this->version > 1) print "<td><b>Customer</b></td>";
                 print"
                 <td><b>Domain</b></td>
-                <td><b>Last change</b></td>
+                <td><b>Change date</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -1815,7 +1815,7 @@ class SIPAccounts extends Records {
                 <td><b>Caller Id</b></td>
                 <td><b>Quota</b></td>
                 <td><b>Groups</b></td>
-                <td><b>Last change</b></td>
+                <td><b>Change date</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Action</b></td>
             </tr>
@@ -2450,7 +2450,7 @@ class SIPAliases extends Records {
                 <td><b>Alias</b></td>
                 <td><b>Target</b></td>
                 <td><b>Owner</b></td>
-                <td><b>Last change</b></td>
+                <td><b>Change date</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -2885,7 +2885,7 @@ class ENUMranges extends Records {
                 <td><b>Min digits</b></td>
                 <td><b>Max digits</b></td>
                 <td><b>Used</b></td>
-                <td><b>Last change</b></td>
+                <td><b>Change date</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -2939,7 +2939,7 @@ class ENUMranges extends Records {
                     }
 
                     if (strlen($this->SOAPEngine->recordGenerator)) {
-                        $range_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s target=generator>%s</a>',$this->url,$this->SOAPEngine->recordGenerator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->id->prefix);
+                        $range_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>%s</a>',$this->url,$this->SOAPEngine->recordGenerator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller,$range->id->prefix);
                     } else {
                     	$range_link=$range->id->prefix;
                     }
@@ -3416,18 +3416,33 @@ class ENUMmappings extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) print "<td><b>Customer</b></td>";
-                print"
-                <td><b>Number</b></td>
-                <td><b>TLD</b></td>
-                <td><b>DNS name</b></td>
-                <td><b>Srv</b></td>
-                <td><b>Map to</b></td>
-                <td><b>TTL</b></td>
-                <td><b>Prio</b></td>
-                <td><b>Owner</b></td>
-                <td><b>Last change</b></td>
-                <td><b>Action</b></td>
+                if ($this->version > 1) {
+                    print "<td><b>Customer</b></td>
+                    <td><b>Number</b></td>
+                    <td><b>TLD</b></td>
+                    <td><b>DNS name</b></td>
+                    <td><b>Srv</b></td>
+                    <td><b>Map to</b></td>
+                    <td><b>TTL</b></td>
+                    <td><b>Prio</b></td>
+                    <td><b>Owner</b></td>
+                    <td><b>Change date</b></td>
+                    <td><b>Action</b></td>
+                    ";
+                } else {
+                    print "
+                    <td><b>Number</b></td>
+                    <td><b>TLD</b></td>
+                    <td><b>DNS name</b></td>
+                    <td><b>Srv</b></td>
+                    <td><b>Map to</b></td>
+                    <td><b>TTL</b></td>
+                    <td><b>Prio</b></td>
+                    <td><b>Owner</b></td>
+                    <td><b>Action</b></td>
+                    ";
+                }
+                print "
             </tr>
             ";
 
@@ -3461,6 +3476,7 @@ class ENUMmappings extends Records {
                     }
 
                     $j=1;
+
                     foreach ($number->mappings as $_mapping) {
                         $_url = $this->url.sprintf("&service=%s&action=Delete&number_filter=%s&tld_filter=%s&mapto_filter=%s",
                         urlencode($this->SOAPEngine->service),
@@ -3515,7 +3531,7 @@ class ENUMmappings extends Records {
                             $_mapping->ttl,
                             $_mapping->priority,
                             $number->owner,
-                            $_mapping->lastChange,
+                            $_mapping->changeDate,
                             $_url,
                             $actionText
                             );
@@ -3524,7 +3540,6 @@ class ENUMmappings extends Records {
                             <tr bgcolor=%s>
                             <td>%s</td>
                             <td>+%s</td>
-                            <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
@@ -3544,7 +3559,6 @@ class ENUMmappings extends Records {
                             $_mapping->ttl,
                             $_mapping->priority,
                             $number->owner,
-                            $_mapping->lastChange,
                             $_url,
                             $actionText
                             );
@@ -3571,7 +3585,7 @@ class ENUMmappings extends Records {
                             $_mapping->mapto,
                             $_mapping->ttl,
                             $_mapping->priority,
-                            $_mapping->lastChange,
+                            $_mapping->changeDate,
                             $_url,
                             $actionText
                             );
@@ -3586,7 +3600,6 @@ class ENUMmappings extends Records {
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
-                            <td>%s</td>
                             <td></td>
                             <td><a href=%s>%s</a></td>
                             </tr>",
@@ -3595,7 +3608,6 @@ class ENUMmappings extends Records {
                             $_mapping->mapto,
                             $_mapping->ttl,
                             $_mapping->priority,
-                            $_mapping->lastChange,
                             $_url,
                             $actionText
                             );
