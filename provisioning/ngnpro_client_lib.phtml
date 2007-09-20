@@ -3354,6 +3354,15 @@ class ENUMmappings extends Records {
 
     var $ranges=array();
 
+    var $FieldsReadOnly=array(
+                              'reseller'
+                              );
+    var $Fields=array(
+                              'customer' => array('type'=>'integer'),
+                              'owner' => array('type'=>'integer'),
+                              'info'  => array('type'=>'string')
+                              );
+
     var $NAPTR_services=array(
         "sip"    => array("service"=>"sip",
                               "webname"=>"SIP",
@@ -3512,6 +3521,7 @@ class ENUMmappings extends Records {
                     <td><b>TTL</b></td>
                     <td><b>Prio</b></td>
                     <td><b>Owner</b></td>
+                    <td><b>Info</b></td>
                     <td><b>Change date</b></td>
                     <td><b>Action</b></td>
                     ";
@@ -3525,6 +3535,7 @@ class ENUMmappings extends Records {
                     <td><b>TTL</b></td>
                     <td><b>Prio</b></td>
                     <td><b>Owner</b></td>
+                    <td><b>Info</b></td>
                     <td><b>Action</b></td>
                     ";
                 }
@@ -3583,6 +3594,12 @@ class ENUMmappings extends Records {
 
                         if ($j==1) {
 
+                            $_number_url = $this->url.sprintf("&service=%s&number_filter=%s&tld_filter=%s",
+                            urlencode($this->SOAPEngine->service),
+        	                urlencode($number->id->number),
+    	                    urlencode($number->id->tld)
+                            );
+
                     		if ($this->version > 1) {
         					$_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                     		urlencode($this->SOAPEngine->soapEngineId),
@@ -3593,7 +3610,8 @@ class ENUMmappings extends Records {
                             <tr bgcolor=%s>
                             <td>%s</td>
                             <td><a href=%s>%s.%s</a></td>
-                            <td>+%s</td>
+                    		<td><a href=%s>+%s</a></td>
+                            <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
@@ -3609,6 +3627,7 @@ class ENUMmappings extends Records {
                             $_customer_url,
                             $number->reseller,
                             $number->customer,
+                            $_number_url,
                             $number->id->number,
                             $number->id->tld,
                             $this->tel2enum($number->id->number,$number->id->tld),
@@ -3617,6 +3636,7 @@ class ENUMmappings extends Records {
                             $_mapping->ttl,
                             $_mapping->priority,
                             $number->owner,
+                            $number->info,
                             $number->changeDate,
                             $_url,
                             $actionText
@@ -3633,6 +3653,7 @@ class ENUMmappings extends Records {
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
+                            <td>%s</td>
                             <td><a href=%s>%s</a></td>
                             </tr>",
                             $bgcolor,
@@ -3645,6 +3666,7 @@ class ENUMmappings extends Records {
                             $_mapping->ttl,
                             $_mapping->priority,
                             $number->owner,
+                            $number->info,
                             $_url,
                             $actionText
                             );
@@ -3662,8 +3684,9 @@ class ENUMmappings extends Records {
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
-                            <td>%s</td>
                             <td></td>
+                            <td></td>
+                            <td>%s</td>
                             <td><a href=%s>%s</a></td>
                             </tr>",
                             $bgcolor,
@@ -3685,8 +3708,9 @@ class ENUMmappings extends Records {
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
-                            <td>%s</td>
                             <td></td>
+                            <td></td>
+                            <td>%s</td>
                             <td><a href=%s>%s</a></td>
                             </tr>",
                             $bgcolor,
@@ -3714,7 +3738,11 @@ class ENUMmappings extends Records {
 
             print "</table>";
 
-            $this->showPagination($maxrows);
+			if ($this->rows == 1 ) {
+                $this->showRecord($number);
+            } else {
+            	$this->showPagination($maxrows);
+            }
 
             return true;
         }
@@ -4251,6 +4279,121 @@ class ENUMmappings extends Records {
                                              'tld'    => $number->id->tld);
             }
             return true;
+        }
+    }
+
+    function showRecord($number) {
+
+        print "<table border=0 cellpadding=10>";
+        print "
+        <tr>
+        <td valign=top>
+        <h3>ENUM number</h3>
+        <table border=0>";
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "<input type=hidden name=action value=Update>";
+
+        print "<tr>
+        <td colspan=2 class=border><input type=submit value=Update>
+        </td></tr>";
+
+        printf ("<tr bgcolor=lightgrey>
+        <td class=border>Field</td>
+        <td class=border>Value</td>
+        </tr>");
+        foreach ($this->FieldsReadOnly as $item) {
+            printf ("<tr>
+            <td class=border valign=top>%s</td>
+            <td class=border>%s</td>
+            </tr>",
+            ucfirst($item),
+            $number->$item
+            );
+        }
+
+        foreach (array_keys($this->Fields) as $item) {
+            if ($this->Fields[$item]['name']) {
+                $item_name=$this->Fields[$item]['name'];
+            } else {
+            	$item_name=ucfirst($item);
+            }
+
+            if ($this->Fields[$item]['type'] == 'text') {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                </tr>",
+                $item_name,
+                $item,
+                $number->$item
+                );
+            } else {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                </tr>",
+                $item_name,
+                $item,
+                $number->$item
+                );
+            }
+        }
+
+        $this->printFiltersToForm();
+        $this->printHiddenFormElements();
+
+        print "</form>";
+        print "
+        </table>
+        ";
+    }
+
+    function getRecord($enumid) {
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclient->getNumber($enumid);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+        	return $result;
+        }
+    }
+
+    function updateRecord () {
+        //print "<p>Updating number ...";
+
+        if (!$_REQUEST['number_filter'] || !$_REQUEST['tld_filter']) return;
+
+        $enumid=array('number' => $_REQUEST['number_filter'],
+                      'tld'    => $_REQUEST['tld_filter']
+                     );
+
+        if (!$number = $this->getRecord($enumid)) {
+            return false;
+        }
+
+        foreach ($number->mappings as $_property) {
+            $mappings[]=$_property;
+        }
+
+        $number->mappings=$mappings;
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result = $this->SOAPEngine->soapclient->updateNumber($number);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+        	return true;
         }
     }
 }
@@ -5657,8 +5800,6 @@ class Customers extends Records {
                                                                'category' => 'admin'),
                                  'soap_engines'       => array('name'     => 'SOAP engines',
                                                                'category' => 'admin'),
-                                 'language'           => array('name'     => 'Language',
-                                                               'category' => 'general'),
                                  'voicemail_server'   => array('name'     => 'Voicemail server address',
                                                                'category' => 'sip'),
                                  'sip_proxy_server'   => array('name'     => 'SIP Proxy server address',
@@ -5679,11 +5820,11 @@ class Customers extends Records {
                                                                'category' => 'sip')
                                  );
 
-    var $customerFieldsReadOnly=array(
+    var $FieldsReadOnly=array(
                               'id',
                               'reseller'
                               );
-    var $customerFields=array(
+    var $Fields=array(
                               'aliasOf'     => array('type'=>'integer'),
                               'username'    => array('type'=>'string'),
                               'password'    => array('type'=>'string',
@@ -5707,7 +5848,8 @@ class Customers extends Records {
                               'city'        => array('type'=>'string'),
                               'state'       => array('type'=>'string'),
                               'country'     => array('type'=>'string'),
-                              'timezone'    => array('type'=>'string')
+                              'timezone'    => array('type'=>'string'),
+                              'language'    => array('type'=>'string')
                               );
 
         var $states=array(
@@ -6209,9 +6351,8 @@ class Customers extends Records {
 
             print "</table>";
 
-
 			if ($this->rows == 1 ) {
-                $this->showRecord($customer->id);
+                $this->showRecord($customer);
             } else {
             	$this->showPagination($maxrows);
             }
@@ -6255,7 +6396,7 @@ class Customers extends Records {
         }
     }
 
-    function getCustomer($id) {
+    function getRecord($id) {
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
         $result     = $this->SOAPEngine->soapclient->getAccount(intval($id));
@@ -6271,11 +6412,7 @@ class Customers extends Records {
         }
     }
 
-    function showRecord($id) {
-
-        if (!$customer = $this->getCustomer($id)) {
-            return false;
-        }
+    function showRecord($customer){
 
         print "<table border=0 cellpadding=10>";
         print "
@@ -6295,7 +6432,7 @@ class Customers extends Records {
         <td class=border>Field</td>
         <td class=border>Value</td>
         </tr>");
-        foreach ($this->customerFieldsReadOnly as $item) {
+        foreach ($this->FieldsReadOnly as $item) {
             printf ("<tr>
             <td class=border valign=top>%s</td>
             <td class=border>%s</td>
@@ -6304,9 +6441,9 @@ class Customers extends Records {
             $customer->$item
             );
         }
-        foreach (array_keys($this->customerFields) as $item) {
-            if ($this->customerFields[$item]['name']) {
-                $item_name=$this->customerFields[$item]['name'];
+        foreach (array_keys($this->Fields) as $item) {
+            if ($this->Fields[$item]['name']) {
+                $item_name=$this->Fields[$item]['name'];
             } else {
             	$item_name=ucfirst($item);
             }
@@ -6366,7 +6503,7 @@ class Customers extends Records {
                 ";
 
             } else {
-                if ($this->customerFields[$item]['type'] == 'text') {
+                if ($this->Fields[$item]['type'] == 'text') {
                     printf ("<tr>
                     <td class=border valign=top>%s</td>
                     <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
@@ -6460,7 +6597,7 @@ class Customers extends Records {
 
         if (!$_REQUEST['customer_filter']) return;
 
-        if (!$customer=$this->getCustomer($_REQUEST['customer_filter'])) {
+        if (!$customer=$this->getRecord($_REQUEST['customer_filter'])) {
             return false;
         }
 
@@ -6479,10 +6616,10 @@ class Customers extends Records {
             $customer->properties=$properties;
 
         } else {
-            foreach (array_keys($this->customerFields) as $item) {
+            foreach (array_keys($this->Fields) as $item) {
                 $var_name=$item.'_form';
                 //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
-                if ($this->customerFields[$item]['type'] == 'integer') {
+                if ($this->Fields[$item]['type'] == 'integer') {
                 	$customer->$item = intval($_REQUEST[$var_name]);
                 } else {
                 	$customer->$item = trim($_REQUEST[$var_name]);
