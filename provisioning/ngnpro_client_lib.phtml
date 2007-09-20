@@ -3349,8 +3349,7 @@ class ENUMranges extends Records {
 class ENUMmappings extends Records {
     var $sortElements=array('changeDate' => 'Change date',
                             'number'     => 'Number',
-                            'tld'        => 'TLD',
-                            'owner'      => 'Owner'
+                            'tld'        => 'TLD'
                             );
 
     var $ranges=array();
@@ -3958,10 +3957,7 @@ class ENUMmappings extends Records {
     function getAllowedDomains() {
 		if ($this->version > 1) {
             // Filter
-            $filter=array('prefix'   => $this->filters['prefix'],
-                          'tld'      => $this->filters['tld'],
-                          'customer' => intval($this->filters['customer']),
-                          'reseller' => intval($this->filters['reseller'])
+            $filter=array('prefix'   => ''
                           );
             // Range
             $range=array('start' => 0,
@@ -3969,11 +3965,8 @@ class ENUMmappings extends Records {
                          );
     
             // Order
-            if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
-            if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
-    
-            $orderBy = array('attribute' => $this->sorting['sortBy'],
-                             'direction' => $this->sorting['sortOrder']
+            $orderBy = array('attribute' => 'changeDate',
+                             'direction' => 'ASC'
                              );
     
             // Compose query
