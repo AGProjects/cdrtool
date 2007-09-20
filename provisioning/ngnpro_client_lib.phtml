@@ -4,7 +4,7 @@ class recordGenerator extends SOAPEngine {
 
     function recordGenerator($generatorId,$recordGenerators,$soapEngines,$extraFormElements,$loginCredentials) {
     	$this->recordGenerators = $recordGenerators;
-        $this->generatorId=$generatorId;
+        $this->generatorId      = $generatorId;
 
 		$keys = array_keys($this->recordGenerators);
 		if (!$generatorId) $generatorId=$keys[0];
@@ -26,6 +26,9 @@ class recordGenerator extends SOAPEngine {
 		$_enum_class          = $this->EnumSOAPEngine->recordsClass;
 		$this->enumRecords    = new $_enum_class(&$this->EnumSOAPEngine);
         $this->enumRecords->getAllowedDomains();
+
+		if ($_REQUEST['reseller_filter']) $this->template['reseller']=intval($_REQUEST['reseller_filter']);
+        if ($_REQUEST['customer_filter']) $this->template['customer']=intval($_REQUEST['customer_filter']);
     }
 
     function generateRecords() {
@@ -46,11 +49,13 @@ class recordGenerator extends SOAPEngine {
             printf ('Generating number +%s with mapping %s ',$number,$mapto);
             flush();
 
-            $enumMapping = array('tld'    => $this->template['tld'],
-                                 'number' => $number,
-                                 'type'   => 'sip',
-                                 'mapto'  => $mapto,
-                                 'owner'  => $this->template['owner']
+            $enumMapping = array('tld'      => $this->template['tld'],
+                                 'number'   => $number,
+                                 'type'     => 'sip',
+                                 'mapto'    => $mapto,
+                                 'owner'    => $this->template['owner'],
+                                 'customer' => $this->template['customer'],
+                                 'reseller' => $this->template['reseller']
                                 );
 
             if ($this->template['create_sip']) {
@@ -59,11 +64,13 @@ class recordGenerator extends SOAPEngine {
             	printf ('and sip account %s@%s ',$username,$this->template['domain']);
     
                 $sipAccount = array('account'  => $username.'@'.$this->template['domain'],
-                                    'owner'    => $this->template['owner'],
                                     'quota'    => $this->template['quota'],
                                     'prepaid'  => $this->template['prepaid'],
                                     'password' => $this->template['password'],
-                                    'groups'   => $groups
+                                    'groups'   => $groups,
+                                    'owner'    => $this->template['owner'],
+                                    'customer' => $this->template['customer'],
+                                    'reseller' => $this->template['reseller']
                                     );
             } else {
                 unset($sipAccount);
@@ -108,7 +115,7 @@ class recordGenerator extends SOAPEngine {
 
         $nr_start=trim($_REQUEST['nr_start']);
         if (strlen($nr_start) && !is_numeric($nr_start)) {
-            print "Error: Use prefix must be numeric";
+            print "Error: Prefix must be numeric";
             return false;
         }
         $this->template['nr_start'] = $nr_start;
@@ -177,7 +184,7 @@ class recordGenerator extends SOAPEngine {
         print "
         <tr>
         <td>";
-        print _("Range");
+        print _("ENUM range");
         print "
         <td align=right>";
 
@@ -209,7 +216,7 @@ class recordGenerator extends SOAPEngine {
         print "
         <tr>
         <td>";
-        print _("Use prefix:");
+        print _("Add prefix:");
         printf ("
         <td align=right>
         <input type=text name=nr_start size=10 maxsize=15 value='%s'>
@@ -227,11 +234,12 @@ class recordGenerator extends SOAPEngine {
         <td>
         ",$_REQUEST['len']);
     
-        print _("SIP domain");
+        print _("SIP domain:");
         print "
         <td align=right>
         ";
-        if (count($this->sipRecords->allowedDomains)) {
+
+        if (count($this->sipRecords->allowedDomains) > 0) {
             print "
             <select name=domain>
             ";
@@ -252,28 +260,35 @@ class recordGenerator extends SOAPEngine {
         </td>
         </tr>
         ";
+
+        if ($_REQUEST['strip_digits']) {
+            $strip_digits=$_REQUEST['strip_digits'];
+        } else {
+            $strip_digits=0;
+        }
+
         print "
         <tr>
         <td>";
-        print _("Strip from username");
+        print _("Strip first digits:");
         printf ("
-        <td align=right>first
-        <input type=text size=5 name=strip_digits value='%s'>digits
+        <td align=right>
+        <input type=text size=10 name=strip_digits value='%s'>
         </td>
         </tr>
-        ",$_REQUEST['strip_digits']);
+        ",$strip_digits);
         print "
         <tr>
         <td>";
-        print _("Owner");
+        print _("Owner:");
         printf ("
-        <td align=right><input type=text size=6 maxsize=6 name=owner value='%s'>
+        <td align=right><input type=text size=10 name=owner value='%s'>
         <td>",$_REQUEST['owner']);
         print "
         </td>
         </tr>";
 
-        if (count($this->sipRecords->allowedDomains)) {
+        if (count($this->sipRecords->allowedDomains) > 0) {
             print "
             <tr>
             <td colspan=3><hr noshade size=1>
@@ -344,7 +359,7 @@ class recordGenerator extends SOAPEngine {
             <td>";
             print _("Prefix Caller-ID");
             printf ("
-            <td align=right><input type=text size=5 name=rpid_prefix value='%s'>
+            <td align=right><input type=text size=10 name=rpid_prefix value='%s'>
             </td>
             </tr>
             ",$_REQUEST['rpid_prefix']);
@@ -354,7 +369,7 @@ class recordGenerator extends SOAPEngine {
             <td>";
             print _("Quota");
             printf ("
-            <td align=right><input type=text size=5 name=quota value='%s'>
+            <td align=right><input type=text size=10 name=quota value='%s'>
             </td>
             </tr>
             ",$_REQUEST['quota']);
@@ -364,52 +379,51 @@ class recordGenerator extends SOAPEngine {
             <td>";
             print _("Password");
             printf ("
-            <td align=right><input type=text size=15 name=password value='%s'>
+            <td align=right><input type=text size=10 name=password value='%s'>
             </td>
             </tr>
             ",$_REQUEST['password']);
 
-            print "
-            <tr>
-            <td colspan=3>
-            <hr noshade size=1 with=100%>
-            </td>
-            </tr>
-            ";
-            print "
-            <tr>
-            <td>
-            ";
-
-            if ($_REQUEST['nr_records']) {
-            	$nr_records=$_REQUEST['nr_records'];
-            } else {
-            	$nr_records=1;
-            }
-            print "<input type=hidden value=Generate>";
-            print "<input type=submit value=";
-            print _("Generate");
-            print ">";
-            printf ("<td align=right>
-            <input type=text size=4 name=nr_records value='%s'>
-            ",$nr_records);
-            print _("records");
-            print "<td>";
-            print "
-            </tr>
-            ";
-    
-            print "
-            <tr>
-            <td colspan=2>
-            <br>
-            <input type=hidden name=action value=Generate>
-            <p>";
-            print _("Existing records will not be overwritten. ");
-            print "</td>
-            </tr>
-            ";
         }
+
+        if ($_REQUEST['nr_records']) {
+            $nr_records=$_REQUEST['nr_records'];
+        } else {
+            $nr_records=1;
+        }
+
+        print "
+        <tr>
+        <td colspan=3>
+        <hr noshade size=1 with=100%>
+        </td>
+        </tr>
+        ";
+        print "
+        <tr>
+        <td>
+        ";
+
+        print "<input type=hidden value=Generate>";
+        print "<input type=submit value=Generate>";
+        printf ("<td align=right>
+        Number of records:<input type=text size=10 name=nr_records value='%s'>
+        ",$nr_records);
+        print "<td>";
+        print "
+        </tr>
+        ";
+
+        print "
+        <tr>
+        <td colspan=2>
+        <br>
+        <input type=hidden name=action value=Generate>
+        <p>";
+        print _("Existing records will not be overwritten. ");
+        print "</td>
+        </tr>
+        ";
 
         $this->printHiddenFormElements();
 
@@ -427,6 +441,14 @@ class recordGenerator extends SOAPEngine {
 
         if ($this->adminonly) {
         	printf("<input type=hidden name=adminonly value='%s'>",$this->adminonly);
+        }
+
+        if ($this->template['customer']) {
+        	printf("<input type=hidden name=customer_filter value='%s'>",$this->template['customer']);
+        }
+
+        if ($this->template['reseller']) {
+        	printf("<input type=hidden name=reseller_filter value='%s'>",$this->template['reseller']);
         }
 
         foreach (array_keys($this->extraFormElements) as $element) {
@@ -787,7 +809,7 @@ class SOAPEngine {
 class Records {
 	var $maxrowsperpage  = '15';
     var $SipSettingsPage = 'sip_settings.phtml';
-    var $allowedDomains  = false;
+    var $allowedDomains  = array();
     var $selectionActive = false;
     var $selectionKeys   = array();
     var $resellers       = array();
@@ -1987,7 +2009,7 @@ class SIPAccounts extends Records {
         printf ("User<input type=text size=15 name=username_filter value='%s'>",$this->filters['username']);
         printf ("@");
 
-        if ($this->allowedDomains) {
+        if (count($this->allowedDomains) > 0) {
             if ($this->filters['domain'] && !in_array($this->filters['domain'],$this->allowedDomains)) {
             	printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
             } else {
@@ -2605,7 +2627,7 @@ class SIPAliases extends Records {
         printf (" Alias<input type=text size=10 name=alias_username_filter value='%s'>",$this->filters['aliasUsername']);
         printf ("@");
 
-        if ($this->allowedDomains) {
+        if (count($this->allowedDomains) > 0) {
             if ($this->filters['aliasDomain'] && !in_array($this->filters['aliasDomain'],$this->allowedDomains)) {
             	printf ("<input type=text size=10 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
             } else {
@@ -3173,7 +3195,7 @@ class ENUMranges extends Records {
         	printf (" Prefix<input type=text size=10 name=prefix_filter value='%s'>",$this->filters['prefix']);
             printf (" TLD");
 
-            if ($this->allowedDomains) {
+            if (count($this->allowedDomains) > 0) {
                 $selected_tld[$this->filters['tld']]='selected';
                 printf ("<select name=tld_filter>
                 <option>");
@@ -3690,7 +3712,7 @@ class ENUMmappings extends Records {
 
         printf (" Number<input type=text size=15 name=number_filter value='%s'>",$this->filters['number']);
         printf (" TLD");
-        if ($this->allowedDomains) {
+        if (count($this->allowedDomains) > 0) {
             $selected_tld[$this->filters['tld']]='selected';
             printf ("<select name=tld_filter>
             <option>");
