@@ -2971,6 +2971,7 @@ class ENUMranges extends Records {
                 <td><b>TTL</b></td>
                 <td><b>Min digits</b></td>
                 <td><b>Max digits</b></td>
+                <td><b>Size</b></td>
                 <td><b>Used</b></td>
                 <td><b>Change date</b></td>
                 <td><b>Action</b></td>
@@ -3048,6 +3049,7 @@ class ENUMranges extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
+                    <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
@@ -3060,6 +3062,7 @@ class ENUMranges extends Records {
                     $range->ttl,
                     $range->minDigits,
                     $range->maxDigits,
+                    $range->size,
                     $range->used,
                     $range->changeDate,
                     $_url,
@@ -3359,8 +3362,15 @@ class ENUMmappings extends Records {
                               );
     var $Fields=array(
                               'customer' => array('type'=>'integer'),
-                              'owner' => array('type'=>'integer'),
-                              'info'  => array('type'=>'string')
+                              'owner'    => array('type'=>'integer'),
+                              'info'     => array('type'=>'string')
+                              );
+
+    var $mapping_fields=array('id'       => 'integer',
+                              'type'     => 'string',
+                              'mapto'    => 'string',
+                              'priority' => 'integer',
+                              'ttl'      => 'integer'
                               );
 
     var $NAPTR_services=array(
@@ -3515,7 +3525,6 @@ class ENUMmappings extends Records {
                     print "<td><b>Customer</b></td>
                     <td><b>Number</b></td>
                     <td><b>TLD</b></td>
-                    <td><b>DNS name</b></td>
                     <td><b>Srv</b></td>
                     <td><b>Map to</b></td>
                     <td><b>TTL</b></td>
@@ -3529,7 +3538,6 @@ class ENUMmappings extends Records {
                     print "
                     <td><b>Number</b></td>
                     <td><b>TLD</b></td>
-                    <td><b>DNS name</b></td>
                     <td><b>Srv</b></td>
                     <td><b>Map to</b></td>
                     <td><b>TTL</b></td>
@@ -3619,7 +3627,6 @@ class ENUMmappings extends Records {
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
-                            <td>%s</td>
                             <td><a href=%s>%s</a></td>
                             </tr>",
                             $bgcolor,
@@ -3630,7 +3637,6 @@ class ENUMmappings extends Records {
                             $_number_url,
                             $number->id->number,
                             $number->id->tld,
-                            $this->tel2enum($number->id->number,$number->id->tld),
                             ucfirst($_mapping->type),
                             $_mapping->mapto,
                             $_mapping->ttl,
@@ -3653,14 +3659,12 @@ class ENUMmappings extends Records {
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
-                            <td>%s</td>
                             <td><a href=%s>%s</a></td>
                             </tr>",
                             $bgcolor,
                             $index,
                             $number->id->number,
                             $number->id->tld,
-                            $this->tel2enum($number->id->number,$number->id->tld),
                             ucfirst($_mapping->type),
                             $_mapping->mapto,
                             $_mapping->ttl,
@@ -3675,7 +3679,6 @@ class ENUMmappings extends Records {
                     		if ($this->version > 1) {
                             printf("
                             <tr bgcolor=%s>
-                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
@@ -3701,7 +3704,6 @@ class ENUMmappings extends Records {
                             } else {
                             printf("
                             <tr bgcolor=%s>
-                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
@@ -3914,7 +3916,7 @@ class ENUMmappings extends Records {
     }
 
     function showAddForm() {
-		if ($this->selectionActive) return;
+		//if ($this->selectionActive) return;
 
         print "
         <p>
@@ -3929,16 +3931,17 @@ class ENUMmappings extends Records {
             print "
             <input type=submit name=action value=Add>
             ";
-            printf (" Number +<input type=text size=15 name=number>");
+            printf (" Number +<input type=text size=15 name=number value='%s'>",$this->filters['number']);
             printf (" TLD");
             if (is_array($this->allowedDomains)) {
+            	$selected_tld[$this->filters['tld']]='selected';
             	print "<select name=tld>";
                 foreach ($this->allowedDomains as $_tld) {
-                    print "<option value=$_tld>$_tld\n";
+                    printf ("<option value=%s %s>%s\n",$_tld,$selected_tld[$_tld],$_tld);
                 }
                 print "</select>";
             } else {
-                print "<input type=text size=15 name=tld>";
+                printf ("<input type=text size=15 name=tld value='%s'>",$this->filters['tld']);
             }
     	    printf (" Map to");
                     print "<select name=type>
@@ -4301,6 +4304,10 @@ class ENUMmappings extends Records {
         <td class=border>Field</td>
         <td class=border>Value</td>
         </tr>");
+
+        printf ("<tr><td class=border>DNS name</td><td class=border>%s</td></td>",
+        $this->tel2enum($number->id->number,$number->id->tld));
+
         foreach ($this->FieldsReadOnly as $item) {
             printf ("<tr>
             <td class=border valign=top>%s</td>
@@ -4339,6 +4346,8 @@ class ENUMmappings extends Records {
             }
         }
 
+        printf ("<input type=hidden name=tld_filter value='%s'",$number->id->tld);
+        printf ("<input type=hidden name=number_filter value='%s'",$number->id->number);
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
 
@@ -4377,11 +4386,33 @@ class ENUMmappings extends Records {
             return false;
         }
 
-        foreach ($number->mappings as $_property) {
-            $mappings[]=$_property;
+        $new_mappings=array();
+
+        foreach ($number->mappings as $_mapping) {
+            foreach (array_keys($this->mapping_fields) as $field) {
+                if ($this->mapping_fields[$field] == 'integer') {
+                    $new_mapping[$field]=intval($_mapping->$field);
+                } else {
+                    $new_mapping[$field]=$_mapping->$field;
+                }
+            }
+
+            $new_mappings[]=$new_mapping;
         }
 
-        $number->mappings=$mappings;
+        $number->mappings=$new_mappings;
+
+        foreach (array_keys($this->Fields) as $item) {
+            $var_name=$item.'_form';
+            //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
+            if ($this->Fields[$item]['type'] == 'integer') {
+                $number->$item = intval($_REQUEST[$var_name]);
+            } else {
+                $number->$item = trim($_REQUEST[$var_name]);
+            }
+        }
+
+        //print_r($number);
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
         $result = $this->SOAPEngine->soapclient->updateNumber($number);
@@ -7340,6 +7371,13 @@ class ENUMMappingsActions extends Actions {
                        'changeowner'    => 'Change owner to:'
                        );
 
+    var $mapping_fields=array('id'       => 'integer',
+                              'type'     => 'string',
+                              'mapto'    => 'string',
+                              'priority' => 'integer',
+                              'ttl'      => 'integer'
+                              );
+
     function ENUMMappingsActions(&$SOAPEngine) {
         $this->Actions(&$SOAPEngine);
     }
@@ -7381,17 +7419,32 @@ class ENUMMappingsActions extends Actions {
             		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             		break;
         		} else {
-            		foreach ($number->mappings as $_property) {
-        				$mappings[]=$_property;
-        			}
-            		$number->mappings=$mappings;
 
-                    if (is_numeric($sub_action_parameter)) {
-                    	$number->ttl=intval($sub_action_parameter);
-                    } else {
+                    if (!is_numeric($sub_action_parameter)) {
             			printf ("<font color=red>Error: TTL '%s' must be numeric</font>",$sub_action_parameter);
                         continue;
                     }
+
+                	$new_mappings=array();
+
+                    foreach ($number->mappings as $_mapping) {
+                        foreach (array_keys($this->mapping_fields) as $field) {
+                            if ($field == 'ttl') {
+                            	$new_mapping[$field]=intval($sub_action_parameter);
+                            } else {
+                                if ($this->mapping_fields[$field] == 'integer') {
+                                    $new_mapping[$field]=intval($_mapping->$field);
+                                } else {
+                                    $new_mapping[$field]=$_mapping->$field;
+                                }
+                            }
+
+                        }
+
+        				$new_mappings[]=$new_mapping;
+        			}
+
+            		$number->mappings=$new_mappings;
 
                     $function=array('commit'   => array('name'       => 'updateNumber',
                                                         'parameters' => array($number),
