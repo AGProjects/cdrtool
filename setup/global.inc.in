@@ -215,7 +215,7 @@ $DATASOURCES=array(
                     			    		),
                     "UserQuotaClass"     => "SERQuota",
                     "UserQuotaNotify"    => "0",	// send e-mail notifications when quota is exceeded
-                    "SoapEngineId"       => '',
+                    "soapEngineId"       => '',
                     "EnableNetworkRating"=> "1",
                     "domainTranslation"  => array(
                                                   "gw02.domain.com"      => "pstn.domain.com" // translate Realm
@@ -279,7 +279,7 @@ $DATASOURCES=array(
 "sip_trace_thor"   =>array(
                     "name"               => "SIP trace Thor",
                     "enableThor"         => true,
-                    "SoapEngineId"       => "id",   
+                    "soapEngineId"       => "thor",   
                     "invisible"          => 1 
                     )
                     

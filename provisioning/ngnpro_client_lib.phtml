@@ -5854,20 +5854,20 @@ class Customers extends Records {
     var $FieldsReadOnly=array(
                               'id',
                               'reseller',
-                              'compCode'
                               );
     var $Fields=array(
-                              'aliasOf'     => array('type'=>'integer'),
-                              'username'    => array('type'=>'text'),
-                              'password'    => array('type'=>'text',
+                              'aliasOf'     => array('type'=>'integer',
+                                                     'name'=>'Impersonate'),
+                              'resellerActive' => array ('type' => 'integer',
+                                                         'name' => 'Reseller active'),
+                              'username'       => array('type'=>'text'),
+                              'password'       => array('type'=>'text',
                                                      'name'=>'Password'),
-                              'firstName'   => array('type'=>'text',
+                              'firstName'      => array('type'=>'text',
                                                      'name'=>'First name'),
-                              'lastName'    => array('type'=>'text',
+                              'lastName'       => array('type'=>'text',
                                                      'name'=>'Last name'),
-                              'organization'=> array('type'=>'text'),
-                              'vatNumber'   => array('type'=>'text',
-                                                     'name'=>'VAT number'),
+                              'organization'   => array('type'=>'text'),
                               'tel'         => array('type'=>'text'),
                               'fax'         => array('type'=>'text'),
                               'sip'         => array('type'=>'text'),
@@ -5880,13 +5880,16 @@ class Customers extends Records {
                               'city'        => array('type'=>'text'),
                               'state'       => array('type'=>'text'),
                               'country'     => array('type'=>'text'),
+                              'timezone'    => array('type'=>'text'),
+                              'language'    => array('type'=>'text'),
+                              'vatNumber'   => array('type'=>'text',
+                                                     'name'=>'VAT number'),
                               'billingAddress' => array('type'=>'textarea',
                                                         'name'=>'Billing address'),
                               'billingEmail'   => array('type'=>'text',
                                                         'name'=>'Billing email'),
-                              'bankAccount' => array('type'=>'text'),
-                              'timezone'    => array('type'=>'text'),
-                              'language'    => array('type'=>'text')
+                              'bankAccount' => array('type'=>'text',
+                                                    'name'=>'Bank account')
                               );
 
         var $states=array(
@@ -6230,7 +6233,6 @@ class Customers extends Records {
 
 		$this->Records(&$SOAPEngine);
 
-		$this->propertiesItems=array_merge($this->propertiesItems,$this->customerProperties);
     }
 
     function listRecords() {
@@ -6302,8 +6304,10 @@ class Customers extends Records {
                 ";
                 if ($this->version > 1) print "<td><b>Customer</b></td>";
                 print"
+                <td><b>Username</b></td>
                 <td><b>Name</b></td>
                 <td><b>Organization</b></td>
+                <td><b>Country</b></td>
                 <td><b>E-mail</b></td>
                 <td><b>Telephone</b></td>
                 <td><b>Web</b></td>
@@ -6362,11 +6366,13 @@ class Customers extends Records {
                     <tr bgcolor=%s>
                     <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
+                    <td>%s</td>
                     <td>%s %s</td>
                     <td>%s</td>
                     <td>%s</td>
+                    <td><a href=mailto:%s>%s</a></td>
                     <td>%s</td>
-                    <td>%s</td>
+                    <td><a href=%s target=_new>%s</a></td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
@@ -6374,11 +6380,15 @@ class Customers extends Records {
                     $_customer_url,
                     $customer->reseller,
                     $customer->id,
+                    $customer->username,
                     $customer->firstName,
                     $customer->lastName,
                     $customer->organization,
+                    $customer->country,
+                    $customer->email,
                     $customer->email,
                     $customer->tel,
+                    $customer->web,
                     $customer->web,
                     $_url,
                     $actionText
@@ -6619,6 +6629,27 @@ class Customers extends Records {
             $this->propertiesItems[$item]['value'],
             $this->propertiesItems[$item]['name']
             );
+        }
+
+		if (count($this->customerProperties) > 0) {
+            printf ("<tr bgcolor=lightgrey>
+            <td class=border colspan=4>Extra properties</td>
+            </tr>");
+            foreach (array_keys($this->customerProperties) as $item) {
+                $item_print=ucfirst (preg_replace("/_/"," ",$item));
+                printf ("<tr>
+                <td class=border>%s</td>
+                <td class=border>%s</td>
+                <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
+                <td class=border>%s</td>
+                </tr>",
+                ucfirst($this->customerProperties[$item]['category']),
+                $item_print,
+                $item,
+                $this->customerProperties[$item]['value'],
+                $this->customerProperties[$item]['name']
+                );
+            }
         }
 
         $this->printFiltersToForm();

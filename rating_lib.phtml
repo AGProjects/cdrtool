@@ -2778,18 +2778,18 @@ class SERQuota {
 
  		dprint_r($this->notificationAddresses);
 
-        if ($DATASOURCES[$this->cdr_source]['SoapEngineId']) {
+        if ($DATASOURCES[$this->cdr_source]['soapEngineId']) {
 
             require_once("provisioning/ngnpro_soap_library.phtml");
             require_once("provisioning/ngnpro_engines.inc");
 
-            if (in_array($SoapEngineId,array_keys($soapEngines))) {
+            if (in_array($soapEngineId,array_keys($soapEngines))) {
         
-                $this->SOAPurl  = $soapEngines[$SoapEngineId]['url'];
+                $this->SOAPurl  = $soapEngines[$soapEngineId]['url'];
                 $this->SOAPlogin = array(
-                                           "username"    => $soapEngines[$SoapEngineId]['username'],
-                                           "password"    => $soapEngines[$SoapEngineId]['password'],
-                                           "admin"       => $soapEngines[$SoapEngineId]['admin']
+                                           "username"    => $soapEngines[$soapEngineId]['username'],
+                                           "password"    => $soapEngines[$soapEngineId]['password'],
+                                           "admin"       => $soapEngines[$soapEngineId]['admin']
                                            );
         
                 $this->SoapAuth=array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
@@ -3478,22 +3478,18 @@ class SERQuota {
             $error_fault = $result->getFault();
             $error_code  = $result->getCode();
 
-            $log1=sprintf("%s: %s",$error_fault->faultstring,$error_fault->faultcode);
-	        syslog(LOG_NOTICE, "SOAP error: $log1");
+            $log=sprintf("Error from %s: %s (%s)",$this->SOAPurl,$error_fault->faultstring,$error_fault->faultcode);
+	        syslog(LOG_NOTICE, $log);
 
-            if ($error_fault->faultcode == "SOAP-ENV:Client") {
-                $log2=sprintf ("%s %s\n",$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-	            syslog(LOG_NOTICE, "SOAP client error: $log2");
-            }
-
-            if ($error_fault->detail->exception->errorcode!="1030") {
+            if ($error_fault->detail->exception->errorcode != "1030") {
 
                 $from         = $this->CDRTool[provider][fromEmail];
                 $to           = $this->CDRTool[provider][toEmail];
                 $extraHeaders = "From: $from";
-                $email_body   = "Remote SOAP request failure when calling blockAccountRemote(): \n\n".$log1." ".$log2;
+                $email_body   = "Remote SOAP request failure when calling blockAccountRemote(): \n\n".
+                                $log;
 
-                mail($to, "CDRTool remote SOAP failure", $email_body, $extraHeaders);
+                mail($to, "CDRTool SOAP client failure", $email_body, $extraHeaders);
             }
 
             return 0;

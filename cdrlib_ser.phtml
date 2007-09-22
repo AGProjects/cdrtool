@@ -4220,18 +4220,17 @@ class SIP_trace {
         if ($this->enableThor) {
     		include_once('provisioning/ngnpro_engines.inc');
 
-        	if ($DATASOURCES[$cdr_source]['SoapEngineId'] && in_array($DATASOURCES[$cdr_source]['SoapEngineId'],array_keys($soapEngines))) {
-            	$this->SoapEngineId=$DATASOURCES[$cdr_source]['SoapEngineId'];
-
-		        require_once("provisioning/ngnpro_client_lib.phtml");
+        	if ($DATASOURCES[$cdr_source]['soapEngineId'] && in_array($DATASOURCES[$cdr_source]['soapEngineId'],array_keys($soapEngines))) {
+            	$this->soapEngineId=$DATASOURCES[$cdr_source]['soapEngineId'];
+			    require_once("provisioning/ngnpro_soap_library.phtml");
 
                 $this->SOAPlogin = array(
-                                       "username"    => $soapEngines[$this->SoapEngineId]['username'],
-                                       "password"    => $soapEngines[$this->SoapEngineId]['password'],
+                                       "username"    => $soapEngines[$this->soapEngineId]['username'],
+                                       "password"    => $soapEngines[$this->soapEngineId]['password'],
                                        "admin"       => true
                                        );
     
-                $this->SOAPurl=$soapEngines[$this->SoapEngineId]['url'];
+                $this->SOAPurl=$soapEngines[$this->soapEngineId]['url'];
         
                 $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
     
@@ -4269,9 +4268,10 @@ class SIP_trace {
 		if ($this->enableThor) {
             // get trace using soap request
             if (!is_object($this->soapclient)) {
-                //return 0;
+                print "Error: soap client is not defined.";
+                return false;
             }
-    
+
             $this->soapclient->addHeader($this->SoapAuth);
             $result     = $this->soapclient->getTrace($proxyIP,$callid,$fromtag);
     
@@ -4280,9 +4280,8 @@ class SIP_trace {
                 $error_fault = $result->getFault();
                 $error_code  = $result->getCode();
     
-                $log=sprintf("%s: %s",$error_fault->faultstring,$error_fault->faultcode);
-                syslog(LOG_NOTICE, "SOAP error: $log1");
-                return 0;
+                printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->faultstring,$error_fault->faultcode);
+                return false;
             }
 
             //print "<pre>";
