@@ -563,8 +563,6 @@ class pageLayout {
  
     function showTopMenu($title='') {
         global $DATASOURCES, $CDRTool, $cdr_source, $perm;
-        global $loginname;
-    
         $loginName=$CDRTool['loginName'];
     
         $version=trim(file_get_contents('version'));
@@ -609,20 +607,20 @@ class pageLayout {
             print " <a href=callsearch.phtml>CDRs</a> ";
         }
         if ($perm->have_perm("rates")) {
-            print " | <a href=rating_tables.phtml>Rating</a>";
+            print " | <a href=rating_tables.phtml>Rating tables</a>";
         }
         
         if ($perm->have_perm("provisioning")) {
-            print " | <a href=provisioning.phtml>SIP/ENUM</a>";
+            print " | <a href=provisioning.phtml>SIP and ENUM</a>";
         }
         
         if ($perm->have_perm("statistics")) {
-            print " | <a href=status/sip_online.phtml target=siponline>Registrar</a>";
-            print " | <a href=status/media_sessions.phtml target=mediasessions>Sessions</a>";
+            print " | <a href=status/sip_online.phtml target=siponline>SIP registrar</a>";
+            print " | <a href=status/media_sessions.phtml target=mediasessions>Media sessions</a>";
             print " | <a href=status/usage/index.phtml target=usage>Statistics</a>";
         }
 
-        print " | <a href=log.phtml>Log</a>";
+        print " | <a href=log.phtml>Logs</a>";
         print " | <a href=accounts.phtml>Accounts</a>";
         
         $now_print=Date("Y-m-d H:i:s",time());
@@ -645,9 +643,8 @@ class pageLayout {
 
     function showTopMenuSubscriber($title="") {
         global $DATASOURCES, $CDRTool, $cdr_source, $perm;
-        global $loginname;
     
-        $loginName=$CDRTool[loginName];
+        $loginName=$CDRTool['loginName'];
     
         $version=trim(file_get_contents(version));
         print "<table width=100% cellpadding=5 CELLSPACING=0 border=5 align=center>
@@ -658,7 +655,7 @@ class pageLayout {
             <td>";
             print "<h1>$title";
             print " ";
-            print $DATASOURCES[$cdr_source][name];
+            print $DATASOURCES[$cdr_source]['name'];
             print "</h1><p>";
             print "<td align=right>";
             print "</td></tr>
@@ -670,18 +667,17 @@ class pageLayout {
         <td align=left>
         "; 
         if ($perm->have_perm("callsearch")) {  
-            print " <a href=callsearch.phtml>Call search</a>";
+            print " <a href=callsearch.phtml>Call detail records</a>";
         } 
         
         $now_print=Date("Y-m-d H:i:s",time());
         $tz=getenv('TZ');
-        print " | $now_print ($tz) | CDRTool $version";
+        print " | $now_print ($tz) | v. $version";
         print "
         </td>
         <td align=right>
         ";
-        print "Logged in as <b>$loginname</b> ";
-        print "<a href=logout.phtml target=_top>Logout</a>";
+        printf ("<a href=logout.phtml target=_top><b>Logout %s</b></a>",$loginname);
         print "
         </tr>
         </table>
