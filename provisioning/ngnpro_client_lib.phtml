@@ -26,6 +26,7 @@ class recordGenerator extends SOAPEngine {
             // sip zones
             if (count($this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngineId']]) > 1 && !in_array('sip_accounts',$this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngineId']])) {
                 // sip port not available
+                dprint("sip port not avaliable");
             } else {
                 $sipEngine           = 'sip_accounts@'.$this->recordGenerators[$generatorId]['sipEngineId'];
                 $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$extraFormElements,$loginCredentials);
@@ -33,10 +34,13 @@ class recordGenerator extends SOAPEngine {
                 $this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
                 $this->sipRecords->getAllowedDomains();
             }
+        } else {
+            printf ("<font color=red>Error: soapengineId %s does not exist</font>",$this->recordGenerators[$generatorId]['sipEngineId']);
         }
 
         if (in_array($this->recordGenerators[$generatorId]['enumEngineId'],array_keys($this->soapEngines))) {
             if (count($this->allowedPorts[$this->recordGenerators[$generatorId]['enumEngineId']]) > 1 && !in_array('enum_numbers',$this->allowedPorts[$this->recordGenerators[$generatorId]['enumEngineId']])) {
+                dprint("enum port not avaliable");
                 // enum port not available
             } else {
                 // enum mappings
@@ -46,6 +50,8 @@ class recordGenerator extends SOAPEngine {
                 $this->enumRecords    = new $_enum_class(&$this->EnumSOAPEngine);
                 $this->enumRecords->getAllowedDomains();
             }
+        } else {
+            printf ("<font color=red>Error: soapengineId %s does not exist</font>",$this->recordGenerators[$generatorId]['enumEngineId']);
         }
 
 		if ($_REQUEST['reseller_filter']) $this->template['reseller']=intval($_REQUEST['reseller_filter']);
@@ -178,7 +184,10 @@ class recordGenerator extends SOAPEngine {
     }
 
     function showGeneratorForm() {
-    	if (!count($this->enumRecords->ranges)) return false;
+    	if (!count($this->enumRecords->ranges)) {
+            print "<font color=red>Error: No ENUM ranges available</font>";
+        	return false;
+        }
         print "
         <form method=post target=_new>
         <table cellspacing=1 cellpadding=1 bgcolor=black>
@@ -5854,6 +5863,8 @@ class Customers extends Records {
     var $FieldsReadOnly=array(
                               'id',
                               'reseller',
+                              'companyCode',
+                              'balance'
                               );
     var $Fields=array(
                               'aliasOf'     => array('type'=>'integer',
@@ -5884,12 +5895,12 @@ class Customers extends Records {
                               'language'    => array('type'=>'text'),
                               'vatNumber'   => array('type'=>'text',
                                                      'name'=>'VAT number'),
+                              'bankAccount' => array('type'=>'text',
+                                                    'name'=>'Bank account'),
                               'billingAddress' => array('type'=>'textarea',
                                                         'name'=>'Billing address'),
                               'billingEmail'   => array('type'=>'text',
                                                         'name'=>'Billing email'),
-                              'bankAccount' => array('type'=>'text',
-                                                    'name'=>'Bank account')
                               );
 
         var $states=array(
@@ -6224,13 +6235,16 @@ class Customers extends Records {
     function Customers(&$SOAPEngine) {
         $this->filters   = array(
                            'username'       => trim($_REQUEST['username_filter']),
-                           'firstName'      => trim($_REQUEST['firstName_filter']),
-                           'lastName'       => trim($_REQUEST['lastName_filter']),
+                           'name'           => trim($_REQUEST['name_filter']),
+                           'organization'   => trim($_REQUEST['organization_filter']),
+                           'tel'            => trim($_REQUEST['tel_filter']),
                            'email'          => trim($_REQUEST['email_filter']),
+                           'web'            => trim($_REQUEST['web_filter']),
+                           'city'           => trim($_REQUEST['city_filter']),
+                           'country'        => trim($_REQUEST['country_filter']),
                            'organization'   => trim($_REQUEST['organization_filter']),
                            'only_resellers' => trim($_REQUEST['only_resellers_filter'])
                            );
-
 		$this->Records(&$SOAPEngine);
 
     }
@@ -6239,10 +6253,13 @@ class Customers extends Records {
 
         // Filter
         $filter=array('username'     => $this->filters['username'],
-                      'firstName'    => $this->filters['firstName'],
-                      'lastName'     => $this->filters['lastName'],
-                      'email'        => $this->filters['email'],
+                      'name'         => $this->filters['name'],
                       'organization' => $this->filters['organization'],
+                      'tel'          => $this->filters['tel'],
+                      'email'        => $this->filters['email'],
+                      'web'          => $this->filters['web'],
+                      'city'         => $this->filters['city'],
+                      'country'      => $this->filters['country'],
                       'only_resellers' => $this->filters['only_resellers'],
                       'customer'     => intval($this->filters['customer']),
                       'reseller'     => intval($this->filters['reseller'])
@@ -6412,6 +6429,8 @@ class Customers extends Records {
 
     function showSeachFormCustom() {
         printf (" Username<input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
+        printf (" Name<input type=text size=10 name=name_filter value='%s'>",$this->filters['name']);
+        printf (" Org<input type=text size=10 name=organization_filter value='%s'>",$this->filters['organization']);
         if ($this->adminonly) {
             if ($this->filters['only_resellers']) $check_only_resellers_filter='checked';
         	printf (" Resellers<input type=checkbox name=only_resellers_filter value=1 %s>",$check_only_resellers_filter);
@@ -6463,7 +6482,9 @@ class Customers extends Records {
 
     function showRecord($customer){
 
-        //print_r($customer);
+        print "<pre>";
+        print_r($customer);
+        print "</pre>";
         print "<table border=0 cellpadding=10>";
         print "
         <tr>

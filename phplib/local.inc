@@ -563,8 +563,6 @@ class pageLayout {
  
     function showTopMenu($title='') {
         global $DATASOURCES, $CDRTool, $cdr_source, $perm;
-        $loginName=$CDRTool['loginName'];
-    
         $version=trim(file_get_contents('version'));
         print "<table width=100% cellpadding=5 CELLSPACING=0 border=5 align=center>
         <tr>
@@ -630,7 +628,7 @@ class pageLayout {
         </td>
         <td align=right>
         ";
-        printf ("<a href=logout.phtml target=_top><b>Logout %s</b></a>",$loginname);
+        printf ("<a href=logout.phtml target=_top><b>Logout %s</b></a>",$CDRTool['loginName']);
         print "
         </tr>
         </table>
@@ -643,8 +641,6 @@ class pageLayout {
 
     function showTopMenuSubscriber($title="") {
         global $DATASOURCES, $CDRTool, $cdr_source, $perm;
-    
-        $loginName=$CDRTool['loginName'];
     
         $version=trim(file_get_contents(version));
         print "<table width=100% cellpadding=5 CELLSPACING=0 border=5 align=center>
@@ -677,7 +673,7 @@ class pageLayout {
         </td>
         <td align=right>
         ";
-        printf ("<a href=logout.phtml target=_top><b>Logout %s</b></a>",$loginname);
+        printf ("<a href=logout.phtml target=_top><b>Logout %s</b></a>",$CDRTool['loginName']);
         print "
         </tr>
         </table>
