@@ -27,8 +27,6 @@ class recordGenerator extends SOAPEngine {
             if (count($this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngineId']]) > 1 && !in_array('sip_accounts',$this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngineId']])) {
                 // sip port not available
             } else {
-                print "<p>sip port is available";
-
                 $sipEngine           = 'sip_accounts@'.$this->recordGenerators[$generatorId]['sipEngineId'];
                 $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$extraFormElements,$loginCredentials);
                 $_sip_class          = $this->SipSOAPEngine->recordsClass;
@@ -679,6 +677,10 @@ class SOAPEngine {
             	$this->SipSettingsPage=$this->soapEngines[$this->soapEngineId]['SipSettingsPage'];
             }
 
+			if (strlen($this->soapEngines[$this->soapEngineId]['customerProperties'])) {
+            	$this->customerProperties=$this->soapEngines[$this->soapEngineId]['customerProperties'];
+            }
+
 			if (strlen($this->soapEngines[$this->soapEngineId]['recordGenerator'])) {
             	$this->recordGenerator=$this->soapEngines[$this->soapEngineId]['recordGenerator'];
             }
@@ -872,19 +874,21 @@ class SOAPEngine {
 }
 
 class Records {
-	var $maxrowsperpage  = '15';
-    var $SipSettingsPage = 'sip_settings.phtml';
-    var $allowedDomains  = array();
-    var $selectionActive = false;
-    var $selectionKeys   = array();
-    var $resellers       = array();
-    var $customers       = array();
-    var $recordGenerator = false;
+	var $maxrowsperpage     = '15';
+    var $SipSettingsPage    = 'sip_settings.phtml';
+    var $allowedDomains     = array();
+    var $selectionActive    = false;
+    var $selectionKeys      = array();
+    var $resellers          = array();
+    var $customers          = array();
+    var $recordGenerator    = false;
+	var $customerProperties = array();
 
     function Records(&$SOAPEngine) {
-    	$this->SOAPEngine       = &$SOAPEngine;
-        $this->version          = &$this->SOAPEngine->version;
-        $this->loginCredentials = &$this->SOAPEngine->loginCredentials;
+    	$this->SOAPEngine         = &$SOAPEngine;
+        $this->version            = &$this->SOAPEngine->version;
+        $this->loginCredentials   = &$this->SOAPEngine->loginCredentials;
+        $this->customerProperties = &$this->SOAPEngine->customerProperties;
 
         $this->sorting['sortBy']    = trim($_REQUEST['sortBy']);
         $this->sorting['sortOrder'] = trim($_REQUEST['sortOrder']);
@@ -5813,74 +5817,76 @@ class Customers extends Records {
                             'customer'   => 'Customer'
                             );
 
-    var $propertiesItems = array('sip_credit'         => array('name'     => 'Credit for SIP account creation',
+    var $propertiesItems = array('sip_credit'          => array('name'     => 'Credit for SIP account creation',
                                                                'category' => 'admin'),
-                                 'sipa_credit'        => array('name'     => 'Credit for SIP alias creation',
+                                 'sipa_credit'         => array('name'     => 'Credit for SIP alias creation',
                                                                'category' => 'admin'),
-                                 'enum_range_credit'  => array('name'     => 'Credit for ENUM range creation',
+                                 'enum_range_credit'   => array('name'     => 'Credit for ENUM range creation',
                                                                'category' => 'admin'),
-                                 'enum_number_credit' => array('name'     => 'Credit for ENUM numbers creation',
+                                 'enum_number_credit'  => array('name'     => 'Credit for ENUM numbers creation',
                                                                'category' => 'admin'),
-                                 'comp_code'          => array('name'     => 'Billing code for invoicing',
+                                 'pstn_access'         => array('name'     => 'Access to PSTN',
                                                                'category' => 'admin'),
-                                 'billing_email'      => array('name'     => 'Email address for invoicing',
+                                 'pstn_gateways'       => array('name'     => 'PSTN gateways',
                                                                'category' => 'admin'),
-                                 'registrar_id'       => array('name'     => 'Registrar id for domain registration',
-                                                               'category' => 'admin'),
-                                 'pstn_access'        => array('name'     => 'Access to PSTN',
-                                                               'category' => 'admin'),
-                                 'soap_engines'       => array('name'     => 'SOAP engines',
-                                                               'category' => 'admin'),
-                                 'voicemail_server'   => array('name'     => 'Voicemail server address',
+                                 'voicemail_server'    => array('name'     => 'Voicemail server address',
                                                                'category' => 'sip'),
-                                 'sip_proxy_server'   => array('name'     => 'SIP Proxy server address',
+                                 'sip_proxy_server'    => array('name'     => 'SIP Proxy server address',
                                                                'category' => 'sip'),
-                                 'support_web'        => array('name'     => 'Support web site',
+                                 'support_web'         => array('name'     => 'Support web site',
                                                                'category' => 'sip'),
-                                 'support_email'      => array('name'     => 'Support email address',
+                                 'support_email'       => array('name'     => 'Support email address',
                                                                'category' => 'sip'),
-                                 'cdrtool_address'    => array('name'     => 'CDRTool address',
+                                 'support_organization'=> array('name'     => 'Support organization',
                                                                'category' => 'sip'),
-                                 'sip_settings_page'  => array('name'     => 'SIP settings page',
+                                 'cdrtool_address'     => array('name'     => 'CDRTool address',
                                                                'category' => 'sip'),
-                                 'default_sip_domain' => array('name'     => 'Default SIP domain',
+                                 'sip_settings_page'   => array('name'     => 'SIP settings page',
                                                                'category' => 'sip'),
-                                 'default_enum_range' => array('name'     => 'Default ENUM range',
+                                 'default_sip_domain'  => array('name'     => 'Default SIP domain',
                                                                'category' => 'sip'),
-                                 'default_enum_tld'   => array('name'     => 'Default ENUM Top Level Domain',
-                                                               'category' => 'sip')
+                                 'default_enum_range'  => array('name'     => 'Default ENUM range',
+                                                               'category' => 'enum'),
+                                 'default_enum_tld'    => array('name'     => 'Default ENUM Top Level Domain',
+                                                               'category' => 'enum')
                                  );
 
     var $FieldsReadOnly=array(
                               'id',
-                              'reseller'
+                              'reseller',
+                              'compCode'
                               );
     var $Fields=array(
                               'aliasOf'     => array('type'=>'integer'),
-                              'username'    => array('type'=>'string'),
-                              'password'    => array('type'=>'string',
+                              'username'    => array('type'=>'text'),
+                              'password'    => array('type'=>'text',
                                                      'name'=>'Password'),
-                              'firstName'   => array('type'=>'string',
+                              'firstName'   => array('type'=>'text',
                                                      'name'=>'First name'),
-                              'lastName'    => array('type'=>'string',
+                              'lastName'    => array('type'=>'text',
                                                      'name'=>'Last name'),
-                              'organization'=> array('type'=>'string'),
-                              'vatNumber'   => array('type'=>'string',
+                              'organization'=> array('type'=>'text'),
+                              'vatNumber'   => array('type'=>'text',
                                                      'name'=>'VAT number'),
-                              'tel'         => array('type'=>'string'),
-                              'fax'         => array('type'=>'string'),
-                              'sip'         => array('type'=>'string'),
-                              'enum'        => array('type'=>'string'),
-                              'mobile'      => array('type'=>'string'),
-                              'email'       => array('type'=>'string'),
-                              'web'         => array('type'=>'string'),
-                              'address'     => array('type'=>'text'),
-                              'postcode'    => array('type'=>'string'),
-                              'city'        => array('type'=>'string'),
-                              'state'       => array('type'=>'string'),
-                              'country'     => array('type'=>'string'),
-                              'timezone'    => array('type'=>'string'),
-                              'language'    => array('type'=>'string')
+                              'tel'         => array('type'=>'text'),
+                              'fax'         => array('type'=>'text'),
+                              'sip'         => array('type'=>'text'),
+                              'enum'        => array('type'=>'text'),
+                              'mobile'      => array('type'=>'text'),
+                              'email'       => array('type'=>'text'),
+                              'web'         => array('type'=>'text'),
+                              'address'     => array('type'=>'textarea'),
+                              'postcode'    => array('type'=>'text'),
+                              'city'        => array('type'=>'text'),
+                              'state'       => array('type'=>'text'),
+                              'country'     => array('type'=>'text'),
+                              'billingAddress' => array('type'=>'textarea',
+                                                        'name'=>'Billing address'),
+                              'billingEmail'   => array('type'=>'text',
+                                                        'name'=>'Billing email'),
+                              'bankAccount' => array('type'=>'text'),
+                              'timezone'    => array('type'=>'text'),
+                              'language'    => array('type'=>'text')
                               );
 
         var $states=array(
@@ -6223,6 +6229,8 @@ class Customers extends Records {
                            );
 
 		$this->Records(&$SOAPEngine);
+
+		$this->propertiesItems=array_merge($this->propertiesItems,$this->customerProperties);
     }
 
     function listRecords() {
@@ -6445,6 +6453,7 @@ class Customers extends Records {
 
     function showRecord($customer){
 
+        //print_r($customer);
         print "<table border=0 cellpadding=10>";
         print "
         <tr>
@@ -6534,7 +6543,7 @@ class Customers extends Records {
                 ";
 
             } else {
-                if ($this->Fields[$item]['type'] == 'text') {
+                if ($this->Fields[$item]['type'] == 'textarea') {
                     printf ("<tr>
                     <td class=border valign=top>%s</td>
                     <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
@@ -6590,6 +6599,7 @@ class Customers extends Records {
         </td></tr>";
 
         printf ("<tr bgcolor=lightgrey>
+        <td class=border>Category</td>
         <td class=border>Property</td>
         <td class=border>Value</td>
         <td class=border>Description</td>
@@ -6599,9 +6609,11 @@ class Customers extends Records {
         	$item_print=ucfirst (preg_replace("/_/"," ",$item));
             printf ("<tr>
             <td class=border>%s</td>
+            <td class=border>%s</td>
             <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
             <td class=border>%s</td>
             </tr>",
+            ucfirst($this->propertiesItems[$item]['category']),
             $item_print,
             $item,
             $this->propertiesItems[$item]['value'],
@@ -6637,10 +6649,13 @@ class Customers extends Records {
 		if ($_REQUEST['section'] == 'customer_properties') {
             foreach (array_keys($this->propertiesItems) as $item) {
                 $var_name=$item.'_form';
-                $properties[]=array('name'     => $item,
-                                     'value'    => trim($_REQUEST[$var_name]),
-                                     'category' => $this->propertiesItems[$item]['category']
-                                     );
+                $var_value=trim($_REQUEST[$var_name]);
+                if (strlen($var_value)) {
+                    $properties[]=array('name'     => $item,
+                                        'value'    => $var_value,
+                                        'category' => $this->propertiesItems[$item]['category']
+                                        );
+                }
     
             }
 
@@ -7372,8 +7387,8 @@ class ENUMMappingsActions extends Actions {
                        );
 
     var $mapping_fields=array('id'       => 'integer',
-                              'type'     => 'string',
-                              'mapto'    => 'string',
+                              'type'     => 'text',
+                              'mapto'    => 'text',
                               'priority' => 'integer',
                               'ttl'      => 'integer'
                               );

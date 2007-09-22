@@ -239,10 +239,6 @@ class SIPSettings {
         	$this->tabs[presence]=_("Presence");
         }
 
-        if ($this->domain=="sip2sip.info" || $this->domain=="sipline.nl") {
-        	$this->Preferences['CanEnableAdvanced']=1;
-        }
-
     }
 
     function initSoapClient() {
@@ -590,7 +586,6 @@ class SIPSettings {
     }
 
     function getRatingEntityProfiles() {
-        // Get Aliases
         dprint("getRatingEntityProfiles()");
 
 		$this->EntityProfiles=array();
@@ -615,21 +610,25 @@ class SIPSettings {
         dprint("setAliases()");
         $aliases_new=$_REQUEST['aliases'];
         $this->getAliases();
-
         $aliases_old=$this->aliases;
 
         $addAliases     = array_unique(array_diff($aliases_new,$aliases_old));
         $deleteAliases  = array_unique(array_diff($aliases_old,$aliases_new));
 
-        //dprint ("Add aliases:");
-        //dprint_r($addAliases );
-        //dprint ("Delete aliases:");
-        //dprint_r($deleteAliases );
+        /*
+        dprint ("Add aliases:");
+        dprint_r($addAliases );
+        dprint ("Delete aliases:");
+        dprint_r($deleteAliases );
+        */
 
         foreach ($addAliases as $_alias) {
             $_alias=trim(strtolower($_alias));
-            if (!preg_match("/^[a-z0-9-_.]+$/i",$_alias)) continue;
+
+            if (!preg_match("/^[a-z0-9-_.@]+$/i",$_alias)) continue;
+
             $els=explode("@",$_alias);
+
             if (count($els) ==1 ) {
                 $_alias_username=$_alias;
                 $_alias_domain=$this->domain;
@@ -644,7 +643,8 @@ class SIPSettings {
                                             "domain"=>$_alias_domain),
                                 "owner"=>intval($this->owner),
                                 "target"=>$this->sipId);
-            dprint_r($_aliasObject);
+
+            //dprint_r($_aliasObject);
 
             if (is_object($this->SipPortRemote)) {
                 dprint("addAliasRemote");
@@ -1751,7 +1751,7 @@ class SIPSettings {
             $checked_voicemail="checked";
         }
 
-        if (!$this->Preferences['CanEditAll'] && !$this->Preferences['CanEnableAdvanced']) {
+        if (!$this->Preferences['CanEditAll']) {
             if ($this->SIPACLS[$key]["SubscriberMayEditIt"]) {
                 $disabled_box = "";
             } else {
@@ -2129,13 +2129,11 @@ class SIPSettings {
 
         foreach ($this->WEBdictionary as $el) {
         	${$el} = $_REQUEST[$el];
-            $log=sprintf("%s = %s",$el, ${$el});
-            //dprint ($log);
         }
 
-  		$newACLarray     = array();
+  		$newACLarray = array();
 
-        $result     = $this->result;
+        $result      = $this->result;
 
         if (!is_array($result->properties))   $result->properties=array();
         if (!is_array($result->groups)) 	  $result->groups=array();
@@ -2153,8 +2151,6 @@ class SIPSettings {
 
 		sort($result->multiTargets);
 
-        //dprint_r($multiTargets);
-
         if ($result->multiTargets != $this->newMultiTargets) {
             $result->multiTargets = $this->newMultiTargets;
             $this->somethingChanged=1;
@@ -2164,7 +2160,7 @@ class SIPSettings {
 
 		dprint_r($this->Preferences);
 
-        if ($this->Preferences['CanEditAll'] || $this->Preferences['CanEnableAdvanced']) {
+        if ($this->Preferences['CanEditAll']) {
 
             if ($advanced) {
                 if (!$this->Preferences['advanced']) {
@@ -2190,10 +2186,6 @@ class SIPSettings {
                 if ($this->deleteVoicemail()) {
                     $this->voicemail['Account']="";
                 }
-            }
-        } else {
-            if ($advanced) {
-            	print _("Not enough credit");
             }
         }
 
@@ -5391,7 +5383,7 @@ class SIPSettings {
             foreach ($extensions as $_ext) {
 
 				$file=$this->templatesPath.'/'.$this->reseller.'/'.$name.'.'.$_ext;
-                dprint("Trying $file ");
+                //dprint("Trying $file ");
             	if (file_exists($file)) return $file;
             }
             foreach ($extensions as $_ext) {
@@ -5404,11 +5396,11 @@ class SIPSettings {
         } else {
             if (file_exists("$this->templatesPath/$this->reseller/$name")) {
                 return "$this->templatesPath/$this->reseller/$name";
-                dprint("Found $this->reseller/$name");
+                //dprint("Found $this->reseller/$name");
             } elseif (file_exists("$this->templatesPath/default/$name")) {
                 return "$this->templatesPath/default/$name";
             } else {
-                dprint("$name not found");
+                //dprint("$name not found");
                 return false;
             }
         }
