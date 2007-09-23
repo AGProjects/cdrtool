@@ -1,9 +1,5 @@
 <?
 include("./global.inc");
-$errorReporting = (E_ALL & ~(E_NOTICE | E_WARNING));
-//$errorReporting = 1; // temporary until warnings are fixed
-error_reporting($errorReporting);
-
 page_open(
             array("sess" => "CDRTool_Session",
                   "auth" => "CDRTool_Auth",
@@ -17,16 +13,27 @@ if (is_readable("local/header.phtml")) {
     include("header.phtml");
 }
 
-set_time_limit(600);
-$perm->check("admin");
-
 //$verbose=1;
+if ($verbose) {
+for (reset   ($HTTP_POST_VARS); list ($k, $v) = each  ($HTTP_POST_VARS); )
+    if ($v) {
+        $vars=$vars." <b>".$k."</b>='".$v."', ";
+    }
+    for (reset   ($HTTP_GET_VARS); list ($k, $v) = each  ($HTTP_GET_VARS); )
+    if ($v) {
+        $vars=$vars." <b>".$k."</b>='".$v."', ";
+    }
+    print_r($vars);
+}
+
+$perm->check("provisioning");
+
 require_once('provisioning/sip_settings_lib.phtml');
+include_once("provisioning/ngnpro_engines.inc");
 
 list($username,$domain)=explode("@",$account);
 
 $_class='SIPSettings';
-
 $_reseller_class=$_class.$_REQUEST['reseller'];
 
 if (class_exists($_reseller_class)) {

@@ -1370,15 +1370,13 @@ class SIPSettings {
            </SCRIPT>
         ";
 
-        /*
         if ($this->Preferences['LoggedInAsSubscriber']) {
         	print "<input class=input100 type=password size=15 name=sip_password value=\"$this->password\">";
         } else {
         	print "<input class=input100 type=text size=15 name=sip_password value=\"$this->password\">";
         }
-        */
 
-        print "<input class=input100 type=password size=15 name=sip_password value=\"$this->password\"> ";
+        //print "<input class=input100 type=password size=15 name=sip_password value=\"$this->password\"> ";
 
         print _("Language");
         print "
@@ -1417,7 +1415,9 @@ class SIPSettings {
         $timestamp=time();
         $LocalTime=getLocalTime($this->timezone,$timestamp);
         print _("Local time");
-        print ": $LocalTime
+        print ": $LocalTime";
+        //dprint_r($this->SIPACLS);
+        print "
         </td>
         </tr>
         ";
@@ -1522,7 +1522,7 @@ class SIPSettings {
 
         foreach (array_keys($this->SIPACLS) as $key) {
 
-            if ($this->Preferences['LoggedInAsSubscriber'] && !$this->SIPACLS[$key][SubscriberMaySeeIt]) {
+            if ($this->Preferences['LoggedInAsSubscriber'] && !$this->SIPACLS[$key]['SubscriberMaySeeIt']) {
                 continue;
             }
 
@@ -1538,14 +1538,14 @@ class SIPSettings {
                 $checked_box[$key]="checked";
             }
 
-            if (!$this->Preferences['LoggedInAsSubscriber'] && !$checked_box[$key] && $key=="free-pstn") {
+            if ($this->Preferences['LoggedInAsSubscriber'] && !$checked_box[$key] && $key=="free-pstn") {
                 continue;
             }
 
             $elementName    = $this->SIPACLS[$key]["WEBName"];
             $elementComment = $this->SIPACLS[$key]["WEBComment"];
 
-			if (!$this->Preferences['LoggedInAsSubscriber']) {
+			if ($this->Preferences['LoggedInAsSubscriber']) {
                 if ($this->SIPACLS[$key]["SubscriberMayEditIt"]) {
                     $disabled_box = "";
                 } else {
@@ -1569,38 +1569,6 @@ class SIPSettings {
             if (!$this->Preferences['LoggedInAsSubscriber']) {
                 if ($key=="free-pstn") {
                     print "$elementComment: <input type=text size=15 maxsize=15 name=rpid value=\"$this->rpid\">";
-                } else if ($key=="multi-targets" && in_array("multi-targets",$this->groups)) {
-                    $t=0;
-                	print "$elementComment";
-
-                    print "<br><table border=0>";
-
-                    print "
-                    <tr>
-                      <td class=border>";
-                        print _("Target");
-                        print "
-                      </td>
-                      <td class=border> <input type=text size=35 name=multiTargets[]></td>
-                    </tr>
-                    ";
-
-                    foreach($this->multiTargets as $a)  {
-                        $t++;
-                        print "
-                        <tr>
-                          <td class=border>";
-                            print _("Target");
-                            print "$t
-                          </td>
-                          <td class=border> <input type=text size=35 name=multiTargets[] value=\"$a\"></td>
-                        </tr>
-                        ";
-                    }
-            
-                    print "</table>";
-
-
                 } else {
                 	print "$elementComment";
                 }
@@ -1719,7 +1687,7 @@ class SIPSettings {
             $checked_voicemail="checked";
         }
 
-        if (!$this->Preferences['LoggedInAsSubscriber']) {
+        if ($this->Preferences['LoggedInAsSubscriber']) {
             if ($this->SIPACLS[$key]["SubscriberMayEditIt"]) {
                 $disabled_box = "";
             } else {
@@ -2348,7 +2316,6 @@ class SIPSettings {
             	$this->updateVoicemail();
             }
         }
-
     }
 
     function setDiversions() {
@@ -5414,48 +5381,45 @@ function normalizeTime($period) {
 }
 
 function getImageForUserAgent($agent) {
-// array with mappings between User Agents and images
-    if (file_exists("phone_images.php")) {
-		include_once("phone_images.php");
-    } else {
-		$userAgentImages = array("Asterisk"       => "asterisk.png",
-                         "AVM FRITZ"      => "avm-fritzbox-wlan.png",
-                         "Cisco ATA"      => "cisco-ata.png",
-                         "Cisco.*Gateway" => "cisco.png",
-                         "CSCO"           => "cisco-7960.png",
-                         "DrayTek"        => "draytek-vigor2600vg.png",
-                         "eStara"         => "eStara.png",
-                         "Eyebeam"        => "eyebeam.png",
-                         "Grandstream"    => "handytone.png",
-                         "ipDialog"       => "ipDialog.png",
-                         "Linksys"        => "linksys-pap2.png",
-                         "Session.*Wave"  => "session.png",
-                         "SIPPS"          => "sipps.png",
-                         "Sipura"         => "spa2000.png",
-                         "sjphone"        => "sjphone.png",
-                         "Snom100"        => "snom100.png",
-                         "Snom(190|200)"  => "snom200.png",
-                         "Snom320"        => "snom320.png",
-                         "Snom360"        => "snom360.png",
-                         "snomSoft"       => "snom360.png",
-                         "Talkin"         => "xten.png",
-                         "unidata"        => "hitachi-wip5000.png",
-                         "Vizufon"        => "vizufon.png",
-                         "voipster"       => "zoep.png",
-                         "Windows RTC"    => "messenger.png",
-                         "X-Lite"         => "xten.png",
-                         "X-PRO"          => "xten.png",
-                         "ZyXEL P2000W"   => "zyxel-p2000.png",
-                         "-IMVP"          => "innomedia-mta5000.png",
-                         "3610\/"         => "siemens-3610.png",
-                         "cirpack"        => "cirpack.png",
-                         "Brcm-Callctrl"  => "webstarepx2203.png",
-                         "Audiocodes-Sip-Gateway-MP" => "audiocodes-mp124.png",
-                         "Nokia"	  => "nokia.png",
-                         "CopperJet"	  => "copperjet16162p.png",
-                         "Ekiga"	  => "ekiga.png"
-                         );
-    }
+	// array with mappings between User Agents and images
+    $userAgentImages = array(
+                     "Asterisk"       => "asterisk.png",
+                     "AVM FRITZ"      => "avm-fritzbox-wlan.png",
+                     "Cisco ATA"      => "cisco-ata.png",
+                     "Cisco.*Gateway" => "cisco.png",
+                     "CSCO"           => "cisco-7960.png",
+                     "DrayTek"        => "draytek-vigor2600vg.png",
+                     "eStara"         => "eStara.png",
+                     "Eyebeam"        => "eyebeam.png",
+                     "Grandstream"    => "handytone.png",
+                     "ipDialog"       => "ipDialog.png",
+                     "Linksys"        => "linksys-pap2.png",
+                     "Session.*Wave"  => "session.png",
+                     "SIPPS"          => "sipps.png",
+                     "Sipura"         => "spa2000.png",
+                     "sjphone"        => "sjphone.png",
+                     "Snom100"        => "snom100.png",
+                     "Snom(190|200)"  => "snom200.png",
+                     "Snom320"        => "snom320.png",
+                     "Snom360"        => "snom360.png",
+                     "snomSoft"       => "snom360.png",
+                     "Talkin"         => "xten.png",
+                     "unidata"        => "hitachi-wip5000.png",
+                     "Vizufon"        => "vizufon.png",
+                     "voipster"       => "zoep.png",
+                     "Windows RTC"    => "messenger.png",
+                     "X-Lite"         => "xten.png",
+                     "X-PRO"          => "xten.png",
+                     "ZyXEL P2000W"   => "zyxel-p2000.png",
+                     "-IMVP"          => "innomedia-mta5000.png",
+                     "3610\/"         => "siemens-3610.png",
+                     "cirpack"        => "cirpack.png",
+                     "Brcm-Callctrl"  => "webstarepx2203.png",
+                     "Audiocodes-Sip" => "audiocodes-mp124.png",
+                     "Nokia"	      => "nokia.png",
+                     "CopperJet"	  => "copperjet16162p.png",
+                     "Ekiga"	      => "ekiga.png"
+                     );
 
     foreach ($userAgentImages as $agentRegexp => $image) {
         if (preg_match("/$agentRegexp/i", $agent)) {
