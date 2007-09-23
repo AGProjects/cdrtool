@@ -1,4 +1,14 @@
 <?
+
+/*
+  Copyright (c) 2007 AG Projects
+  http://ag-projects.com
+
+  This library provide the functions for managing properties
+  of SIP accounts retrieved from NGN-Pro
+
+*/
+
 class SIPSettings {
 
 	var $soapClassSipPort          = 'WebService_NGNPro_SipPort';
@@ -6,29 +16,23 @@ class SIPSettings {
     var $soapClassCustomerPort     = 'WebService_NGNPro_CustomerPort';
     var $soapClassPresencePort     = 'WebService_SoapSIMPLEProxy_PresencePort';
 
-    var $voicemail				   = array('AccessNumber'     => '*70',
-										   'Server'           => 'vm.example.com'
-                                           );
-
+    var $voicemail				   = array('AccessNumber'     => '*70','Server'           => 'vm.example.com');
     var $SupportCompany            = "Example company";
     var $SupportCDRsite            = "https://cdrtool.example.com/CDRTool";
     var $SupportWEBsite            = "https://www.example.com/help";
 	var $SupportEmail              = "Support <support@example.com>";
     var $SIPsettingsURL		       = "https://cdrtool.example.com/sip_settings.phtml";
     var $xcaproot   		       = "https://cdrtool.example.com/xcap-root/";
-    var $templatesPath             = './templates';
 
+    var $templatesPath             = './templates';
     var $changePrivacyAccessNumber = "*67";
     var $checkPrivacyAccessNumber  = "*68";
 
-    var $SaveSettingsAllowed       = 0;
-    var $CanEditAll        		   = 0;
-
     var $tab			           = "settings";
-
     var $phonebook_img             = "<img src=images/pb.gif border=0>";
     var $call_img                  = "<img src=images/call.gif border=0>";
     var $delete_img                = "<img src=images/del_pb.gif border=0>";
+
     var $privacyGroup              = "anonymous";
 
     var $ForwardingTargetTypes	   = array("Voicemail","Other","Mobile","Tel","ENUM","Disabled");
@@ -64,18 +68,14 @@ class SIPSettings {
                                            'owner',
                                            'multiTargets'
                                            );
-            
     var $presenceStatuses   = array('allow','deny','confirm');
     var $presenceActivities = array('busy'      => 'buddy_busy.jpg',
                                     'open'      => 'buddy_online.jpg',
                                     'idle'      => 'buddy_idle.jpg',
                                     'away'      => 'buddy_away.jpg'
                                     );
-
-    var $emergencyRegions=array();
-
-	var $answerTimeoutDefault=35;
-
+    var $emergencyRegions   =array();
+	var $answerTimeoutDefault = 35;
     var $answerTimeoutEls=array(
              "5" =>"5 s",
              "10"=>"10 s",
@@ -90,7 +90,6 @@ class SIPSettings {
              "55"=>"55 s",
              "60"=>"60 s"
              );
-
 	var $exportFilename = "export.txt";
 
     function SIPSettings($account='',$loginCredentials,$soapEngines) {
@@ -134,8 +133,6 @@ class SIPSettings {
         $this->getAccount($account);
 
         if ($this->loginType == "admin") {
-            $this->Preferences['CanEditAll'] = 1;
-
             $this->pageURL=$this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&soapEngineIdSipPort=$this->soapEngineIdSipPort";
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
@@ -145,7 +142,6 @@ class SIPSettings {
             ";
 
         } else if ($this->loginType == "reseller") {
-            $this->Preferences['CanEditAll']         = 1;
 
             $this->pageURL=$this->settingsPage."?account=$this->account&reseller=$this->reseller";
             $this->hiddenElements="
@@ -154,7 +150,6 @@ class SIPSettings {
             ";
         } else {
             $this->Preferences['LoggedInAsSubscriber'] = 1;
-            $this->Preferences['CanEditAll']           = 0;
 
             $this->pageURL=$this->settingsPage."?account=$this->account";
             $this->hiddenElements="
@@ -229,8 +224,6 @@ class SIPSettings {
             }
         }
 
-        //$this->tabs[upgrade]=_("Upgrade");
-
         if ($this->prepaid) {
             $this->tabs[prepaid]=_("Prepaid");
         }
@@ -246,7 +239,7 @@ class SIPSettings {
 		require_once('SOAP/Client.php');
         require_once("ngnpro_soap_library.phtml");
 
-        // Sip, Voicemail and Customer Port share same login
+        // Sip, Voicemail and Customer ports share same login
         $this->SOAPurl=$this->soapEngines[$this->soapEngineIdSipPort]['url'];
 
         if (strlen($this->loginCredentials['soapUsername'])) {
@@ -357,7 +350,6 @@ class SIPSettings {
             $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
         }
-
     }
 
     function getAccount($account) {
@@ -379,8 +371,6 @@ class SIPSettings {
         //dprint_r($result);
 
         $this->owner     = $result->owner;
-
-    	$this->Preferences['SaveSettingsAllowed']=1;
 
         if (!is_array($result->properties)) $result->properties=array();
         if (!is_array($result->groups)) $result->groups=array();
@@ -900,32 +890,32 @@ class SIPSettings {
         $this->footerFile = $this->getFileTemplate("footer.phtml");
         $this->cssFile    = $this->getFileTemplate("main.css");
 
-        $this->SIPACLS['free-pstn']    =array("SERGroup"=>"free-pstn",
+        $this->SIPACLS['free-pstn']    =array("Group"=>"free-pstn",
                                             "WEBName" =>   sprintf(_("Access to PSTN")),
                                             "WEBComment"=> sprintf(_("Caller-ID")),
                                             "SubscriberMayEditIt"=>"0",
                                             "SubscriberMaySeeIt"=>1
                                             );
 
-        $this->SIPACLS['blocked']   =array("SERGroup"=>"blocked",
+        $this->SIPACLS['blocked']   =array("Group"=>"blocked",
                                         "WEBName" =>sprintf(_("Account blocked")),
                                         "SubscriberMayEditIt"=>"0",
                                         "SubscriberMaySeeIt"=>0
                                         );
 
         if ($this->Preferences['advanced']) {
-            $this->SIPACLS['voicemail']=array("SERGroup"=>"voicemail",
+            $this->SIPACLS['voicemail']=array("Group"=>"voicemail",
                                         "WEBName" =>sprintf (_("Voice mailbox")),
                                         "SubscriberMayEditIt"=>"0",
                                         "SubscriberMaySeeIt"=>0
                                         );
-            $this->SIPACLS[$this->privacyGroup]=array("SERGroup"=>$this->privacyGroup,
+            $this->SIPACLS[$this->privacyGroup]=array("Group"=>$this->privacyGroup,
                                         "WEBName" =>sprintf (_("Privacy")),
                                         "WEBComment"=>sprintf(_("Dial %s to change or %s to check status "),$this->changePrivacyAccessNumber, $this->checkPrivacyAccessNumber),
                                         "SubscriberMaySeeIt"=>1,
                                         "SubscriberMayEditIt"=>1
                                         );
-            $this->SIPACLS['anonymous-reject']=array("SERGroup"=>$this->anonymous-reject,
+            $this->SIPACLS['anonymous-reject']=array("Group"=>$this->anonymous-reject,
                                         "WEBName" =>sprintf (_("Reject anonymous callers")),
                                         "SubscriberMaySeeIt"=>1,
                                         "SubscriberMayEditIt"=>1
@@ -933,11 +923,11 @@ class SIPSettings {
 
         }
 
-        $this->SIPACLS[prepaid]=array("SERGroup"=>"prepaid",
-                                    "WEBName" =>sprintf (_("Prepaid")),
-                                    "SubscriberMayEditIt"=>"0",
-                                    "SubscriberMaySeeIt"=>0
-                                    );
+        $this->SIPACLS['prepaid'] = array("Group"            => "prepaid",
+                                          "WEBName"             => sprintf (_("Prepaid")),
+                                          "SubscriberMayEditIt" => "0",
+                                          "SubscriberMaySeeIt"  => 0
+                                          );
  
 
     }
@@ -1201,12 +1191,9 @@ class SIPSettings {
 
         $t=0;
 
-        if ($this->Preferences['SaveSettingsAllowed']) {
-
         print "
         <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
         ";
-        }
 
         foreach($this->aliases as $a)  {
             $t++;
@@ -1222,56 +1209,39 @@ class SIPSettings {
             ";
         }
 
-        if (!$this->skipCheckOwnership) {
+        print "
+        <tr>
+          <td class=border>";
+            print _("New alias");
             print "
-            <tr>
-              <td class=border>";
-                print _("New alias");
-                print "
-              </td>
-              <td class=border> <input type=text size=35 name=aliases[]></td>
-            </tr>
-            ";
-		}
+          </td>
+          <td class=border> <input type=text size=35 name=aliases[]></td>
+        </tr>
+        ";
 
-        if ($this->Preferences['SaveSettingsAllowed'] && !$this->skipCheckOwnership) {
-        	print "
-	        <tr>
-    	      <td align=left>
-        	    <input type=hidden name=action value=\"set aliases\">
-	        ";
-            print "
-            <input type=submit value=\"";
-            print _("Save aliases");
-            print "\"
-                   onClick=saveHandler(this)>
-            ";
-    	    print "
-        	  </td>
-	          <td align=right>
-    	      </td>
-	        </tr>
-    	    ";
+        print "
+        <tr>
+          <td align=left>
+            <input type=hidden name=action value=\"set aliases\">
+        ";
+        print "
+        <input type=submit value=\"";
+        print _("Save aliases");
+        print "\"
+               onClick=saveHandler(this)>
+        ";
+        print "
+          </td>
+          <td align=right>
+          </td>
+        </tr>
+        ";
 
-	        print $this->hiddenElements;
+        print $this->hiddenElements;
 
-        	print "
-	        </form>
-    	    ";
-    	} else  if (!$t && !$this->skipCheckOwnership) {
-            print "
-            <tr>
-              <td class=border>";
-                print _("Aliases");
-                print "
-              </td>
-              <td class=border>";
-                print _("None");
-                print "
-              </td>
-            </tr>
-            ";
-        }
+        print "
+        </form>
+        ";
 
         $chapter=sprintf(_("Notifications address"));
         $this->showChapter($chapter);
@@ -1500,8 +1470,8 @@ class SIPSettings {
         </tr>
         ";
         */
-
-        if ($this->Preferences['CanEditAll'] && in_array("free-pstn",$this->groups)) {
+	    
+        if (!$this->Preferences['LoggedInAsSubscriber'] && in_array("free-pstn",$this->groups)) {
 
             if (in_array("quota",$this->groups)) {
             	$td_class="orange";
@@ -1568,14 +1538,14 @@ class SIPSettings {
                 $checked_box[$key]="checked";
             }
 
-            if (!$this->Preferences['CanEditAll'] && !$checked_box[$key] && $key=="free-pstn") {
+            if (!$this->Preferences['LoggedInAsSubscriber'] && !$checked_box[$key] && $key=="free-pstn") {
                 continue;
             }
 
             $elementName    = $this->SIPACLS[$key]["WEBName"];
             $elementComment = $this->SIPACLS[$key]["WEBComment"];
 
-			if (!$this->Preferences['CanEditAll']) {
+			if (!$this->Preferences['LoggedInAsSubscriber']) {
                 if ($this->SIPACLS[$key]["SubscriberMayEditIt"]) {
                     $disabled_box = "";
                 } else {
@@ -1596,7 +1566,7 @@ class SIPSettings {
             <input type=checkbox value=1 name=$key $checked_box[$key] $disabled_box>
             ";
 
-            if ($this->Preferences['CanEditAll']) {
+            if (!$this->Preferences['LoggedInAsSubscriber']) {
                 if ($key=="free-pstn") {
                     print "$elementComment: <input type=text size=15 maxsize=15 name=rpid value=\"$this->rpid\">";
                 } else if ($key=="multi-targets" && in_array("multi-targets",$this->groups)) {
@@ -1648,7 +1618,7 @@ class SIPSettings {
             ";
         }
 
-        if ($this->Preferences['CanEditAll']) {
+        if (!$this->Preferences['LoggedInAsSubscriber']) {
 
 	        // prepaid
         	if ($this->prepaid) $checked_prepaid="checked";
@@ -1722,14 +1692,12 @@ class SIPSettings {
             <input type=hidden name=action value=\"Save settings\">
         ";
 
-        if ($this->Preferences['SaveSettingsAllowed']) {
-            print "
-            <input type=submit value=\"";
-            print _("Save");
-            print "\"
-                   onClick=saveHandler(this)>
-            ";
-        }
+        print "
+        <input type=submit value=\"";
+        print _("Save");
+        print "\"
+               onClick=saveHandler(this)>
+        ";
         print "
           </td>
           <td align=right>
@@ -1751,7 +1719,7 @@ class SIPSettings {
             $checked_voicemail="checked";
         }
 
-        if (!$this->Preferences['CanEditAll']) {
+        if (!$this->Preferences['LoggedInAsSubscriber']) {
             if ($this->SIPACLS[$key]["SubscriberMayEditIt"]) {
                 $disabled_box = "";
             } else {
@@ -2096,14 +2064,13 @@ class SIPSettings {
             <input type=hidden name=action value=\"set barring prefixes\">
         ";
 
-        if ($this->Preferences['SaveSettingsAllowed']) {
-            print "
-            <input type=submit value=\"";
-            print _("Save");
-            print "\"
-                   onClick=saveHandler(this)>
-            ";
-        }
+        print "
+        <input type=submit value=\"";
+        print _("Save");
+        print "\"
+               onClick=saveHandler(this)>
+        ";
+
         print "
           </td>
           <td align=right>
@@ -2160,7 +2127,7 @@ class SIPSettings {
 
 		dprint_r($this->Preferences);
 
-        if ($this->Preferences['CanEditAll']) {
+        if (!$this->Preferences['LoggedInAsSubscriber']) {
 
             if ($advanced) {
                 if (!$this->Preferences['advanced']) {
@@ -2169,7 +2136,7 @@ class SIPSettings {
                 }
     
                 $voicemail=1;
-                $this->SIPACLS[voicemail]=array("SERGroup"=>"voicemail",
+                $this->SIPACLS['voicemail']=array("Group"=>"voicemail",
                                             "WEBName" =>sprintf (_("Voice mailbox")),
                                             "SubscriberMayEditIt"=>"0",
                                             "SubscriberMaySeeIt"=>0
@@ -2177,7 +2144,7 @@ class SIPSettings {
             }
 
             if (!$this->voicemail['Account'] && $voicemail) {
-                dprint ("Lets's create voicemail account");
+                dprint ("Create voicemail account ...");
                 if ($this->createVoicemail()) {
                     $this->setVoicemailDiversions();
                     $this->createdVoicemailnow=1;
@@ -2189,35 +2156,32 @@ class SIPSettings {
             }
         }
 
-        if ($this->Preferences['CanEditAll']) {
-            if ($this->Preferences['CanEditAll']) {
-                if (strcmp($quota,$this->quota) != 0) {
-                    if (!$quota) $quota=0;
-                    $result->quota=intval($quota);
-                    dprint ("change the quota");
-                    $this->somethingChanged=1;
-                }
-
-                if ($quota_reset) {
-                    $result->groups = array_unique(array_diff($this->groups,array('quota')));
-                    $this->somethingChanged=1;
-
-                    if (is_object($this->SipPortRemote)) {
-                        $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-                        $this->SipPortRemote->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain), "quota");
-                    }
-
-                    $this->SipPort->addHeader($this->SoapAuth);
-                    $this->SipPort->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain), "quota");
-                }
-
-                if (strcmp($rpid,$this->rpid) != 0) {
-                    dprint ("change the rpid");
-                    $result->rpid=$rpid;
-                    $this->somethingChanged=1;
-                }
+        if (!$this->Preferences['LoggedInAsSubscriber']) {
+            if (strcmp($quota,$this->quota) != 0) {
+                if (!$quota) $quota=0;
+                $result->quota=intval($quota);
+                dprint ("change the quota");
+                $this->somethingChanged=1;
             }
 
+            if ($quota_reset) {
+                $result->groups = array_unique(array_diff($this->groups,array('quota')));
+                $this->somethingChanged=1;
+
+                if (is_object($this->SipPortRemote)) {
+                    $this->SipPortRemote->addHeader($this->SoapAuthRemote);
+                    $this->SipPortRemote->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain), "quota");
+                }
+
+                $this->SipPort->addHeader($this->SoapAuth);
+                $this->SipPort->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain), "quota");
+            }
+
+            if (strcmp($rpid,$this->rpid) != 0) {
+                dprint ("change the rpid");
+                $result->rpid=$rpid;
+                $this->somethingChanged=1;
+            }
         }
 
 		if ($this->loginType == 'admin' || $this->loginType == 'reseller') {
@@ -2234,8 +2198,7 @@ class SIPSettings {
             // $val is set to 1 if web checkbox is ticked
             $val = $_REQUEST[$key];
 
-            if ($this->Preferences['CanEditAll'] ||
-        		($this->Preferences['LoggedInAsSubscriber'] && $this->SIPACLS[$key][SubscriberMayEditIt])) {
+            if (!$this->Preferences['LoggedInAsSubscriber'] || $this->SIPACLS[$key]['SubscriberMayEditIt']) {
 
                 // toggle prepaid
                 if ($key == "prepaid") $result->prepaid=intval($val);
@@ -2362,7 +2325,7 @@ class SIPSettings {
 
         }
 
-        if ($this->Preferences['CanEditAll'] && $this->voicemail['Account'] && !$this->createdVoicemailnow) {
+        if (!$this->Preferences['LoggedInAsSubscriber'] && $this->voicemail['Account'] && !$this->createdVoicemailnow) {
             $delete_voicemail = $_REQUEST['delete_voicemail'];
 
             $log=sprintf("delete_voicemail_orig=%s",$this->voicemail['Options']->delete);
@@ -4327,14 +4290,13 @@ class SIPSettings {
             <input type=hidden name=action value=\"set reject members\">
         ";
 
-        if ($this->Preferences['SaveSettingsAllowed']) {
-            print "
-            <input type=submit value=\"";
-            print _("Save");
-            print "\"
-                   onClick=saveHandler(this)>
-            ";
-        }
+        print "
+        <input type=submit value=\"";
+        print _("Save");
+        print "\"
+               onClick=saveHandler(this)>
+        ";
+
         print "
           </td>
           <td align=right>
@@ -4875,14 +4837,12 @@ class SIPSettings {
             <input type=hidden name=action value=\"set accept rules\">
         ";
 
-        if ($this->Preferences['SaveSettingsAllowed']) {
-            print "
-            <input type=submit value=\"";
-            print _("Save");
-            print "\"
-                   onClick=saveHandler(this)>
-            ";
-        }
+        print "
+        <input type=submit value=\"";
+        print _("Save");
+        print "\"
+               onClick=saveHandler(this)>
+        ";
 
         print "
           </td>
@@ -5077,12 +5037,9 @@ class SIPSettings {
         $this->getPresenceRules();
         $this->getPresenceInformation();
 
-        if ($this->Preferences['SaveSettingsAllowed']) {
-            print "
-            <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
-            ";
-        }
-
+        print "
+        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        ";
         $chapter=sprintf(_("Published information"));
         $this->showChapter($chapter);
 
@@ -5228,14 +5185,12 @@ class SIPSettings {
             <input type=hidden name=action value=\"set presence\">
         ";
 
-        if ($this->Preferences['SaveSettingsAllowed']) {
-            print "
-            <input type=submit value=\"";
-            print _("Save");
-            print "\"
-                   onClick=saveHandler(this)>
-            ";
-        }
+        print "
+        <input type=submit value=\"";
+        print _("Save");
+        print "\"
+               onClick=saveHandler(this)>
+        ";
         print "
           </td>
           <td align=right>

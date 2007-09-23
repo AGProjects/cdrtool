@@ -1,534 +1,19 @@
 <?
-class recordGenerator extends SOAPEngine {
-	var $template     = array();
-    var $allowedPorts = array();
 
-    function recordGenerator($generatorId,$recordGenerators,$soapEngines,$extraFormElements,$loginCredentials) {
-    	$this->recordGenerators = $recordGenerators;
-        $this->generatorId      = $generatorId;
-		$this->loginCredentials = $loginCredentials;
+/*
+  Copyright (c) 2007 AG Projects
+  http://ag-projects.com
 
-        dprint_r($this->loginCredentials);
-		$keys = array_keys($this->recordGenerators);
-		if (!$generatorId) $generatorId=$keys[0];
+  This library provide the functions for managing SIP accounts,
+  ENUM ranges, ENUM numbers, Trusted Peers, LCR, Rating plans
+  on a remote NGN-Pro server
 
-		if (!in_array($generatorId,array_keys($this->recordGenerators))) {
-            return false;
-        }
-
-        if (strlen($this->loginCredentials['soapFilter'])) {
-            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->loginCredentials['soapFilter']);
-        } else {
-        	$this->soapEngines = $soapEngines;
-        }
-
-        if (in_array($this->recordGenerators[$generatorId]['sipEngineId'],array_keys($this->soapEngines))) {
-            // sip zones
-            if (count($this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngineId']]) > 1 && !in_array('sip_accounts',$this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngineId']])) {
-                // sip port not available
-                dprint("sip port not avaliable");
-            } else {
-                $sipEngine           = 'sip_accounts@'.$this->recordGenerators[$generatorId]['sipEngineId'];
-                $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$extraFormElements,$loginCredentials);
-                $_sip_class          = $this->SipSOAPEngine->recordsClass;
-                $this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
-                $this->sipRecords->getAllowedDomains();
-            }
-        } else {
-            printf ("<font color=red>Error: soapengineId %s does not exist</font>",$this->recordGenerators[$generatorId]['sipEngineId']);
-        }
-
-        if (in_array($this->recordGenerators[$generatorId]['enumEngineId'],array_keys($this->soapEngines))) {
-            if (count($this->allowedPorts[$this->recordGenerators[$generatorId]['enumEngineId']]) > 1 && !in_array('enum_numbers',$this->allowedPorts[$this->recordGenerators[$generatorId]['enumEngineId']])) {
-                dprint("enum port not avaliable");
-                // enum port not available
-            } else {
-                // enum mappings
-                $enumEngine           = 'enum_numbers@'.$this->recordGenerators[$generatorId]['enumEngineId'];
-                $this->EnumSOAPEngine = new SOAPEngine($enumEngine,$soapEngines,$extraFormElements,$loginCredentials);
-                $_enum_class          = $this->EnumSOAPEngine->recordsClass;
-                $this->enumRecords    = new $_enum_class(&$this->EnumSOAPEngine);
-                $this->enumRecords->getAllowedDomains();
-            }
-        } else {
-            printf ("<font color=red>Error: soapengineId %s does not exist</font>",$this->recordGenerators[$generatorId]['enumEngineId']);
-        }
-
-		if ($_REQUEST['reseller_filter']) $this->template['reseller']=intval($_REQUEST['reseller_filter']);
-        if ($_REQUEST['customer_filter']) $this->template['customer']=intval($_REQUEST['customer_filter']);
-    }
-
-    function generateRecords() {
-
-        print "<p>";
-        if (!$this->checkGenerateRequest()) {
-        	return false;
-        }
-        print "<p>Generating records
-        <ol>";
-
-
-        $i=0;
-
-        while ($i < $this->template['nr_records']) {
-
-            $number   = sprintf("%.0f", $this->start_padded + $i);
-            $username = substr($number,$this->template['strip_digits']);
-			$mapto    = 'sip:'.$username.'@'.$this->template['domain'];
-
-            print "<li>";
-            printf ('Generating number +%s with mapping %s ',$number,$mapto);
-            flush();
-
-            $enumMapping = array('tld'      => $this->template['tld'],
-                                 'number'   => $number,
-                                 'type'     => 'sip',
-                                 'mapto'    => $mapto,
-                                 'owner'    => $this->template['owner'],
-                                 'customer' => $this->template['customer'],
-                                 'reseller' => $this->template['reseller']
-                                );
-
-            if ($this->template['create_sip']) {
-                $groups=array();
-                if ($this->template['pstn']) $groups[]='free-pstn';
-            	printf ('and sip account %s@%s ',$username,$this->template['domain']);
-    
-                $sipAccount = array('account'  => $username.'@'.$this->template['domain'],
-                                    'quota'    => $this->template['quota'],
-                                    'prepaid'  => $this->template['prepaid'],
-                                    'password' => $this->template['password'],
-                                    'groups'   => $groups,
-                                    'owner'    => $this->template['owner'],
-                                    'customer' => $this->template['customer'],
-                                    'reseller' => $this->template['reseller']
-                                    );
-            } else {
-                unset($sipAccount);
-            }
-
-            if (is_array($enumMapping)) $this->enumRecords->addRecord($enumMapping);
-            if (is_array($sipAccount))  $this->sipRecords->addRecord($sipAccount);
-
-            $i++;
-        }
-
-        print "</ol>";
-        return true;
-	}
-
-    function checkGenerateRequest() {
-        // check number of records
-        $this->template['create_sip']=trim($_REQUEST['create_sip']);
-
-        $nr_records=trim($_REQUEST['nr_records']);
-        if (!is_numeric($nr_records) || $nr_records < 1 || $nr_records > 200) {
-            print "<font color=red>Error: number of records must be a number between 1 and 200</font>";
-            return false;
-        }
-        $this->template['nr_records'] = $nr_records;
-
-        // length of generated record
-        $len=trim($_REQUEST['len']);
-        if (!is_numeric($len) || $len < 4 || $len > 15) {
-            print "<font color=red>Error: number length must be a number between 4 and 15</font>";
-            return false;
-        }
-        $this->template['len'] = $len;
-
-        // sip domain
-        $domain=trim($_REQUEST['domain']);
-        if (!strlen($domain)) {
-            print "<font color=red>Error: SIP domain missing</font>";
-            return false;
-        }
-        $this->template['domain'] = $domain;
-
-        $nr_start=trim($_REQUEST['nr_start']);
-        if (strlen($nr_start) && !is_numeric($nr_start)) {
-            print "<font color=red>Error: Prefix must be numeric</font>";
-            return false;
-        }
-        $this->template['nr_start'] = $nr_start;
-
-        // check ENUM TLD
-        list($prefix,$tld)=explode('@',trim($_REQUEST['range']));
-
-        $this->template['prefix']   = intval($prefix);
-        $this->template['tld']      = $tld;
-        $this->template['quota']    = intval($_REQUEST['quota']);
-        $this->template['owner']    = intval($_REQUEST['owner']);
-        $this->template['pstn']     = intval($_REQUEST['pstn']);
-        $this->template['prepaid']  = intval($_REQUEST['prepaid']);
-        $this->template['password'] = trim($_REQUEST['password']);
-
-        ///////////////////////////////////////
-        // logical checks
-        if (strlen($this->template['nr_start'])) {
-            $start = $this->template['nr_start'];
-        } else {
-            $start = 0;
-        }
-
-		$digits             = $this->template['len']-strlen($this->template['prefix']);
-        $this->start_padded = $this->template['prefix'].str_pad($start,$digits,'0');
-        $this->top          = sprintf("%.0f", $this->start_padded + pow(10,$digits-strlen($this->template['nr_start'])));
-        $maxNumbers         = pow(10,$digits-strlen($this->template['nr_start']));
-
-        if ($maxNumbers < $this->template['nr_records']) {
-            printf ("<font color=red>Error: Insufficient numbers in range, requested = %d, available = %d</font>",$this->template['nr_records'],$maxNumbers);
-            return false;
-        }
-
-        return true;
-    }
-
-    function showGeneratorForm() {
-    	if (!count($this->enumRecords->ranges)) {
-            print "<font color=red>Error: No ENUM ranges available</font>";
-        	return false;
-        }
-        print "
-        <form method=post target=_new>
-        <table cellspacing=1 cellpadding=1 bgcolor=black>
-        <tr>
-        <td>
-        <table cellspacing=3 cellpadding=4 width=100% bgcolor=#444444>
-        <tr>
-        <td>
-        <font color=white>
-        <b>";
-        print _("Record generator");
-        print "</b>
-        </font>
-        </td>
-        </tr>
-        </table>
-        </tr>
-        <tr>
-        <td colspan=100%>
-
-        <table cellpadding=2 bgcolor=white width=100%>
-        <tr>
-        <td colspan=3>
-        </td>
-        </tr>
-        ";
-    
-        print "
-        <tr>
-        <td>";
-        print _("ENUM range");
-        print "
-        <td align=right>";
-
-        if (is_array($this->enumRecords->ranges)) {
-            print "<select name=range>";
-            $selected_range[$_REQUEST['range']]='selected';
-            foreach ($this->enumRecords->ranges as $_range) {
-                $rangeId=$_range['prefix'].'@'.$_range['tld'];
-                printf ("<option value=%s %s>+%s under %s",$rangeId,$selected_range[$rangeId],$_range['prefix'],$_range['tld']);
-            }
-            print "</select>";
-        }
-
-        print "<td>
-        </tr>
-        ";
-
-        print "
-        <tr>
-        <td colspan=2>
-        ";
-        print "<b>";
-        print _("ENUM mapping template");
-        print "</b>";
-        print "</td>
-        </tr>
-        ";
-
-        print "
-        <tr>
-        <td>";
-        print _("Add prefix:");
-        printf ("
-        <td align=right>
-        <input type=text name=nr_start size=10 maxsize=15 value='%s'>
-        </td>
-        </tr>
-        ",$_REQUEST['nr_start']);
-        print "
-        <tr>
-        <td>";
-        print _("Number length:");
-        printf ("
-        <td align=right>
-        <input type=text name=len size=10 maxsize=15 value='%s'>
-        <tr>
-        <td>
-        ",$_REQUEST['len']);
-    
-        print _("SIP domain:");
-        print "
-        <td align=right>
-        ";
-
-        if (count($this->sipRecords->allowedDomains) > 0) {
-            print "
-            <select name=domain>
-            ";
-            $selected_range[$_REQUEST['domain']]='selected';
-
-            foreach ($this->sipRecords->allowedDomains as $domain) {
-                printf ("<option value='%s' %s>%s",$domain,$selected_range[$domain],$domain);
-            }
-            print "</select>  ";
-        } else {
-            print "<input type=text size=15 name=domain>";
-        }
-
-        print "
-        </td>
-        <td>";
-        print "
-        </td>
-        </tr>
-        ";
-
-        if ($_REQUEST['strip_digits']) {
-            $strip_digits=$_REQUEST['strip_digits'];
-        } else {
-            $strip_digits=0;
-        }
-
-        print "
-        <tr>
-        <td>";
-        print _("Strip first digits:");
-        printf ("
-        <td align=right>
-        <input type=text size=10 name=strip_digits value='%s'>
-        </td>
-        </tr>
-        ",$strip_digits);
-        print "
-        <tr>
-        <td>";
-        print _("Owner:");
-        printf ("
-        <td align=right><input type=text size=10 name=owner value='%s'>
-        <td>",$_REQUEST['owner']);
-        print "
-        </td>
-        </tr>";
-
-        if (count($this->sipRecords->allowedDomains) > 0) {
-            print "
-            <tr>
-            <td colspan=3><hr noshade size=1>
-            </td>
-            </tr>
-            ";
-    
-            print "
-            <tr>
-            <td colspan=2>
-            ";
-            print "<b>";
-            print _("SIP account template");
-            print "</b>";
-            print "</td>
-            </tr>
-            ";
-
-            print "
-            <tr>
-            <td>";
-            print _("Create SIP records");
-            if ($_REQUEST['create_sip']) {
-            	$checked_create_sip='checked';
-            } else {
-            	$checked_create_sip='';
-            }
-            printf ("
-            <td align=right><input type=checkbox name=create_sip value=1 %s>
-            </td>
-            </tr>
-            ",$checked_create_sip);
-
-            if ($_REQUEST['pstn']) {
-            	$checked_pstn='checked';
-            } else {
-            	$checked_pstn='';
-            }
-
-            print "
-            <tr>
-            <td>";
-            print _("PSTN");
-            printf ("
-            <td align=right><input type=checkbox name=pstn value=1 %s>
-            </td>
-            </tr>
-            ",$checked_pstn);
-
-            if ($_REQUEST['prepaid']) {
-            	$checked_prepaid='checked';
-            } else {
-            	$checked_prepaid='';
-            }
-
-            print "
-            <tr>
-            <td>";
-            print _("Prepaid");
-            printf ("
-            <td align=right><input type=checkbox name=prepaid value=1 %s>
-            </td>
-            </tr>
-            ",$checked_prepaid);
-
-            print "
-            <tr>
-            <td>";
-            print _("Prefix Caller-ID");
-            printf ("
-            <td align=right><input type=text size=10 name=rpid_prefix value='%s'>
-            </td>
-            </tr>
-            ",$_REQUEST['rpid_prefix']);
-
-            print "
-            <tr>
-            <td>";
-            print _("Quota");
-            printf ("
-            <td align=right><input type=text size=10 name=quota value='%s'>
-            </td>
-            </tr>
-            ",$_REQUEST['quota']);
-
-            print "
-            <tr>
-            <td>";
-            print _("Password");
-            printf ("
-            <td align=right><input type=text size=10 name=password value='%s'>
-            </td>
-            </tr>
-            ",$_REQUEST['password']);
-
-        }
-
-        if ($_REQUEST['nr_records']) {
-            $nr_records=$_REQUEST['nr_records'];
-        } else {
-            $nr_records=1;
-        }
-
-        print "
-        <tr>
-        <td colspan=3>
-        <hr noshade size=1 with=100%>
-        </td>
-        </tr>
-        ";
-        print "
-        <tr>
-        <td>
-        ";
-
-        print "<input type=hidden value=Generate>";
-        print "<input type=submit value=Generate>";
-        printf ("<td align=right>
-        Number of records:<input type=text size=10 name=nr_records value='%s'>
-        ",$nr_records);
-        print "<td>";
-        print "
-        </tr>
-        ";
-
-        print "
-        <tr>
-        <td colspan=2>
-        <br>
-        <input type=hidden name=action value=Generate>
-        <p>";
-        print _("Existing records will not be overwritten. ");
-        print "</td>
-        </tr>
-        ";
-
-        $this->printHiddenFormElements();
-
-        print "
-        </table>
-        </form>
-        </td>
-        </tr>
-        </table>
-        ";
-    }
-
-    function printHiddenFormElements () {
-        printf("<input type=hidden name=generatorId value='%s'>",$this->generatorId);
-
-        if ($this->adminonly) {
-        	printf("<input type=hidden name=adminonly value='%s'>",$this->adminonly);
-        }
-
-        if ($this->template['customer']) {
-        	printf("<input type=hidden name=customer_filter value='%s'>",$this->template['customer']);
-        }
-
-        if ($this->template['reseller']) {
-        	printf("<input type=hidden name=reseller_filter value='%s'>",$this->template['reseller']);
-        }
-
-        foreach (array_keys($this->extraFormElements) as $element) {
-        	if (!strlen($this->extraFormElements[$element])) continue;
-            printf ("<input type=hidden name=%s value='%s'>\n",$element,$this->extraFormElements[$element]);
-        }
-
-    }
-
-    function getSoapEngineAllowed($soapEngines,$filter) {
-    	$_filter_els=explode(" ",trim($filter));
-		foreach(array_keys($soapEngines) as $_engine) {
-            //dprint("check engine $_engine");
-        	foreach ($_filter_els as $_filter) {
-                //dprint("check filter $_filter");
-
-                unset($_allowed_engine);
-                $_allowed_ports=array();
-
-                list($_allowed_engine,$_allowed_ports_els) = explode(":",$_filter);
-
-                //dprint ("_allowed_engine=$_allowed_engine, _allowed_ports=$_allowed_ports_els");
-                if ($_allowed_ports_els) {
-                	$_allowed_ports = explode(",",$_allowed_ports_els);
-                }
-
-            	if ($_engine == $_allowed_engine) {
-                	$soapEngines_checked[$_engine]=$soapEngines[$_engine];
-                    $this->allowedPorts[$_engine]=$_allowed_ports;
-                	continue;
-            	} else {
-                    //dprint ("$_engine != $_allowed_engine");
-                }
-        	}
-    	}
-
-		//dprint_r($soapEngines_checked);
-
-        return $soapEngines_checked;
-    }
-
-}
+*/
 
 class SOAPEngine {
     var $version       = 1;
     var $adminonly     = 0;
+    var $customer      = 0;
     var $reseller      = 0;
     var $loginType     = 'reseller';
 	var $allowedPorts  = array();
@@ -611,6 +96,8 @@ class SOAPEngine {
 
     function SOAPEngine($service,$soapEngines,$extraFormElements,$loginCredentials) {
 
+        // service syntax is is port@engine
+
         /*
         $soapEngines=array(
                                    'mdns' => array('name'=> 'Managed DNS',
@@ -621,14 +108,12 @@ class SOAPEngine {
                                                  ),
         */
 
-
 		$this->loginCredentials = $loginCredentials;
+        dprint_r($this->loginCredentials);
 
 		if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
             unset($this->loginCredentials['customer']);
         }
-
-        dprint_r($this->loginCredentials);
 
         if ($this->loginCredentials['loginType'] == 'admin') $this->adminonly = 1;
 
@@ -641,6 +126,7 @@ class SOAPEngine {
         if (is_array($this->soapEngines)) {
 
             if (!$service) {
+                // use first engine available
                 $_services     = array_keys($this->services);
                 $_soapids      = array_keys($this->soapEngines);
                 $service       = $_services[0].'@'.$_soapids[0];
@@ -654,8 +140,8 @@ class SOAPEngine {
 
             $_els=explode('@',$this->service);
 
-            $this->soapEngineId   = $_els[1];
-            $this->soapEngineIdSettingsPage=$this->soapEngineId;
+            $this->soapEngineId             = $_els[1];
+            $this->soapEngineIdSettingsPage = $this->soapEngineId;
 
             if (count($this->allowedPorts[$this->soapEngineId]) > 1 && in_array($_els[0],$this->allowedPorts[$this->soapEngineId])) {
             	$this->soapEnginePort = $_els[0];
@@ -974,7 +460,6 @@ class Records {
             }
         }
     }
-
 
     function showPagination($maxrows) {
 
@@ -1601,29 +1086,22 @@ class Domains extends Records {
     function deleteRecord() {
         if (!$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
-            return 1;
+            return true;
         }
 
         if (!strlen($this->filters['domain']) || !strlen($this->filters['domain'])) {
             print "<p><font color=red>Error: missing SIP domain. </font>";
-            return 0;
-        }
-
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
-        $result     = $this->SOAPEngine->soapclient->deleteDomain($this->filters['domain']);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
-        } else {
-           printf ("<p><font color=green>SIP domain %s has been deleted. </font> ",$this->filters['domain']);
-           unset($this->filters);
-           return 1;
         }
+
+        $function=array('commit'   => array('name'       => 'deleteDomain',
+                                            'parameters' => array($this->filters['domain']),
+                                            'logs'       => array('success' => sprintf('SIP domain %s has been deleted',$this->filters['domain']))
+                                           )
+                                           );
+
+        unset($this->filters);
+        return $this->SOAPEngine->execute($function);
     }
 
     function showAddForm() {
@@ -1683,28 +1161,25 @@ class Domains extends Records {
             if (!$customer) $customer=$reseller;
         }
 
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
         if ($this->version  >1 ) {
             $domainStructure=array('domain'   => $domain,
                                    'customer' => intval($customer),
                                    'reseller' => intval($reseller)
                                    );
-        	$result     = $this->SOAPEngine->soapclient->addDomain($domainStructure);
+            $parameter=$domainStructure;
         } else {
-        	$result     = $this->SOAPEngine->soapclient->addDomain($domain);
+            $parameter=$domain;
         }
 
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-           printf ("<p><font color=green>SIP domain %s has been added. </font>",$domain);
-           return true;
-        }
+        $function=array('commit'   => array('name'       => 'addDomain',
+                                            'parameters' => array($parameter),
+                                            'logs'       => array('success' => sprintf('SIP domain %s has been added',$domain))),
+                        'rollback' => array('name'       => 'deleteDomain',
+                                            'parameters' => array($parameter))
+                                           );
+
+        return $this->SOAPEngine->execute($function);
+
     }
 
     function getRecordKeys() {
@@ -2109,17 +1584,17 @@ class SIPAccounts extends Records {
     function deleteRecord() {
         if (!$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
-            return 1;
+            return true;
         }
 
         if (!strlen($this->filters['username']) || !strlen($this->filters['domain'])) {
             print "<p><font color=red>Error: missing SIP account username or domain. </font>";
-            return 0;
+            return false;
         }
 
         $account=array('username' => $this->filters['username'],
-                     'domain'   => $this->filters['domain']
-        			);
+                       'domain'   => $this->filters['domain']
+        			  );
 
         $function=array('commit'   => array('name'       => 'deleteAccount',
                                             'parameters' => array($account),
@@ -2129,11 +1604,8 @@ class SIPAccounts extends Records {
 
                         );
 
-        if ($this->SOAPEngine->execute($function)) {
-           unset($this->filters);
-        }
-
-        return true;
+        unset($this->filters);
+        return $this->SOAPEngine->execute($function);
     }
 
     function showAddForm() {
@@ -2331,7 +1803,8 @@ class SIPAccounts extends Records {
                                             'parameters' => array($account),
                                             'logs'       => array('success' => sprintf('<p>SIP account %s@%s has been added',$username,$domain))),
                         'rollback' => array('name'       => 'deleteAlias',
-                                            'parameters' => array($deleteAccount))
+                                            'parameters' => array($deleteAccount)
+                                            )
                         );
      
         return $this->SOAPEngine->execute($function);
@@ -2671,12 +2144,12 @@ class SIPAliases extends Records {
     function deleteRecord() {
         if (!$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
-            return 1;
+            return true;
         }
 
         if (!strlen($this->filters['aliasUsername']) || !strlen($this->filters['aliasDomain'])) {
             print "<p><font color=red>Error: missing SIP alias username or domain. </font>";
-            return 0;
+            return false;
         }
 
         $alias=array('username' => $this->filters['aliasUsername'],
@@ -2692,13 +2165,8 @@ class SIPAliases extends Records {
                         );
 
 
-        if ($this->SOAPEngine->execute($function)) {
-           	unset($this->filters);
-           	return true;
-        } else {
-       		return flase;
-        }
-
+        unset($this->filters);
+        return $this->SOAPEngine->execute($function);
     }
 
     function showSeachFormCustom() {
@@ -2838,7 +2306,8 @@ class SIPAliases extends Records {
                                             'parameters' => array($alias),
                                             'logs'       => array('success' => sprintf('<p>SIP alias %s@%s has been added',$username,$domain))),
                         'rollback' => array('name'       => 'deleteAlias',
-                                            'parameters' => array($deleteAlias))
+                                            'parameters' => array($deleteAlias)
+                                            )
                         );
      
         return $this->SOAPEngine->execute($function);
@@ -3129,12 +2598,12 @@ class ENUMranges extends Records {
     function deleteRecord() {
         if (!$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
-            return 1;
+            return true;
         }
 
         if (!strlen($this->filters['prefix']) || !strlen($this->filters['tld'])) {
             print "<p><font color=red>Error: missing ENUM range id </font>";
-            return 0;
+            return false;
         }
 
         $rangeId=array('prefix'=>$this->filters['prefix'],
@@ -3264,7 +2733,8 @@ class ENUMranges extends Records {
                                             'parameters' => array($range),
                                             'logs'       => array('success' => sprintf('<p>ENUM range +%s under %s has been added',$prefix,$tld))),
                         'rollback' => array('name'       => 'deleteRange',
-                                            'parameters' => array($deleteRange))
+                                            'parameters' => array($deleteRange)
+                                            )
                         );
      
         return $this->SOAPEngine->execute($function);
@@ -3854,7 +3324,7 @@ class ENUMmappings extends Records {
 
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
-            return 1;
+            return true;
         }
 
         if ($dictionary['number']) {
@@ -3877,7 +3347,7 @@ class ENUMmappings extends Records {
 
         if (!strlen($number) || !strlen($tld)) {
             print "<p><font color=red>Error: missing ENUM number or TLD </font>";
-            return 0;
+            return false;
         }
 
         $enum_id=array('number'=>$number,
@@ -3907,7 +3377,8 @@ class ENUMmappings extends Records {
                                                     'parameters' => array($result_new),
                                                     'logs'       => array('success' => sprintf('<p>ENUM mapping %s has been deleted',$mapto))),
                                 'rollback' => array('name'       => 'updateNumber',
-                                                    'parameters' => array($result))
+                                                    'parameters' => array($result)
+                                                    )
                                 );
     
             } else {
@@ -3915,7 +3386,8 @@ class ENUMmappings extends Records {
                                                     'parameters' => array($enum_id),
                                                     'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been deleted',$number,$tld))),
                                 'rollback' => array('name'       => 'addNumber',
-                                                    'parameters' => array($result))
+                                                    'parameters' => array($result)
+                                                    )
                                 );
             }
 
@@ -4204,7 +3676,8 @@ class ENUMmappings extends Records {
                                                     'parameters' => array($enum_number),
                                                     'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been added',$number,$tld))),
                                 'rollback' => array('name'       => 'deleteNumber',
-                                                    'parameters' => array($enumId))
+                                                    'parameters' => array($enumId)
+                                                    )
                                 );
              
                 return $this->SOAPEngine->execute($function);
@@ -4246,8 +3719,6 @@ class ENUMmappings extends Records {
              
             return $this->SOAPEngine->execute($function);
         }
-
-    	return true;
     }
 
     function getRecordKeys() {
@@ -4399,6 +3870,8 @@ class ENUMmappings extends Records {
             return false;
         }
 
+        $number_old=$number;
+
         $new_mappings=array();
 
         foreach ($number->mappings as $_mapping) {
@@ -4426,19 +3899,15 @@ class ENUMmappings extends Records {
         }
 
         //print_r($number);
+        $function=array('commit'   => array('name'       => 'updateNumber',
+                                            'parameters' => array($number),
+                                            'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been updated',$enumid['number'],$enumid['tld']))),
+                        'rollback' => array('name'       => 'updateNumber',
+                                            'parameters' => array($number_old))
+                        );
+     
+        return $this->SOAPEngine->execute($function);
 
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-        $result = $this->SOAPEngine->soapclient->updateNumber($number);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-        	return true;
-        }
     }
 }
 
@@ -4707,50 +4176,35 @@ class TrustedPeers extends Records {
                      'reseller'    => intval($reseller)
         			);
 
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
-        $result     = $this->SOAPEngine->soapclient->addTrustedPeer($peer);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-           printf ("<p><font color=green>Trusted peers %s has been added. </font>",$ipaddress);
-           return 1;
-        }
+        $function=array('commit'   => array('name'       => 'addTrustedPeer',
+                                            'parameters' => array($peer),
+                                            'logs'       => array('success' => sprintf('<p>Trusted peers %s has been added',$ipaddress))),
+                        'rollback' => array('name'       => 'deleteTrustedPeer',
+                                            'parameters' => array($peer)
+                                            )
+                        );
+     
+        return $this->SOAPEngine->execute($function);
     }
 
     function deleteRecord() {
         if (!$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
-            return 1;
+            return true;
         }
 
-        if (!strlen($this->filters['ip']) || !strlen($this->filters['ip'])) {
+        if (!strlen($this->filters['ip'])) {
             print "<p><font color=red>Error: missing IP address. </font>";
-            return 0;
-        }
-
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
-        $result     = $this->SOAPEngine->soapclient->deleteTrustedPeer($this->filters['ip']);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
-        } else {
-           printf ("<p><font color=green>Trusted peer %s has been deleted. </font> ",$this->filters['ip']);
-           unset($this->filters);
-           return 1;
         }
-    }
 
+        $function=array('commit'   => array('name'       => 'deleteTrustedPeer',
+                                            'parameters' => array($this->filters['ip']),
+                                            'logs'       => array('success' => sprintf('<p>Trusted peers %s has been deleted',$this->filters['ip'])))
+                        );
+     
+        return $this->SOAPEngine->execute($function);
+    }
 }
 
 class GatewayGroups extends Records {
@@ -4940,48 +4394,37 @@ class GatewayGroups extends Records {
             return false;
         }
 
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
-        $result     = $this->SOAPEngine->soapclient->addGatewayGroup($name);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-           printf ("<p><font color=green>Gateway group %s has been added. </font>",$name);
-           return 1;
-        }
+        $function=array('commit'   => array('name'       => 'addGatewayGroup',
+                                            'parameters' => array($name),
+                                            'logs'       => array('success' => sprintf('<p>Gateway group %s has been added',$name))),
+                        'rollback' => array('name'       => 'deleteGatewayGroup',
+                                            'parameters' => array($name)
+                                            )
+                        );
+     
+        return $this->SOAPEngine->execute($function);
     }
 
     function deleteRecord() {
         if (!$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
-            return 1;
+            return true;
         }
 
         if (!strlen($this->filters['group'])) {
             print "<p><font color=red>Error: missing gateway group. </font>";
-            return 0;
-        }
-
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
-        $result     = $this->SOAPEngine->soapclient->deleteGatewayGroup($this->filters['group']);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
-        } else {
-           printf ("<p><font color=green>Gateway %s has been deleted. </font> ",$this->filters['group']);
-           unset($this->filters);
-           return 1;
         }
+
+        $function=array('commit'   => array('name'       => 'deleteGatewayGroup',
+                                            'parameters' => array($this->filters['group']),
+                                            'logs'       => array('success' => sprintf('<p>Gateway group %s has been deleted',$this->filters['group']))),
+                        'rollback' => array('name'       => 'addGatewayGroup',
+                                            'parameters' => array($this->filters['group'])
+                                            )
+                        );
+     
+        return $this->SOAPEngine->execute($function);
     }
 
     function showSeachFormCustom() {
@@ -5269,48 +4712,34 @@ class Gateways extends Records {
                      'prefix'    => $_REQUEST['prefix']
         			);
 
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
-        $result     = $this->SOAPEngine->soapclient->addGateway($gateway);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-           printf ("<p><font color=green>Gateway %s has been added. </font>",$address);
-           return 1;
-        }
+        $function=array('commit'   => array('name'       => 'addGateway',
+                                            'parameters' => array($gateway),
+                                            'logs'       => array('success' => sprintf('<p>Gateway grup %s has been added',$address))),
+                        'rollback' => array('name'       => 'deleteGateway',
+                                            'parameters' => array($name)
+                                            )
+                        );
+     
+        return $this->SOAPEngine->execute($function);
     }
 
     function deleteRecord() {
         if (!$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
-            return 1;
+            return true;
         }
 
         if (!strlen($this->filters['name'])) {
             print "<p><font color=red>Error: missing gateway name. </font>";
-            return 0;
-        }
-
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
-        $result     = $this->SOAPEngine->soapclient->deleteGateway($this->filters['name']);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
-        } else {
-           printf ("<p><font color=green>Gateway %s has been deleted. </font> ",$this->filters['address']);
-           unset($this->filters);
-           return 1;
         }
+
+        $function=array('commit'   => array('name'       => 'deleteGateway',
+                                            'parameters' => array($this->filters['name']),
+                                            'logs'       => array('success' => sprintf('<p>Gateway grup %s has been deleted',$this->filters['name'])))
+                        );
+        return $this->SOAPEngine->execute($function);
+
     }
 
     function showSeachFormCustom() {
@@ -5574,31 +5003,27 @@ class Routes extends Records {
 
 		$routes=array($route);
 
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $function=array('commit'   => array('name'       => 'addRoutes',
+                                            'parameters' => array($routes),
+                                            'logs'       => array('success' => sprintf('<p>Route %s has been added',$prefix))),
+                        'rollback' => array('name'       => 'deleteRoutes',
+                                            'parameters' => array($routes)
+                                            )
+                        );
+     
+        return $this->SOAPEngine->execute($function);
 
-        $result     = $this->SOAPEngine->soapclient->addRoutes($routes);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-           printf ("<p><font color=green>Route %s has been added. </font>",$prefix);
-           return 1;
-        }
     }
 
     function deleteRecord() {
         if (!$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
-            return 1;
+            return true;
         }
 
         if (!strlen($this->filters['prefix']) || !strlen($this->filters['gatewayGroup'])) {
             print "<p><font color=red>Error: missing route prefix or gatewayGroup. </font>";
-            return 0;
+            return false;
         }
 
         $route=array(
@@ -5610,21 +5035,12 @@ class Routes extends Records {
 
         $routes=array($route);
 
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
-        $result     = $this->SOAPEngine->soapclient->deleteRoutes($routes);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-           printf ("<p><font color=green>Route %s has been deleted. </font> ",$this->filters['prefix']);
-           unset($this->filters);
-           return 1;
-        }
+        $function=array('commit'   => array('name'       => 'deleteRoutes',
+                                            'parameters' => array($routes),
+                                            'logs'       => array('success' => sprintf('<p>Route %s has been added',$prefix)))
+                        );
+     
+        return $this->SOAPEngine->execute($function);
     }
 
     function showSeachFormCustom() {
@@ -5768,53 +5184,6 @@ class DomainStatistics extends Records {
 
     }
 
-    function deleteRecord() {
-        if (!$_REQUEST['confirm']) {
-        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
-            return 1;
-        }
-
-        if (!strlen($this->filters['domain']) || !strlen($this->filters['domain'])) {
-            print "<p><font color=red>Error: missing SIP domain. </font>";
-            return 0;
-        }
-
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
-        $result     = $this->SOAPEngine->soapclient->deleteDomain($this->filters['domain']);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-           printf ("<p><font color=green>SIP domain %s has been deleted. </font> ",$this->filters['domain']);
-           unset($this->filters);
-           return 1;
-        }
-    }
-
-    function addRecord() {
-
-        $domain=trim($_REQUEST['domain']);
-
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-
-        $result     = $this->SOAPEngine->soapclient->addDomain($domain);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-           printf ("<p><font color=green>SIP domain %s has been added. </font>",$domain);
-           return 1;
-        }
-    }
 }
 
 class Customers extends Records {
@@ -6440,28 +5809,20 @@ class Customers extends Records {
     function deleteRecord() {
         if (!$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
-            return 1;
+            return true;
         }
 
-        if (!strlen($this->filters['customer']) || !strlen($this->filters['customer'])) {
+        if (!strlen($this->filters['customer'])) {
             print "<p><font color=red>Error: missing customer id. </font>";
-            return 0;
-        }
-
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-        $result     = $this->SOAPEngine->soapclient->deleteAccount(intval($this->filters['customer']));
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
-        } else {
-           printf ("<p><font color=green>Customer id %s has been deleted. </font> ",$this->filters['customer']);
-           unset($this->filters);
-           return 1;
         }
+
+        $function=array('commit'   => array('name'       => 'deleteAccount',
+                                            'parameters' => array(intval($this->filters['customer'])),
+                                            'logs'       => array('success' => sprintf('<p>Customer id %s has been deleted',$this->filters['customer'])))
+                        );
+     
+        return $this->SOAPEngine->execute($function);
     }
 
     function getRecord($id) {
@@ -6690,11 +6051,15 @@ class Customers extends Records {
     function updateRecord () {
         //print "<p>Updating customer ...";
 
-        if (!$_REQUEST['customer_filter']) return;
-
-        if (!$customer=$this->getRecord($_REQUEST['customer_filter'])) {
+        if (!strlen($this->filters['customer'])) {
             return false;
         }
+
+        if (!$customer=$this->getRecord($this->filters['customer'])) {
+            return false;
+        }
+
+        $customer_old=$customer;
 
 		$properties=array();
 
@@ -6727,27 +6092,20 @@ class Customers extends Records {
             foreach ($customer->properties as $_property) {
         		$properties[]=$_property;
         	}
+
             $customer->properties=$properties;
         }
 
-        /*
-        print "<pre>";
-        print_r($customer);
-        print "</pre>";
-        */
-
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-        $result     = $this->SOAPEngine->soapclient->updateAccount($customer);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-        	return true;
-        }
+        $function=array('commit'   => array('name'       => 'updateAccount',
+                                            'parameters' => array($customer),
+                                            'logs'       => array('success' => sprintf('<p>Customer id %s has been updated',strlen($this->filters['customer'])))
+                                            ),
+                        'rollback' => array('name'       => 'updateAccount',
+                                            'parameters' => array($customer_old)
+                                            )
+                        );
+     
+        return $this->SOAPEngine->execute($function);
     }
 
     function showTimezones($timezone) {
@@ -6772,89 +6130,543 @@ class Customers extends Records {
         print "</select>";
     }
 }
+class recordGenerator extends SOAPEngine {
+	//this class generates in bulk enum numbers and sip accounts
 
-class recordsGenerator  {
-    function recordsGenerator() {
+	var $template     = array();
+    var $allowedPorts = array();
+
+    function recordGenerator($generatorId,$recordGenerators,$soapEngines,$extraFormElements,$loginCredentials) {
+    	$this->recordGenerators = $recordGenerators;
+        $this->generatorId      = $generatorId;
+		$this->loginCredentials = $loginCredentials;
+
+        dprint_r($this->loginCredentials);
+		$keys = array_keys($this->recordGenerators);
+		if (!$generatorId) $generatorId=$keys[0];
+
+		if (!in_array($generatorId,array_keys($this->recordGenerators))) {
+            return false;
+        }
+
+        if (strlen($this->loginCredentials['soapFilter'])) {
+            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->loginCredentials['soapFilter']);
+        } else {
+        	$this->soapEngines = $soapEngines;
+        }
+
+        if (in_array($this->recordGenerators[$generatorId]['sipEngineId'],array_keys($this->soapEngines))) {
+            // sip zones
+            if (count($this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngineId']]) > 1 && !in_array('sip_accounts',$this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngineId']])) {
+                // sip port not available
+                dprint("sip port not avaliable");
+            } else {
+                $sipEngine           = 'sip_accounts@'.$this->recordGenerators[$generatorId]['sipEngineId'];
+                $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$extraFormElements,$loginCredentials);
+                $_sip_class          = $this->SipSOAPEngine->recordsClass;
+                $this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
+                $this->sipRecords->getAllowedDomains();
+            }
+        } else {
+            printf ("<font color=red>Error: soapengineId %s does not exist</font>",$this->recordGenerators[$generatorId]['sipEngineId']);
+        }
+
+        if (in_array($this->recordGenerators[$generatorId]['enumEngineId'],array_keys($this->soapEngines))) {
+            if (count($this->allowedPorts[$this->recordGenerators[$generatorId]['enumEngineId']]) > 1 && !in_array('enum_numbers',$this->allowedPorts[$this->recordGenerators[$generatorId]['enumEngineId']])) {
+                dprint("enum port not avaliable");
+                // enum port not available
+            } else {
+                // enum mappings
+                $enumEngine           = 'enum_numbers@'.$this->recordGenerators[$generatorId]['enumEngineId'];
+                $this->EnumSOAPEngine = new SOAPEngine($enumEngine,$soapEngines,$extraFormElements,$loginCredentials);
+                $_enum_class          = $this->EnumSOAPEngine->recordsClass;
+                $this->enumRecords    = new $_enum_class(&$this->EnumSOAPEngine);
+                $this->enumRecords->getAllowedDomains();
+            }
+        } else {
+            printf ("<font color=red>Error: soapengineId %s does not exist</font>",$this->recordGenerators[$generatorId]['enumEngineId']);
+        }
+
+		if ($_REQUEST['reseller_filter']) $this->template['reseller']=intval($_REQUEST['reseller_filter']);
+        if ($_REQUEST['customer_filter']) $this->template['customer']=intval($_REQUEST['customer_filter']);
     }
 
-    function showAddForm() {
-        print "
-        <p>
-        <table border=0 class=border width=100%>
-        <tr>
-            ";
-            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-            print "
-        	<td align=left>
-            ";
+    function generateRecords() {
 
-            print "
-            <input type=submit name=action value=Generate>
-            ";
+        print "<p>";
+        if (!$this->checkGenerateRequest()) {
+        	return false;
+        }
+        print "<p>Generating records
+        <ol>";
 
-            printf (" Name<input type=text size=20 name=name>");
 
-            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-            $result     = $this->SOAPEngine->soapclient->getGatewayGroups();
+        $i=0;
 
-            printf (" Group: ");
+        while ($i < $this->template['nr_records']) {
 
-            // Compose query
-            $Query=array('filter'  => array('name'=>''),
-                         'orderBy' => array('attribute' => 'name',
-                                            'direction' => 'ASC'
-                                      ),
-                         'range'   => array('start' => 0,
-			                                'count' => 1000)
-                         );
+            $number   = sprintf("%.0f", $this->start_padded + $i);
+            $username = substr($number,$this->template['strip_digits']);
+			$mapto    = 'sip:'.$username.'@'.$this->template['domain'];
 
-            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-            $result     = $this->SOAPEngine->soapclient->getGatewayGroups($Query);
+            print "<li>";
+            printf ('Generating number +%s with mapping %s ',$number,$mapto);
+            flush();
 
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
+            $enumMapping = array('tld'      => $this->template['tld'],
+                                 'number'   => $number,
+                                 'type'     => 'sip',
+                                 'mapto'    => $mapto,
+                                 'owner'    => $this->template['owner'],
+                                 'customer' => $this->template['customer'],
+                                 'reseller' => $this->template['reseller']
+                                );
+
+            if ($this->template['create_sip']) {
+                $groups=array();
+                if ($this->template['pstn']) $groups[]='free-pstn';
+            	printf ('and sip account %s@%s ',$username,$this->template['domain']);
+    
+                $sipAccount = array('account'  => $username.'@'.$this->template['domain'],
+                                    'quota'    => $this->template['quota'],
+                                    'prepaid'  => $this->template['prepaid'],
+                                    'password' => $this->template['password'],
+                                    'groups'   => $groups,
+                                    'owner'    => $this->template['owner'],
+                                    'customer' => $this->template['customer'],
+                                    'reseller' => $this->template['reseller']
+                                    );
             } else {
-            	print "<select name=group> ";
-                foreach ($result->groups as $_grp) {
-                	printf ("<option value='%s'>%s",$_grp,$_grp);
-                }
-            	printf (" </select>");
-            }
-            printf (" Address<input type=text size=25 name=address>");
-            printf (" Strip: <select name=strip>");
-            $t=0;
-            while ($t<10) {
-                print "<option value=$t>$t";
-                $t++;
+                unset($sipAccount);
             }
 
+            if (is_array($enumMapping)) $this->enumRecords->addRecord($enumMapping);
+            if (is_array($sipAccount))  $this->sipRecords->addRecord($sipAccount);
+
+            $i++;
+        }
+
+        print "</ol>";
+        return true;
+	}
+
+    function checkGenerateRequest() {
+        // check number of records
+        $this->template['create_sip']=trim($_REQUEST['create_sip']);
+
+        $nr_records=trim($_REQUEST['nr_records']);
+        if (!is_numeric($nr_records) || $nr_records < 1 || $nr_records > 200) {
+            print "<font color=red>Error: number of records must be a number between 1 and 200</font>";
+            return false;
+        }
+        $this->template['nr_records'] = $nr_records;
+
+        // length of generated record
+        $len=trim($_REQUEST['len']);
+        if (!is_numeric($len) || $len < 4 || $len > 15) {
+            print "<font color=red>Error: number length must be a number between 4 and 15</font>";
+            return false;
+        }
+        $this->template['len'] = $len;
+
+        // sip domain
+        $domain=trim($_REQUEST['domain']);
+        if (!strlen($domain)) {
+            print "<font color=red>Error: SIP domain missing</font>";
+            return false;
+        }
+        $this->template['domain'] = $domain;
+
+        $nr_start=trim($_REQUEST['nr_start']);
+        if (strlen($nr_start) && !is_numeric($nr_start)) {
+            print "<font color=red>Error: Prefix must be numeric</font>";
+            return false;
+        }
+        $this->template['nr_start'] = $nr_start;
+
+        // check ENUM TLD
+        list($prefix,$tld)=explode('@',trim($_REQUEST['range']));
+
+        $this->template['prefix']   = intval($prefix);
+        $this->template['tld']      = $tld;
+        $this->template['quota']    = intval($_REQUEST['quota']);
+        $this->template['owner']    = intval($_REQUEST['owner']);
+        $this->template['pstn']     = intval($_REQUEST['pstn']);
+        $this->template['prepaid']  = intval($_REQUEST['prepaid']);
+        $this->template['password'] = trim($_REQUEST['password']);
+
+        ///////////////////////////////////////
+        // logical checks
+        if (strlen($this->template['nr_start'])) {
+            $start = $this->template['nr_start'];
+        } else {
+            $start = 0;
+        }
+
+		$digits             = $this->template['len']-strlen($this->template['prefix']);
+        $this->start_padded = $this->template['prefix'].str_pad($start,$digits,'0');
+        $this->top          = sprintf("%.0f", $this->start_padded + pow(10,$digits-strlen($this->template['nr_start'])));
+        $maxNumbers         = pow(10,$digits-strlen($this->template['nr_start']));
+
+        if ($maxNumbers < $this->template['nr_records']) {
+            printf ("<font color=red>Error: Insufficient numbers in range, requested = %d, available = %d</font>",$this->template['nr_records'],$maxNumbers);
+            return false;
+        }
+
+        return true;
+    }
+
+    function showGeneratorForm() {
+    	if (!count($this->enumRecords->ranges)) {
+            print "<font color=red>Error: No ENUM ranges available</font>";
+        	return false;
+        }
+        print "
+        <form method=post target=_new>
+        <table cellspacing=1 cellpadding=1 bgcolor=black>
+        <tr>
+        <td>
+        <table cellspacing=3 cellpadding=4 width=100% bgcolor=#444444>
+        <tr>
+        <td>
+        <font color=white>
+        <b>";
+        print _("Record generator");
+        print "</b>
+        </font>
+        </td>
+        </tr>
+        </table>
+        </tr>
+        <tr>
+        <td colspan=100%>
+
+        <table cellpadding=2 bgcolor=white width=100%>
+        <tr>
+        <td colspan=3>
+        </td>
+        </tr>
+        ";
+    
+        print "
+        <tr>
+        <td>";
+        print _("ENUM range");
+        print "
+        <td align=right>";
+
+        if (is_array($this->enumRecords->ranges)) {
+            print "<select name=range>";
+            $selected_range[$_REQUEST['range']]='selected';
+            foreach ($this->enumRecords->ranges as $_range) {
+                $rangeId=$_range['prefix'].'@'.$_range['tld'];
+                printf ("<option value=%s %s>+%s under %s",$rangeId,$selected_range[$rangeId],$_range['prefix'],$_range['tld']);
+            }
             print "</select>";
-            printf (" Prefix<input type=text size=5 name=prefix>");
+        }
+
+        print "<td>
+        </tr>
+        ";
+
+        print "
+        <tr>
+        <td colspan=2>
+        ";
+        print "<b>";
+        print _("ENUM mapping template");
+        print "</b>";
+        print "</td>
+        </tr>
+        ";
+
+        print "
+        <tr>
+        <td>";
+        print _("Add prefix:");
+        printf ("
+        <td align=right>
+        <input type=text name=nr_start size=10 maxsize=15 value='%s'>
+        </td>
+        </tr>
+        ",$_REQUEST['nr_start']);
+        print "
+        <tr>
+        <td>";
+        print _("Number length:");
+        printf ("
+        <td align=right>
+        <input type=text name=len size=10 maxsize=15 value='%s'>
+        <tr>
+        <td>
+        ",$_REQUEST['len']);
+    
+        print _("SIP domain:");
+        print "
+        <td align=right>
+        ";
+
+        if (count($this->sipRecords->allowedDomains) > 0) {
+            print "
+            <select name=domain>
+            ";
+            $selected_range[$_REQUEST['domain']]='selected';
+
+            foreach ($this->sipRecords->allowedDomains as $domain) {
+                printf ("<option value='%s' %s>%s",$domain,$selected_range[$domain],$domain);
+            }
+            print "</select>  ";
+        } else {
+            print "<input type=text size=15 name=domain>";
+        }
+
+        print "
+        </td>
+        <td>";
+        print "
+        </td>
+        </tr>
+        ";
+
+        if ($_REQUEST['strip_digits']) {
+            $strip_digits=$_REQUEST['strip_digits'];
+        } else {
+            $strip_digits=0;
+        }
+
+        print "
+        <tr>
+        <td>";
+        print _("Strip first digits:");
+        printf ("
+        <td align=right>
+        <input type=text size=10 name=strip_digits value='%s'>
+        </td>
+        </tr>
+        ",$strip_digits);
+        print "
+        <tr>
+        <td>";
+        print _("Owner:");
+        printf ("
+        <td align=right><input type=text size=10 name=owner value='%s'>
+        <td>",$_REQUEST['owner']);
+        print "
+        </td>
+        </tr>";
+
+        if (count($this->sipRecords->allowedDomains) > 0) {
+            print "
+            <tr>
+            <td colspan=3><hr noshade size=1>
+            </td>
+            </tr>
+            ";
+    
+            print "
+            <tr>
+            <td colspan=2>
+            ";
+            print "<b>";
+            print _("SIP account template");
+            print "</b>";
+            print "</td>
+            </tr>
+            ";
 
             print "
-	        </td>
-        	<td align=right>
-            ";
-            print "
-	        </td>
-            ";
-            $this->printHiddenFormElements();
+            <tr>
+            <td>";
+            print _("Create SIP records");
+            if ($_REQUEST['create_sip']) {
+            	$checked_create_sip='checked';
+            } else {
+            	$checked_create_sip='';
+            }
+            printf ("
+            <td align=right><input type=checkbox name=create_sip value=1 %s>
+            </td>
+            </tr>
+            ",$checked_create_sip);
+
+            if ($_REQUEST['pstn']) {
+            	$checked_pstn='checked';
+            } else {
+            	$checked_pstn='';
+            }
 
             print "
-            </form>
+            <tr>
+            <td>";
+            print _("PSTN");
+            printf ("
+            <td align=right><input type=checkbox name=pstn value=1 %s>
+            </td>
+            </tr>
+            ",$checked_pstn);
+
+            if ($_REQUEST['prepaid']) {
+            	$checked_prepaid='checked';
+            } else {
+            	$checked_prepaid='';
+            }
+
+            print "
+            <tr>
+            <td>";
+            print _("Prepaid");
+            printf ("
+            <td align=right><input type=checkbox name=prepaid value=1 %s>
+            </td>
+            </tr>
+            ",$checked_prepaid);
+
+            print "
+            <tr>
+            <td>";
+            print _("Prefix Caller-ID");
+            printf ("
+            <td align=right><input type=text size=10 name=rpid_prefix value='%s'>
+            </td>
+            </tr>
+            ",$_REQUEST['rpid_prefix']);
+
+            print "
+            <tr>
+            <td>";
+            print _("Quota");
+            printf ("
+            <td align=right><input type=text size=10 name=quota value='%s'>
+            </td>
+            </tr>
+            ",$_REQUEST['quota']);
+
+            print "
+            <tr>
+            <td>";
+            print _("Password");
+            printf ("
+            <td align=right><input type=text size=10 name=password value='%s'>
+            </td>
+            </tr>
+            ",$_REQUEST['password']);
+
+        }
+
+        if ($_REQUEST['nr_records']) {
+            $nr_records=$_REQUEST['nr_records'];
+        } else {
+            $nr_records=1;
+        }
+
+        print "
+        <tr>
+        <td colspan=3>
+        <hr noshade size=1 with=100%>
+        </td>
+        </tr>
+        ";
+        print "
+        <tr>
+        <td>
+        ";
+
+        print "<input type=hidden value=Generate>";
+        print "<input type=submit value=Generate>";
+        printf ("<td align=right>
+        Number of records:<input type=text size=10 name=nr_records value='%s'>
+        ",$nr_records);
+        print "<td>";
+        print "
+        </tr>
+        ";
+
+        print "
+        <tr>
+        <td colspan=2>
+        <br>
+        <input type=hidden name=action value=Generate>
+        <p>";
+        print _("Existing records will not be overwritten. ");
+        print "</td>
+        </tr>
+        ";
+
+        $this->printHiddenFormElements();
+
+        print "
+        </table>
+        </form>
+        </td>
         </tr>
         </table>
         ";
     }
 
+    function printHiddenFormElements () {
+        printf("<input type=hidden name=generatorId value='%s'>",$this->generatorId);
+
+        if ($this->adminonly) {
+        	printf("<input type=hidden name=adminonly value='%s'>",$this->adminonly);
+        }
+
+        if ($this->template['customer']) {
+        	printf("<input type=hidden name=customer_filter value='%s'>",$this->template['customer']);
+        }
+
+        if ($this->template['reseller']) {
+        	printf("<input type=hidden name=reseller_filter value='%s'>",$this->template['reseller']);
+        }
+
+        foreach (array_keys($this->extraFormElements) as $element) {
+        	if (!strlen($this->extraFormElements[$element])) continue;
+            printf ("<input type=hidden name=%s value='%s'>\n",$element,$this->extraFormElements[$element]);
+        }
+
+    }
+
+    function getSoapEngineAllowed($soapEngines,$filter) {
+
+        // filter syntax:
+        // $filter="engine1:port1,port2,port3 engine2 engine3";
+        // where engine is a connection from ngnpro_engines.inc and
+        // port is valid port from that engine like sip_accounts or enum_numbers
+
+    	$_filter_els=explode(" ",trim($filter));
+		foreach(array_keys($soapEngines) as $_engine) {
+            //dprint("check engine $_engine");
+        	foreach ($_filter_els as $_filter) {
+                unset($_allowed_engine);
+                $_allowed_ports=array();
+
+                list($_allowed_engine,$_allowed_ports_els) = explode(":",$_filter);
+
+                //dprint ("_allowed_engine=$_allowed_engine, _allowed_ports=$_allowed_ports_els");
+                if ($_allowed_ports_els) {
+                	$_allowed_ports = explode(",",$_allowed_ports_els);
+                }
+
+            	if ($_engine == $_allowed_engine) {
+                	$soapEngines_checked[$_engine]=$soapEngines[$_engine];
+                    $this->allowedPorts[$_engine]=$_allowed_ports;
+                	continue;
+            	} else {
+                    //dprint ("$_engine != $_allowed_engine");
+                }
+        	}
+    	}
+
+		//dprint_r($soapEngines_checked);
+
+        return $soapEngines_checked;
+    }
+
 }
 
 class Actions {
-    var $actions=array();
+    // this class perfom actions on an array of entities returned by selections
+
+    var $actions = array();
     var $version = 1;
 
     function Actions(&$SOAPEngine) {
