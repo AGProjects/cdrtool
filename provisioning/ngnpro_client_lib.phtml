@@ -1390,8 +1390,8 @@ class SIPAccounts extends Records {
                 <td><b>Caller Id</b></td>
                 <td><b>Quota</b></td>
                 <td><b>Groups</b></td>
-                <td><b>Change date</b></td>
                 <td><b>Owner</b></td>
+                <td><b>Change date</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -1474,75 +1474,85 @@ class SIPAccounts extends Records {
                     foreach ($account->groups as $_grp) $groups.=$_grp.' ';
 
                     if ($this->version > 1) {
-        			$_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    urlencode($this->SOAPEngine->soapEngineId),
-                    urlencode($account->customer)
-                    );
+                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SOAPEngine->soapEngineId),
+                        urlencode($account->customer));
 
+						if ($account->owner) {
+                            $_owner_url = sprintf
+                            ("<a href=%s&service=customers@%s&customer_filter=%s>%s</a>",
+                            $this->url,
+                            urlencode($this->SOAPEngine->soapEngineId),
+                            urlencode($account->owner),
+                            $account->owner
+                            );
+                        } else {
+                        	$_owner_url='';
+                        }          
 
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s </td>
-                    <td><a href=%s>%s.%s</a></td>
-                    <td>%s</td>
-                    <td>%s %s</td>
-                    <td><a href=mailto:%s>%s</a></td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>
-                    ",
-                    $bgcolor,
-                    $index,
-                    $_customer_url,
-                    $account->reseller,
-                    $account->customer,
-                    $sip_account,
-                    $account->firstName,
-                    $account->lastName,
-                    $account->email,
-                    $account->email,
-                    $account->rpid,
-                    $account->quota,
-                    $groups,
-                    $account->changeDate,
-                    $account->owner,
-                    $_url,
-                    $actionText
-                    );
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s </td>
+                        <td><a href=%s>%s.%s</a></td>
+                        <td>%s</td>
+                        <td>%s %s</td>
+                        <td><a href=mailto:%s>%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>
+                        ",
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $account->reseller,
+                        $account->customer,
+                        $sip_account,
+                        $account->firstName,
+                        $account->lastName,
+                        $account->email,
+                        $account->email,
+                        $account->rpid,
+                        $account->quota,
+                        $groups,
+                        $_owner_url,
+                        $account->changeDate,
+                        $_url,
+                        $actionText
+                        );
                     } else {
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s </td>
-                    <td>%s</td>
-                    <td>%s %s</td>
-                    <td><a href=mailto:%s>%s</a></td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>
-                    ",
-                    $bgcolor,
-                    $index,
-                    $sip_account,
-                    $account->firstName,
-                    $account->lastName,
-                    $account->email,
-                    $account->email,
-                    $account->rpid,
-                    $account->quota,
-                    $groups,
-                    $account->changeDate,
-                    $account->owner,
-                    $_url,
-                    $actionText
-                    );
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s </td>
+                        <td>%s</td>
+                        <td>%s %s</td>
+                        <td><a href=mailto:%s>%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>
+                        ",
+                        $bgcolor,
+                        $index,
+                        $sip_account,
+                        $account->firstName,
+                        $account->lastName,
+                        $account->email,
+                        $account->email,
+                        $account->rpid,
+                        $account->quota,
+                        $groups,
+                        $account->owner,
+                        $account->changeDate,
+                        $_url,
+                        $actionText
+                        );
                     }
 
                     $i++;
@@ -2074,10 +2084,22 @@ class SIPAliases extends Records {
 
                     if ($this->version > 1) {
 
-        			$_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    urlencode($this->SOAPEngine->soapEngineId),
-                    urlencode($alias->customer)
-                    );
+                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SOAPEngine->soapEngineId),
+                        urlencode($alias->customer)
+                        );
+    
+						if ($alias->owner) {
+                            $_owner_url = sprintf
+                            ("<a href=%s&service=customers@%s&customer_filter=%s>%s</a>",
+                            $this->url,
+                            urlencode($this->SOAPEngine->soapEngineId),
+                            urlencode($alias->owner),
+                            $alias->owner
+                            );
+                        } else {
+                        	$_owner_url='';
+                        }          
 
                     printf("
                     <tr bgcolor=%s>
@@ -2099,7 +2121,7 @@ class SIPAliases extends Records {
                     $alias->id->domain,
                     $alias->target->username,
                     $alias->target->domain,
-                    $alias->owner,
+                    $_owner_url,
                     $alias->changeDate,
                     $_url,
                     $actionText
@@ -3092,120 +3114,132 @@ class ENUMmappings extends Records {
                             );
 
                     		if ($this->version > 1) {
-        					$_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    		urlencode($this->SOAPEngine->soapEngineId),
-                    		urlencode($number->customer)
-                    		);
-
-                            printf("
-                            <tr bgcolor=%s>
-                            <td>%s</td>
-                            <td><a href=%s>%s.%s</a></td>
-                    		<td><a href=%s>+%s</a></td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td><a href=%s>%s</a></td>
-                            </tr>",
-                            $bgcolor,
-                            $index,
-                            $_customer_url,
-                            $number->reseller,
-                            $number->customer,
-                            $_number_url,
-                            $number->id->number,
-                            $number->id->tld,
-                            ucfirst($_mapping->type),
-                            $_mapping->mapto,
-                            $_mapping->ttl,
-                            $_mapping->priority,
-                            $number->owner,
-                            $number->info,
-                            $number->changeDate,
-                            $_url,
-                            $actionText
-                            );
+                                $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                                urlencode($this->SOAPEngine->soapEngineId),
+                                urlencode($number->customer)
+                                );
+    
+                                if ($number->owner) {
+                                    $_owner_url = sprintf
+                                    ("<a href=%s&service=customers@%s&customer_filter=%s>%s</a>",
+                                    $this->url,
+                                    urlencode($this->SOAPEngine->soapEngineId),
+                                    urlencode($number->owner),
+                                    $number->owner
+                                    );
+                                } else {
+                                    $_owner_url='';
+                                }          
+    
+                                printf("
+                                <tr bgcolor=%s>
+                                <td>%s</td>
+                                <td><a href=%s>%s.%s</a></td>
+                                <td><a href=%s>+%s</a></td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td><a href=%s>%s</a></td>
+                                </tr>",
+                                $bgcolor,
+                                $index,
+                                $_customer_url,
+                                $number->reseller,
+                                $number->customer,
+                                $_number_url,
+                                $number->id->number,
+                                $number->id->tld,
+                                ucfirst($_mapping->type),
+                                $_mapping->mapto,
+                                $_mapping->ttl,
+                                $_mapping->priority,
+                                $_owner_url,
+                                $number->info,
+                                $number->changeDate,
+                                $_url,
+                                $actionText
+                                );
                             } else {
-                            printf("
-                            <tr bgcolor=%s>
-                            <td>%s</td>
-                            <td>+%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td><a href=%s>%s</a></td>
-                            </tr>",
-                            $bgcolor,
-                            $index,
-                            $number->id->number,
-                            $number->id->tld,
-                            ucfirst($_mapping->type),
-                            $_mapping->mapto,
-                            $_mapping->ttl,
-                            $_mapping->priority,
-                            $number->owner,
-                            $number->info,
-                            $_url,
-                            $actionText
-                            );
+                                printf("
+                                <tr bgcolor=%s>
+                                <td>%s</td>
+                                <td>+%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td><a href=%s>%s</a></td>
+                                </tr>",
+                                $bgcolor,
+                                $index,
+                                $number->id->number,
+                                $number->id->tld,
+                                ucfirst($_mapping->type),
+                                $_mapping->mapto,
+                                $_mapping->ttl,
+                                $_mapping->priority,
+                                $number->owner,
+                                $number->info,
+                                $_url,
+                                $actionText
+                                );
                             }
                         } else {
                     		if ($this->version > 1) {
-                            printf("
-                            <tr bgcolor=%s>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td></td>
-                            <td></td>
-                            <td>%s</td>
-                            <td><a href=%s>%s</a></td>
-                            </tr>",
-                            $bgcolor,
-                            ucfirst($_mapping->type),
-                            $_mapping->mapto,
-                            $_mapping->ttl,
-                            $_mapping->priority,
-                            $number->changeDate,
-                            $_url,
-                            $actionText
-                            );
+                                printf("
+                                <tr bgcolor=%s>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td></td>
+                                <td></td>
+                                <td>%s</td>
+                                <td><a href=%s>%s</a></td>
+                                </tr>",
+                                $bgcolor,
+                                ucfirst($_mapping->type),
+                                $_mapping->mapto,
+                                $_mapping->ttl,
+                                $_mapping->priority,
+                                $number->changeDate,
+                                $_url,
+                                $actionText
+                                );
                             } else {
-                            printf("
-                            <tr bgcolor=%s>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td></td>
-                            <td></td>
-                            <td>%s</td>
-                            <td><a href=%s>%s</a></td>
-                            </tr>",
-                            $bgcolor,
-                            ucfirst($_mapping->type),
-                            $_mapping->mapto,
-                            $_mapping->ttl,
-                            $_mapping->priority,
-                            $_url,
-                            $actionText
-                            );
+                                printf("
+                                <tr bgcolor=%s>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td></td>
+                                <td></td>
+                                <td>%s</td>
+                                <td><a href=%s>%s</a></td>
+                                </tr>",
+                                $bgcolor,
+                                ucfirst($_mapping->type),
+                                $_mapping->mapto,
+                                $_mapping->ttl,
+                                $_mapping->priority,
+                                $_url,
+                                $actionText
+                                );
                             }
                         }
                         $j++;

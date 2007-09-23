@@ -1687,14 +1687,6 @@ class SIPSettings {
             $checked_voicemail="checked";
         }
 
-        if ($this->Preferences['LoggedInAsSubscriber']) {
-            if ($this->SIPACLS[$key]["SubscriberMayEditIt"]) {
-                $disabled_box = "";
-            } else {
-                $disabled_box   = "disabled=true";
-            }
-        }
-
         $chapter=sprintf(_("Voicemail"));
         $this->showChapter($chapter);
 
@@ -2095,32 +2087,29 @@ class SIPSettings {
 
 		dprint_r($this->Preferences);
 
-        if (!$this->Preferences['LoggedInAsSubscriber']) {
-
-            if ($advanced) {
-                if (!$this->Preferences['advanced']) {
-            		$this->setPreference("advanced","1");
-                    $this->somethingChanged=1;
-                }
-    
-                $voicemail=1;
-                $this->SIPACLS['voicemail']=array("Group"=>"voicemail",
-                                            "WEBName" =>sprintf (_("Voice mailbox")),
-                                            "SubscriberMayEditIt"=>"0",
-                                            "SubscriberMaySeeIt"=>0
-                                            );
+        if ($advanced) {
+            if (!$this->Preferences['advanced']) {
+                $this->setPreference("advanced","1");
+                $this->somethingChanged=1;
             }
 
-            if (!$this->voicemail['Account'] && $voicemail) {
-                dprint ("Create voicemail account ...");
-                if ($this->createVoicemail()) {
-                    $this->setVoicemailDiversions();
-                    $this->createdVoicemailnow=1;
-                }
-            } else if ($this->voicemail['Account'] && !$voicemail) {
-                if ($this->deleteVoicemail()) {
-                    $this->voicemail['Account']="";
-                }
+            $voicemail=1;
+            $this->SIPACLS['voicemail']=array("Group"=>"voicemail",
+                                        "WEBName" =>sprintf (_("Voice mailbox")),
+                                        "SubscriberMayEditIt"=>"1",
+                                        "SubscriberMaySeeIt"=>0
+                                        );
+        }
+
+        if (!$this->voicemail['Account'] && $voicemail) {
+            dprint ("Create voicemail account ...");
+            if ($this->createVoicemail()) {
+                $this->setVoicemailDiversions();
+                $this->createdVoicemailnow=1;
+            }
+        } else if ($this->voicemail['Account'] && !$voicemail) {
+            if ($this->deleteVoicemail()) {
+                $this->voicemail['Account']="";
             }
         }
 
@@ -2150,11 +2139,10 @@ class SIPSettings {
                 $result->rpid=$rpid;
                 $this->somethingChanged=1;
             }
-        }
 
-		if ($this->loginType == 'admin' || $this->loginType == 'reseller') {
             $owner=intval($owner);
             if ($owner != $this->owner) {
+                dprint ("change the owner");
 	    		$result->owner=$owner;
     	        $this->somethingChanged=1;
             }
