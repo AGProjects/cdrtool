@@ -5832,8 +5832,10 @@ class Customers extends Records {
 
     function showSeachFormCustom() {
         printf (" Username<input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
-        printf (" Name<input type=text size=10 name=name_filter value='%s'>",$this->filters['name']);
+        printf (" FName<input type=text size=7 name=firstName_filter value='%s'>",$this->filters['firstName']);
+        printf (" LName<input type=text size=7 name=lastName_filter value='%s'>",$this->filters['lastName']);
         printf (" Org<input type=text size=10 name=organization_filter value='%s'>",$this->filters['organization']);
+
         if ($this->adminonly) {
             if ($this->filters['only_resellers']) $check_only_resellers_filter='checked';
         	printf (" Resellers<input type=checkbox name=only_resellers_filter value=1 %s>",$check_only_resellers_filter);

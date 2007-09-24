@@ -699,8 +699,8 @@ class Rate {
 
         if (!$this->rateValues) {
         	$this->rateNotFound=true;
-            $log=sprintf("Error: Cannot find rates for callid=%s, customer %s, destination=%s, profile=%s, app=%s",
-            $this->callId,$this->CustomerProfile,$this->DestinationId,$this->profileName,$this->applicationType);
+            $log=sprintf("Error: Cannot find rates for callid=%s, billing party=%s, customer %s, gateway=%s, destination=%s, profile=%s, app=%s",
+            $this->callId,$this->BillingPartyId,$this->CustomerProfile,$this->gateway,$this->DestinationId,$this->profileName,$this->applicationType);
             dprint($log);
             $subject=$this->CDRS->CDRTool['provider']['service']." - CDRTool rating problem";
             mail($this->toEmail, $subject, $log, $this->extraHeaders);
