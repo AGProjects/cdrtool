@@ -5102,9 +5102,7 @@ class DomainStatistics extends Records {
     var $maxrowsperpage= 200;
 
     function DomainStatistics(&$SOAPEngine) {
-        $this->filters   = array(
-                           'domain'       => trim($_REQUEST['domain_filter'])
-                           );
+        $this->filters   = array('domain'       => trim($_REQUEST['domain_filter']));
 
 		$this->Records(&$SOAPEngine);
     }
@@ -5127,6 +5125,7 @@ class DomainStatistics extends Records {
             $error_code = $result->getCode();
             printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
+
         } else {
 
 			$this->rows = count($result);
@@ -5218,9 +5217,7 @@ class DomainStatistics extends Records {
     }
 
     function showSeachFormCustom() {
-
         printf (" Domain<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
-
     }
 
 }
@@ -5275,25 +5272,36 @@ class Customers extends Records {
                                  );
 
     var $FieldsReadOnly=array(
-                              'id',
-                              'reseller',
-                              'companyCode',
-                              'balance',
-                              'credit'
+                              'id'          => array('type'=>'integer'),
+                              'reseller'    => array('type'=>'integer')
                               );
     var $Fields=array(
-                              'aliasOf'     => array('type'=>'integer',
-                                                     'name'=>'Impersonate'),
-                              'resellerActive' => array ('type' => 'boolean',
-                                                         'name' => 'Reseller active'),
-                              'username'       => array('type'=>'text'),
-                              'password'       => array('type'=>'text',
+                              'aliasOf'     => array('type'       =>'integer',
+                                                     'name'       =>'Impersonate'),
+                              'companyCode' => array('type'       =>'text',
+                                                     'name'       =>'Company code',
+                                                     'adminonly'  => true
+                                                     ),
+                              'balance'     => array('type'       => 'float',
+                                                     'adminonly'  => true
+                                                     ),
+                              'credit'      => array('type'       => 'float',
+                                                     'adminonly'  => true
+                                                     ),
+                           'resellerActive' => array ('type'      => 'boolean',
+                                                      'name'      => 'Reseller active',
+                                                      'adminonly' => true
+                                                     ),
+                              'username'    => array('type'       =>'text',
+                                                     'adminonly'  => true
+                                                     ),
+                              'password'    => array('type'=>'text',
                                                      'name'=>'Password'),
-                              'firstName'      => array('type'=>'text',
+                              'firstName'   => array('type'=>'text',
                                                      'name'=>'First name'),
-                              'lastName'       => array('type'=>'text',
+                              'lastName'    => array('type'=>'text',
                                                      'name'=>'Last name'),
-                              'organization'   => array('type'=>'text'),
+                              'organization'=> array('type'=>'text'),
                               'tel'         => array('type'=>'text'),
                               'fax'         => array('type'=>'text'),
                               'sip'         => array('type'=>'text'),
@@ -5311,9 +5319,11 @@ class Customers extends Records {
                               'vatNumber'   => array('type'=>'text',
                                                      'name'=>'VAT number'),
                               'bankAccount' => array('type'=>'text',
-                                                    'name'=>'Bank account'),
-                              'billingAddress' => array('type'=>'textarea',
-                                                        'name'=>'Billing address')
+                                                     'name'=>'Bank account'
+                                                     ),
+                           'billingAddress' => array('type'=>'textarea',
+                                                     'name'=>'Billing address'
+                                                     )
                               );
 
         var $states=array(
@@ -5658,6 +5668,7 @@ class Customers extends Records {
                            'city'           => trim($_REQUEST['city_filter']),
                            'only_resellers' => trim($_REQUEST['only_resellers_filter'])
                            );
+
 		$this->Records(&$SOAPEngine);
 
     }
@@ -5891,9 +5902,11 @@ class Customers extends Records {
 
     function showRecord($customer){
 
+        /*
         print "<pre>";
         print_r($customer);
         print "</pre>";
+        */
 
         print "<table border=0 cellpadding=10>";
         print "
@@ -5915,7 +5928,7 @@ class Customers extends Records {
         <td class=border>Field</td>
         <td class=border>Value</td>
         </tr>");
-        foreach ($this->FieldsReadOnly as $item) {
+        foreach (array_keys($this->FieldsReadOnly) as $item) {
             printf ("<tr>
             <td class=border valign=top>%s</td>
             <td class=border>%s</td>
@@ -5987,41 +6000,75 @@ class Customers extends Records {
 
             } else {
                 if ($this->Fields[$item]['type'] == 'textarea') {
-                    printf ("<tr>
+                    printf ("
+                    <tr>
                     <td class=border valign=top>%s</td>
                     <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
-                    </tr>",
+                    </tr>
+                    ",
                     $item_name,
                     $item,
                     $customer->$item
                     );
                 } elseif ($this->Fields[$item]['type'] == 'boolean') {
-                    $_var='selected_'.$item;
-                    ${$_var}[$customer->$item]='selected';
+                    if ($this->Fields[$item]['adminonly'] && !$this->adminonly) {
+                        printf ("
+                        <tr>
+                        <td class=border valign=top>%s</td>
+                        <td class=border><input name=%s_form type=hidden value='%s'>%s</td>
+                        </tr>
+                        ",
+                        $item_name,
+                        $item,
+                        $customer->$item,
+                        $customer->$item
+                        );
+                    } else {
+                    	$_var='select_'.$item;
+                        ${$_var}[$customer->$item]='selected';
 
-                    printf ("<tr>
-                    <td class=border valign=top>%s</td>
-                    <td class=border>
-                    <select name=%s_form>
-                    <option value='0' %s>False
-                    <option value='1' %s>True
-                    </select>
-                    </td>
-                    </tr>",
-                    $item_name,
-                    $item,
-                    ${$_var}[0],
-                    ${$_var}[1]
-                    );
+                        printf ("
+                        <tr>
+                        <td class=border valign=top>%s</td>
+                        <td class=border>
+                        <select name=%s_form>
+                        <option value='0' %s>False
+                        <option value='1' %s>True
+                        </select>
+                        </td>
+                        </tr>
+                        ",
+                        $item_name,
+                        $item,
+                        ${$_var}[0],
+                        ${$_var}[1]
+                        );
+                    }
                 } else {
-                    printf ("<tr>
-                    <td class=border valign=top>%s</td>
-                    <td class=border><input name=%s_form size=30 type=text value='%s'></td>
-                    </tr>",
-                    $item_name,
-                    $item,
-                    $customer->$item
-                    );
+                    if ($this->Fields[$item]['adminonly'] && !$this->adminonly) {
+                        printf ("
+                        <tr>
+                        <td class=border valign=top>%s</td>
+                        <td class=border><input name=%s_form type=hidden value='%s'>%s</td>
+                        </tr>
+                        ",
+                        $item_name,
+                        $item,
+                        $customer->$item,
+                        $customer->$item
+                        );
+                    } else {
+                        printf ("
+                        <tr>
+                        <td class=border valign=top>%s</td>
+                        <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                        </tr>
+                        ",
+                        $item_name,
+                        $item,
+                        $customer->$item
+                        );
+                    }
                 }
             }
         }
@@ -6042,9 +6089,7 @@ class Customers extends Records {
         */
 
 		foreach ($customer->properties as $_property) {
-            if (in_array($_property->name,array_keys($this->propertiesItems))) {
-        		$this->propertiesItems[$_property->name]['value']=$_property->value;
-            }
+        	$this->propertiesItems[$_property->name]['value']=$_property->value;
         }
 
 
@@ -6097,8 +6142,8 @@ class Customers extends Records {
                 ucfirst($this->customerProperties[$item]['category']),
                 $item_print,
                 $item,
-                $this->customerProperties[$item]['value'],
-                $this->customerProperties[$item]['name']
+                $this->propertiesItems[$item]['value'],
+                $this->propertiesItems[$item]['name']
                 );
             }
         }
@@ -6128,7 +6173,10 @@ class Customers extends Records {
             return false;
         }
 
-        $customer_old=$customer;
+        $customer->credit      = floatval($customer->credit);
+        $customer->balance     = floatval($customer->balance);
+
+        $customer_old = $customer;
 
 		$properties=array();
 
@@ -6145,14 +6193,28 @@ class Customers extends Records {
     
             }
 
+            foreach (array_keys($this->customerProperties) as $item) {
+                $var_name=$item.'_form';
+                $var_value=trim($_REQUEST[$var_name]);
+                if (strlen($var_value)) {
+                    $properties[]=array('name'     => $item,
+                                        'value'    => $var_value,
+                                        'category' => $this->customerProperties[$item]['category']
+                                        );
+                }
+    
+            }
+
             $customer->properties=$properties;
 
         } else {
             foreach (array_keys($this->Fields) as $item) {
                 $var_name=$item.'_form';
                 //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
-                if ($this->Fields[$item]['type'] == 'integer') {
+                if ($this->Fields[$item]['type'] == 'integer' || $this->Fields[$item]['type'] == 'boolean') {
                 	$customer->$item = intval($_REQUEST[$var_name]);
+                } else if ($this->Fields[$item]['type'] == 'float') {
+                	$customer->$item = floatval($_REQUEST[$var_name]);
                 } else {
                 	$customer->$item = trim($_REQUEST[$var_name]);
                 }
