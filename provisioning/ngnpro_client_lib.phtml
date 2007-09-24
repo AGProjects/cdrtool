@@ -5223,9 +5223,9 @@ class DomainStatistics extends Records {
 }
 
 class Customers extends Records {
+    var $children     = array();
 
-    var $maxrowsperpage= 20;
-    var $sortElements=array(
+    var $sortElements = array(
 							'changeDate'   => 'Change date',
                             'username'     => 'Username',
                             'firstName'    => 'First name',
@@ -5731,6 +5731,12 @@ class Customers extends Records {
 
 			$this->rows = $result->total;
 
+			if ($this->rows == 1 ) {
+               $customer = $result->accounts[0];
+                $this->showRecord($customer);
+                return true;
+            }
+
             if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
             }
@@ -5843,11 +5849,7 @@ class Customers extends Records {
 
             print "</table>";
 
-			if ($this->rows == 1 ) {
-                $this->showRecord($customer);
-            } else {
-            	$this->showPagination($maxrows);
-            }
+            $this->showPagination($maxrows);
 
             return true;
         }
@@ -5908,21 +5910,19 @@ class Customers extends Records {
         print "</pre>";
         */
 
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+
+        print "<input type=hidden name=action value=Update>";
+
         print "<table border=0 cellpadding=10>";
         print "
         <tr>
+        <td colspan=2><input type=submit value=Update></td>
+        </tr>
+        <tr>
         <td valign=top>
-        <h3>Customer data</h3>
         <table border=0>
         ";
-
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-        print "<input type=hidden name=action value=Update>";
-        print "<input type=hidden name=section value=customer_data>";
-
-        print "<tr>
-        <td colspan=2 class=border><input type=submit value=Update>
-        </td></tr>";
 
         printf ("<tr bgcolor=lightgrey>
         <td class=border>Field</td>
@@ -5937,6 +5937,7 @@ class Customers extends Records {
             $customer->$item
             );
         }
+
         foreach (array_keys($this->Fields) as $item) {
             if ($this->Fields[$item]['name']) {
                 $item_name=$this->Fields[$item]['name'];
@@ -5954,6 +5955,25 @@ class Customers extends Records {
                 $this->showTimezones($customer->$item);
 
                 print "</td>
+                </tr>
+                ";
+            } else if ($item=='state') {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>",
+                $item_name
+                );
+                print "<td class=border>
+                <select name=state_form>";
+
+				$selected_state[$customer->state]='selected';
+
+                foreach ($this->states as $_state) {
+                    printf ("<option value='%s' %s>%s",$_state['value'],$selected_state[$_state['value']],$_state['label']);
+                }
+
+                print "
+                </select>
+                </td>
                 </tr>
                 ";
             } else if ($item=='country') {
@@ -5976,27 +5996,66 @@ class Customers extends Records {
                 </tr>
                 ";
 
+            } else if ($item=='resellerActive' && ($customer->reseller != $customer->id)) {
+            	printf ("<input name=%s_form type=hidden value='%s'>",
+                        $item,
+                        $customer->$item);
 
-            } else if ($item=='state') {
-                printf ("<tr>
-                <td class=border valign=top>%s</td>",
-                $item_name
-                );
+            } else if ($item=='aliasOf') {
 
-                print "<td class=border>
-                <select name=state_form>";
-
-				$selected_state[$customer->state]='selected';
-
-                foreach ($this->states as $_state) {
-                    printf ("<option value='%s' %s>%s",$_state['value'],$selected_state[$_state['value']],$_state['label']);
+		        if ($customer->reseller != $customer->id) {
+                	if ($this->adminonly || $this->reseller == $customer->reseller) {
+                        printf ("<tr>
+                        <td class=border valign=top>%s</td>",
+                        $item_name
+                        );
+                        print "<td class=border>      ";
+                        $this->getChildren($customer->reseller);
+                        if (count($this->children)> 0) {
+                            print "
+                            <select name=aliasOf_form>
+                            <option>";
+                            $selected_aliasOf[$customer->aliasOf]='selected';
+                            foreach (array_keys($this->children) as $_child) {
+                                printf ("<option value='%s' %s>%s. %s %s",$_child,$selected_aliasOf[$_child],$_child,$this->children[$_child]['firstName'],$this->children[$_child]['lastName']);
+                            }
+        
+                            print "
+                            </select>
+                            ";
+                        } else {
+                            printf ("
+                            <input name=%s_form size=30 type=text value='%s'>
+                            ",
+                            $item,
+                            $customer->$item
+                            );
+                        }
+                        print "
+                        </td>
+                        </tr>
+                        ";
+                    } else {
+                        printf ("
+                        <tr>
+                        <td class=border valign=top>%s</td>
+                        <td class=border><input name=%s_form type=hidden value='%s'>%s</td>
+                        </tr>
+                        ",
+                        $item_name,
+                        $item,
+                        $customer->$item,
+                        $customer->$item
+                        );
+                    }
+       	 		} else {
+                    printf ("
+                    <input name=%s_form type=hidden value='%s'>
+                    ",
+                    $item,
+                    $customer->$item
+                    );
                 }
-
-                print "
-                </select>
-                </td>
-                </tr>
-                ";
 
             } else {
                 if ($this->Fields[$item]['type'] == 'textarea') {
@@ -6077,7 +6136,7 @@ class Customers extends Records {
 
         $this->printHiddenFormElements();
 
-        print "</form>";
+        //print "</form>";
         print "
         </table>
         ";
@@ -6095,14 +6154,7 @@ class Customers extends Records {
 
         print "</td>
         <td valign=top>
-        <h3>Customer properties</h3>
         <table border=0>";
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-        print "<input type=hidden name=action value=Update>";
-        print "<input type=hidden name=section value=customer_properties>";
-        print "<tr>
-        <td colspan=4 class=border><input type=submit value=Update>
-        </td></tr>";
 
         printf ("<tr bgcolor=lightgrey>
         <td class=border>Category</td>
@@ -6176,60 +6228,56 @@ class Customers extends Records {
         $customer->credit      = floatval($customer->credit);
         $customer->balance     = floatval($customer->balance);
 
+        foreach ($customer->properties as $_property) {
+            $properties[]=$_property;
+        }
+
+        $customer->properties=$properties;
+
         $customer_old = $customer;
 
 		$properties=array();
 
-		if ($_REQUEST['section'] == 'customer_properties') {
-            foreach (array_keys($this->propertiesItems) as $item) {
-                $var_name=$item.'_form';
-                $var_value=trim($_REQUEST[$var_name]);
-                if (strlen($var_value)) {
-                    $properties[]=array('name'     => $item,
-                                        'value'    => $var_value,
-                                        'category' => $this->propertiesItems[$item]['category']
-                                        );
-                }
-    
+        foreach (array_keys($this->propertiesItems) as $item) {
+            $var_name=$item.'_form';
+            $var_value=trim($_REQUEST[$var_name]);
+            if (strlen($var_value)) {
+                $properties[]=array('name'     => $item,
+                                    'value'    => $var_value,
+                                    'category' => $this->propertiesItems[$item]['category']
+                                    );
             }
-
-            foreach (array_keys($this->customerProperties) as $item) {
-                $var_name=$item.'_form';
-                $var_value=trim($_REQUEST[$var_name]);
-                if (strlen($var_value)) {
-                    $properties[]=array('name'     => $item,
-                                        'value'    => $var_value,
-                                        'category' => $this->customerProperties[$item]['category']
-                                        );
-                }
-    
+ 
+        }
+ 
+        foreach (array_keys($this->customerProperties) as $item) {
+            $var_name=$item.'_form';
+            $var_value=trim($_REQUEST[$var_name]);
+            if (strlen($var_value)) {
+                $properties[]=array('name'     => $item,
+                                    'value'    => $var_value,
+                                    'category' => $this->customerProperties[$item]['category']
+                                    );
             }
-
-            $customer->properties=$properties;
-
-        } else {
-            foreach (array_keys($this->Fields) as $item) {
-                $var_name=$item.'_form';
-                //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
-                if ($this->Fields[$item]['type'] == 'integer' || $this->Fields[$item]['type'] == 'boolean') {
-                	$customer->$item = intval($_REQUEST[$var_name]);
-                } else if ($this->Fields[$item]['type'] == 'float') {
-                	$customer->$item = floatval($_REQUEST[$var_name]);
-                } else {
-                	$customer->$item = trim($_REQUEST[$var_name]);
-                }
+        }
+ 
+        $customer->properties=$properties;
+ 
+        foreach (array_keys($this->Fields) as $item) {
+            $var_name=$item.'_form';
+            //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
+            if ($this->Fields[$item]['type'] == 'integer' || $this->Fields[$item]['type'] == 'boolean') {
+                $customer->$item = intval($_REQUEST[$var_name]);
+            } else if ($this->Fields[$item]['type'] == 'float') {
+                $customer->$item = floatval($_REQUEST[$var_name]);
+            } else {
+                $customer->$item = trim($_REQUEST[$var_name]);
             }
-
-            foreach ($customer->properties as $_property) {
-        		$properties[]=$_property;
-        	}
-
-            $customer->properties=$properties;
         }
 
         $function=array('commit'   => array('name'       => 'updateAccount',
                                             'parameters' => array($customer),
-                                            'logs'       => array('success' => sprintf('<p>Customer id %s has been updated',strlen($this->filters['customer'])))
+                                            'logs'       => array('success' => sprintf('<p>Customer id %s has been updated',$customer->id))
                                             ),
                         'rollback' => array('name'       => 'updateAccount',
                                             'parameters' => array($customer_old)
@@ -6260,6 +6308,54 @@ class Customers extends Records {
         fclose($fp);
         print "</select>";
     }
+
+    function getChildren($reseller) {
+        // Filter
+        $filter=array('reseller'     => intval($reseller));
+
+        // Range
+        $range=array('start' => 0,
+                     'count' => 1000
+                     );
+
+        // Order
+        $orderBy = array('attribute' => 'firstName',
+                         'direction' => 'ASC'
+                         );
+
+        // Compose query
+        $Query=array('filter'     => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getCustomers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            $i=0;
+            if ($result->total > 100) return;
+            while ($i < $result->total) {
+            	$customer = $result->accounts[$i];
+
+               	$this->children[$customer->id]=array('firstName'    => $customer->firstName,
+                                                     'lastName'     => $customer->lastName,
+                                                     'organization' => $customer->organization
+                                               );
+               	$i++;
+            }
+        }
+    }
+
 }
 
 class recordGenerator extends SOAPEngine {
