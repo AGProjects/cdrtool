@@ -1620,6 +1620,8 @@ class SIPAccounts extends Records {
 
     function showAddForm() {
 		if ($this->selectionActive) return;
+        if (!$this->adminonly && count($this->allowedDomains) < 1) return;
+
         print "
         <p>
         <table border=0 class=border width=100%>
@@ -1635,13 +1637,15 @@ class SIPAccounts extends Records {
             ";
 
             printf (" User<input type=text size=15 name=account value='%s'>",$_REQUEST['account']);
-            if (is_array($this->allowedDomains)) {
+            if (count($this->allowedDomains) > 0) {
             	print "@<select name=domain>";
                 foreach ($this->allowedDomains as $_domain) {
                     print "<option value=$_domain>$_domain\n";
                 }
                 print "</select>";
 
+            } else {
+                printf ("<input type=text name=domain size=10 value='%s'>",$_REQUEST['domain']);
             }
 
             printf (" Pass<input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
@@ -2220,6 +2224,8 @@ class SIPAliases extends Records {
 
     function showAddForm() {
 		if ($this->selectionActive) return;
+        if (!$this->adminonly && count($this->allowedDomains) < 1) return;
+
         print "
         <p>
         <table border=0 class=border width=100%>
@@ -2287,11 +2293,6 @@ class SIPAliases extends Records {
 
         } else {
             printf ("<p><font color=red>Error: Missing SIP domain</font>");
-            return false;
-        }
-
-		if (is_array($this->allowedDomains) && !in_array($domain,$this->allowedDomains)) {
-            printf ("<p><font color=red>Error: SIP domain %s is not allowed</font>",$domain);
             return false;
         }
 
@@ -2855,6 +2856,7 @@ class ENUMranges extends Records {
 }
 
 class ENUMmappings extends Records {
+
     var $sortElements=array('changeDate' => 'Change date',
                             'number'     => 'Number',
                             'tld'        => 'TLD'
@@ -3441,64 +3443,67 @@ class ENUMmappings extends Records {
         <p>
         <table border=0 class=border width=100%>
         <tr>
-            ";
-            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-            print "
-        	<td align=left>
-            ";
+        ";
 
-            print "
-            <input type=submit name=action value=Add>
-            ";
-            printf (" Number +<input type=text size=15 name=number value='%s'>",$this->filters['number']);
-            printf (" TLD");
-            if (is_array($this->allowedDomains)) {
-            	$selected_tld[$this->filters['tld']]='selected';
-            	print "<select name=tld>";
-                foreach ($this->allowedDomains as $_tld) {
-                    printf ("<option value=%s %s>%s\n",$_tld,$selected_tld[$_tld],$_tld);
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "
+        <td align=left>
+        ";
+
+        print "
+        <input type=submit name=action value=Add>
+        ";
+        printf (" Number +<input type=text size=15 name=number value='%s'>",$this->filters['number']);
+        printf (" TLD");
+        if (count($this->allowedDomains) >0) {
+            $selected_tld[$this->filters['tld']]='selected';
+            print "<select name=tld>";
+            foreach ($this->allowedDomains as $_tld) {
+                printf ("<option value=%s %s>%s\n",$_tld,$selected_tld[$_tld],$_tld);
+            }
+            print "</select>";
+        } else {
+            printf ("<input type=text size=15 name=tld value='%s'>",$this->filters['tld']);
+        }
+
+        printf (" Map to");
+                print "<select name=type>
+                ";
+                reset($this->NAPTR_services);
+                while (list($k,$v) = each($this->NAPTR_services)) {
+                    printf ("<option value='%s' %s>%s",$k,$selected_naptr_service[$k],$this->NAPTR_services[$k]['webname']);
                 }
-                print "</select>";
-            } else {
-                printf ("<input type=text size=15 name=tld value='%s'>",$this->filters['tld']);
-            }
-    	    printf (" Map to");
-                    print "<select name=type>
-                    ";
-                    reset($this->NAPTR_services);
-                    while (list($k,$v) = each($this->NAPTR_services)) {
-                    	printf ("<option value='%s' %s>%s",$k,$selected_naptr_service[$k],$this->NAPTR_services[$k]['webname']);
-                    }
-   
-                    print "
-                    </select>
-                    ";
-            printf (" <input type=text size=25 name=mapto>");
-            printf (" TTL<input type=text size=5 name=ttl value=3600>");
-            print "Customer";
-            if ($this->adminonly) {
-            	$this->showResellerForm('reseller');
-                print ".";
-            	$this->showCustomerForm('customer');
-            } else {
-            	$this->showCustomerForm('customer');
-            }
 
-            printf (" Owner<input type=text size=5 name=owner>");
-            printf (" Prio<input type=text size=3 name=priority>");
+                print "
+                </select>
+                ";
+        printf (" <input type=text size=25 name=mapto>");
+        printf (" TTL<input type=text size=5 name=ttl value=3600>");
+        print "Customer";
 
-            print "
-	        </td>
-        	<td align=right>
-            ";
-            print "
-	        </td>
-            ";
+        if ($this->adminonly) {
+            $this->showResellerForm('reseller');
+            print ".";
+            $this->showCustomerForm('customer');
+        } else {
+            $this->showCustomerForm('customer');
+        }
 
-            $this->printHiddenFormElements();
+        printf (" Owner<input type=text size=5 name=owner>");
+        printf (" Prio<input type=text size=3 name=priority>");
 
-            print "
-            </form>
+        print "
+        </td>
+        <td align=right>
+        ";
+        print "
+        </td>
+        ";
+
+        $this->printHiddenFormElements();
+
+        print "
+        </form>
         </tr>
         </table>
         ";
@@ -5224,9 +5229,12 @@ class Customers extends Records {
 
     var $maxrowsperpage= 20;
     var $sortElements=array(
-							'changeDate' => 'Change date',
-                            'username'   => 'Username',
-                            'customer'   => 'Customer'
+							'changeDate'   => 'Change date',
+                            'username'     => 'Username',
+                            'firstName'    => 'First name',
+                            'lastName'     => 'Last name',
+                            'organization' => 'Organization',
+                            'customer'     => 'Customer'
                             );
 
     var $propertiesItems = array('sip_credit'          => array('name'     => 'Credit for SIP account creation',
@@ -5238,7 +5246,8 @@ class Customers extends Records {
                                  'enum_number_credit'  => array('name'     => 'Credit for ENUM numbers creation',
                                                                'category' => 'admin'),
                                  'pstn_access'         => array('name'     => 'Access to PSTN',
-                                                               'category' => 'admin'),
+                                                               'category' => 'admin',
+                                                               'type'     => 'boolean'),
                                  'pstn_gateways'       => array('name'     => 'PSTN gateways',
                                                                'category' => 'admin'),
                                  'voicemail_server'    => array('name'     => 'Voicemail server address',
@@ -5260,19 +5269,22 @@ class Customers extends Records {
                                  'default_enum_range'  => array('name'     => 'Default ENUM range',
                                                                'category' => 'enum'),
                                  'default_enum_tld'    => array('name'     => 'Default ENUM Top Level Domain',
-                                                               'category' => 'enum')
+                                                               'category' => 'enum'),
+                                 'records_per_page'    => array('name'     => 'Records per page',
+                                                               'category' => 'web')
                                  );
 
     var $FieldsReadOnly=array(
                               'id',
                               'reseller',
                               'companyCode',
-                              'balance'
+                              'balance',
+                              'credit'
                               );
     var $Fields=array(
                               'aliasOf'     => array('type'=>'integer',
                                                      'name'=>'Impersonate'),
-                              'resellerActive' => array ('type' => 'integer',
+                              'resellerActive' => array ('type' => 'boolean',
                                                          'name' => 'Reseller active'),
                               'username'       => array('type'=>'text'),
                               'password'       => array('type'=>'text',
@@ -5301,9 +5313,7 @@ class Customers extends Records {
                               'bankAccount' => array('type'=>'text',
                                                     'name'=>'Bank account'),
                               'billingAddress' => array('type'=>'textarea',
-                                                        'name'=>'Billing address'),
-                              'billingEmail'   => array('type'=>'text',
-                                                        'name'=>'Billing email'),
+                                                        'name'=>'Billing address')
                               );
 
         var $states=array(
@@ -5638,14 +5648,14 @@ class Customers extends Records {
     function Customers(&$SOAPEngine) {
         $this->filters   = array(
                            'username'       => trim($_REQUEST['username_filter']),
-                           'name'           => trim($_REQUEST['name_filter']),
+                           'firstName'      => trim($_REQUEST['firstName_filter']),
+                           'lastName'       => trim($_REQUEST['lastName_filter']),
                            'organization'   => trim($_REQUEST['organization_filter']),
                            'tel'            => trim($_REQUEST['tel_filter']),
                            'email'          => trim($_REQUEST['email_filter']),
                            'web'            => trim($_REQUEST['web_filter']),
-                           'city'           => trim($_REQUEST['city_filter']),
                            'country'        => trim($_REQUEST['country_filter']),
-                           'organization'   => trim($_REQUEST['organization_filter']),
+                           'city'           => trim($_REQUEST['city_filter']),
                            'only_resellers' => trim($_REQUEST['only_resellers_filter'])
                            );
 		$this->Records(&$SOAPEngine);
@@ -5656,7 +5666,8 @@ class Customers extends Records {
 
         // Filter
         $filter=array('username'     => $this->filters['username'],
-                      'name'         => $this->filters['name'],
+                      'firstName'    => $this->filters['firstName'],
+                      'lastName'     => $this->filters['lastName'],
                       'organization' => $this->filters['organization'],
                       'tel'          => $this->filters['tel'],
                       'email'        => $this->filters['email'],
@@ -5730,7 +5741,7 @@ class Customers extends Records {
                 <td><b>Country</b></td>
                 <td><b>E-mail</b></td>
                 <td><b>Telephone</b></td>
-                <td><b>Web</b></td>
+                <td><b>Change date</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -5764,8 +5775,9 @@ class Customers extends Records {
                         $bgcolor="white";
                     }
 
-        			$_url = $this->url.sprintf("&service=%s&action=Delete&customer_filter=%s",
+        			$_url = $this->url.sprintf("&service=%s&action=Delete&reseller_filter=%s&customer_filter=%s",
                     urlencode($this->SOAPEngine->service),
+                    urlencode($customer->reseller),
                     urlencode($customer->id)
                     );
 
@@ -5777,8 +5789,9 @@ class Customers extends Records {
                         $actionText = "Delete";
                     }
 
-        			$_customer_url = $this->url.sprintf("&service=%s&customer_filter=%s",
+        			$_customer_url = $this->url.sprintf("&service=%s&reseller_filter=%s&customer_filter=%s",
                     urlencode($this->SOAPEngine->service),
+                    urlencode($customer->reseller),
                     urlencode($customer->id)
                     );
 
@@ -5792,7 +5805,7 @@ class Customers extends Records {
                     <td>%s</td>
                     <td><a href=mailto:%s>%s</a></td>
                     <td>%s</td>
-                    <td><a href=%s target=_new>%s</a></td>
+                    <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
@@ -5808,8 +5821,7 @@ class Customers extends Records {
                     $customer->email,
                     $customer->email,
                     $customer->tel,
-                    $customer->web,
-                    $customer->web,
+                    $customer->changeDate,
                     $_url,
                     $actionText
                     );
@@ -5882,12 +5894,15 @@ class Customers extends Records {
         print "<pre>";
         print_r($customer);
         print "</pre>";
+
         print "<table border=0 cellpadding=10>";
         print "
         <tr>
         <td valign=top>
         <h3>Customer data</h3>
-        <table border=0>";
+        <table border=0>
+        ";
+
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
         print "<input type=hidden name=section value=customer_data>";
@@ -5979,6 +5994,24 @@ class Customers extends Records {
                     $item_name,
                     $item,
                     $customer->$item
+                    );
+                } elseif ($this->Fields[$item]['type'] == 'boolean') {
+                    $_var='selected_'.$item;
+                    ${$_var}[$customer->$item]='selected';
+
+                    printf ("<tr>
+                    <td class=border valign=top>%s</td>
+                    <td class=border>
+                    <select name=%s_form>
+                    <option value='0' %s>False
+                    <option value='1' %s>True
+                    </select>
+                    </td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    ${$_var}[0],
+                    ${$_var}[1]
                     );
                 } else {
                     printf ("<tr>
@@ -6166,6 +6199,7 @@ class Customers extends Records {
         print "</select>";
     }
 }
+
 class recordGenerator extends SOAPEngine {
 	//this class generates in bulk enum numbers and sip accounts
 
