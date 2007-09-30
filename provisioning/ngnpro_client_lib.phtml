@@ -1,13 +1,115 @@
 <?
 
 /*
-  Copyright (c) 2007 AG Projects
-  http://ag-projects.com
+    Copyright (c) 2007 AG Projects
+    http://ag-projects.com
+    
+    This client library provide the functions for managing SIP accounts,
+    ENUM ranges, ENUM numbers, Trusted Peers, LCR, Rating plans
+    on a remote NGN-Pro server
 
-  This library provide the functions for managing SIP accounts,
-  ENUM ranges, ENUM numbers, Trusted Peers, LCR, Rating plans
-  on a remote NGN-Pro server
+    // Usage example
 
+    // login using your favorite php session management and read data from login application
+    
+    if ($adminonly) {
+        $loginCredentials=array(
+                                'loginType'          => 'admin',
+                                'reseller'           => $reseller,
+                                'customer'           => $customer
+                                );
+    } else {
+        $loginCredentials=array(
+                                'loginType'          => 'reseller',
+                                'soapUsername'       => $soapUsername,
+                                'soapPassword'       => $soapPassword,
+                                'reseller'           => $reseller,
+                                'customer'           => $customer
+                                );
+    
+    }
+    
+    require_once("provisioning/ngnpro_soap_library.phtml");
+    require_once("provisioning/ngnpro_client_lib.phtml");
+    include_once("provisioning/ngnpro_engines.inc");
+
+    $extraFormElements=array();
+    
+    ////////////////////////////////
+    // How to create a SIP record //
+    ////////////////////////////////
+    
+    $sipEngine           = 'sip_accounts@engine';
+    $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$extraFormElements,$loginCredentials);
+    $_sip_class          = $this->SipSOAPEngine->recordsClass;
+    $this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
+    
+    $sipAccount = array('account'  => 'user@example.com',
+                        'quota'    => $quota,
+                        'prepaid'  => $prepaid,
+                        'password' => $password,
+                        'groups'   => array('group1','group2'),
+                        'owner'    => $owner,
+                        'customer' => $customer,
+                        'reseller' => $reseller
+                        );
+    
+    $this->sipRecords->addRecord($sipAccount);
+
+    ////////////////////////////////
+    // How to create a SIP domain //
+    ////////////////////////////////
+    
+    $sipEngine           = 'sip_accounts@engine';
+    $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$extraFormElements,$loginCredentials);
+    $_sip_class          = $this->SipSOAPEngine->recordsClass;
+    $this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
+    
+    $sipDomain = array('domain'  => 'example.com',
+                        'customer' => $customer,
+                        'reseller' => $reseller
+                        );
+    
+    $this->sipRecords->addRecord($sipDomain);
+
+    ///////////////////////////////
+    // How to create a SIP alias //
+    ///////////////////////////////
+    
+    $sipEngine           = 'sip_aliases@engine';
+    $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$extraFormElements,$loginCredentials);
+    $_sip_class          = $this->SipSOAPEngine->recordsClass;
+    $this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
+    
+    $sipAlias = array(  'alias'    => 'user@example1.com',
+                        'target'   => 'user@example2.com',
+                        'owner'    => $owner,
+                        'customer' => $customer,
+                        'reseller' => $reseller
+                        );
+    
+    $this->sipRecords->addRecord($sipAlias);
+    
+    ///////////////////////////////////
+    // How to create an ENUM mapping //
+    ///////////////////////////////////
+    
+    $enumEngine           = 'enum_numbers@engine';
+    $this->EnumSOAPEngine = new SOAPEngine($enumEngine,$soapEngines,$extraFormElements,$loginCredentials);
+    $_enum_class          = $this->EnumSOAPEngine->recordsClass;
+    $this->enumRecords    = new $_enum_class(&$this->EnumSOAPEngine);
+    
+    $enumMapping = array('tld'      => $tld,
+                         'number'   => $number,
+                         'type'     => 'sip',
+                         'mapto'    => 'sip:user@example.com',
+                         'owner'    => $owner,
+                         'customer' => $customer,
+                         'reseller' => $reseller
+                        );
+    
+    $this->enumRecords->addRecord($enumMapping);
+    
 */
 
 class SOAPEngine {
@@ -94,7 +196,7 @@ class SOAPEngine {
         return $soapEngines_checked;
     }
 
-    function SOAPEngine($service,$soapEngines,$extraFormElements,$loginCredentials) {
+    function SOAPEngine($service,$soapEngines,$extraFormElements=array(),$loginCredentials=array()) {
 
         // service syntax is is port@engine
 
@@ -552,7 +654,7 @@ class Records {
     function getRecordKeys() {
     }
 
-    function addRecord() {
+    function addRecord($dictionary=array()) {
     }
 
     function deleteRecord() {
@@ -1148,16 +1250,35 @@ class Domains extends Records {
         ";
     }
 
-    function addRecord() {
+    function addRecord($dictionary=array()) {
 
-        $domain   = trim($_REQUEST['domain']);
+    	if ($dictionary['domain']) {
+    		$domain = $dictionary['domain'];
+        } else {
+        	$domain = trim($_REQUEST['domain']);
+        }
 
         if ($this->adminonly) {
-        	$reseller = trim($_REQUEST['reseller']);
-        	$customer = trim($_REQUEST['customer']);
+            if ($dictionary['reseller']) {
+        		$reseller = $dictionary['reseller'];
+            } else {
+        		$reseller = trim($_REQUEST['reseller']);
+            }
+            if ($dictionary['customer']) {
+        		$customer = $dictionary['customer'];
+            } else {
+        		$customer = trim($_REQUEST['customer']);
+            }
+            if (!$customer) $customer=$reseller;
         } else {
         	$reseller = $this->reseller;
-        	$customer = trim($_REQUEST['customer']);
+
+            if ($dictionary['customer']) {
+        		$customer = $dictionary['customer'];
+            } else {
+        		$customer = trim($_REQUEST['customer']);
+            }
+
             if (!$customer) $customer=$reseller;
         }
 
@@ -1251,7 +1372,6 @@ class SIPAccounts extends Records {
                               );
 
 		$this->Records(&$SOAPEngine);
-
     }
 
     function getRecordKeys() {
@@ -2279,9 +2399,19 @@ class SIPAliases extends Records {
         ";
     }
 
-    function addRecord() {
-    	$alias_els  = explode("@", trim($_REQUEST['alias']));
-        $target_els = explode("@", trim($_REQUEST['target']));
+    function addRecord($dictionary=array()) {
+
+    	if ($dictionary['alias']) {
+    		$alias_els  = $dictionary['alias'];
+        } else {
+    		$alias_els  = explode("@", trim($_REQUEST['alias']));
+        }
+
+    	if ($dictionary['target']) {
+    		$target_els  = $dictionary['target'];
+        } else {
+	        $target_els = explode("@", trim($_REQUEST['target']));
+        }
 
         $username=$alias_els[0];
 
@@ -2297,15 +2427,27 @@ class SIPAliases extends Records {
         }
 
         if ($this->adminonly) {
-        	$reseller = trim($_REQUEST['reseller']);
-        	$customer = trim($_REQUEST['customer']);
+            if ($dictionary['reseller']) {
+        		$reseller = $dictionary['reseller'];
+            } else {
+        		$reseller = trim($_REQUEST['reseller']);
+            }
+            if ($dictionary['customer']) {
+        		$customer = $dictionary['customer'];
+            } else {
+        		$customer = trim($_REQUEST['customer']);
+            }
             if (!$customer) $customer=$reseller;
         } else {
         	$reseller = $this->reseller;
-        	$customer = trim($_REQUEST['customer']);
-            if (!$customer || !in_array($customer,array_keys($this->customers))) {
-                $customer=$reseller;
+
+            if ($dictionary['customer']) {
+        		$customer = $dictionary['customer'];
+            } else {
+        		$customer = trim($_REQUEST['customer']);
             }
+
+            if (!$customer) $customer=$reseller;
         }
 
         $alias=array(
@@ -4793,14 +4935,12 @@ class Routes extends Records {
 
     var $sortElements=array(
                             'prefix'       => 'Prefix',
-                            'fromURI'      => 'From URI',
                             'priority'     => 'Priority'
                             );
 
     function Routes(&$SOAPEngine) {
     	$this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
-                                 'gatewayGroup' => trim($_REQUEST['gatewayGroup_filter']),
-                                 'fromURI'      => trim($_REQUEST['fromURI_filter'])
+                                 'gatewayGroup' => trim($_REQUEST['gatewayGroup_filter'])
                                  );
 
 		$this->Records(&$SOAPEngine);
@@ -4838,8 +4978,7 @@ class Routes extends Records {
 
         // Filter
         $filter=array('prefix'       => $this->filters['prefix'],
-                      'gatewayGroup' => $this->filters['gatewayGroup'],
-                      'fromURI'      => $this->filters['fromURI']
+                      'gatewayGroup' => $this->filters['gatewayGroup']
                       );
 
         // Range
@@ -4884,7 +5023,6 @@ class Routes extends Records {
                 <td><b>Id</b></th>
                 <td><b>Prefix</b></th>
                 <td><b>Gateway Group</b></td>
-                <td><b>From URI</b></td>
                 <td><b>Priority</b></td>
                 <td><b>Action</b></td>
             </tr>
@@ -4919,18 +5057,16 @@ class Routes extends Records {
                         $bgcolor="white";
                     }
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&gatewayGroup_filter=%s&fromURI_filter=%s&priority_filter=%s",
+                    $_url = $this->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&gatewayGroup_filter=%s&priority_filter=%s",
                     urlencode($this->SOAPEngine->service),
                     urlencode($route->prefix),
                     urlencode($route->gatewayGroup),
-                    urlencode($route->fromURI),
                     urlencode($route->priority)
                     );
 
                     if ($_REQUEST['action'] == 'Delete' &&
                     	$_REQUEST['prefix_filter'] == $route->prefix &&
                         $_REQUEST['gatewayGroup_filter'] == $route->gatewayGroup &&
-                        $_REQUEST['fromURI_filter'] == $route->fromURI &&
                         $_REQUEST['priority_filter'] == $route->priority) {
 
                 		$_url .= "&confirm=1";
@@ -4945,14 +5081,12 @@ class Routes extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
                     $index,
                     $route->prefix,
                     $route->gatewayGroup,
-                    $route->fromURI,
                     $route->priority,
                     $_url,
                     $actionText
@@ -5001,7 +5135,7 @@ class Routes extends Records {
                 printf ("<option value='%s'>%s",$_grp,$_grp);
             }
             printf (" </select>");
-            printf (" From<input type=text size=25 name=fromURI>");
+            //printf (" From<input type=text size=25 name=fromURI>");
             printf (" Priority<input type=text size=5 name=priority>");
 
             print "
@@ -5245,8 +5379,6 @@ class Customers extends Records {
                                  'pstn_access'         => array('name'     => 'Access to PSTN',
                                                                'category' => 'admin',
                                                                'type'     => 'boolean'),
-                                 'pstn_gateways'       => array('name'     => 'PSTN gateways',
-                                                               'category' => 'admin'),
                                  'voicemail_server'    => array('name'     => 'Voicemail server address',
                                                                'category' => 'sip'),
                                  'sip_proxy_server'    => array('name'     => 'SIP Proxy server address',
@@ -6147,11 +6279,6 @@ class Customers extends Records {
         print "</pre>";
         */
 
-		foreach ($customer->properties as $_property) {
-        	$this->propertiesItems[$_property->name]['value']=$_property->value;
-        }
-
-
         print "</td>
         <td valign=top>
         <table border=0>";
@@ -6163,23 +6290,51 @@ class Customers extends Records {
         <td class=border>Description</td>
         </tr>");
 
+		foreach ($customer->properties as $_property) {
+            if (in_array($_property->name,array_keys($this->propertiesItems))) {
+	        	$this->propertiesItems[$_property->name]['value']=$_property->value;
+            }
+        }
+
         foreach (array_keys($this->propertiesItems) as $item) {
         	$item_print=ucfirst (preg_replace("/_/"," ",$item));
-            printf ("<tr>
-            <td class=border>%s</td>
-            <td class=border>%s</td>
-            <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
-            <td class=border>%s</td>
-            </tr>",
-            ucfirst($this->propertiesItems[$item]['category']),
-            $item_print,
-            $item,
-            $this->propertiesItems[$item]['value'],
-            $this->propertiesItems[$item]['name']
-            );
+            if ($this->propertiesItems[$item]['category'] != 'admin' || ($this->propertiesItems[$item]['category'] == 'admin' && $this->adminonly)) {
+                printf ("<tr>
+                <td class=border>%s</td>
+                <td class=border>%s</td>
+                <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
+                <td class=border>%s</td>
+                </tr>",
+                ucfirst($this->propertiesItems[$item]['category']),
+                $item_print,
+                $item,
+                $this->propertiesItems[$item]['value'],
+                $this->propertiesItems[$item]['name']
+                );
+            } else {
+                printf ("<tr>
+                <td class=border>%s</td>
+                <td class=border>%s</td>
+                <td class=border><input type=hidden size=45 name='%s_form' value='%s'>%s</td>
+                <td class=border>%s</td>
+                </tr>",
+                ucfirst($this->propertiesItems[$item]['category']),
+                $item_print,
+                $item,
+                $this->propertiesItems[$item]['value'],
+                $this->propertiesItems[$item]['value'],
+                $this->propertiesItems[$item]['name']
+                );
+            }
         }
 
 		if (count($this->customerProperties) > 0) {
+            foreach ($customer->properties as $_property) {
+                if (in_array($_property->name,array_keys($this->customerProperties))) {
+                    $this->propertiesItems[$_property->name]['value']=$_property->value;
+                }
+            }
+
             printf ("<tr bgcolor=lightgrey>
             <td class=border colspan=4>Extra properties</td>
             </tr>");
@@ -6310,7 +6465,9 @@ class Customers extends Records {
     }
 
     function getChildren($reseller) {
+        return;
         // Filter
+
         $filter=array('reseller'     => intval($reseller));
 
         // Range
@@ -6364,7 +6521,7 @@ class recordGenerator extends SOAPEngine {
 	var $template     = array();
     var $allowedPorts = array();
 
-    function recordGenerator($generatorId,$recordGenerators,$soapEngines,$extraFormElements,$loginCredentials) {
+    function recordGenerator($generatorId,$recordGenerators,$soapEngines,$extraFormElements=array(),$loginCredentials=array()) {
     	$this->recordGenerators = $recordGenerators;
         $this->generatorId      = $generatorId;
 		$this->loginCredentials = $loginCredentials;
@@ -6549,6 +6706,7 @@ class recordGenerator extends SOAPEngine {
             print "<font color=red>Error: No ENUM ranges available</font>";
         	return false;
         }
+
         print "
         <form method=post target=_new>
         <table cellspacing=1 cellpadding=1 bgcolor=black>
@@ -6850,7 +7008,6 @@ class recordGenerator extends SOAPEngine {
         	if (!strlen($this->extraFormElements[$element])) continue;
             printf ("<input type=hidden name=%s value='%s'>\n",$element,$this->extraFormElements[$element]);
         }
-
     }
 
     function getSoapEngineAllowed($soapEngines,$filter) {
@@ -7590,7 +7747,6 @@ class ENUMMappingsActions extends Actions {
                                                         'logs'       => array('success' => sprintf('ENUM number %s@%s has owner set to  %d',$key['number'],$key['tld'],intval($sub_action_parameter))
                                                                               )
                                                        )
-            
                                     );
                 	$this->SOAPEngine->execute($function);
         		}
@@ -7598,9 +7754,7 @@ class ENUMMappingsActions extends Actions {
         }
 
         print "</ol>";
-
     }
-
 }
 
 ?>

@@ -16,14 +16,8 @@ if (is_readable("local/header.phtml")) {
 set_time_limit(600);
 $perm->check("provisioning");
 
-require_once("provisioning/ngnpro_soap_library.phtml");
-require_once("provisioning/ngnpro_client_lib.phtml");
-include_once("provisioning/ngnpro_engines.inc");
-
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
-
-// $soapEngines must be defined in global.inc
 
 global $CDRTool;
 
@@ -42,6 +36,11 @@ if ($CDRTool['reseller']) {
 //print_r($loginCredentials);
 
 $extraFormElements=array();
+
+require_once("provisioning/ngnpro_soap_library.phtml");
+require_once("provisioning/ngnpro_client_lib.phtml");
+include_once("provisioning/ngnpro_engines.inc");
+
 
 if ($_REQUEST['generatorId']) {
     $generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,$extraFormElements,$loginCredentials);
