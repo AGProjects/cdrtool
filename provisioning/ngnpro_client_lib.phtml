@@ -6393,6 +6393,18 @@ class Customers extends Records {
 
 		$properties=array();
 
+        // preserve the properties not managed by this client unchanged:
+        foreach ($customer->properties as $_property) {
+            if (!in_array($_property->name,array_keys($this->propertiesItems)) &&
+            	!in_array($_property->name,array_keys($this->customerProperties))) {
+
+                $properties[]=array('name'     => $_property->name,
+                                    'value'    => $_property->value,
+                                    'category' => $_property->category
+                                    );
+            }
+        }
+
         foreach (array_keys($this->propertiesItems) as $item) {
             $var_name=$item.'_form';
             $var_value=trim($_REQUEST[$var_name]);
