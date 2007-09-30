@@ -5370,15 +5370,14 @@ class Customers extends Records {
 
     var $propertiesItems = array('sip_credit'          => array('name'     => 'Credit for SIP account creation',
                                                                'category' => 'admin'),
-                                 'sipa_credit'         => array('name'     => 'Credit for SIP alias creation',
+                                 'sip_alias_credit'    => array('name'     => 'Credit for SIP alias creation',
                                                                'category' => 'admin'),
-                                 'enum_range_credit'   => array('name'     => 'Credit for ENUM range creation',
+                                 'dns_zone_credit'     => array('name'     => 'Credit for ENUM range creation',
                                                                'category' => 'admin'),
                                  'enum_number_credit'  => array('name'     => 'Credit for ENUM numbers creation',
                                                                'category' => 'admin'),
                                  'pstn_access'         => array('name'     => 'Access to PSTN',
-                                                               'category' => 'admin',
-                                                               'type'     => 'boolean'),
+                                                               'category' => 'admin'),
                                  'voicemail_server'    => array('name'     => 'Voicemail server address',
                                                                'category' => 'sip'),
                                  'sip_proxy_server'    => array('name'     => 'SIP Proxy server address',
@@ -5393,11 +5392,11 @@ class Customers extends Records {
                                                                'category' => 'sip'),
                                  'sip_settings_page'   => array('name'     => 'SIP settings page',
                                                                'category' => 'sip'),
-                                 'default_sip_domain'  => array('name'     => 'Default SIP domain',
+                                 'sip_default_domain'  => array('name'     => 'Default SIP domain',
                                                                'category' => 'sip'),
-                                 'default_enum_range'  => array('name'     => 'Default ENUM range',
+                                 'enum_default_range'  => array('name'     => 'Default ENUM range',
                                                                'category' => 'enum'),
-                                 'default_enum_tld'    => array('name'     => 'Default ENUM Top Level Domain',
+                                 'enum_default_tld'    => array('name'     => 'Default ENUM Top Level Domain',
                                                                'category' => 'enum'),
                                  'records_per_page'    => array('name'     => 'Records per page',
                                                                'category' => 'web')
@@ -6297,7 +6296,7 @@ class Customers extends Records {
         }
 
         foreach (array_keys($this->propertiesItems) as $item) {
-        	$item_print=ucfirst (preg_replace("/_/"," ",$item));
+        	$item_print=preg_replace("/_/"," ",$item);
             if ($this->propertiesItems[$item]['category'] != 'admin' || ($this->propertiesItems[$item]['category'] == 'admin' && $this->adminonly)) {
                 printf ("<tr>
                 <td class=border>%s</td>
@@ -6305,7 +6304,7 @@ class Customers extends Records {
                 <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
                 <td class=border>%s</td>
                 </tr>",
-                ucfirst($this->propertiesItems[$item]['category']),
+                $this->propertiesItems[$item]['category'],
                 $item_print,
                 $item,
                 $this->propertiesItems[$item]['value'],
@@ -6339,18 +6338,18 @@ class Customers extends Records {
             <td class=border colspan=4>Extra properties</td>
             </tr>");
             foreach (array_keys($this->customerProperties) as $item) {
-                $item_print=ucfirst (preg_replace("/_/"," ",$item));
+                $item_print=preg_replace("/_/"," ",$item);
                 printf ("<tr>
                 <td class=border>%s</td>
                 <td class=border>%s</td>
                 <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
                 <td class=border>%s</td>
                 </tr>",
-                ucfirst($this->customerProperties[$item]['category']),
+                $this->customerProperties[$item]['category'],
                 $item_print,
                 $item,
                 $this->propertiesItems[$item]['value'],
-                $this->propertiesItems[$item]['name']
+                $this->customerProperties[$item]['name']
                 );
             }
         }
