@@ -619,10 +619,8 @@ class Records {
     
             if ($this->adminonly) {
                 $this->showResellerForm();
-                if ($this->filters['reseller']) {
-                    print ".";
-                    $this->showCustomerForm();
-                }
+                print ".";
+                $this->showCustomerForm();
             } else {
                 printf ("%s",$this->reseller);
                 print ".";

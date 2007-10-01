@@ -50,7 +50,7 @@ cdrtool (5.3.0) unstable; urgency=low
   * Better organize NGNPro client provisioning library
   * Added ENUM tld management in the Rating page
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 19 Sep 2007 14:23:05 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 01 Oct 2007 23:43:28 +0200
 
 cdrtool (5.2.6) unstable; urgency=low
 
