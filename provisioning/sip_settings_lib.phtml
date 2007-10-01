@@ -11,12 +11,14 @@
 
 class SIPSettings {
 
+	var $loginType                 = 'subscriber';
 	var $soapClassSipPort          = 'WebService_NGNPro_SipPort';
     var $soapClassVoicemailPort    = 'WebService_NGNPro_VoicemailPort';
     var $soapClassCustomerPort     = 'WebService_NGNPro_CustomerPort';
     var $soapClassPresencePort     = 'WebService_SoapSIMPLEProxy_PresencePort';
 
-    var $voicemail				   = array('AccessNumber'     => '*70','Server'           => 'vm.example.com');
+    var $voicemail				   = array('AccessNumber'     => '*70',
+                                           'Server'           => 'vm.example.com');
     var $SupportCompany            = "Example company";
     var $SupportCDRsite            = "https://cdrtool.example.com/CDRTool";
     var $SupportWEBsite            = "https://www.example.com/help";
@@ -32,8 +34,6 @@ class SIPSettings {
     var $phonebook_img             = "<img src=images/pb.gif border=0>";
     var $call_img                  = "<img src=images/call.gif border=0>";
     var $delete_img                = "<img src=images/del_pb.gif border=0>";
-
-    var $privacyGroup              = "anonymous";
 
     var $ForwardingTargetTypes	   = array("Voicemail","Other","Mobile","Tel","ENUM","Disabled");
 
@@ -65,8 +65,7 @@ class SIPSettings {
                                            'voicemail_password',
                                            'region',
                                            'answerTimeout',
-                                           'owner',
-                                           'multiTargets'
+                                           'owner'
                                            );
     var $presenceStatuses   = array('allow','deny','confirm');
     var $presenceActivities = array('busy'      => 'buddy_busy.jpg',
@@ -74,7 +73,7 @@ class SIPSettings {
                                     'idle'      => 'buddy_idle.jpg',
                                     'away'      => 'buddy_away.jpg'
                                     );
-    var $emergencyRegions   =array();
+    var $emergencyRegions   = array();
 	var $answerTimeoutDefault = 35;
     var $answerTimeoutEls=array(
              "5" =>"5 s",
@@ -90,6 +89,7 @@ class SIPSettings {
              "55"=>"55 s",
              "60"=>"60 s"
              );
+
 	var $exportFilename = "export.txt";
 
     function SIPSettings($account,$loginCredentials=array(),$soapEngines=array()) {
@@ -100,7 +100,9 @@ class SIPSettings {
         dprint_r($loginCredentials);
 
 		$this->loginCredentials   = &$loginCredentials;
-        $this->loginType          = $loginCredentials['loginType'];
+        if ($loginCredentials['loginType']) {
+        	$this->loginType          = $loginCredentials['loginType'];
+        }
 
         if ($this->loginType == "admin") {
             if ($_REQUEST['reseller']) {
@@ -148,7 +150,6 @@ class SIPSettings {
             <input type=hidden name=reseller value=$this->reseller>
             ";
         } else {
-            $this->Preferences['LoggedInAsSubscriber'] = 1;
 
             $this->pageURL=$this->settingsPage."?account=$this->account";
             $this->hiddenElements="
@@ -157,47 +158,6 @@ class SIPSettings {
         }
 
         $this->setLanguage();
-
-        $this->PhonebookGroups=array(
-        "vip"       =>sprintf(_("VIP")),
-        "business"  =>sprintf(_("Business")),
-        "coworkers" =>sprintf(_("Coworkers")),
-        "friends"   =>sprintf(_("Friends")),
-        "family"    =>sprintf(_("Family"))
-        );
-
-        // for busy not online or unconditional
-        $this->CallPrefDictionary=array(
-        "FUNC"=>sprintf(_("All calls")),
-        "FNOL"=>sprintf(_("If Not-Online")),
-        "FBUS"=>sprintf(_("If Busy")),
-        "FNOA"=>sprintf(_("If No-Answer")),
-        "FUNV"=>sprintf(_("If Unavailable"))
-        );
-
-        $this->CallPrefDictionaryUNV=array(
-        "FUNV"=>sprintf(_("If Unavailable"))
-        );
-
-        // set on voicemail account when creating voicemail
-        $this->VoicemailCallPrefDictionary=array(
-        "FNOL"=>sprintf(_("If Not-Online")),
-        "FBUS"=>sprintf(_("If Busy")),
-        "FNOA"=>sprintf(_("If No-Answer")),
-        "FUNV"=>sprintf(_("If Unavailable"))
-        );
-
-        $this->acceptDailyProfiles=array('127' => _('Every day'),
-                                       '31'  => _('Weekday'),
-                                       '96'  => _('Weekend'),
-                                       '1'   => _('Monday'),
-                                       '2'   => _('Tuesday'),
-                                       '4'   => _('Wednesday'),
-                                       '8'   => _('Thursday'),
-                                       '16'  => _('Friday'),
-                                       '32'  => _('Saturday'),
-                                       '64'  => _('Sunday')
-                                       );
 
         if (!$this->username) {
             dprint ("Record not found.");
@@ -211,6 +171,45 @@ class SIPSettings {
                           'locations'=>_('Devices'),
                           'calls'=>_('Calls')
                           );
+
+        $this->acceptDailyProfiles=array('127' => _('Every day'),
+                                       '31'  => _('Weekday'),
+                                       '96'  => _('Weekend'),
+                                       '1'   => _('Monday'),
+                                       '2'   => _('Tuesday'),
+                                       '4'   => _('Wednesday'),
+                                       '8'   => _('Thursday'),
+                                       '16'  => _('Friday'),
+                                       '32'  => _('Saturday'),
+                                       '64'  => _('Sunday')
+                                       );
+
+        $this->PhonebookGroups=array(
+        "vip"       =>sprintf(_("VIP")),
+        "business"  =>sprintf(_("Business")),
+        "coworkers" =>sprintf(_("Coworkers")),
+        "friends"   =>sprintf(_("Friends")),
+        "family"    =>sprintf(_("Family"))
+        );
+
+        $this->CallPrefDictionary=array(
+        "FUNC"=>sprintf(_("All calls")),
+        "FNOL"=>sprintf(_("If Not-Online")),
+        "FBUS"=>sprintf(_("If Busy")),
+        "FNOA"=>sprintf(_("If No-Answer")),
+        "FUNV"=>sprintf(_("If Unavailable"))
+        );
+
+        $this->CallPrefDictionaryUNV=array(
+        "FUNV"=>sprintf(_("If Unavailable"))
+        );
+
+        $this->VoicemailCallPrefDictionary=array(
+        "FNOL"=>sprintf(_("If Not-Online")),
+        "FBUS"=>sprintf(_("If Busy")),
+        "FNOA"=>sprintf(_("If No-Answer")),
+        "FUNV"=>sprintf(_("If Unavailable"))
+        );
 
         if ($this->Preferences['advanced']) {
             // Advanced accounts has access to call control and Phonebook
@@ -371,9 +370,8 @@ class SIPSettings {
 
         $this->owner     = $result->owner;
 
-        if (!is_array($result->properties)) $result->properties=array();
-        if (!is_array($result->groups)) $result->groups=array();
-        if (!is_array($result->multiTargets)) $result->multiTargets=array();
+        if (!is_array($result->properties))   $result->properties=array();
+        if (!is_array($result->groups))       $result->groups=array();
 
 		foreach ($result->properties as $_property) {
         	$this->Preferences[$_property->name]=$_property->value;
@@ -393,7 +391,6 @@ class SIPSettings {
         $this->timezone  = $result->timezone;
         $this->email     = $result->email;
         $this->groups    = $result->groups;
-        $this->multiTargets    = $result->multiTargets;
         $this->quickdial = $result->quickdial;
         $this->quota     = $result->quota;
         $this->prepaid   = $result->prepaid;
@@ -507,7 +504,7 @@ class SIPSettings {
 
         if ($this->loginType == 'reseller') {
             $lang = $this->ResellerLanguage;
-        } else if ($this->Preferences['LoggedInAsSubscriber']) {
+        } else if ($this->loginType == 'subscriber') {
             $lang = $this->Preferences['language'];
         } else {
             $lang = "en";
@@ -794,7 +791,7 @@ class SIPSettings {
         <td align=right valign=top>
         ";
     
-        if ($this->Preferences['LoggedInAsSubscriber']) {
+        if ($this->loginType == 'subscriber') {
             print "<a href=sip_logout.phtml>";
             print _("Logout");
             print "</a>";
@@ -908,7 +905,7 @@ class SIPSettings {
                                         "SubscriberMayEditIt"=>"0",
                                         "SubscriberMaySeeIt"=>0
                                         );
-            $this->SIPACLS[$this->privacyGroup]=array("Group"=>$this->privacyGroup,
+            $this->SIPACLS['anonymous']=array("Group"=>"anonymous",
                                         "WEBName" =>sprintf (_("Privacy")),
                                         "WEBComment"=>sprintf(_("Dial %s to change or %s to check status "),$this->changePrivacyAccessNumber, $this->checkPrivacyAccessNumber),
                                         "SubscriberMaySeeIt"=>1,
@@ -1369,7 +1366,7 @@ class SIPSettings {
            </SCRIPT>
         ";
 
-        if ($this->Preferences['LoggedInAsSubscriber']) {
+        if ($this->loginType == 'subscriber') {
         	print "<input class=input100 type=password size=15 name=sip_password value=\"$this->password\">";
         } else {
         	print "<input class=input100 type=text size=15 name=sip_password value=\"$this->password\">";
@@ -1470,7 +1467,7 @@ class SIPSettings {
         ";
         */
 	    
-        if (!$this->Preferences['LoggedInAsSubscriber'] && in_array("free-pstn",$this->groups)) {
+        if ($this->loginType != 'subscriber' && in_array("free-pstn",$this->groups)) {
 
             if (in_array("quota",$this->groups)) {
             	$td_class="orange";
@@ -1521,7 +1518,7 @@ class SIPSettings {
 
         foreach (array_keys($this->SIPACLS) as $key) {
 
-            if ($this->Preferences['LoggedInAsSubscriber'] && !$this->SIPACLS[$key]['SubscriberMaySeeIt']) {
+            if ($this->loginType == 'subscriber' && !$this->SIPACLS[$key]['SubscriberMaySeeIt']) {
                 continue;
             }
 
@@ -1537,14 +1534,14 @@ class SIPSettings {
                 $checked_box[$key]="checked";
             }
 
-            if ($this->Preferences['LoggedInAsSubscriber'] && !$checked_box[$key] && $key=="free-pstn") {
+            if ($this->loginType == 'subscriber' && !$checked_box[$key] && $key=="free-pstn") {
                 continue;
             }
 
             $elementName    = $this->SIPACLS[$key]["WEBName"];
             $elementComment = $this->SIPACLS[$key]["WEBComment"];
 
-			if ($this->Preferences['LoggedInAsSubscriber']) {
+			if ($this->loginType == 'subscriber') {
                 if ($this->SIPACLS[$key]["SubscriberMayEditIt"]) {
                     $disabled_box = "";
                 } else {
@@ -1565,7 +1562,7 @@ class SIPSettings {
             <input type=checkbox value=1 name=$key $checked_box[$key] $disabled_box>
             ";
 
-            if (!$this->Preferences['LoggedInAsSubscriber']) {
+            if ($this->loginType != 'subscriber') {
                 if ($key=="free-pstn") {
                     print "$elementComment: <input type=text size=15 maxsize=15 name=rpid value=\"$this->rpid\">";
                 } else {
@@ -1585,7 +1582,7 @@ class SIPSettings {
             ";
         }
 
-        if (!$this->Preferences['LoggedInAsSubscriber']) {
+        if ($this->loginType != 'subscriber') {
 
 	        // prepaid
         	if ($this->prepaid) $checked_prepaid="checked";
@@ -2071,17 +2068,6 @@ class SIPSettings {
             $this->emailHasChanged=1;
         }
 
-
-        if (!is_array($result->multiTargets)) $result->multiTargets=array();
-        if (!is_array($multiTargets))         $multiTargets=array();
-
-		sort($result->multiTargets);
-
-        if ($result->multiTargets != $this->newMultiTargets) {
-            $result->multiTargets = $this->newMultiTargets;
-            $this->somethingChanged=1;
-        }
-
 		$this->properties=$result->properties;
 
 		dprint_r($this->Preferences);
@@ -2112,7 +2098,7 @@ class SIPSettings {
             }
         }
 
-        if (!$this->Preferences['LoggedInAsSubscriber']) {
+        if ($this->loginType != 'subscriber') {
             if (strcmp($quota,$this->quota) != 0) {
                 if (!$quota) $quota=0;
                 $result->quota=intval($quota);
@@ -2153,7 +2139,7 @@ class SIPSettings {
             // $val is set to 1 if web checkbox is ticked
             $val = $_REQUEST[$key];
 
-            if (!$this->Preferences['LoggedInAsSubscriber'] || $this->SIPACLS[$key]['SubscriberMayEditIt']) {
+            if ($this->loginType != 'subscriber' || $this->SIPACLS[$key]['SubscriberMayEditIt']) {
 
                 // toggle prepaid
                 if ($key == "prepaid") $result->prepaid=intval($val);
@@ -2184,7 +2170,7 @@ class SIPSettings {
         }
 
         if ($language && $language != $this->Preferences['language'] ) {
-            if ($this->Preferences['LoggedInAsSubscriber']) {;
+            if ($this->loginType == 'subscriber') {;
                 dprint("Set lang $language");
                 changeLanguage($language);
             }
@@ -2280,7 +2266,7 @@ class SIPSettings {
 
         }
 
-        if (!$this->Preferences['LoggedInAsSubscriber'] && $this->voicemail['Account'] && !$this->createdVoicemailnow) {
+        if ($this->loginType != 'subscriber' && $this->voicemail['Account'] && !$this->createdVoicemailnow) {
             $delete_voicemail = $_REQUEST['delete_voicemail'];
 
             $log=sprintf("delete_voicemail_orig=%s",$this->voicemail['Options']->delete);
@@ -4889,16 +4875,6 @@ class SIPSettings {
         if (!strlen($accept_temporary_group)) $accept_temporary_remain=0;
         if (!$accept_temporary_remain) $accept_temporary_group="";
         if (!$anonymous) $anonymous="0";
-
-        $this->newMultiTargets = array();
-
-		foreach ($multiTargets as $_m) {
-            if (strlen($_m) && checkURI($_m)) {
-            	$this->newMultiTargets[]=$_m;
-            }
-        }
-
-        sort($this->newMultiTargets);
 
         return true;
     }
