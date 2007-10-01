@@ -43,9 +43,9 @@ if (class_exists($_reseller_class)) {
 }
 
 $loginCredentials=array(
-                        'loginType'           => 'admin',
-                        'reseller'            => $_REQUEST['reseller'],
-                        'soapEngineIdSipPort' => $_REQUEST['soapEngineIdSipPort']
+                        'loginType'  => 'admin',
+                        'reseller'   => $_REQUEST['reseller'],
+                        'soapEngine' => $_REQUEST['soapEngine']
                         );
 
 $SIPSettings = new $SIPSettings_class($account,$loginCredentials,$soapEngines);

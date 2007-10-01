@@ -35,7 +35,7 @@ if ($CDRTool['reseller']) {
 
 //print_r($loginCredentials);
 
-$extraFormElements=array();
+$loginCredentials['extraFormElements']=array();
 
 require_once("provisioning/ngnpro_soap_library.phtml");
 require_once("provisioning/ngnpro_client_lib.phtml");
@@ -43,7 +43,7 @@ include_once("provisioning/ngnpro_engines.inc");
 
 
 if ($_REQUEST['generatorId']) {
-    $generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,$extraFormElements,$loginCredentials);
+    $generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,$loginCredentials);
     if ($_REQUEST['action']=='Generate') {
         $generator->generateRecords();
         $generator->showGeneratorForm();
@@ -51,7 +51,7 @@ if ($_REQUEST['generatorId']) {
         $generator->showGeneratorForm();
     }
 } else {
-	$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,$extraFormElements,$loginCredentials);
+	$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,$loginCredentials);
     $_class     = $SOAPEngine->recordsClass;
     $RECORDS    = new $_class(&$SOAPEngine);
     

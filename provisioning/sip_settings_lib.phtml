@@ -92,7 +92,7 @@ class SIPSettings {
              );
 	var $exportFilename = "export.txt";
 
-    function SIPSettings($account='',$loginCredentials,$soapEngines) {
+    function SIPSettings($account,$loginCredentials=array(),$soapEngines=array()) {
     	$this->soapEngines        = $soapEngines;
 
         $debug=sprintf("Initialize class %s(%s)",get_class($this),$account);
@@ -100,7 +100,6 @@ class SIPSettings {
         dprint_r($loginCredentials);
 
 		$this->loginCredentials   = &$loginCredentials;
-
         $this->loginType          = $loginCredentials['loginType'];
 
         if ($this->loginType == "admin") {
@@ -119,11 +118,11 @@ class SIPSettings {
         	$this->customer           = $loginCredentials['customer'];
         }
 
-		if (strlen($loginCredentials['soapEngineIdSipPort'])) {
-            $this->soapEngineIdSipPort=$loginCredentials['soapEngineIdSipPort'];
+		if (strlen($loginCredentials['soapEngine'])) {
+            $this->soapEngine=$loginCredentials['soapEngine'];
         }
 
-        dprint("Using engine: $this->soapEngineIdSipPort");
+        dprint("Using engine: $this->soapEngine");
 
         $this->settingsPage       = $_SERVER['PHP_SELF'];
         $this->tab                = $_REQUEST['tab'];
@@ -133,11 +132,11 @@ class SIPSettings {
         $this->getAccount($account);
 
         if ($this->loginType == "admin") {
-            $this->pageURL=$this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&soapEngineIdSipPort=$this->soapEngineIdSipPort";
+            $this->pageURL=$this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&soapEngine=$this->soapEngine";
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
             <input type=hidden name=reseller value=$this->reseller>
-            <input type=hidden name=soapEngineIdSipPort value=$this->soapEngineIdSipPort>
+            <input type=hidden name=soapEngine value=$this->soapEngine>
             <input type=hidden name=adminonly value=1>
             ";
 
@@ -240,7 +239,7 @@ class SIPSettings {
         require_once("ngnpro_soap_library.phtml");
 
         // Sip, Voicemail and Customer ports share same login
-        $this->SOAPurl=$this->soapEngines[$this->soapEngineIdSipPort]['url'];
+        $this->SOAPurl=$this->soapEngines[$this->soapEngine]['url'];
 
         if (strlen($this->loginCredentials['soapUsername'])) {
             $this->SOAPlogin = array(
@@ -251,8 +250,8 @@ class SIPSettings {
 
         } else {
             $this->SOAPlogin = array(
-                                   "username"    => $this->soapEngines[$this->soapEngineIdSipPort]['username'],
-                                   "password"    => $this->soapEngines[$this->soapEngineIdSipPort]['password'],
+                                   "username"    => $this->soapEngines[$this->soapEngine]['username'],
+                                   "password"    => $this->soapEngines[$this->soapEngine]['password'],
                                    "admin"       => true,
                                    "impersonate" => intval($this->reseller)
                                    );
@@ -261,13 +260,13 @@ class SIPSettings {
         $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
         // Presence
-        $this->SOAPurlPresence=$this->soapEngines[$this->soapEngineIdPresencePort]['url'];
+        $this->SOAPurlPresence=$this->soapEngines[$this->soapEnginePresencePort]['url'];
 
         // Instantiate the SOAP clients
         $this->SipPort       = new $this->soapClassSipPort($this->SOAPurl);
 
-		if (strlen($this->soapEngines[$this->soapEngineIdSipPort]['voicemailEngineId'])) {
-        	$voicemailId=$this->soapEngines[$this->soapEngineIdSipPort]['voicemailEngineId'];
+		if (strlen($this->soapEngines[$this->soapEngine]['voicemailEngineId'])) {
+        	$voicemailId=$this->soapEngines[$this->soapEngine]['voicemailEngineId'];
         	$this->SOAPurlVoicemail = $this->soapEngines[$voicemailId]['url'];
             $this->SOAPloginVoicemail = array(
                                    "username"    => $this->soapEngines[$voicemailId]['username'],
@@ -282,19 +281,19 @@ class SIPSettings {
             $this->SoapAuthVoicemail = $this->SoapAuth;
         }
 
-		if (strlen($this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['presenceEngineId']])) {
-        	$this->SOAPurlPresence = $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['presenceEngineId']]['url'];
+		if (strlen($this->soapEngines[$this->soapEngines[$this->soapEngine]['presenceEngineId']])) {
+        	$this->SOAPurlPresence = $this->soapEngines[$this->soapEngines[$this->soapEngine]['presenceEngineId']]['url'];
         	$this->PresencePort    = new $this->soapClassPresencePort($this->SOAPurlPresence);
         	$this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT,        5);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
         }
 
-		if (strlen($this->soapEngines[$this->soapEngineIdSipPort]['customerEngineId'])) {
-        	$this->SOAPurlCustomer = $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['customerEngineId']]['url'];
+		if (strlen($this->soapEngines[$this->soapEngine]['customerEngineId'])) {
+        	$this->SOAPurlCustomer = $this->soapEngines[$this->soapEngines[$this->soapEngine]['customerEngineId']]['url'];
             $this->SOAPloginCustomer = array(
-                                   "username"    => $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['customerEngineId']]['username'],
-                                   "password"    => $this->soapEngines[$this->soapEngines[$this->soapEngineIdSipPort]['customerEngineId']]['password'],
+                                   "username"    => $this->soapEngines[$this->soapEngines[$this->soapEngine]['customerEngineId']]['username'],
+                                   "password"    => $this->soapEngines[$this->soapEngines[$this->soapEngine]['customerEngineId']]['password'],
                                    "admin"       => true
                                    );
 
@@ -302,8 +301,8 @@ class SIPSettings {
         } else {
         	$this->SOAPurlCustomer  = $this->SOAPurl;
             $this->SOAPloginCustomer = array(
-                                   "username"    => $this->soapEngines[$this->soapEngineIdSipPort]['username'],
-                                   "password"    => $this->soapEngines[$this->soapEngineIdSipPort]['password'],
+                                   "username"    => $this->soapEngines[$this->soapEngine]['username'],
+                                   "password"    => $this->soapEngines[$this->soapEngine]['password'],
                                    "admin"       => true
                                    );
 
@@ -326,10 +325,10 @@ class SIPSettings {
         $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-        $this->soapRemoteId=$this->soapEngines[$this->soapEngineIdSipPort]['depends'];
+        $this->soapRemoteId=$this->soapEngines[$this->soapEngine]['depends'];
 
         if (strlen($this->soapRemoteId) && in_array($this->soapRemoteId,array_keys($this->soapEngines))) {
-            $this->soapEngineIdRemote = $this->soapEngines[$this->soapRemoteId];
+            $this->soapEngineRemote = $this->soapEngines[$this->soapRemoteId];
             $impersonateRemote=intval($this->soapEngines[$this->soapRemoteId]['impersonate']);
 
             $this->SOAPloginRemote = array(
