@@ -14,7 +14,7 @@ minimal training of the helpdesk and operations staff. It gives you or your
 customers instant access to SIP usage information, traces from CDR level to
 protocol level, statistics grouped by criteria like release cause,
 destination or billing parties and can help pin-point SIP/ISDN call flows
-and failure reason. 
+and failure reason.
 
 CDRTool provides 100% accurate accounting for call detail records generated
 by OpenSER used in combination with MediaProxy regardless of the

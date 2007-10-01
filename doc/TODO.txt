@@ -1,2 +1,1 @@
-- Match SIP URIs as Destination Id to apply price per SIP destination
-- Define custom directory to load the CSV files from
+- Migrate web session and database management from phplib to pear  
