@@ -406,10 +406,10 @@ class SOAPEngine {
             $resultRemote = call_user_func_array(array($this->soapclientRemote,$function['commit']['name']),$function['commit']['parameters']);
 
             if (PEAR::isError($resultRemote)) {
-                $error_msg   = $resultRemote->getMessage();
-                $error_fault = $resultRemote->getFault();
-                $error_code  = $resultRemote->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                $this->error_msg   = $resultRemote->getMessage();
+                $this->error_fault = $resultRemote->getFault();
+                $this->error_code  = $resultRemote->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
                 return false;
             } else {
             	printf ("<p><font color=green>%s %s </font>",$function['commit']['logs']['success'],$this->SOAPurlRemote);
@@ -418,10 +418,10 @@ class SOAPEngine {
             	$result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
 
                 if (PEAR::isError($result)) {
-                    $error_msg   = $result->getMessage();
-                    $error_fault = $result->getFault();
-                    $error_code  = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    $this->error_msg   = $result->getMessage();
+                    $this->error_fault = $result->getFault();
+                    $this->error_code  = $result->getCode();
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
 
 					if ($function['rollback']['name']) {
 
@@ -431,10 +431,10 @@ class SOAPEngine {
             			$resultRemote = call_user_func_array(array($this->soapclientRemote,$function['rollback']['name']),$function['rollback']['parameters']);
 
                         if (PEAR::isError($result)) {
-                            $error_msg=$result->getMessage();
-                            $error_fault=$result->getFault();
-                            $error_code=$result->getCode();
-                            printf ("<p><font color=red>Error roll back at %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                            $this->error_msg=$result->getMessage();
+                            $this->error_fault=$result->getFault();
+                            $this->error_code=$result->getCode();
+                            printf ("<p><font color=red>Error roll back at %s: %s (%s): %s</font>",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
                         } else {
             				printf ("<p><font color=green>Rolled back action at %s </font>",$this->SOAPurlRemote);
                         }
@@ -454,10 +454,10 @@ class SOAPEngine {
             $result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
 
             if (PEAR::isError($result)) {
-                $error_msg   = $result->getMessage();
-                $error_fault = $result->getFault();
-                $error_code  = $result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                $this->error_msg   = $result->getMessage();
+                $this->error_fault = $result->getFault();
+                $this->error_code  = $result->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
                 return false;
             } else {
             	if ($function['commit']['logs']['success']) {
@@ -958,6 +958,9 @@ class Records {
     }
 
     function updateRecord () {
+    }
+
+    function copyRecord () {
     }
 
     function showRecord () {
@@ -6000,7 +6003,7 @@ class Customers extends Records {
 
     function deleteRecord() {
         if (!$_REQUEST['confirm']) {
-        	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+        	print "<p><font color=red>Please press on Delete again to confirm the delete. </font>";
             return true;
         }
 
@@ -6013,7 +6016,8 @@ class Customers extends Records {
                                             'parameters' => array(intval($this->filters['customer'])),
                                             'logs'       => array('success' => sprintf('<p>Customer id %s has been deleted',$this->filters['customer'])))
                         );
-     
+
+     	unset($this->filters['customer']);
         return $this->SOAPEngine->execute($function);
     }
 
@@ -6041,17 +6045,31 @@ class Customers extends Records {
         print "</pre>";
         */
 
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-
-        print "<input type=hidden name=action value=Update>";
-
         print "<table border=0 cellpadding=10>";
+
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "
+
         <tr>
-        <td colspan=2><input type=submit value=Update></td>
+        <td align=left><input type=submit name=action value=Update></td>
+        <td align=right>";
+
+      	if ($this->adminonly || $this->reseller == $customer->reseller) {
+        	print "<input type=submit name=action value=Copy>";
+        	print "<input type=submit name=action value=Delete>";
+            if ($_REQUEST['action'] == 'Delete' || $_REQUEST['action'] == 'Copy') {
+                print "<input type=hidden name=confirm value=1>";
+            }
+        }
+
+        print "</td>";
+
+        print "
+
         </tr>
         <tr>
         <td valign=top>
+
         <table border=0>
         ";
 
@@ -6524,6 +6542,69 @@ class Customers extends Records {
         }
     }
 
+    function copyRecord () {
+        //print "<p>Copy customer ...";
+
+        if (!strlen($this->filters['customer'])) {
+            return false;
+        }
+
+        if (!$_REQUEST['confirm']) {
+        	print "<p><font color=red>Please press on Copy again to confirm the copy</font>";
+            return true;
+        }
+
+        if (!$customer=$this->getRecord($this->filters['customer'])) {
+            return false;
+        }
+
+        $customer->credit      = floatval($customer->credit);
+        $customer->balance     = floatval($customer->balance);
+
+		$properties=array();
+
+        foreach ($customer->properties as $_property) {
+            $properties[]=$_property;
+        }
+
+        $customer->properties=$properties;
+
+        // change username
+        $customer_new=$customer;
+		unset($customer_new->id);
+
+        if (!$this->adminonly) {
+        	unset($customer_new->reseller);
+        }
+
+        $j=1;
+        while ($j < 9) {
+
+            $customer_new->username=$customer->username.$j;
+
+            $function=array('commit'   => array('name'       => 'addAccount',
+                                                'parameters' => array($customer_new),
+                                                'logs'       => array('success' => sprintf('<p>Customer id %s has been copied',$customer->id))
+                                                ),
+                            'rollback' => array('name'       => 'deleteAccount',
+                                                'parameters' => array($customer_new)
+                                                )
+                            );
+    
+            if ($this->SOAPEngine->execute($function)) {
+                // Reset filters to find the copy
+                unset($this->filters['customer']);
+                $this->filters['username']=$customer_new->username;
+                return true;
+            } else {
+                if ($this->SOAPEngine->error_fault->detail->exception->errorcode != "5001") {
+                	return false;
+                }
+            }
+
+            $j++;
+        }
+    }
 }
 
 class recordGenerator extends SOAPEngine {
@@ -6595,7 +6676,6 @@ class recordGenerator extends SOAPEngine {
         }
         print "<p>Generating records
         <ol>";
-
 
         $i=0;
 
