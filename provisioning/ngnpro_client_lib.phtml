@@ -3,7 +3,8 @@
 /*
     Copyright (c) 2007 AG Projects
     http://ag-projects.com
-    
+    Author Adrian Georgescu
+
     This client library provide the functions for managing SIP accounts,
     ENUM ranges, ENUM numbers, Trusted Peers, LCR, Rating plans
     on a remote NGN-Pro server
@@ -122,51 +123,64 @@ class SOAPEngine {
     var $loginType     = 'reseller';
 	var $allowedPorts  = array();
 
-    var $services=array(
-                        'sip_accounts'     => array(
+    var $ports=array(
+                        'sip_accounts'   => array(
                                            'recordsClass' => 'SipAccounts',
                                            'name'         => 'SIP accounts',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
-                                          ),
-                        'sip_aliases'    => array('recordsClass' => 'SipAliases',
+                                           ),
+                        'sip_aliases'    => array(
+                                           'recordsClass' => 'SipAliases',
                                            'name'         => 'SIP Aliases',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
-                                          ),
-                        'sip_domains'    => array('recordsClass' => 'Domains',
+                                           ),
+                        'sip_domains'    => array(
+                                           'recordsClass' => 'Domains',
                                            'name'         => 'SIP Domains',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
-                                          ),
-                        'enum_numbers'    => array('recordsClass' => 'EnumMappings',
+                                           ),
+                        'enum_numbers'   => array(
+                                           'recordsClass' => 'EnumMappings',
                                            'name'         => 'ENUM Numbers',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
-                                          ),
-                        'enum_ranges'    => array('recordsClass' => 'EnumRanges',
+                                           ),
+                        'enum_ranges'    => array(
+                                           'recordsClass' => 'EnumRanges',
                                            'name'         => 'ENUM Ranges',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
-                                          ),
-                        'customers'     => array('recordsClass' => 'Customers',
+                                           ),
+                        'customers'      => array(
+                                           'recordsClass' => 'Customers',
                                            'name'         => 'Customers',
                                            'soapClass'    => 'WebService_NGNPro_CustomerPort'
                                            ),
-                        'trusted_peers'  => array('recordsClass' => 'TrustedPeers',
+                        'trusted_peers'  => array(
+                                           'recordsClass' => 'TrustedPeers',
                                            'name'         => 'Trusted Peers',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
-                                          ),
-                        'pstn_gateways'  => array('recordsClass' => 'Gateways',
+                                           ),
+                        'pstn_gateways'  => array(
+                                           'recordsClass' => 'Gateways',
                                            'name'         => 'PSTN Gateways',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                            ),
-                        'pstn_gateway_groups' => array('recordsClass' => 'GatewayGroups',
+                        'pstn_gateway_groups' => array(
+                                           'recordsClass' => 'GatewayGroups',
                                            'name'         => 'Gateway groups',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
-                                          ),
-                        'pstn_routes'    => array('recordsClass' => 'Routes',
+                                           ),
+                        'pstn_routes'    => array(
+                                           'recordsClass' => 'Routes',
                                            'name'         => 'PSTN Routes',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
-                                          )
+                                           )
                         );
 
     function getSoapEngineAllowed($soapEngines,$filter) {
+        // returns a list of allowed engines based on a filter
+        // the filter format is:
+        // engine1:service1,service2 engine2 engine3
+
     	$_filter_els=explode(" ",trim($filter));
 		foreach(array_keys($soapEngines) as $_engine) {
         	foreach ($_filter_els as $_filter) {
@@ -192,16 +206,22 @@ class SOAPEngine {
 
     function SOAPEngine($service,$soapEngines,$loginCredentials=array()) {
 
-        // service syntax is is port@engine
-
         /*
-        $soapEngines=array(
+        	service is port@engine where:
+
+         	- port is an available NGNPro web service and
+            - engine is a connection to remote NGNPro server
+
+         	soapEngines is an array of NGNPro connections and
+            settings belonging to them:
+
+        	$soapEngines=array(
                                  'mdns' => array('name'        => 'Managed DNS',
                                                  'username'    => 'soapadmin',
                                                  'password'    => 'passwd',
-                                                 'url'         => 'http://example.com:9200/',
-                                                 'impersonate' => 1745
-                                                 ),
+                                                 'url'         => 'http://example.com:9200/'
+                                                 )
+                               );
         */
 
 		$this->loginCredentials = $loginCredentials;
@@ -223,9 +243,9 @@ class SOAPEngine {
 
             if (!$service) {
                 // use first engine available
-                $_services     = array_keys($this->services);
-                $_soapids      = array_keys($this->soapEngines);
-                $service       = $_services[0].'@'.$_soapids[0];
+                $_ports    = array_keys($this->ports);
+                $_engines  = array_keys($this->soapEngines);
+                $service   = $_ports[0].'@'.$_engines[0];
             }
 
 	        $this->extraFormElements    = $this->loginCredentials['extraFormElements'];
@@ -239,12 +259,12 @@ class SOAPEngine {
 
             if (count($this->allowedPorts[$this->soapEngine]) > 1 && in_array($_els[0],$this->allowedPorts[$this->soapEngine])) {
             	$this->soapEnginePort = $_els[0];
-            	$this->recordsClass   = $this->services[$this->soapEnginePort]['recordsClass'];
-            	$this->soapClass      = $this->services[$this->soapEnginePort]['soapClass'];
+            	$this->recordsClass   = $this->ports[$this->soapEnginePort]['recordsClass'];
+            	$this->soapClass      = $this->ports[$this->soapEnginePort]['soapClass'];
             }  else {
             	$this->soapEnginePort = $_els[0];
-            	$this->recordsClass   = $this->services[$this->soapEnginePort]['recordsClass'];
-            	$this->soapClass      = $this->services[$this->soapEnginePort]['soapClass'];
+            	$this->recordsClass   = $this->ports[$this->soapEnginePort]['recordsClass'];
+            	$this->soapClass      = $this->ports[$this->soapEnginePort]['soapClass'];
             }
 
             foreach(array_keys($this->soapEngines) as $_key ) {
@@ -348,6 +368,7 @@ class SOAPEngine {
             }
 
 	    	if ($this->version > 1) {
+                // The customer port is at the same SOAP URL
 	            $this->soapclientCustomers = new WebService_NGNPro_CustomerPort($this->SOAPurl);
     	        $this->soapclientCustomers->setOpt('curl', CURLOPT_TIMEOUT,        5);
         	    $this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
@@ -472,8 +493,8 @@ class SOAPEngineNewCustomer extends SOAPEngine {
             $this->soapEngine   = $engines[0];
             $this->soapEngines    = $soapEngines;
 			$this->soapEnginePort = 'customers';
-            $this->recordsClass   = $this->services[$this->soapEnginePort]['recordsClass'];
-            $this->soapClass      = $this->services[$this->soapEnginePort]['soapClass'];
+            $this->recordsClass   = $this->ports[$this->soapEnginePort]['recordsClass'];
+            $this->soapClass      = $this->ports[$this->soapEnginePort]['soapClass'];
 
             $this->SOAPlogin = array(
                                    "username"    => $this->soapEngines[$this->soapEngine]['username'],
@@ -581,7 +602,9 @@ class Records {
         $this->getResellers();
         $this->getCustomers();
 
-        if (strlen($this->SOAPEngine->SipSettingsPage)) $this->SipSettingsPage=$this->SOAPEngine->SipSettingsPage;
+        if (strlen($this->SOAPEngine->SipSettingsPage)) {
+        	$this->SipSettingsPage=$this->SOAPEngine->SipSettingsPage;
+        }
     }
 
     function showEngineSelection() {
@@ -594,12 +617,12 @@ class Records {
 
         	if ($j>1) printf ("<option value=''>--------");
             $k=1;
-            foreach (array_keys($this->SOAPEngine->services) as $_service) {
-                $idx=$_service.'@'.$_engine;
-                if (in_array($_service,$this->SOAPEngine->skipEngines[$_engine])) continue;
-                if (count($this->SOAPEngine->allowedPorts[$_engine]) > 1 && !in_array($_service,$this->SOAPEngine->allowedPorts[$_engine])) continue;
+            foreach (array_keys($this->SOAPEngine->ports) as $_port) {
+                $idx=$_port.'@'.$_engine;
+                if (in_array($_port,$this->SOAPEngine->skipEngines[$_engine])) continue;
+                if (count($this->SOAPEngine->allowedPorts[$_engine]) > 1 && !in_array($_port,$this->SOAPEngine->allowedPorts[$_engine])) continue;
                 if ($_engine == 'Customers' && $this->version <= 1) continue;
-                printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_service,$_engine,$selected_soapEngine[$idx],$j,$k,$this->SOAPEngine->services[$_service]['name'],$this->SOAPEngine->soapEngines[$_engine]['name']);
+                printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_port,$_engine,$selected_soapEngine[$idx],$j,$k,$this->SOAPEngine->ports[$_port]['name'],$this->SOAPEngine->soapEngines[$_engine]['name']);
                 $k++;
             }
             $j++;
@@ -4370,18 +4393,45 @@ class TrustedPeers extends Records {
         ";
     }
 
-    function addRecord() {
-    	$ipaddress   = trim($_REQUEST['ipaddress']);
-        $description = trim($_REQUEST['description']);
-        $owner       = trim($_REQUEST['owner']);
+    function addRecord($dictionary=array()) {
+
+        if ($dictionary['ipaddress']) {
+    		$ipaddress   = $dictionary['ipaddress'];
+        } else {
+    		$ipaddress   = trim($_REQUEST['ipaddress']);
+        }
+
+        if ($dictionary['description']) {
+    		$description   = $dictionary['description'];
+        } else {
+    		$description   = trim($_REQUEST['description']);
+        }
+
+        if ($dictionary['owner']) {
+    		$owner   = $dictionary['owner'];
+        } else {
+    		$owner   = trim($_REQUEST['owner']);
+        }
 
         if ($this->adminonly) {
-        	$reseller = trim($_REQUEST['reseller']);
-        	$customer = trim($_REQUEST['customer']);
+        	if ($dictionary['reseller']) {
+                $reseller=$dictionary['reseller'];
+            } else {
+            	$reseller = trim($_REQUEST['reseller']);
+            }
+        	if ($dictionary['customer']) {
+                $customer=$dictionary['customer'];
+            } else {
+            	$customer = trim($_REQUEST['customer']);
+            }
             if (!$customer) $customer=$reseller;
         } else {
         	$reseller = $this->reseller;
-        	$customer = trim($_REQUEST['customer']);
+        	if ($dictionary['customer']) {
+                $customer=$dictionary['customer'];
+            } else {
+            	$customer = trim($_REQUEST['customer']);
+            }
             if (!$customer || !in_array($customer,array_keys($this->customers))) {
                 $customer=$reseller;
             }
@@ -4610,8 +4660,47 @@ class GatewayGroups extends Records {
         ";
     }
 
-    function addRecord() {
-    	$name     = trim($_REQUEST['name']);
+    function addRecord($dictionary=array()) {
+        if ($this->version > 1) {
+        	if ($dictionary['name']) {
+                $name=$dictionary['name'];
+            } else {
+            	$name = trim($_REQUEST['name']);
+            }
+
+            if ($this->adminonly) {
+                if ($dictionary['reseller']) {
+                    $reseller=$dictionary['reseller'];
+                } else {
+                    $reseller = trim($_REQUEST['reseller']);
+                }
+                if ($dictionary['customer']) {
+                    $customer=$dictionary['customer'];
+                } else {
+                    $customer = trim($_REQUEST['customer']);
+                }
+                if (!$customer) $customer=$reseller;
+            } else {
+                $reseller = $this->reseller;
+                if ($dictionary['customer']) {
+                    $customer=$dictionary['customer'];
+                } else {
+                    $customer = trim($_REQUEST['customer']);
+                }
+                if (!$customer || !in_array($customer,array_keys($this->customers))) {
+                    $customer=$reseller;
+                }
+            }
+
+            $structure=array('name'     => $name,
+                             'customer' => intval($customer),
+                             'reseller' => intval($reseller)
+                             );
+
+        } else {
+    		$structure = trim($_REQUEST['name']);
+            $name = $structure;
+        }
 
 		if (!strlen($name)) {
             printf ("<p><font color=red>Error: Missing name. </font>");
@@ -4619,10 +4708,10 @@ class GatewayGroups extends Records {
         }
 
         $function=array('commit'   => array('name'       => 'addGatewayGroup',
-                                            'parameters' => array($name),
+                                            'parameters' => array($structure),
                                             'logs'       => array('success' => sprintf('<p>Gateway group %s has been added',$name))),
                         'rollback' => array('name'       => 'deleteGatewayGroup',
-                                            'parameters' => array($name)
+                                            'parameters' => array($structure)
                                             )
                         );
      
@@ -4893,12 +4982,56 @@ class Gateways extends Records {
         ";
     }
 
-    function addRecord() {
-    	$name     = trim($_REQUEST['name']);
-        $group    = trim($_REQUEST['group']);
-        $address  = trim($_REQUEST['address']);
-        $strip    = trim($_REQUEST['strip']);
-        $prefix   = trim($_REQUEST['prefix']);
+    function addRecord($dictionary=array()) {
+        if ($dictionary['name']) {
+    		$name   = $dictionary['name'];
+        } else {
+    		$name   = trim($_REQUEST['name']);
+        }
+        if ($dictionary['group']) {
+    		$group   = $dictionary['group'];
+        } else {
+    		$group   = trim($_REQUEST['group']);
+        }
+        if ($dictionary['address']) {
+    		$address   = $dictionary['address'];
+        } else {
+    		$address   = trim($_REQUEST['address']);
+        }
+        if ($dictionary['strip']) {
+    		$strip   = $dictionary['strip'];
+        } else {
+    		$strip   = trim($_REQUEST['strip']);
+        }
+        if ($dictionary['prefix']) {
+    		$prefix   = $dictionary['prefix'];
+        } else {
+    		$prefix   = trim($_REQUEST['prefix']);
+        }
+
+        if ($this->adminonly) {
+        	if ($dictionary['reseller']) {
+                $reseller=$dictionary['reseller'];
+            } else {
+            	$reseller = trim($_REQUEST['reseller']);
+            }
+        	if ($dictionary['customer']) {
+                $customer=$dictionary['customer'];
+            } else {
+            	$customer = trim($_REQUEST['customer']);
+            }
+            if (!$customer) $customer=$reseller;
+        } else {
+        	$reseller = $this->reseller;
+        	if ($dictionary['customer']) {
+                $customer=$dictionary['customer'];
+            } else {
+            	$customer = trim($_REQUEST['customer']);
+            }
+            if (!$customer || !in_array($customer,array_keys($this->customers))) {
+                $customer=$reseller;
+            }
+        }
 
 		if (!strlen($name) || !strlen($group) || !strlen($address)) {
             printf ("<p><font color=red>Error: Missing name, group or address. </font>");
@@ -4933,7 +5066,9 @@ class Gateways extends Records {
                      'uriScheme' => 'sip',
                      'transport' => $transport,
                      'strip'     => intval($_REQUEST['strip']),
-                     'prefix'    => $_REQUEST['prefix']
+                     'prefix'    => $_REQUEST['prefix'],
+                     'customer'    => intval($customer),
+                     'reseller'    => intval($reseller)
         			);
 
         $function=array('commit'   => array('name'       => 'addGateway',
@@ -5198,12 +5333,51 @@ class Routes extends Records {
         ";
     }
 
-    function addRecord() {
+    function addRecord($dictionary=array()) {
+        if ($dictionary['prefix']) {
+    		$prefix   = $dictionary['prefix'];
+        } else {
+    		$prefix   = trim($_REQUEST['prefix']);
+        }
+        if ($dictionary['gatewayGroup']) {
+    		$gatewayGroup   = $dictionary['gatewayGroup'];
+        } else {
+    		$gatewayGroup   = trim($_REQUEST['gatewayGroup']);
+        }
+        if ($dictionary['fromURI']) {
+    		$fromURI   = $dictionary['fromURI'];
+        } else {
+    		$fromURI   = trim($_REQUEST['fromURI']);
+        }
+        if ($dictionary['priority']) {
+    		$priority   = $dictionary['priority'];
+        } else {
+    		$priority   = trim($_REQUEST['priority']);
+        }
 
-    	$prefix       = trim($_REQUEST['prefix']);
-        $gatewayGroup = trim($_REQUEST['gatewayGroup']);
-        $fromURI         = trim($_REQUEST['fromURI']);
-        $priority     = trim($_REQUEST['priority']);
+        if ($this->adminonly) {
+        	if ($dictionary['reseller']) {
+                $reseller=$dictionary['reseller'];
+            } else {
+            	$reseller = trim($_REQUEST['reseller']);
+            }
+        	if ($dictionary['customer']) {
+                $customer=$dictionary['customer'];
+            } else {
+            	$customer = trim($_REQUEST['customer']);
+            }
+            if (!$customer) $customer=$reseller;
+        } else {
+        	$reseller = $this->reseller;
+        	if ($dictionary['customer']) {
+                $customer=$dictionary['customer'];
+            } else {
+            	$customer = trim($_REQUEST['customer']);
+            }
+            if (!$customer || !in_array($customer,array_keys($this->customers))) {
+                $customer=$reseller;
+            }
+        }
 
 		if (!strlen($prefix) || !strlen($gatewayGroup)) {
             printf ("<p><font color=red>Error: Missing prefix or gatewayGroup. </font>");
@@ -5214,8 +5388,10 @@ class Routes extends Records {
                      'prefix'       => $prefix,
                      'gatewayGroup' => $gatewayGroup,
                      'fromURI'      => $fromURI,
-                     'priority'     => intval($priority)
-        			);
+                     'priority'     => intval($priority),
+                     'customer'     => intval($customer),
+                     'reseller'     => intval($reseller)
+                     );
 
 		$routes=array($route);
 

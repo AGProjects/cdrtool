@@ -13,19 +13,6 @@ if (is_readable("local/header.phtml")) {
     include("header.phtml");
 }
 
-//$verbose=1;
-if ($verbose) {
-for (reset   ($HTTP_POST_VARS); list ($k, $v) = each  ($HTTP_POST_VARS); )
-    if ($v) {
-        $vars=$vars." <b>".$k."</b>='".$v."', ";
-    }
-    for (reset   ($HTTP_GET_VARS); list ($k, $v) = each  ($HTTP_GET_VARS); )
-    if ($v) {
-        $vars=$vars." <b>".$k."</b>='".$v."', ";
-    }
-    print_r($vars);
-}
-
 $perm->check("provisioning");
 
 require_once('provisioning/sip_settings_lib.phtml');

@@ -1,4 +1,14 @@
 <?
+/*
+    Copyright (c) 2007 AG Projects
+    http://ag-projects.com
+    Author Adrian Georgescu
+
+    This page provides the functions for managing SIP accounts,
+    ENUM ranges, ENUM numbers, Trusted Peers, LCR, Rating plans
+    on a remote NGN-Pro server
+*/
+
 include("./global.inc");
 page_open(
             array("sess" => "CDRTool_Session",
@@ -14,6 +24,7 @@ if (is_readable("local/header.phtml")) {
 }
 
 set_time_limit(600);
+
 $perm->check("provisioning");
 
 $layout = new pageLayoutLocal();
@@ -33,14 +44,9 @@ if ($CDRTool['reseller']) {
                         );
 }
 
-//print_r($loginCredentials);
-
-$loginCredentials['extraFormElements']=array();
-
 require_once("provisioning/ngnpro_soap_library.phtml");
 require_once("provisioning/ngnpro_client_lib.phtml");
 include_once("provisioning/ngnpro_engines.inc");
-
 
 if ($_REQUEST['generatorId']) {
     $generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,$loginCredentials);
@@ -65,8 +71,8 @@ if ($_REQUEST['generatorId']) {
     } else {
         $RECORDS->listRecords();
     }
-    
 }
+
 $layout->showFooter();
 
 print "
