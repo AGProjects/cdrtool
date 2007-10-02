@@ -68,9 +68,9 @@
     $this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
     
     $sipDomain = array('domain'  => 'example.com',
-                        'customer' => $customer,
-                        'reseller' => $reseller
-                        );
+                       'customer' => $customer,
+                       'reseller' => $reseller
+                      );
     
     $this->sipRecords->addRecord($sipDomain);
 
@@ -83,12 +83,12 @@
     $_sip_class          = $this->SipSOAPEngine->recordsClass;
     $this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
     
-    $sipAlias = array(  'alias'    => 'user@example1.com',
-                        'target'   => 'user@example2.com',
-                        'owner'    => $owner,
-                        'customer' => $customer,
-                        'reseller' => $reseller
-                        );
+    $sipAlias = array('alias'    => 'user@example1.com',
+                      'target'   => 'user@example2.com',
+                      'owner'    => $owner,
+                      'customer' => $customer,
+                      'reseller' => $reseller
+                     );
     
     $this->sipRecords->addRecord($sipAlias);
     
@@ -169,16 +169,12 @@ class SOAPEngine {
     function getSoapEngineAllowed($soapEngines,$filter) {
     	$_filter_els=explode(" ",trim($filter));
 		foreach(array_keys($soapEngines) as $_engine) {
-            //dprint("check engine $_engine");
         	foreach ($_filter_els as $_filter) {
-                //dprint("check filter $_filter");
-
                 unset($_allowed_engine);
                 $_allowed_ports=array();
 
                 list($_allowed_engine,$_allowed_ports_els) = explode(":",$_filter);
 
-                //dprint ("_allowed_engine=$_allowed_engine, _allowed_ports=$_allowed_ports_els");
                 if ($_allowed_ports_els) {
                 	$_allowed_ports = explode(",",$_allowed_ports_els);
                 }
@@ -187,13 +183,9 @@ class SOAPEngine {
                 	$soapEngines_checked[$_engine]=$soapEngines[$_engine];
                     $this->allowedPorts[$_engine]=$_allowed_ports;
                 	continue;
-            	} else {
-                    //dprint ("$_engine != $_allowed_engine");
                 }
         	}
     	}
-
-		//dprint_r($soapEngines_checked);
 
         return $soapEngines_checked;
     }
@@ -1351,21 +1343,20 @@ class Domains extends Records {
             if (!$customer) $customer=$reseller;
         }
 
-        if ($this->version  >1 ) {
-            $domainStructure=array('domain'   => $domain,
-                                   'customer' => intval($customer),
-                                   'reseller' => intval($reseller)
-                                   );
-            $parameter=$domainStructure;
+        if ($this->version > 1) {
+            $domainStructure = array('domain'   => $domain,
+                                    'customer' => intval($customer),
+                                    'reseller' => intval($reseller)
+                                    );
         } else {
-            $parameter=$domain;
+            $domainStructure = $domain;
         }
 
         $function=array('commit'   => array('name'       => 'addDomain',
-                                            'parameters' => array($parameter),
+                                            'parameters' => array($domainStructure),
                                             'logs'       => array('success' => sprintf('SIP domain %s has been added',$domain))),
                         'rollback' => array('name'       => 'deleteDomain',
-                                            'parameters' => array($parameter))
+                                            'parameters' => array($domainStructure))
                                            );
 
         return $this->SOAPEngine->execute($function);
@@ -1840,7 +1831,6 @@ class SIPAccounts extends Records {
             printf (" Pass<input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
             printf (" Name<input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
             printf (" Email<input type=text size=15 name=email value='%s'>",$_REQUEST['email']);
-            //printf (" CallerId<input type=text size=11 name=rpid value='%s'>",$_REQUEST['rpid']);
             printf ("<nobr>Owner<input type=text size=5 name=owner value='%s'></nobr> ",$_REQUEST['owner']);
             printf ("<nobr>PSTN<input type=checkbox name=pstn value=1></nobr> ");
             printf ("<nobr>Quota<input type=text size=5 name=quota value='%s'></nobr> ",$_REQUEST['quota']);
@@ -7437,14 +7427,12 @@ class recordGenerator extends SOAPEngine {
 
     	$_filter_els=explode(" ",trim($filter));
 		foreach(array_keys($soapEngines) as $_engine) {
-            //dprint("check engine $_engine");
         	foreach ($_filter_els as $_filter) {
                 unset($_allowed_engine);
                 $_allowed_ports=array();
 
                 list($_allowed_engine,$_allowed_ports_els) = explode(":",$_filter);
 
-                //dprint ("_allowed_engine=$_allowed_engine, _allowed_ports=$_allowed_ports_els");
                 if ($_allowed_ports_els) {
                 	$_allowed_ports = explode(",",$_allowed_ports_els);
                 }
@@ -7453,13 +7441,9 @@ class recordGenerator extends SOAPEngine {
                 	$soapEngines_checked[$_engine]=$soapEngines[$_engine];
                     $this->allowedPorts[$_engine]=$_allowed_ports;
                 	continue;
-            	} else {
-                    //dprint ("$_engine != $_allowed_engine");
                 }
         	}
     	}
-
-		//dprint_r($soapEngines_checked);
 
         return $soapEngines_checked;
     }

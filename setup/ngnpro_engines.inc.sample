@@ -1,18 +1,32 @@
 <?
 // Connections to NGN-Pro
+
 $soapEngines=array(
-                           'sp' => array('name'=> 'SOAP Engine',
+                           'se' => array('name'=> 'SOAP Engine',
                                          'username'=> 'username',
                                          'password'=> 'password',
-                                         'url'     => 'http://example.com:9200/'
+                                         'url'     => 'http://sip.example.com:9200/',
+                                         'voicemailEngine' => 've',
+                                         'presenceEngine'  => 'pe',
+                                         'recordGenerator' => 'rg'
+                                         ),
+                           'pe' => array('name'=> 'Simple Soap Proxy',
+                                         'url'     => 'http://ssp.example.com:9300/ssp/',
+                                         'skip'    => true
+                                         ),
+                           've' => array('name'=> 'Voicemail',
+                                         'username'=> 'username',
+                                         'password'=> 'password',
+                                         'url'     => 'http://vm.example.com:9200/',
+                                         'skip'    =>  true
                                          )
-                          );
+                  );
 
-// Used to generate SIP accounts and ENUM mappings
+// Used to generate SIP accounts and ENUM mappings in bulk
 $recordGenerators =array (
                           'rg'=>array(
-                                      'sipEngineId' => 'sp',
-                                      'enumEngineId'=> 'sp'
+                                      'sipEngine' => 'se',
+                                      'enumEngine'=> 'se'
                                      )
                          );
 
