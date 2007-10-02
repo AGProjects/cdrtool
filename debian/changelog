@@ -1,6 +1,6 @@
 cdrtool (5.3.0) unstable; urgency=low
 
-  * Renamed OpenSER radius table Framed-Protocol to ENUMtld to accomodate
+  * Renamed field radius.Framed-Protocol to radius.ENUMtld to accomodate
     discounts based on ENUM top level domain. This functionality requires
     changes to the database structures and reconfigure several components:
 
