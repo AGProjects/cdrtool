@@ -6959,36 +6959,36 @@ class recordGenerator extends SOAPEngine {
         	$this->soapEngines = $soapEngines;
         }
 
-        if (in_array($this->recordGenerators[$generatorId]['sipEngineId'],array_keys($this->soapEngines))) {
+        if (in_array($this->recordGenerators[$generatorId]['sipEngine'],array_keys($this->soapEngines))) {
             // sip zones
-            if (count($this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngineId']]) > 1 && !in_array('sip_accounts',$this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngineId']])) {
+            if (count($this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngine']]) > 1 && !in_array('sip_accounts',$this->allowedPorts[$this->recordGenerators[$generatorId]['sipEngine']])) {
                 // sip port not available
                 dprint("sip port not avaliable");
             } else {
-                $sipEngine           = 'sip_accounts@'.$this->recordGenerators[$generatorId]['sipEngineId'];
+                $sipEngine           = 'sip_accounts@'.$this->recordGenerators[$generatorId]['sipEngine'];
                 $this->SipSOAPEngine = new SOAPEngine($sipEngine,$soapEngines,$loginCredentials);
                 $_sip_class          = $this->SipSOAPEngine->recordsClass;
                 $this->sipRecords    = new $_sip_class(&$this->SipSOAPEngine);
                 $this->sipRecords->getAllowedDomains();
             }
         } else {
-            printf ("<font color=red>Error: soapengineId %s does not exist</font>",$this->recordGenerators[$generatorId]['sipEngineId']);
+            printf ("<font color=red>Error: soapengineId %s does not exist</font>",$this->recordGenerators[$generatorId]['sipEngine']);
         }
 
-        if (in_array($this->recordGenerators[$generatorId]['enumEngineId'],array_keys($this->soapEngines))) {
-            if (count($this->allowedPorts[$this->recordGenerators[$generatorId]['enumEngineId']]) > 1 && !in_array('enum_numbers',$this->allowedPorts[$this->recordGenerators[$generatorId]['enumEngineId']])) {
+        if (in_array($this->recordGenerators[$generatorId]['enumEngine'],array_keys($this->soapEngines))) {
+            if (count($this->allowedPorts[$this->recordGenerators[$generatorId]['enumEngine']]) > 1 && !in_array('enum_numbers',$this->allowedPorts[$this->recordGenerators[$generatorId]['enumEngine']])) {
                 dprint("enum port not avaliable");
                 // enum port not available
             } else {
                 // enum mappings
-                $enumEngine           = 'enum_numbers@'.$this->recordGenerators[$generatorId]['enumEngineId'];
+                $enumEngine           = 'enum_numbers@'.$this->recordGenerators[$generatorId]['enumEngine'];
                 $this->EnumSOAPEngine = new SOAPEngine($enumEngine,$soapEngines,$loginCredentials);
                 $_enum_class          = $this->EnumSOAPEngine->recordsClass;
                 $this->enumRecords    = new $_enum_class(&$this->EnumSOAPEngine);
                 $this->enumRecords->getAllowedDomains();
             }
         } else {
-            printf ("<font color=red>Error: soapengineId %s does not exist</font>",$this->recordGenerators[$generatorId]['enumEngineId']);
+            printf ("<font color=red>Error: soapengineId %s does not exist</font>",$this->recordGenerators[$generatorId]['enumEngine']);
         }
 
 		if ($_REQUEST['reseller_filter']) $this->template['reseller']=intval($_REQUEST['reseller_filter']);

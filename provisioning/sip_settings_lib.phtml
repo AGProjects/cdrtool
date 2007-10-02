@@ -264,8 +264,8 @@ class SIPSettings {
         // Instantiate the SOAP clients
         $this->SipPort       = new $this->soapClassSipPort($this->SOAPurl);
 
-		if (strlen($this->soapEngines[$this->soapEngine]['voicemailEngineId'])) {
-        	$voicemailId=$this->soapEngines[$this->soapEngine]['voicemailEngineId'];
+		if (strlen($this->soapEngines[$this->soapEngine]['voicemailEngine'])) {
+        	$voicemailId=$this->soapEngines[$this->soapEngine]['voicemailEngine'];
         	$this->SOAPurlVoicemail = $this->soapEngines[$voicemailId]['url'];
             $this->SOAPloginVoicemail = array(
                                    "username"    => $this->soapEngines[$voicemailId]['username'],
@@ -280,19 +280,19 @@ class SIPSettings {
             $this->SoapAuthVoicemail = $this->SoapAuth;
         }
 
-		if (strlen($this->soapEngines[$this->soapEngines[$this->soapEngine]['presenceEngineId']])) {
-        	$this->SOAPurlPresence = $this->soapEngines[$this->soapEngines[$this->soapEngine]['presenceEngineId']]['url'];
+		if (strlen($this->soapEngines[$this->soapEngines[$this->soapEngine]['presenceEngine']])) {
+        	$this->SOAPurlPresence = $this->soapEngines[$this->soapEngines[$this->soapEngine]['presenceEngine']]['url'];
         	$this->PresencePort    = new $this->soapClassPresencePort($this->SOAPurlPresence);
         	$this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT,        5);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
         }
 
-		if (strlen($this->soapEngines[$this->soapEngine]['customerEngineId'])) {
-        	$this->SOAPurlCustomer = $this->soapEngines[$this->soapEngines[$this->soapEngine]['customerEngineId']]['url'];
+		if (strlen($this->soapEngines[$this->soapEngine]['customerEngine'])) {
+        	$this->SOAPurlCustomer = $this->soapEngines[$this->soapEngines[$this->soapEngine]['customerEngine']]['url'];
             $this->SOAPloginCustomer = array(
-                                   "username"    => $this->soapEngines[$this->soapEngines[$this->soapEngine]['customerEngineId']]['username'],
-                                   "password"    => $this->soapEngines[$this->soapEngines[$this->soapEngine]['customerEngineId']]['password'],
+                                   "username"    => $this->soapEngines[$this->soapEngines[$this->soapEngine]['customerEngine']]['username'],
+                                   "password"    => $this->soapEngines[$this->soapEngines[$this->soapEngine]['customerEngine']]['password'],
                                    "admin"       => true
                                    );
 
@@ -366,7 +366,7 @@ class SIPSettings {
             return false;
         }
 
-        //dprint_r($result);
+        dprint_r($result);
 
         $this->owner     = $result->owner;
 
@@ -2183,6 +2183,8 @@ class SIPSettings {
             $result->password=$sip_password;
 	    	$this->somethingChanged=1;
         }
+
+        if (!$result->password) unset($result->password);
 
         if ($timezone && $timezone != $this->timezone) {
             $result->timezone=$timezone;
