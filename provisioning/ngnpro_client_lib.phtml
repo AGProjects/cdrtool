@@ -5679,6 +5679,9 @@ class Customers extends Records {
                               'bankAccount' => array('type'=>'text',
                                                      'name'=>'Bank account'
                                                      ),
+                             'billingEmail' => array('type'=>'text',
+                                                     'name'=>'Billing email'
+                                                     ),
                            'billingAddress' => array('type'=>'textarea',
                                                      'name'=>'Billing address'
                                                      )
@@ -7090,6 +7093,17 @@ class Customers extends Records {
             $item_form       = $item.'_form';
         	$customer[$item] = trim($_REQUEST[$item_form]);
         }
+
+		if ($customer['state'] != 'N/A') {
+        	$_state=$customer['state'].' ';
+        } else {
+            $_state='';
+        }
+
+		$customer['billingEmail']   = $customer['email'];
+        $customer['billingAddress'] = $customer['address']."\n".
+                                      $customer['postcode']." ".$customer['city']."\n".
+                                      $_state.$customer['country'];
 
         $customer->properties=array();
 
