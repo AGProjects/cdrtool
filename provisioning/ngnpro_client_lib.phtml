@@ -328,7 +328,7 @@ class SOAPEngine {
             }
 
             $this->SOAPurl=$this->soapEngines[$this->soapEngine]['url'];
-            printf ("<p>Connection to %s at <a href=%swsdl target=wsdl>%s</a> as %s/%s ",$this->soapClass,$this->SOAPurl,$this->SOAPurl,$this->soapUsername,$this->reseller);
+            //printf ("<p>Connection to %s at <a href=%swsdl target=wsdl>%s</a> as %s/%s ",$this->soapClass,$this->SOAPurl,$this->SOAPurl,$this->soapUsername,$this->reseller);
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
     		// Instantiate the SOAP client
@@ -627,7 +627,8 @@ class Records {
                 if (in_array($_port,$this->SOAPEngine->skipEngines[$_engine])) continue;
                 if (count($this->SOAPEngine->allowedPorts[$_engine]) > 1 && !in_array($_port,$this->SOAPEngine->allowedPorts[$_engine])) continue;
                 if ($_engine == 'Customers' && $this->version <= 1) continue;
-                printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_port,$_engine,$selected_soapEngine[$idx],$j,$k,$this->SOAPEngine->ports[$_port]['name'],$this->SOAPEngine->soapEngines[$_engine]['name']);
+                //printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_port,$_engine,$selected_soapEngine[$idx],$j,$k,$this->SOAPEngine->ports[$_port]['name'],$this->SOAPEngine->soapEngines[$_engine]['name']);
+                printf ("<option value='%s@%s' %s>%s@%s",$_port,$_engine,$selected_soapEngine[$idx],$this->SOAPEngine->ports[$_port]['name'],$this->SOAPEngine->soapEngines[$_engine]['name']);
                 $k++;
             }
             $j++;
@@ -700,15 +701,19 @@ class Records {
     }
 
     function showSeachForm() {
+
      	print "
-        <p>
-        <table border=0 class=border width=100%>
+        <table border=0 bgcolor=lightgreen class=border width=100%>
         <tr>
             ";
             printf ("<form method=post name=soapengine action=%s>",$_SERVER['PHP_SELF']);
             print "
         	<td align=left>
             ";
+            print "
+            <input type=submit name=action value=Search>
+            ";
+
             $this->showEngineSelection();
 
             $this->showSeachFormCustom();
@@ -716,12 +721,9 @@ class Records {
             print "
 	        </td>
         	<td align=right>
-            ";
+            Order";
             $this->showSortForm();
 
-            print "
-            <input type=submit name=action value=Search>
-            ";
             $this->printHiddenFormElements();
 
             print "
@@ -1299,7 +1301,7 @@ class Domains extends Records {
 		if ($this->selectionActive) return;
         print "
         <p>
-        <table border=0 class=border width=100%>
+        <table border=0 class=border width=100% bgcolor=lightblue>
         <tr>
             ";
             printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
@@ -1832,7 +1834,7 @@ class SIPAccounts extends Records {
 
         print "
         <p>
-        <table border=0 class=border width=100%>
+        <table border=0 class=border width=100% bgcolor=lightblue>
         <tr>
             ";
             printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
@@ -2435,7 +2437,7 @@ class SIPAliases extends Records {
 
         print "
         <p>
-        <table border=0 class=border width=100%>
+        <table border=0 class=border width=100% bgcolor=lightblue>
         <tr>
             ";
             printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
@@ -2879,7 +2881,7 @@ class ENUMranges extends Records {
 
         print "
         <p>
-        <table border=0 class=border width=100%>
+        <table border=0 class=border width=100% bgcolor=lightblue>
         <tr>
             ";
             printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
@@ -3555,7 +3557,6 @@ class ENUMmappings extends Records {
     function showSeachFormCustom() {
 
         printf (" Number<input type=text size=15 name=number_filter value='%s'>",$this->filters['number']);
-        printf (" TLD");
         if (count($this->allowedDomains) > 0) {
             $selected_tld[$this->filters['tld']]='selected';
             printf ("<select name=tld_filter>
@@ -3570,20 +3571,19 @@ class ENUMmappings extends Records {
             printf ("<input type=text size=10 name=tld_filter value='%s'>",$this->filters['tld']);
         }
 
-        printf (" Srv");
-                    print "<select name=type_filter>
-                    <option>
-                    ";
-                    reset($this->NAPTR_services);
-                    $selected_naptr_service[$this->filters['mapto']];
-                    while (list($k,$v) = each($this->NAPTR_services)) {
-                    	printf ("<option value='%s' %s>%s",$k,$selected_naptr_service[$k],$this->NAPTR_services[$k]['webname']);
-                    }
-   
-                    print "
-                    </select>
-                    ";
-        printf (" <nobr>Map to<input type=text size=20 name=mapto_filter value='%s'></nobr>",$this->filters['mapto']);
+        print "<select name=type_filter>
+        <option>
+        ";
+        reset($this->NAPTR_services);
+        $selected_naptr_service[$this->filters['type']]='selected';
+        while (list($k,$v) = each($this->NAPTR_services)) {
+            printf ("<option value='%s' %s>%s",$k,$selected_naptr_service[$k],$this->NAPTR_services[$k]['webname']);
+        }
+
+        print "
+        </select>
+        ";
+        printf (" <nobr>Map to<input type=text size=15 name=mapto_filter value='%s'></nobr>",$this->filters['mapto']);
 
     }
 
@@ -3672,7 +3672,7 @@ class ENUMmappings extends Records {
 
         print "
         <p>
-        <table border=0 class=border width=100%>
+        <table border=0 class=border width=100% bgcolor=lightblue>
         <tr>
         ";
 
@@ -3698,30 +3698,21 @@ class ENUMmappings extends Records {
         }
 
         printf (" Map to");
-                print "<select name=type>
-                ";
-                reset($this->NAPTR_services);
-                while (list($k,$v) = each($this->NAPTR_services)) {
-                    printf ("<option value='%s' %s>%s",$k,$selected_naptr_service[$k],$this->NAPTR_services[$k]['webname']);
-                }
-
-                print "
-                </select>
-                ";
-        printf (" <input type=text size=25 name=mapto>");
-        printf (" TTL<input type=text size=5 name=ttl value=3600>");
-        print "Customer";
-
-        if ($this->adminonly) {
-            $this->showResellerForm('reseller');
-            print ".";
-            $this->showCustomerForm('customer');
-        } else {
-            $this->showCustomerForm('customer');
+        print "<select name=type>
+        ";
+        reset($this->NAPTR_services);
+        while (list($k,$v) = each($this->NAPTR_services)) {
+            printf ("<option value='%s' %s>%s",$k,$selected_naptr_service[$k],$this->NAPTR_services[$k]['webname']);
         }
 
+        print "
+        </select>
+        ";
+        printf (" <input type=text size=25 name=mapto>");
+        printf (" TTL<input type=text size=5 name=ttl value=3600>");
+        printf (" Priority<input type=text size=3 name=priority>");
         printf (" Owner<input type=text size=5 name=owner>");
-        printf (" Prio<input type=text size=3 name=priority>");
+        printf (" Info<input type=text size=10 name=info>");
 
         print "
         </td>
@@ -3874,6 +3865,12 @@ class ENUMmappings extends Records {
     		$owner = intval(trim($_REQUEST['owner']));
         }
 
+        if ($dictionary['info']) {
+            $info = intval($dictionary['info']);
+        } else {
+    		$info = intval(trim($_REQUEST['info']));
+        }
+
 		if (!$priority) $priority=5;
 
         $enum_id=array('number' => $number,
@@ -3922,6 +3919,7 @@ class ENUMmappings extends Records {
 
         $enum_number=array('id'       => $enum_id,
                            'owner'    => $owner,
+                           'info'     => $info,
                            'customer' => intval($customer),
                            'reseller' => intval($reseller),
                            'mappings' => array(array('type'     => $type,
@@ -4360,7 +4358,7 @@ class TrustedPeers extends Records {
 		if ($this->selectionActive) return;
         print "
         <p>
-        <table border=0 class=border width=100%>
+        <table border=0 class=border width=100% bgcolor=lightblue>
         <tr>
             ";
             printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
@@ -4634,7 +4632,7 @@ class GatewayGroups extends Records {
 		if ($this->selectionActive) return;
         print "
         <p>
-        <table border=0 class=border width=100%>
+        <table border=0 class=border width=100% bgcolor=lightblue>
         <tr>
             ";
             printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
@@ -4918,7 +4916,7 @@ class Gateways extends Records {
 		if ($this->selectionActive) return;
         print "
         <p>
-        <table border=0 class=border width=100%>
+        <table border=0 class=border width=100% bgcolor=lightblue>
         <tr>
             ";
             printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
@@ -5299,7 +5297,7 @@ class Routes extends Records {
 		if ($this->selectionActive) return;
         print "
         <p>
-        <table border=0 class=border width=100%>
+        <table border=0 class=border width=100% bgcolor=lightblue>
         <tr>
             ";
             printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
@@ -5634,6 +5632,10 @@ class Customers extends Records {
                               'reseller'    => array('type'=>'integer')
                               );
     var $Fields=array(
+                           'resellerActive' => array ('type'      => 'boolean',
+                                                      'name'      => 'Reseller active',
+                                                      'adminonly' => true
+                                                     ),
                               'aliasOf'     => array('type'       =>'integer',
                                                      'name'       =>'Impersonate'),
                               'companyCode' => array('type'       =>'text',
@@ -5645,10 +5647,6 @@ class Customers extends Records {
                                                      ),
                               'credit'      => array('type'       => 'float',
                                                      'adminonly'  => true
-                                                     ),
-                           'resellerActive' => array ('type'      => 'boolean',
-                                                      'name'      => 'Reseller active',
-                                                      'adminonly' => true
                                                      ),
                               'username'    => array('type'       =>'text',
                                                      'adminonly'  => true
@@ -6060,7 +6058,7 @@ class Customers extends Records {
     function showSeachForm() {
      	print "
         <p>
-        <table border=0 class=border width=100%>
+        <table border=0 class=border width=100% bgcolor=lightgreen>
         <tr>
             ";
             printf ("<form method=post name=soapengine action=%s>",$_SERVER['PHP_SELF']);
