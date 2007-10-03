@@ -1865,6 +1865,7 @@ class SIPAccounts extends Records {
             printf ("<nobr>PSTN<input type=checkbox name=pstn value=1></nobr> ");
             printf ("<nobr>Quota<input type=text size=5 name=quota value='%s'></nobr> ",$_REQUEST['quota']);
             printf ("<nobr>Prepaid<input type=checkbox name=prepaid value=1></nobr> ");
+            /*
             print "<nobr>";
             print "Customer";
             if ($this->adminonly) {
@@ -1875,6 +1876,7 @@ class SIPAccounts extends Records {
             	$this->showCustomerForm('customer');
             }
             print "</nobr>";
+            */
 
             print "
 	        </td>
@@ -2461,6 +2463,7 @@ class SIPAliases extends Records {
 
             printf (" Target<input type=text size=35 name=target>");
 
+            /*
             print "Customer";
             if ($this->adminonly) {
             	$this->showResellerForm('reseller');
@@ -2469,6 +2472,7 @@ class SIPAliases extends Records {
             } else {
             	$this->showCustomerForm('customer');
             }
+            */
 
             printf (" Owner<input type=text size=5 name=owner>");
 
