@@ -385,6 +385,9 @@ class SOAPEngine {
             if (!strlen($this->extraFormElements[$element])) continue;
             $this->url  .= sprintf('&%s=%s',$element,urlencode($this->extraFormElements[$element]));
         }
+
+		$this->supportEmail=$this->soapEngines[$this->soapEngine]['supportEmail'];
+
     }
 
     function execute($function) {
@@ -490,7 +493,7 @@ class SOAPEngineNewCustomer extends SOAPEngine {
         if (is_array($soapEngines)) {
             $engines = array_keys($soapEngines);
 
-            $this->soapEngine   = $engines[0];
+            $this->soapEngine     = $engines[0];
             $this->soapEngines    = $soapEngines;
 			$this->soapEnginePort = 'customers';
             $this->recordsClass   = $this->ports[$this->soapEnginePort]['recordsClass'];
@@ -548,6 +551,8 @@ class SOAPEngineNewCustomer extends SOAPEngine {
         }
 
         $this->url = $_SERVER['PHP_SELF']."?1=1";
+
+		$this->supportEmail=$this->soapEngines[$this->soapEngine]['supportEmail'];
     }
 }
 
@@ -2808,6 +2813,7 @@ class ENUMranges extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
+                    <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
@@ -2817,6 +2823,7 @@ class ENUMranges extends Records {
                     $range->ttl,
                     $range->minDigits,
                     $range->maxDigits,
+                    $range->size,
                     $range->used,
                     $range->changeDate,
                     $_url,
@@ -6146,7 +6153,7 @@ class Customers extends Records {
 			$this->rows = $result->total;
 
 			if ($this->rows == 1 ) {
-               $customer = $result->accounts[0];
+                $customer = $result->accounts[0];
                 $this->showRecord($customer);
                 return true;
             }
@@ -6939,10 +6946,12 @@ class Customers extends Records {
 
     function showAddForm() {
 
+        print "<h3>Add new customer</h3>";
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "
         <p>
         <input type=submit name=action value=Add>
+        <p>
         <input type=hidden name=showAddForm value=1>
         <table border=0>
         ";
@@ -7075,7 +7084,7 @@ class Customers extends Records {
         ";
     }
 
-    function addRecord() {
+    function addRecord($notify=false) {
 
         foreach (array_keys($this->addFields) as $item) {
             $item_form       = $item.'_form';
@@ -7092,11 +7101,92 @@ class Customers extends Records {
 
 
         if ($this->SOAPEngine->execute($function)) {
+            if ($notify) $this->notify($customer);
      		$this->showAddForm=false;
             return true;
         } else {
             return false;
         }
+    }
+
+    function notify($customer) {
+    	if ($_SERVER['HTTPS']=="on") {
+        	$protocolURL="https://";
+        } else {
+        	$protocolURL="http://";
+        }
+
+        $url=sprintf("%s%s",$protocolURL,$_SERVER['HTTP_HOST']);
+
+    	$body="\n".
+               sprintf("Your login account information at %s\n\n",$url).
+               sprintf("Username: %s\n",$customer['username']).
+               sprintf("Password: %s\n",$customer['password']).
+               "\n".
+               "Do not reply to this message.\n";
+
+		$from    = sprintf("From: %s",$this->SOAPEngine->supportEmail);
+        $subject = sprintf("Your login account at %s",$url);
+
+        mail($customer['email'], $subject, $body, $from);
+    }
+
+    function getRecordKeys() {
+        // Filter
+        $filter=array('username'     => $this->filters['username'],
+                      'firstName'    => $this->filters['firstName'],
+                      'lastName'     => $this->filters['lastName'],
+                      'organization' => $this->filters['organization'],
+                      'tel'          => $this->filters['tel'],
+                      'email'        => $this->filters['email'],
+                      'web'          => $this->filters['web'],
+                      'city'         => $this->filters['city'],
+                      'country'      => $this->filters['country'],
+                      'only_resellers' => $this->filters['only_resellers'],
+                      'customer'     => intval($this->filters['customer']),
+                      'reseller'     => intval($this->filters['reseller'])
+                      );
+
+        //print_r($filter);
+
+        // Range
+        $range=array('start' => 0,
+                     'count' => 1000
+                     );
+
+        // Order
+        $orderBy = array('attribute' => 'customer',
+                         'direction' => 'ASC'
+                         );
+
+        // Compose query
+        $Query=array('filter'     => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        if ($this->adminonly && $this->filters['only_resellers']) {
+        	$result     = $this->SOAPEngine->soapclient->getResellers($Query);
+        } else {
+        	$result     = $this->SOAPEngine->soapclient->getCustomers($Query);
+        }
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+			foreach ($result->accounts as $customer) {
+                $this->selectionKeys[]=$customer->id;
+            }
+        }
+
     }
 }
 
@@ -8328,6 +8418,42 @@ class ENUMMappingsActions extends Actions {
                                     );
                 	$this->SOAPEngine->execute($function);
         		}
+            }
+        }
+
+        print "</ol>";
+    }
+}
+
+class CustomersActions extends Actions {
+    var $actions=array(
+                       'delete'         => 'Delete customers'
+                       );
+
+    function CustomerActions(&$SOAPEngine) {
+        $this->Actions(&$SOAPEngine);
+    }
+
+    function performActions($selectionKeys,$action,$sub_action_parameter) {
+
+        if (!in_array($action,array_keys($this->actions))) {
+            print "<font color=red>Error: Invalid action $action</font>";
+        	return false;
+        }
+
+        print "<ol>";
+
+        foreach($selectionKeys as $key) {
+            flush();
+            print "<li>";
+
+        	if ($action=='delete') {
+		        $function=array('commit'  => array('name'       => 'deleteAccount',
+             		                               'parameters' => intval($key),
+                    	                           'logs'       => array('success' => sprintf('Customer id %s has been deleted',$key)))
+        	            	    );
+
+                $this->SOAPEngine->execute($function);
             }
         }
 
