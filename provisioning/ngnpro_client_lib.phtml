@@ -179,7 +179,7 @@ class SOAPEngine {
     function getSoapEngineAllowed($soapEngines,$filter) {
         // returns a list of allowed engines based on a filter
         // the filter format is:
-        // engine1:service1,service2 engine2 engine3
+        // engine1:port1,port2 engine2 engine3:port1
 
     	$_filter_els=explode(" ",trim($filter));
 		foreach(array_keys($soapEngines) as $_engine) {
@@ -1208,7 +1208,7 @@ class Domains extends Records {
                     urlencode($domain->customer)
                     );
 
-                    printf("
+                 	printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
@@ -1315,14 +1315,16 @@ class Domains extends Records {
 
             printf (" Domain<input type=text size=20 name=domain>");
 
-            print "Customer";
-
-            if ($this->adminonly) {
-            	$this->showResellerForm('reseller');
-                print ".";
-            	$this->showCustomerForm('customer');
-            } else {
-            	$this->showCustomerForm('customer');
+            if ($this->version > 1) {
+                print "Customer";
+    
+                if ($this->adminonly) {
+                    $this->showResellerForm('reseller');
+                    print ".";
+                    $this->showCustomerForm('customer');
+                } else {
+                    $this->showCustomerForm('customer');
+                }
             }
 
             print "
@@ -2896,7 +2898,7 @@ class ENUMranges extends Records {
             print "
             <input type=submit name=action value=Add>
             ";
-            printf ("Prefix +<input type=text size=5 name=prefix> ");
+            printf ("Prefix +<input type=text size=15 name=prefix> ");
             printf (" TLD");
             /*
             if (is_array($this->allowedDomains)) {
@@ -2913,14 +2915,18 @@ class ENUMranges extends Records {
             printf ("TTL<input type=text size=5 name=ttl value=3600> ");
             printf ("Min Digits<input type=text size=3 name=minDigits value=11> ");
             printf ("Max Digits<input type=text size=3 name=maxDigits value=11> ");
-            print "Customer";
-            if ($this->adminonly) {
-            	$this->showResellerForm('reseller');
-                print ".";
-            	$this->showCustomerForm('customer');
-            } else {
-            	$this->showCustomerForm('customer');
+            if ($this->version > 1) {
+                print "Customer";
+    
+                if ($this->adminonly) {
+                    $this->showResellerForm('reseller');
+                    print ".";
+                    $this->showCustomerForm('customer');
+                } else {
+                    $this->showCustomerForm('customer');
+                }
             }
+
             //printf ("Info<input type=text size=15 name=info> ");
 
             print "
@@ -3003,7 +3009,7 @@ class ENUMranges extends Records {
 
     function showSeachFormCustom() {
         if ($this->version > 1) {
-        	printf (" Prefix<input type=text size=10 name=prefix_filter value='%s'>",$this->filters['prefix']);
+        	printf (" Prefix<input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
             printf (" TLD");
 
             if (count($this->allowedDomains) > 0) {
@@ -4375,15 +4381,18 @@ class TrustedPeers extends Records {
             ";
             printf (" IP address<input type=text size=20 name=ipaddress>");
             printf (" Description<input type=text size=30 name=description>");
-            print "Customer";
-            if ($this->adminonly) {
-            	$this->showResellerForm('reseller');
-                print ".";
-            	$this->showCustomerForm('customer');
-            } else {
-            	$this->showCustomerForm('customer');
+
+            if ($this->version > 1) {
+                print "Customer";
+    
+                if ($this->adminonly) {
+                    $this->showResellerForm('reseller');
+                    print ".";
+                    $this->showCustomerForm('customer');
+                } else {
+                    $this->showCustomerForm('customer');
+                }
             }
-            printf (" Owner<input type=text size=5 name=owner>");
 
             print "
 	        </td>
@@ -4488,6 +4497,14 @@ class TrustedPeers extends Records {
      
         return $this->SOAPEngine->execute($function);
     }
+
+    function showSeachFormCustom() {
+
+        printf (" IP address<input type=text size=15 name=ip_filter value='%s'>",$this->filters['ip']);
+        printf (" Description<input type=text size=15 name=description_filter value='%s'>",$this->filters['description']);
+
+    }
+
 }
 
 class GatewayGroups extends Records {
@@ -4511,7 +4528,9 @@ class GatewayGroups extends Records {
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
         // Filter
-        $filter=array('name'  => $this->filters['group']
+        $filter=array('name'  => $this->filters['group'],
+                      'customer' => intval($this->filters['customer']),
+                      'reseller' => intval($this->filters['reseller'])
                       );
 
         // Range
@@ -4552,8 +4571,14 @@ class GatewayGroups extends Records {
             </table>
             <p>
             <table border=0 cellpadding=2 width=100%>
+            ";
+
+            print "
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
+                ";
+                if ($this->version > 1) print "<td><b>Customer</b></td>";
+                print"
                 <td><b>Name</b></th>
                 <td><b>Action</b></td>
             </tr>
@@ -4601,22 +4626,51 @@ class GatewayGroups extends Records {
                         $actionText = "Delete";
                     }
 
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>",
-                    $bgcolor,
-                    $index,
-                    $group,
-                    $_url,
-                    $actionText
-                    );
-
-                    printf("
-                    </tr>
-                    ");
+                    if ($this->version > 1) {
+                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($group->customer)
+                        );
+    
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td><a href=%s>%s.%s</a></td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $group->reseller,
+                        $group->customer,
+                        $group->name,
+                        $_url,
+                        $actionText
+                        );
+    
+                        printf("
+                        </tr>
+                        ");
+                    } else {
+    
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $group,
+                        $_url,
+                        $actionText
+                        );
+    
+                        printf("
+                        </tr>
+                        ");
+                    }
 
                     $i++;
     
@@ -4650,13 +4704,23 @@ class GatewayGroups extends Records {
 
             printf (" Name<input type=text size=20 name=name>");
 
-            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-            $result     = $this->SOAPEngine->soapclient->getGatewayGroups();
+            if ($this->version > 1) {
+                print "Customer";
+    
+                if ($this->adminonly) {
+                    $this->showResellerForm('reseller');
+                    print ".";
+                    $this->showCustomerForm('customer');
+                } else {
+                    $this->showCustomerForm('customer');
+                }
+            }
 
             print "
 	        </td>
         	<td align=right>
             ";
+
             print "
 	        </td>
             ";
@@ -4750,7 +4814,7 @@ class GatewayGroups extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Group<input type=text size=15 name=group_filter value='%s'>",$this->filters['group']);
+        printf (" Name<input type=text size=15 name=group_filter value='%s'>",$this->filters['group']);
     }
 
 }
@@ -4781,7 +4845,9 @@ class Gateways extends Records {
 
         // Filter
         $filter=array('name'  => $this->filters['name'],
-                      'group' => $this->filters['group']
+                      'group' => $this->filters['group'],
+                      'customer' => intval($this->filters['customer']),
+                      'reseller' => intval($this->filters['reseller'])
                       );
 
         // Range
@@ -4822,8 +4888,14 @@ class Gateways extends Records {
             </table>
             <p>
             <table border=0 cellpadding=2 width=100%>
+            ";
+
+            print "
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
+                ";
+                if ($this->version > 1) print "<td><b>Customer</b></td>";
+                print"
                 <td><b>Name</b></th>
                 <td><b>Group</b></td>
                 <td><b>Address</b></td>
@@ -4875,32 +4947,70 @@ class Gateways extends Records {
                         $actionText = "Delete";
                     }
 
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s:%s:%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>",
-                    $bgcolor,
-                    $index,
-                    $gateway->name,
-                    $gateway->group,
-                    $gateway->transport,
-                    $gateway->ip,
-                    $gateway->port,
-                    $gateway->strip,
-                    $gateway->prefix,
-                    $_url,
-                    $actionText
-                    );
-
-                    printf("
-                    </tr>
-                    ");
+                    if ($this->version > 1) {
+                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($gateway->customer)
+                        );
+    
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td><a href=%s>%s.%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s:%s:%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $gateway->reseller,
+                        $gateway->customer,
+                        $gateway->name,
+                        $gateway->group,
+                        $gateway->transport,
+                        $gateway->ip,
+                        $gateway->port,
+                        $gateway->strip,
+                        $gateway->prefix,
+                        $_url,
+                        $actionText
+                        );
+    
+                        printf("
+                        </tr>
+                        ");
+                    } else {
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s:%s:%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $gateway->name,
+                        $gateway->group,
+                        $gateway->transport,
+                        $gateway->ip,
+                        $gateway->port,
+                        $gateway->strip,
+                        $gateway->prefix,
+                        $_url,
+                        $actionText
+                        );
+    
+                        printf("
+                        </tr>
+                        ");
+                    }
 
                     $i++;
     
@@ -4974,6 +5084,18 @@ class Gateways extends Records {
 
             print "</select>";
             printf (" Prefix<input type=text size=5 name=prefix>");
+
+            if ($this->version > 1) {
+                print "Customer";
+    
+                if ($this->adminonly) {
+                    $this->showResellerForm('reseller');
+                    print ".";
+                    $this->showCustomerForm('customer');
+                } else {
+                    $this->showCustomerForm('customer');
+                }
+            }
 
             print "
 	        </td>
@@ -5136,6 +5258,7 @@ class Routes extends Records {
     function listRecords() {
 
         // Get gateway groups
+
         $Query=array('filter'  => array('name'=>''),
                      'orderBy' => array('attribute' => 'name',
                                         'direction' => 'ASC'
@@ -5165,7 +5288,9 @@ class Routes extends Records {
 
         // Filter
         $filter=array('prefix'       => $this->filters['prefix'],
-                      'gatewayGroup' => $this->filters['gatewayGroup']
+                      'gatewayGroup' => $this->filters['gatewayGroup'],
+                      'customer'     => intval($this->filters['customer']),
+                      'reseller'     => intval($this->filters['reseller'])
                       );
 
         // Range
@@ -5206,8 +5331,14 @@ class Routes extends Records {
             </table>
             <p>
             <table border=0 cellpadding=2 width=100%>
+            ";
+
+            print "
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
+                ";
+                if ($this->version > 1) print "<td><b>Customer</b></td>";
+                print"
                 <td><b>Prefix</b></th>
                 <td><b>Gateway Group</b></td>
                 <td><b>Priority</b></td>
@@ -5262,27 +5393,60 @@ class Routes extends Records {
                         $actionText = "Delete";
                     }
 
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>",
-                    $bgcolor,
-                    $index,
-                    $route->prefix,
-                    $route->gatewayGroup,
-                    $route->priority,
-                    $_url,
-                    $actionText
-                    );
+	                if ($this->version > 1) {
+                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($route->customer)
+                        );
+    
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td><a href=%s>%s.%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $route->reseller,
+                        $route->customer,
+                        $route->prefix,
+                        $route->gatewayGroup,
+                        $route->priority,
+                        $_url,
+                        $actionText
+                        );
+    
+                        printf("
+                        </tr>
+                        ");
+    
+                    } else {
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $route->prefix,
+                        $route->gatewayGroup,
+                        $route->priority,
+                        $_url,
+                        $actionText
+                        );
+    
+                        printf("
+                        </tr>
+                        ");
 
-                    printf("
-                    </tr>
-                    ");
-
+					}
                     $i++;
     
                 }
@@ -5324,6 +5488,18 @@ class Routes extends Records {
             printf (" </select>");
             //printf (" From<input type=text size=25 name=fromURI>");
             printf (" Priority<input type=text size=5 name=priority>");
+
+            if ($this->version > 1) {
+                print "Customer";
+    
+                if ($this->adminonly) {
+                    $this->showResellerForm('reseller');
+                    print ".";
+                    $this->showCustomerForm('customer');
+                } else {
+                    $this->showCustomerForm('customer');
+                }
+            }
 
             print "
 	        </td>
