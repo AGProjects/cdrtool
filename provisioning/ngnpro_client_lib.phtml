@@ -131,22 +131,22 @@ class SOAPEngine {
                                            ),
                         'sip_aliases'    => array(
                                            'recordsClass' => 'SipAliases',
-                                           'name'         => 'SIP Aliases',
+                                           'name'         => 'SIP aliases',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                            ),
                         'sip_domains'    => array(
                                            'recordsClass' => 'Domains',
-                                           'name'         => 'SIP Domains',
+                                           'name'         => 'SIP domains',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                            ),
                         'enum_numbers'   => array(
                                            'recordsClass' => 'EnumMappings',
-                                           'name'         => 'ENUM Numbers',
+                                           'name'         => 'ENUM numbers',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
                                            ),
                         'enum_ranges'    => array(
                                            'recordsClass' => 'EnumRanges',
-                                           'name'         => 'ENUM Ranges',
+                                           'name'         => 'ENUM ranges',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort'
                                            ),
                         'customers'      => array(
@@ -156,12 +156,12 @@ class SOAPEngine {
                                            ),
                         'trusted_peers'  => array(
                                            'recordsClass' => 'TrustedPeers',
-                                           'name'         => 'Trusted Peers',
+                                           'name'         => 'Trusted peers',
                                            'soapClass'    => 'WebService_NGNPro_SipPort'
                                            ),
                         'pstn_gateways'  => array(
                                            'recordsClass' => 'Gateways',
-                                           'name'         => 'PSTN Gateways',
+                                           'name'         => 'PSTN gateways',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                            ),
                         'pstn_gateway_groups' => array(
@@ -171,7 +171,7 @@ class SOAPEngine {
                                            ),
                         'pstn_routes'    => array(
                                            'recordsClass' => 'Routes',
-                                           'name'         => 'PSTN Routes',
+                                           'name'         => 'PSTN routes',
                                            'soapClass'    => 'WebService_NGNPro_NetworkPort'
                                            )
                         );
@@ -2453,7 +2453,7 @@ class SIPAliases extends Records {
 
             printf (" Alias<input type=text size=15 name=alias>");
 
-            if (is_array($this->allowedDomains)) {
+            if (count($this->allowedDomains) > 0) {
             	print "@<select name=domain>";
                 foreach ($this->allowedDomains as $_domain) {
                     print "<option value=$_domain>$_domain\n";
@@ -6064,29 +6064,31 @@ class Customers extends Records {
         <p>
         <table border=0 class=border width=100% bgcolor=lightgreen>
         <tr>
-            ";
-            printf ("<form method=post name=soapengine action=%s>",$_SERVER['PHP_SELF']);
-            print "
-        	<td align=left>
-            ";
-            $this->showEngineSelection();
+        ";
 
-            $this->showSeachFormCustom();
+        printf ("<form method=post name=soapengine action=%s>",$_SERVER['PHP_SELF']);
+        print "
+        <td align=left>
+        ";
+        print "
+        <input type=submit name=action value=Search>
+        ";
 
-            print "
-	        </td>
-        	<td align=right>
-            ";
-            $this->showSortForm();
+        $this->showEngineSelection();
 
-            print "
-            <input type=submit name=action value=Search>
-            ";
-            $this->printHiddenFormElements();
+        $this->showSeachFormCustom();
 
-            print "
-	        </td>
-            </form>
+        print "
+        </td>
+        <td align=right>
+        ";
+        $this->showSortForm();
+
+        $this->printHiddenFormElements();
+
+        print "
+        </td>
+        </form>
         </tr>
         </table>
         ";
