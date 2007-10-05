@@ -705,30 +705,31 @@ class Records {
      	print "
         <table border=0 bgcolor=lightgreen class=border width=100%>
         <tr>
-            ";
-            printf ("<form method=post name=soapengine action=%s>",$_SERVER['PHP_SELF']);
-            print "
-        	<td align=left>
-            ";
-            print "
-            <input type=submit name=action value=Search>
-            ";
 
-            $this->showEngineSelection();
+        ";
+        printf ("<form method=post name=soapengine action=%s>",$_SERVER['PHP_SELF']);
+        print "
+        <td align=left>
+        ";
+        print "
+        <input type=submit name=action value=Search>
+        ";
 
-            $this->showSeachFormCustom();
+        $this->showEngineSelection();
 
-            print "
-	        </td>
-        	<td align=right>
-            Order";
-            $this->showSortForm();
+        $this->showSeachFormCustom();
 
-            $this->printHiddenFormElements();
+        print "
+        </td>
+        <td align=right>
+        Order";
+        $this->showSortForm();
 
-            print "
-	        </td>
-            </form>
+        $this->printHiddenFormElements();
+
+        print "
+        </td>
+        </form>
         </tr>
         </table>
         ";
@@ -1054,6 +1055,21 @@ class Records {
     function showRecord () {
     }
 
+    function RandomPassword($len=11) {
+        $alf=array("a","b","c","d","e","f",
+               "h","i","j","k","l","m",
+               "n","p","r","s","t","w",
+               "x","y","1","2","3","4",
+               "5","6","7","8","9");
+        $i=0;
+        while($i < $len) {
+            srand((double)microtime()*1000000);
+            $randval = rand(0,28);
+            $string="$string"."$alf[$randval]";
+            $i++;
+        }
+        return $string;
+    }
 }
 
 class Domains extends Records {
@@ -1803,19 +1819,32 @@ class SIPAccounts extends Records {
         printf (" Name<input type=text size=15 name=fullname_filter value='%s'>",$this->filters['fullname']);
     }
 
-    function deleteRecord() {
-        if (!$_REQUEST['confirm']) {
+    function deleteRecord($dictionary=array()) {
+
+        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
         }
 
-        if (!strlen($this->filters['username']) || !strlen($this->filters['domain'])) {
+        if ($dictionary['username']) {
+        	$username=$dictionary['username'];
+        } else {
+        	$username=$this->filters['username'];
+        }
+
+        if ($dictionary['domain']) {
+        	$domain=$dictionary['domain'];
+        } else {
+        	$domain=$this->filters['domain'];
+        }
+
+        if (!strlen($username) || !strlen($domain)) {
             print "<p><font color=red>Error: missing SIP account username or domain. </font>";
             return false;
         }
 
-        $account=array('username' => $this->filters['username'],
-                       'domain'   => $this->filters['domain']
+        $account=array('username' => $username,
+                       'domain'   => $domain
         			  );
 
         $function=array('commit'   => array('name'       => 'deleteAccount',
@@ -2001,9 +2030,6 @@ class SIPAccounts extends Records {
 			$prepaid=intval($_REQUEST['prepaid']);
         }
 
-    	$regexp = "/^([a-z0-9][a-z0-9_.-]*)@([a-z0-9][a-z0-9-]*\.)+([a-z0-9]{2,})$/i";
-        if (!preg_match($regexp, $uri)) $email=$username.'@'.$domain;
-
         $account=array(
                      'id'     => array('username' => $username,
                                        'domain'   => $domain),
@@ -2036,22 +2062,6 @@ class SIPAccounts extends Records {
      
         return $this->SOAPEngine->execute($function);
 
-    }
-
-    function RandomPassword($len=11) {
-        $alf=array("a","b","c","d","e","f",
-               "h","i","j","k","l","m",
-               "n","p","r","s","t","w",
-               "x","y","1","2","3","4",
-               "5","6","7","8","9");
-        $i=0;
-        while($i < $len) {
-            srand((double)microtime()*1000000);
-            $randval = rand(0,28);
-            $string="$string"."$alf[$randval]";
-            $i++;
-        }
-        return $string;
     }
 
     function getAllowedDomains() {
@@ -2100,7 +2110,6 @@ class SIPAccounts extends Records {
             	$this->allowedDomains=$result;
             }
         }
-
      }
 }
 
@@ -2118,6 +2127,10 @@ class SIPAliases extends Records {
                                  'targetUsername'    => trim($_REQUEST['target_username_filter']),
                                  'targetDomain'      => trim($_REQUEST['target_domain_filter'])
                            );
+
+        if ($version > 1) {
+            $this->sortElements['changeDate'] = 'Change date';
+        }
 
 		$this->Records(&$SOAPEngine);
 
@@ -2380,19 +2393,31 @@ class SIPAliases extends Records {
         }
     }
 
-    function deleteRecord() {
-        if (!$_REQUEST['confirm']) {
+    function deleteRecord($dictionary=array()) {
+        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
         }
 
-        if (!strlen($this->filters['aliasUsername']) || !strlen($this->filters['aliasDomain'])) {
+        if ($dictionary['aliasUsername']) {
+        	$aliasUsername=$dictionary['aliasUsername'];
+        } else {
+        	$aliasUsername=$this->filters['aliasUsername'];
+        }
+
+        if ($dictionary['aliasDomain']) {
+        	$aliasDomain=$dictionary['aliasDomain'];
+        } else {
+        	$aliasDomain=$this->filters['aliasDomain'];
+        }
+
+        if (!strlen($aliasUsername) || !strlen($aliasDomain)) {
             print "<p><font color=red>Error: missing SIP alias username or domain. </font>";
             return false;
         }
 
-        $alias=array('username' => $this->filters['aliasUsername'],
-                     'domain'   => $this->filters['aliasDomain']
+        $alias=array('username' => $aliasUsername,
+                     'domain'   => $aliasDomain
         			);
 
         $function=array('commit'   => array('name'       => 'deleteAlias',
@@ -2402,7 +2427,6 @@ class SIPAliases extends Records {
                                            )
 
                         );
-
 
         unset($this->filters);
         return $this->SOAPEngine->execute($function);
@@ -2497,13 +2521,13 @@ class SIPAliases extends Records {
     function addRecord($dictionary=array()) {
 
     	if ($dictionary['alias']) {
-    		$alias_els  = $dictionary['alias'];
+    		$alias_els  = explode("@", $dictionary['alias']);
         } else {
     		$alias_els  = explode("@", trim($_REQUEST['alias']));
         }
 
     	if ($dictionary['target']) {
-    		$target_els  = $dictionary['target'];
+    		$target_els = explode("@", $dictionary['target']);
         } else {
 	        $target_els = explode("@", trim($_REQUEST['target']));
         }
@@ -2556,8 +2580,6 @@ class SIPAliases extends Records {
                      'customer'   => intval($customer),
                      'reseller'   => intval($reseller)
         			);
-
-        //print_r($alias);
 
         $deleteAlias=array('username' => $username,
                            'domain'   => $domain);
@@ -3627,8 +3649,9 @@ class ENUMmappings extends Records {
             return false;
         }
 
-        $enum_id=array('number'=>$number,
-                       'tld'=>$tld);
+        $enum_id=array('number' => $number,
+                       'tld'    => $tld
+                       );
 
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
         $result     = $this->SOAPEngine->soapclient->getNumber($enum_id);
@@ -3876,9 +3899,9 @@ class ENUMmappings extends Records {
         }
 
         if ($dictionary['info']) {
-            $info = intval($dictionary['info']);
+            $info = $dictionary['info'];
         } else {
-    		$info = intval(trim($_REQUEST['info']));
+    		$info = trim($_REQUEST['info']);
         }
 
 		if (!$priority) $priority=5;
@@ -5773,38 +5796,69 @@ class Customers extends Records {
                             'customer'     => 'Customer'
                             );
 
-    var $propertiesItems = array('sip_credit'          => array('name'     => 'Credit for SIP accounts',
-                                                               'category' => 'admin'),
-                                 'sip_alias_credit'    => array('name'     => 'Credit for SIP aliases',
-                                                               'category' => 'admin'),
-                                 'enum_range_credit'   => array('name'     => 'Credit for ENUM ranges',
-                                                               'category' => 'admin'),
-                                 'enum_number_credit'  => array('name'     => 'Credit for ENUM numbers',
-                                                               'category' => 'admin'),
-                                 'pstn_access'         => array('name'     => 'Access to PSTN',
-                                                               'category' => 'admin'),
-                                 'voicemail_server'    => array('name'     => 'Voicemail server address',
-                                                               'category' => 'sip'),
-                                 'sip_proxy_server'    => array('name'     => 'SIP Proxy server address',
-                                                               'category' => 'sip'),
-                                 'support_web'         => array('name'     => 'Support web site',
-                                                               'category' => 'sip'),
-                                 'support_email'       => array('name'     => 'Support email address',
-                                                               'category' => 'sip'),
-                                 'support_organization'=> array('name'     => 'Support organization',
-                                                               'category' => 'sip'),
-                                 'cdrtool_address'     => array('name'     => 'CDRTool address',
-                                                               'category' => 'sip'),
-                                 'sip_settings_page'   => array('name'     => 'SIP settings page',
-                                                               'category' => 'sip'),
-                                 'sip_default_domain'  => array('name'     => 'Default SIP domain',
-                                                               'category' => 'sip'),
-                                 'enum_default_range'  => array('name'     => 'Default ENUM range',
-                                                               'category' => 'enum'),
-                                 'enum_default_tld'    => array('name'     => 'Default ENUM Top Level Domain',
-                                                               'category' => 'enum'),
+    var $propertiesItems = array('sip_credit'          => array('name'      => 'Credit for SIP accounts',
+                                                               'category'   => 'credit',
+                                                               'permission' => 'admin'
+                                                               ),
+                                 'sip_alias_credit'    => array('name'      => 'Credit for SIP aliases',
+                                                               'category'   => 'credit',
+                                                               'permission' => 'admin'
+                                                               ),
+                                 'enum_range_credit'   => array('name'      => 'Credit for ENUM ranges',
+                                                               'category'   => 'credit',
+                                                               'permission' => 'admin'
+                                                               ),
+                                 'enum_number_credit'  => array('name'      => 'Credit for ENUM numbers',
+                                                               'category'   => 'credit',
+                                                               'permission' => 'admin'
+                                                               ),
+                                 'pstn_access'         => array('name'      => 'Access to PSTN',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'admin'
+                                                               ),
+                                 'voicemail_server'    => array('name'      => 'Voicemail server address',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'reseller'
+                                                               ),
+                                 'sip_proxy_server'    => array('name'      => 'SIP Proxy server address',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'reseller'
+                                                               ),
+                                 'support_web'         => array('name'      => 'Support web site',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'reseller'
+                                                               ),
+                                 'support_email'       => array('name'      => 'Support email address',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'reseller'
+                                                               ),
+                                 'support_organization'=> array('name'      => 'Support organization',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'reseller'
+                                                               ),
+                                 'cdrtool_address'     => array('name'      => 'CDRTool address',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'reseller'
+                                                               ),
+                                 'sip_settings_page'   => array('name'      => 'SIP settings page',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'reseller'
+                                                               ),
+                                 'sip_default_domain'  => array('name'      => 'Default SIP domain',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'reseller'
+                                                               ),
+                                 'enum_default_range'  => array('name'      => 'Default ENUM range',
+                                                               'category'   => 'enum',
+                                                               'permission' => 'reseller'
+                                                               ),
+                                 'enum_default_tld'    => array('name'      => 'Default ENUM Top Level Domain',
+                                                               'category'   => 'enum',
+                                                               'permission' => 'reseller'
+                                                               ),
                                  'records_per_page'    => array('name'     => 'Records per page',
-                                                               'category' => 'web')
+                                                               'category'  => 'web'
+                                                               )
                                  );
 
     var $FieldsReadOnly=array(
@@ -6492,8 +6546,8 @@ class Customers extends Records {
 
     }
 
-    function deleteRecord() {
-        if (!$_REQUEST['confirm']) {
+    function deleteRecord($confirm) {
+        if (!$confirm && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Delete again to confirm the delete. </font>";
             return true;
         }
@@ -6806,6 +6860,7 @@ class Customers extends Records {
 
         printf ("<tr bgcolor=lightgrey>
         <td class=border>Category</td>
+        <td class=border>Permission</td>
         <td class=border>Property</td>
         <td class=border>Value</td>
         <td class=border>Description</td>
@@ -6823,10 +6878,12 @@ class Customers extends Records {
                 printf ("<tr>
                 <td class=border>%s</td>
                 <td class=border>%s</td>
+                <td class=border>%s</td>
                 <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
                 <td class=border>%s</td>
                 </tr>",
                 $this->propertiesItems[$item]['category'],
+                $this->propertiesItems[$item]['permission'],
                 $item_print,
                 $item,
                 $this->propertiesItems[$item]['value'],
@@ -6836,10 +6893,12 @@ class Customers extends Records {
                 printf ("<tr>
                 <td class=border>%s</td>
                 <td class=border>%s</td>
+                <td class=border>%s</td>
                 <td class=border><input type=hidden size=45 name='%s_form' value='%s'>%s</td>
                 <td class=border>%s</td>
                 </tr>",
                 $this->propertiesItems[$item]['category'],
+                $this->propertiesItems[$item]['permission'],
                 $item_print,
                 $item,
                 $this->propertiesItems[$item]['value'],
@@ -6865,10 +6924,12 @@ class Customers extends Records {
                     printf ("<tr>
                     <td class=border>%s</td>
                     <td class=border>%s</td>
+                    <td class=border>%s</td>
                     <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
                     <td class=border>%s</td>
                     </tr>",
                     $this->customerProperties[$item]['category'],
+                    $this->customerProperties[$item]['permission'],
                     $item_print,
                     $item,
                     $this->propertiesItems[$item]['value'],
@@ -6878,10 +6939,12 @@ class Customers extends Records {
                     printf ("<tr>
                     <td class=border>%s</td>
                     <td class=border>%s</td>
+                    <td class=border>%s</td>
                     <td class=border><input type=hidden size=45 name='%s_form' value='%s'>%s</td>
                     <td class=border>%s</td>
                     </tr>",
                     $this->customerProperties[$item]['category'],
+                    $this->customerProperties[$item]['permission'],
                     $item_print,
                     $item,
                     $this->propertiesItems[$item]['value'],
@@ -6935,9 +6998,10 @@ class Customers extends Records {
             if (!in_array($_property->name,array_keys($this->propertiesItems)) &&
             	!in_array($_property->name,array_keys($this->customerProperties))) {
 
-                $properties[]=array('name'     => $_property->name,
-                                    'value'    => $_property->value,
-                                    'category' => $_property->category
+                $properties[]=array('name'       => $_property->name,
+                                    'value'      => $_property->value,
+                                    'category'   => $_property->category,
+                                    'permission' => $_property->permission
                                     );
             }
         }
@@ -6946,9 +7010,10 @@ class Customers extends Records {
             $var_name=$item.'_form';
             $var_value=trim($_REQUEST[$var_name]);
             if (strlen($var_value)) {
-                $properties[]=array('name'     => $item,
-                                    'value'    => $var_value,
-                                    'category' => $this->propertiesItems[$item]['category']
+                $properties[]=array('name'       => $item,
+                                    'value'      => $var_value,
+                                    'category'   => $this->propertiesItems[$item]['category'],
+                                    'permission' => $this->propertiesItems[$item]['permission']
                                     );
             }
  
@@ -6958,9 +7023,10 @@ class Customers extends Records {
             $var_name=$item.'_form';
             $var_value=trim($_REQUEST[$var_name]);
             if (strlen($var_value)) {
-                $properties[]=array('name'     => $item,
-                                    'value'    => $var_value,
-                                    'category' => $this->customerProperties[$item]['category']
+                $properties[]=array('name'       => $item,
+                                    'value'      => $var_value,
+                                    'category'   => $this->customerProperties[$item]['category'],
+                                    'permission' => $this->customerProperties[$item]['permission']
                                     );
             }
         }
@@ -7267,12 +7333,26 @@ class Customers extends Records {
         ";
     }
 
-    function addRecord($notify=false) {
+    function addRecord($dictionary=array(),$notify=false) {
 
         foreach (array_keys($this->addFields) as $item) {
-            $item_form       = $item.'_form';
-        	$customer[$item] = trim($_REQUEST[$item_form]);
+
+            if ($dictionary[$item]) {
+                $customer[$item] = trim($dictionary[$item]);
+            } else {
+                $item_form       = $item.'_form';
+                $customer[$item] = trim($_REQUEST[$item_form]);
+            }
         }
+
+        if (!strlen($customer['username'])) $customer['username'] = trim($customer['firstName']).'.'.trim($customer['lastName']);
+		if (!strlen($customer['state']))    $customer['state']    = 'N/A';
+        if (!strlen($customer['country']))  $customer['country']  = 'N/A';
+        if (!strlen($customer['city']))     $customer['city']     = 'Unknown';
+        if (!strlen($customer['address']))  $customer['address']  = 'Unknown';
+        if (!strlen($customer['postcode'])) $customer['postcode'] = 'Unknown';
+        if (!strlen($customer['tel']))      $customer['tel']      = '+19999999999';
+        if (!strlen($customer['timezone'])) $customer['timezone'] = 'Europe/Amsterdam';
 
 		if ($customer['state'] != 'N/A') {
         	$_state=$customer['state'].' ';
@@ -7285,6 +7365,8 @@ class Customers extends Records {
                                       $customer['postcode']." ".$customer['city']."\n".
                                       $_state.$customer['country'];
 
+        if (!strlen($customer['password'])) $customer['password'] = $this->RandomPassword(6);
+
         $customer->properties=array();
 
         $function=array('commit'   => array('name'       => 'addAccount',
@@ -7292,7 +7374,6 @@ class Customers extends Records {
                                             'logs'       => array('success' => sprintf('<p>Customer %s %s has been added',$customer['firstName'],$customer['lastName']))
                                             )
                        );
-
 
         if ($this->SOAPEngine->execute($function)) {
             if ($notify) $this->notify($customer);
