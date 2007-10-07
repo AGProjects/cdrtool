@@ -123,6 +123,7 @@ class SOAPEngine {
     var $reseller      = 0;
     var $loginType     = 'reseller';
 	var $allowedPorts  = array();
+    var $timeout       = 5;
 
     var $ports=array(
                         'sip_accounts'   => array(
@@ -194,6 +195,7 @@ class SOAPEngine {
                 	$_allowed_ports = explode(",",$_allowed_ports_els);
                 }
 
+
             	if ($_engine == $_allowed_engine) {
                 	$soapEngines_checked[$_engine]=$soapEngines[$_engine];
                     $this->allowedPorts[$_engine]=$_allowed_ports;
@@ -258,7 +260,7 @@ class SOAPEngine {
             $this->soapEngine             = $_els[1];
             $this->soapEngineSettingsPage = $this->soapEngine;
 
-            if (count($this->allowedPorts[$this->soapEngine]) > 1 && in_array($_els[0],$this->allowedPorts[$this->soapEngine])) {
+            if (count($this->allowedPorts[$this->soapEngine]) > 0 && in_array($_els[0],$this->allowedPorts[$this->soapEngine])) {
             	$this->soapEnginePort = $_els[0];
             	$this->recordsClass   = $this->ports[$this->soapEnginePort]['recordsClass'];
             	$this->soapClass      = $this->ports[$this->soapEnginePort]['soapClass'];
@@ -291,7 +293,9 @@ class SOAPEngine {
             	$this->customerProperties=$this->soapEngines[$this->soapEngine]['customerProperties'];
             }
 
-			if (strlen($this->soapEngines[$this->soapEngine]['recordGenerator'])) {
+	        if (strlen($this->loginCredentials['recordGenerator'])) {
+            	$this->recordGenerator=$this->loginCredentials['recordGenerator'];
+            } else if (strlen($this->soapEngines[$this->soapEngine]['recordGenerator'])) {
             	$this->recordGenerator=$this->soapEngines[$this->soapEngine]['recordGenerator'];
             }
 
@@ -337,7 +341,7 @@ class SOAPEngine {
 
             $this->soapclient = new $this->soapClass($this->SOAPurl);
 
-            $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
+            $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
@@ -363,7 +367,7 @@ class SOAPEngine {
     			// Instantiate the SOAP client dependency
             	$this->soapclientRemote = new $this->soapClass($this->SOAPurlRemote);
 
-            	$this->soapclientRemote->setOpt('curl', CURLOPT_TIMEOUT,        5);
+            	$this->soapclientRemote->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
             	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
             }
@@ -371,7 +375,7 @@ class SOAPEngine {
 	    	if ($this->version > 1) {
                 // The customer port is at the same SOAP URL
 	            $this->soapclientCustomers = new WebService_NGNPro_CustomerPort($this->SOAPurl);
-    	        $this->soapclientCustomers->setOpt('curl', CURLOPT_TIMEOUT,        5);
+    	        $this->soapclientCustomers->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
         	    $this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             	$this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
             }
@@ -428,7 +432,7 @@ class SOAPEngine {
                 printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
                 return false;
             } else {
-            	printf ("<p><font color=green>%s %s </font>",$function['commit']['logs']['success'],$this->SOAPurlRemote);
+            	printf ("<p><font color=green>%s at %s </font>",$function['commit']['logs']['success'],$this->SOAPurlRemote);
 
                 $this->soapclient->addHeader($this->SoapAuth);
             	$result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
@@ -459,7 +463,7 @@ class SOAPEngine {
                     return false;
                 } else {
                     if ($function['commit']['logs']['success']) {
-                    	printf ("<p><font color=green>%s %s </font>",$function['commit']['logs']['success'],$this->SOAPurl);
+                    	printf ("<p><font color=green>%s at %s </font>",$function['commit']['logs']['success'],$this->SOAPurl);
                     }
                 }
             }
@@ -517,7 +521,7 @@ class SOAPEngineNewCustomer extends SOAPEngine {
 
             $this->soapclient = new $this->soapClass($this->SOAPurl);
 
-            $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
+            $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
@@ -542,7 +546,7 @@ class SOAPEngineNewCustomer extends SOAPEngine {
     			// Instantiate the SOAP client depends
             	$this->soapclientRemote = new $this->soapClass($this->SOAPurlRemote);
 
-            	$this->soapclientRemote->setOpt('curl', CURLOPT_TIMEOUT,        5);
+            	$this->soapclientRemote->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
             	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
             }
@@ -626,7 +630,7 @@ class Records {
             foreach (array_keys($this->SOAPEngine->ports) as $_port) {
                 $idx=$_port.'@'.$_engine;
                 if (in_array($_port,$this->SOAPEngine->skipEngines[$_engine])) continue;
-                if (count($this->SOAPEngine->allowedPorts[$_engine]) > 1 && !in_array($_port,$this->SOAPEngine->allowedPorts[$_engine])) continue;
+                if (count($this->SOAPEngine->allowedPorts[$_engine]) > 0 && !in_array($_port,$this->SOAPEngine->allowedPorts[$_engine])) continue;
                 if ($_engine == 'Customers' && $this->version <= 1) continue;
                 //printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_port,$_engine,$selected_soapEngine[$idx],$j,$k,$this->SOAPEngine->ports[$_port]['name'],$this->SOAPEngine->soapEngines[$_engine]['name']);
                 printf ("<option value='%s@%s' %s>%s@%s",$_port,$_engine,$selected_soapEngine[$idx],$this->SOAPEngine->ports[$_port]['name'],$this->SOAPEngine->soapEngines[$_engine]['name']);
@@ -1071,6 +1075,15 @@ class Records {
         }
         return $string;
     }
+
+    function validDomain($domain) {
+   		if (!preg_match ("/^[A-Za-z0-9-.]{1,}\.[A-Za-z]{2,}$/",$domain)) {
+            return false;
+        }
+
+        return true;
+    }
+
 }
 
 class Domains extends Records {
@@ -1085,13 +1098,15 @@ class Domains extends Records {
                   	        	      'domain'     => 'Domain'
 	                        	     );
 
-            $this->filters   = array(
-                               'domain'       => strtolower(trim($_REQUEST['domain_filter']))
-                               );
-
         } else {
     		$this->maxrowsperpage = 10000;
         }
+
+        $this->filters   = array(
+                               'domain'       => strtolower(trim($_REQUEST['domain_filter']))
+                               );
+
+
     }
 
     function listRecords() {
@@ -1293,20 +1308,27 @@ class Domains extends Records {
         }
     }
 
-    function deleteRecord() {
-        if (!$_REQUEST['confirm']) {
+    function deleteRecord($dictionary=array()) {
+
+        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
         }
 
-        if (!strlen($this->filters['domain']) || !strlen($this->filters['domain'])) {
+        if ($dictionary['domain']) {
+        	$domain=$dictionary['domain'];
+        } else {
+        	$domain=$this->filters['domain'];
+        }
+
+        if (!strlen($domain)) {
             print "<p><font color=red>Error: missing SIP domain. </font>";
             return false;
         }
 
         $function=array('commit'   => array('name'       => 'deleteDomain',
-                                            'parameters' => array($this->filters['domain']),
-                                            'logs'       => array('success' => sprintf('SIP domain %s has been deleted',$this->filters['domain']))
+                                            'parameters' => array($domain),
+                                            'logs'       => array('success' => sprintf('SIP domain %s has been deleted',$domain))
                                            )
                                            );
 
@@ -1392,7 +1414,7 @@ class Domains extends Records {
             if (!$customer) $customer=$reseller;
         }
 
-        if (!preg_match ("/^[A-Za-z0-9-.]{1,}\.[A-Za-z]{2,}$/",$domain)) {
+        if (!$this->validDomain($domain)) {
             print "<font color=red>Error: invalid domain name</font>";
             return false;
         }
@@ -1964,7 +1986,7 @@ class SIPAccounts extends Records {
             return false;
         }
 
-        if (!preg_match ("/^[A-Za-z0-9-.]{1,}\.[A-Za-z]{2,}$/",$domain)) {
+        if (!$this->validDomain($domain)) {
             print "<font color=red>Error: invalid domain name</font>";
             return false;
         }
@@ -2027,6 +2049,8 @@ class SIPAccounts extends Records {
         } else {
 			$prepaid=intval($_REQUEST['prepaid']);
         }
+
+		if (!$email) $email=strtolower($username).'@'.strtolower($domain);
 
         $account=array(
                      'id'     => array('username' => strtolower($username),
@@ -2103,10 +2127,16 @@ class SIPAccounts extends Records {
         } else {
 			if ($this->version > 1) {
 				foreach ($result->domains as $_domain) {
-            		$this->allowedDomains[]=$_domain->domain;
+			        if ($this->validDomain($_domain->domain)) {
+            			$this->allowedDomains[]=$_domain->domain;
+                    }
                 }
             } else {
-            	$this->allowedDomains=$result;
+				foreach ($result as $_domain) {
+					if ($this->validDomain($_domain)) {
+            			$this->allowedDomains[]=$_domain;
+                	}
+                }
             }
         }
      }
@@ -2552,7 +2582,7 @@ class SIPAliases extends Records {
             return false;
         }
 
-        if (!preg_match ("/^[A-Za-z0-9-.]{1,}\.[A-Za-z]{2,}$/",$domain)) {
+        if (!$this->validDomain($domain)) {
             print "<font color=red>Error: invalid domain name</font>";
             return false;
         }
@@ -2647,10 +2677,16 @@ class SIPAliases extends Records {
         } else {
 			if ($this->version > 1) {
 				foreach ($result->domains as $_domain) {
-            		$this->allowedDomains[]=$_domain->domain;
+			        if ($this->validDomain($_domain->domain)) {
+            			$this->allowedDomains[]=$_domain->domain;
+                    }
                 }
             } else {
-            	$this->allowedDomains=$result;
+				foreach ($result as $_domain) {
+					if ($this->validDomain($_domain)) {
+            			$this->allowedDomains[]=$_domain;
+                	}
+                }
             }
         }
     }
@@ -5895,8 +5931,7 @@ class Customers extends Records {
                               'credit'      => array('type'       => 'float',
                                                      'adminonly'  => true
                                                      ),
-                              'username'    => array('type'       =>'text',
-                                                     'adminonly'  => true
+                              'username'    => array('type'       =>'text'
                                                      ),
                               'password'    => array('type'=>'text',
                                                      'name'=>'Password'),
@@ -5933,8 +5968,7 @@ class Customers extends Records {
                               );
 
     var $addFields=array(
-                              'username'    => array('type'       =>'text',
-                                                     'adminonly'  => true
+                              'username'    => array('type'       =>'text'
                                                      ),
                               'password'    => array('type'=>'text',
                                                      'name'=>'Password'),
@@ -6418,12 +6452,13 @@ class Customers extends Records {
             <table border=0 align=center width=100%>
             <tr><td align=left width=33%>";
 
-            if ($this->adminonly || $this->reseller == $customer->reseller) {
                 $_add_url = $this->url.sprintf("&service=%s&showAddForm=1",
 	            urlencode($this->SOAPEngine->service)
                 );
     	        printf ("<a href=%s>Add new customer</a> ",$_add_url);
 
+
+            if ($this->adminonly) {
     			if ($this->adminonly && $this->filters['reseller']) {
            			$_add_url = $this->url.sprintf("&service=%s&showAddForm=1&reseller_filter=%s",
 	            	urlencode($this->SOAPEngine->service),
@@ -7162,6 +7197,9 @@ class Customers extends Records {
         if ($this->adminonly && $this->filters['reseller']) {
             printf ("<tr><td class=border>Reseller</td>
             <td class=border>%s</td></tr>",$this->filters['reseller']);
+        } else {
+            printf ("<tr><td class=border>Reseller</td>
+            <td class=border>%s</td></tr>",$this->reseller);
         }
 
         foreach (array_keys($this->addFields) as $item) {
@@ -7287,7 +7325,7 @@ class Customers extends Records {
         ";
     }
 
-    function addRecord($dictionary=array(),$notify=false) {
+    function addRecord($dictionary=array()) {
 
         foreach (array_keys($this->addFields) as $item) {
 
@@ -7332,7 +7370,7 @@ class Customers extends Records {
                        );
 
         if ($this->SOAPEngine->execute($function)) {
-            if ($notify) $this->notify($customer);
+            if ($dictionary['notify']) $this->notify($customer);
      		$this->showAddForm=false;
             return true;
         } else {
@@ -8220,8 +8258,6 @@ class SIPAccountsActions extends Actions {
             		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             		break;
         		} else {
-                    //print_r($result);
-                    // Sanitize data types due to PHP bugs
 
                     if (!is_array($result->properties))   $result->properties=array();
         			if (!is_array($result->groups)) 	  $result->groups=array();
