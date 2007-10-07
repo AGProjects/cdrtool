@@ -248,7 +248,7 @@ class SOAPEngine {
                 // use first engine available
                 $_ports    = array_keys($this->ports);
                 $_engines  = array_keys($this->soapEngines);
-                $service   = $_ports[0].'@'.$_engines[0];
+                $service   = $this->allowedPorts[$_engines[0]][0].'@'.$_engines[0];
             }
 
 	        $this->extraFormElements    = $this->loginCredentials['extraFormElements'];
