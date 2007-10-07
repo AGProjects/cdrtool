@@ -116,6 +116,7 @@
 */
 
 class SOAPEngine {
+
     var $version       = 1;
     var $adminonly     = 0;
     var $customer      = 0;
@@ -359,7 +360,7 @@ class SOAPEngine {
 
             	$this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
 
-    			// Instantiate the SOAP client depends
+    			// Instantiate the SOAP client dependency
             	$this->soapclientRemote = new $this->soapClass($this->SOAPurlRemote);
 
             	$this->soapclientRemote->setOpt('curl', CURLOPT_TIMEOUT,        5);
@@ -1085,7 +1086,7 @@ class Domains extends Records {
 	                        	     );
 
             $this->filters   = array(
-                               'domain'       => trim($_REQUEST['domain_filter'])
+                               'domain'       => strtolower(trim($_REQUEST['domain_filter']))
                                );
 
         } else {
@@ -1391,13 +1392,18 @@ class Domains extends Records {
             if (!$customer) $customer=$reseller;
         }
 
+        if (!preg_match ("/^[A-Za-z0-9-.]{1,}\.[A-Za-z]{2,}$/",$domain)) {
+            print "<font color=red>Error: invalid domain name</font>";
+            return false;
+        }
+
         if ($this->version > 1) {
-            $domainStructure = array('domain'   => $domain,
+            $domainStructure = array('domain'   => strtolower($domain),
                                     'customer' => intval($customer),
                                     'reseller' => intval($reseller)
                                     );
         } else {
-            $domainStructure = $domain;
+            $domainStructure = strtolower($domain);
         }
 
         $function=array('commit'   => array('name'       => 'addDomain',
@@ -1474,8 +1480,8 @@ class SIPAccounts extends Records {
                             );
 
     function SIPAccounts(&$SOAPEngine) {
-        $this->filters = array('username' => trim($_REQUEST['username_filter']),
-                               'domain'   => trim($_REQUEST['domain_filter']),
+        $this->filters = array('username' => strtolower(trim($_REQUEST['username_filter'])),
+                               'domain'   => strtolower(trim($_REQUEST['domain_filter'])),
                                'fullname' => trim($_REQUEST['fullname_filter'])
                               );
 
@@ -1886,7 +1892,7 @@ class SIPAccounts extends Records {
                 print "</select>";
 
             } else {
-                printf ("<input type=text name=domain size=10 value='%s'>",$_REQUEST['domain']);
+                printf ("<input type=text name=domain size=15 value='%s'>",$_REQUEST['domain']);
             }
 
             printf (" Pass<input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
@@ -1896,18 +1902,6 @@ class SIPAccounts extends Records {
             printf ("<nobr>PSTN<input type=checkbox name=pstn value=1></nobr> ");
             printf ("<nobr>Quota<input type=text size=5 name=quota value='%s'></nobr> ",$_REQUEST['quota']);
             printf ("<nobr>Prepaid<input type=checkbox name=prepaid value=1></nobr> ");
-            /*
-            print "<nobr>";
-            print "Customer";
-            if ($this->adminonly) {
-            	$this->showResellerForm('reseller');
-                print ".";
-            	$this->showCustomerForm('customer');
-            } else {
-            	$this->showCustomerForm('customer');
-            }
-            print "</nobr>";
-            */
 
             print "
 	        </td>
@@ -1965,9 +1959,13 @@ class SIPAccounts extends Records {
             $domain=$dictionary['domain'];
         } else if ($_REQUEST['domain']) {
             $domain=trim($_REQUEST['domain']);
-
         } else {
             printf ("<p><font color=red>Error: Missing SIP domain</font>");
+            return false;
+        }
+
+        if (!preg_match ("/^[A-Za-z0-9-.]{1,}\.[A-Za-z]{2,}$/",$domain)) {
+            print "<font color=red>Error: invalid domain name</font>";
             return false;
         }
 
@@ -2031,8 +2029,9 @@ class SIPAccounts extends Records {
         }
 
         $account=array(
-                     'id'     => array('username' => $username,
-                                       'domain'   => $domain),
+                     'id'     => array('username' => strtolower($username),
+                                       'domain'   => strtolower($domain)
+                                       ),
                      'firstName'  => $firstName,
                      'lastName'   => $lastName,
                      'password'   => $password,
@@ -2114,26 +2113,32 @@ class SIPAccounts extends Records {
 }
 
 class SIPAliases extends Records {
-    var $sortElements=array(
-                            'aliasUsername'  => 'Alias user',
-                            'aliasDomain'    => 'Alias domain',
-                            'targetUsername' => 'Target user',
-                            'targetDomain'   => 'Target domain'
-                            );
 
     function SIPAliases(&$SOAPEngine) {
-        $this->filters   = array('aliasUsername'     => trim($_REQUEST['alias_username_filter']),
-                                 'aliasDomain'       => trim($_REQUEST['alias_domain_filter']),
+		$this->Records(&$SOAPEngine);
+
+        $this->filters   = array('aliasUsername'     => strtolower(trim($_REQUEST['alias_username_filter'])),
+                                 'aliasDomain'       => strtolower(trim($_REQUEST['alias_domain_filter'])),
                                  'targetUsername'    => trim($_REQUEST['target_username_filter']),
                                  'targetDomain'      => trim($_REQUEST['target_domain_filter'])
                            );
 
-        if ($version > 1) {
-            $this->sortElements['changeDate'] = 'Change date';
+        if ($this->version > 1) {
+            $this->sortElements=array(
+                            'changeDate'     => 'Change date',
+                            'aliasUsername'  => 'Alias user',
+                            'aliasDomain'    => 'Alias domain',
+                            'targetUsername' => 'Target user',
+                            'targetDomain'   => 'Target domain',
+                            );
+        } else {
+            $this->sortElements=array(
+                            'aliasUsername'  => 'Alias user',
+                            'aliasDomain'    => 'Alias domain',
+                            'targetUsername' => 'Target user',
+                            'targetDomain'   => 'Target domain',
+                            );
         }
-
-		$this->Records(&$SOAPEngine);
-
     }
 
     function getRecordKeys() {
@@ -2433,12 +2438,12 @@ class SIPAliases extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Alias<input type=text size=10 name=alias_username_filter value='%s'>",$this->filters['aliasUsername']);
+        printf (" Alias<input type=text size=15 name=alias_username_filter value='%s'>",$this->filters['aliasUsername']);
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
             if ($this->filters['aliasDomain'] && !in_array($this->filters['aliasDomain'],$this->allowedDomains)) {
-            	printf ("<input type=text size=10 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
+            	printf ("<input type=text size=15 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
             } else {
                 $selected_domain[$this->filters['aliasDomain']]='selected';
                 printf ("<select name=alias_domain_filter>
@@ -2451,11 +2456,11 @@ class SIPAliases extends Records {
                 printf ("</select>");
             }
         } else {
-            printf ("<input type=text size=10 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
+            printf ("<input type=text size=15 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
         }
 
-        printf (" Target<input type=text size=10 name=target_username_filter value='%s'>",$this->filters['targetUsername']);
-        printf (" @<input type=text size=10 name=target_domain_filter value='%s'>",$this->filters['targetDomain']);
+        printf (" Target<input type=text size=15 name=target_username_filter value='%s'>",$this->filters['targetUsername']);
+        printf ("@<input type=text size=15 name=target_domain_filter value='%s'>",$this->filters['targetDomain']);
 
     }
 
@@ -2485,6 +2490,8 @@ class SIPAliases extends Records {
                     print "<option value=$_domain>$_domain\n";
                 }
                 print "</select>";
+            } else {
+                print "<input type=text size=10 name=domain>";
             }
 
             printf (" Target<input type=text size=35 name=target>");
@@ -2545,6 +2552,11 @@ class SIPAliases extends Records {
             return false;
         }
 
+        if (!preg_match ("/^[A-Za-z0-9-.]{1,}\.[A-Za-z]{2,}$/",$domain)) {
+            print "<font color=red>Error: invalid domain name</font>";
+            return false;
+        }
+
         if ($this->adminonly) {
             if ($dictionary['reseller']) {
         		$reseller = $dictionary['reseller'];
@@ -2570,8 +2582,8 @@ class SIPAliases extends Records {
         }
 
         $alias=array(
-                     'id'     => array('username' => $username,
-                                       'domain'   => $domain
+                     'id'     => array('username' => strtolower($username),
+                                       'domain'   => strtolower($domain)
                                        ),
                      'target' => array('username' => $target_els[0],
                                        'domain'   => $target_els[1]
@@ -2581,8 +2593,9 @@ class SIPAliases extends Records {
                      'reseller'   => intval($reseller)
         			);
 
-        $deleteAlias=array('username' => $username,
-                           'domain'   => $domain);
+        $deleteAlias=array('username' => strtolower($username),
+                           'domain'   => strtolower($domain)
+                           );
 
         $function=array('commit'   => array('name'       => 'addAlias',
                                             'parameters' => array($alias),
@@ -6287,6 +6300,8 @@ class Customers extends Records {
 
 		$this->Records(&$SOAPEngine);
 
+		$this->allProperties=array_merge($this->propertiesItems,$this->customerProperties);
+
     }
 
     function showSeachForm() {
@@ -6538,12 +6553,12 @@ class Customers extends Records {
         printf (" FName<input type=text size=7 name=firstName_filter value='%s'>",$this->filters['firstName']);
         printf (" LName<input type=text size=7 name=lastName_filter value='%s'>",$this->filters['lastName']);
         printf (" Org<input type=text size=10 name=organization_filter value='%s'>",$this->filters['organization']);
+        printf (" Email<input type=text size=10 name=email_filter value='%s'>",$this->filters['email']);
 
         if ($this->adminonly) {
             if ($this->filters['only_resellers']) $check_only_resellers_filter='checked';
         	printf (" Resellers<input type=checkbox name=only_resellers_filter value=1 %s>",$check_only_resellers_filter);
         }
-
     }
 
     function deleteRecord($confirm) {
@@ -6867,14 +6882,14 @@ class Customers extends Records {
         </tr>");
 
 		foreach ($customer->properties as $_property) {
-            if (in_array($_property->name,array_keys($this->propertiesItems))) {
-	        	$this->propertiesItems[$_property->name]['value']=$_property->value;
+            if (in_array($_property->name,array_keys($this->allProperties))) {
+	        	$this->allProperties[$_property->name]['value']=$_property->value;
             }
         }
 
-        foreach (array_keys($this->propertiesItems) as $item) {
+        foreach (array_keys($this->allProperties) as $item) {
         	$item_print=preg_replace("/_/"," ",$item);
-            if ($this->propertiesItems[$item]['category'] != 'admin' || ($this->propertiesItems[$item]['category'] == 'admin' && $this->adminonly)) {
+            if ($this->allProperties[$item]['category'] != 'admin' || ($this->allProperties[$item]['category'] == 'admin' && $this->adminonly)) {
                 printf ("<tr>
                 <td class=border>%s</td>
                 <td class=border>%s</td>
@@ -6882,12 +6897,12 @@ class Customers extends Records {
                 <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
                 <td class=border>%s</td>
                 </tr>",
-                $this->propertiesItems[$item]['category'],
-                $this->propertiesItems[$item]['permission'],
+                $this->allProperties[$item]['category'],
+                $this->allProperties[$item]['permission'],
                 $item_print,
                 $item,
-                $this->propertiesItems[$item]['value'],
-                $this->propertiesItems[$item]['name']
+                $this->allProperties[$item]['value'],
+                $this->allProperties[$item]['name']
                 );
             } else {
                 printf ("<tr>
@@ -6897,61 +6912,14 @@ class Customers extends Records {
                 <td class=border><input type=hidden size=45 name='%s_form' value='%s'>%s</td>
                 <td class=border>%s</td>
                 </tr>",
-                $this->propertiesItems[$item]['category'],
-                $this->propertiesItems[$item]['permission'],
+                $this->allProperties[$item]['category'],
+                $this->allProperties[$item]['permission'],
                 $item_print,
                 $item,
-                $this->propertiesItems[$item]['value'],
-                $this->propertiesItems[$item]['value'],
-                $this->propertiesItems[$item]['name']
+                $this->allProperties[$item]['value'],
+                $this->allProperties[$item]['value'],
+                $this->allProperties[$item]['name']
                 );
-            }
-        }
-
-		if (count($this->customerProperties) > 0) {
-            foreach ($customer->properties as $_property) {
-                if (in_array($_property->name,array_keys($this->customerProperties))) {
-                    $this->propertiesItems[$_property->name]['value']=$_property->value;
-                }
-            }
-
-            printf ("<tr bgcolor=lightgrey>
-            <td class=border colspan=4>Extra properties</td>
-            </tr>");
-            foreach (array_keys($this->customerProperties) as $item) {
-                $item_print=preg_replace("/_/"," ",$item);
-            	if ($this->customerProperties[$item]['category'] != 'admin' || ($this->customerProperties[$item]['category'] == 'admin' && $this->adminonly)) {
-                    printf ("<tr>
-                    <td class=border>%s</td>
-                    <td class=border>%s</td>
-                    <td class=border>%s</td>
-                    <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
-                    <td class=border>%s</td>
-                    </tr>",
-                    $this->customerProperties[$item]['category'],
-                    $this->customerProperties[$item]['permission'],
-                    $item_print,
-                    $item,
-                    $this->propertiesItems[$item]['value'],
-                    $this->customerProperties[$item]['name']
-                    );
-                } else {
-                    printf ("<tr>
-                    <td class=border>%s</td>
-                    <td class=border>%s</td>
-                    <td class=border>%s</td>
-                    <td class=border><input type=hidden size=45 name='%s_form' value='%s'>%s</td>
-                    <td class=border>%s</td>
-                    </tr>",
-                    $this->customerProperties[$item]['category'],
-                    $this->customerProperties[$item]['permission'],
-                    $item_print,
-                    $item,
-                    $this->propertiesItems[$item]['value'],
-                    $this->propertiesItems[$item]['value'],
-                    $this->customerProperties[$item]['name']
-                    );
-                }
             }
         }
 
@@ -6995,9 +6963,7 @@ class Customers extends Records {
 
         // preserve the properties not managed by this client unchanged:
         foreach ($customer->properties as $_property) {
-            if (!in_array($_property->name,array_keys($this->propertiesItems)) &&
-            	!in_array($_property->name,array_keys($this->customerProperties))) {
-
+            if (!in_array($_property->name,array_keys($this->allProperties))) {
                 $properties[]=array('name'       => $_property->name,
                                     'value'      => $_property->value,
                                     'category'   => $_property->category,
@@ -7006,29 +6972,17 @@ class Customers extends Records {
             }
         }
 
-        foreach (array_keys($this->propertiesItems) as $item) {
-            $var_name=$item.'_form';
-            $var_value=trim($_REQUEST[$var_name]);
+        foreach (array_keys($this->allProperties) as $item) {
+            $var_name   = $item.'_form';
+            $var_value  = trim($_REQUEST[$var_name]);
             if (strlen($var_value)) {
                 $properties[]=array('name'       => $item,
                                     'value'      => $var_value,
-                                    'category'   => $this->propertiesItems[$item]['category'],
-                                    'permission' => $this->propertiesItems[$item]['permission']
+                                    'category'   => $this->allProperties[$item]['category'],
+                                    'permission' => $this->allProperties[$item]['permission']
                                     );
             }
  
-        }
- 
-        foreach (array_keys($this->customerProperties) as $item) {
-            $var_name=$item.'_form';
-            $var_value=trim($_REQUEST[$var_name]);
-            if (strlen($var_value)) {
-                $properties[]=array('name'       => $item,
-                                    'value'      => $var_value,
-                                    'category'   => $this->customerProperties[$item]['category'],
-                                    'permission' => $this->customerProperties[$item]['permission']
-                                    );
-            }
         }
  
         $customer->properties=$properties;
@@ -7353,6 +7307,8 @@ class Customers extends Records {
         if (!strlen($customer['postcode'])) $customer['postcode'] = 'Unknown';
         if (!strlen($customer['tel']))      $customer['tel']      = '+19999999999';
         if (!strlen($customer['timezone'])) $customer['timezone'] = 'Europe/Amsterdam';
+
+        $customer['username'] = strtolower(preg_replace ("/\s+/",".",trim($customer['username'])));
 
 		if ($customer['state'] != 'N/A') {
         	$_state=$customer['state'].' ';
