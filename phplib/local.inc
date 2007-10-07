@@ -244,7 +244,6 @@ class CDRTool_Auth extends Auth {
             $CDRTool['filter']['gateway']    = $this->db->f('gatewayFilter');
             $CDRTool['filter']['compid']     = $this->db->f('compidFilter');
             $CDRTool['filter']['cscode']     = $this->db->f('cscodeFilter');
-            $CDRTool['filter']['soap']       = $this->db->f('soapFilter');
             $CDRTool['reseller']             = $this->db->f('reseller');
             
             if ($this->db->f('only_after_date') && $this->db->f('only_after_date') != "0000-00-00") {

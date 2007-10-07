@@ -183,26 +183,34 @@ class SOAPEngine {
         // the filter format is:
         // engine1:port1,port2 engine2 engine3:port1
 
-    	$_filter_els=explode(" ",trim($filter));
-		foreach(array_keys($soapEngines) as $_engine) {
-        	foreach ($_filter_els as $_filter) {
-                unset($_allowed_engine);
-                $_allowed_ports=array();
-
-                list($_allowed_engine,$_allowed_ports_els) = explode(":",$_filter);
-
-                if ($_allowed_ports_els) {
-                	$_allowed_ports = explode(",",$_allowed_ports_els);
+		if (!$filter){
+        	$soapEngines_checked=$soapEngines;
+        } else {
+    
+            $_filter_els=explode(" ",$filter);
+            foreach(array_keys($soapEngines) as $_engine) {
+                foreach ($_filter_els as $_filter) {
+                    unset($_allowed_engine);
+                    $_allowed_ports=array();
+    
+                    list($_allowed_engine,$_allowed_ports_els) = explode(":",$_filter);
+    
+                    if ($_allowed_ports_els) {
+                        $_allowed_ports = explode(",",$_allowed_ports_els);
+                    }
+    
+                    if (count($_allowed_ports) == 0) {
+                        $_allowed_ports=array_keys($this->ports);
+                    }
+    
+                    if ($_engine == $_allowed_engine) {
+                        $soapEngines_checked[$_engine]=$soapEngines[$_engine];
+                        $this->allowedPorts[$_engine]=$_allowed_ports;
+                        continue;
+                    }
                 }
-
-
-            	if ($_engine == $_allowed_engine) {
-                	$soapEngines_checked[$_engine]=$soapEngines[$_engine];
-                    $this->allowedPorts[$_engine]=$_allowed_ports;
-                	continue;
-                }
-        	}
-    	}
+            }
+        }
 
         return $soapEngines_checked;
     }
@@ -246,9 +254,14 @@ class SOAPEngine {
 
             if (!$service) {
                 // use first engine available
-                $_ports    = array_keys($this->ports);
                 $_engines  = array_keys($this->soapEngines);
-                $service   = $this->allowedPorts[$_engines[0]][0].'@'.$_engines[0];
+                if (is_array($this->allowedPorts) && count($this->allowedPorts[$_engines[0]]) > 0) {
+                	$_ports=$this->allowedPorts[$_engines[0]];
+                } else {
+                	$_ports    = array_keys($this->ports);
+                }
+                // default service is:
+                $service   = $_ports[0].'@'.$_engines[0];
             }
 
 	        $this->extraFormElements    = $this->loginCredentials['extraFormElements'];

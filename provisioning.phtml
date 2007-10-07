@@ -44,6 +44,14 @@ if ($CDRTool['reseller']) {
                         );
 }
 
+if ($resellerFilters[$loginCredentials['reseller']]) {
+	$loginCredentials['soapFilter']      = $resellerFilters[$loginCredentials['reseller']]['soapFilter'];
+    $loginCredentials['recordGenerator'] = $resellerFilters[$loginCredentials['reseller']]['recordGenerator'];
+} else if ($loginCredentials['loginType'] != 'admin' && $resellerFilters['default']) {
+	$loginCredentials['soapFilter']      = $resellerFilters['default']['soapFilter'];
+    $loginCredentials['recordGenerator'] = $resellerFilters['default']['recordGenerator'];
+}
+
 require_once("provisioning/ngnpro_soap_library.phtml");
 require_once("provisioning/ngnpro_client_lib.phtml");
 include_once("provisioning/ngnpro_engines.inc");

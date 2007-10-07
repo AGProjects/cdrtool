@@ -431,7 +431,6 @@ setup/radius/OpenSER/radius_accounting.proc
 
 5.2.7
 alter table auth_user add column reseller bigint unsigned not null;
-alter table auth_user add column soapFilter varchar(255) not null after afterDateFilter;
 
 CREATE TABLE `billing_enum_tlds` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
