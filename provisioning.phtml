@@ -32,29 +32,32 @@ $layout->showTopMenu($title);
 
 global $CDRTool;
 
+$loginCredentials=array();
+
 if ($CDRTool['reseller']) {
 	$loginCredentials=array(
                         'reseller'           => $CDRTool['reseller'],
-                        'loginType'          => 'admin',
-                        'soapFilter'         => $CDRTool['filter']['soap']
+                        'loginType'          => 'admin'
                         );
 } else {
+    if ($perm->have_perm("admin")) {
 	$loginCredentials=array(
                         'loginType'          => 'admin'
                         );
-}
-
-if ($resellerFilters[$loginCredentials['reseller']]) {
-	$loginCredentials['soapFilter']      = $resellerFilters[$loginCredentials['reseller']]['soapFilter'];
-    $loginCredentials['recordGenerator'] = $resellerFilters[$loginCredentials['reseller']]['recordGenerator'];
-} else if ($loginCredentials['loginType'] != 'admin' && $resellerFilters['default']) {
-	$loginCredentials['soapFilter']      = $resellerFilters['default']['soapFilter'];
-    $loginCredentials['recordGenerator'] = $resellerFilters['default']['recordGenerator'];
+    }
 }
 
 require_once("provisioning/ngnpro_soap_library.phtml");
 require_once("provisioning/ngnpro_client_lib.phtml");
 include_once("provisioning/ngnpro_engines.inc");
+
+if ($resellerFilters[$loginCredentials['reseller']]) {
+	$loginCredentials['soapFilter']      = $resellerFilters[$loginCredentials['reseller']]['soapFilter'];
+    $loginCredentials['recordGenerator'] = $resellerFilters[$loginCredentials['reseller']]['recordGenerator'];
+} else if ($resellerFilters['default']) {
+	$loginCredentials['soapFilter']      = $resellerFilters['default']['soapFilter'];
+    $loginCredentials['recordGenerator'] = $resellerFilters['default']['recordGenerator'];
+}
 
 if ($_REQUEST['generatorId']) {
     $generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,$loginCredentials);

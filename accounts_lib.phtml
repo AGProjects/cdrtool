@@ -99,11 +99,6 @@ $f->add_element(array(	"name"=>"serviceFilter",
 			"maxlength"=>"255",
 			"size"=>"60"
 			));
-$f->add_element(array(	"name"=>"soapFilter",
-			"type"=>"text",
-			"maxlength"=>"255",
-			"size"=>"60"
-			));
 $f->add_element(array(	"name"=>"afterDateFilter",
 			"type"=>"text",
 			"maxlength"=>"10",
@@ -183,7 +178,6 @@ function showForm($id="") {
                   "compidFilter",
                   "cscodeFilter",
                   "afterDateFilter",
-                  "soapFilter",
                   "reseller");
             $f->freeze($ff);
         }
@@ -450,9 +444,6 @@ function showForm($id="") {
      $f->show_element("compidFilter","");
      print "</td></tr>";
      */
-     print "<tr><td>Soap engines</td><td>";
-     $f->show_element("soapFilter","");
-     print "</td></tr>";
      print "<tr><td>After date</td><td>";
      $f->show_element("afterDateFilter","");
      print "</td></tr>";

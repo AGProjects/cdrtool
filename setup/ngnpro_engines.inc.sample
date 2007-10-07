@@ -30,4 +30,11 @@ $recordGenerators =array (
                                      )
                          );
 
+$resellerFilters=array('default'  => array('soapFilter'      => 'se'
+                                          ),
+                       '1000'     => array('soapFilter'      => 'se:sip_accounts',
+                                           'recordGenerator' => 'rg',
+                                           'soapEngine'      => 'node03'
+                                           )
+                       );
 ?>

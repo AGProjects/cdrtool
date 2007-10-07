@@ -7,6 +7,8 @@ page_open(
 
 $title="SIP settings page";
 
+//$verbose=1;
+
 if (is_readable("local/header.phtml")) {
     include("local/header.phtml");
 } else {
@@ -31,9 +33,14 @@ if (class_exists($_reseller_class)) {
 
 $loginCredentials=array(
                         'loginType'  => 'admin',
-                        'reseller'   => $_REQUEST['reseller'],
-                        'soapEngine' => $_REQUEST['soapEngine']
+                        'reseller'   => $_REQUEST['reseller']
                         );
+
+if ($resellerFilters[$loginCredentials['reseller']]) {
+	$loginCredentials['soapEngine']      = $resellerFilters[$loginCredentials['reseller']]['soapEngine'];
+} else if ($resellerFilters['default']) {
+	$loginCredentials['soapEngine']      = $resellerFilters['default']['soapEngine'];
+}
 
 $SIPSettings = new $SIPSettings_class($account,$loginCredentials,$soapEngines);
 
