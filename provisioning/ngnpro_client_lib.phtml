@@ -4280,17 +4280,28 @@ class ENUMmappings extends Records {
 
 class TrustedPeers extends Records {
 
-    var $sortElements=array(
-                            'description'   => 'Description',
-                            'ip' =>'IP address'
-                            );
 
     function TrustedPeers(&$SOAPEngine) {
+
     	$this->filters   = array('ip'     => trim($_REQUEST['ip_filter']),
                                  'description'  => trim($_REQUEST['description_filter'])
                                  );
 
 		$this->Records(&$SOAPEngine);
+
+        if ($this->version > 1) {
+
+        	$this->sortElements=array(
+                            'changeDate'  => 'Change date',
+                            'description' => 'Description',
+                            'ip'          => 'IP address'
+                            );
+    	} else {
+        	$this->sortElements=array(
+                            'description' => 'Description',
+                            'ip'          => 'IP address'
+                            );
+        }
     }
 
     function listRecords() {
@@ -4355,9 +4366,13 @@ class TrustedPeers extends Records {
                 <td><b>IP address</b></td>
                 <td><b>Protocol</b></td>
                 <td><b>From pattern</b></td>
-                <td><b>Description</b></td>
-                <td><b>Owner</b></td>
-                <td><b>Action</b></td>
+                <td><b>Description</b></td>";
+
+                if ($this->version > 1) print "<td><b>Change date</b></td>";
+
+                print "<td><b>Action</b></td>
+
+
             </tr>
             ";
 
@@ -4404,61 +4419,61 @@ class TrustedPeers extends Records {
                     }
 
                		if ($this->version > 1) {
+                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SOAPEngine->customerEngine),
+                        urlencode($peer->customer)
+                        );
 
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td>%s.%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>",
-                    $bgcolor,
-                    $index,
-                    $peer->reseller,
-                    $peer->customer,
-                    $peer->ip,
-                    $peer->protocol,
-                    $peer->fromPattern,
-                    $peer->description,
-                    $peer->owner,
-                    $_url,
-                    $actionText
-                    );
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td><a href=%s>%s.%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $peer->reseller,
+                        $peer->customer,
+                        $peer->ip,
+                        $peer->protocol,
+                        $peer->fromPattern,
+                        $peer->description,
+                        $peer->changeDate,
+                        $_url,
+                        $actionText
+                        );
                     } else {
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>",
-                    $bgcolor,
-                    $index,
-                    $peer->ip,
-                    $peer->protocol,
-                    $peer->fromPattern,
-                    $peer->description,
-                    $peer->owner,
-                    $_url,
-                    $actionText
-                    );
-
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $peer->ip,
+                        $peer->protocol,
+                        $peer->fromPattern,
+                        $peer->description,
+                        $_url,
+                        $actionText
+                        );
                     }
+
                     printf("
                     </tr>
                     ");
-
                     $i++;
-    
                 }
-    
 			}
 
             print "</table>";
