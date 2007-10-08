@@ -59,6 +59,8 @@ if ($resellerFilters[$loginCredentials['reseller']]) {
     $loginCredentials['recordGenerator'] = $resellerFilters['default']['recordGenerator'];
 }
 
+$loginCredentials['resellerFilters'] = $resellerFilters;
+
 if ($_REQUEST['generatorId']) {
     $generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,$loginCredentials);
     if ($_REQUEST['action']=='Generate') {

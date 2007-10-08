@@ -236,6 +236,7 @@ class SOAPEngine {
         */
 
 		$this->loginCredentials = $loginCredentials;
+        
         dprint_r($this->loginCredentials);
 
 		if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
@@ -1245,69 +1246,69 @@ class Domains extends Records {
                     }
 
                     if ($this->version > 1) {
-        			$_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
-                    urlencode($this->SOAPEngine->service),
-                    urlencode($domain->domain)
-                    );
-
-                    if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['domain_filter'] == $domain->domain) {
-                		$_url .= "&confirm=1";
-                        $actionText = "<font color=red>Confirm</font>";
+                        $_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
+                        urlencode($this->SOAPEngine->service),
+                        urlencode($domain->domain)
+                        );
+    
+                        if ($_REQUEST['action'] == 'Delete' &&
+                            $_REQUEST['domain_filter'] == $domain->domain) {
+                            $_url .= "&confirm=1";
+                            $actionText = "<font color=red>Confirm</font>";
+                        } else {
+                            $actionText = "Delete";
+                        }
+    
+                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SOAPEngine->customerEngine),
+                        urlencode($domain->customer)
+                        );
+    
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td><a href=%s>%s.%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $domain->customer,
+                        $domain->reseller,
+                        $domain->domain,
+                        $domain->changeDate,
+                        $_url,
+                        $actionText
+                        );
                     } else {
-                        $actionText = "Delete";
-                    }
-
-                    $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    urlencode($this->SOAPEngine->customerEngine),
-                    urlencode($domain->customer)
-                    );
-
-                 	printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td><a href=%s>%s.%s</a></td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>",
-                    $bgcolor,
-                    $index,
-                    $_customer_url,
-                    $domain->customer,
-                    $domain->reseller,
-                    $domain->domain,
-                    $domain->changeDate,
-                    $_url,
-                    $actionText
-                    );
-                    } else {
-        			$_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
-                    urlencode($this->SOAPEngine->service),
-                    urlencode($domain)
-                    );
-
-                    if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['domain_filter'] == $domain) {
-                		$_url .= "&confirm=1";
-                        $actionText = "<font color=red>Confirm</font>";
-                    } else {
-                        $actionText = "Delete";
-                    }
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>",
-                    $bgcolor,
-                    $index,
-                    $domain,
-                    $domain->changeDate,
-                    $_url,
-                    $actionText
-                    );
+                        $_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
+                        urlencode($this->SOAPEngine->service),
+                        urlencode($domain)
+                        );
+    
+                        if ($_REQUEST['action'] == 'Delete' &&
+                            $_REQUEST['domain_filter'] == $domain) {
+                            $_url .= "&confirm=1";
+                            $actionText = "<font color=red>Confirm</font>";
+                        } else {
+                            $actionText = "Delete";
+                        }
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $domain,
+                        $domain->changeDate,
+                        $_url,
+                        $actionText
+                        );
                     }
 
                     $i++;
@@ -2389,53 +2390,53 @@ class SIPAliases extends Records {
                         	$_owner_url='';
                         }          
 
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td><a href=%s>%s.%s</a></td>
-                    <td>%s@%s</td>
-                    <td>%s@%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>
-                    ",
-                    $bgcolor,
-                    $index,
-                    $_customer_url,
-                    $alias->customer,
-                    $alias->reseller,
-                    $alias->id->username,
-                    $alias->id->domain,
-                    $alias->target->username,
-                    $alias->target->domain,
-                    $_owner_url,
-                    $alias->changeDate,
-                    $_url,
-                    $actionText
-                    );
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td><a href=%s>%s.%s</a></td>
+                        <td>%s@%s</td>
+                        <td>%s@%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>
+                        ",
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $alias->customer,
+                        $alias->reseller,
+                        $alias->id->username,
+                        $alias->id->domain,
+                        $alias->target->username,
+                        $alias->target->domain,
+                        $_owner_url,
+                        $alias->changeDate,
+                        $_url,
+                        $actionText
+                        );
                     } else {
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td>%s@%s</td>
-                    <td>%s@%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>
-                    ",
-                    $bgcolor,
-                    $index,
-                    $alias->id->username,
-                    $alias->id->domain,
-                    $alias->target->username,
-                    $alias->target->domain,
-                    $alias->owner,
-                    $alias->changeDate,
-                    $_url,
-                    $actionText
-                    );
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td>%s@%s</td>
+                        <td>%s@%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>
+                        ",
+                        $bgcolor,
+                        $index,
+                        $alias->id->username,
+                        $alias->id->domain,
+                        $alias->target->username,
+                        $alias->target->domain,
+                        $alias->owner,
+                        $alias->changeDate,
+                        $_url,
+                        $actionText
+                        );
                     }
                     $i++;
     
@@ -2862,76 +2863,85 @@ class ENUMranges extends Records {
                         $actionText = "Delete";
                     }
 
-                    if (strlen($this->SOAPEngine->recordGenerator)) {
-                        $range_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>%s</a>',$this->url,$this->SOAPEngine->recordGenerator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller,$range->id->prefix);
+					if ($this->adminonly) {
+                    	if ($this->loginCredentials['resellerFilters'][$range->reseller]['recordGenerator']) {
+                            $range_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>%s</a>',$this->url,$this->loginCredentials['resellerFilters'][$range->reseller]['recordGenerator'],$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller,$range->id->prefix);
+                        } else  if (strlen($this->SOAPEngine->recordGenerator)) {
+                            $range_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>%s</a>',$this->url,$this->SOAPEngine->recordGenerator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller,$range->id->prefix);
+                        } else {
+                            $range_link=$range->id->prefix;
+                        }
                     } else {
-                    	$range_link=$range->id->prefix;
+                        if (strlen($this->SOAPEngine->recordGenerator)) {
+                            $range_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>%s</a>',$this->url,$this->SOAPEngine->recordGenerator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller,$range->id->prefix);
+                        } else {
+                            $range_link=$range->id->prefix;
+                        }
                     }
 
                     if ($this->version > 1) {
-        			$_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    urlencode($this->SOAPEngine->customerEngine),
-                    urlencode($range->customer)
-                    );
-                    
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td><a href=%s>%s.%s</a></td>
-                    <td>+%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>",
-                    $bgcolor,
-                    $index,
-                    $_customer_url,
-                    $range->customer,
-                    $range->reseller,
-                    $range_link,
-                    $range->id->tld,
-                    $range->ttl,
-                    $range->minDigits,
-                    $range->maxDigits,
-                    $range->size,
-                    $range->used,
-                    $range->changeDate,
-                    $_url,
-                    $actionText
-                    );
+                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SOAPEngine->customerEngine),
+                        urlencode($range->customer)
+                        );
+                        
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td><a href=%s>%s.%s</a></td>
+                        <td>+%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $range->customer,
+                        $range->reseller,
+                        $range_link,
+                        $range->id->tld,
+                        $range->ttl,
+                        $range->minDigits,
+                        $range->maxDigits,
+                        $range->size,
+                        $range->used,
+                        $range->changeDate,
+                        $_url,
+                        $actionText
+                        );
                     } else {
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td>+%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>",
-                    $bgcolor,
-                    $index,
-                    $range_link,
-                    $range->id->tld,
-                    $range->ttl,
-                    $range->minDigits,
-                    $range->maxDigits,
-                    $range->size,
-                    $range->used,
-                    $range->changeDate,
-                    $_url,
-                    $actionText
-                    );
-
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td>+%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $range_link,
+                        $range->id->tld,
+                        $range->ttl,
+                        $range->minDigits,
+                        $range->maxDigits,
+                        $range->size,
+                        $range->used,
+                        $range->changeDate,
+                        $_url,
+                        $actionText
+                        );
                     }
                     printf("
                     </tr>
