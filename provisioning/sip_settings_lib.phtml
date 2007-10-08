@@ -260,70 +260,73 @@ class SIPSettings {
         $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
         // Presence
-        $this->SOAPurlPresence=$this->soapEngines[$this->soapEnginePresencePort]['url'];
+        $this->SOAPurlPresence=$this->soapEngines[$this->presenceEngine]['url'];
+
+        if (strlen($this->loginCredentials['customerEngine'])) {
+            $this->customerEngine=$this->loginCredentials['customerEngine'];
+        } else if (strlen($this->soapEngines[$this->soapEngine]['customerEngine'])) {
+            $this->customerEngine=$this->soapEngines[$this->soapEngine]['customerEngine'];
+        } else {
+            $this->customerEngine=$this->soapEngine;
+        }
+
+        if (strlen($this->loginCredentials['presenceEngine'])) {
+            $this->presenceEngine=$this->loginCredentials['presenceEngine'];
+        } else if (strlen($this->soapEngines[$this->soapEngine]['presenceEngine'])) {
+            $this->presenceEngine=$this->soapEngines[$this->soapEngine]['presenceEngine'];
+        }
+
+        if (strlen($this->loginCredentials['voicemailEngine'])) {
+            $this->voicemailEngine=$this->loginCredentials['voicemailEngine'];
+        } else if (strlen($this->soapEngines[$this->soapEngine]['voicemailEngine'])) {
+            $this->voicemailEngine=$this->soapEngines[$this->soapEngine]['voicemailEngine'];
+        } else {
+            $this->voicemailEngine=$this->soapEngine;
+        }
 
         // Instantiate the SOAP clients
         $this->SipPort       = new $this->soapClassSipPort($this->SOAPurl);
+        $this->SipPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-		if (strlen($this->soapEngines[$this->soapEngine]['voicemailEngine'])) {
-        	$voicemailId=$this->soapEngines[$this->soapEngine]['voicemailEngine'];
-        	$this->SOAPurlVoicemail = $this->soapEngines[$voicemailId]['url'];
-            $this->SOAPloginVoicemail = array(
-                                   "username"    => $this->soapEngines[$voicemailId]['username'],
-                                   "password"    => $this->soapEngines[$voicemailId]['password'],
-                                   "admin"       => true,
-                                   "impersonate" => intval($this->reseller)
-                                   );
+        // voicemail
+        $this->SOAPurlVoicemail = $this->soapEngines[$this->voicemailEngine]['url'];
+        $this->SOAPloginVoicemail = array(
+                               "username"    => $this->soapEngines[$this->voicemailEngine]['username'],
+                               "password"    => $this->soapEngines[$this->voicemailEngine]['password'],
+                               "admin"       => true,
+                               "impersonate" => intval($this->reseller)
+                               );
 
-            $this->SoapAuthVoicemail = array('auth', $this->SOAPloginVoicemail , 'urn:AGProjects:NGNPro', 0, '');
-        } else {
-        	$this->SOAPurlVoicemail  = $this->SOAPurl;
-            $this->SoapAuthVoicemail = $this->SoapAuth;
-        }
+        $this->SoapAuthVoicemail = array('auth', $this->SOAPloginVoicemail , 'urn:AGProjects:NGNPro', 0, '');
+        $this->VoicemailPort = new $this->soapClassVoicemailPort($this->SOAPurlVoicemail);
+        $this->VoicemailPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-		if (strlen($this->soapEngines[$this->soapEngines[$this->soapEngine]['presenceEngine']])) {
-        	$this->SOAPurlPresence = $this->soapEngines[$this->soapEngines[$this->soapEngine]['presenceEngine']]['url'];
+        // customer
+        $this->SOAPurlCustomer = $this->soapEngines[$this->customerEngine]['url'];
+        $this->SOAPloginCustomer = array(
+                               "username"    => $this->soapEngines[$this->customerEngine]['username'],
+                               "password"    => $this->soapEngines[$this->customerEngine]['password'],
+                               "admin"       => true
+                               );
+
+        $this->SoapAuthCustomer = array('auth', $this->SOAPloginCustomer , 'urn:AGProjects:NGNPro', 0, '');
+        $this->CustomerPort  = new $this->soapClassCustomerPort($this->SOAPurlCustomer);
+        $this->CustomerPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+        // presence
+		if ($this->presenceEngine) {
+        	$this->SOAPurlPresence = $this->soapEngines[$this->presenceEngine]['url'];
         	$this->PresencePort    = new $this->soapClassPresencePort($this->SOAPurlPresence);
         	$this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT,        5);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
         }
-
-		if (strlen($this->soapEngines[$this->soapEngine]['customerEngine'])) {
-        	$this->SOAPurlCustomer = $this->soapEngines[$this->soapEngines[$this->soapEngine]['customerEngine']]['url'];
-            $this->SOAPloginCustomer = array(
-                                   "username"    => $this->soapEngines[$this->soapEngines[$this->soapEngine]['customerEngine']]['username'],
-                                   "password"    => $this->soapEngines[$this->soapEngines[$this->soapEngine]['customerEngine']]['password'],
-                                   "admin"       => true
-                                   );
-
-            $this->SoapAuthCustomer = array('auth', $this->SOAPloginCustomer , 'urn:AGProjects:NGNPro', 0, '');
-        } else {
-        	$this->SOAPurlCustomer  = $this->SOAPurl;
-            $this->SOAPloginCustomer = array(
-                                   "username"    => $this->soapEngines[$this->soapEngine]['username'],
-                                   "password"    => $this->soapEngines[$this->soapEngine]['password'],
-                                   "admin"       => true
-                                   );
-
-            $this->SoapAuthCustomer = array('auth', $this->SOAPloginCustomer , 'urn:AGProjects:NGNPro', 0, '');
-            $this->SoapAuthCustomer = $this->SoapAuthCustomer;
-        }
-
-        $this->VoicemailPort = new $this->soapClassVoicemailPort($this->SOAPurlVoicemail);
-        $this->CustomerPort  = new $this->soapClassCustomerPort($this->SOAPurlCustomer);
-
-        $this->SipPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
-        $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-        $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-
-        $this->VoicemailPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
-        $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-        $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-
-        $this->CustomerPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
-        $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-        $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
         $this->soapRemoteId=$this->soapEngines[$this->soapEngine]['depends'];
 

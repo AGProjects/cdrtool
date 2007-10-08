@@ -312,6 +312,14 @@ class SOAPEngine {
             	$this->recordGenerator=$this->soapEngines[$this->soapEngine]['recordGenerator'];
             }
 
+	        if (strlen($this->loginCredentials['customerEngine'])) {
+            	$this->customerEngine=$this->loginCredentials['customerEngine'];
+            } else if (strlen($this->soapEngines[$this->soapEngine]['customerEngine'])) {
+            	$this->customerEngine=$this->soapEngines[$this->soapEngine]['customerEngine'];
+            } else {
+            	$this->customerEngine=$this->soapEngine;
+            }
+
             if (strlen($loginCredentials['reseller'])) {
             	$this->reseller = $loginCredentials['reseller'];
             } else if ($this->adminonly && $_REQUEST['reseller_filter']){
@@ -380,15 +388,17 @@ class SOAPEngine {
     			// Instantiate the SOAP client dependency
             	$this->soapclientRemote = new $this->soapClass($this->SOAPurlRemote);
 
-            	$this->soapclientRemote->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
+            	$this->soapclientRemote->setOpt('curl', CURLOPT_TIMEOUT, $this->timeout);
             	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
             }
 
 	    	if ($this->version > 1) {
-                // The customer port is at the same SOAP URL
-	            $this->soapclientCustomers = new WebService_NGNPro_CustomerPort($this->SOAPurl);
-    	        $this->soapclientCustomers->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
+
+                $this->SOAPurlCustomers    = $this->soapEngines[$this->customerEngine]['url'];
+	            $this->soapclientCustomers = new WebService_NGNPro_CustomerPort($this->SOAPurlCustomers);
+
+    	        $this->soapclientCustomers->setOpt('curl', CURLOPT_TIMEOUT, $this->timeout);
         	    $this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             	$this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
             }
@@ -1249,7 +1259,7 @@ class Domains extends Records {
                     }
 
                     $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    urlencode($this->SOAPEngine->soapEngine),
+                    urlencode($this->SOAPEngine->customerEngine),
                     urlencode($domain->customer)
                     );
 
@@ -1744,7 +1754,7 @@ class SIPAccounts extends Records {
 
                     if ($this->version > 1) {
                         $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                        urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($this->SOAPEngine->customerEngine),
                         urlencode($account->customer));
 
 						if ($account->owner) {
@@ -2363,7 +2373,7 @@ class SIPAliases extends Records {
                     if ($this->version > 1) {
 
                         $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                        urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($this->SOAPEngine->customerEngine),
                         urlencode($alias->customer)
                         );
     
@@ -2860,7 +2870,7 @@ class ENUMranges extends Records {
 
                     if ($this->version > 1) {
         			$_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    urlencode($this->SOAPEngine->soapEngine),
+                    urlencode($this->SOAPEngine->customerEngine),
                     urlencode($range->customer)
                     );
                     
@@ -3444,7 +3454,7 @@ class ENUMmappings extends Records {
 
                     		if ($this->version > 1) {
                                 $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                                urlencode($this->SOAPEngine->soapEngine),
+                                urlencode($this->SOAPEngine->customerEngine),
                                 urlencode($number->customer)
                                 );
     
@@ -4713,7 +4723,7 @@ class GatewayGroups extends Records {
 
                     if ($this->version > 1) {
                         $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                        urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($this->SOAPEngine->customerEngine),
                         urlencode($group->customer)
                         );
     
@@ -5034,7 +5044,7 @@ class Gateways extends Records {
 
                     if ($this->version > 1) {
                         $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                        urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($this->SOAPEngine->customerEngine),
                         urlencode($gateway->customer)
                         );
     
@@ -5480,7 +5490,7 @@ class Routes extends Records {
 
 	                if ($this->version > 1) {
                         $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                        urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($this->SOAPEngine->customerEngine),
                         urlencode($route->customer)
                         );
     
