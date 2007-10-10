@@ -1108,6 +1108,35 @@ class Records {
         return true;
     }
 
+    function getGatewayGroups () {
+        $Query=array('filter'  => array('name'=>''),
+                     'orderBy' => array('attribute' => 'name',
+                                        'direction' => 'ASC'
+                                  ),
+                     'range'   => array('start' => 0,
+                                        'count' => 1000)
+                     );
+
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclient->getGatewayGroups($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            if ($this->version > 1) {
+                foreach ($result->groups as $_grp){
+                	$this->gatewayGroups[]=$_grp->name;
+                }
+            } else {
+            	$this->gatewayGroups=$result->groups;
+            }
+
+        }
+    }
 }
 
 class Domains extends Records {
@@ -1333,7 +1362,6 @@ class Domains extends Records {
     }
 
     function deleteRecord($dictionary=array()) {
-
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
@@ -1872,7 +1900,6 @@ class SIPAccounts extends Records {
     }
 
     function deleteRecord($dictionary=array()) {
-
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
@@ -2961,8 +2988,8 @@ class ENUMranges extends Records {
         }
     }
 
-    function deleteRecord() {
-        if (!$_REQUEST['confirm']) {
+    function deleteRecord($dictionary=array()) {
+        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
         }
@@ -3702,7 +3729,6 @@ class ENUMmappings extends Records {
     }
 
     function deleteRecord($dictionary=array()) {
-
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
@@ -4280,7 +4306,6 @@ class ENUMmappings extends Records {
 
 class TrustedPeers extends Records {
 
-
     function TrustedPeers(&$SOAPEngine) {
 
     	$this->filters   = array('ip'     => trim($_REQUEST['ip_filter']),
@@ -4570,6 +4595,7 @@ class TrustedPeers extends Records {
             } else {
             	$customer = trim($_REQUEST['customer']);
             }
+
             if (!$customer || !in_array($customer,array_keys($this->customers))) {
                 $customer=$reseller;
             }
@@ -4599,8 +4625,8 @@ class TrustedPeers extends Records {
         return $this->SOAPEngine->execute($function);
     }
 
-    function deleteRecord() {
-        if (!$_REQUEST['confirm']) {
+    function deleteRecord($dictionary=array()) {
+        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
         }
@@ -4615,6 +4641,7 @@ class TrustedPeers extends Records {
                                             'logs'       => array('success' => sprintf('<p>Trusted peers %s has been deleted',$this->filters['ip'])))
                         );
      
+        unset($this->filters);
         return $this->SOAPEngine->execute($function);
     }
 
@@ -4634,7 +4661,7 @@ class GatewayGroups extends Records {
                             );
 
     function GatewayGroups(&$SOAPEngine) {
-    	$this->filters   = array('group'   => trim($_REQUEST['group_filter'])
+    	$this->filters   = array('name'   => trim($_REQUEST['name_filter'])
                                  );
 
 		$this->Records(&$SOAPEngine);
@@ -4648,7 +4675,7 @@ class GatewayGroups extends Records {
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
 
         // Filter
-        $filter=array('name'  => $this->filters['group'],
+        $filter=array('name'     => $this->filters['name'],
                       'customer' => intval($this->filters['customer']),
                       'reseller' => intval($this->filters['reseller'])
                       );
@@ -4668,9 +4695,9 @@ class GatewayGroups extends Records {
 
         // Compose query
         $Query=array('filter'  => $filter,
-                        'orderBy' => $orderBy,
-                        'range'   => $range
-                        );
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
 
         // Call function
         $result     = $this->SOAPEngine->soapclient->getGatewayGroups($Query);
@@ -4699,7 +4726,11 @@ class GatewayGroups extends Records {
                 ";
                 if ($this->version > 1) print "<td><b>Customer</b></td>";
                 print"
-                <td><b>Name</b></th>
+                <td><b>Name</b></th>";
+
+                if ($this->version > 1) print "<td><b>Change date</b></td>";
+                print "
+
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -4733,20 +4764,20 @@ class GatewayGroups extends Records {
                         $bgcolor="white";
                     }
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&group_filter=%s",
-                    urlencode($this->SOAPEngine->service),
-                    urlencode($group)
-                    );
-
-                    if ($_REQUEST['action'] == 'Delete' &&
-                    	$_REQUEST['group_filter'] == $group) {
-                		$_url .= "&confirm=1";
-                        $actionText = "<font color=red>Confirm</font>";
-                    } else {
-                        $actionText = "Delete";
-                    }
-
                     if ($this->version > 1) {
+                        $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s",
+                        urlencode($this->SOAPEngine->service),
+                        urlencode($group->name)
+                        );
+
+                        if ($_REQUEST['action'] == 'Delete' &&
+                            $_REQUEST['name_filter'] == $group->name) {
+                            $_url .= "&confirm=1";
+                            $actionText = "<font color=red>Confirm</font>";
+                        } else {
+                            $actionText = "Delete";
+                        }
+
                         $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                         urlencode($this->SOAPEngine->customerEngine),
                         urlencode($group->customer)
@@ -4757,6 +4788,7 @@ class GatewayGroups extends Records {
                         <td>%s</td>
                         <td><a href=%s>%s.%s</a></td>
                         <td>%s</td>
+                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
                         $bgcolor,
@@ -4765,6 +4797,7 @@ class GatewayGroups extends Records {
                         $group->customer,
                         $group->reseller,
                         $group->name,
+                        $group->changeDate,
                         $_url,
                         $actionText
                         );
@@ -4773,7 +4806,19 @@ class GatewayGroups extends Records {
                         </tr>
                         ");
                     } else {
-    
+                        $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s",
+                        urlencode($this->SOAPEngine->service),
+                        urlencode($group)
+                        );
+
+                        if ($_REQUEST['action'] == 'Delete' &&
+                            $_REQUEST['name_filter'] == $group) {
+                            $_url .= "&confirm=1";
+                            $actionText = "<font color=red>Confirm</font>";
+                        } else {
+                            $actionText = "Delete";
+                        }
+
                         printf("
                         <tr bgcolor=%s>
                         <td>%s</td>
@@ -4855,6 +4900,7 @@ class GatewayGroups extends Records {
 
     function addRecord($dictionary=array()) {
         if ($this->version > 1) {
+
         	if ($dictionary['name']) {
                 $name=$dictionary['name'];
             } else {
@@ -4891,7 +4937,11 @@ class GatewayGroups extends Records {
                              );
 
         } else {
-    		$structure = trim($_REQUEST['name']);
+        	if ($dictionary['name']) {
+                $structure=$dictionary['name'];
+            } else {
+            	$structure = trim($_REQUEST['name']);
+            }
             $name = $structure;
         }
 
@@ -4911,30 +4961,37 @@ class GatewayGroups extends Records {
         return $this->SOAPEngine->execute($function);
     }
 
-    function deleteRecord() {
-        if (!$_REQUEST['confirm']) {
+    function deleteRecord($dictionary=array()) {
+        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
         }
 
-        if (!strlen($this->filters['group'])) {
-            print "<p><font color=red>Error: missing gateway group. </font>";
+        if ($dictionary['name']) {
+    		$name   = $dictionary['name'];
+        } else {
+    		$name   = trim($this->filters['name']);
+        }
+
+        if (!strlen($name)) {
+            print "<p><font color=red>Error: missing gateway group name </font>";
             return false;
         }
 
         $function=array('commit'   => array('name'       => 'deleteGatewayGroup',
-                                            'parameters' => array($this->filters['group']),
-                                            'logs'       => array('success' => sprintf('<p>Gateway group %s has been deleted',$this->filters['group']))),
+                                            'parameters' => array($name),
+                                            'logs'       => array('success' => sprintf('<p>Gateway group %s has been deleted',$name))),
                         'rollback' => array('name'       => 'addGatewayGroup',
                                             'parameters' => array($this->filters['group'])
                                             )
                         );
      
+        unset($this->filters);
         return $this->SOAPEngine->execute($function);
     }
 
     function showSeachFormCustom() {
-        printf (" Name<input type=text size=15 name=group_filter value='%s'>",$this->filters['group']);
+        printf (" Name<input type=text size=15 name=name_filter value='%s'>",$this->filters['name']);
     }
 
 }
@@ -5021,6 +5078,7 @@ class Gateways extends Records {
                 <td><b>Address</b></td>
                 <td><b>Strip</b></td>
                 <td><b>Prefix</b></td>
+                <td><b>Change date</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -5082,6 +5140,7 @@ class Gateways extends Records {
                         <td>%s:%s:%s</td>
                         <td>%s</td>
                         <td>%s</td>
+                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
                         $bgcolor,
@@ -5096,6 +5155,7 @@ class Gateways extends Records {
                         $gateway->port,
                         $gateway->strip,
                         $gateway->prefix,
+                        $gateway->changeDate,
                         $_url,
                         $actionText
                         );
@@ -5148,6 +5208,14 @@ class Gateways extends Records {
 
     function showAddForm() {
 		if ($this->selectionActive) return;
+
+        $this->getGatewayGroups();
+
+        if (!count($this->gatewayGroups)) {
+            print "<p>Create a gateway group first";
+            return false;
+        }
+
         print "
         <p>
         <table border=0 class=border width=100% bgcolor=lightblue>
@@ -5164,36 +5232,15 @@ class Gateways extends Records {
 
             printf (" Name<input type=text size=20 name=name>");
 
-            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-            $result     = $this->SOAPEngine->soapclient->getGatewayGroups();
-
             printf (" Group: ");
 
-            // Compose query
-            $Query=array('filter'  => array('name'=>''),
-                         'orderBy' => array('attribute' => 'name',
-                                            'direction' => 'ASC'
-                                      ),
-                         'range'   => array('start' => 0,
-			                                'count' => 1000)
-                         );
 
-            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-            $result     = $this->SOAPEngine->soapclient->getGatewayGroups($Query);
-
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-            	print "<select name=group> ";
-                foreach ($result->groups as $_grp) {
-                	printf ("<option value='%s'>%s",$_grp,$_grp);
-                }
-            	printf (" </select>");
+            print "<select name=group> ";
+            foreach ($this->gatewayGroups as $_grp) {
+            	printf ("<option value='%s'>%s",$_grp,$_grp);
             }
+            printf (" </select>");
+
             printf (" Address<input type=text size=25 name=address>");
             printf (" Strip: <select name=strip>");
             $t=0;
@@ -5330,24 +5377,32 @@ class Gateways extends Records {
                                             )
                         );
      
+        unset($this->filters);
         return $this->SOAPEngine->execute($function);
     }
 
-    function deleteRecord() {
-        if (!$_REQUEST['confirm']) {
+    function deleteRecord($dictionary=array()) {
+        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
         }
 
-        if (!strlen($this->filters['name'])) {
+        if ($dictionary['name']) {
+    		$name   = $dictionary['name'];
+        } else {
+    		$name   = trim($this->filters['name']);
+        }
+
+        if (!strlen($name)) {
             print "<p><font color=red>Error: missing gateway name. </font>";
             return false;
         }
 
         $function=array('commit'   => array('name'       => 'deleteGateway',
-                                            'parameters' => array($this->filters['name']),
-                                            'logs'       => array('success' => sprintf('<p>Gateway grup %s has been deleted',$this->filters['name'])))
+                                            'parameters' => array($name),
+                                            'logs'       => array('success' => sprintf('<p>Gateway grup %s has been deleted',$name)))
                         );
+        unset($this->filters);
         return $this->SOAPEngine->execute($function);
 
     }
@@ -5369,6 +5424,7 @@ class Routes extends Records {
 
     function Routes(&$SOAPEngine) {
     	$this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
+                                 'priority'     => trim($_REQUEST['priority_filter']),
                                  'gatewayGroup' => trim($_REQUEST['gatewayGroup_filter'])
                                  );
 
@@ -5376,30 +5432,9 @@ class Routes extends Records {
     }
 
     function listRecords() {
+        $this->getGatewayGroups();
 
         // Get gateway groups
-
-        $Query=array('filter'  => array('name'=>''),
-                     'orderBy' => array('attribute' => 'name',
-                                        'direction' => 'ASC'
-                                  ),
-                     'range'   => array('start' => 0,
-                                        'count' => 1000)
-                     );
-
-        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
-        $result     = $this->SOAPEngine->soapclient->getGatewayGroups($Query);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-            $this->gatewayGroups=$result->groups;
-        }
-
 
 		$this->showSeachForm();
 
@@ -5462,6 +5497,7 @@ class Routes extends Records {
                 <td><b>Prefix</b></th>
                 <td><b>Gateway Group</b></td>
                 <td><b>Priority</b></td>
+                <td><b>Change date</b></td>
                 <td><b>Action</b></td>
             </tr>
             ";
@@ -5526,6 +5562,7 @@ class Routes extends Records {
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
+                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
                         $bgcolor,
@@ -5536,6 +5573,7 @@ class Routes extends Records {
                         $route->prefix,
                         $route->gatewayGroup,
                         $route->priority,
+                        $route->changeDate,
                         $_url,
                         $actionText
                         );
@@ -5551,6 +5589,7 @@ class Routes extends Records {
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
+                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
                         $bgcolor,
@@ -5558,6 +5597,7 @@ class Routes extends Records {
                         $route->prefix,
                         $route->gatewayGroup,
                         $route->priority,
+                        $route->changeDate,
                         $_url,
                         $actionText
                         );
@@ -5583,6 +5623,12 @@ class Routes extends Records {
 
     function showAddForm() {
 		if ($this->selectionActive) return;
+
+        if (!count($this->gatewayGroups)) {
+            print "<p>Create a gateway group first";
+            return false;
+        }
+
         print "
         <p>
         <table border=0 class=border width=100% bgcolor=lightblue>
@@ -5603,8 +5649,9 @@ class Routes extends Records {
 
             print "<select name=gatewayGroup> ";
             foreach ($this->gatewayGroups as $_grp) {
-                printf ("<option value='%s'>%s",$_grp,$_grp);
+            	printf ("<option value='%s'>%s",$_grp,$_grp);
             }
+
             printf (" </select>");
             //printf (" From<input type=text size=25 name=fromURI>");
             printf (" Priority<input type=text size=5 name=priority>");
@@ -5708,39 +5755,63 @@ class Routes extends Records {
                                             )
                         );
      
+        unset($this->filters);
         return $this->SOAPEngine->execute($function);
 
     }
 
-    function deleteRecord() {
-        if (!$_REQUEST['confirm']) {
+    function deleteRecord($dictionary=array()) {
+        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
         	print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
         }
 
-        if (!strlen($this->filters['prefix']) || !strlen($this->filters['gatewayGroup'])) {
+        if ($dictionary['prefix']) {
+    		$prefix   = $dictionary['prefix'];
+        } else {
+    		$prefix   = trim($this->filters['prefix']);
+        }
+        if ($dictionary['gatewayGroup']) {
+    		$gatewayGroup   = $dictionary['gatewayGroup'];
+        } else {
+    		$gatewayGroup   = trim($this->filters['gatewayGroup']);
+        }
+        if ($dictionary['fromURI']) {
+    		$fromURI   = $dictionary['fromURI'];
+        } else {
+    		$fromURI   = trim($this->filters['fromURI']);
+        }
+        if ($dictionary['priority']) {
+    		$priority   = $dictionary['priority'];
+        } else {
+    		$priority   = trim($this->filters['priority']);
+        }
+
+        if (!strlen($prefix) || !strlen($gatewayGroup)) {
             print "<p><font color=red>Error: missing route prefix or gatewayGroup. </font>";
             return false;
         }
 
         $route=array(
-                     'prefix'       => $this->filters['prefix'],
-                     'gatewayGroup' => $this->filters['gatewayGroup'],
-                     'fromURI'      => $this->filters['fromURI'],
-                     'priority'     => intval($this->filters['priority'])
+                     'prefix'       => $prefix,
+                     'gatewayGroup' => $gatewayGroup,
+                     'fromURI'      => $fromURI,
+                     'priority'     => intval($priority)
         			);
 
         $routes=array($route);
 
         $function=array('commit'   => array('name'       => 'deleteRoutes',
                                             'parameters' => array($routes),
-                                            'logs'       => array('success' => sprintf('<p>Route %s has been added',$prefix)))
+                                            'logs'       => array('success' => sprintf('<p>Route %s has been deleted',$prefix)))
                         );
      
+        unset($this->filters);
         return $this->SOAPEngine->execute($function);
     }
 
     function showSeachFormCustom() {
+
         printf (" Prefix<input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
         print "<select name=gatewayGroup_filter>
         	<option>";

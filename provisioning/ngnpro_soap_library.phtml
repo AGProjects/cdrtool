@@ -851,12 +851,9 @@ class WebService_SoapSIMPLEProxy_PresencePort extends SOAP_Client_Custom
                             'style'=>'rpc',
                             'use'=>'encoded' ));
     }
-    function &getWatchers($presentityId) {
-        // presentityId is a ComplexType SipId,
-        //refer to wsdl for more info
-        $presentityId =& new SOAP_Value('presentityId','{urn:AGProjects:SoapSIMPLEProxy}SipId',$presentityId);
+    function &getWatchers($sipId, $password) {
         return $this->call("getWatchers", 
-                        $v = array("presentityId"=>$presentityId), 
+                        $v = array("sipId"=>$sipId, "password"=>$password), 
                         array('namespace'=>'urn:AGProjects:SoapSIMPLEProxy:Presence',
                             'soapaction'=>'',
                             'style'=>'rpc',

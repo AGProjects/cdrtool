@@ -5188,7 +5188,7 @@ class SIPSettings {
     }
 
     function getPresenceWatchers () {
-        $result = $this->PresencePort->getWatchers(array("username" =>$this->username,"domain"   =>$this->domain));
+        $result = $this->PresencePort->getWatchers(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
