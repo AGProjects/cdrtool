@@ -240,6 +240,7 @@ class SIPSettings {
 
         // Sip, Voicemail and Customer ports share same login
         $this->SOAPurl=$this->soapEngines[$this->soapEngine]['url'];
+        $this->SOAPversion=$this->soapEngines[$this->soapEngine]['version'];
 
         if (strlen($this->loginCredentials['soapUsername'])) {
             $this->SOAPlogin = array(
@@ -395,7 +396,11 @@ class SIPSettings {
         $this->timezone  = $result->timezone;
         $this->email     = $result->email;
         $this->groups    = $result->groups;
-        $this->quickdial = $result->quickdial;
+        if ($this->SOAPversion > 1) {
+        	$this->quickdial = $result->quickdialPrefix;
+        } else {
+        	$this->quickdial = $result->quickdial;
+        }
         $this->quota     = $result->quota;
         $this->prepaid   = $result->prepaid;
         $this->region    = $result->region;
@@ -2201,7 +2206,12 @@ class SIPSettings {
         if ($this->Preferences['advanced']) {
     
             if (strcmp($quickdial,$this->quickdial) != 0) {
-            	$result->quickdial=$quickdial;
+        		if ($this->SOAPversion > 1) {
+            		$result->quickdialPrefix=$quickdial;
+                } else {
+            		$result->quickdial=$quickdial;
+                }
+
             	$this->somethingChanged=1;
             }
 

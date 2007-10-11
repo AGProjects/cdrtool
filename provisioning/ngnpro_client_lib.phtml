@@ -5332,7 +5332,7 @@ class Gateways extends Records {
         }
 
 		if (!strlen($name) || !strlen($group) || !strlen($address)) {
-            printf ("<p><font color=red>Error: Missing name, group or address. </font>");
+            printf ("<p><font color=red>Error: Missing gateway name, group or address</font>");
             return false;
         }
 
@@ -5363,8 +5363,8 @@ class Gateways extends Records {
                      'port'      => intval($port),
                      'uriScheme' => 'sip',
                      'transport' => $transport,
-                     'strip'     => intval($_REQUEST['strip']),
-                     'prefix'    => $_REQUEST['prefix'],
+                     'strip'     => intval($strip),
+                     'prefix'    => $prefix,
                      'customer'    => intval($customer),
                      'reseller'    => intval($reseller)
         			);
@@ -5653,7 +5653,6 @@ class Routes extends Records {
             }
 
             printf (" </select>");
-            //printf (" From<input type=text size=25 name=fromURI>");
             printf (" Priority<input type=text size=5 name=priority>");
 
             if ($this->version > 1) {
@@ -5696,11 +5695,6 @@ class Routes extends Records {
         } else {
     		$gatewayGroup   = trim($_REQUEST['gatewayGroup']);
         }
-        if ($dictionary['fromURI']) {
-    		$fromURI   = $dictionary['fromURI'];
-        } else {
-    		$fromURI   = trim($_REQUEST['fromURI']);
-        }
         if ($dictionary['priority']) {
     		$priority   = $dictionary['priority'];
         } else {
@@ -5739,7 +5733,6 @@ class Routes extends Records {
         $route=array(
                      'prefix'       => $prefix,
                      'gatewayGroup' => $gatewayGroup,
-                     'fromURI'      => $fromURI,
                      'priority'     => intval($priority),
                      'customer'     => intval($customer),
                      'reseller'     => intval($reseller)
@@ -5776,11 +5769,6 @@ class Routes extends Records {
         } else {
     		$gatewayGroup   = trim($this->filters['gatewayGroup']);
         }
-        if ($dictionary['fromURI']) {
-    		$fromURI   = $dictionary['fromURI'];
-        } else {
-    		$fromURI   = trim($this->filters['fromURI']);
-        }
         if ($dictionary['priority']) {
     		$priority   = $dictionary['priority'];
         } else {
@@ -5795,7 +5783,6 @@ class Routes extends Records {
         $route=array(
                      'prefix'       => $prefix,
                      'gatewayGroup' => $gatewayGroup,
-                     'fromURI'      => $fromURI,
                      'priority'     => intval($priority)
         			);
 
@@ -5821,9 +5808,7 @@ class Routes extends Records {
         }
         printf (" </select>");
 
-        //printf (" From URI<input type=text size=15 name=fromURI_filter value='%s'>",$this->filters['fromURI']);
     }
-
 }
 
 class DomainStatistics extends Records {
