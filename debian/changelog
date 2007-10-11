@@ -1,56 +1,18 @@
 cdrtool (5.3.0) unstable; urgency=low
 
+  * Added ENUM tld based discounts in the rating engine
+  * Added ENUM tld management in the Rating page
   * Renamed field radius.Framed-Protocol to radius.ENUMtld to accomodate
     discounts based on ENUM top level domain. This functionality requires
     changes to the database structures and reconfigure several components:
-
-    1. Setup OpenSER to log a new Radius attribute ENUM-TLD:
-
-       modparam("acc", "radius_extra",       "Sip-RPid=$avp(s:rpid); \
-                                             ...
-                                             ENUM-TLD=$avp(s:enum_tld)")
-
-
-      if (enum_query("e164.arpa.")) {
-            xlog("L_INFO", "Found E2U+sip address in e164.arpa: $ru");
-            avp_delete("$avp(s:enum_tld)/g");
-            avp_write("e164.arpa", "$avp(s:enum_tld)");
-       }
-
-    2. update OpenSER radius dictionary with:
-
-    ATTRIBUTE       ENUM-TLD               232     string
-
-    3. reload the SQL stored procedures into the radius database from:
-
-    setup/radius/OpenSER/radius_accounting.proc
-
-    4. update Freeradius OpenSER dictionary with:
-
-    ATTRIBUTE       ENUM-TLD               232     string
-
-    5. update Freeradius configuration with the new configuration from:
-
-        setup/radius/OpenSER/radius_accounting.conf
-
-    6. restart Feeradius server
-
-    7. rename the column FramedProtocol to ENUMtld in all radiusYYYYMMDD
-    tables. This operation can take a long time to complete depending on the
-    number of records in the table. During this modification no accounting
-    records can be written to the table. When using table auto-rotation with
-    SQL stored procedures, it is best to apply these changes in the first
-    day of the month imediately after the table rotation moment.
-
-    alter table radacctYYYMMDD change column FramedProtocol ENUMtld varchar(64) not NULL;
-
-    8. apply the changes from setup/mysql/alter_tables.mysql
-
+    See doc/Upgrade.txt and setup/mysql/alter_tables.mysql for more information
   * Removed unused SOAP directory
-  * Better organize NGNPro client provisioning library
-  * Added ENUM tld management in the Rating page
+  * Added NGNPro client provisioning library
+  * Added sip settings page
+  * Added new rights for provisioning tasks
+  * Change main menu item names
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 01 Oct 2007 23:43:28 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 11 Oct 2007 10:12:38 +0200
 
 cdrtool (5.2.6) unstable; urgency=low
 
