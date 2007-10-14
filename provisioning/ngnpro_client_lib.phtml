@@ -320,6 +320,8 @@ class SOAPEngine {
             	$this->version = $this->soapEngines[$this->soapEngine]['version'];
             }
 
+            $this->impersonate  = intval($this->soapEngines[$this->soapEngine]['impersonate']);
+
             $this->defaultEnumTLD  = $this->soapEngines[$this->soapEngine]['defaultEnumTLD'];
 
 			if (strlen($this->soapEngines[$this->soapEngine]['soapEngineSettingsPage'])) {
@@ -391,21 +393,21 @@ class SOAPEngine {
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-			$this->soapRemoteId=$this->soapEngines[$this->soapEngine]['depends'];
+			$this->soapDepends=$this->soapEngines[$this->soapEngine]['depends'];
 
-            if (strlen($this->soapRemoteId) && in_array($this->soapRemoteId,array_keys($this->soapEngines))) {
-				$this->soapEngineRemote = $this->soapEngines[$this->soapRemoteId];
-                $impersonateRemote=intval($this->soapEngines[$this->soapRemoteId]['impersonate']);
+            if (strlen($this->soapDepends) && in_array($this->soapDepends,array_keys($this->soapEngines))) {
+				$this->soapEngineRemote  = $this->soapEngines[$this->soapDepends];
+                $this->impersonateRemote = intval($this->soapEngines[$this->soapDepends]['impersonate']);
 
     	        $this->SOAPloginRemote = array(
-        	                           "username"    => $this->soapEngines[$this->soapRemoteId]['username'],
-            	                       "password"    => $this->soapEngines[$this->soapRemoteId]['password'],
+        	                           "username"    => $this->soapEngines[$this->soapDepends]['username'],
+            	                       "password"    => $this->soapEngines[$this->soapDepends]['password'],
                 	                   "admin"       => true,
-                    	               "impersonate" => $impersonateRemote
+                    	               "impersonate" => $this->impersonateRemote
                                    );
 
                 dprint_r($this->SOAPloginRemote);
-            	$this->SOAPurlRemote=$this->soapEngines[$this->soapRemoteId]['url'];
+            	$this->SOAPurlRemote=$this->soapEngines[$this->soapDepends]['url'];
             	//printf ("and syncronize writes at <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
 
             	$this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
@@ -573,20 +575,20 @@ class SOAPEngineNewCustomer extends SOAPEngine {
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-			$this->soapRemoteId=$this->soapEngines[$this->soapEngine]['depends'];
+			$this->soapDepends=$this->soapEngines[$this->soapEngine]['depends'];
 
-            if (strlen($this->soapRemoteId) && in_array($this->soapRemoteId,array_keys($this->soapEngines))) {
-				$this->soapEngineRemote = $this->soapEngines[$this->soapRemoteId];
-                $impersonateRemote=intval($this->soapEngines[$this->soapRemoteId]['impersonate']);
+            if (strlen($this->soapDepends) && in_array($this->soapDepends,array_keys($this->soapEngines))) {
+				$this->soapEngineRemote = $this->soapEngines[$this->soapDepends];
+                $this->impersonateRemote=intval($this->soapEngines[$this->soapDepends]['impersonate']);
 
     	        $this->SOAPloginRemote = array(
-        	                           "username"    => $this->soapEngines[$this->soapRemoteId]['username'],
-            	                       "password"    => $this->soapEngines[$this->soapRemoteId]['password'],
+        	                           "username"    => $this->soapEngines[$this->soapDepends]['username'],
+            	                       "password"    => $this->soapEngines[$this->soapDepends]['password'],
                 	                   "admin"       => true
                                    );
 
                 //print_r($this->SOAPloginRemote);
-            	$this->SOAPurlRemote=$this->soapEngines[$this->soapRemoteId]['url'];
+            	$this->SOAPurlRemote=$this->soapEngines[$this->soapDepends]['url'];
             	//printf ("and syncronize writes at <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
 
             	$this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
@@ -663,6 +665,7 @@ class Records {
         if (strlen($this->SOAPEngine->SipSettingsPage)) {
         	$this->SipSettingsPage=$this->SOAPEngine->SipSettingsPage;
         }
+
     }
 
     function showEngineSelection() {
@@ -1784,9 +1787,14 @@ class SIPAccounts extends Records {
                         $actionText = "Delete";
                     }
 
+
 					if ($account->reseller) {
                     	$resellerSipSettingsPage=$account->reseller;
+                    } else if ($this->SOAPEngine->impersonate) {
+                        // use the reseller from the soap engine
+                    	$resellerSipSettingsPage=$this->SOAPEngine->impersonate;
                     } else {
+                        // use the reseller from the login
                     	$resellerSipSettingsPage=$this->reseller;
                     }
 
