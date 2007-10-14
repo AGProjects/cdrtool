@@ -119,7 +119,7 @@ class Session {
           SetCookie($this->name, $id, 0, "/", $this->cookie_domain);
         }
         if ( 0 < $this->lifetime ) {
-          SetCookie($this->name, $id, time()+$this->lifetime*60, "/", $this->$cookie_domain);
+          SetCookie($this->name, $id, time()+$this->lifetime*60, "/", $this->cookie_domain);
         }
       break;
       case "get":

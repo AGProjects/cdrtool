@@ -236,7 +236,34 @@ class SOAPEngine {
         */
 
 		$this->loginCredentials = $loginCredentials;
-        
+
+        if (is_array($this->loginCredentials['ports'])) {
+            $_ports=array();
+            foreach (array_keys($this->ports) as $_key) {
+                if (in_array($_key,array_keys($this->loginCredentials['ports']))) {
+                    if (strlen($this->loginCredentials['ports'][$_key]['recordsClass'])){
+                		$_ports[$_key]['recordsClass']=$this->loginCredentials['ports'][$_key]['recordsClass'];
+                    } else {
+                        $_ports[$_key]['recordsClass']=$this->ports[$_key]['recordsClass'];
+                    }
+                    if (strlen($this->loginCredentials['ports'][$_key]['soapClass'])){
+                		$_ports[$_key]['soapClass']=$this->loginCredentials['ports'][$_key]['soapClass'];
+                    } else {
+                        $_ports[$_key]['soapClass']=$this->ports[$_key]['soapClass'];
+                    }
+                    if (strlen($this->loginCredentials['ports'][$_key]['name'])){
+                		$_ports[$_key]['name']=$this->loginCredentials['ports'][$_key]['name'];
+                    } else {
+                        $_ports[$_key]['name']=$this->ports[$_key]['name'];
+                    }
+                } else {
+                	$_ports[$_key]=$this->ports[$_key];
+                }
+            }
+            $this->ports=$_ports;
+
+        }
+
         dprint_r($this->loginCredentials);
 
 		if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
@@ -275,13 +302,13 @@ class SOAPEngine {
             $this->soapEngineSettingsPage = $this->soapEngine;
 
             if (count($this->allowedPorts[$this->soapEngine]) > 0 && in_array($_els[0],$this->allowedPorts[$this->soapEngine])) {
-            	$this->soapEnginePort = $_els[0];
-            	$this->recordsClass   = $this->ports[$this->soapEnginePort]['recordsClass'];
-            	$this->soapClass      = $this->ports[$this->soapEnginePort]['soapClass'];
+            	$this->port = $_els[0];
+            	$this->recordsClass   = $this->ports[$this->port]['recordsClass'];
+            	$this->soapClass      = $this->ports[$this->port]['soapClass'];
             }  else {
-            	$this->soapEnginePort = $_els[0];
-            	$this->recordsClass   = $this->ports[$this->soapEnginePort]['recordsClass'];
-            	$this->soapClass      = $this->ports[$this->soapEnginePort]['soapClass'];
+            	$this->port = $_els[0];
+            	$this->recordsClass   = $this->ports[$this->port]['recordsClass'];
+            	$this->soapClass      = $this->ports[$this->port]['soapClass'];
             }
 
             foreach(array_keys($this->soapEngines) as $_key ) {
@@ -333,19 +360,16 @@ class SOAPEngine {
             	$this->customer = $_REQUEST['customer_filter'];
             }
 
-            if (strlen($loginCredentials['soapUsername'])) {
+            if (strlen($loginCredentials['soapUsername']) && $this->version > 1) {
             	$this->soapUsername=$loginCredentials['soapUsername'];
-            } else if ($this->adminonly) {
-				$this->soapUsername=$this->soapEngines[$this->soapEngine]['username'];
-            }
-
-            if (strlen($loginCredentials['soapUsername'])) {
                 $this->SOAPlogin = array(
                                        "username"    => $this->soapUsername,
                                        "password"    => $loginCredentials['soapPassword'],
                                        "admin"       => false
                                        );
             } else {
+                // use the credentials defined for the soap engine
+				$this->soapUsername=$this->soapEngines[$this->soapEngine]['username'];
                 $this->SOAPlogin = array(
                                        "username"    => $this->soapUsername,
                                        "password"    => $this->soapEngines[$this->soapEngine]['password'],
@@ -355,7 +379,7 @@ class SOAPEngine {
             }
 
             $this->SOAPurl=$this->soapEngines[$this->soapEngine]['url'];
-            //printf ("<p>Connection to %s at <a href=%swsdl target=wsdl>%s</a> as %s/%s ",$this->soapClass,$this->SOAPurl,$this->SOAPurl,$this->soapUsername,$this->reseller);
+            //printf ("<p>Connection to %s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClass,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
     		// Instantiate the SOAP client
@@ -380,7 +404,7 @@ class SOAPEngine {
                     	               "impersonate" => $impersonateRemote
                                    );
 
-                //print_r($this->SOAPloginRemote);
+                dprint_r($this->SOAPloginRemote);
             	$this->SOAPurlRemote=$this->soapEngines[$this->soapRemoteId]['url'];
             	//printf ("and syncronize writes at <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
 
@@ -524,9 +548,9 @@ class SOAPEngineNewCustomer extends SOAPEngine {
 
             $this->soapEngine     = $engines[0];
             $this->soapEngines    = $soapEngines;
-			$this->soapEnginePort = 'customers';
-            $this->recordsClass   = $this->ports[$this->soapEnginePort]['recordsClass'];
-            $this->soapClass      = $this->ports[$this->soapEnginePort]['soapClass'];
+			$this->port 		  = 'customers';
+            $this->recordsClass   = $this->ports[$this->port]['recordsClass'];
+            $this->soapClass      = $this->ports[$this->port]['soapClass'];
 
             $this->SOAPlogin = array(
                                    "username"    => $this->soapEngines[$this->soapEngine]['username'],
@@ -668,9 +692,9 @@ class Records {
             print "Customer ";
     
             if ($this->adminonly) {
-                $this->showResellerForm();
-                print ".";
                 $this->showCustomerForm();
+                print ".";
+                $this->showResellerForm();
             } else {
                 printf ("%s",$this->reseller);
                 print ".";
@@ -1137,6 +1161,15 @@ class Records {
 
         }
     }
+
+    function updateBefore () {
+        return true;
+    }
+
+    function updateAfter () {
+        return true;
+    }
+
 }
 
 class Domains extends Records {
@@ -6010,7 +6043,8 @@ class Customers extends Records {
                                                                'permission' => 'reseller'
                                                                ),
                                  'records_per_page'    => array('name'     => 'Records per page',
-                                                               'category'  => 'web'
+                                                               'category'  => 'web',
+                                                               'permission'  => 'customer'
                                                                )
                                  );
 
@@ -6739,12 +6773,6 @@ class Customers extends Records {
 
     function showRecord($customer) {
 
-        /*
-        print "<pre>";
-        print_r($customer);
-        print "</pre>";
-        */
-
         print "<table border=0 cellpadding=10>";
 
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
@@ -7012,6 +7040,8 @@ class Customers extends Records {
         <td valign=top>
         <table border=0>";
 
+        if ($this->adminonly) {
+
         printf ("<tr bgcolor=lightgrey>
         <td class=border>Category</td>
         <td class=border>Permission</td>
@@ -7019,6 +7049,12 @@ class Customers extends Records {
         <td class=border>Value</td>
         <td class=border>Description</td>
         </tr>");
+        } else {
+        printf ("<tr bgcolor=lightgrey>
+        <td class=border>Property</td>
+        <td class=border>Value</td>
+        </tr>");
+        }
 
 		foreach ($customer->properties as $_property) {
             if (in_array($_property->name,array_keys($this->allProperties))) {
@@ -7028,7 +7064,7 @@ class Customers extends Records {
 
         foreach (array_keys($this->allProperties) as $item) {
         	$item_print=preg_replace("/_/"," ",$item);
-            if ($this->allProperties[$item]['category'] != 'admin' || ($this->allProperties[$item]['category'] == 'admin' && $this->adminonly)) {
+            if ($this->adminonly) {
                 printf ("<tr>
                 <td class=border>%s</td>
                 <td class=border>%s</td>
@@ -7043,21 +7079,23 @@ class Customers extends Records {
                 $this->allProperties[$item]['value'],
                 $this->allProperties[$item]['name']
                 );
-            } else {
+            } else if ($this->allProperties[$item]['permission'] != 'admin' && $this->customer == $customer->reseller) {
                 printf ("<tr>
                 <td class=border>%s</td>
-                <td class=border>%s</td>
-                <td class=border>%s</td>
-                <td class=border><input type=hidden size=45 name='%s_form' value='%s'>%s</td>
-                <td class=border>%s</td>
+                <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
                 </tr>",
-                $this->allProperties[$item]['category'],
-                $this->allProperties[$item]['permission'],
-                $item_print,
+                $this->allProperties[$item]['name'],
                 $item,
-                $this->allProperties[$item]['value'],
-                $this->allProperties[$item]['value'],
-                $this->allProperties[$item]['name']
+                $this->allProperties[$item]['value']
+                );
+            } else if ($this->allProperties[$item]['permission'] != 'admin' && $this->allProperties[$item]['permission'] != 'reseller') {
+                printf ("<tr>
+                <td class=border>%s</td>
+                <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
+                </tr>",
+                $this->allProperties[$item]['name'],
+                $item,
+                $this->allProperties[$item]['value']
                 );
             }
         }
@@ -7147,7 +7185,12 @@ class Customers extends Records {
                                             )
                         );
      
-        return $this->SOAPEngine->execute($function);
+        if ($this->SOAPEngine->execute($function)) {
+            $this->updateAfter($customer);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     function showTimezones($timezone) {
@@ -7559,7 +7602,15 @@ class Customers extends Records {
                 $this->selectionKeys[]=$customer->id;
             }
         }
+    }
 
+	function getProperty($customer,$name) {
+        foreach ($customer->properties as $_property) {
+            if ($_property['name'] == $name && strlen($_property['value'])) {
+                return $_property['value'];
+            }
+        }
+        return false;
     }
 }
 
@@ -7687,10 +7738,12 @@ class recordGenerator extends SOAPEngine {
         $this->template['create_sip']=trim($_REQUEST['create_sip']);
 
         $nr_records=trim($_REQUEST['nr_records']);
-        if (!is_numeric($nr_records) || $nr_records < 1 || $nr_records > 200) {
-            print "<font color=red>Error: number of records must be a number between 1 and 200</font>";
+
+        if (!is_numeric($nr_records) || $nr_records < 1 || $nr_records > 100) {
+            print "<font color=red>Error: number of records must be a number between 1 and 100</font>";
             return false;
         }
+
         $this->template['nr_records'] = $nr_records;
 
         // length of generated record
@@ -7699,6 +7752,7 @@ class recordGenerator extends SOAPEngine {
             print "<font color=red>Error: number length must be a number between 4 and 15</font>";
             return false;
         }
+
         $this->template['len'] = $len;
 
         // sip domain
