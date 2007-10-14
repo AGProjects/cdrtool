@@ -1159,10 +1159,12 @@ class Records {
                 	$this->gatewayGroups[]=$_grp->name;
                 }
             } else {
-            	$this->gatewayGroups=$result->groups;
+                if (is_array($result->groups)) {
+            		$this->gatewayGroups=$result->groups;
+                }
             }
-
         }
+
     }
 
     function updateBefore () {
@@ -4657,6 +4659,7 @@ class TrustedPeers extends Records {
 }
 
 class GatewayGroups extends Records {
+	var $gatewayGroups=array();
 
     var $sortElements=array(
                             'name'   => 'Name'
@@ -4989,6 +4992,7 @@ class GatewayGroups extends Records {
 }
 
 class Gateways extends Records {
+	var $gatewayGroups=array();
 
     var $sortElements=array(
                             'name'   => 'Name',

@@ -3241,9 +3241,7 @@ class SIPSettings {
         <tr>
         <td colspan=2 align=right>
 		";
-        dprint ("here we have logo");
         if ($this->logoFile) {
-        	dprint("lg=$this->logoFile");
     	    print "<img src=./$this->logoFile border=0>";
             print "<p>";
         }
@@ -5198,6 +5196,7 @@ class SIPSettings {
     }
 
     function getPresenceWatchers () {
+        dprint("getPresenceWatchers()");
         $result = $this->PresencePort->getWatchers(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
 
         if (PEAR::isError($result)) {
@@ -5208,6 +5207,8 @@ class SIPSettings {
             return false;
         }
 
+
+        dprint_r($result);
         foreach ($result as $_watcher) {
         	$this->presenceWatchers[$_watcher->id]['status']=$_watcher->status;
             $this->presenceWatchers[$_watcher->id]['online']=$_watcher->online;
@@ -5219,6 +5220,7 @@ class SIPSettings {
     }
 
     function getPresenceInformation() {
+        dprint("getPresenceInformation()");
         $result = $this->PresencePort->getPresenceInformation(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
 
         if (PEAR::isError($result)) {
@@ -5228,6 +5230,8 @@ class SIPSettings {
             printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         }
+
+        dprint_r($result);
 
 		$this->presentity['activity'] = $result->activity;
         $this->presentity['note']     = $result->note;
@@ -5258,6 +5262,7 @@ class SIPSettings {
 	}
 
     function getPresenceRules () {
+        dprint("getPresenceRules()");
         $result = $this->PresencePort->getPolicy(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
 
         if (PEAR::isError($result)) {
@@ -5267,6 +5272,8 @@ class SIPSettings {
             printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         }
+
+        dprint_r($result);
 
 		foreach ($this->presenceStatuses as $_status) {
         	$this->presenceRules[$_status] = $result->$_status;
