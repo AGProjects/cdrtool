@@ -1173,6 +1173,18 @@ class Records {
         return true;
     }
 
+    function showCustomerTextBox () {
+    	if ($this->version < 2) return;
+    	print "Customer";
+    	if ($this->adminonly) {
+        	$this->showCustomerForm('customer');
+            print ".";
+            $this->showResellerForm('reseller');
+        } else {
+        	$this->showCustomerForm('customer');
+        }
+    }
+
 }
 
 class Domains extends Records {
@@ -1194,7 +1206,6 @@ class Domains extends Records {
         $this->filters   = array(
                                'domain'       => strtolower(trim($_REQUEST['domain_filter']))
                                );
-
 
     }
 
@@ -1442,17 +1453,7 @@ class Domains extends Records {
 
             printf (" Domain<input type=text size=20 name=domain>");
 
-            if ($this->version > 1) {
-                print "Customer";
-    
-                if ($this->adminonly) {
-                    $this->showResellerForm('reseller');
-                    print ".";
-                    $this->showCustomerForm('customer');
-                } else {
-                    $this->showCustomerForm('customer');
-                }
-            }
+            $this->showCustomerTextBox();
 
             print "
 	        </td>
@@ -2618,17 +2619,6 @@ class SIPAliases extends Records {
 
             printf (" Target<input type=text size=35 name=target>");
 
-            /*
-            print "Customer";
-            if ($this->adminonly) {
-            	$this->showResellerForm('reseller');
-                print ".";
-            	$this->showCustomerForm('customer');
-            } else {
-            	$this->showCustomerForm('customer');
-            }
-            */
-
             printf (" Owner<input type=text size=5 name=owner>");
 
             print "
@@ -3072,31 +3062,12 @@ class ENUMranges extends Records {
             ";
             printf ("Prefix +<input type=text size=15 name=prefix> ");
             printf (" TLD");
-            /*
-            if (is_array($this->allowedDomains)) {
-            	print "<select name=tld>";
-                foreach ($this->allowedDomains as $_tld) {
-                    print "<option value=$_tld>$_tld\n";
-                }
-                print "</select>";
-            } else {
-                print "<input type=text size=15 name=tld>";
-            }
-            */
             print "<input type=text size=15 name=tld>";
             printf ("TTL<input type=text size=5 name=ttl value=3600> ");
             printf ("Min Digits<input type=text size=3 name=minDigits value=11> ");
             printf ("Max Digits<input type=text size=3 name=maxDigits value=11> ");
             if ($this->version > 1) {
-                print "Customer";
-    
-                if ($this->adminonly) {
-                    $this->showResellerForm('reseller');
-                    print ".";
-                    $this->showCustomerForm('customer');
-                } else {
-                    $this->showCustomerForm('customer');
-                }
+                $this->showCustomerTextBox();
             }
 
             //printf ("Info<input type=text size=15 name=info> ");
@@ -4568,17 +4539,7 @@ class TrustedPeers extends Records {
             printf (" IP address<input type=text size=20 name=ipaddress>");
             printf (" Description<input type=text size=30 name=description>");
 
-            if ($this->version > 1) {
-                print "Customer";
-    
-                if ($this->adminonly) {
-                    $this->showResellerForm('reseller');
-                    print ".";
-                    $this->showCustomerForm('customer');
-                } else {
-                    $this->showCustomerForm('customer');
-                }
-            }
+            $this->showCustomerTextBox();
 
             print "
 	        </td>
@@ -4910,17 +4871,7 @@ class GatewayGroups extends Records {
 
             printf (" Name<input type=text size=20 name=name>");
 
-            if ($this->version > 1) {
-                print "Customer";
-    
-                if ($this->adminonly) {
-                    $this->showResellerForm('reseller');
-                    print ".";
-                    $this->showCustomerForm('customer');
-                } else {
-                    $this->showCustomerForm('customer');
-                }
-            }
+            $this->showCustomerTextBox();
 
             print "
 	        </td>
@@ -5293,17 +5244,7 @@ class Gateways extends Records {
             print "</select>";
             printf (" Prefix<input type=text size=5 name=prefix>");
 
-            if ($this->version > 1) {
-                print "Customer";
-    
-                if ($this->adminonly) {
-                    $this->showResellerForm('reseller');
-                    print ".";
-                    $this->showCustomerForm('customer');
-                } else {
-                    $this->showCustomerForm('customer');
-                }
-            }
+            $this->showCustomerTextBox();
 
             print "
 	        </td>
@@ -5695,18 +5636,7 @@ class Routes extends Records {
 
             printf (" </select>");
             printf (" Priority<input type=text size=5 name=priority>");
-
-            if ($this->version > 1) {
-                print "Customer";
-    
-                if ($this->adminonly) {
-                    $this->showResellerForm('reseller');
-                    print ".";
-                    $this->showCustomerForm('customer');
-                } else {
-                    $this->showCustomerForm('customer');
-                }
-            }
+            $this->showCustomerTextBox();
 
             print "
 	        </td>
