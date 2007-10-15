@@ -1,4 +1,5 @@
 <?
+
 /*
     Copyright (c) 2007 AG Projects
     http://ag-projects.com
@@ -8,6 +9,9 @@
     ENUM ranges, ENUM numbers, Trusted Peers, LCR, Rating plans
     on a remote NGN-Pro server
 */
+
+header("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+header("Pragma: no-cache");
 
 include("./global.inc");
 page_open(
@@ -49,7 +53,7 @@ if ($CDRTool['reseller']) {
 
 require_once("provisioning/ngnpro_soap_library.phtml");
 require_once("provisioning/ngnpro_client_lib.phtml");
-include_once("provisioning/ngnpro_engines.inc");
+require("provisioning/ngnpro_engines.inc");
 
 if ($resellerFilters[$loginCredentials['reseller']]) {
 	$loginCredentials['soapFilter']      = $resellerFilters[$loginCredentials['reseller']]['soapFilter'];

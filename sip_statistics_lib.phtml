@@ -1,4 +1,14 @@
 <?
+/*
+    Copyright (c) 2007 AG Projects
+    http://ag-projects.com
+    Author Adrian Georgescu
+
+    This page provides functions for building graphical
+    usage statistics for OpenSER and MediaProxy
+
+*/
+
 class SIPstatistics {
     var $SipEnabledZones = array();
 	var $online          = array();
@@ -418,7 +428,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
 
                 $note=sprintf("%s: Sessions %d, Online %d",$key, $sessions,$online_users);
 
-                $this->publishPresence ($this->StatisticsPresentities[$key]['soapEngineId'],
+                $this->publishPresence ($this->StatisticsPresentities[$key]['soapEngine'],
                                         $this->StatisticsPresentities[$key]['SIPaccount'],
                                         $note,
                                         $activity);
@@ -617,32 +627,25 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         //dprint_r($this->online);
 	}
 
-    function publishPresence ($soapEngineId,$SIPaccount,$note,$activity) {
+    function publishPresence ($soapEngine,$SIPaccount,$note,$activity) {
+
+	  	unset($soapEngines);
 
 		require_once("provisioning/ngnpro_soap_library.phtml");
-        require_once("provisioning/ngnpro_engines.inc");
+        require("provisioning/ngnpro_engines.inc");
 
-        $this->soapEngines = $soapEngines;
-
-        if (!in_array($soapEngineId,array_keys($this->soapEngines))) {
-            print "Error: soapEngineId '$soapEngineId' does not exist.\n";
+        //$soapEngines
+        if (!array_key_exists($soapEngine,$soapEngines)) {
+            print "Error: soapEngine '$soapEngine' does not exist.\n";
             return false;
         }
 
-		$this->SOAPurl       = $this->soapEngines[$soapEngineId]['url'];
+		$this->SOAPurl       = $soapEngines[$soapEngine]['url'];
         $this->PresencePort  = new WebService_SoapSIMPLEProxy_PresencePort($this->SOAPurl);
 
         $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
         $this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT, 1);
-
-        $this->SOAPloginPresence = array(
-                                   "username"    => $this->soapEngines[$soapEngineId]['username'],
-                                   "password"    => $this->soapEngines[$soapEngineId]['password'],
-                                   "admin"       => true
-                                   );
-
-        $this->SoapAuthPresence = array('auth', $this->SOAPloginPresence, 'urn:AGProjects:PresenceEngine', 0, '');
 
         $allowed_activities=array('open',
                                   'idle',
@@ -658,7 +661,6 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
     
         $presentity['note']     = $note;
 
-        $this->PresencePort->addHeader($this->SoapAuthPresence);
         $result = $this->PresencePort->setPresenceInformation(array("username" =>$SIPaccount['username'],"domain"   =>$SIPaccount['domain']),$SIPaccount['password'], $presentity);
     
         if (PEAR::isError($result)) {
