@@ -27,7 +27,6 @@ $compidFilter    = $_REQUEST['compidFilter'];
 $aNumberFilter   = $_REQUEST['aNumberFilter'];
 $cscodeFilter    = $_REQUEST['cscodeFilter'];
 $afterDateFilter = $_REQUEST['afterDateFilter'];
-$soapFilter      = $_REQUEST['soapFilter'];
 $reseller        = $_REQUEST['reseller'];
 
 $perms           = $_REQUEST['perms'];
@@ -111,7 +110,6 @@ if ($action == "edit" && $id) {
                     aNumberFilter   = '%s',
                     cscodeFilter    = '%s',
                     afterDateFilter = '%s',
-                    soapFilter      = '%s',
                     reseller        = '%s'
                     ",
                 	addslashes($perms_text),
@@ -124,7 +122,6 @@ if ($action == "edit" && $id) {
                     addslashes($aNumberFilter),
                     addslashes($cscodeFilter),
                     addslashes($afterDateFilter),
-                    addslashes($soapFilter),
                     addslashes($reseller)
                     );
                 }
@@ -194,7 +191,6 @@ if ($action == "edit" && $id) {
         $compidFilter     = $db->f('compidFilter');
         $cscodeFilter     = $db->f('cscodeFilter');
         $afterDateFilter  = $db->f('afterDateFilter');
-        $soapFilter       = $db->f('soapFilter');
         $reseller         = $db->f('reseller');
 
         showForm($id);
@@ -240,10 +236,8 @@ if ($action == "edit" && $id) {
             cscodeFilter,
             gatewayFilter,
             afterDateFilter,
-            soapFilter,
             reseller
             ) values (
-            '%s',
             '%s',
             '%s',
             '%s',
@@ -280,7 +274,6 @@ if ($action == "edit" && $id) {
             addslashes($cscodeFilter),
         	addslashes($gatewayFilter),
             addslashes($afterDateFilter),
-            addslashes($soapFilter),
             addslashes($reseller)
             );
 
