@@ -22,7 +22,9 @@ $perm->check("provisioning");
 require_once('provisioning/sip_settings_lib.phtml');
 require("provisioning/ngnpro_engines.inc");
 
-list($username,$domain)=explode("@",$account);
+$account = $_REQUEST['account'];
+$action  = $_REQUEST['action'];
+$export  = $_REQUEST['export'];
 
 $_class='SIPSettings';
 $_reseller_class=$_class.$_REQUEST['reseller'];
@@ -40,6 +42,8 @@ $loginCredentials=array(
 
 if ($resellerFilters[$loginCredentials['reseller']]) {
 	$loginCredentials['soapEngine']      = $resellerFilters[$loginCredentials['reseller']]['soapEngine'];
+} else if ($_REQUEST['soapEngine']) {
+    $loginCredentials['soapEngine']=$_REQUEST['soapEngine'];
 } else if ($resellerFilters['default']) {
 	$loginCredentials['soapEngine']      = $resellerFilters['default']['soapEngine'];
 }
