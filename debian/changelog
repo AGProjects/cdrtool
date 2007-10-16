@@ -5,12 +5,8 @@ cdrtool (5.3.1) unstable; urgency=low
   * Update presence functions in provisioning client
   * Fixed initalization of gatewaygroups
   * Add function for showing customer text box
-
-Sun Oct 14 10:23:01 CEST 2007  Adrian Georgescu <ag@ag-projects.com>
-  * Hide properties if not available for logged in customer
-  Allow specification of custom port names and classes per reseller
-  Use engine user/password when remote ngnpro does not support customers port
-  Fixed phplib typo that caused crash on php5
+  * Allow specification of custom port names and classes per reseller
+  * Fixed phplib typo that caused crash on php5
 
  -- Adrian Georgescu <ag@ag-projects.com>  Tue, 16 Oct 2007 19:13:26 +0200
 
