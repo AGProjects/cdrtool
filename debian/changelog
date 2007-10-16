@@ -1,3 +1,9 @@
+cdrtool (5.3.2) unstable; urgency=low
+
+  * Fixed memory leak
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 16 Oct 2007 20:12:55 +0200
+
 cdrtool (5.3.1) unstable; urgency=low
 
   * Removed reference to soapFilter which was unused

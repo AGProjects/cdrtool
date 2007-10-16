@@ -126,18 +126,9 @@ class Rate {
     }
 
     function calculate(&$dictionary) {
-        dprint("<b>Rate->calculate(&dictionary)</b>");
+        dprint("<b>Rate->calculate()</b>");
 
 		if ($this->duration > $this->minimumDuration) return 0;
-
-        $log='Calculate dictionary: ';
-		foreach (array_keys($dictionary) as $entry) {
-            $log.= sprintf("%s=%s ",$entry,$dictionary[$entry]);
-        }
-
-  		syslog(LOG_NOTICE, $log);
-
-        //dprint_r($dictionary);
 
         /////////////////////////////////////////////////////
         // required fields passed from a CDR structure
