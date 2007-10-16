@@ -173,7 +173,7 @@ class Rate {
         $this->cNumber           = $dictionary['cNumber'];
         $this->ENUMtld           = $dictionary['ENUMtld'];
 
-		if ($this->ENUMtld) {
+		if ($this->ENUMtld && $this->ENUMtld != 'none') {
         	$this->ENUMdiscount = $this->RatingTables->ENUMtlds[$this->ENUMtld]['discount'];
             if (!is_numeric($this->ENUMdiscount ) || $this->ENUMdiscount <0 || $this->ENUMdiscount >100) {
   				syslog(LOG_NOTICE, "Error: ENUM discount for tld $this->ENUMtld must be between 0 and 100");
