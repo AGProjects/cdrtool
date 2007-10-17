@@ -1281,11 +1281,19 @@ class Domains extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) print "<td><b>Customer</b></td>";
-                print"
-                <td><b>Domain</b></td>
-                <td><b>Change date</b></td>
-                <td><b>Action</b></td>
+                if ($this->version > 1) {
+	                print "<td><b>Customer</b></td>
+    	            <td><b>Domain</b></td>
+        	        <td><b>Change date</b></td>
+            	    <td><b>Action</b></td>
+                	";
+                } else {
+	                print "
+    	            <td><b>Domain</b></td>
+        	        <td><b>Action</b></td>
+            	    ";
+                }
+                print "
             </tr>
             ";
 
@@ -1375,13 +1383,11 @@ class Domains extends Records {
                         <tr bgcolor=%s>
                         <td>%s</td>
                         <td>%s</td>
-                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
                         $bgcolor,
                         $index,
                         $domain,
-                        $domain->changeDate,
                         $_url,
                         $actionText
                         );
