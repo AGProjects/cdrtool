@@ -430,7 +430,7 @@ class CDRS {
             dprint($query);
             $this->cdrtool->query($query);
 
-            $mc_value = "\n";
+            $mc_value = "\n";                                                   
 
             while($this->cdrtool->next_record()) {
 
@@ -442,7 +442,7 @@ class CDRS {
 
             if (is_object($this->mc)) {
             	if ($this->mc->set('ENUMtlds',json_encode($_ENUMtlds),0,0)) {
-                	$log=sprintf("Saved %d ENUM TLDs in memcache key ENUMtlds",$this->ENUMtldCount);
+                	$log=sprintf("Saved %d ENUM TLDs in memcache key ENUMtlds",count($_ENUMtlds));
             		syslog(LOG_NOTICE, $log);
                 }
             }
