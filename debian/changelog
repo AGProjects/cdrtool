@@ -1,3 +1,9 @@
+cdrtool (5.3.3) unstable; urgency=low
+
+  * Fixed ENUM tld match and logging 
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 17 Oct 2007 14:53:24 +0200
+
 cdrtool (5.3.2) unstable; urgency=low
 
   * Fixed memory leak
