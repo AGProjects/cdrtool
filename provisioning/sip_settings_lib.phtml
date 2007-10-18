@@ -1327,59 +1327,7 @@ class SIPSettings {
         </td>
         <td class=borderns>";
 
-        print "
-        <SCRIPT>
-        function changePasswordType(input){
-            if(input.type == 'password')
-                input.type = 'text'
-            input.focus()
-        }
-        </SCRIPT>
-        <SCRIPT>
-           var hasFocus = false;
-        
-           function createPasswordField(fieldType){
-               var input = document.getElementById('sip_password_id');
-               password = document.createElement('input');
-                         password.type = fieldType;
-               password.size  = 15;
-               password.name = 'sip_password';
-               password.value = input.value;
-               password.id = 'sip_password_id';
-                     input.parentNode.insertBefore(password,input);
-               input.parentNode.removeChild(input);
-                     if (password.addEventListener){
-                   password.addEventListener('click', pwdClickHandler, false);
-                   password.addEventListener('blur', pwdBlurHandler, false);
-               }
-               else if (password.attachEvent){//IE
-                   password.attachEvent('onclick', pwdClickHandler);
-                   password.attachEvent('onblur', pwdBlurHandler);          }
-               if (fieldType == 'text')
-                   password.focus();
-           }
-        
-           function pwdClickHandler(){
-               if (hasFocus == false){
-                   createPasswordField('text');
-                   hasFocus = true;
-               }
-           }
-        
-           function pwdBlurHandler(){
-               hasFocus = false;
-               createPasswordField('password');
-           }
-           </SCRIPT>
-        ";
-
-        if ($this->loginType == 'subscriber') {
-        	print "<input class=input100 type=password size=15 name=sip_password value=\"$this->password\">";
-        } else {
-        	print "<input class=input100 type=text size=15 name=sip_password value=\"$this->password\">";
-        }
-
-        //print "<input class=input100 type=password size=15 name=sip_password value=\"$this->password\"> ";
+      	print "<input class=input100 type=password size=15 name=sip_password value=\"$this->password\">";
 
         print _("Language");
         print "
