@@ -39,6 +39,9 @@ define_syslog_variables();
 openlog("CDRTool", LOG_PID, LOG_LOCAL0);
 
 $path=dirname(realpath($_SERVER['PHP_SELF']));
+$version_file=$path."/../version";
+$version=trim(file_get_contents($version_file));
+
 include($path."/../global.inc");
 include($path."/../cdrlib.phtml");
 
@@ -70,15 +73,16 @@ $reuse = socket_get_option($sock, SOL_SOCKET, SO_REUSEADDR) | 1;
 socket_set_option($sock, SOL_SOCKET, SO_REUSEADDR, $reuse);
 
 // Bind the socket to an address/port 
-socket_bind($sock, $address, $port) or die('Could not bind socket to $address:$port'); 
+if (socket_bind($sock, $address, $port)) {
+	syslog(LOG_NOTICE,"CDRTool $version rating engine started on $address:$port");
+} else {
+	$log="Error: rating engine cannot listen on $address:$port\n";
+	syslog(LOG_NOTICE,$log);
+    exit;
+}
 
 // Start listening for connections 
 socket_listen($sock, $max_clients);
-
-$_versionFile=$CDRTool['Path']."/version";
-$version=trim(file_get_contents($_versionFile));
-
-syslog(LOG_NOTICE,"CDRTool $version rating engine started, listening on $address:$port");
 
 // Init CDRS
 $CDR_class  = $DATASOURCES[$cdr_source]["class"];
