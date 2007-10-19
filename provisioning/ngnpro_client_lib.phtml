@@ -2862,22 +2862,40 @@ class ENUMranges extends Records {
             </table>
             <p>
             <table border=0 cellpadding=2 width=100%>
-            <tr bgcolor=lightgrey>
-                <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) print "<td><b>Customer</b></td>";
-                print"
-                <td><b>Prefix </b></td>
-                <td><b>TLD</b></td>
-                <td><b>TTL</b></td>
-                <td><b>Min digits</b></td>
-                <td><b>Max digits</b></td>
-                <td><b>Size</b></td>
-                <td><b>Used</b></td>
-                <td><b>Change date</b></td>
-                <td><b>Action</b></td>
-            </tr>
-            ";
+                if ($this->version > 1) {
+                	print "
+		            <tr bgcolor=lightgrey>
+        	        <td><b>Id</b></th>
+                    <td><b>Customer</b></td>
+                    <td><b>Prefix </b></td>
+                    <td><b>TLD</b></td>
+                    <td><b>Info</b></td>
+                    <td><b>TTL</b></td>
+                    <td><b>Min digits</b></td>
+                    <td><b>Max digits</b></td>
+                    <td><b>Size</b></td>
+                    <td><b>Used</b></td>
+                    <td><b>Change date</b></td>
+                    <td><b>Action</b></td>
+            		</tr>
+                    ";
+                } else {
+                	print "
+		            <tr bgcolor=lightgrey>
+        	        <td><b>Id</b></th>
+                    <td><b>Prefix </b></td>
+                    <td><b>TLD</b></td>
+                    <td><b>TTL</b></td>
+                    <td><b>Min digits</b></td>
+                    <td><b>Max digits</b></td>
+                    <td><b>Size</b></td>
+                    <td><b>Used</b></td>
+                    <td><b>Change date</b></td>
+                    <td><b>Action</b></td>
+            		</tr>
+                    ";
+                }
 
      		if (!$this->next)  $this->next=0;
 
@@ -2961,6 +2979,7 @@ class ENUMranges extends Records {
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
+                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
                         $bgcolor,
@@ -2970,6 +2989,7 @@ class ENUMranges extends Records {
                         $range->reseller,
                         $range_link,
                         $range->id->tld,
+                        $range->info,
                         $range->ttl,
                         $range->minDigits,
                         $range->maxDigits,
@@ -3421,15 +3441,16 @@ class ENUMmappings extends Records {
                 <td><b>Id</b></th>
                 ";
                 if ($this->version > 1) {
-                    print "<td><b>Customer</b></td>
+                    print "
+                    <td><b>Customer</b></td>
                     <td><b>Number</b></td>
                     <td><b>TLD</b></td>
+                    <td><b>Info</b></td>
                     <td><b>Srv</b></td>
                     <td><b>Map to</b></td>
                     <td><b>TTL</b></td>
                     <td><b>Prio</b></td>
                     <td><b>Owner</b></td>
-                    <td><b>Info</b></td>
                     <td><b>Change date</b></td>
                     <td><b>Action</b></td>
                     ";
@@ -3437,12 +3458,12 @@ class ENUMmappings extends Records {
                     print "
                     <td><b>Number</b></td>
                     <td><b>TLD</b></td>
+                    <td><b>Info</b></td>
                     <td><b>Srv</b></td>
                     <td><b>Map to</b></td>
                     <td><b>TTL</b></td>
                     <td><b>Prio</b></td>
                     <td><b>Owner</b></td>
-                    <td><b>Info</b></td>
                     <td><b>Action</b></td>
                     ";
                 }
@@ -3548,12 +3569,12 @@ class ENUMmappings extends Records {
                                 $_number_url,
                                 $number->id->number,
                                 $number->id->tld,
+                                $number->info,
                                 ucfirst($_mapping->type),
                                 $_mapping->mapto,
                                 $_mapping->ttl,
                                 $_mapping->priority,
                                 $_owner_url,
-                                $number->info,
                                 $number->changeDate,
                                 $_url,
                                 $actionText
@@ -3576,12 +3597,12 @@ class ENUMmappings extends Records {
                                 $index,
                                 $number->id->number,
                                 $number->id->tld,
+                                $number->info,
                                 ucfirst($_mapping->type),
                                 $_mapping->mapto,
                                 $_mapping->ttl,
                                 $_mapping->priority,
                                 $number->owner,
-                                $number->info,
                                 $_url,
                                 $actionText
                                 );
@@ -3594,11 +3615,11 @@ class ENUMmappings extends Records {
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td>%s</td>
-                                <td>%s</td>
-                                <td>%s</td>
-                                <td>%s</td>
                                 <td></td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
                                 <td></td>
                                 <td>%s</td>
                                 <td><a href=%s>%s</a></td>
@@ -3618,10 +3639,10 @@ class ENUMmappings extends Records {
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td>%s</td>
-                                <td>%s</td>
-                                <td>%s</td>
                                 <td></td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
                                 <td></td>
                                 <td>%s</td>
                                 <td><a href=%s>%s</a></td>
