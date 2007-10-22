@@ -675,15 +675,12 @@ class Records {
         	if ($this->SOAPEngine->skip[$_engine]) continue;
 
         	if ($j>1) printf ("<option value=''>--------");
-            $k=1;
             foreach (array_keys($this->SOAPEngine->ports) as $_port) {
                 $idx=$_port.'@'.$_engine;
                 if (in_array($_port,$this->SOAPEngine->skipEngines[$_engine])) continue;
                 if (count($this->SOAPEngine->allowedPorts[$_engine]) > 0 && !in_array($_port,$this->SOAPEngine->allowedPorts[$_engine])) continue;
-                if ($_engine == 'Customers' && $this->version <= 1) continue;
-                //printf ("<option value='%s@%s' %s>%d.%d %s@%s",$_port,$_engine,$selected_soapEngine[$idx],$j,$k,$this->SOAPEngine->ports[$_port]['name'],$this->SOAPEngine->soapEngines[$_engine]['name']);
+                if ($_port == 'customers' && $this->SOAPEngine->soapEngines[$_engine]['version'] < 2) continue;
                 printf ("<option value='%s@%s' %s>%s@%s",$_port,$_engine,$selected_soapEngine[$idx],$this->SOAPEngine->ports[$_port]['name'],$this->SOAPEngine->soapEngines[$_engine]['name']);
-                $k++;
             }
             $j++;
         }
