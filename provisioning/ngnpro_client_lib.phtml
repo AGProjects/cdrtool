@@ -1208,6 +1208,11 @@ class Records {
 class Domains extends Records {
 
     function Domains(&$SOAPEngine) {
+        $this->filters   = array(
+                               'domain'       => strtolower(trim($_REQUEST['domain_filter']))
+                               );
+
+		$this->Records(&$SOAPEngine);
 
         if ($this->version > 1) {
             // keep default maxrowsperpage
@@ -1219,11 +1224,6 @@ class Domains extends Records {
     		$this->maxrowsperpage = 10000;
         }
 
-        $this->filters   = array(
-                               'domain'       => strtolower(trim($_REQUEST['domain_filter']))
-                               );
-
-		$this->Records(&$SOAPEngine);
 
     }
 
@@ -2270,6 +2270,8 @@ class SIPAliases extends Records {
                                  'targetDomain'      => trim($_REQUEST['target_domain_filter'])
                            );
 
+
+		$this->Records(&$SOAPEngine);
         if ($this->version > 1) {
             $this->sortElements=array(
                             'changeDate'     => 'Change date',
@@ -2287,7 +2289,6 @@ class SIPAliases extends Records {
                             );
         }
 
-		$this->Records(&$SOAPEngine);
     }
 
     function getRecordKeys() {
@@ -2609,7 +2610,6 @@ class SIPAliases extends Records {
         }
 
         printf (" Target<input type=text size=15 name=target_username_filter value='%s'>",$this->filters['targetUsername']);
-        printf ("@<input type=text size=15 name=target_domain_filter value='%s'>",$this->filters['targetDomain']);
 
     }
 
@@ -2803,14 +2803,15 @@ class SIPAliases extends Records {
 class ENUMranges extends Records {
 
     function ENUMranges(&$SOAPEngine) {
-		$this->Records(&$SOAPEngine);
 
         $this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
                                     'tld'          => trim($_REQUEST['tld_filter']),
                                     'info'         => trim($_REQUEST['info_filter'])
                                    );
+
+		$this->Records(&$SOAPEngine);
+
         if ($this->version > 1) {
-           
         	$this->sortElements=array('changeDate' => 'Change date',
                   	        	      'prefix'     => 'Prefix',
                     	        	  'tld'        => 'TLD'
@@ -4386,6 +4387,8 @@ class TrustedPeers extends Records {
                                  'description'  => trim($_REQUEST['description_filter'])
                                  );
 
+		$this->Records(&$SOAPEngine);
+
         if ($this->version > 1) {
 
         	$this->sortElements=array(
@@ -4399,7 +4402,6 @@ class TrustedPeers extends Records {
                             'ip'          => 'IP address'
                             );
         }
-		$this->Records(&$SOAPEngine);
 
     }
 
@@ -6467,13 +6469,12 @@ class Customers extends Records {
                            'only_resellers' => trim($_REQUEST['only_resellers_filter'])
                            );
 
+		$this->Records(&$SOAPEngine);
+
 		$this->showAddForm = $_REQUEST['showAddForm'];
 
         $this->customerProperties = &$this->SOAPEngine->customerProperties;
 		$this->allProperties=array_merge($this->propertiesItems,$this->customerProperties);
-
-		$this->Records(&$SOAPEngine);
-
 
     }
 
