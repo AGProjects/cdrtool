@@ -1182,6 +1182,27 @@ class Records {
         }
     }
 
+    function makebar($w) {
+    	if ($w < 0) $w = 0;
+	    if ($w > 100) $w = 100;
+    	$width = $w;
+	    $extra = 100 - $w;
+    	if ($width < 50)
+	        $color = "black";
+    	else if ($width < 70)
+	        $color = "darkred";
+    	else
+        	$color = "red";
+	    return "
+        <table class=bar cellspacing=0>
+        <tr>
+        <td class=$color width=$width></td>
+        <td class=white width=$extra>
+        </td>
+        </tr>
+        </table>
+        ";
+	}
 }
 
 class Domains extends Records {
@@ -2876,7 +2897,7 @@ class ENUMranges extends Records {
                     <td><b>Min digits</b></td>
                     <td><b>Max digits</b></td>
                     <td><b>Size</b></td>
-                    <td><b>Used</b></td>
+                    <td colspan=2><b>Used</b></td>
                     <td><b>Change date</b></td>
                     <td><b>Action</b></td>
             		</tr>
@@ -2891,7 +2912,7 @@ class ENUMranges extends Records {
                     <td><b>Min digits</b></td>
                     <td><b>Max digits</b></td>
                     <td><b>Size</b></td>
-                    <td><b>Used</b></td>
+                    <td colspan=2><b>Used</b></td>
                     <td><b>Change date</b></td>
                     <td><b>Action</b></td>
             		</tr>
@@ -2962,6 +2983,14 @@ class ENUMranges extends Records {
                         }
                     }
 
+
+					if ($range->size) {
+                    	$usage=intval(100*$range->used/$range->size);
+                        $bar=$this->makebar($usage);
+                    } else {
+                        $bar="";
+                    }
+
                     if ($this->version > 1) {
                         $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                         urlencode($this->SOAPEngine->customerEngine),
@@ -2973,6 +3002,7 @@ class ENUMranges extends Records {
                         <td>%s</td>
                         <td><a href=%s>%s.%s</a></td>
                         <td>+%s</td>
+                        <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
@@ -2996,6 +3026,7 @@ class ENUMranges extends Records {
                         $range->maxDigits,
                         $range->size,
                         $range->used,
+                        $bar,
                         $range->changeDate,
                         $_url,
                         $actionText
@@ -3005,6 +3036,7 @@ class ENUMranges extends Records {
                         <tr bgcolor=%s>
                         <td>%s</td>
                         <td>+%s</td>
+                        <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
@@ -3023,6 +3055,7 @@ class ENUMranges extends Records {
                         $range->maxDigits,
                         $range->size,
                         $range->used,
+                        $bar,
                         $range->changeDate,
                         $_url,
                         $actionText
@@ -6690,15 +6723,15 @@ class Customers extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Username<input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
-        printf (" FName<input type=text size=7 name=firstName_filter value='%s'>",$this->filters['firstName']);
-        printf (" LName<input type=text size=7 name=lastName_filter value='%s'>",$this->filters['lastName']);
+        printf (" User<input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
+        printf (" Name<input type=text size=7 name=firstName_filter value='%s'>",$this->filters['firstName']);
+        printf ("<input type=text size=7 name=lastName_filter value='%s'>",$this->filters['lastName']);
         printf (" Org<input type=text size=10 name=organization_filter value='%s'>",$this->filters['organization']);
         printf (" Email<input type=text size=10 name=email_filter value='%s'>",$this->filters['email']);
 
         if ($this->adminonly) {
             if ($this->filters['only_resellers']) $check_only_resellers_filter='checked';
-        	printf (" Resellers<input type=checkbox name=only_resellers_filter value=1 %s>",$check_only_resellers_filter);
+        	printf (" Res<input type=checkbox name=only_resellers_filter value=1 %s>",$check_only_resellers_filter);
         }
     }
 
