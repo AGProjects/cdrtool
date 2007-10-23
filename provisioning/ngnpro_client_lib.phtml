@@ -2782,18 +2782,19 @@ class SIPAliases extends Records {
 class ENUMranges extends Records {
 
     function ENUMranges(&$SOAPEngine) {
+		$this->Records(&$SOAPEngine);
+
         $this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
-                                 'tld'          => trim($_REQUEST['tld_filter'])
-                                );
-        
+                                    'tld'          => trim($_REQUEST['tld_filter']),
+                                    'info'         => trim($_REQUEST['info_filter'])
+                                   );
         if ($this->version > 1) {
+           
         	$this->sortElements=array('changeDate' => 'Change date',
                   	        	      'prefix'     => 'Prefix',
                     	        	  'tld'        => 'TLD'
 	                        	     );
         }
-
-		$this->Records(&$SOAPEngine);
     }
 
     function listRecords() {
@@ -2805,6 +2806,7 @@ class ENUMranges extends Records {
             // Filter
             $filter=array('prefix'   => $this->filters['prefix'],
                           'tld'      => $this->filters['tld'],
+                          'info'     => $this->filters['info'],
   	                      'customer' => intval($this->filters['customer']),
     	                  'reseller' => intval($this->filters['reseller'])
                           );
@@ -3093,9 +3095,8 @@ class ENUMranges extends Records {
             printf ("Max Digits<input type=text size=3 name=maxDigits value=11> ");
             if ($this->version > 1) {
                 $this->showCustomerTextBox();
+            	printf ("Info<input type=text size=15 name=info> ");
             }
-
-            //printf ("Info<input type=text size=15 name=info> ");
 
             print "
 	        </td>
@@ -3154,6 +3155,7 @@ class ENUMranges extends Records {
                      'id'         => array('prefix' => $prefix,
                                            'tld'    => $tld),
                      'ttl'        => $ttl,
+                     'info'       => $info,
                      'minDigits'  => intval(trim($_REQUEST['minDigits'])),
                      'maxDigits'  => intval(trim($_REQUEST['maxDigits'])),
                      'customer'   => intval($customer),
@@ -3193,6 +3195,7 @@ class ENUMranges extends Records {
             } else {
                 printf ("<input type=text size=10 name=tld_filter value='%s'>",$this->filters['tld']);
             }
+        	printf (" Info<input type=text size=15 name=info_filter value='%s'>",$this->filters['info']);
         }
     }
 
@@ -5272,8 +5275,6 @@ class Gateways extends Records {
             print "</select>";
             printf (" Prefix<input type=text size=5 name=prefix>");
 
-            $this->showCustomerTextBox();
-
             print "
 	        </td>
         	<td align=right>
@@ -5664,7 +5665,6 @@ class Routes extends Records {
 
             printf (" </select>");
             printf (" Priority<input type=text size=5 name=priority>");
-            $this->showCustomerTextBox();
 
             print "
 	        </td>
