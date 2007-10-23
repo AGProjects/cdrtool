@@ -3,28 +3,28 @@
 /*
   	Copyright (c) 2007 AG Projects
   	http://ag-projects.com
-    Author Adrian Georgescu
+        Author Adrian Georgescu
 
   	This library provide the functions for managing properties
-  	of SIP accounts retrieved from NGN-Pro
+  	of SIP accounts retrieved from NGN-Pro server
 
 */
 
 class SIPSettings {
 
-	var $loginType                 = 'subscriber';
-	var $soapClassSipPort          = 'WebService_NGNPro_SipPort';
+    var $loginType                 = 'subscriber';
+    var $soapClassSipPort          = 'WebService_NGNPro_SipPort';
     var $soapClassVoicemailPort    = 'WebService_NGNPro_VoicemailPort';
     var $soapClassCustomerPort     = 'WebService_NGNPro_CustomerPort';
     var $soapClassPresencePort     = 'WebService_SoapSIMPLEProxy_PresencePort';
 
-    var $voicemail				   = array('AccessNumber'     => '*70',
+    var $voicemail		   = array('AccessNumber'     => '*70',
                                            'Server'           => 'vm.example.com');
     var $SupportCompany            = "Example company";
     var $SupportCDRsite            = "https://cdrtool.example.com/CDRTool";
     var $SupportWEBsite            = "https://www.example.com/help";
-	var $SupportEmail              = "Support <support@example.com>";
-    var $SIPsettingsURL		       = "https://cdrtool.example.com/sip_settings.phtml";
+    var $SupportEmail              = "Support <support@example.com>";
+    var $SIPsettingsURL 	       = "https://cdrtool.example.com/sip_settings.phtml";
     var $xcaproot   		       = "https://cdrtool.example.com/xcap-root/";
 
     var $templatesPath             = './templates';

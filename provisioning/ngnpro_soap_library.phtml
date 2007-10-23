@@ -6,11 +6,12 @@
   	Author Adrian Georgescu
 
   	This library provide NGN-Pro soap client functions
-  	It requires SOAP library from http://pear.php.net
+  	It requires the SOAP library from http://pear.php.net
 
 */
 
 require_once('SOAP/Client.php');
+
 class SOAP_Client_Custom extends SOAP_Client {
 	function addHeader(&$soap_value) {
         // add a new header to the SOAP message if not already exists
