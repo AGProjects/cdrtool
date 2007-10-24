@@ -287,7 +287,10 @@ class SIPSettings {
             $this->voicemailEngine=$this->soapEngine;
         }
 
+        $this->soapRemoteId=$this->soapEngines[$this->soapEngine]['depends'];
+
         // Instantiate the SOAP clients
+        // sip
         $this->SipPort       = new $this->soapClassSipPort($this->SOAPurl);
         $this->SipPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
         $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
@@ -295,6 +298,35 @@ class SIPSettings {
 
         if ($this->loginType == "admin")  {
         	printf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassSipPort,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
+        }
+
+        // sip remote
+        if (strlen($this->soapRemoteId) && in_array($this->soapRemoteId,array_keys($this->soapEngines))) {
+            $this->soapEngineRemote = $this->soapEngines[$this->soapRemoteId];
+            $impersonateRemote=intval($this->soapEngines[$this->soapRemoteId]['impersonate']);
+
+            $this->SOAPloginRemote = array(
+                                   "username"    => $this->soapEngines[$this->soapRemoteId]['username'],
+                                   "password"    => $this->soapEngines[$this->soapRemoteId]['password'],
+                                   "admin"       => true,
+                                   "impersonate" => $impersonateRemote
+                               );
+
+            //print_r($this->SOAPloginRemote);
+            $this->SOAPurlRemote=$this->soapEngines[$this->soapRemoteId]['url'];
+            $this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
+
+            // Instantiate the SOAP client depends
+            $this->SipPortRemote = new $this->soapClassSipPort($this->SOAPurlRemote);
+
+            $this->SipPortRemote->setOpt('curl', CURLOPT_TIMEOUT,        5);
+            $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+            $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+            if ($this->loginType == "admin")  {
+                printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s (remote) ",$this->soapClassSipPort,$this->SOAPurlRemote,$this->SOAPurlRemote,$this->soapEngines[$this->soapRemoteId]['username']);
+            }
+
         }
 
         // voicemail
@@ -344,37 +376,6 @@ class SIPSettings {
             if ($this->loginType == "admin")  {
                 printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> ",$this->soapClassPresencePort,$this->SOAPurlPresence,$this->SOAPurlPresence);
             }
-        }
-
-
-        $this->soapRemoteId=$this->soapEngines[$this->soapEngine]['depends'];
-
-        if (strlen($this->soapRemoteId) && in_array($this->soapRemoteId,array_keys($this->soapEngines))) {
-            $this->soapEngineRemote = $this->soapEngines[$this->soapRemoteId];
-            $impersonateRemote=intval($this->soapEngines[$this->soapRemoteId]['impersonate']);
-
-            $this->SOAPloginRemote = array(
-                                   "username"    => $this->soapEngines[$this->soapRemoteId]['username'],
-                                   "password"    => $this->soapEngines[$this->soapRemoteId]['password'],
-                                   "admin"       => true,
-                                   "impersonate" => $impersonateRemote
-                               );
-
-            //print_r($this->SOAPloginRemote);
-            $this->SOAPurlRemote=$this->soapEngines[$this->soapRemoteId]['url'];
-            $this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
-
-            // Instantiate the SOAP client depends
-            $this->SipPortRemote = new $this->soapClassSipPort($this->SOAPurlRemote);
-
-            $this->SipPortRemote->setOpt('curl', CURLOPT_TIMEOUT,        5);
-            $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-            $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-
-            if ($this->loginType == "admin")  {
-                printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s (remote) ",$this->soapClassSipPort,$this->SOAPurlRemote,$this->SOAPurlRemote,$this->soapEngines[$this->soapRemoteId]['username']);
-            }
-
         }
 
     }
