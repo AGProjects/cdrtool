@@ -381,7 +381,11 @@ class SOAPEngine {
             }
 
             $this->SOAPurl=$this->soapEngines[$this->soapEngine]['url'];
-            //printf ("<p>Connection to %s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClass,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
+
+            if ($this->adminonly)  {
+            	printf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClass,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
+            }
+
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
     		// Instantiate the SOAP client
@@ -408,8 +412,10 @@ class SOAPEngine {
 
                 dprint_r($this->SOAPloginRemote);
             	$this->SOAPurlRemote=$this->soapEngines[$this->soapDepends]['url'];
-            	//printf ("and syncronize writes at <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
 
+                if ($this->adminonly)  {
+            		printf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
+                }
             	$this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
 
     			// Instantiate the SOAP client dependency
