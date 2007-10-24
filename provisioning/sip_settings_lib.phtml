@@ -293,6 +293,10 @@ class SIPSettings {
         $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
+        if ($this->loginType == "admin")  {
+        	printf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassSipPort,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
+        }
+
         // voicemail
         $this->SOAPurlVoicemail = $this->soapEngines[$this->voicemailEngine]['url'];
         $this->SOAPloginVoicemail = array(
@@ -308,6 +312,10 @@ class SIPSettings {
         $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
+        if ($this->loginType == "admin")  {
+        	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassVoicemailPort,$this->SOAPurlVoicemail,$this->SOAPurlVoicemail,$this->soapEngines[$this->voicemailEngine]['username']);
+        }
+
         // customer
         $this->SOAPurlCustomer = $this->soapEngines[$this->customerEngine]['url'];
         $this->SOAPloginCustomer = array(
@@ -322,6 +330,10 @@ class SIPSettings {
         $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
+        if ($this->loginType == "admin")  {
+        	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassCustomerPort,$this->SOAPurlCustomer,$this->SOAPurlCustomer,$this->soapEngines[$this->customerEngine]['username']);
+        }
+
         // presence
 		if ($this->presenceEngine) {
         	$this->SOAPurlPresence = $this->soapEngines[$this->presenceEngine]['url'];
@@ -329,7 +341,11 @@ class SIPSettings {
         	$this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT,        5);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+            if ($this->loginType == "admin")  {
+                printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> ",$this->soapClassPresencePort,$this->SOAPurlPresence,$this->SOAPurlPresence);
+            }
         }
+
 
         $this->soapRemoteId=$this->soapEngines[$this->soapEngine]['depends'];
 
@@ -354,11 +370,13 @@ class SIPSettings {
             $this->SipPortRemote->setOpt('curl', CURLOPT_TIMEOUT,        5);
             $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+            if ($this->loginType == "admin")  {
+                printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s (remote) ",$this->soapClassSipPort,$this->SOAPurlRemote,$this->SOAPurlRemote,$this->soapEngines[$this->soapRemoteId]['username']);
+            }
+
         }
 
-        if ($this->loginType == "admin")  {
-        	printf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassSipPort,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
-        }
     }
 
     function getAccount($account) {
