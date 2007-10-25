@@ -3625,18 +3625,24 @@ class SIPSettings {
     function updatePhonebookEntry() {
 
         dprint("updatePhonebookEntry()");
-
-		$firstName = trim($_REQUEST['first_name']);
-        $lastName  = trim($_REQUEST['last_name']);
         $uri       = trim($_REQUEST['uri']);
-        $group     = trim($_REQUEST['group']);
+	    $group     = trim($_REQUEST['group']);
 
-        $phonebookEntry=array('firstName' => $firstName,
-                              'lastName'  => $lastName,
-                              'uri'       => $uri,
-                              'group'     => $group
+   		if ($this->SOAPversion > 1) {
+			$name = trim($_REQUEST['name']);
+    	    $phonebookEntry=array('name' => $name,
+            	                  'uri'       => $uri,
+                	              'group'     => $group
                               );
-
+        } else {
+			$firstName = trim($_REQUEST['first_name']);
+    	    $lastName  = trim($_REQUEST['last_name']);
+    	    $phonebookEntry=array('firstName' => $firstName,
+        	                      'lastName'  => $lastName,
+            	                  'uri'       => $uri,
+                	              'group'     => $group
+                              );
+        }
 
 		//dprint_r($phonebookEntry);
 
@@ -3742,10 +3748,16 @@ class SIPSettings {
 
 		if (!strlen($search_text)) $search_text="%" ;
 
-        $match=array('uri'       => $search_text,
-                     'firstName' => $search_text,
-                     'lastName'  => $search_text
-                     );
+        if ($this->SOAPversion > 1) {
+        	$match=array('uri'  => $search_text,
+            	         'name' => $search_text
+                    	 );
+        } else {
+        	$match=array('uri'       => $search_text,
+            	         'firstName' => $search_text,
+                	     'lastName'  => $search_text
+                    	 );
+        }
 
 		if (strlen($group)) {
             if ($group=="empty") {
@@ -3822,9 +3834,14 @@ class SIPSettings {
         $confirm = $_REQUEST['confirm'];
 
         $group = $_REQUEST['group'];
-        $first_name = $_REQUEST['first_name'];
-        $last_name = $_REQUEST['last_name'];
         $uri = $_REQUEST['uri'];
+
+        if ($this->SOAPversion > 1) {
+        	$name = $_REQUEST['name'];
+        } else {
+        	$first_name = $_REQUEST['first_name'];
+	        $last_name = $_REQUEST['last_name'];
+        }
 
         if ($task=="deleteContact" && $confirm) {
             $this->deletePhonebookEntry();
@@ -3899,7 +3916,7 @@ class SIPSettings {
             <td class=h align=right>Id</td>
             ";
             print "<td class=h>";
-            print _("Group");
+            print _("Address");
             print "</td>";
             print "<td class=h>";
             print "</td>";
@@ -3907,7 +3924,7 @@ class SIPSettings {
             print _("Name");
             print "</td>";
             print "<td class=h>";
-            print _("Address");
+            print _("Group");
             print "</td>";
             print "<td class=h>";
             print _("Action");
@@ -3918,9 +3935,6 @@ class SIPSettings {
         
                 $found=$i+1;
     
-                $fname    = $this->PhonebookEntries[$_entry]->firstName;
-                $lname    = $this->PhonebookEntries[$_entry]->lastName;
-
                 print "
                 <tr bgcolor=white valign=top>
                 <form name=\"Entry$found\" action=\"$this->pageURL&tab=$this->tab\">
@@ -3932,30 +3946,25 @@ class SIPSettings {
 
                 print "<td valign=top>$found</td>
                 <td>";
-
-                printf ("<select name=group onChange=\"location.href='%s&task=update&uri=%s&first_name=%s&last_name=%s&group='+this.options[this.selectedIndex].value\">",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($fname),urlencode($lname));
-        		print "<option value=\"\">";
-        		$selected_grp[$this->PhonebookEntries[$_entry]->group]="selected";
-                foreach(array_keys($this->PhonebookGroups) as $_key) {
-            		printf ("<option value=\"%s\" %s>%s",$_key,$selected_grp[$_key],$this->PhonebookGroups[$_key]);
-        		}
-                unset($selected_grp);
-
-        		print "</select>";
+                print $this->PhonebookEntries[$_entry]->uri;
 
                 printf ("</td>
                 <td valign=top>%s</td>
                 <td valign=top>",
                 $this->PhoneDialURL($this->PhonebookEntries[$_entry]->uri));
 
-                if ($fname || $lname) {
-                    print "<a onClick=\"return toggleVisibility('row$found')\" href=#>$fname $lname</a>";
+        		if ($this->SOAPversion > 1) {
+                    print _("Name");
+                    printf ("<input type=text name=name value='%s'>",$this->PhonebookEntries[$_entry]->name);
+                    print "<a href=\"javascript: document.Entry$found.submit()\">Update</a>";
                 } else {
-                    print "<a onClick=\"return toggleVisibility('row$found')\" href=#>Edit</a>";
-                }
-
-                print "
-                <table border=0 class=extrainfo id=row$found cellpadding=0 cellspacing=0 width=100%>
+	                if ($fname || $lname) {
+    	                print "<a onClick=\"return toggleVisibility('row$found')\" href=#>$fname $lname</a>";
+        	        } else {
+            	        print "<a onClick=\"return toggleVisibility('row$found')\" href=#>Edit</a>";
+                	}
+	                print "
+    	            <table border=0 class=extrainfo id=row$found cellpadding=0 cellspacing=0 width=100%>
                     <tr>
                     <td>";
                     print _("First");
@@ -3970,13 +3979,32 @@ class SIPSettings {
                     print "<td><input type=text name=last_name value=\"$lname\"></td>";
                     print "</tr>";
                     //print "<tr><td><input type=submit value=Save></td></tr>";
-                    print "<tr><td><a href=\"javascript: document.Entry$found.submit()\">Update</a></td></tr>";
 
                     print "
-                </table>
+        	        </table>
+            	    ";
+                }
+
+                print "
                 </td>
                 <td valign=top>";
-                print $this->PhonebookEntries[$_entry]->uri;
+        		if ($this->SOAPversion > 1) {
+                	printf ("<select name=group onChange=\"location.href='%s&task=update&uri=%s&name=%s&group='+this.options[this.selectedIndex].value\">",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($this->PhonebookEntries[$_entry]->name));
+                } else {
+                	$fname    = $this->PhonebookEntries[$_entry]->firstName;
+	                $lname    = $this->PhonebookEntries[$_entry]->lastName;
+                	printf ("<select name=group onChange=\"location.href='%s&task=update&uri=%s&first_name=%s&last_name=%s&group='+this.options[this.selectedIndex].value\">",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($fname),urlencode($lname));
+                }
+
+        		print "<option value=\"\">";
+        		$selected_grp[$this->PhonebookEntries[$_entry]->group]="selected";
+                foreach(array_keys($this->PhonebookGroups) as $_key) {
+            		printf ("<option value=\"%s\" %s>%s",$_key,$selected_grp[$_key],$this->PhonebookGroups[$_key]);
+        		}
+                unset($selected_grp);
+
+        		print "</select>";
+
 
                 print "</td>
                 ";
@@ -4125,6 +4153,9 @@ class SIPSettings {
         $rejectMembers=$_REQUEST['rejectMembers'];
 
         foreach ($rejectMembers as $_member) {
+        	if (strlen($_member) && !preg_match("/^sip:/",$_member)) {
+            	$_member.='sip:'.$_member;
+            }
             if (strlen($_member)) $members[]=$_member;
         }
 
@@ -4886,7 +4917,7 @@ class SIPSettings {
 
     function PhoneDialURL($uri) {
 		$uri=$this->normalizeURI($uri);
-        $uri_print="<a href=sip:$uri>$this->call_img</a>";
+        $uri_print="<a href=$uri>$this->call_img</a>";
         return $uri_print;
     }
 
