@@ -4294,8 +4294,14 @@ class SIP_trace {
                     $protocol=$m[1];
                 }
 
-                if (!$this->column[$_trace->fromip]) {
-                    $this->column[$_trace->fromip]=$columns+1;
+                if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->fromip,$m)) {
+                    $fromip=$m[2];
+                } else {
+                    $fromip=$_trace->fromip;
+                }
+
+                if (!$this->column[$fromip]) {
+                    $this->column[$fromip]=$columns+1;
                     $columns++;
                 }
     
@@ -4311,7 +4317,7 @@ class SIP_trace {
                             array (
                                    'id'        => $_trace->id,
                                    'direction' => $_trace->direction,
-                                   'fromip'    => $_trace->fromip,
+                                   'fromip'    => $fromip,
                                    'toip'      => $toip,
                                    'method'    => $_trace->method,
                                    'protocol'  => $protocol,
@@ -4347,9 +4353,15 @@ class SIP_trace {
                     $toip=$m[2];
                     $protocol=$m[1];
                 }
-    
-                if (!$this->column[$this->db->f('fromip')]) {
-                    $this->column[$this->db->f('fromip')]=$columns+1;
+
+                if (preg_match("/^(udp|tcp|tls):(.*)$/",$this->db->f('fromip'),$m)) {
+                    $fromip=$m[2];
+                } else {
+                    $fromip=$this->db->f('fromip');
+                }
+
+                if (!$this->column[$fromip]) {
+                    $this->column[$fromip]=$columns+1;
                     $columns++;
                 }
     
@@ -4362,7 +4374,7 @@ class SIP_trace {
                             array (
                                    'id'        => $this->db->f('id'),
                                    'direction' => $this->db->f('direction'),
-                                   'fromip'    => $this->db->f('fromip'),
+                                   'fromip'    => $fromip,
                                    'toip'      => $toip,
                                    'method'    => $this->db->f('method'),
                                    'protocol'  => $protocol,
