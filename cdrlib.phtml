@@ -19,6 +19,9 @@ class CDRS {
     var $defaults            = array();
 	var $whereUnnormalized   = '';
 	var $skipNormalize       = false;
+	var $reNormalize         = false;
+	var $usageKeysForDeletionFromCache = array();
+	var $mc_key_mu_prefix    = 'mu:';
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
@@ -232,7 +235,6 @@ class CDRS {
         $this->mc_key_init       = $this->cdr_source.':quotaCheckInit';
         $this->mc_key_domains    = $this->cdr_source.':domains';
         $this->mc_key_accounts   = $this->cdr_source.':accounts';
-    	$this->mc_key_mu_prefix  = 'mu:';
 
         $this->LoadDisconnectCodes();
         $this->LoadDestinations();
@@ -761,6 +763,7 @@ class CDRS {
         }
 
         dprint("unNormalized $c calls");
+        $this->reNormalize=true;
 
         return $c;
     }
@@ -933,6 +936,8 @@ class CDRS {
             return 0;
         }
 
+		$this->usageKeysForDeletionFromCache=array();
+
         while ($this->CDRdb->next_record()) {
 
             dprint("-------");
@@ -950,6 +955,10 @@ class CDRS {
                 $this->status['normalized']++;
             } else {
                 $this->status['normalize_failures']++;
+            }
+
+			if ($this->reNormalize && $CDR->pricePrint && !$this->usageKeysForDeletionFromCache[$CDR->BillingPartyId]) {
+            	$this->usageKeysForDeletionFromCache[$CDR->BillingPartyId]++;
             }
 
             if ($this->status['cdr_to_normalize'] > 1000) {
@@ -987,6 +996,17 @@ class CDRS {
     
             if ($this->RatingEngineSocket) {
                 fclose($this->RatingEngineSocket);
+            }
+        }
+
+        if (count($this->usageKeysForDeletionFromCache)) {
+        	if (is_object($this->mc)) {
+				if ($reset_quota_for = $this->mc->get('reset_quota_for')) {
+    	            $reset_quota_new=array_merge(json_decode($reset_quota_for),array_keys($this->usageKeysForDeletionFromCache));
+        	    } else {
+    	            $reset_quota_new=array_keys($this->usageKeysForDeletionFromCache);
+                }
+                $this->mc->set('reset_quota_for',json_encode(array_unique($reset_quota_new)));
             }
         }
 

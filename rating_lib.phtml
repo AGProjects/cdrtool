@@ -164,7 +164,7 @@ class Rate {
         $this->cNumber           = $dictionary['cNumber'];
         $this->ENUMtld           = $dictionary['ENUMtld'];
 
-		if ($this->ENUMtld && $this->ENUMtld != 'none' && $this->RatingTables->ENUMtlds[$this->ENUMtld]) {
+		if ($this->ENUMtld && $this->ENUMtld != 'n/a' && $this->ENUMtld != 'none' && $this->RatingTables->ENUMtlds[$this->ENUMtld]) {
         	$this->ENUMdiscount = $this->RatingTables->ENUMtlds[$this->ENUMtld]['discount'];
             if (!is_numeric($this->ENUMdiscount ) || $this->ENUMdiscount <0 || $this->ENUMdiscount >100) {
   				syslog(LOG_NOTICE, "Error: ENUM discount for tld $this->ENUMtld must be between 0 and 100");
@@ -2999,7 +2999,8 @@ class SERQuota {
         }
     }
 
-    function Reset() {
+    function Reset($reset_quota_for=array()) {
+        // deblock users blocked by quota
 
         if (!$this->AccountsDBClass) {
             print("Info: No database defined for SIP accounts.\n");
@@ -3030,7 +3031,18 @@ class SERQuota {
 
         } else {
              $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",$this->quotaGroup);
-     
+
+                if (count($reset_quota_for)) {
+	        	    $k=0;
+    	        	foreach ($reset_quota_for as $_account) {
+        	        	if ($k) $usage_keys.= ", ";
+	        	    	$usage_keys.="'".$_account."'";
+    	        	    $k++;
+	        	    }
+    	        	$query.= "and CONCAT(username,'@',domain) in (".$usage_keys.")";
+        		}
+
+
              if (!$this->AccountsDB->query($query)) {
                  $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
                  print $log;
@@ -3043,11 +3055,25 @@ class SERQuota {
              }
         }
 
+        if (count($reset_quota_for)) {
+        	$blockedAccounts=array_intersect($blockedAccounts,$reset_quota_for);
+        }
+
 		if (count($blockedAccounts) >0 ) {
             $this->unBlockRemoteAccounts($blockedAccounts);
 
 			if (!$this->enableThor) {
                 $query=sprintf("delete from grp where grp = '%s'",$this->quotaGroup);
+		        if (count($reset_quota_for)) {
+	        	    $k=0;
+    	        	foreach ($reset_quota_for as $_account) {
+        	        	if ($k) $usage_keys.= ", ";
+	        	    	$usage_keys.="'".$_account."'";
+    	        	    $k++;
+	        	    }
+    	        	$query.= "and CONCAT(username,'@',domain) in (".$usage_keys.")";
+        		}
+
                 dprint($query);
         
                 if (!$this->AccountsDB->query($query)) {
@@ -3089,7 +3115,7 @@ class SERQuota {
         }
     }
 
-    function initMonthlyUsageFromDatabase($month="") {
+    function initMonthlyUsageFromDatabase($month="",$reset_quota_for=array()) {
 		if (!$month) {
         	$this->startTime=Date("Y-m-01 00:00",time());
         } else {
@@ -3100,6 +3126,17 @@ class SERQuota {
 
         $j=0;
 
+		$usage_keys='';
+        if (count($reset_quota_for)) {
+            $k=0;
+            foreach ($reset_quota_for as $_account) {
+                if ($k) $usage_keys.= ", ";
+            	$usage_keys.="'".$_account."'";
+                $k++;
+            }
+            $usage_keys="and ".$this->BillingPartyIdField. " in (".$usage_keys.")";
+        }
+
         $query=sprintf("select %s,
         count(*) as calls,
         sum(AcctSessionTime) as duration,
@@ -3108,10 +3145,12 @@ class SERQuota {
         from %s
         where AcctStartTime >= '%s'
         and Normalized = '1'
+        %s
         group by %s\n",
         addslashes($this->BillingPartyIdField),
         addslashes($this->table),
         addslashes($this->startTime),
+        $usage_keys,
         addslashes($this->BillingPartyIdField)
         );
 
@@ -3586,11 +3625,13 @@ class SERQuota {
     	if (is_object($this->CDRS->mc)) {
 			if (!$this->CDRS->mc->get($this->mc_key_init)) {
 
-                $this->Reset();
+				$reset_quota_for = json_decode($this->CDRS->mc->get('reset_quota_for'));
 
-                $this->deleteMonthlyUsageFromCache();
+                $this->Reset($reset_quota_for);
 
-				$this->initMonthlyUsageFromDatabase();
+                $this->deleteMonthlyUsageFromCache($reset_quota_for);
+
+				$this->initMonthlyUsageFromDatabase('',$reset_quota_for);
 
                 $this->CDRS->cacheMonthlyUsage(&$this->Accounts);
         
@@ -3607,16 +3648,18 @@ class SERQuota {
                 }
 
                 if ($this->saveQuotaInitFlag()) {
-                    return 1;
+					$this->CDRS->mc->delete('reset_quota_for');
+                    return true;
                 } else {
 		        	$log=sprintf ("Error: failed to save key quotaCheckInit in memcache");
 	    		    syslog(LOG_NOTICE, $log);
-		            return 0;
+		            return false;
                 }
             }
 		} else {
 		    $query=sprintf("select * from memcache where `key` = '%s'",$this->mc_key_init);
             dprint($query);
+
             if (!$this->db->query($query)) {
                 $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                 print $log;
@@ -3625,12 +3668,26 @@ class SERQuota {
             }
 
             if (!$this->db->num_rows()) {
+			    $query=sprintf("select * from memcache where `key` = 'reset_quota_for'");
+    	        dprint($query);
 
-                $this->Reset();
+            	if (!$this->db->query($query)) {
+                	$log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+	                print $log;
+    	            syslog(LOG_NOTICE,$log);
+        	        return false;
+                }
 
-                $this->deleteMonthlyUsageFromCache();
+                if ($this->db->num_rows()) {
+                    $this->db->next_record();
+                	$reset_quota_for = json_decode($this->db->f('reset_quota_for'));
+                }
 
-                $this->initMonthlyUsageFromDatabase();
+                $this->Reset($reset_quota_for);
+
+                $this->deleteMonthlyUsageFromCache($reset_quota_for);
+
+                $this->initMonthlyUsageFromDatabase('',$reset_quota_for);
 
                 if ($this->CDRS->status['cached_keys']['saved_keys']) {
                     $log=sprintf("Saved %d keys\n",$this->CDRS->status['cached_keys']['saved_keys']);
@@ -3645,18 +3702,22 @@ class SERQuota {
                 }
 
                 if ($this->saveQuotaInitFlag()) {
-                    return 1;
+				    $query=sprintf("delete from memcache where `key` = 'reset_quota_for'");
+        		    dprint($query);
+
+            		$this->db->query($query);
+
+                    return true;
                 } else {
                     $log=sprintf ("Error: failed to save key quotaCheckInit in memcache");
                     syslog(LOG_NOTICE, $log);
-                    return 0;
+                    return false;
                 }
             }
 		}
-        return 1;
     }
 
-    function deleteMonthlyUsageFromCache () {
+    function deleteMonthlyUsageFromCache ($reset_quota_for=array()) {
 
     	$deleted_keys=0;
 
@@ -3666,24 +3727,32 @@ class SERQuota {
         }
 
         if (is_object($this->CDRS->mc)) {
-
-	        if ($this->enableThor) {
-            	$query="select * from sip_accounts";
+            if (count($reset_quota_for)) {
+                foreach($reset_quota_for as $_account) {
+                    $mc_key=$this->CDRS->mc_key_mu_prefix.$_account;
+                    if ($this->CDRS->mc->delete($mc_key)) {
+                        $deleted_keys++;
+                    }
+                }
             } else {
-            	$query="select * from subscriber";
-            }
-    	    dprint($query);
-            if (!$this->AccountsDB->query($query)) {
-                $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
-                print $log;
-                syslog(LOG_NOTICE,$log);
-                return false;
-            }
-
-            while($this->AccountsDB->next_record()) {
-                $mc_key=$this->CDRS->mc_key_mu_prefix.$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');;
-                if ($this->CDRS->mc->delete($mc_key)) {
-                    $deleted_keys++;
+                if ($this->enableThor) {
+                    $query="select * from sip_accounts";
+                } else {
+                    $query="select * from subscriber";
+                }
+                dprint($query);
+                if (!$this->AccountsDB->query($query)) {
+                    $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE,$log);
+                    return false;
+                }
+    
+                while($this->AccountsDB->next_record()) {
+                    $mc_key=$this->CDRS->mc_key_mu_prefix.$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
+                    if ($this->CDRS->mc->delete($mc_key)) {
+                        $deleted_keys++;
+                    }
                 }
             }
 
@@ -3694,9 +3763,20 @@ class SERQuota {
             }
         }
 
-        $query=sprintf("delete from memcache where `key` like '%s%s'",
-        $this->CDRS->mc_key_mu_prefix,"%");
-    	dprint($query);
+        if (count($reset_quota_for)) {
+            $k=0;
+            foreach ($reset_quota_for as $_account) {
+                if ($k) $usage_keys.= ", ";
+            	$usage_keys="'".$_account."'";
+                $k++;
+            }
+        	$query=sprintf("delete from memcache where `key` in (%s)",$usage_keys);
+        } else {
+        	$query=sprintf("delete from memcache where `key` like '%s%s'",$this->CDRS->mc_key_mu_prefix,"%");
+        }
+
+        dprint($query);
+
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->Accountsdb->Errno);
             print $log;
