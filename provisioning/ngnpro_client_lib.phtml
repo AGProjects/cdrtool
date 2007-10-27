@@ -7707,10 +7707,12 @@ class Presence {
 }
 
 class recordGenerator extends SOAPEngine {
+
 	//this class generates in bulk enum numbers and sip accounts
 
 	var $template     = array();
     var $allowedPorts = array();
+	var $maxRecords   = 1000;
 
     function recordGenerator($generatorId,$recordGenerators,$soapEngines,$loginCredentials=array()) {
     	$this->recordGenerators = $recordGenerators;
@@ -7798,6 +7800,11 @@ class recordGenerator extends SOAPEngine {
                                 );
 
             if ($this->template['create_sip']) {
+            	if (preg_match("/^0/",$username)) {
+            		printf ('SIP accounts starting with 0 are not generated (%s@%s)',$username,$this->template['domain']);
+                	continue;
+            	}
+
                 $groups=array();
                 if ($this->template['pstn']) $groups[]='free-pstn';
             	printf ('and sip account %s@%s ',$username,$this->template['domain']);
@@ -7831,8 +7838,8 @@ class recordGenerator extends SOAPEngine {
 
         $nr_records=trim($_REQUEST['nr_records']);
 
-        if (!is_numeric($nr_records) || $nr_records < 1 || $nr_records > 100) {
-            print "<font color=red>Error: number of records must be a number between 1 and 100</font>";
+        if (!is_numeric($nr_records) || $nr_records < 1 || $nr_records > $this->maxRecords) {
+            print "<font color=red>Error: number of records must be a number between 1 and $this->maxRecords</font>";
             return false;
         }
 
@@ -7846,6 +7853,15 @@ class recordGenerator extends SOAPEngine {
         }
 
         $this->template['len'] = $len;
+
+        // 
+        $strip_digits=trim($_REQUEST['strip_digits']);
+        if (!is_numeric($strip_digits) || $strip_digits < 1 || $len < $strip_digits + 3) {
+            print "<font color=red>Error: strip digits must be smaller then $len</font>";
+            return false;
+        }
+
+        $this->template['strip_digits'] = $strip_digits;
 
         // sip domain
         $domain=trim($_REQUEST['domain']);
