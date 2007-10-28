@@ -345,7 +345,7 @@ class SIPSettings {
         $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-        if ($this->loginType == "admin")  {
+        if ($this->loginType == "admin" && $this->SOAPurlVoicemail != $this->SOAPurl)  {
         	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassVoicemailPort,$this->SOAPurlVoicemail,$this->SOAPurlVoicemail,$this->soapEngines[$this->voicemailEngine]['username']);
         }
 
@@ -363,7 +363,7 @@ class SIPSettings {
         $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-        if ($this->loginType == "admin")  {
+        if ($this->loginType == "admin" && $this->SOAPurlCustomer != $this->SOAPurl)  {
         	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassCustomerPort,$this->SOAPurlCustomer,$this->SOAPurlCustomer,$this->soapEngines[$this->customerEngine]['username']);
         }
 

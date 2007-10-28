@@ -7794,6 +7794,7 @@ class recordGenerator extends SOAPEngine {
                                  'number'   => $number,
                                  'type'     => 'sip',
                                  'mapto'    => $mapto,
+                                 'info'     => $this->template['info'],
                                  'owner'    => $this->template['owner'],
                                  'customer' => $this->template['customer'],
                                  'reseller' => $this->template['reseller']
@@ -7836,6 +7837,8 @@ class recordGenerator extends SOAPEngine {
         // check number of records
         $this->template['create_sip']=trim($_REQUEST['create_sip']);
 
+        $this->template['info']=trim($_REQUEST['info']);
+
         $nr_records=trim($_REQUEST['nr_records']);
 
         if (!is_numeric($nr_records) || $nr_records < 1 || $nr_records > $this->maxRecords) {
@@ -7856,7 +7859,7 @@ class recordGenerator extends SOAPEngine {
 
         // 
         $strip_digits=trim($_REQUEST['strip_digits']);
-        if (!is_numeric($strip_digits) || $strip_digits < 1 || $len < $strip_digits + 3) {
+        if (!is_numeric($strip_digits) || $strip_digits <0 || $len < $strip_digits + 3) {
             print "<font color=red>Error: strip digits must be smaller then $len</font>";
             return false;
         }
@@ -7985,6 +7988,7 @@ class recordGenerator extends SOAPEngine {
         </td>
         </tr>
         ",$_REQUEST['nr_start']);
+
         print "
         <tr>
         <td>";
@@ -8046,6 +8050,17 @@ class recordGenerator extends SOAPEngine {
         printf ("
         <td align=right><input type=text size=10 name=owner value='%s'>
         <td>",$_REQUEST['owner']);
+        print "
+        </td>
+        </tr>";
+
+        print "
+        <tr>
+        <td>";
+        print _("Info:");
+        printf ("
+        <td align=right><input type=text size=10 name=info value='%s'>
+        <td>",$_REQUEST['info']);
         print "
         </td>
         </tr>";
