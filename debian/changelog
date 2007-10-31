@@ -1,9 +1,10 @@
 cdrtool (5.3.4) unstable; urgency=low
 
   * After renormalization, recache the monthly usage only for the accounts
-  that had CDRs changed during renormalization
+    that had CDRs changed during renormalization
+  * Fixed application type for rating engine (default application is audio)
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 26 Oct 2007 11:40:16 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 31 Oct 2007 15:07:19 +0100
 
 cdrtool (5.3.3) unstable; urgency=low
 

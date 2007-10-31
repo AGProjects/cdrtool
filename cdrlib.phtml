@@ -1718,9 +1718,14 @@ class CDR {
     var $cNumberField         = "CalledStationId";
     var $aNumberField         = "CallingStationId";
     var $disconnectField      = "H323DisconnectCause";
-
-    var $traceIn = "";
-    var $traceOut= "";
+    var $traceIn              = "";
+    var $traceOut             = "";
+    var $defaultApplicationType = "audio";
+  	var $supportedApplicationTypes = array('audio',
+                                           'presence',
+                                           'message',
+                                           'video'
+                                           );
 
     function CDR() {
     }

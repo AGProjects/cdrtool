@@ -6,6 +6,7 @@ class CDRS_ser_radius extends CDRS {
     var $subscriber_table      = "subscriber";
     var $enable_thor           = false;
     var $ENUMtld               = '';
+    var $supportedApplications = array('video','audio','message','text','presence');
 
     var $CDRFields=array('id'   	       => 'RadAcctId',
                          'callId'          => 'AcctSessionId',
@@ -2198,10 +2199,9 @@ class CDR_ser_radius extends CDR {
             } else {
         		$this->applicationType="audio";
             }
-            $this->applicationTypeNormalized=$this->applicationType;
-        } else {
-			$this->applicationType=strtolower($this->applicationType);
         }
+
+		$this->applicationType=strtolower($this->applicationType);
 
         if (strstr($this->applicationType,'video')) {
             // we rate calls containing video same as audio
@@ -2211,7 +2211,11 @@ class CDR_ser_radius extends CDR {
         	$this->applicationType='audio';
         }
 
-        $this->applicationTypePrint=$this->applicationType;
+        if (!in_array($this->applicationType,$this->supportedApplicationTypes)) {
+			$this->applicationType = $this->defaultApplicationType;
+        }
+
+        $this->applicationTypeNormalized=$this->applicationType;
 
 		dprint("Application type: $this->applicationType");
 

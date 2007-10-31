@@ -324,7 +324,7 @@ class SIPSettings {
             $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-            if ($this->loginType == "admin")  {
+            if ($this->loginType == "admin" && $this->showSoapConnectionInfo)  {
                 printf ("and sync to <a href=%swsdl target=wsdl>%s</a> as %s ",$this->SOAPurlRemote,$this->SOAPurlRemote,$this->soapEngines[$this->soapRemoteId]['username']);
             }
 
@@ -374,7 +374,7 @@ class SIPSettings {
         	$this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT,        5);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-            if ($this->loginType == "admin")  {
+            if ($this->loginType == "admin" && $this->showSoapConnectionInfo)  {
                 printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> ",$this->soapClassPresencePort,$this->SOAPurlPresence,$this->SOAPurlPresence);
             }
         }
