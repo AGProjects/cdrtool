@@ -236,7 +236,7 @@ class Rate {
                 " Destination: $this->DestinationId ($this->destinationNamePrint)\n".
                 "    Customer: $this->CustomerProfile\n";
 
-            if ($this->ENUMtld && $this->ENUMtld != 'none') {
+            if ($this->ENUMtld && $this->ENUMtld != 'none' && $this->ENUMtld != 'n/a') {
             $this->rateInfo .= 
     
                 "    ENUM tld: $this->ENUMtld\n".
