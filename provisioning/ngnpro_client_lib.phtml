@@ -2807,6 +2807,14 @@ class SIPAliases extends Records {
 }
 
 class ENUMranges extends Records {
+    var $FieldsReadOnly=array(
+                              'reseller'
+                              );
+    var $Fields=array(
+                              'customer' => array('type'=>'integer'),
+                              'info'     => array('type'=>'string'),
+                              'ttl'      => array('type'=>'integer')
+                              );
 
     function ENUMranges(&$SOAPEngine) {
 
@@ -3080,7 +3088,11 @@ class ENUMranges extends Records {
 
             print "</table>";
 
-            $this->showPagination($maxrows);
+			if ($this->rows == 1 && $this->version > 1) {
+                $this->showRecord($range);
+            } else {
+            	$this->showPagination($maxrows);
+            }
 
             return true;
         }
@@ -3307,6 +3319,141 @@ class ENUMranges extends Records {
             }
         }
     }
+
+    function showRecord($range) {
+
+        print "<table border=0 cellpadding=10>";
+        print "
+        <tr>
+        <td valign=top>
+        <table border=0>";
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "<input type=hidden name=action value=Update>";
+
+        print "<tr>
+        <td colspan=2><input type=submit value=Update>
+        </td></tr>";
+
+        printf ("<tr><td class=border>DNS name</td><td class=border>%s</td></td>",
+        $this->tel2enum($range->id->prefix,$range->id->tld));
+
+        foreach (array_keys($this->Fields) as $item) {
+            if ($this->Fields[$item]['name']) {
+                $item_name=$this->Fields[$item]['name'];
+            } else {
+            	$item_name=ucfirst($item);
+            }
+
+            if ($this->Fields[$item]['type'] == 'text') {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                </tr>",
+                $item_name,
+                $item,
+                $range->$item
+                );
+            } else {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                </tr>",
+                $item_name,
+                $item,
+                $range->$item
+                );
+            }
+        }
+
+        printf ("<input type=hidden name=tld_filter value='%s'",$range->id->tld);
+        printf ("<input type=hidden name=prefix_filter value='%s'",$range->id->prefix);
+        $this->printFiltersToForm();
+        $this->printHiddenFormElements();
+
+        print "</form>";
+        print "
+        </table>
+        ";
+    }
+
+    function updateRecord () {
+        //print "<p>Updating rage ...";
+
+        if (!$_REQUEST['prefix_filter'] || !$_REQUEST['prefix_filter']) return;
+
+        $rangeid=array('prefix' => $_REQUEST['prefix_filter'],
+                      'tld'    => $_REQUEST['tld_filter']
+                     );
+
+        if (!$range = $this->getRecord($enumid)) {
+            return false;
+        }
+
+        $range_old=$range;
+
+        foreach (array_keys($this->Fields) as $item) {
+            $var_name=$item.'_form';
+            printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
+            if ($this->Fields[$item]['type'] == 'integer') {
+                $range->$item = intval($_REQUEST[$var_name]);
+            } else {
+                $range->$item = trim($_REQUEST[$var_name]);
+            }
+        }
+
+        //dprint_r($range);
+        //return true;
+        $function=array('commit'   => array('name'       => 'updateRange',
+                                            'parameters' => array($range),
+                                            'logs'       => array('success' => sprintf('<p>ENUM range +%s under %s has been updated',$rangeid['prefix'],$rangeid['tld']))),
+                        'rollback' => array('name'       => 'updateRange',
+                                            'parameters' => array($range_old))
+                        );
+     
+        return $this->SOAPEngine->execute($function);
+
+    }
+
+    function getRecord($rangeid) {
+            // Filter
+            $filter=array('prefix'   => $rnageid['prefix'],
+                          'tld'      => $rangeid['tld']
+                          );
+
+            // Range
+            $range=array('start' => 0,
+                         'count' => 1
+                         );
+    
+            // Order
+            $orderBy = array('attribute' => 'changeDate',
+                             'direction' => 'DESC'
+                             );
+    
+            // Compose query
+            $Query=array('filter'  => $filter,
+                         'orderBy' => $orderBy,
+                         'range'   => $range
+                         );
+    
+            $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+            $result     = $this->SOAPEngine->soapclient->getRanges($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+        	if ($result->ranges[0]){
+        		return $result->ranges[0];
+            } else {
+                return false;
+            }
+        }
+    }
+
 }
 
 class ENUMmappings extends Records {
