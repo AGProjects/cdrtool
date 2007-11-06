@@ -542,6 +542,17 @@ class WebService_NGNPro_EnumPort extends SOAP_Client_Custom
                             'style'=>'rpc',
                             'use'=>'encoded' ));
     }
+    function &updateRange($range) {
+        // range is a ComplexType EnumRange,
+        //refer to wsdl for more info
+        $range =& new SOAP_Value('range','{urn:AGProjects:NGNPro}EnumRange',$range);
+        return $this->call("updateRange", 
+                        $v = array("range"=>$range), 
+                        array('namespace'=>'urn:AGProjects:NGNPro:Enum',
+                            'soapaction'=>'',
+                            'style'=>'rpc',
+                            'use'=>'encoded' ));
+    }
     function &deleteRange($range) {
         // range is a ComplexType EnumRangeId,
         //refer to wsdl for more info
