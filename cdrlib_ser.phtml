@@ -2,9 +2,7 @@
 class CDRS_ser_radius extends CDRS {
     var $table                 = "radacct";
     var $CDR_class             = "CDR_ser_radius";
-    var $domain_table          = "domain";
     var $subscriber_table      = "subscriber";
-    var $enable_thor           = false;
     var $ENUMtld               = '';
 
     var $CDRFields=array('id'   	       => 'RadAcctId',
@@ -1825,41 +1823,50 @@ class CDRS_ser_radius extends CDRS {
 
     function LoadDomains() {
 
+		dprint("LoadDomains()");
+
         if (!$this->AccountsDBClass) {
             dprint("Info: No database defined for SER accounts");
             return 0;
         }
 
+        if (strlen($this->DATASOURCES[$this->cdr_source]['enableThor'])) {
+	    	$this->domain_table          = "sip_domains";
+        } else {
+	    	$this->domain_table          = "domain";
+        }
+
         if ($this->mc && $mc_value = $this->mc->get($this->mc_key_domains)) {
             $this->localDomains=explode(" ",$mc_value);
-            //$log=sprintf("Loaded %d domains from memcache\n",count($this->localDomains));
-            //print $log;
-            //syslog(LOG_NOTICE,$log);
+            $log=sprintf("Loaded %d domains from memcache\n",count($this->localDomains));
+            dprint($log);
+            syslog(LOG_NOTICE,$log);
         } else {
         	$mc_value="";
 
             $query=sprintf("select domain from %s",$this->domain_table);
             if ($this->CDRTool['filter']['aNumber']) {
                 $els=explode("@",$this->CDRTool['filter']['aNumber']);
-                $query=$query ." where domain = '$els[1]' ";
+                $query.=" where domain = '$els[1]' ";
             } else if ($this->CDRTool['filter']['domain']) {
                 $fdomain=$this->CDRTool['filter']['domain'];
-                $query=$query ." where domain = '$fdomain' ";
+                $query.=" where domain = '$fdomain' ";
             }
     
             if (!$this->AccountsDB->query($query)) {
-                return 0;
+                printf ("<p>Error: database error %s %s",$this->AccountsDB->Error,$query);
+                return false;
             }
     
             while($this->AccountsDB->next_record()) {
                 $mc_value.=$this->AccountsDB->f('domain')." ";
             }
 
-            $this->localDomains=explode(" ",$mc_value);
+            $this->localDomains=explode(" ",trim($mc_value));
 
             if ($this->mc && $this->mc->set($this->mc_key_domains,$mc_value,0,3600)) {
                 $log=sprintf("Saved %d domains in memcache key %s\n",count($this->localDomains),$this->mc_key_domains);
-                //print $log;
+                dprint($log);
                 syslog(LOG_NOTICE,$log);
             }
         }

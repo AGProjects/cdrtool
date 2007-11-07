@@ -14,6 +14,7 @@ class SIPSettings {
 
     var $loginType                 = 'subscriber';
     var $soapClassSipPort          = 'WebService_NGNPro_SipPort';
+    var $soapClassRatingPort       = 'WebService_NGNPro_RatingPort';
     var $soapClassVoicemailPort    = 'WebService_NGNPro_VoicemailPort';
     var $soapClassCustomerPort     = 'WebService_NGNPro_CustomerPort';
     var $soapClassPresencePort     = 'WebService_SoapSIMPLEProxy_PresencePort';
@@ -289,6 +290,14 @@ class SIPSettings {
             $this->voicemailEngine=$this->soapEngine;
         }
 
+        if (strlen($this->loginCredentials['ratingEngine'])) {
+            $this->ratingEngine=$this->loginCredentials['ratingEngine'];
+        } else if (strlen($this->soapEngines[$this->soapEngine]['ratingEngine'])) {
+            $this->ratingEngine=$this->soapEngines[$this->soapEngine]['ratingEngine'];
+        } else {
+            $this->ratingEngine=$this->soapEngine;
+        }
+
         $this->soapRemoteId=$this->soapEngines[$this->soapEngine]['depends'];
 
         // Instantiate the SOAP clients
@@ -348,6 +357,25 @@ class SIPSettings {
 
         if ($this->loginType == "admin" && $this->SOAPurlVoicemail != $this->SOAPurl)  {
         	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassVoicemailPort,$this->SOAPurlVoicemail,$this->SOAPurlVoicemail,$this->soapEngines[$this->voicemailEngine]['username']);
+        }
+
+        // rating
+        $this->SOAPurlRating = $this->soapEngines[$this->ratingEngine]['url'];
+        $this->SOAPloginRating = array(
+                               "username"    => $this->soapEngines[$this->ratingEngine]['username'],
+                               "password"    => $this->soapEngines[$this->ratingEngine]['password'],
+                               "admin"       => true,
+                               "impersonate" => intval($this->reseller)
+                               );
+
+        $this->SoapAuthRating = array('auth', $this->SOAPloginRating , 'urn:AGProjects:NGNPro', 0, '');
+        $this->RatingPort = new $this->soapClassRatingPort($this->SOAPurlRating);
+        $this->RatingPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->RatingPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->RatingPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+        if ($this->loginType == "admin" && $this->SOAPurlRating != $this->SOAPurl)  {
+        	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassRatingPort,$this->SOAPurlRating,$this->SOAPurlRating,$this->soapEngines[$this->ratingEngine]['username']);
         }
 
         // customer
@@ -599,6 +627,7 @@ class SIPSettings {
             return false;
         }
 
+        dprint_r($result);
         foreach ($result as $_structure) {
         	if ($_structure->domain == $this->domain) {
         		$this->aliases[]=$_structure->username."@".$_structure->domain;
@@ -1388,7 +1417,7 @@ class SIPSettings {
         </td>
         <td class=border>
         ";
-        $this->showTimezones();
+        $this->showTimezones('timezone',$this->timezone);
         print " ";
         $timestamp=time();
         $LocalTime=getLocalTime($this->timezone,$timestamp);
@@ -1583,6 +1612,7 @@ class SIPSettings {
         }
 
         $this->showOwner();
+        $this->showBillingProfiles();
 
         if ($this->Preferences['advanced']) {
             $this->showQuickDial();
@@ -2278,6 +2308,9 @@ class SIPSettings {
             	$this->updateVoicemail();
             }
         }
+
+        $this->updateBillingProfiles();
+
     }
 
     function setDiversions() {
@@ -3269,16 +3302,16 @@ class SIPSettings {
         }
     }
 
-    function showTimezones() {
+    function showTimezones($name,$value) {
         if (!$fp = fopen("timezones", "r")) {
         	print _("Failed to open timezone file.");
             return false;
         }
-        print "<select name=timezone>";
+        printf ("<select name=%s>",$name);
         print "\n<option>";
         while ($buffer = fgets($fp,1024)) {
         	$buffer=trim($buffer);
-            if ($this->timezone==$buffer) {
+            if ($value==$buffer) {
                 $selected="selected";
             } else {
                 $selected="";
@@ -4269,7 +4302,6 @@ class SIPSettings {
         ";
 
     }
-
 
     function getAcceptRules() {
 
@@ -5334,8 +5366,124 @@ class SIPSettings {
             return false;
         }
     }
-    
 
+    function getBillingProfiles() {
+        // Get getBillingProfiles
+        if ($this->SOAPversion < 2) return true;
+        dprint("getBillingProfiles()");
+
+        $this->RatingPort->addHeader($this->SoapAuth);
+		$result     = $this->RatingPort->getEntityProfiles("subscriber://".$this->account);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            if ($error_fault->detail->exception->errorcode != "4001") {
+	            printf ("<p><font color=red>Error (Rating): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            	return false;
+            }
+        }
+
+        $this->billingProfiles=$result;
+        //dprint_r($this->billingProfiles);
+
+    }
+
+
+    function showBillingProfiles() {
+		if ($this->loginType != 'admin' && $this->loginType != 'reseller') {
+            return true;
+        }
+
+		$this->getBillingProfiles();
+
+    	$chapter=sprintf(_("Billing profiles"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr>
+          <td class=border>";
+            print _("Profiles");
+            printf ("
+          </td>
+          <td class=border align=left>
+            Weekday:
+            <input type=text size=10 maxsize=64 name=profileWeekday value='%s'>
+            Weekend:
+            <input type=text size=10 maxsize=64 name=profileWeekend value='%s'>
+            ",
+            $this->billingProfiles->profileWeekday,
+        	$this->billingProfiles->profileWeekend
+        	);
+
+        	$this->showTimezones('profileTimezone',$this->billingProfiles->timezone);
+
+            print "
+          </td>
+        </tr>
+        ";
+    }
+    function updateBillingProfiles() {
+		if ($this->loginType != 'admin' && $this->loginType != 'reseller') {
+            return true;
+        }
+
+        $this->RatingPort->addHeader($this->SoapAuth);
+		$result     = $this->RatingPort->getEntityProfiles("subscriber://".$this->account);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            if ($error_fault->detail->exception->errorcode != "4001") {
+	            printf ("<p><font color=red>Error (Rating): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            	return false;
+            }
+        }
+
+        $this->billingProfiles=$result;
+
+        $profiles=array("entity"         =>'subscriber://'.$this->account ,
+        			    "profileWeekday" => trim($_REQUEST['profileWeekday']),
+                	    "profileWeekend" => trim($_REQUEST['profileWeekend']),
+                        "timezone"       => trim($_REQUEST['profileTimezone'])
+                        );
+
+        dprint_r($profiles);
+
+        $this->RatingPort->addHeader($this->SoapAuth);
+        if ($this->billingProfiles->profileWeekday && !$profiles['profileWeekday']) {
+            // delete profile
+			$result     = $this->RatingPort->deleteEntityProfiles('subscriber://'.$this->account);
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                if ($error_fault->detail->exception->errorcode != "4001") {
+                    printf ("<p><font color=red>Error (Rating): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+
+        } else if ($profiles['profileWeekday']) {
+            // update profile
+
+			$result     = $this->RatingPort->setEntityProfiles($profiles);
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                if ($error_fault->detail->exception->errorcode != "4001") {
+                    printf ("<p><font color=red>Error (Rating): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    return false;
+                }
+            }
+
+        } else {
+            // do nothing
+        }
+    }
 }
 
 function normalizeURI($uri) {

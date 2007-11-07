@@ -242,6 +242,8 @@ class CDRS {
         $this->LoadDomains();
         $this->getCDRtables();
 
+        dprint("Init OK");
+
         $this->initOK=1;
     }
 
@@ -1943,10 +1945,9 @@ class CDR {
             	$query2 = sprintf("update %s set %s where %s = '%s'",$previousTable,$query,$this->idField,$this->id);
             }
 
-            dprint($query1);
-            dprint($query2);
 
             if ($updatedFields) {
+	            dprint($query1);
                 if ($this->CDRS->CDRdb1->query($query1)) {
                     if ($this->CDRS->CDRdb1->affected_rows()) {
                         if ($table == $this->CDRS->table) {
@@ -1963,6 +1964,7 @@ class CDR {
     
 
                     } else {
+            			dprint($query2);
                 		if ($this->CDRS->CDRdb1->query($query2)) {
                             if ($previousTable == $this->CDRS->table) {
                                 // cache usage only if current month
@@ -2027,6 +2029,7 @@ class CDR {
         foreach (array_keys($accounts) as $_account) {
 
         	if ($this->CallerIsLocal) {
+        	    dprint("cacheMonthlyUsage for $_account");
 
 	            $_usage = $this->CDRS->getMonthlyUsageFromCache($_account);
 
@@ -2036,6 +2039,7 @@ class CDR {
 	            $accounts[$_account]['usage']['traffic']  =  $accounts[$_account]['usage']['traffic']  + $_usage['traffic'];
 
             } else {
+                dprint("Caller is not local");
                 return ;
             }
         }
