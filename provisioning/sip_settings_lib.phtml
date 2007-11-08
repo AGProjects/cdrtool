@@ -1612,12 +1612,13 @@ class SIPSettings {
         }
 
         $this->showOwner();
-        $this->showBillingProfiles();
 
         if ($this->Preferences['advanced']) {
             $this->showQuickDial();
         	$this->showVoicemail();
         }
+
+        $this->showBillingProfiles();
 
         if (!$this->Preferences['advanced']) {
             print "
