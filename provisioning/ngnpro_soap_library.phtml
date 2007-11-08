@@ -273,6 +273,17 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                             'style'=>'rpc',
                             'use'=>'encoded' ));
     }
+    function &getPrepaidStatusNew($sipIds) {
+        // sipIds is a ComplexType SipIdArray,
+        //refer to wsdl for more info
+        $sipIds =& new SOAP_Value('sipIds','{urn:AGProjects:NGNPro}SipIdArray',$sipIds);
+        return $this->call("getPrepaidStatus", 
+                        $v = array("sipIds"=>$sipIds), 
+                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
+                            'soapaction'=>'',
+                            'style'=>'rpc',
+                            'use'=>'encoded' ));
+    }
     function &getPrepaidStatus($sipId) {
         // sipId is a ComplexType SipId,
         //refer to wsdl for more info
@@ -459,7 +470,7 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
     }
     function &getTrace($nodeIP, $callID, $fromTag) {
         return $this->call("getTrace", 
-                        $v = array("nodeIP"=>$nodeIP, "callID"=>$callID, "fromTag"=>$fromTag), 
+                        $v = array("nodeIp"=>$nodeIP, "callId"=>$callID, "fromTag"=>$fromTag),
                         array('namespace'=>'urn:AGProjects:NGNPro:Sip',
                             'soapaction'=>'',
                             'style'=>'rpc',

@@ -2984,20 +2984,20 @@ class ENUMranges extends Records {
 
 					if ($this->adminonly) {
                     	if ($this->loginCredentials['resellerFilters'][$range->reseller]['recordGenerator']) {
-                            $range_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>%s</a>',$this->url,$this->loginCredentials['resellerFilters'][$range->reseller]['recordGenerator'],$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller,$range->id->prefix);
+                            $generator_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->loginCredentials['resellerFilters'][$range->reseller]['recordGenerator'],$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
                         } else  if (strlen($this->SOAPEngine->recordGenerator)) {
-                            $range_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>%s</a>',$this->url,$this->SOAPEngine->recordGenerator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller,$range->id->prefix);
-                        } else {
-                            $range_link=$range->id->prefix;
+                            $generator_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->SOAPEngine->recordGenerator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
                         }
+                        $range_link=sprintf('<a href=%s&service=%s&reseller_filter=%s&prefix_filter=%s&tld_filter=%s>%s</a>',$this->url,$this->SOAPEngine->service,$range->reseller,$range->id->prefix,$range->id->tld,$range->id->prefix);
+
                     } else {
                         if (strlen($this->SOAPEngine->recordGenerator)) {
-                            $range_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>%s</a>',$this->url,$this->SOAPEngine->recordGenerator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller,$range->id->prefix);
+                            $generator_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->SOAPEngine->recordGenerator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
                         } else {
-                            $range_link=$range->id->prefix;
+                            $generator_link='';
                         }
+                        $range_link=sprintf('<a href=%s&&service=%s&prefix_filter=%s&tld_filter=%s>%s</a>',$this->url,$this->SOAPEngine->service,$range->id->prefix,$range->id->tld,$range->id->prefix);
                     }
-
 
 					if ($range->size) {
                     	$usage=intval(100*$range->used/$range->size);
@@ -3014,7 +3014,7 @@ class ENUMranges extends Records {
                         
                         printf("
                         <tr bgcolor=%s>
-                        <td>%s</td>
+                        <td>%s %s</td>
                         <td><a href=%s>%s.%s</a></td>
                         <td>+%s</td>
                         <td>%s</td>
@@ -3030,6 +3030,7 @@ class ENUMranges extends Records {
                         </tr>",
                         $bgcolor,
                         $index,
+                        $generator_link,
                         $_customer_url,
                         $range->customer,
                         $range->reseller,

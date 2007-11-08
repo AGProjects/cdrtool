@@ -7,8 +7,10 @@ cdrtool (5.3.4) unstable; urgency=low
   * Fixed node ip parsing in sip trace
   * Fixed default login account creation
   * Don't log ENUM tld in rate info if is set to none
+  * Added RatingProfiles management in sip settings page
+  * Fixed name of domain table when thor is enabled
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 02 Nov 2007 18:06:03 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 07 Nov 2007 17:02:04 +0100
 
 cdrtool (5.3.3) unstable; urgency=low
 

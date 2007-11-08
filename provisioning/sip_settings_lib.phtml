@@ -2926,7 +2926,11 @@ class SIPSettings {
             //dprint_r($result);
 
             $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            $result     = $this->SipPortRemote->getPrepaidStatus($this->sipId);
+   			if ($this->SOAPversion > 1) {
+            	$result     = $this->SipPortRemote->getPrepaidStatusNew(array($this->sipId));
+            } else {
+            	$result     = $this->SipPortRemote->getPrepaidStatus($this->sipId);
+            }
     
             if (PEAR::isError($result)) {
                 $error_msg  = $result->getMessage();
@@ -2935,13 +2939,21 @@ class SIPSettings {
                 printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             }  else {
-                return $result;
+   				if ($this->SOAPversion > 1) {
+                	return $result[0];
+                } else {
+                	return $result;
+                }
             }
 
         } else {
             dprint("GetPrepaidAccountInfoLocal");
             $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->getPrepaidStatus($this->sipId);
+   			if ($this->SOAPversion > 1) {
+            	$result     = $this->SipPort->getPrepaidStatusNew(array($this->sipId));
+            } else {
+            	$result     = $this->SipPort->getPrepaidStatus($this->sipId);
+            }
     
             if (PEAR::isError($result)) {
                 $error_msg  = $result->getMessage();
@@ -2950,7 +2962,11 @@ class SIPSettings {
                 printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             }  else {
-                return $result;
+   				if ($this->SOAPversion > 1) {
+                	return $result[0];
+                } else {
+                	return $result;
+                }
             }
         }
     }

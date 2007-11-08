@@ -1827,7 +1827,7 @@ class CDRS_ser_radius extends CDRS {
 
         if (!$this->AccountsDBClass) {
             dprint("Info: No database defined for SER accounts");
-            return 0;
+            return false;
         }
 
         if (strlen($this->DATASOURCES[$this->cdr_source]['enableThor'])) {
@@ -1905,7 +1905,7 @@ class CDRS_ser_radius extends CDRS {
 
         if (!$fp=fopen("$file","r")) {
             print "Error: cannot open file $file\n";
-            return 0;
+            return false;
         } else {
             $filesize=filesize($file);
             print "File $file (size=$filesize) succesfully opened.\n";
@@ -2869,9 +2869,9 @@ class CDR_ser_radius extends CDR {
     function isCallerLocal() {
         if (in_array($this->aNumberDomain,$this->CDRS->localDomains)) {
         	$this->CallerIsLocal=1;
-            return 1;
+            return true;
         }
-        return 0;
+        return false;
     }
 
     function isCalleeLocal() {
@@ -4253,7 +4253,7 @@ class SIP_trace {
     
         	} else {
                 print "Error: soapEngineID not defined in datasource $cdr_source";
-                return 0;
+                return false;
             }
 
         } else {
@@ -4297,26 +4297,27 @@ class SIP_trace {
             //print "<pre>";
             $columns=0;
 
+            //print_r($result);
             foreach ($result as $_trace) {
 
-                if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->toip,$m)) {
-                    $toip=$m[2];
-                    $protocol=$m[1];
+                if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->toIp,$m)) {
+                    $toip     = $m[2];
+                    $protocol = $m[1];
                 }
 
-                if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->fromip,$m)) {
-                    $fromip=$m[2];
+                if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->fromIp,$m)) {
+                    $fromip = $m[2];
                 } else {
-                    $fromip=$_trace->fromip;
+                    $fromip = $_trace->fromIp;
                 }
 
                 if (!$this->column[$fromip]) {
-                    $this->column[$fromip]=$columns+1;
+                    $this->column[$fromip] = $columns+1;
                     $columns++;
                 }
     
                 if (!$this->column[$toip]) {
-                    $this->column[$toip]=$columns+1;
+                    $this->column[$toip]   = $columns+1;
                     $columns++;
                 }
 
@@ -4325,49 +4326,52 @@ class SIP_trace {
 
                 $this->trace_array[$_trace->id]=
                             array (
-                                   'id'        => $_trace->id,
-                                   'direction' => $_trace->direction,
-                                   'fromip'    => $fromip,
-                                   'toip'      => $toip,
-                                   'method'    => $_trace->method,
-                                   'protocol'  => $protocol,
-                                   'date'      => $_trace->date,
-                                   'status'    => $_trace->status,
-                                   'timestamp' => $timestamp,
-                                   'msg'       => $_trace->msg,
-                                   'md5'       => md5($_trace->msg)
+                                   'id'         => $_trace->id,
+                                   'direction'  => $_trace->direction,
+                                   'fromip'     => $fromip,
+                                   'toip'       => $toip,
+                                   'method'     => $_trace->method,
+                                   'protocol'   => $protocol,
+                                   'date'       => $_trace->date,
+                                   'status'     => $_trace->status,
+                                   'timestamp'  => $timestamp,
+                                   'msg'        => $_trace->msg,
+                                   'md5'        => md5($_trace->msg)
                                    );
             }
+            $this->rows = count($this->trace_array);
 
         } else {
-            $query="select *,UNIX_TIMESTAMP(date) as timestamp
-            from $this->table where callid = '$callid'
-            and traced_user = '' order by id asc";
+            $query=sprintf("select *,UNIX_TIMESTAMP(date) as timestamp
+            from %s where callid = '%s'
+            and traced_user = '' order by id asc",
+            $this->table,
+            $callid);
     
             dprint($query);
     
             if (!$this->db->query($query)) {
                 printf ("<p>Error: database error %s %s",$this->db->Error,$query);
-                return 0;
+                return false;
             }
     
-            $rows=$this->db->num_rows();
+            $this->rows = $this->db->num_rows();
     
-            dprint("Found $rows rows");
+            dprint("Found $this->rows rows");
     
-            $columns=0;
+            $columns = 0;
     
             while ($this->db->next_record()) {
     
                 if (preg_match("/^(udp|tcp|tls):(.*)$/",$this->db->f('toip'),$m)) {
-                    $toip=$m[2];
-                    $protocol=$m[1];
+                    $toip = $m[2];
+                    $protocol = $m[1];
                 }
 
                 if (preg_match("/^(udp|tcp|tls):(.*)$/",$this->db->f('fromip'),$m)) {
-                    $fromip=$m[2];
+                    $fromip = $m[2];
                 } else {
-                    $fromip=$this->db->f('fromip');
+                    $fromip = $this->db->f('fromip');
                 }
 
                 if (!$this->column[$fromip]) {
@@ -4396,6 +4400,9 @@ class SIP_trace {
                                    );
             }
         }
+
+        //dprint_r($this->trace_array);
+
     }
 
     function show($callid,$fromtag,$proxyIP) {
@@ -4407,10 +4414,10 @@ class SIP_trace {
 			$this->togglePublicVisibility($callid,$fromtag,$toggleVisibility);
         }
 
-        if ($_SERVER['HTTPS']=="on") {
-            $protocolURL="https://";
+        if ($_SERVER['HTTPS'] == "on") {
+            $protocolURL = "https://";
         } else {
-            $protocolURL="http://";
+            $protocolURL = "http://";
         }
 
         $this->getTrace($callid,$fromtag,$proxyIP);
@@ -4435,7 +4442,7 @@ class SIP_trace {
             dprint($query);
             $this->cdrtool->query($query);
 
-            $basicURL=$protocolURL.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+            $basicURL = $protocolURL.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 
             if ($this->cdrtool->num_rows()) {
                 $selected_toggleVisibility['public']="selected";
@@ -4450,6 +4457,7 @@ class SIP_trace {
             <td align=left width=50% bgcolor=$color2>
 
             Trace is visible
+
             <select name=toggleVisibility onChange=\"document.visibility.submit.disabled = true; location.href = '$basicURL&action=toggleVisibility&toggleVisibility=' + this.options[this.selectedIndex].value\">
             <option $selected_toggleVisibility[public] value=1>without authorization
             <option $selected_toggleVisibility[private] value=0>only for authorized users
@@ -4670,7 +4678,7 @@ class SIP_trace {
 
             print "
             </td>
-            <td class=bbot>$status_color$i/$rows&nbsp;</font></td>
+            <td class=bbot>$status_color$i/$this->rows&nbsp;</font></td>
             <td class=bbot><nobr>$status_color$date</nobr></font>
             </td>
             ";
@@ -4812,7 +4820,7 @@ class SIP_trace {
     function purgeRecords($days='') {
 
 		if ($this->enableThor) {
-            return 1;
+            return true;
         }
 
         $b=time();
@@ -4839,14 +4847,14 @@ class SIP_trace {
                 $log=sprintf("No records found in %s\n",$this->table);
                 print $log;
                 syslog(LOG_NOTICE,$log);
-                return 0;
+                return false;
             }
 
         } else {
         	$log=sprintf("Error: %s (%s)\n",$this->db->Error,$query);
             print $log;
             syslog(LOG_NOTICE,$log);
-            return 0;
+            return false;
         }
 
         $query=sprintf("select id as max from %s where date < '%s' order by id DESC limit 1",
@@ -4862,7 +4870,7 @@ class SIP_trace {
             $this->table,$beforeDate,$begindate);
         	syslog(LOG_NOTICE,$log);
             print $log;
-            return 0;
+            return false;
         }
 
         $deleted=0;
@@ -4891,7 +4899,7 @@ class SIP_trace {
             } else {
         		$log=sprintf("Error: %s (%s)",$this->db->Error,$this->db->Errno);
         		syslog(LOG_NOTICE,$log);
-                return 0;
+                return false;
             }
 
             if ($found > $progress*$rows2delete/100) {
@@ -4917,7 +4925,7 @@ class SIP_trace {
         syslog(LOG_NOTICE,$log);
         print $log;
 
-        return 1;
+        return true;
     }
 }
 
