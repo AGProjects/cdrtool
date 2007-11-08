@@ -617,7 +617,34 @@ class SIPSettings {
 		$this->aliases=array();
 
         $this->SipPort->addHeader($this->SoapAuth);
-		$result     = $this->SipPort->getAliasesForAccount($this->sipId);
+
+        if ($this->SOAPversion > 1) {
+        	// Filter
+            $filter=array('targetUsername' => $this->username,
+                          'targetDomain'   => $this->domain
+                          );
+    
+            // Range
+            $range=array('start' => 0,
+                         'count' => 20
+                         );
+    
+            // Order
+            $orderBy = array('attribute' => 'aliasUsername',
+                             'direction' => 'ASC'
+                             );
+    
+            // Compose query
+            $Query=array('filter'  => $filter,
+                            'orderBy' => $orderBy,
+                            'range'   => $range
+                            );
+    
+            // Call function
+			$result     = $this->SipPort->getAliases($Query);
+        } else {
+			$result     = $this->SipPort->getAliasesForAccount($this->sipId);
+        }
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -628,9 +655,16 @@ class SIPSettings {
         }
 
         dprint_r($result);
-        foreach ($result as $_structure) {
-        	if ($_structure->domain == $this->domain) {
-        		$this->aliases[]=$_structure->username."@".$_structure->domain;
+        if ($this->SOAPversion > 1) {
+            foreach ($result->aliases as $_alias) {
+            	$this->aliases[]=$_alias->id->username.'@'.$_alias->id->domain;
+            }
+
+        } else {
+            foreach ($result as $_alias) {
+                if ($_alias->domain == $this->domain) {
+                    $this->aliases[]=$_alias->username.'@'.$_alias->domain;
+                }
             }
         }
     }
