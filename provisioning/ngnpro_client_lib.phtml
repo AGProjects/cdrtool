@@ -9138,7 +9138,6 @@ class ENUMMappingsActions extends Actions {
                     }
 
                 	$new_mappings=array();
-
                     foreach ($number->mappings as $_mapping) {
                         foreach (array_keys($this->mapping_fields) as $field) {
                             if ($field == 'ttl') {
@@ -9178,10 +9177,12 @@ class ENUMMappingsActions extends Actions {
             		printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             		break;
         		} else {
-            		foreach ($number->mappings as $_property) {
-        				$mappings[]=$_property;
+                	$new_mappings=array();
+                    foreach ($number->mappings as $_mapping) {
+        				$new_mappings[]=$_mapping;
         			}
-            		$number->mappings=$mappings;
+
+            		$number->mappings=$new_mappings;
 
                     if (is_numeric($sub_action_parameter)) {
                     	$number->owner=intval($sub_action_parameter);
