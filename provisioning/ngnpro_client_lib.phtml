@@ -4007,7 +4007,9 @@ class ENUMmappings extends Records {
                                           );
                     }
                 }
-    
+
+    			if (!is_array($mappings_new)) $mappings_new = array();
+
                 $result_new->mappings=$mappings_new;
     
                 $function=array('commit'   => array('name'       => 'updateNumber',
@@ -4509,6 +4511,8 @@ class ENUMmappings extends Records {
         }
 
         $number->mappings=$new_mappings;
+
+        if (!is_array($number->mappings)) $number->mappings=array();
 
         foreach (array_keys($this->Fields) as $item) {
             $var_name=$item.'_form';
