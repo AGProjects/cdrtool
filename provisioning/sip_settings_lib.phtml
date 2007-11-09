@@ -14,6 +14,7 @@ class SIPSettings {
 
     var $loginType                 = 'subscriber';
     var $soapClassSipPort          = 'WebService_NGNPro_SipPort';
+    var $soapClassEnumPort         = 'WebService_NGNPro_EnumPort';
     var $soapClassRatingPort       = 'WebService_NGNPro_RatingPort';
     var $soapClassVoicemailPort    = 'WebService_NGNPro_VoicemailPort';
     var $soapClassCustomerPort     = 'WebService_NGNPro_CustomerPort';
@@ -148,16 +149,18 @@ class SIPSettings {
 
         } else if ($this->loginType == "reseller") {
 
-            $this->pageURL=$this->settingsPage."?account=$this->account&reseller=$this->reseller";
+            $this->pageURL=$this->settingsPage."?account=$this->account&reseller=$this->reseller&soapEngine=$this->soapEngine";
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
             <input type=hidden name=reseller value=$this->reseller>
+            <input type=hidden name=soapEngine value=$this->soapEngine>
             ";
         } else {
 
             $this->pageURL=$this->settingsPage."?account=$this->account";
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
+            <input type=hidden name=soapEngine value=$this->soapEngine>
             ";
         }
 
@@ -290,6 +293,14 @@ class SIPSettings {
             $this->voicemailEngine=$this->soapEngine;
         }
 
+        if (strlen($this->loginCredentials['enumEngine'])) {
+            $this->enumEngine=$this->loginCredentials['enumEngine'];
+        } else if (strlen($this->soapEngines[$this->soapEngine]['enumEngine'])) {
+            $this->enumEngine=$this->soapEngines[$this->soapEngine]['enumEngine'];
+        } else {
+            $this->enumEngine=$this->soapEngine;
+        }
+
         if (strlen($this->loginCredentials['ratingEngine'])) {
             $this->ratingEngine=$this->loginCredentials['ratingEngine'];
         } else if (strlen($this->soapEngines[$this->soapEngine]['ratingEngine'])) {
@@ -357,6 +368,25 @@ class SIPSettings {
 
         if ($this->loginType == "admin" && $this->SOAPurlVoicemail != $this->SOAPurl)  {
         	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassVoicemailPort,$this->SOAPurlVoicemail,$this->SOAPurlVoicemail,$this->soapEngines[$this->voicemailEngine]['username']);
+        }
+
+        // enum
+        $this->SOAPurlEnum = $this->soapEngines[$this->enumEngine]['url'];
+        $this->SOAPloginEnum = array(
+                               "username"    => $this->soapEngines[$this->enumEngine]['username'],
+                               "password"    => $this->soapEngines[$this->enumEngine]['password'],
+                               "admin"       => true,
+                               "impersonate" => intval($this->reseller)
+                               );
+
+        $this->SoapAuthEnum = array('auth', $this->SOAPloginEnum , 'urn:AGProjects:NGNPro', 0, '');
+        $this->EnumPort = new $this->soapClassEnumPort($this->SOAPurlEnum);
+        $this->EnumPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->EnumPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->EnumPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+        if ($this->loginType == "admin" && $this->SOAPurlEnum != $this->SOAPurl)  {
+        	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassEnumPort,$this->SOAPurlEnum,$this->SOAPurlEnum,$this->soapEngines[$this->enumEngine]['username']);
         }
 
         // rating
@@ -3319,6 +3349,45 @@ class SIPSettings {
     }
 
     function getENUMmappings () {
+    	$filter=array(
+                      'type'     => 'sip',
+                      'mapto'    => $this->account,
+                      'owner'    => $this->owner
+                      );
+        // Range
+        $range=array('start' => 0,
+                     'count' => 10
+                     );
+
+        // Order
+
+        $orderBy = array('attribute' => 'changeDate',
+                         'direction' => 'ASC'
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+
+        // Insert credetials
+        $this->EnumPort->addHeader($this->SoapAuth);
+        $result = $this->EnumPort->getNumbers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (EnumPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        foreach($result->numbers as $_number) {
+            $enum='+'.$_number->id->number;
+        	$this->voicemailUsernameOptions[]=$enum;
+            $this->enums[]=$enum;
+        }
     }
 
     function enum2tel($enum_text) {
@@ -4231,7 +4300,6 @@ class SIPSettings {
         return true;
     }
 
-
     function setRejectMembers() {
 
     	$members=array();
@@ -4240,7 +4308,7 @@ class SIPSettings {
 
         foreach ($rejectMembers as $_member) {
         	if (strlen($_member) && !preg_match("/^sip:/",$_member)) {
-            	$_member.='sip:'.$_member;
+            	$_member = 'sip:'.$_member;
             }
             if (strlen($_member)) $members[]=$_member;
         }
@@ -5443,7 +5511,7 @@ class SIPSettings {
 
 
     function showBillingProfiles() {
-		if ($this->loginType != 'admin' && $this->loginType != 'reseller') {
+		if ($this->loginType != 'admin' && $this->loginType != 'reseller' || !in_array("free-pstn",$this->groups)) {
             return true;
         }
 

@@ -760,6 +760,8 @@ class Records {
     function showSeachForm() {
 
      	print "
+        <p> Use % to match a pattern
+
         <table border=0 bgcolor=lightgreen class=border width=100%>
         <tr>
 
@@ -2270,10 +2272,16 @@ class SIPAliases extends Records {
 
     function SIPAliases(&$SOAPEngine) {
 
+		$target_filters_els=explode("@",trim($_REQUEST['target_username_filter']));
+        $targetUsername=$target_filters_els[0];
+        if (count($target_filters_els) > 1) {
+        	$targetDomain=$target_filters_els[1];
+        }
+
         $this->filters   = array('aliasUsername'     => strtolower(trim($_REQUEST['alias_username_filter'])),
                                  'aliasDomain'       => strtolower(trim($_REQUEST['alias_domain_filter'])),
-                                 'targetUsername'    => trim($_REQUEST['target_username_filter']),
-                                 'targetDomain'      => trim($_REQUEST['target_domain_filter'])
+                                 'targetUsername'    => strtolower($targetUsername),
+                                 'targetDomain'      => strtolower($targetDomain)
                            );
 
 
@@ -2615,7 +2623,7 @@ class SIPAliases extends Records {
             printf ("<input type=text size=15 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
         }
 
-        printf (" Target<input type=text size=15 name=target_username_filter value='%s'>",$this->filters['targetUsername']);
+        printf (" Target<input type=text size=15 name=target_username_filter value='%s'>",trim($_REQUEST['target_username_filter']));
 
     }
 
@@ -2807,8 +2815,8 @@ class SIPAliases extends Records {
 }
 
 class ENUMranges extends Records {
-    var $FieldsReadOnly=array(
-                              'reseller'
+    var $FieldsAdminOnly=array(
+                              'reseller' => array('type'=>'integer'),
                               );
     var $Fields=array(
                               'customer' => array('type'=>'integer'),
@@ -3338,11 +3346,42 @@ class ENUMranges extends Records {
         printf ("<tr><td class=border>DNS name</td><td class=border>%s</td></td>",
         $this->tel2enum($range->id->prefix,$range->id->tld));
 
+		if ($this->adminonly) {
+
+            foreach (array_keys($this->FieldsAdminOnly) as $item) {
+                if ($this->FieldsAdminOnly[$item]['name']) {
+                    $item_name=$this->FieldsAdminOnly[$item]['name'];
+                } else {
+                    $item_name=ucfirst($item);
+                }
+    
+                if ($this->FieldsAdminOnly[$item]['type'] == 'text') {
+                    printf ("<tr>
+                    <td class=border valign=top>%s</td>
+                    <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $range->$item
+                    );
+                } else {
+                    printf ("<tr>
+                    <td class=border valign=top>%s</td>
+                    <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $range->$item
+                    );
+                }
+            }
+    
+        }
         foreach (array_keys($this->Fields) as $item) {
             if ($this->Fields[$item]['name']) {
                 $item_name=$this->Fields[$item]['name'];
             } else {
-            	$item_name=ucfirst($item);
+                $item_name=ucfirst($item);
             }
 
             if ($this->Fields[$item]['type'] == 'text') {
@@ -3378,15 +3417,15 @@ class ENUMranges extends Records {
     }
 
     function updateRecord () {
-        //print "<p>Updating rage ...";
+        //print "<p>Updating range ...";
 
-        if (!$_REQUEST['prefix_filter'] || !$_REQUEST['prefix_filter']) return;
+        if (!$_REQUEST['prefix_filter'] || !$_REQUEST['tld_filter']) return;
 
         $rangeid=array('prefix' => $_REQUEST['prefix_filter'],
                       'tld'    => $_REQUEST['tld_filter']
                      );
 
-        if (!$range = $this->getRecord($enumid)) {
+        if (!$range = $this->getRecord($rangeid)) {
             return false;
         }
 
@@ -3394,11 +3433,23 @@ class ENUMranges extends Records {
 
         foreach (array_keys($this->Fields) as $item) {
             $var_name=$item.'_form';
-            printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
+            //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
             if ($this->Fields[$item]['type'] == 'integer') {
                 $range->$item = intval($_REQUEST[$var_name]);
             } else {
                 $range->$item = trim($_REQUEST[$var_name]);
+            }
+        }
+
+		if ($this->adminonly) {
+            foreach (array_keys($this->FieldsAdminOnly) as $item) {
+                $var_name=$item.'_form';
+                //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
+                if ($this->FieldsAdminOnly[$item]['type'] == 'integer') {
+                    $range->$item = intval($_REQUEST[$var_name]);
+                } else {
+                    $range->$item = trim($_REQUEST[$var_name]);
+                }
             }
         }
 
@@ -3417,7 +3468,12 @@ class ENUMranges extends Records {
 
     function getRecord($rangeid) {
             // Filter
-            $filter=array('prefix'   => $rnageid['prefix'],
+	        if (!$rangeid['prefix'] || !$rangeid['tld']) {
+                print "Error in getRecord(): Missing prefix or tld";
+            	return false;
+            }
+
+            $filter=array('prefix'   => $rangeid['prefix'],
                           'tld'      => $rangeid['tld']
                           );
 
@@ -3454,7 +3510,6 @@ class ENUMranges extends Records {
             }
         }
     }
-
 }
 
 class ENUMmappings extends Records {
