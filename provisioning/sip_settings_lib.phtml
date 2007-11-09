@@ -240,6 +240,7 @@ class SIPSettings {
     }
 
     function initSoapClient() {
+        dprint("initSoapClient()");
 
 		require_once('SOAP/Client.php');
         require_once("ngnpro_soap_library.phtml");
@@ -608,6 +609,7 @@ class SIPSettings {
         changeLanguage($lang);
     }
 
+
     function getOwnerSettings() {
         dprint("getOwnerSettings($this->owner)");
         if (!$this->owner) {
@@ -684,7 +686,7 @@ class SIPSettings {
             return false;
         }
 
-        dprint_r($result);
+        //dprint_r($result);
         if ($this->SOAPversion > 1) {
             foreach ($result->aliases as $_alias) {
             	$this->aliases[]=$_alias->id->username.'@'.$_alias->id->domain;
@@ -1009,17 +1011,42 @@ class SIPSettings {
 
         dprint("getResellerSettings(reseller=$this->reseller)");
 
-        $this->logoFile   = $this->getFileTemplate("logo","logo");
-        $this->headerFile = $this->getFileTemplate("header.phtml");
-        $this->footerFile = $this->getFileTemplate("footer.phtml");
-        $this->cssFile    = $this->getFileTemplate("main.css");
+        $this->CustomerPort->addHeader($this->SoapAuthCustomer);
+        $result     = $this->CustomerPort->getAccount(intval($this->reseller));
+ 
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (CustomerPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
 
-        $this->SIPACLS['free-pstn']    =array("Group"=>"free-pstn",
-                                            "WEBName" =>   sprintf(_("Access to PSTN")),
-                                            "WEBComment"=> sprintf(_("Caller-ID")),
-                                            "SubscriberMayEditIt"=>"0",
-                                            "SubscriberMaySeeIt"=>1
-                                            );
+        foreach ($result->properties as $_property) {
+            $this->resellerProperties[$_property->name]=$_property->value;
+        }
+
+		//dprint_r($this->resellerProperties);
+
+        $this->ResellerLanguage = $result->language;
+        $this->proxy            = $this->resellerProperties['sip_proxy_server'];
+        $this->SupportCompany   = $this->resellerProperties['support_organization'];
+        $this->SupportWEBsite	= $this->resellerProperties['support_web'];
+        $this->SupportEmail	    = $this->resellerProperties['support_email'];
+
+        $this->logoFile         = $this->getFileTemplate("logo","logo");
+        $this->headerFile       = $this->getFileTemplate("header.phtml");
+        $this->footerFile       = $this->getFileTemplate("footer.phtml");
+        $this->cssFile          = $this->getFileTemplate("main.css");
+
+		if ($this->resellerProperties['pstn_access']) {
+            $this->SIPACLS['free-pstn']    =array("Group"=>"free-pstn",
+                                                "WEBName" =>   sprintf(_("Access to PSTN")),
+                                                "WEBComment"=> sprintf(_("Caller-ID")),
+                                                "SubscriberMayEditIt"=>"0",
+                                                "SubscriberMaySeeIt"=>1
+                                                );
+        }
 
         $this->SIPACLS['blocked']   =array("Group"=>"blocked",
                                         "WEBName" =>sprintf(_("Account blocked")),
@@ -3349,6 +3376,8 @@ class SIPSettings {
     }
 
     function getENUMmappings () {
+		dprint("getENUMmappings()");
+
     	$filter=array(
                       'type'     => 'sip',
                       'mapto'    => $this->account,
