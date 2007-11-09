@@ -2813,15 +2813,16 @@ class ENUMranges extends Records {
     var $Fields=array(
                               'customer' => array('type'=>'integer'),
                               'info'     => array('type'=>'string'),
+                              'size'     => array('type'=>'integer'),
                               'ttl'      => array('type'=>'integer')
                               );
 
     function ENUMranges(&$SOAPEngine) {
 
         $this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
-                                    'tld'          => trim($_REQUEST['tld_filter']),
-                                    'info'         => trim($_REQUEST['info_filter'])
-                                   );
+                                 'tld'          => trim($_REQUEST['tld_filter']),
+                                 'info'         => trim($_REQUEST['info_filter'])
+                                 );
 
 		$this->Records(&$SOAPEngine);
 
@@ -3171,6 +3172,7 @@ class ENUMranges extends Records {
     function addRecord() {
     	$tld    = trim($_REQUEST['tld']);
         $prefix = trim($_REQUEST['prefix']);
+        $size   = trim($_REQUEST['size']);
         $info   = trim($_REQUEST['info']);
 
         if (!strlen($tld)) {
@@ -3211,6 +3213,7 @@ class ENUMranges extends Records {
                      'info'       => $info,
                      'minDigits'  => intval(trim($_REQUEST['minDigits'])),
                      'maxDigits'  => intval(trim($_REQUEST['maxDigits'])),
+                     'size'       => intval($size),
                      'customer'   => intval($customer),
                      'reseller'   => intval($reseller)
         			);
