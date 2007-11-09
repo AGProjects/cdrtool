@@ -266,10 +266,6 @@ class SOAPEngine {
 
         dprint_r($this->loginCredentials);
 
-		if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
-            unset($this->loginCredentials['customer']);
-        }
-
         if ($this->loginCredentials['loginType'] == 'admin') $this->adminonly = 1;
 
         if (strlen($this->loginCredentials['soapFilter'])) {
@@ -658,11 +654,7 @@ class Records {
             }
         }
 
-        if ($this->loginCredentials['customer']) {
-        	$this->filters['customer'] = $this->loginCredentials['customer'];
-        } else {
-        	$this->filters['customer'] = trim($_REQUEST['customer_filter']);
-        }
+      	$this->filters['customer'] = trim($_REQUEST['customer_filter']);
 
         $this->getResellers();
         $this->getCustomers();
@@ -1044,7 +1036,7 @@ class Records {
     }
 
     function showCustomerForm($name='customer_filter') {
-        if ($this->loginCredentials['customer']) {
+        if ($this->loginCredentials['customer'] != $this->loginCredentials['reseller']) {
             printf (" %s",$this->loginCredentials['customer']);
         } else {
             if (count($this->customers)) {
@@ -7252,23 +7244,26 @@ class Customers extends Records {
         */
 
         print "</td>
-        <td valign=top>
+        <td valign=top>";
+
+        print "
         <table border=0>";
 
         if ($this->adminonly) {
-
-        printf ("<tr bgcolor=lightgrey>
-        <td class=border>Category</td>
-        <td class=border>Permission</td>
-        <td class=border>Property</td>
-        <td class=border>Value</td>
-        <td class=border>Description</td>
-        </tr>");
+            printf ("<tr bgcolor=lightgrey>
+            <td class=border>Category</td>
+            <td class=border>Permission</td>
+            <td class=border>Property</td>
+            <td class=border>Value</td>
+            <td class=border>Description</td>
+            </tr>");
         } else {
-        printf ("<tr bgcolor=lightgrey>
-        <td class=border>Property</td>
-        <td class=border>Value</td>
-        </tr>");
+            printf ("<tr bgcolor=lightgrey>
+            <td class=border>Permission</td>
+            <td class=border>Property</td>
+            <td class=border>Value</td>
+            </tr>"
+            );
         }
 
 		foreach ($customer->properties as $_property) {
@@ -7294,24 +7289,54 @@ class Customers extends Records {
                 $this->allProperties[$item]['value'],
                 $this->allProperties[$item]['name']
                 );
-            } else if ($this->allProperties[$item]['permission'] != 'admin' && $this->customer == $customer->reseller) {
-                printf ("<tr>
-                <td class=border>%s</td>
-                <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
-                </tr>",
-                $this->allProperties[$item]['name'],
-                $item,
-                $this->allProperties[$item]['value']
-                );
-            } else if ($this->allProperties[$item]['permission'] != 'admin' && $this->allProperties[$item]['permission'] != 'reseller') {
-                printf ("<tr>
-                <td class=border>%s</td>
-                <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
-                </tr>",
-                $this->allProperties[$item]['name'],
-                $item,
-                $this->allProperties[$item]['value']
-                );
+            } else {
+                if ($this->allProperties[$item]['permission'] == 'admin') {
+                	if ($customer->id == $customer->reseller ){
+                        printf ("<tr>
+                        <td class=border>%s</td>
+                        <td class=border>%s</td>
+                        <td class=border>%s</td>
+                        </tr>",
+                        $this->allProperties[$item]['permission'],
+                        $this->allProperties[$item]['name'],
+                        $this->allProperties[$item]['value']
+                        );
+                    }
+                } else if ($this->allProperties[$item]['permission'] == 'reseller') {
+                    if ($customer->id == $customer->reseller) {
+                        printf ("<tr>
+                        <td class=border>%s</td>
+                        <td class=border>%s</td>
+                        <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
+                        </tr>",
+                        $this->allProperties[$item]['permission'],
+                        $this->allProperties[$item]['name'],
+                        $item,
+                        $this->allProperties[$item]['value']
+                        );
+                    } else if ($customer->id != $customer->reseller) {
+                        printf ("<tr>
+                        <td class=border>%s</td>
+                        <td class=border>%s</td>
+                        <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
+                        </tr>",
+                        $this->allProperties[$item]['permission'],
+                        $this->allProperties[$item]['name'],
+                        $this->allProperties[$item]['value']
+                        );
+                    }
+                } else {
+                    printf ("<tr>
+                    <td class=border>%s</td>
+                    <td class=border>%s</td>
+                    <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
+                    </tr>",
+                    $this->allProperties[$item]['permission'],
+                    $this->allProperties[$item]['name'],
+                    $item,
+                    $this->allProperties[$item]['value']
+                    );
+                }
             }
         }
 
