@@ -4220,18 +4220,20 @@ class SIP_trace {
 
     function SIP_trace ($cdr_source) {
         global $DATASOURCES, $auth;
+        $this->cdr_source = $cdr_source;
+
         $this->cdrtool  = new DB_CDRTool();
 
 
-		if (strlen($DATASOURCES[$cdr_source]['enableThor'])) {
-        	$this->enableThor = $DATASOURCES[$cdr_source]['enableThor'];
+		if (strlen($DATASOURCES[$this->cdr_source]['enableThor'])) {
+        	$this->enableThor = $DATASOURCES[$this->cdr_source]['enableThor'];
         }
 
         if ($this->enableThor) {
     		include_once('provisioning/ngnpro_engines.inc');
 
-        	if ($DATASOURCES[$cdr_source]['soapEngineId'] && in_array($DATASOURCES[$cdr_source]['soapEngineId'],array_keys($soapEngines))) {
-            	$this->soapEngineId=$DATASOURCES[$cdr_source]['soapEngineId'];
+        	if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
+            	$this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
 			    require_once("provisioning/ngnpro_soap_library.phtml");
 
                 $this->SOAPlogin = array(
@@ -4252,14 +4254,14 @@ class SIP_trace {
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
     
         	} else {
-                print "Error: soapEngineID not defined in datasource $cdr_source";
+                print "Error: soapEngineID not defined in datasource $this->cdr_source";
                 return false;
             }
 
         } else {
-            $this->table             = $DATASOURCES[$cdr_source]['table'];
-            $db_class                = $DATASOURCES[$cdr_source]['db_class'];
-            $this->purgeRecordsAfter = $DATASOURCES[$cdr_source]['purgeRecordsAfter'];
+            $this->table             = $DATASOURCES[$this->cdr_source]['table'];
+            $db_class                = $DATASOURCES[$this->cdr_source]['db_class'];
+            $this->purgeRecordsAfter = $DATASOURCES[$this->cdr_source]['purgeRecordsAfter'];
             $this->db                = new $db_class;
         }
 
@@ -4267,8 +4269,8 @@ class SIP_trace {
         	$this->isAuthorized=1;
         }
 
-        if (is_array($DATASOURCES[$cdr_source]['SIPProxies'])) {
-        	$this->SIPProxies=$DATASOURCES[$cdr_source]['SIPProxies'];
+        if (is_array($DATASOURCES[$this->cdr_source]['SIPProxies'])) {
+        	$this->SIPProxies=$DATASOURCES[$this->cdr_source]['SIPProxies'];
         }
 
     }
@@ -4548,7 +4550,19 @@ class SIP_trace {
                     }
                 }
 
-            printf ("<td align=center class=border><b><font color=blue>%s</font><br>%s</b></td>",$isProxy,$_key);
+            if ($this->enableThor && in_array($justIP,array_keys($this->SIPProxies)) && $proxyIP != $justIP) {
+                $trace_link=sprintf("<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&proxyIP=%s', 'Trace',
+                'toolbar=0,status=1,menubar=1,scrollbars=1,resizable=1,width=1000,height=600')\">%s <font color=red>Click to trace</font></a>",
+                urlencode($this->cdr_source),
+                urlencode($callid),
+                urlencode($fromtag),
+                $justIP,
+                $justIP
+                );
+            	printf ("<td align=center class=border><b><font color=blue>%s</font><br>%s</b></td>",$isProxy,$trace_link);
+            } else {
+            	printf ("<td align=center class=border><b><font color=blue>%s</font><br>%s</b></td>",$isProxy,$_key);
+            }
         }
 
         print "</tr>";
