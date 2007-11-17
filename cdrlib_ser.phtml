@@ -138,6 +138,7 @@ class CDRS_ser_radius extends CDRS {
     }
 
     function showTableHeader($begin_datetime,$end_datetime) {
+
         if (preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$begin_datetime) && preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$end_datetime)) {
             print "<p>From $begin_datetime to $end_datetime";
         }
@@ -150,7 +151,15 @@ class CDRS_ser_radius extends CDRS {
         <tr bgcolor=lightgrey>
         <td>Id</td>
         <td><b>Start time</b></td>
-        <td><b>SIP Proxy</b></td>
+        ";
+
+        if ($this->DATASOURCES[$this->cdr_source]['enableThor']) {
+	        print "<td><b>Thor node</b></td>";
+        } else {
+	        print "<td><b>SIP Proxy</b></td>";
+        }
+
+        print "
         <td><b>SIP caller</b></td>
         <td><b>In</b></td>
         <td><b>SIP destination</b></td>
@@ -4217,6 +4226,7 @@ class CDR_ser_acc extends CDR {
 class SIP_trace {
     var $enableThor = false;
 	var $trace_array = array();
+	var $traced_ip = array();
 
     function SIP_trace ($cdr_source) {
         global $DATASOURCES, $auth;
@@ -4265,9 +4275,7 @@ class SIP_trace {
             $this->db                = new $db_class;
         }
 
-        if (is_object($auth)) {
-        	$this->isAuthorized=1;
-        }
+        if (is_object($auth)) $this->isAuthorized=1;
 
         if (is_array($DATASOURCES[$this->cdr_source]['SIPProxies'])) {
         	$this->SIPProxies=$DATASOURCES[$this->cdr_source]['SIPProxies'];
@@ -4275,75 +4283,131 @@ class SIP_trace {
 
     }
 
+    function getTraceFromThor($proxyIP,$callid,$fromtag) {
+        // get trace using soap request
+		if (!$proxyIP || !$callid || !$fromtag) return false;
+
+        if (!is_object($this->soapclient)) {
+            print "Error: soap client is not defined.";
+            return false;
+        }
+
+        if ($this->traced_ip[$proxyIP]) return true;
+
+        $this->traced_ip[$proxyIP]++;
+
+        $this->soapclient->addHeader($this->SoapAuth);
+        $result     = $this->soapclient->getTrace($proxyIP,$callid,$fromtag);
+
+        if (PEAR::isError($result)) {
+            $error_msg   = $result->getMessage();
+            $error_fault = $result->getFault();
+            $error_code  = $result->getCode();
+
+            printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->faultstring,$error_fault->faultcode);
+            return false;
+        }
+
+        //print "<pre>";
+        $columns=0;
+
+        //print_r($result);
+        $trace_array=array();
+
+        foreach ($result as $_trace) {
+
+            if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->toIp,$m)) {
+                $toip     = $m[2];
+                $protocol = $m[1];
+            } else {
+                $toip     = $_trace->toIp;
+            }
+
+            $_ip=explode(":",$fromip);
+            if ($_ip[0] && !$this->seen_ip[$_ip[0]] && $this->isProxy($_ip[0])) {
+            	$this->seen_ip[$_ip[0]]++;
+            }
+
+            if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->fromIp,$m)) {
+                $fromip = $m[2];
+            } else {
+                $fromip = $_trace->fromIp;
+            }
+
+            $_ip=explode(":",$toip);
+            if ($_ip[0] && !$this->seen_ip[$_ip[0]] && $this->isProxy($_ip[0])) {
+            	$this->seen_ip[$_ip[0]]++;
+            }
+
+            if (!$this->column[$fromip]) {
+                $this->column[$fromip] = $columns+1;
+                $columns++;
+            }
+
+            if (!$this->column[$toip]) {
+                $this->column[$toip]   = $columns+1;
+                $columns++;
+            }
+
+
+            preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/",$_trace->date,$m);
+            $timestamp = mktime($m[4],$m[5],$m[6],$m[2],$m[3],$m[1]);
+
+			$idx=$proxyIP.'_'.$_trace->id;
+
+            $trace_array[$idx]=
+                        array (
+                               'id'         => $idx,
+                               'direction'  => $_trace->direction,
+                               'fromip'     => $fromip,
+                               'toip'       => $toip,
+                               'method'     => $_trace->method,
+                               'protocol'   => $protocol,
+                               'date'       => $_trace->date,
+                               'status'     => $_trace->status,
+                               'timestamp'  => $timestamp,
+                               'msg'        => $_trace->msg,
+                               'md5'        => md5($_trace->msg)
+                               );
+        }
+
+        return $trace_array;
+
+    }
+
+    function isProxy($ip) {
+        if (!is_array($this->SIPProxies)) {
+            return false;
+        }
+
+        if (in_array($ip,array_keys($this->SIPProxies))) {
+            return true;
+        }
+
+        return false;
+    }
+
     function getTrace ($callid,$fromtag,$proxyIP) {
 
 		if ($this->enableThor) {
-            // get trace using soap request
-            if (!is_object($this->soapclient)) {
-                print "Error: soap client is not defined.";
-                return false;
+			$this->seen_ip=array();
+			$this->trace_array=$this->getTraceFromThor($proxyIP,$callid,$fromtag);
+
+            /*
+            foreach (array_keys($this->seen_ip) as $ip) {
+            	$trace=$this->getTraceFromThor($ip,$callid,$fromtag);
+                $this->trace_array=array_merge($this->trace_array,$trace);
+
+                //print_r($trace);
             }
+            */
 
-            $this->soapclient->addHeader($this->SoapAuth);
-            $result     = $this->soapclient->getTrace($proxyIP,$callid,$fromtag);
-    
-            if (PEAR::isError($result)) {
-                $error_msg   = $result->getMessage();
-                $error_fault = $result->getFault();
-                $error_code  = $result->getCode();
-    
-                printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->faultstring,$error_fault->faultcode);
-                return false;
-            }
-
-            //print "<pre>";
-            $columns=0;
-
-            //print_r($result);
-            foreach ($result as $_trace) {
-
-                if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->toIp,$m)) {
-                    $toip     = $m[2];
-                    $protocol = $m[1];
-                }
-
-                if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->fromIp,$m)) {
-                    $fromip = $m[2];
-                } else {
-                    $fromip = $_trace->fromIp;
-                }
-
-                if (!$this->column[$fromip]) {
-                    $this->column[$fromip] = $columns+1;
-                    $columns++;
-                }
-    
-                if (!$this->column[$toip]) {
-                    $this->column[$toip]   = $columns+1;
-                    $columns++;
-                }
-
-				preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/",$_trace->date,$m);
-                $timestamp = mktime($m[4],$m[5],$m[6],$m[2],$m[3],$m[1]);
-
-                $this->trace_array[$_trace->id]=
-                            array (
-                                   'id'         => $_trace->id,
-                                   'direction'  => $_trace->direction,
-                                   'fromip'     => $fromip,
-                                   'toip'       => $toip,
-                                   'method'     => $_trace->method,
-                                   'protocol'   => $protocol,
-                                   'date'       => $_trace->date,
-                                   'status'     => $_trace->status,
-                                   'timestamp'  => $timestamp,
-                                   'msg'        => $_trace->msg,
-                                   'md5'        => md5($_trace->msg)
-                                   );
-            }
             $this->rows = count($this->trace_array);
+			//print_r($this->seen_ip);
 
         } else {
+            // get trace from SQL
+
             $query=sprintf("select *,UNIX_TIMESTAMP(date) as timestamp
             from %s where callid = '%s'
             and traced_user = '' order by id asc",

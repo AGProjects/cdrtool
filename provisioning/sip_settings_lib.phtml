@@ -1587,8 +1587,7 @@ class SIPSettings {
             <table cellspacing=0 cellpadding=0 width=100%>
             <tr>
             <td>";
-            print "<input type=text size=6 maxsize=6 name=quota value=\"$this->quota\">";
-            print " $this->currency";
+            printf ("<input type=text size=6 maxsize=6 name=quota value='%s'> %s",$this->quota,$this->currency);
 
             if ($this->quota || in_array("quota",$this->groups)) {
                 $this->getCallStatistics();
@@ -1604,7 +1603,7 @@ class SIPSettings {
             </td>
             <td align=right>
             ";
-            printf ("<input type=hidden name=used_quota value=%s>",$this->thisMonth['price']);
+            printf ("<input type=hidden name=used_quota value='%s'>",$this->thisMonth['price']);
 
             print _("De-block account");
 
@@ -1616,6 +1615,8 @@ class SIPSettings {
             </td>
             </tr>
             ";
+        } else {
+            printf ("<input type=hidden name=quota value='%s'>",$this->quota);
         }
 
         foreach (array_keys($this->SIPACLS) as $key) {
