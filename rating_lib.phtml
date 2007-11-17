@@ -932,7 +932,7 @@ class Rate {
 }
 
 class RatingTables {
-
+    var $delimiter=",";
 	var $filesToImport=array();
     var $importFilesPatterns=array('rates_history',
                                    'rates',
@@ -949,7 +949,9 @@ class RatingTables {
         $this->CDRTool = $CDRTool;
         $this->cdrtool->Halt_On_Error="no";
 
-        $period=$CDRTool['rating'][durationPeriodRated] = 60;
+        if ($CDRTool['rating']['delimiter']) {
+            $this->delimiter=$CDRTool['rating']['delimiter'];
+        }
 
         $this->tables=array(
                            "destinations"=>array("name"=>"Destinations",
@@ -1162,7 +1164,7 @@ class RatingTables {
                                                  				)
 
                                                  ),
-                           "prepaid"=>array("name"=>"Prepaid",
+                           "prepaid"=>array("name"=>"Prepaid accounts",
                                                  "keys"=>array("id"),
                                                  "size"=>15,
                                                  "exceptions" =>array(),
@@ -1200,6 +1202,32 @@ class RatingTables {
                                                                                  )
                                                                   )
                                                    ),
+                           "prepaid_cards"=>array("name"=>"Prepaid cards",
+                                                 "keys"=>array("id"),
+                                                 "size"=>15,
+                                                 "exceptions" =>array('service'),
+                                                 "domainFilterColumn"=>"account",
+                                                 "fields"=>array("batch"=>array("size"=>30,
+                                                                               "name"=>"Batch name"
+                                                                                ),
+                                                                 "date_batch"=>array("size"=>11,
+                                                                 				 "name"=>"Batch date"
+                                                                                 ),
+                                                                 "number"=>array("size"=>20,
+                                                                 				 "name"=>"Card number"
+                                                                                 ),
+                                                                 "value"=>array("size"=>6,
+                                                                 				 "name"=>"Card value"
+                                                                                 ),
+                                                                 "blocked"=>array("size"=>1,
+                                                                 				 "name"=>"Lock"
+                                                                                 ),
+                                                                 "date_active"=>array("size"=>18,
+                                                                 				 "name"=>"Activation date"
+                                                                                 )
+
+                                                                  )
+                                                   )
                            );
 
     }
@@ -1239,7 +1267,7 @@ class RatingTables {
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
 
-            $p = explode(",", $buffer);
+            $p = explode($this->delimiter, $buffer);
 
             $ops             = trim($p[0]);
             $gateway         = trim($p[1]);
@@ -1462,7 +1490,7 @@ class RatingTables {
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
 
-            $p = explode(",", $buffer);
+            $p = explode($this->delimiter, $buffer);
 
             $ops             = trim($p[0]);
             $gateway         = trim($p[1]);
@@ -1705,7 +1733,7 @@ class RatingTables {
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
 
-            $p = explode(",", $buffer);
+            $p = explode($this->delimiter, $buffer);
 
             $ops               = trim($p[0]);
             $gateway           = trim($p[1]);
@@ -1918,7 +1946,7 @@ class RatingTables {
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
 
-            $p = explode(",", $buffer);
+            $p = explode($this->delimiter, $buffer);
 
             $ops             = trim($p[0]);
             $gateway         = trim($p[1]);
@@ -2083,7 +2111,7 @@ class RatingTables {
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
 
-            $p = explode(",", $buffer);
+            $p = explode($this->delimiter, $buffer);
 
             $ops        = trim($p[0]);
             $gateway    = trim($p[1]);

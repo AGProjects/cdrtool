@@ -99,7 +99,7 @@ class SIPSettings {
     function SIPSettings($account,$loginCredentials=array(),$soapEngines=array()) {
     	$this->soapEngines        = $soapEngines;
 
-        $debug=sprintf("Initialize class %s(%s)",get_class($this),$account);
+        $debug=sprintf("<font color=blue><p><b>Initialize class %s(%s)</b></font>",get_class($this),$account);
         dprint($debug);
         dprint_r($loginCredentials);
 
@@ -127,9 +127,8 @@ class SIPSettings {
 		if (strlen($loginCredentials['soapEngine'])) {
             $this->soapEngine=$loginCredentials['soapEngine'];
         }
-        
 
-        dprint("Using engine: $this->soapEngine");
+        //dprint("Using engine: $this->soapEngine");
 
         $this->settingsPage       = $_SERVER['PHP_SELF'];
         $this->tab                = $_REQUEST['tab'];
@@ -596,6 +595,7 @@ class SIPSettings {
     }
 
     function setLanguage() {
+        dprint("setLanguage()");
 
         if ($this->loginType == 'reseller') {
             $lang = $this->ResellerLanguage;
@@ -722,8 +722,8 @@ class SIPSettings {
     }
 
     function setAliases() {
-        // Get Aliases
         dprint("setAliases()");
+
         $aliases_new=$_REQUEST['aliases'];
         $this->getAliases();
         $aliases_old=$this->aliases;
@@ -905,6 +905,7 @@ class SIPSettings {
     }
 
     function showTitleBar() {
+
         print "
         <tr>
         <td class=border colspan=2 bgcolor=lightgrey>
@@ -1008,7 +1009,6 @@ class SIPSettings {
     }
 
     function getResellerSettings () {
-
         dprint("getResellerSettings(reseller=$this->reseller)");
 
         $this->CustomerPort->addHeader($this->SoapAuthCustomer);
@@ -1026,9 +1026,11 @@ class SIPSettings {
             $this->resellerProperties[$_property->name]=$_property->value;
         }
 
+		$this->resellerProperties['language'] = $result->language;
+        $this->resellerProperties['timezone'] = $result->timezone;
+
 		//dprint_r($this->resellerProperties);
 
-        $this->ResellerLanguage = $result->language;
         $this->proxy            = $this->resellerProperties['sip_proxy_server'];
         $this->SupportCompany   = $this->resellerProperties['support_organization'];
         $this->SupportWEBsite	= $this->resellerProperties['support_web'];
@@ -1114,7 +1116,7 @@ class SIPSettings {
     }
 
     function getDeviceLocations() {
-
+        dprint("getDeviceLocations()");
         if (is_object($this->SipPortRemote)) {
 
             $this->SipPortRemote->addHeader($this->SoapAuthRemote);
@@ -1180,6 +1182,7 @@ class SIPSettings {
 
     function getVoicemailForwarding () {
         dprint("getVoicemailForwarding()");
+
         if (!$this->voicemail['Account']) {
             return;
         }
@@ -2147,7 +2150,7 @@ class SIPSettings {
     }
 
     function saveSettings() {
-        dprint("<b>SIP->saveSettings()</b>");
+        dprint("saveSettings()");
 
 		$this->getVoicemail();
         $this->getENUMmappings();
@@ -2174,8 +2177,6 @@ class SIPSettings {
         }
 
 		$this->properties=$result->properties;
-
-		dprint_r($this->Preferences);
 
         if ($advanced) {
             if (!$this->Preferences['advanced']) {
@@ -2331,7 +2332,7 @@ class SIPSettings {
 
             if (!$result->quota) $result->quota=0;
 
- 			dprint_r($result);
+ 			//dprint_r($result);
 
             if (is_object($this->SipPortRemote)) {
                 dprint("saveSettingsRemote");
@@ -2381,8 +2382,8 @@ class SIPSettings {
         if ($this->loginType != 'subscriber' && $this->voicemail['Account'] && !$this->createdVoicemailnow) {
             $delete_voicemail = $_REQUEST['delete_voicemail'];
 
-            $log=sprintf("delete_voicemail_orig=%s",$this->voicemail['Options']->delete);
-        	dprint($log);
+            //$log=sprintf("delete_voicemail_orig=%s",$this->voicemail['Options']->delete);
+        	//dprint($log);
 
             if (($delete_voicemail && !$this->voicemail['Options']->delete) ||
             	(!$delete_voicemail && $this->voicemail['Options']->delete)) {
@@ -2417,7 +2418,6 @@ class SIPSettings {
             $select_name = $condition."_select";
             $selectedIdx = $_REQUEST[$select_name];
             $textboxURI  = $_REQUEST[$condition];
-
 
             if ($textboxURI && !preg_match("/@/",$textboxURI)) {
                 $textboxURI=$textboxURI."@".$this->domain;
@@ -2970,8 +2970,10 @@ class SIPSettings {
                 $sessionTime=normalizeTime($prepaidAccount->sessionTime);
                 printf (": %s (%s)",$sessionTime,$prepaidAccount->destination);
             } else {
-                print _("Last call price");
-                printf (": %s (%s)",$prepaidAccount->lastCallPrice,$prepaidAccount->destination);
+                if ($prepaidAccount->lastCallPrice) {
+                	print _("Last call price");
+                	printf (": %s (%s)",$prepaidAccount->lastCallPrice,$prepaidAccount->destination);
+                }
             }
     
             print "</nobr>
@@ -3088,7 +3090,7 @@ class SIPSettings {
             dprint("AddPrepaidBalanceLocal($prepaidCard,$prepaidId)");
 
             $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->addBalance($this->sipId,$card);
+            $result     = $this->SipPort->addBalanceFromVoucher($this->sipId,$card);
     
             if (PEAR::isError($result)) {
                 $error_msg  = $result->getMessage();
@@ -5151,7 +5153,7 @@ class SIPSettings {
     }
 
     function checkEmail($email) {
-        dprint ("<b>checkEmail($email) </b>");
+        dprint ("checkEmail($email)");
         $regexp = "/^([a-z0-9][a-z0-9_.-]*)@([a-z0-9][a-z0-9-]*\.)+([a-z]{2,})$/i";
         if (stristr($email,"-.") ||
             !preg_match($regexp, $email)) {
@@ -5566,7 +5568,13 @@ class SIPSettings {
         	$this->billingProfiles->profileWeekend
         	);
 
-        	$this->showTimezones('profileTimezone',$this->billingProfiles->timezone);
+			if ($this->billingProfiles->timezone) {
+                $_timezone=$this->billingProfiles->timezone;
+            } else {
+                $_timezone=$this->resellerProperties['timezone'];
+            }
+
+        	$this->showTimezones('profileTimezone',$_timezone);
 
             print "
           </td>
@@ -5599,7 +5607,7 @@ class SIPSettings {
                         "timezone"       => trim($_REQUEST['profileTimezone'])
                         );
 
-        dprint_r($profiles);
+        //dprint_r($profiles);
 
         $this->RatingPort->addHeader($this->SoapAuth);
         if ($this->billingProfiles->profileWeekday && !$profiles['profileWeekday']) {

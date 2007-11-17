@@ -10,8 +10,9 @@ cdrtool (5.3.4) unstable; urgency=low
   * Added RatingProfiles management in sip settings page
   * Fixed name of domain table when thor is enabled
   * Added link in the trace window to jump to a different SIP Proxy
+  * Import/export delimiter for rating tables can be adjusted, default is ,
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 15 Nov 2007 17:20:37 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 17 Nov 2007 14:13:22 +0100
 
 cdrtool (5.3.3) unstable; urgency=low
 

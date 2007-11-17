@@ -164,6 +164,9 @@ $DATASOURCES=array(
                     )
 );
 
+// delimiter used for import/export of rating tables 
+$CDRTool['rating']['delimiter']=",";
+
 // load CDRTool libraries 
 $CDRToolModules=array("ser","asterisk","rating");
 

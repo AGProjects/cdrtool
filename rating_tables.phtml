@@ -6,7 +6,6 @@ page_open(
                   "perm" => "CDRTool_Perm"));
 
 $perm->check("rates");
-
 $table_fname=array(
                    "destinations"          => "destinations.csv",
                    "billing_customers"     => "customers.csv",
@@ -47,6 +46,13 @@ $db= new DB_CDRTool;
 $db->Halt_On_Error ="no";
 $db1= new DB_CDRTool;
 $db1->Halt_On_Error ="no";
+
+// delimiter for exporting records
+if ($CDRTool['rating']['delimiter']) {
+    $delimiter=$CDRTool['rating']['delimiter'];
+} else {
+	$delimiter=",";
+}
 
 if (!$export) {
     $title="Rating tables";
@@ -709,27 +715,27 @@ if (!$export) {
     ";
 }
 
-    while ($k < $cc) {
-        $th=$metadata[$k]["name"];
-		if (!in_array($th,$exceptions) ) {
-            if ($fields[$th][name]) {
-                $th=$fields[$th][name];
-            } else {
-                $th=ucfirst($th);
-            }
-			if (!$export) {
-            	print "<td class=border><b>$th</b></td>";
-            } else {
-                if ($k) {
-                    print ",$th";
-                } else {
-                    print "Ops";
-                }
-            }
-            $t_columns++;
+while ($k < $cc) {
+    $th=$metadata[$k]["name"];
+    if (!in_array($th,$exceptions) ) {
+        if ($fields[$th][name]) {
+            $th=$fields[$th][name];
+        } else {
+            $th=ucfirst($th);
         }
-        $k++;
+        if (!$export) {
+            print "<td class=border><b>$th</b></td>";
+        } else {
+            if ($k) {
+                printf ("%s%s",$delimiter,$th);
+            } else {
+                print "Ops";
+            }
+        }
+        $t_columns++;
     }
+    $k++;
+}
 
 if ($export) {
     print "\n";
@@ -1111,7 +1117,7 @@ while  ($i<$maxrows)  {
                 }
             } else {
                 if ($j) {
-                    print ",$value";
+                	printf ("%s%s",$delimiter,$value);
                 } else {
                     print "2";
                 }
@@ -1186,7 +1192,7 @@ if (!$export) {
         }
     
         print "
-        <form  action=$PHP_SELF  method=post>
+        <form method=post>
         <input type=hidden name=maxrowsperpage value=$maxrowsperpage>
         <input type=hidden name=next	       value=$mod_show_next>
         <input type=hidden name=action         value=Search>
@@ -1222,7 +1228,7 @@ if (!$export) {
         $show_next=$maxrowsperpage+$next;
     
         print "
-        <form action=$PHP_SELF  		method=post>
+        <form method=post>
         <input type=hidden name=maxrowsperpage value=$maxrowsperpage>
         <input type=hidden name=next		   value=$show_next>
         <input type=hidden name=table	       value=$table>
