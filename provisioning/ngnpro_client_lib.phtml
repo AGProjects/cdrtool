@@ -2807,6 +2807,9 @@ class SIPAliases extends Records {
 }
 
 class ENUMranges extends Records {
+	// only admin can add prefixes below
+    var $deniedPrefixes=array('1','20','210','211','212','213','214','215','216','217','218','219','220','221','222','223','224','225','226','227','228','229','230','231','232','233','234','235','236','237','238','239','240','241','242','243','244','245','246','247','248','249','250','251','252','253','254','255','256','257','258','259','260','261','262','263','264','265','266','267','268','269','27','280','281','282','283','284','285','286','287','288','289','290','291','292','293','294','295','296','297','298','299','30','31','32','33','34','350','351','352','353','354','355','356','357','358','359','36','370','371','372','373','374','375','376','377','378','379','380','381','382','383','384','385','386','387','388','389','39','40','41','420','421','422','423','424','425','426','427','428','429','43','44','45','46','47','48','49','500','501','502','503','504','505','506','507','508','509','51','52','53','54','55','56','57','58','590','591','592','593','594','595','596','597','598','599','60','61','62','63','64','65','66','670','671','672','673','674','675','676','677','678','679','680','681','682','683','684','685','686','687','688','689','690','691','692','693','694','695','696','697','698','699','7','800','801','802','803','804','805','806','807','808','809','81','82','830','831','832','833','834','835','836','837','838','839','84','850','851','852','853','854','855','856','857','858','859','86','870','871','872','873','874','875','876','877','878','879','880','881','882','883','884','885','886','887','888','889','890','891','892','893','894','895','896','897','898','899','90','91','92','93','94','95','960','961','962','963','964','965','966','967','968','969','970','971','972','973','974','975','976','977','978','979','98','990','991','992','993','994','995','996','997','998','999');
+
     var $FieldsAdminOnly=array(
                               'reseller' => array('type'=>'integer'),
                               );
@@ -2836,7 +2839,6 @@ class ENUMranges extends Records {
 
     function listRecords() {
         $this->getAllowedDomains();
-
 		$this->showSeachForm();
 
 		if ($this->version > 1) {
@@ -3141,15 +3143,15 @@ class ENUMranges extends Records {
             print "
             <input type=submit name=action value=Add>
             ";
-            printf ("Prefix +<input type=text size=15 name=prefix> ");
+            printf ("Prefix +<input type=text size=15 name=prefix value='%s'> ",$_REQUEST['prefix']);
             printf (" TLD");
-            print "<input type=text size=15 name=tld>";
+            printf ("<input type=text size=15 name=tld value='%s'>",$_REQUEST['tld']);
             printf ("TTL<input type=text size=5 name=ttl value=3600> ");
             printf ("Min Digits<input type=text size=3 name=minDigits value=11> ");
             printf ("Max Digits<input type=text size=3 name=maxDigits value=11> ");
             if ($this->version > 1) {
                 $this->showCustomerTextBox();
-            	printf ("Info<input type=text size=15 name=info> ");
+            	printf ("Info<input type=text size=15 name=info value='%s'> ",$_REQUEST['info']);
             }
 
             print "
@@ -3193,6 +3195,11 @@ class ENUMranges extends Records {
         	$customer = trim($_REQUEST['customer']);
             if (!$customer) $customer=$reseller;
         } else {
+			if (in_array($prefix,$this->deniedPrefixes)) {
+                print "<p><font color=red>Error: Only an administrator account can create the prefix coresponding to a country code.</font>";
+                return false;
+            }
+
         	$reseller = $this->reseller;
         	$customer = trim($_REQUEST['customer']);
             if (!$customer || !in_array($customer,array_keys($this->customers))) {
@@ -3608,19 +3615,26 @@ class ENUMmappings extends Records {
         );
 
     function ENUMmappings(&$SOAPEngine) {
-        $this->filters   = array('number'       => trim($_REQUEST['number_filter']),
-                                 'tld'          => trim($_REQUEST['tld_filter']),
+        list($prefix,$tld)= explode("@",$_REQUEST['range_filter']);
+        if ($prefix && !$_REQUEST['number_filter']) {
+        	$_number_filter=$prefix.'%';
+        } else {
+        	$_number_filter=$_REQUEST['number_filter'];
+        }
+
+        $this->filters   = array('number'       => $_number_filter,
+                                 'tld'          => $tld,
+                                 'range'        => trim($_REQUEST['range_filter']),
                                  'type'         => trim($_REQUEST['type_filter']),
                                  'mapto'        => trim($_REQUEST['mapto_filter']),
                                  'owner'        => trim($_REQUEST['owner_filter'])
                                 );
 		$this->Records(&$SOAPEngine);
-    }
-
-
-    function listRecords() {
         $this->getAllowedDomains();
 
+    }
+
+    function listRecords() {
 		$this->showSeachForm();
 
         $filter=array('number'   => $this->filters['number'],
@@ -3976,20 +3990,18 @@ class ENUMmappings extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" Number<input type=text size=15 name=number_filter value='%s'>",$this->filters['number']);
-        if (count($this->allowedDomains) > 0) {
-            $selected_tld[$this->filters['tld']]='selected';
-            printf ("<select name=tld_filter>
-            <option>");
-
-            foreach ($this->allowedDomains as $_tld) {
-                printf ("<option value='$_tld' %s>$_tld",$selected_tld[$_tld]);
-            }
-
-            printf ("</select>");
-        } else {
-            printf ("<input type=text size=10 name=tld_filter value='%s'>",$this->filters['tld']);
+        print "<select name=range_filter><option>
+        ";
+        $selected_range[$_REQUEST['range_filter']]='selected';
+        foreach ($this->ranges as $_range) {
+        	$rangeId=$_range['prefix'].'@'.$_range['tld'];
+        	//printf ("<option value=%s %s>%s +%s",$rangeId,$selected_range[$rangeId],$_range['tld'],$_range['prefix']);
+            printf ("<option value=%s %s>+%s",$rangeId,$selected_range[$rangeId],$_range['prefix']);
         }
+
+        print "</select>";
+
+        printf ("<input type=text size=15 name=number_filter value='%s'>",$_REQUEST['number_filter']);
 
         print "<select name=type_filter>
         <option>
@@ -4091,6 +4103,10 @@ class ENUMmappings extends Records {
 
     function showAddForm() {
 		//if ($this->selectionActive) return;
+		if (!count($this->ranges)) {
+            print "<p><font color=red>Error: Create an ENUM range first</font>";
+			return false;
+        }
 
         print "
         <p>
@@ -4106,23 +4122,23 @@ class ENUMmappings extends Records {
         print "
         <input type=submit name=action value=Add>
         ";
-        printf (" Number +<input type=text size=15 name=number value='%s'>",$this->filters['number']);
-        printf (" TLD");
-        if (count($this->allowedDomains) >0) {
-            $selected_tld[$this->filters['tld']]='selected';
-            print "<select name=tld>";
-            foreach ($this->allowedDomains as $_tld) {
-                printf ("<option value=%s %s>%s\n",$_tld,$selected_tld[$_tld],$_tld);
-            }
-            print "</select>";
-        } else {
-            printf ("<input type=text size=15 name=tld value='%s'>",$this->filters['tld']);
+        printf (" Number");
+
+        print "<select name=range>";
+        $selected_range[$_REQUEST['range']]='selected';
+        foreach ($this->ranges as $_range) {
+        	$rangeId=$_range['prefix'].'@'.$_range['tld'];
+        	printf ("<option value=%s %s>%s +%s",$rangeId,$selected_range[$rangeId],$_range['tld'],$_range['prefix']);
         }
+
+        print "</select>";
+        printf ("<input type=text size=15 name=number value='%s'>",$_REQUEST['number']);
 
         printf (" Map to");
         print "<select name=type>
         ";
         reset($this->NAPTR_services);
+        $selected_naptr_service[$_REQUEST['type']]='selected';
         while (list($k,$v) = each($this->NAPTR_services)) {
             printf ("<option value='%s' %s>%s",$k,$selected_naptr_service[$k],$this->NAPTR_services[$k]['webname']);
         }
@@ -4130,11 +4146,16 @@ class ENUMmappings extends Records {
         print "
         </select>
         ";
-        printf (" <input type=text size=25 name=mapto>");
-        printf (" TTL<input type=text size=5 name=ttl value=3600>");
-        printf (" Priority<input type=text size=3 name=priority>");
-        printf (" Owner<input type=text size=5 name=owner>");
-        printf (" Info<input type=text size=10 name=info>");
+        if ($_REQUEST['ttl']) {
+            $_ttl=$_REQUEST['ttl'];
+        } else {
+            $_ttl=3600;
+        }
+        printf (" <input type=text size=25 name=mapto value='%s'>",$_REQUEST['mapto']);
+        printf (" TTL<input type=text size=5 name=ttl value='%s'>",$_ttl);
+        printf (" Priority<input type=text size=3 name=priority value='%s'>",$_REQUEST['priority']);
+        printf (" Owner<input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
+        printf (" Info<input type=text size=10 name=info value='%s'>",$_REQUEST['info']);
 
         print "
         </td>
@@ -4219,16 +4240,24 @@ class ENUMmappings extends Records {
     }
 
     function addRecord($dictionary=array()) {
-        if ($dictionary['tld']) {
-            $tld=$dictionary['tld'];
+        $prefix='';
+        if ($dictionary['range']) {
+        	list($prefix,$tld)=explode('@',trim($dictionary['range']));
+        } else if ($dictionary['tld']) {
+            $tld = $dictionary['tld'];
+        } else if ($_REQUEST['range']) {
+        	list($prefix,$tld)=explode('@',trim($_REQUEST['range']));
         } else {
-    		$tld      = trim($_REQUEST['tld']);
+    		$tld = trim($_REQUEST['tld']);
         }
+
         if ($dictionary['number']) {
-            $number=$dictionary['number'];
+            $number = $dictionary['number'];
         } else {
-    		$number      = trim($_REQUEST['number']);
+    		$number = trim($_REQUEST['number']);
         }
+
+        $number=$prefix.$number;
 
         if (!strlen($tld)) {
             if (strlen($this->SOAPEngine->defaultEnumTLD)) {
@@ -6193,63 +6222,68 @@ class Customers extends Records {
 
     var $propertiesItems = array('sip_credit'          => array('name'      => 'Credit for SIP accounts',
                                                                'category'   => 'credit',
-                                                               'permission' => 'admin'
+                                                               'permission' => 'admin',
+                                                               'resellerMayManageForChildAccounts' => true
                                                                ),
                                  'sip_alias_credit'    => array('name'      => 'Credit for SIP aliases',
                                                                'category'   => 'credit',
-                                                               'permission' => 'admin'
+                                                               'permission' => 'admin',
+                                                               'resellerMayManageForChildAccounts' => true
                                                                ),
                                  'enum_range_credit'   => array('name'      => 'Credit for ENUM ranges',
                                                                'category'   => 'credit',
-                                                               'permission' => 'admin'
+                                                               'permission' => 'admin',
+                                                               'resellerMayManageForChildAccounts' => true
                                                                ),
                                  'enum_number_credit'  => array('name'      => 'Credit for ENUM numbers',
                                                                'category'   => 'credit',
-                                                               'permission' => 'admin'
+                                                               'permission' => 'admin',
+                                                               'resellerMayManageForChildAccounts' => true
                                                                ),
                                  'pstn_access'         => array('name'      => 'Access to PSTN',
                                                                'category'   => 'sip',
-                                                               'permission' => 'admin'
+                                                               'permission' => 'admin',
+                                                               'resellerMayManageForChildAccounts' => true
                                                                ),
                                  'voicemail_server'    => array('name'      => 'Voicemail server address',
                                                                'category'   => 'sip',
-                                                               'permission' => 'reseller'
+                                                               'permission' => 'customer'
                                                                ),
                                  'sip_proxy_server'    => array('name'      => 'SIP Proxy server address',
                                                                'category'   => 'sip',
-                                                               'permission' => 'reseller'
+                                                               'permission' => 'customer'
                                                                ),
                                  'support_web'         => array('name'      => 'Support web site',
                                                                'category'   => 'sip',
-                                                               'permission' => 'reseller'
+                                                               'permission' => 'customer'
                                                                ),
                                  'support_email'       => array('name'      => 'Support email address',
                                                                'category'   => 'sip',
-                                                               'permission' => 'reseller'
+                                                               'permission' => 'customer'
                                                                ),
                                  'support_organization'=> array('name'      => 'Support organization',
                                                                'category'   => 'sip',
-                                                               'permission' => 'reseller'
+                                                               'permission' => 'customer'
                                                                ),
                                  'cdrtool_address'     => array('name'      => 'CDRTool address',
                                                                'category'   => 'sip',
-                                                               'permission' => 'reseller'
+                                                               'permission' => 'customer'
                                                                ),
                                  'sip_settings_page'   => array('name'      => 'SIP settings page',
                                                                'category'   => 'sip',
-                                                               'permission' => 'reseller'
+                                                               'permission' => 'customer'
                                                                ),
                                  'sip_default_domain'  => array('name'      => 'Default SIP domain',
                                                                'category'   => 'sip',
-                                                               'permission' => 'reseller'
+                                                               'permission' => 'customer'
                                                                ),
                                  'enum_default_range'  => array('name'      => 'Default ENUM range',
                                                                'category'   => 'enum',
-                                                               'permission' => 'reseller'
+                                                               'permission' => 'customer'
                                                                ),
                                  'enum_default_tld'    => array('name'      => 'Default ENUM Top Level Domain',
                                                                'category'   => 'enum',
-                                                               'permission' => 'reseller'
+                                                               'permission' => 'customer'
                                                                ),
                                  'records_per_page'    => array('name'     => 'Records per page',
                                                                'category'  => 'web',
@@ -7248,11 +7282,16 @@ class Customers extends Records {
 
         print "</td>
         <td valign=top>";
+        /*
+        print "<pre>";
+		print_r($this->loginCredentials);
+        print "</pre>";
+        */
 
         print "
         <table border=0>";
 
-        if ($this->adminonly) {
+        if ($this->loginCredentials['loginType'] == 'admin') {
             printf ("<tr bgcolor=lightgrey>
             <td class=border>Category</td>
             <td class=border>Permission</td>
@@ -7260,9 +7299,15 @@ class Customers extends Records {
             <td class=border>Value</td>
             <td class=border>Description</td>
             </tr>");
-        } else {
+        } else if ($this->loginCredentials['loginType'] == 'reseller') {
             printf ("<tr bgcolor=lightgrey>
             <td class=border>Permission</td>
+            <td class=border>Property</td>
+            <td class=border>Value</td>
+            </tr>"
+            );
+        } else {
+            printf ("<tr bgcolor=lightgrey>
             <td class=border>Property</td>
             <td class=border>Value</td>
             </tr>"
@@ -7277,7 +7322,8 @@ class Customers extends Records {
 
         foreach (array_keys($this->allProperties) as $item) {
         	$item_print=preg_replace("/_/"," ",$item);
-            if ($this->adminonly) {
+
+            if ($this->loginCredentials['loginType'] == 'admin') {
                 printf ("<tr>
                 <td class=border>%s</td>
                 <td class=border>%s</td>
@@ -7286,47 +7332,56 @@ class Customers extends Records {
                 <td class=border>%s</td>
                 </tr>",
                 $this->allProperties[$item]['category'],
-                $this->allProperties[$item]['permission'],
+                ucfirst($this->allProperties[$item]['permission']),
                 $item_print,
                 $item,
                 $this->allProperties[$item]['value'],
                 $this->allProperties[$item]['name']
                 );
-            } else {
+            } else if ($this->loginCredentials['loginType'] == 'reseller') {
+                // logged in as reseller
+
                 if ($this->allProperties[$item]['permission'] == 'admin') {
-                	if ($customer->id == $customer->reseller ){
-                        printf ("<tr>
-                        <td class=border>%s</td>
-                        <td class=border>%s</td>
-                        <td class=border>%s</td>
-                        </tr>",
-                        $this->allProperties[$item]['permission'],
-                        $this->allProperties[$item]['name'],
-                        $this->allProperties[$item]['value']
-                        );
-                    }
-                } else if ($this->allProperties[$item]['permission'] == 'reseller') {
-                    if ($customer->id == $customer->reseller) {
-                        printf ("<tr>
-                        <td class=border>%s</td>
-                        <td class=border>%s</td>
-                        <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
-                        </tr>",
-                        $this->allProperties[$item]['permission'],
-                        $this->allProperties[$item]['name'],
-                        $item,
-                        $this->allProperties[$item]['value']
-                        );
-                    } else if ($customer->id != $customer->reseller) {
-                        printf ("<tr>
-                        <td class=border>%s</td>
-                        <td class=border>%s</td>
-                        <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
-                        </tr>",
-                        $this->allProperties[$item]['permission'],
-                        $this->allProperties[$item]['name'],
-                        $this->allProperties[$item]['value']
-                        );
+                	if ($customer->id == $customer->reseller ) {
+                        // reseller cannot modify himself for items with admin permission
+                    	if (!$this->allProperties[$item]['invisible']) {
+                            printf ("<tr>
+                            <td class=border>%s</td>
+                            <td class=border>%s</td>
+                            <td class=border>%s </td>
+                            </tr>",
+                            ucfirst($this->allProperties[$item]['permission']),
+                            $this->allProperties[$item]['name'],
+                            $this->allProperties[$item]['value']
+                            );
+                        }
+                    } else {
+                        if ($this->allProperties[$item]['resellerMayManageForChildAccounts']) {
+                            // reseller can manage these properties for his customers
+                            printf ("<tr>
+                            <td class=border>%s</td>
+                            <td class=border>%s</td>
+                            <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
+                            </tr>",
+                            'Reseller',
+                            $this->allProperties[$item]['name'],
+                            $item,
+                            $this->allProperties[$item]['value']
+                            );
+                        } else {
+                            if (!$this->allProperties[$item]['invisible']) {
+                                // otherwise cannot modify them
+                                printf ("<tr>
+                                <td class=border>%s</td>
+                                <td class=border>%s</td>
+                                <td class=border>%s </td>
+                                </tr>",
+                                ucfirst($this->allProperties[$item]['permission']),
+                                $this->allProperties[$item]['name'],
+                                $this->allProperties[$item]['value']
+                                );
+                            }
+                        }
                     }
                 } else {
                     printf ("<tr>
@@ -7334,23 +7389,49 @@ class Customers extends Records {
                     <td class=border>%s</td>
                     <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
                     </tr>",
-                    $this->allProperties[$item]['permission'],
+                    ucfirst($this->allProperties[$item]['permission']),
                     $this->allProperties[$item]['name'],
                     $item,
                     $this->allProperties[$item]['value']
                     );
                 }
+            } else {
+                // logged in as customer
+                if ($this->allProperties[$item]['permission'] == 'admin' || $this->allProperties[$item]['permission'] == 'reseller' ) {
+                    if (!$this->allProperties[$item]['invisible']) {
+                        printf ("<tr>
+                        <td class=border>%s</td>
+                        <td class=border>%s </td>
+                        </tr>",
+                        $this->allProperties[$item]['name'],
+                        $this->allProperties[$item]['value']
+                        );
+                    }
+                } else {
+                    printf ("<tr>
+                    <td class=border>%s</td>
+                    <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
+                    </tr>",
+                    $this->allProperties[$item]['name'],
+                    $item,
+                    $this->allProperties[$item]['value']
+                    );
+                }
+
             }
+
         }
+
+        print "
+        </table>
+        ";
 
         $this->printFiltersToForm();
 
         $this->printHiddenFormElements();
 
         print "</form>";
-
         print "
-        </table>
         </td>
         </tr>
         </table>
@@ -7396,17 +7477,33 @@ class Customers extends Records {
             $var_name   = $item.'_form';
             $var_value  = trim($_REQUEST[$var_name]);
             if (strlen($var_value)) {
+            	if ($this->allProperties[$item]['permission'] == 'admin' &&
+                    	$customer->id != $customer->reseller &&
+                    	$this->allProperties[$item]['resellerMayManageForChildAccounts']) {
+
+                    $_permission='reseller';
+
+                } else {
+                	$_permission=$this->allProperties[$item]['permission'];
+                }
+
                 $properties[]=array('name'       => $item,
                                     'value'      => $var_value,
                                     'category'   => $this->allProperties[$item]['category'],
-                                    'permission' => $this->allProperties[$item]['permission']
+                                    'permission' => $_permission
                                     );
             }
  
         }
  
         $customer->properties=$properties;
- 
+
+        /*
+        print "<pre>";
+        print_r($customer->properties);
+        print "</pre>";
+        */
+
         foreach (array_keys($this->Fields) as $item) {
             $var_name=$item.'_form';
             //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
