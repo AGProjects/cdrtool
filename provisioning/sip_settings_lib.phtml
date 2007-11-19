@@ -3068,8 +3068,9 @@ class SIPSettings {
 
     function AddPrepaidBalance($prepaidCard,$prepaidId) {
         dprint("AddPrepaidBalance($prepaidCard,$prepaidId)");
-        $card 	 = array("id"     => $prepaidId,
-                         "number" => $prepaidCard);
+        $card 	 = array('id'     => intval($prepaidId),
+                         'number' => intval($prepaidCard)
+                         );
 
         if (is_object($this->SipPortRemote)) {
             dprint("AddPrepaidBalanceRemote($prepaidCard,$prepaidId)");
