@@ -2007,7 +2007,11 @@ class SIPAccounts extends Records {
 
     function showAddForm() {
 		if ($this->selectionActive) return;
-        if (!$this->adminonly && count($this->allowedDomains) < 1) return;
+
+		if (!count($this->allowedDomains)) {
+            print "<p><font color=red>Error: Create a SIP domain first</font>";
+			return false;
+        }
 
         print "
         <p>
@@ -3515,6 +3519,7 @@ class ENUMranges extends Records {
 }
 
 class ENUMmappings extends Records {
+	var $maxrowsperpage     = '30';
 
     var $sortElements=array('changeDate' => 'Change date',
                             'number'     => 'Number',
@@ -3615,15 +3620,20 @@ class ENUMmappings extends Records {
         );
 
     function ENUMmappings(&$SOAPEngine) {
-        list($prefix,$tld)= explode("@",$_REQUEST['range_filter']);
-        if ($prefix && !$_REQUEST['number_filter']) {
-        	$_number_filter=$prefix.'%';
+        if ($_REQUEST['range_filter']) {
+        	list($_prefix,$_tld_filter)= explode("@",$_REQUEST['range_filter']);
+            if ($_prefix && !$_REQUEST['number_filter']) {
+                $_number_filter=$_prefix.'%';
+            } else {
+                $_number_filter=$_REQUEST['number_filter'];
+            }
         } else {
         	$_number_filter=$_REQUEST['number_filter'];
+            $_tld_filter=trim($_REQUEST['tld_filter']);
         }
 
         $this->filters   = array('number'       => $_number_filter,
-                                 'tld'          => $tld,
+                                 'tld'          => $_tld_filter,
                                  'range'        => trim($_REQUEST['range_filter']),
                                  'type'         => trim($_REQUEST['type_filter']),
                                  'mapto'        => trim($_REQUEST['mapto_filter']),
@@ -3742,7 +3752,6 @@ class ENUMmappings extends Records {
                     if (!$result->numbers[$i]) break;
     
                     $number = $result->numbers[$i];
-    
                     $index=$this->next+$i+1;
     
                     $rr=floor($index/2);
@@ -3912,6 +3921,98 @@ class ENUMmappings extends Records {
                             }
                         }
                         $j++;
+                    }
+
+                    if (!is_array($number->mappings) || !count($number->mappings)) {
+                        $_url = $this->url.sprintf("&service=%s&action=Delete&number_filter=%s&tld_filter=%s",
+                        urlencode($this->SOAPEngine->service),
+                        urlencode($number->id->number),
+                        urlencode($number->id->tld),
+                        urlencode($_mapping->mapto)
+                        );
+    
+                        if ($_REQUEST['action'] == 'Delete' &&
+                            $_REQUEST['number_filter'] == $number->id->number &&
+                            $_REQUEST['tld_filter'] == $number->id->tld &&
+                            $_REQUEST['mapto_filter'] == $_mapping->mapto) {
+                            $_url .= "&confirm=1";
+                            $actionText = "<font color=red>Confirm</font>";
+                        } else {
+                            $actionText = "Delete";
+                        }
+
+                        $_number_url = $this->url.sprintf("&service=%s&number_filter=%s&tld_filter=%s",
+                        urlencode($this->SOAPEngine->service),
+                        urlencode($number->id->number),
+                        urlencode($number->id->tld)
+                        );
+
+                        if ($this->version > 1) {
+                            $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                            urlencode($this->SOAPEngine->customerEngine),
+                            urlencode($number->customer)
+                            );
+
+                            if ($number->owner) {
+                                $_owner_url = sprintf
+                                ("<a href=%s&service=customers@%s&customer_filter=%s>%s</a>",
+                                $this->url,
+                                urlencode($this->SOAPEngine->soapEngine),
+                                urlencode($number->owner),
+                                $number->owner
+                                );
+                            } else {
+                                $_owner_url='';
+                            }          
+
+                            printf("
+                            <tr bgcolor=%s>
+                            <td>%s</td>
+                            <td><a href=%s>%s.%s</a></td>
+                            <td><a href=%s>+%s</a></td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>%s</td>
+                            <td><a href=%s>%s</a></td>
+                            </tr>",
+                            $bgcolor,
+                            $index,
+                            $_customer_url,
+                            $number->customer,
+                            $number->reseller,
+                            $_number_url,
+                            $number->id->number,
+                            $number->id->tld,
+                            $number->info,
+                            $_owner_url,
+                            $number->changeDate,
+                            $_url,
+                            $actionText
+                            );
+                        } else {
+                            printf("
+                            <tr bgcolor=%s>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td><a href=%s>%s</a></td>
+                            </tr>",
+                            $bgcolor,
+                            $_url,
+                            $actionText
+                            );
+                        }
                     }
 
                     printf("
