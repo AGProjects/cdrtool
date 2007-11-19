@@ -391,7 +391,7 @@ CREATE TABLE `prepaid_cards` (
   `batch` varchar(255) NOT NULL default '',
   `number` bigint(20) unsigned NOT NULL default '0',
   `value` smallint(5) unsigned NOT NULL default '0',
-  `blocked` enum('0','1') NOT NULL default '0',
+  `blocked` smallint unsigned not null,
   `date_active` date NOT NULL default '0000-00-00',
   `date_batch` date NOT NULL default '0000-00-00',
   `service` varchar(255) NOT NULL default 'sip',

@@ -224,8 +224,10 @@ if ($action =="update" && $table) {
                         }
                     }
                 } else {
-            		if (!$db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'")){
-            			printf ("<font color=red>Database error: %s (%s)</font>",$db->Error,$db->Errno);
+                    if ($table != 'prepaid_cards') {
+            			if (!$db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'")){
+            				printf ("<font color=red>Database error: %s (%s)</font>",$db->Error,$db->Errno);
+	                    }
                     }
                 }
             }
