@@ -7427,7 +7427,16 @@ class Customers extends Records {
         foreach (array_keys($this->allProperties) as $item) {
         	$item_print=preg_replace("/_/"," ",$item);
 
+			$_permission=$this->allProperties[$item]['permission'];
+
             if ($this->loginCredentials['loginType'] == 'admin') {
+            	if ($this->allProperties[$item]['permission'] == 'admin' &&
+                        $customer->id != $customer->reseller &&
+                        $this->allProperties[$item]['resellerMayManageForChildAccounts']) {
+
+                        $_permission='reseller';
+        	    }
+
                 printf ("<tr>
                 <td class=border>%s</td>
                 <td class=border>%s</td>
@@ -7436,7 +7445,7 @@ class Customers extends Records {
                 <td class=border>%s</td>
                 </tr>",
                 $this->allProperties[$item]['category'],
-                ucfirst($this->allProperties[$item]['permission']),
+                ucfirst($_permission),
                 $item_print,
                 $item,
                 $this->allProperties[$item]['value'],
@@ -7581,6 +7590,7 @@ class Customers extends Records {
             $var_name   = $item.'_form';
             $var_value  = trim($_REQUEST[$var_name]);
             if (strlen($var_value)) {
+
             	if ($this->allProperties[$item]['permission'] == 'admin' &&
                     	$customer->id != $customer->reseller &&
                     	$this->allProperties[$item]['resellerMayManageForChildAccounts']) {
