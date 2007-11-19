@@ -411,8 +411,8 @@ CREATE TABLE `prepaid_history` (
   `domain` varchar(64) NOT NULL default '',
   `action` varchar(255) NOT NULL default '',
   `number` varchar(255) NOT NULL default '',
-  `value` float(10,2) NOT NULL default '0.00',
-  `balance` float(10,2) NOT NULL default '0.00',
+  `value` decimal(10,4)  not null,
+  `balance` decimal(10,4)  not null,
   `date` datetime default NULL,
   PRIMARY KEY  (`id`),
   KEY `acct_id` (`username`,`domain`)

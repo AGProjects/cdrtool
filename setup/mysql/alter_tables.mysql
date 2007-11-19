@@ -451,3 +451,5 @@ alter table radius.radacctYYYMMDD change column FramedProtocol ENUMtld varchar(6
 
 5.3.4
 alter table prepaid_cards change column blocked blocked smallint unsigned not null;
+alter table prepaid_history change column value value decimal(10,4)  not null; 
+alter table prepaid_history change column balance balance decimal(10,4)  not null;
