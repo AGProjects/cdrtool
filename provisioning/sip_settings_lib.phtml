@@ -21,7 +21,8 @@ class SIPSettings {
     var $soapClassPresencePort     = 'WebService_SoapSIMPLEProxy_PresencePort';
 
     var $voicemail		   = array('AccessNumber'     => '*70',
-                                           'Server'           => 'vm.example.com');
+                                   'Server'           => 'vm.example.com'
+                                   );
     var $SupportCompany            = "Example company";
     var $SupportCDRsite            = "https://cdrtool.example.com/CDRTool";
     var $SupportWEBsite            = "https://www.example.com/help";
@@ -890,6 +891,11 @@ class SIPSettings {
             }
         }
 
+		if (!$result->mailbox) {
+            dprint ("No voicemail account found");
+            return false;
+        }
+
         $this->voicemail['Mailbox']        = $result->mailbox;
         $this->voicemail['Password']       = $result->password;
         $this->voicemail['Name']           = $result->name;
@@ -898,9 +904,10 @@ class SIPSettings {
         $this->voicemail['Options']        = $result->options;
         $this->voicemail['Account']        = $result->mailbox.'@'.$this->voicemail['Server'];
 
+        // used by template system
 		$this->voicemailMailbox=$result->mailbox;
 
-        //dprint_r($this->voicemail);
+        dprint_r($this->voicemail);
         return true;
     }
 
