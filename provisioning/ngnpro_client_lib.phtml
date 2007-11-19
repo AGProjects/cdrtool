@@ -2625,7 +2625,10 @@ class SIPAliases extends Records {
 
     function showAddForm() {
 		if ($this->selectionActive) return;
-        if (!$this->adminonly && count($this->allowedDomains) < 1) return;
+		if (!count($this->allowedDomains)) {
+            print "<p><font color=red>Error: Create a SIP domain first</font>";
+			return false;
+        }
 
         print "
         <p>
