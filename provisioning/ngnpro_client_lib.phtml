@@ -11,7 +11,7 @@
 
     // Usage example
 
-    // login using your favorite php session management and read data from login application
+    // login using your favorite php session management and read data from the login function
     
     if ($adminonly) {
         $loginCredentials=array(
@@ -6404,7 +6404,7 @@ class Customers extends Records {
                                                       'name'      => 'Reseller active',
                                                       'adminonly' => true
                                                      ),
-                              'aliasOf'     => array('type'       =>'integer',
+                              'impersonate'     => array('type'       =>'integer',
                                                      'name'       =>'Impersonate'),
                               'companyCode' => array('type'       =>'text',
                                                      'name'       =>'Company code',
@@ -7238,7 +7238,7 @@ class Customers extends Records {
                         $item,
                         $customer->$item);
 
-            } else if ($item=='aliasOf') {
+            } else if ($item=='impersonate') {
 
 		        if ($customer->reseller != $customer->id) {
                 	if ($this->adminonly || $this->reseller == $customer->reseller) {
@@ -7250,11 +7250,11 @@ class Customers extends Records {
                         $this->getChildren($customer->reseller);
                         if (count($this->children)> 0) {
                             print "
-                            <select name=aliasOf_form>
+                            <select name=impersonate_form>
                             <option>";
-                            $selected_aliasOf[$customer->aliasOf]='selected';
+                            $selected_impersonate[$customer->impersonate]='selected';
                             foreach (array_keys($this->children) as $_child) {
-                                printf ("<option value='%s' %s>%s. %s %s",$_child,$selected_aliasOf[$_child],$_child,$this->children[$_child]['firstName'],$this->children[$_child]['lastName']);
+                                printf ("<option value='%s' %s>%s. %s %s",$_child,$selected_impersonate[$_child],$_child,$this->children[$_child]['firstName'],$this->children[$_child]['lastName']);
                             }
         
                             print "
@@ -7979,11 +7979,11 @@ class Customers extends Records {
         $url=sprintf("%s%s",$protocolURL,$_SERVER['HTTP_HOST']);
 
     	$body="\n".
-               sprintf("Your login account information at %s\n\n",$url).
-               sprintf("Username: %s\n",$customer['username']).
-               sprintf("Password: %s\n",$customer['password']).
-               "\n".
-               "Do not reply to this message.\n";
+        sprintf("Your login account information at %s\n\n",$url).
+        sprintf("Username: %s\n",$customer['username']).
+        sprintf("Password: %s\n",$customer['password']).
+        "\n".
+        "Do not reply to this message.\n";
 
 		$from    = sprintf("From: %s",$this->SOAPEngine->supportEmail);
         $subject = sprintf("Your login account at %s",$url);
@@ -8021,9 +8021,9 @@ class Customers extends Records {
 
         // Compose query
         $Query=array('filter'     => $filter,
-                        'orderBy' => $orderBy,
-                        'range'   => $range
-                        );
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                    );
 
         // Insert credetials
         $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
@@ -8071,7 +8071,7 @@ class Presence {
         }
 
         if (!$SIPaccount['username'] || !$SIPaccount['domain'] || !$SIPaccount['password'] ) {
-            print "Error: SIPAccount not defined.\n";
+            print "Error: SIP account not defined\n";
             return false;
         }
 
@@ -8117,7 +8117,7 @@ class Presence {
         }
 
         if (!$SIPaccount['username'] || !$SIPaccount['domain'] || !$SIPaccount['password'] ) {
-            print "Error: SIPAccount not defined.\n";
+            print "Error: SIP account not defined";
             return false;
         }
 
