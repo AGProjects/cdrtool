@@ -2380,8 +2380,14 @@ class SIPAliases extends Records {
                      );
 
         // Order
-        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'aliasUsername';
-        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+
+        if ($this->version > 1) {
+	        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+    	    if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+        } else {
+    	    if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'aliasUsername';
+	        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'ASC';
+        }
 
         $orderBy = array('attribute' => $this->sorting['sortBy'],
                          'direction' => $this->sorting['sortOrder']
