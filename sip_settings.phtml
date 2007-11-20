@@ -20,7 +20,8 @@ if (is_readable("local/header.phtml")) {
 $perm->check("provisioning");
 
 require_once('provisioning/sip_settings_lib.phtml');
-require("provisioning/ngnpro_engines.inc");
+require_once("provisioning/ngnpro_engines.inc");
+include_once("local/provisioning.phtml");
 
 $account = $_REQUEST['account'];
 $action  = $_REQUEST['action'];
