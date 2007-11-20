@@ -3075,9 +3075,15 @@ class SIPSettings {
 
     function AddPrepaidBalance($prepaidCard,$prepaidId) {
         dprint("AddPrepaidBalance($prepaidCard,$prepaidId)");
-        $card 	 = array('id'     => intval($prepaidId),
-                         'number' => intval($prepaidCard)
-                         );
+        if ($this->SOAPversion > 1) {
+            $card 	 = array('id'     => intval($prepaidId),
+                             'number' => intval($prepaidCard)
+                             );
+        } else {
+            $card 	 = array('id'     => $prepaidId,
+                             'number' => $prepaidCard
+                             );
+        }
 
         if (is_object($this->SipPortRemote)) {
             dprint("AddPrepaidBalanceRemote($prepaidCard,$prepaidId)");
