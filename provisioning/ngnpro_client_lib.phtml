@@ -1983,7 +1983,7 @@ class SIPAccounts extends Records {
     }
 
     function showSeachFormCustom() {
-        printf ("User<input type=text size=15 name=username_filter value='%s'>",$this->filters['username']);
+        printf (" User<input type=text size=15 name=username_filter value='%s'>",$this->filters['username']);
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
@@ -2066,7 +2066,7 @@ class SIPAccounts extends Records {
             <input type=submit name=action value=Add>
             ";
 
-            printf (" User<input type=text size=15 name=account value='%s'>",$_REQUEST['account']);
+            printf ("User<input type=text size=15 name=account value='%s'>",$_REQUEST['account']);
             if (count($this->allowedDomains) > 0) {
             	print "@<select name=domain>";
                 foreach ($this->allowedDomains as $_domain) {
@@ -2075,7 +2075,7 @@ class SIPAccounts extends Records {
                 print "</select>";
 
             } else {
-                printf ("<input type=text name=domain size=15 value='%s'>",$_REQUEST['domain']);
+                printf (" <input type=text name=domain size=15 value='%s'>",$_REQUEST['domain']);
             }
 
             printf (" Pass<input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
@@ -2300,7 +2300,7 @@ class SIPAccounts extends Records {
                 }
             }
         }
-     }
+    }
 }
 
 class SIPAliases extends Records {
