@@ -126,55 +126,75 @@ class SOAPEngine {
     var $timeout       = 5;
 
     var $ports=array(
-                        'sip_accounts'   => array(
-                                           'recordsClass' => 'SipAccounts',
-                                           'name'         => 'SIP accounts',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort'
-                                           ),
-                        'sip_aliases'    => array(
-                                           'recordsClass' => 'SipAliases',
-                                           'name'         => 'SIP aliases',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                        'customers'      => array(
+                                           'recordsClass' => 'Customers',
+                                           'name'         => 'Login accounts',
+                                           'soapClass'    => 'WebService_NGNPro_CustomerPort',
+                                           'category'     => 'general',
+                                           'description'  => 'Manage customers address, login information and properties. Use the id to group data belonging to same customers. Use % to match a pattern. '
                                            ),
                         'sip_domains'    => array(
                                            'recordsClass' => 'Domains',
                                            'name'         => 'SIP domains',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                                           'soapClass'    => 'WebService_NGNPro_SipPort',
+                                           'category'     => 'sip',
+                                           'description'  => 'Manage SIP domains (e.g example.com). Use % to match a pattern. '
                                            ),
-                        'enum_numbers'   => array(
-                                           'recordsClass' => 'EnumMappings',
-                                           'name'         => 'ENUM numbers',
-                                           'soapClass'    => 'WebService_NGNPro_EnumPort'
+                        'sip_accounts'   => array(
+                                           'recordsClass' => 'SipAccounts',
+                                           'name'         => 'SIP accounts',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort',
+                                           'category'     => 'sip',
+                                           'description'  => 'Manage SIP accounts. Click on the SIP account to access the settings page. Use % to match a pattern. '
+                                           ),
+                        'sip_aliases'    => array(
+                                           'recordsClass' => 'SipAliases',
+                                           'name'         => 'SIP aliases',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort',
+                                           'category'     => 'sip',
+                                           'description'  => 'Manage aliases for SIP destinations. Use % to match a pattern. '
+                                           ),
+                        'trusted_peers'  => array(
+                                           'recordsClass' => 'TrustedPeers',
+                                           'name'         => 'SIP trusted IPs',
+                                           'soapClass'    => 'WebService_NGNPro_SipPort',
+                                           'category'     => 'sip',
+                                           'description'  => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. '
                                            ),
                         'enum_ranges'    => array(
                                            'recordsClass' => 'EnumRanges',
                                            'name'         => 'ENUM ranges',
-                                           'soapClass'    => 'WebService_NGNPro_EnumPort'
+                                           'soapClass'    => 'WebService_NGNPro_EnumPort',
+                                           'category'     => 'enum',
+                                           'description'  => 'Manage ENUM ranges that hold ENUM numbers. Use % to match a pattern. '
                                            ),
-                        'customers'      => array(
-                                           'recordsClass' => 'Customers',
-                                           'name'         => 'Customers',
-                                           'soapClass'    => 'WebService_NGNPro_CustomerPort'
+                        'enum_numbers'   => array(
+                                           'recordsClass' => 'EnumMappings',
+                                           'name'         => 'ENUM numbers',
+                                           'soapClass'    => 'WebService_NGNPro_EnumPort',
+                                           'category'     => 'enum',
+                                           'description'  => 'Managed ENUM numbers used for incomming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use % to match a pattern. '
                                            ),
-                        'trusted_peers'  => array(
-                                           'recordsClass' => 'TrustedPeers',
-                                           'name'         => 'Trusted peers',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort'
+                        'pstn_gateway_groups' => array(
+                                           'recordsClass' => 'GatewayGroups',
+                                           'name'         => 'PSTN groups',
+                                           'soapClass'    => 'WebService_NGNPro_NetworkPort',
+                                           'category'     => 'pstn',
+                                           'description'  => 'Managed groups of gateways used to call to the PSTN. You must add individual gateways to each group. '
                                            ),
                         'pstn_gateways'  => array(
                                            'recordsClass' => 'Gateways',
                                            'name'         => 'PSTN gateways',
-                                           'soapClass'    => 'WebService_NGNPro_NetworkPort'
-                                           ),
-                        'pstn_gateway_groups' => array(
-                                           'recordsClass' => 'GatewayGroups',
-                                           'name'         => 'Gateway groups',
-                                           'soapClass'    => 'WebService_NGNPro_NetworkPort'
+                                           'soapClass'    => 'WebService_NGNPro_NetworkPort',
+                                           'category'     => 'pstn',
+                                           'description'  => 'Manage gateways used to call to the PSTN. Set the IP address and IP protocol. '
                                            ),
                         'pstn_routes'    => array(
                                            'recordsClass' => 'Routes',
                                            'name'         => 'PSTN routes',
-                                           'soapClass'    => 'WebService_NGNPro_NetworkPort'
+                                           'soapClass'    => 'WebService_NGNPro_NetworkPort',
+                                           'category'     => 'pstn',
+                                           'description'  => 'Assign gateways groups to PSTN prefixes. Use % to match a pattern. '
                                            )
                         );
 
@@ -256,10 +276,16 @@ class SOAPEngine {
                     } else {
                         $_ports[$_key]['name']=$this->ports[$_key]['name'];
                     }
+                    if (strlen($this->loginCredentials['ports'][$_key]['description'])){
+                		$_ports[$_key]['description']=$this->loginCredentials['ports'][$_key]['description'];
+                    } else {
+                        $_ports[$_key]['description']=$this->ports[$_key]['description'];
+                    }
                 } else {
                 	$_ports[$_key]=$this->ports[$_key];
                 }
             }
+
             $this->ports=$_ports;
 
         }
@@ -751,9 +777,11 @@ class Records {
 
     function showSeachForm() {
 
-     	print "
-        <p> Use % to match a pattern
+     	printf ("<p><b>%s</b>",
+        $this->SOAPEngine->ports[$this->SOAPEngine->port]['description']);
 
+        print "
+        <p>
         <table border=0 bgcolor=lightgreen class=border width=100%>
         <tr>
 
@@ -3649,7 +3677,6 @@ class ENUMmappings extends Records {
                                 );
 		$this->Records(&$SOAPEngine);
         $this->getAllowedDomains();
-
     }
 
     function listRecords() {
@@ -4286,7 +4313,9 @@ class ENUMmappings extends Records {
     function getAllowedDomains() {
 		if ($this->version > 1) {
             // Filter
-            $filter=array('prefix'   => ''
+            $filter=array('prefix'   => '',
+                          'customer' => intval($this->filters['customer']),
+                          'reseller' => intval($this->filters['reseller'])
                           );
             // Range
             $range=array('start' => 0,
@@ -6830,6 +6859,11 @@ class Customers extends Records {
     }
 
     function showSeachForm() {
+     	printf ("<p><b>%s</b>",
+        $this->SOAPEngine->ports[$this->SOAPEngine->port]['description'],
+        '%'
+        );
+
      	print "
         <p>
         <table border=0 class=border width=100% bgcolor=lightgreen>
