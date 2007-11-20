@@ -1065,7 +1065,7 @@ class Records {
 
     function showCustomerForm($name='customer_filter') {
         if ($this->loginCredentials['customer'] != $this->loginCredentials['reseller']) {
-            printf (" %s",$this->loginCredentials['customer']);
+            printf ("%s",$this->loginCredentials['customer']);
         } else {
             if (count($this->customers)) {
                 $select_customer[$this->filters['customer']]='selected';
@@ -1084,7 +1084,7 @@ class Records {
     function showResellerForm($name='reseller_filter') {
         if (!$this->adminonly) return;
         if ($this->loginCredentials['reseller']) {
-            printf (" %s",$this->loginCredentials['reseller']);
+            printf ("%s",$this->loginCredentials['reseller']);
         } else {
             if (count($this->resellers)) {
                 $select_reseller[$this->filters['reseller']]='selected';
@@ -1231,6 +1231,37 @@ class Records {
         </table>
         ";
 	}
+
+    function customerFromLogin($dictionary=array()) {
+
+        if ($this->loginCredentials['reseller']) {
+            $reseller = $this->loginCredentials['reseller'];
+
+            if ($dictionary['customer']) {
+                $customer = $dictionary['customer'];
+            } else if ($_REQUEST['customer']) {
+                $customer = $_REQUEST['customer'];
+            } else {
+                $customer = $this->loginCredentials['customer'];
+            }
+        } else {
+            if ($dictionary['reseller']) {
+                $reseller = $dictionary['reseller'];
+            } else {
+                $reseller = trim($_REQUEST['reseller']);
+            }
+            if ($dictionary['customer']) {
+                $customer = $dictionary['customer'];
+            } else {
+                $customer = trim($_REQUEST['customer']);
+            }
+
+            if (!$customer) $customer=$reseller;
+        }
+
+        return array(intval($customer),intval($reseller));
+    }
+
 }
 
 class Domains extends Records {
@@ -1532,29 +1563,7 @@ class Domains extends Records {
         	$domain = trim($_REQUEST['domain']);
         }
 
-        if ($this->adminonly) {
-            if ($dictionary['reseller']) {
-        		$reseller = $dictionary['reseller'];
-            } else {
-        		$reseller = trim($_REQUEST['reseller']);
-            }
-            if ($dictionary['customer']) {
-        		$customer = $dictionary['customer'];
-            } else {
-        		$customer = trim($_REQUEST['customer']);
-            }
-            if (!$customer) $customer=$reseller;
-        } else {
-        	$reseller = $this->reseller;
-
-            if ($dictionary['customer']) {
-        		$customer = $dictionary['customer'];
-            } else {
-        		$customer = trim($_REQUEST['customer']);
-            }
-
-            if (!$customer) $customer=$reseller;
-        }
+		list($customer,$reseller)=$this->customerFromLogin($dictionary);
 
         if (!$this->validDomain($domain)) {
             print "<font color=red>Error: invalid domain name</font>";
@@ -1563,9 +1572,11 @@ class Domains extends Records {
 
         if ($this->version > 1) {
             $domainStructure = array('domain'   => strtolower($domain),
-                                    'customer' => intval($customer),
-                                    'reseller' => intval($reseller)
+                                     'customer' => intval($customer),
+                                     'reseller' => intval($reseller)
                                     );
+            print_r($domainStructure);
+
         } else {
             $domainStructure = strtolower($domain);
         }
@@ -3192,7 +3203,7 @@ class ENUMranges extends Records {
             printf ("Max Digits<input type=text size=3 name=maxDigits value=11> ");
             if ($this->version > 1) {
                 $this->showCustomerTextBox();
-            	printf ("Info<input type=text size=15 name=info value='%s'> ",$_REQUEST['info']);
+            	printf (" Info<input type=text size=15 name=info value='%s'> ",$_REQUEST['info']);
             }
 
             print "
@@ -3231,22 +3242,14 @@ class ENUMranges extends Records {
             return false;
         }
 
-        if ($this->adminonly) {
-        	$reseller = trim($_REQUEST['reseller']);
-        	$customer = trim($_REQUEST['customer']);
-            if (!$customer) $customer=$reseller;
-        } else {
-			if (in_array($prefix,$this->deniedPrefixes)) {
+        if (!$this->adminonly) {
+			if (!in_array($prefix,$this->deniedPrefixes)) {
                 print "<p><font color=red>Error: Only an administrator account can create the prefix coresponding to a country code.</font>";
                 return false;
             }
-
-        	$reseller = $this->reseller;
-        	$customer = trim($_REQUEST['customer']);
-            if (!$customer || !in_array($customer,array_keys($this->customers))) {
-                $customer=$reseller;
-            }
         }
+
+		list($customer,$reseller)=$this->customerFromLogin($dictionary);
 
 		if (!trim($_REQUEST['ttl'])) {
             $ttl=3600;
@@ -5017,30 +5020,7 @@ class TrustedPeers extends Records {
     		$owner   = trim($_REQUEST['owner']);
         }
 
-        if ($this->adminonly) {
-        	if ($dictionary['reseller']) {
-                $reseller=$dictionary['reseller'];
-            } else {
-            	$reseller = trim($_REQUEST['reseller']);
-            }
-        	if ($dictionary['customer']) {
-                $customer=$dictionary['customer'];
-            } else {
-            	$customer = trim($_REQUEST['customer']);
-            }
-            if (!$customer) $customer=$reseller;
-        } else {
-        	$reseller = $this->reseller;
-        	if ($dictionary['customer']) {
-                $customer=$dictionary['customer'];
-            } else {
-            	$customer = trim($_REQUEST['customer']);
-            }
-
-            if (!$customer || !in_array($customer,array_keys($this->customers))) {
-                $customer=$reseller;
-            }
-        }
+		list($customer,$reseller)=$this->customerFromLogin($dictionary);
 
 		if (!strlen($ipaddress) || !strlen($description)) {
             printf ("<p><font color=red>Error: Missing IP or description. </font>");
@@ -5339,29 +5319,7 @@ class GatewayGroups extends Records {
             	$name = trim($_REQUEST['name']);
             }
 
-            if ($this->adminonly) {
-                if ($dictionary['reseller']) {
-                    $reseller=$dictionary['reseller'];
-                } else {
-                    $reseller = trim($_REQUEST['reseller']);
-                }
-                if ($dictionary['customer']) {
-                    $customer=$dictionary['customer'];
-                } else {
-                    $customer = trim($_REQUEST['customer']);
-                }
-                if (!$customer) $customer=$reseller;
-            } else {
-                $reseller = $this->reseller;
-                if ($dictionary['customer']) {
-                    $customer=$dictionary['customer'];
-                } else {
-                    $customer = trim($_REQUEST['customer']);
-                }
-                if (!$customer || !in_array($customer,array_keys($this->customers))) {
-                    $customer=$reseller;
-                }
-            }
+			list($customer,$reseller)=$this->customerFromLogin($dictionary);
 
             $structure=array('name'     => $name,
                              'customer' => intval($customer),

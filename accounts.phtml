@@ -27,7 +27,7 @@ $compidFilter    = $_REQUEST['compidFilter'];
 $aNumberFilter   = $_REQUEST['aNumberFilter'];
 $cscodeFilter    = $_REQUEST['cscodeFilter'];
 $afterDateFilter = $_REQUEST['afterDateFilter'];
-$reseller        = $_REQUEST['reseller'];
+$impersonate        = $_REQUEST['impersonate'];
 
 $perms           = $_REQUEST['perms'];
 $sources         = $_REQUEST['sources'];
@@ -110,7 +110,7 @@ if ($action == "edit" && $id) {
                     aNumberFilter   = '%s',
                     cscodeFilter    = '%s',
                     afterDateFilter = '%s',
-                    reseller        = '%s'
+                    impersonate        = '%s'
                     ",
                 	addslashes($perms_text),
 	                addslashes($sources_text),
@@ -122,7 +122,7 @@ if ($action == "edit" && $id) {
                     addslashes($aNumberFilter),
                     addslashes($cscodeFilter),
                     addslashes($afterDateFilter),
-                    addslashes($reseller)
+                    addslashes($impersonate)
                     );
                 }
             }
@@ -191,7 +191,7 @@ if ($action == "edit" && $id) {
         $compidFilter     = $db->f('compidFilter');
         $cscodeFilter     = $db->f('cscodeFilter');
         $afterDateFilter  = $db->f('afterDateFilter');
-        $reseller         = $db->f('reseller');
+        $impersonate         = $db->f('impersonate');
 
         showForm($id);
     }
@@ -236,7 +236,7 @@ if ($action == "edit" && $id) {
             cscodeFilter,
             gatewayFilter,
             afterDateFilter,
-            reseller
+            impersonate
             ) values (
             '%s',
             '%s',
@@ -274,7 +274,7 @@ if ($action == "edit" && $id) {
             addslashes($cscodeFilter),
         	addslashes($gatewayFilter),
             addslashes($afterDateFilter),
-            addslashes($reseller)
+            addslashes($impersonate)
             );
 
             dprint($query);

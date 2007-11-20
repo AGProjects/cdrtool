@@ -109,7 +109,7 @@ CREATE TABLE `auth_user` (
   `otp_rcpt` varchar(255) NOT NULL default '',
   `otp_expire` datetime NOT NULL default '0000-00-00 00:00:00',
   `otp_passwd` varchar(255) NOT NULL default '',
-  `reseller` bigint(20) unsigned NOT NULL,
+  `impersonate` varchar(50) not null default '',
   PRIMARY KEY  (`user_id`),
   UNIQUE KEY `k_username` (`username`)
 )  DEFAULT CHARSET=latin1;

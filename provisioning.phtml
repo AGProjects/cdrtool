@@ -38,17 +38,37 @@ global $CDRTool;
 
 $loginCredentials=array();
 
-if ($CDRTool['reseller']) {
-	$loginCredentials=array(
-                        'reseller'           => $CDRTool['reseller'],
+if ($CDRTool['impersonate']) {
+    if (preg_match("/^([1-9][0-9]*)\.([1-9][0-9]*)$/",$CDRTool['impersonate'],$m)) {
+        $_customer=$m[1];
+        $_reseller=$m[2];
+		$loginCredentials=array(
+                        'customer'           => $_customer,
+                        'reseller'           => $_reseller,
                         'loginType'          => 'admin'
                         );
-} else {
-    if ($perm->have_perm("admin")) {
-	$loginCredentials=array(
+
+    } else if (preg_match("/^(\[1-9][0-9]*)$/",$CDRTool['impersonate'],$m)) {
+        $_customer=$m[1];
+		$loginCredentials=array(
+                        'customer'           => $_customer,
+                        'reseller'           => $_customer,
                         'loginType'          => 'admin'
                         );
+    } else if ($CDRTool['impersonate'] == '0' || $CDRTool['impersonate'] = '0.0') {
+		$loginCredentials=array(
+                        'loginType'          => 'admin'
+                        );
+    } else {
+        page_close();
+        printf ("Error: Invalid impersonate value %s",$CDRTool['impersonate']);
+        exit;
     }
+
+} else {
+    page_close();
+    printf ("Please define impersonate field for login account <b>%s</b>",$auth->auth["uname"]);
+    exit;
 }
 
 require_once("provisioning/ngnpro_soap_library.phtml");
