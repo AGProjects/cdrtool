@@ -449,7 +449,7 @@ INSERT into billing_enum_tlds (enum_tld,e164_regexp,discount) values ('e164.exam
 
 alter table radius.radacctYYYMMDD change column FramedProtocol ENUMtld varchar(64) not NULL;
 
-5.3.4
+5.4
 alter table prepaid_cards change column blocked blocked smallint unsigned not null;
 alter table prepaid_history change column value value decimal(10,4)  not null; 
 alter table prepaid_history change column balance balance decimal(10,4)  not null;
