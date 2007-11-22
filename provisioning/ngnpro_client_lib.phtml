@@ -131,28 +131,28 @@ class SOAPEngine {
                                            'name'         => 'Login accounts',
                                            'soapClass'    => 'WebService_NGNPro_CustomerPort',
                                            'category'     => 'general',
-                                           'description'  => 'Manage customers address, login information and properties. Use the id to group data belonging to same customers. Use % to match a pattern. '
+                                           'description'  => 'Manage login accounts, customer information  and properties. Customer id can be assigned to entities like SIP domains and ENUM ranges. Use % to match a pattern. '
                                            ),
                         'sip_domains'    => array(
                                            'recordsClass' => 'Domains',
                                            'name'         => 'SIP domains',
                                            'soapClass'    => 'WebService_NGNPro_SipPort',
                                            'category'     => 'sip',
-                                           'description'  => 'Manage SIP domains (e.g example.com). Use % to match a pattern. '
+                                           'description'  => 'Manage SIP domains (e.g example.com) served by the SIP Proxy. Use % to match a pattern. '
                                            ),
                         'sip_accounts'   => array(
                                            'recordsClass' => 'SipAccounts',
                                            'name'         => 'SIP accounts',
                                            'soapClass'    => 'WebService_NGNPro_SipPort',
                                            'category'     => 'sip',
-                                           'description'  => 'Manage SIP accounts. Click on the SIP account to access the settings page. Use % to match a pattern. '
+                                           'description'  => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use % to match a pattern. '
                                            ),
                         'sip_aliases'    => array(
                                            'recordsClass' => 'SipAliases',
                                            'name'         => 'SIP aliases',
                                            'soapClass'    => 'WebService_NGNPro_SipPort',
                                            'category'     => 'sip',
-                                           'description'  => 'Manage aliases for SIP destinations. Use % to match a pattern. '
+                                           'description'  => 'Manage aliases for SIP destinations (e.g. user1@example1.com alias to user2@example2.com). Use % to match a pattern. '
                                            ),
                         'trusted_peers'  => array(
                                            'recordsClass' => 'TrustedPeers',
@@ -173,7 +173,7 @@ class SOAPEngine {
                                            'name'         => 'ENUM numbers',
                                            'soapClass'    => 'WebService_NGNPro_EnumPort',
                                            'category'     => 'enum',
-                                           'description'  => 'Manage ENUM numbers used for incomming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use % to match a pattern. '
+                                           'description'  => 'Manage ENUM numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use % to match a pattern. '
                                            ),
                         'pstn_gateway_groups' => array(
                                            'recordsClass' => 'GatewayGroups',
@@ -1425,12 +1425,17 @@ class Domains extends Records {
                         urlencode($this->SOAPEngine->customerEngine),
                         urlencode($domain->customer)
                         );
+
+                        $_sip_accounts_url = $this->url.sprintf("&service=sip_accounts@%s&domain_filter=%s",
+                        urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($domain->domain)
+                        );
     
                         printf("
                         <tr bgcolor=%s>
                         <td>%s</td>
                         <td><a href=%s>%s.%s</a></td>
-                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
                         <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
@@ -1439,6 +1444,7 @@ class Domains extends Records {
                         $_customer_url,
                         $domain->customer,
                         $domain->reseller,
+                        $_sip_accounts_url,
                         $domain->domain,
                         $domain->changeDate,
                         $_url,
@@ -1575,8 +1581,6 @@ class Domains extends Records {
                                      'customer' => intval($customer),
                                      'reseller' => intval($reseller)
                                     );
-            print_r($domainStructure);
-
         } else {
             $domainStructure = strtolower($domain);
         }
@@ -2865,11 +2869,12 @@ class ENUMranges extends Records {
     var $FieldsAdminOnly=array(
                               'reseller' => array('type'=>'integer'),
                               );
+
     var $Fields=array(
-                              'customer' => array('type'=>'integer'),
-                              'info'     => array('type'=>'string'),
-                              'size'     => array('type'=>'integer'),
-                              'ttl'      => array('type'=>'integer')
+                              'customer'    => array('type'=>'integer'),
+                              'info'        => array('type'=>'string'),
+                              'size'        => array('type'=>'integer'),
+                              'ttl'         => array('type'=>'integer')
                               );
 
     function ENUMranges(&$SOAPEngine) {
@@ -2886,6 +2891,9 @@ class ENUMranges extends Records {
                   	        	      'prefix'     => 'Prefix',
                     	        	  'tld'        => 'TLD'
 	                        	     );
+            $this->Fields['nameservers'] = array('type'=>'string',
+                                                 'name'=>'Name servers');
+
         }
     }
 
@@ -5192,6 +5200,12 @@ class GatewayGroups extends Records {
                         urlencode($group->name)
                         );
 
+                        $_group_url = $this->url.sprintf("&service=pstn_gateways@%s&group_filter=%s",
+                        urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($group->name)
+                        );
+
+
                         if ($_REQUEST['action'] == 'Delete' &&
                             $_REQUEST['name_filter'] == $group->name) {
                             $_url .= "&confirm=1";
@@ -5209,7 +5223,7 @@ class GatewayGroups extends Records {
                         <tr bgcolor=%s>
                         <td>%s</td>
                         <td><a href=%s>%s.%s</a></td>
-                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
                         <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
@@ -5218,6 +5232,7 @@ class GatewayGroups extends Records {
                         $_customer_url,
                         $group->customer,
                         $group->reseller,
+                        $_group_url,
                         $group->name,
                         $group->changeDate,
                         $_url,
@@ -5521,7 +5536,7 @@ class Gateways extends Records {
                         urlencode($this->SOAPEngine->customerEngine),
                         urlencode($gateway->customer)
                         );
-    
+
                         printf("
                         <tr bgcolor=%s>
                         <td>%s</td>
@@ -5933,13 +5948,18 @@ class Routes extends Records {
                         urlencode($this->SOAPEngine->customerEngine),
                         urlencode($route->customer)
                         );
-    
+
+                        $_group_url = $this->url.sprintf("&service=pstn_gateways@%s&group_filter=%s",
+                        urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($route->gatewayGroup)
+                        );
+
                         printf("
                         <tr bgcolor=%s>
                         <td>%s</td>
                         <td><a href=%s>%s.%s</a></td>
                         <td>%s</td>
-                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
                         <td>%s</td>
                         <td>%s</td>
                         <td><a href=%s>%s</a></td>
@@ -5950,6 +5970,7 @@ class Routes extends Records {
                         $route->customer,
                         $route->reseller,
                         $route->prefix,
+                        $_group_url,
                         $route->gatewayGroup,
                         $route->priority,
                         $route->changeDate,
@@ -7138,9 +7159,8 @@ class Customers extends Records {
         	if ($_REQUEST['action'] != 'Delete') {
         		print "<input type=submit name=action value=Copy>";
             }
-        	if ($_REQUEST['action'] != 'Copy') {
-        		print "<input type=submit name=action value=Delete>";
-            }
+
+            print "<input type=submit name=action value=Delete>";
 
             if ($_REQUEST['action'] == 'Delete' || $_REQUEST['action'] == 'Copy') {
                 print "<input type=hidden name=confirm value=1>";
@@ -7745,10 +7765,6 @@ class Customers extends Records {
         // change username
         $customer_new=$customer;
 		unset($customer_new->id);
-
-        if (!$this->adminonly) {
-        	unset($customer_new->reseller);
-        }
 
         $j=1;
         while ($j < 9) {
