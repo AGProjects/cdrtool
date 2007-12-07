@@ -405,7 +405,7 @@ class SOAPEngine {
             $this->SOAPurl=$this->soapEngines[$this->soapEngine]['url'];
 
             if ($this->adminonly)  {
-            	printf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClass,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
+            	//printf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClass,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
             }
 
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
@@ -436,7 +436,7 @@ class SOAPEngine {
             	$this->SOAPurlRemote=$this->soapEngines[$this->soapDepends]['url'];
 
                 if ($this->adminonly)  {
-            		printf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
+            		//printf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
                 }
             	$this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
 
@@ -698,7 +698,7 @@ class Records {
         foreach (array_keys($this->SOAPEngine->soapEngines) as $_engine) {
         	if ($this->SOAPEngine->skip[$_engine]) continue;
 
-        	if ($j>1) printf ("<option value=''>--------");
+        	if ($j > 1) printf ("<option value=''>--------");
             foreach (array_keys($this->SOAPEngine->ports) as $_port) {
                 $idx=$_port.'@'.$_engine;
                 if (in_array($_port,$this->SOAPEngine->skipEngines[$_engine])) continue;
@@ -2052,7 +2052,7 @@ class SIPAccounts extends Records {
 		if ($this->selectionActive) return;
 
 		if (!count($this->allowedDomains)) {
-            print "<p><font color=red>Error: Create a SIP domain first</font>";
+            print "<p><font color=red>You must create at least one SIP domain before adding SIP accounts</font>";
 			return false;
         }
 
@@ -2675,7 +2675,7 @@ class SIPAliases extends Records {
     function showAddForm() {
 		if ($this->selectionActive) return;
 		if (!count($this->allowedDomains)) {
-            print "<p><font color=red>Error: Create a SIP domain first</font>";
+            print "<p><font color=red>You must create at least one SIP domain before adding SIP aliases</font>";
 			return false;
         }
 
@@ -2874,7 +2874,7 @@ class ENUMranges extends Records {
                               'customer'    => array('type'=>'integer'),
                               'info'        => array('type'=>'string'),
                               'size'        => array('type'=>'integer'),
-                              'ttl'         => array('type'=>'integer')
+                              'ttl'         => array('type'=>'integer'),
                               );
 
     function ENUMranges(&$SOAPEngine) {
@@ -3429,8 +3429,8 @@ class ENUMranges extends Records {
                     );
                 }
             }
-    
         }
+
         foreach (array_keys($this->Fields) as $item) {
             if ($this->Fields[$item]['name']) {
                 $item_name=$this->Fields[$item]['name'];
@@ -3438,7 +3438,20 @@ class ENUMranges extends Records {
                 $item_name=ucfirst($item);
             }
 
-            if ($this->Fields[$item]['type'] == 'text') {
+            if ($item == 'nameservers') {
+                foreach ($range->$item as $_item) {
+                    $nameservers.=$_item."\n";
+                }
+
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><textarea cols=30 name=%s_form rows=6>%s</textarea></td>
+                </tr>",
+                $item_name,
+                $item,
+                $nameservers
+                );
+            } elseif ($this->Fields[$item]['type'] == 'text') {
                 printf ("<tr>
                 <td class=border valign=top>%s</td>
                 <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
@@ -3490,6 +3503,19 @@ class ENUMranges extends Records {
             //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
             if ($this->Fields[$item]['type'] == 'integer') {
                 $range->$item = intval($_REQUEST[$var_name]);
+            } else if ($item == 'nameservers') {
+                $_txt=trim($_REQUEST[$var_name]);
+                if (!strlen($_txt)) {
+                    unset($range->$item);
+                } else {
+                	$_nameservers=array();
+                	$_lines=explode("\n",$_txt);
+                    foreach ($_lines as $_line) {
+                        $_ns=trim($_line);
+                    	$_nameservers[]=$_ns;
+                    }
+                	$range->$item=$_nameservers;
+                }
             } else {
                 $range->$item = trim($_REQUEST[$var_name]);
             }
@@ -3507,8 +3533,6 @@ class ENUMranges extends Records {
             }
         }
 
-        //dprint_r($range);
-        //return true;
         $function=array('commit'   => array('name'       => 'updateRange',
                                             'parameters' => array($range),
                                             'logs'       => array('success' => sprintf('<p>ENUM range +%s under %s has been updated',$rangeid['prefix'],$rangeid['tld']))),
@@ -4251,7 +4275,7 @@ class ENUMmappings extends Records {
     function showAddForm() {
 		//if ($this->selectionActive) return;
 		if (!count($this->ranges)) {
-            print "<p><font color=red>Error: Create an ENUM range first</font>";
+            print "<p><font color=red>You must create at least one ENUM range before adding ENUM numbers</font>";
 			return false;
         }
 

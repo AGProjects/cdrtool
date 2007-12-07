@@ -19,6 +19,7 @@ class SIPSettings {
     var $soapClassVoicemailPort    = 'WebService_NGNPro_VoicemailPort';
     var $soapClassCustomerPort     = 'WebService_NGNPro_CustomerPort';
     var $soapClassPresencePort     = 'WebService_SoapSIMPLEProxy_PresencePort';
+    var $showSoapConnectionInfo    = false;
 
     var $voicemail		   = array('AccessNumber'     => '*70',
                                    'Server'           => 'vm.example.com'
@@ -319,7 +320,7 @@ class SIPSettings {
         $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-        if ($this->loginType == "admin")  {
+        if ($this->showSoapConnectionInfo)  {
         	printf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassSipPort,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
         }
 
@@ -346,7 +347,7 @@ class SIPSettings {
             $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-            if ($this->loginType == "admin" && $this->showSoapConnectionInfo)  {
+            if ($this->showSoapConnectionInfo)  {
                 printf ("and sync to <a href=%swsdl target=wsdl>%s</a> as %s ",$this->SOAPurlRemote,$this->SOAPurlRemote,$this->soapEngines[$this->soapRemoteId]['username']);
             }
 
@@ -367,7 +368,7 @@ class SIPSettings {
         $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-        if ($this->loginType == "admin" && $this->SOAPurlVoicemail != $this->SOAPurl)  {
+        if ($this->showSoapConnectionInfo && $this->SOAPurlVoicemail != $this->SOAPurl)  {
         	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassVoicemailPort,$this->SOAPurlVoicemail,$this->SOAPurlVoicemail,$this->soapEngines[$this->voicemailEngine]['username']);
         }
 
@@ -386,7 +387,7 @@ class SIPSettings {
         $this->EnumPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->EnumPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-        if ($this->loginType == "admin" && $this->SOAPurlEnum != $this->SOAPurl)  {
+        if ($this->showSoapConnectionInfo && $this->SOAPurlEnum != $this->SOAPurl)  {
         	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassEnumPort,$this->SOAPurlEnum,$this->SOAPurlEnum,$this->soapEngines[$this->enumEngine]['username']);
         }
 
@@ -405,7 +406,7 @@ class SIPSettings {
         $this->RatingPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->RatingPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-        if ($this->loginType == "admin" && $this->SOAPurlRating != $this->SOAPurl)  {
+        if ($this->showSoapConnectionInfo  && $this->SOAPurlRating != $this->SOAPurl)  {
         	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassRatingPort,$this->SOAPurlRating,$this->SOAPurlRating,$this->soapEngines[$this->ratingEngine]['username']);
         }
 
@@ -423,7 +424,7 @@ class SIPSettings {
         $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-        if ($this->loginType == "admin" && $this->SOAPurlCustomer != $this->SOAPurl)  {
+        if ($this->showSoapConnectionInfo && $this->SOAPurlCustomer != $this->SOAPurl)  {
         	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassCustomerPort,$this->SOAPurlCustomer,$this->SOAPurlCustomer,$this->soapEngines[$this->customerEngine]['username']);
         }
 
@@ -434,7 +435,7 @@ class SIPSettings {
         	$this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT,        5);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-            if ($this->loginType == "admin" && $this->showSoapConnectionInfo)  {
+            if ($this->showSoapConnectionInfo)  {
                 printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> ",$this->soapClassPresencePort,$this->SOAPurlPresence,$this->SOAPurlPresence);
             }
         }
@@ -1076,7 +1077,7 @@ class SIPSettings {
                                         "SubscriberMayEditIt"=>1
                                         );
             $this->SIPACLS['anonymous-reject']=array("Group"=>$this->anonymous-reject,
-                                        "WEBName" =>sprintf (_("Reject anonymous callers")),
+                                        "WEBName" =>sprintf (_("Reject anonymous")),
                                         "SubscriberMaySeeIt"=>1,
                                         "SubscriberMayEditIt"=>1
                                         );
@@ -1299,25 +1300,15 @@ class SIPSettings {
 
             print "
             <tr>
-            	<td class=border>Presence Mode
+            	<td class=border>Mode
             	</td>
-            	<td class=border>Presence agent (RFC3903)
+            	<td class=border>Presence agent (RFC3903) with XCAP policy (RFC4825)
             	</td>
             </tr>
-            <tr>
-            	<td class=border>Storage mode
-            	</td>
-            	<td class=border>XCAP (RFC4825)
-            </td>
             <tr>
             	<td class=border>XCAP root
             	</td>
             	<td class=border>$this->xcaproot
-            </td>
-            <tr>
-            	<td class=border>XCAP authentication
-            	</td>
-            	<td class=border>Use SIP credentials
             </td>
             </tr>
             ";
@@ -1362,7 +1353,7 @@ class SIPSettings {
             <tr>
               <td class=border>";
                 print _("Alias");
-                print "$t
+                print " $t
               </td>
               <td class=border> <input type=text size=35 name=aliases[] value=\"$a\"></td>
             </tr>
@@ -1848,7 +1839,7 @@ class SIPSettings {
                 print "</select>";
                 print "<br>";
             } else {
-            	printf (_("Voicemail messages are sent by email to %s"),$this->email);
+            	printf (_("Voice messages are sent by email to %s"),$this->email);
             }
 
             print "
