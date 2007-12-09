@@ -1265,6 +1265,13 @@ class Records {
 }
 
 class Domains extends Records {
+    var $FieldsAdminOnly=array(
+                              'reseller' => array('type'=>'integer'),
+                              );
+
+    var $Fields=array(
+                              'customer'    => array('type'=>'integer')
+                              );
 
     function Domains(&$SOAPEngine) {
         $this->filters   = array(
@@ -1483,7 +1490,9 @@ class Domains extends Records {
 
             print "</table>";
 
-	        if ($this->version > 1) {
+			if ($this->rows == 1 && $this->version > 1) {
+                $this->showRecord($domain);
+            } else {
             	$this->showPagination($maxrows);
             }
 
@@ -1648,7 +1657,179 @@ class Domains extends Records {
             	$this->selectionKeys[]=$result;
             }
         }
-   }
+    }
+
+    function getRecord($domain) {
+		if ($this->version < 2) return false;
+
+        // Filter
+        $filter=array(
+                      'domain'    => $domain
+                      );
+
+        // Range
+        $range=array('start' => 0,
+                     'count' => 1
+                     );
+
+        $orderBy = array('attribute' => 'changeDate',
+                         'direction' => 'DESC'
+                         );
+
+        // Compose query
+        $Query=array('filter'     => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+        dprint_r($Query);
+
+        // Insert credetials
+        $this->SOAPEngine->soapclient->addHeader($this->SOAPEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SOAPEngine->soapclient->getDomains($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+        	if ($result->domains[0]){
+        		return $result->domains[0];
+            } else {
+                return false;
+            }
+        }
+    }
+
+    function showRecord($domain) {
+
+        print "<table border=0 cellpadding=10>";
+        print "
+        <tr>
+        <td valign=top>
+        <table border=0>";
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "<input type=hidden name=action value=Update>";
+
+        print "<tr>
+        <td colspan=2><input type=submit value=Update>
+        </td></tr>";
+
+		if ($this->adminonly) {
+
+            foreach (array_keys($this->FieldsAdminOnly) as $item) {
+                if ($this->FieldsAdminOnly[$item]['name']) {
+                    $item_name=$this->FieldsAdminOnly[$item]['name'];
+                } else {
+                    $item_name=ucfirst($item);
+                }
+    
+                if ($this->FieldsAdminOnly[$item]['type'] == 'text') {
+                    printf ("<tr>
+                    <td class=border valign=top>%s</td>
+                    <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $domain->$item
+                    );
+                } else {
+                    printf ("<tr>
+                    <td class=border valign=top>%s</td>
+                    <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $domain->$item
+                    );
+                }
+            }
+        }
+
+        foreach (array_keys($this->Fields) as $item) {
+            if ($this->Fields[$item]['name']) {
+                $item_name=$this->Fields[$item]['name'];
+            } else {
+                $item_name=ucfirst($item);
+            }
+
+            if ($this->Fields[$item]['type'] == 'text') {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                </tr>",
+                $item_name,
+                $item,
+                $domain->$item
+                );
+            } else {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                </tr>",
+                $item_name,
+                $item,
+                $domain->$item
+                );
+            }
+        }
+
+        printf ("<input type=hidden name=domain_filter value='%s'",$domain->domain);
+        $this->printFiltersToForm();
+        $this->printHiddenFormElements();
+
+        print "</form>";
+        print "
+        </table>
+        ";
+    }
+
+    function updateRecord () {
+        //print "<p>Updating domain ...";
+
+        if (!$_REQUEST['domain_filter']) return false;
+
+        if (!$domain = $this->getRecord($_REQUEST['domain_filter'])) {
+            return false;
+        }
+
+        $domain_old=$domain;
+
+        foreach (array_keys($this->Fields) as $item) {
+            $var_name=$item.'_form';
+            //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
+            if ($this->Fields[$item]['type'] == 'integer') {
+                $domain->$item = intval($_REQUEST[$var_name]);
+            } else {
+                $domain->$item = trim($_REQUEST[$var_name]);
+            }
+        }
+
+		if ($this->adminonly) {
+            foreach (array_keys($this->FieldsAdminOnly) as $item) {
+                $var_name=$item.'_form';
+                //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
+                if ($this->FieldsAdminOnly[$item]['type'] == 'integer') {
+                    $domain->$item = intval($_REQUEST[$var_name]);
+                } else {
+                    $domain->$item = trim($_REQUEST[$var_name]);
+                }
+            }
+        }
+
+        $function=array('commit'   => array('name'       => 'updateDomain',
+                                            'parameters' => array($domain),
+                                            'logs'       => array('success' => sprintf('<p>Domain %s has been updated',$domain->domain))),
+                        'rollback' => array('name'       => 'updateDomain',
+                                            'parameters' => array($domain_old))
+                        );
+
+        return $this->SOAPEngine->execute($function);
+
+    }
 
 }
 

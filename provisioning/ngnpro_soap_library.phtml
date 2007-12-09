@@ -49,6 +49,17 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                             'style'=>'rpc',
                             'use'=>'encoded' ));
     }
+    function &updateDomain($domain) {
+        // domain is a ComplexType SipDomain,
+        //refer to wsdl for more info
+        $domain =& new SOAP_Value('domain','{urn:AGProjects:NGNPro}SipDomain',$domain);
+        return $this->call("updateDomain", 
+                        $v = array("domain"=>$domain), 
+                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
+                            'soapaction'=>'',
+                            'style'=>'rpc',
+                            'use'=>'encoded' ));
+    }
     function &deleteDomain($domain) {
         return $this->call("deleteDomain", 
                         $v = array("domain"=>$domain), 

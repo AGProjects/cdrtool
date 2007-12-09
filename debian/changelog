@@ -1,4 +1,4 @@
-cdrtool (5.4) unstable; urgency=low
+cdrtool (6.0) unstable; urgency=low
 
   * After renormalization, re-cache the monthly usage only for the accounts
     that had CDRs changed during renormalization
@@ -12,9 +12,10 @@ cdrtool (5.4) unstable; urgency=low
   * Fixed name of domain table when thor data-source is enabled
   * Added link in the trace window to jump to a different SIP Proxy
   * Import/export delimiter for rating tables can be adjusted, default is ,
-  * Must apply database structure changes from setup/mysql/alter_tables.mysql 
+  * Must apply database structure changes from setup/mysql/alter_tables.mysql
+  * NGNPro client completed
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 22 Nov 2007 10:51:01 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 09 Dec 2007 04:20:50 +0100
 
 cdrtool (5.3.3) unstable; urgency=low
 
