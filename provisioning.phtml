@@ -42,6 +42,7 @@ if ($CDRTool['impersonate']) {
     if (preg_match("/^([1-9][0-9]*)\.([1-9][0-9]*)$/",$CDRTool['impersonate'],$m)) {
         $_customer=$m[1];
         $_reseller=$m[2];
+
 		$loginCredentials=array(
                         'customer'           => $_customer,
                         'reseller'           => $_reseller,

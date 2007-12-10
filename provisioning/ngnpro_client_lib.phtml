@@ -1368,7 +1368,7 @@ class Domains extends Records {
                 ";
                 if ($this->version > 1) {
 	                print "<td><b>Customer</b></td>
-    	            <td><b>Domain</b></td>
+    	            <td colspan=3><b>Domain</b></td>
         	        <td><b>Change date</b></td>
             	    <td><b>Action</b></td>
                 	";
@@ -1419,7 +1419,7 @@ class Domains extends Records {
                         urlencode($this->SOAPEngine->service),
                         urlencode($domain->domain)
                         );
-    
+
                         if ($_REQUEST['action'] == 'Delete' &&
                             $_REQUEST['domain_filter'] == $domain->domain) {
                             $_url .= "&confirm=1";
@@ -1433,8 +1433,18 @@ class Domains extends Records {
                         urlencode($domain->customer)
                         );
 
-                        $_sip_accounts_url = $this->url.sprintf("&service=sip_accounts@%s&domain_filter=%s",
+                        $_sip_domains_url = $this->url.sprintf("&service=sip_domains@%s&domain_filter=%s",
                         urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($domain->domain)
+                        );
+
+                        $_sip_accounts_url = $this->url.sprintf("&service=sip_accounts@%s&domain_filter=%s",
+                        urlencode($this->SOAPEngine->customerEngine),
+                        urlencode($domain->domain)
+                        );
+
+                        $_sip_aliases_url = $this->url.sprintf("&service=sip_aliases@%s&domain_filter=%s",
+                        urlencode($this->SOAPEngine->customerEngine),
                         urlencode($domain->domain)
                         );
     
@@ -1443,6 +1453,8 @@ class Domains extends Records {
                         <td>%s</td>
                         <td><a href=%s>%s.%s</a></td>
                         <td><a href=%s>%s</a></td>
+                        <td><a href=%s>Sip accounts</a></td>
+                        <td><a href=%s>Sip aliases</a></td>
                         <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
@@ -1451,8 +1463,10 @@ class Domains extends Records {
                         $_customer_url,
                         $domain->customer,
                         $domain->reseller,
-                        $_sip_accounts_url,
+                        $_sip_domains_url,
                         $domain->domain,
+                        $_sip_accounts_url,
+                        $_sip_aliases_url,
                         $domain->changeDate,
                         $_url,
                         $actionText

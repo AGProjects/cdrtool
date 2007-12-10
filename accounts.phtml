@@ -99,6 +99,13 @@ if ($action == "edit" && $id) {
                 );
 
                 if ($perm->have_perm("admin")) {
+                    if (strlen($impersonate)) {
+                        if (!preg_match("/^[1-9][0-9]*\.[1-9][0-9]*$/",$impersonate)) {
+                            printf ("<p><font color=blue>Warning: Impersonate must be formated as CustomerId.ResellerId</font>");
+                            unset($impersonate);
+                        }
+                    }
+
                     $query.=sprintf(",
                     perms           = '%s',
                     sources         = '%s',
@@ -110,7 +117,7 @@ if ($action == "edit" && $id) {
                     aNumberFilter   = '%s',
                     cscodeFilter    = '%s',
                     afterDateFilter = '%s',
-                    impersonate        = '%s'
+                    impersonate     = '%s'
                     ",
                 	addslashes($perms_text),
 	                addslashes($sources_text),
@@ -191,7 +198,7 @@ if ($action == "edit" && $id) {
         $compidFilter     = $db->f('compidFilter');
         $cscodeFilter     = $db->f('cscodeFilter');
         $afterDateFilter  = $db->f('afterDateFilter');
-        $impersonate         = $db->f('impersonate');
+        $impersonate      = $db->f('impersonate');
 
         showForm($id);
     }
@@ -209,6 +216,13 @@ if ($action == "edit" && $id) {
     if ($check) {
     	if ($perms) $perms   = implode($perms,",");
         if ($sources) $sources = implode($sources,",");
+
+        if (strlen($impersonate)) {
+			if (!preg_match("/^[1-9][0-9]*\.[1-9][0-9]*$/",$impersonate)) {
+                printf ("<p><font color=blue>Warning: Impersonate must be formated as CustomerId.ResellerId</font>");
+            	unset($impersonate);
+            }
+        }
 
         if ($err = $f->validate()) {
             print "<p><font color=red>$err</font>
