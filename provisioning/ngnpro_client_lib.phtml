@@ -649,6 +649,7 @@ class Records {
     var $customers          = array();
     var $recordGenerator    = false;
 	var $customerProperties = array();
+    var $loginProperties    = array();
 
     function Records(&$SOAPEngine) {
     	$this->SOAPEngine         = &$SOAPEngine;
@@ -660,9 +661,11 @@ class Records {
 
         $this->next       = $_REQUEST['next'];
 
-        $this->adminonly  = $this->SOAPEngine->adminonly;
-		$this->reseller   = $this->SOAPEngine->reseller;
-        $this->url        = $this->SOAPEngine->url;
+        $this->adminonly   = $this->SOAPEngine->adminonly;
+		$this->reseller    = $this->SOAPEngine->reseller;
+        $this->customer    = $this->SOAPEngine->customer;
+        $this->impersonate = $this->SOAPEngine->impersonate;
+        $this->url         = $this->SOAPEngine->url;
 
 		foreach(array_keys($this->filters) as $_filter) {
             if (strlen($this->filters[$_filter])) {
@@ -684,6 +687,8 @@ class Records {
 
         $this->getResellers();
         $this->getCustomers();
+
+        $this->getLoginProperties();
 
         if (strlen($this->SOAPEngine->SipSettingsPage)) {
         	$this->SipSettingsPage=$this->SOAPEngine->SipSettingsPage;
@@ -1260,6 +1265,57 @@ class Records {
         }
 
         return array(intval($customer),intval($reseller));
+    }
+
+    function getLoginProperties() {
+        return;
+        print("getLoginProperties($this->customer)");
+
+        if ($this->version <= 1 ) return true;
+
+        $this->SOAPEngine->soapclientCustomers->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclientCustomers->getProperties(intval($this->customer));
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            $this->loginProperties=$result->properties;
+        }
+
+        print_r($this->loginProperties);
+
+        return true;
+    }
+
+    function setLoginProperties($properties) {
+        return;
+
+        print("setLoginProperties($this->customer)");
+
+        if ($this->version <= 1 ) return true;
+
+        if (!is_array($properties)) return true;
+
+		$filter=array('customer'   => intval($this->customer),
+                      'properties' => $properties
+                      );
+
+        $this->SOAPEngine->soapclientCustomers->addHeader($this->SOAPEngine->SoapAuth);
+        $result     = $this->SOAPEngine->soapclientCustomers->setProperties($filter);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        return true;
     }
 
 }
@@ -2176,6 +2232,8 @@ class SIPAccounts extends Records {
             print "</table>";
 
             $this->showPagination($maxrows);
+
+			$this->setLoginProperties();
 
             return true;
         }

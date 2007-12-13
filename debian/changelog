@@ -1,5 +1,6 @@
 cdrtool (6.0) unstable; urgency=low
 
+  * Fixed links from Group by output to discrete CDRs
   * After renormalization, re-cache the monthly usage only for the accounts
     that had CDRs changed during renormalization
   * Fixed application type for rating engine (default application is audio)
@@ -15,7 +16,7 @@ cdrtool (6.0) unstable; urgency=low
   * Must apply database structure changes from setup/mysql/alter_tables.mysql
   * NGNPro client completed
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 09 Dec 2007 04:20:50 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 13 Dec 2007 15:43:51 +0100
 
 cdrtool (5.3.3) unstable; urgency=low
 

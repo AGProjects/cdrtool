@@ -1730,7 +1730,9 @@ class CDRS_ser_radius extends CDRS {
                         <td align=right>($zero calls)</td>
                         <td>$mygroup_print</td>
                         <td>$description</td>
-			            <td><a href=$url_calls&$traceField=$traceValue_enc target=_new>Display calls</a></td>
+			            <td>";
+                        printf("<a href=%s&%s=%s&%s_comp=begin target=_new>Display calls</a></td>",$url_calls,$traceField,$traceValue_enc,$traceField);
+                        print "
                         </tr>
                         ";
                     } else {
