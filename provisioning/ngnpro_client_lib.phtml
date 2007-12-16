@@ -1310,7 +1310,7 @@ class Records {
 
         if ($this->version <= 1 ) return true;
 
-        if (!is_array($properties)) return true;
+        if (!is_array($properties) || !$this->customer) return true;
 
         $this->SOAPEngine->soapclientCustomers->addHeader($this->SOAPEngine->SoapAuth);
         $result     = $this->SOAPEngine->soapclientCustomers->setProperties(intval($this->customer),$properties);
@@ -1515,12 +1515,12 @@ class Domains extends Records {
                         );
 
                         $_sip_accounts_url = $this->url.sprintf("&service=sip_accounts@%s&domain_filter=%s",
-                        urlencode($this->SOAPEngine->customerEngine),
+                        urlencode($this->SOAPEngine->soapEngine),
                         urlencode($domain->domain)
                         );
 
                         $_sip_aliases_url = $this->url.sprintf("&service=sip_aliases@%s&domain_filter=%s",
-                        urlencode($this->SOAPEngine->customerEngine),
+                        urlencode($this->SOAPEngine->soapEngine),
                         urlencode($domain->domain)
                         );
     
@@ -4751,7 +4751,7 @@ class ENUMmappings extends Records {
                          );
     
             // Order
-            $orderBy = array('attribute' => 'changeDate',
+            $orderBy = array('attribute' => 'prefix',
                              'direction' => 'ASC'
                              );
     
