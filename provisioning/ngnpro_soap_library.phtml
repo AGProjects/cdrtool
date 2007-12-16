@@ -753,7 +753,25 @@ class WebService_NGNPro_CustomerPort extends SOAP_Client_Custom
                             'style'=>'rpc',
                             'use'=>'' ));
     }
-
+    function &setProperties($customer, $properties) {
+        // properties is a ComplexType CustomerPropertyArray,
+        //refer to wsdl for more info
+        $properties =& new SOAP_Value('properties','{urn:AGProjects:NGNPro}CustomerPropertyArray',$properties);
+        return $this->call("setProperties", 
+                        $v = array("customer"=>$customer, "properties"=>$properties), 
+                        array('namespace'=>'urn:AGProjects:NGNPro:Customer',
+                            'soapaction'=>'',
+                            'style'=>'rpc',
+                            'use'=>'encoded' ));
+    }
+    function &getProperties($customer) {
+        return $this->call("getProperties", 
+                        $v = array("customer"=>$customer), 
+                        array('namespace'=>'urn:AGProjects:NGNPro:Customer',
+                            'soapaction'=>'',
+                            'style'=>'rpc',
+                            'use'=>'encoded' ));
+    }
 }
 class WebService_NGNPro_NetworkPort extends SOAP_Client_Custom
 {
