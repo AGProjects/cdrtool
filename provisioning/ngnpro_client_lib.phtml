@@ -288,7 +288,6 @@ class SOAPEngine {
             }
 
             $this->ports=$_ports;
-
         }
 
         dprint_r($this->loginCredentials);
@@ -302,10 +301,10 @@ class SOAPEngine {
         }
 
         if (is_array($this->soapEngines)) {
+        	$_engines  = array_keys($this->soapEngines);
 
             if (!$service) {
                 // use first engine available
-                $_engines  = array_keys($this->soapEngines);
                 if (is_array($this->allowedPorts) && count($this->allowedPorts[$_engines[0]]) > 0) {
                 	$_ports=$this->allowedPorts[$_engines[0]];
                 } else {
@@ -321,7 +320,12 @@ class SOAPEngine {
 
             $_els=explode('@',$this->service);
 
-            $this->soapEngine             = $_els[1];
+            if (!$_els[1]) {
+            	$this->soapEngine = $_engines[0];
+            } else {
+            	$this->soapEngine = $_els[1];
+            }
+
             $this->soapEngineSettingsPage = $this->soapEngine;
 
             if (count($this->allowedPorts[$this->soapEngine]) > 0 && in_array($_els[0],$this->allowedPorts[$this->soapEngine])) {
@@ -333,6 +337,8 @@ class SOAPEngine {
             	$this->recordsClass   = $this->ports[$this->port]['recordsClass'];
             	$this->soapClass      = $this->ports[$this->port]['soapClass'];
             }
+
+            $this->service    = $this->port.'@'.$this->soapEngine;
 
             foreach(array_keys($this->soapEngines) as $_key ) {
             	$this->skipEngines[$_key]=$this->soapEngines[$_key]['skipEngines'];
