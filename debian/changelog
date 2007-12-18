@@ -1,6 +1,6 @@
 cdrtool (6.0) unstable; urgency=low
 
-  * Fixed links from Group by output to discrete CDRs
+  * Fixed links from Group-by output to discrete CDRs
   * After renormalization, re-cache the monthly usage only for the accounts
     that had CDRs changed during renormalization
   * Fixed application type for rating engine (default application is audio)
@@ -10,14 +10,14 @@ cdrtool (6.0) unstable; urgency=low
   * Don't log ENUM tld in rate info if is set to none
   * Added RatingProfiles management in sip settings page
   * Added prepaid_cards management in Rating tables page
-  * Fixed name of domain table when thor data-source is enabled
+  * Fixed name of domain table when SIP Thor data-source is enabled
   * Added link in the trace window to jump to a different SIP Proxy
   * Import/export delimiter for rating tables can be adjusted, default is ,
   * Must apply database structure changes from setup/mysql/alter_tables.mysql
   * NGNPro client completed
   * Save settings before existing provisioning pages
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 16 Dec 2007 13:31:59 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 18 Dec 2007 10:42:06 +0100
 
 cdrtool (5.3.3) unstable; urgency=low
 
