@@ -607,7 +607,7 @@ class SIPSettings {
             $lang = "en";
         }
 
-        //dprint("Set language to $lang");
+        dprint("Set language to $lang");
         changeLanguage($lang);
     }
 
@@ -1017,7 +1017,7 @@ class SIPSettings {
     }
 
     function getResellerSettings () {
-        dprint("getResellerSettings(reseller=$this->reseller)");
+        dprint("getResellerSettings($this->reseller)");
 
         $this->CustomerPort->addHeader($this->SoapAuthCustomer);
         $result     = $this->CustomerPort->getAccount(intval($this->reseller));
@@ -1153,7 +1153,7 @@ class SIPSettings {
                                          );
                 }
 
-                dprint_r($this->locations);
+                //dprint_r($this->locations);
         
             }
 
@@ -1181,7 +1181,7 @@ class SIPSettings {
                                              "user_agent" => $locationStructure->userAgent
                                          );
                 }
-                dprint_r($this->locations);
+                //dprint_r($this->locations);
         
             }
 
@@ -3643,9 +3643,9 @@ class SIPSettings {
     }
 
     function getCalls () {
-    	dprint("getCalls");
+    	dprint("getCalls()");
 
-        $fromDate=time()-3600*24*60;
+        $fromDate=time()-3600*24*60; // last two months
         $toDate=time();
 
 		$CallQuery=array("fromDate"=>$fromDate,
@@ -5476,7 +5476,7 @@ class SIPSettings {
 
     function getFileTemplate($name, $type="file") {
     
-        dprint("getFileTemplate(name=$name, type=$type, path=$this->templatesPath)");
+        //dprint("getFileTemplate(name=$name, type=$type, path=$this->templatesPath)");
 
         if ($type=='logo') {
             $extensions=array('png','gif','jpg');

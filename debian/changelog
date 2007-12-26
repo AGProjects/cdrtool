@@ -1,3 +1,9 @@
+cdrtool (6.0.1) unstable; urgency=low
+
+  * Fixed update of billing_rates entries from csv files
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 27 Dec 2007 00:13:48 +0100
+
 cdrtool (6.0) unstable; urgency=low
 
   * Fixed links from Group-by output to discrete CDRs
