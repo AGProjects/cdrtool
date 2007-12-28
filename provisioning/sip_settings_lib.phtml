@@ -21,19 +21,21 @@ class SIPSettings {
     var $soapClassPresencePort     = 'WebService_SoapSIMPLEProxy_PresencePort';
     var $showSoapConnectionInfo    = false;
 
-    var $voicemail		   = array('AccessNumber'     => '*70',
-                                   'Server'           => 'vm.example.com'
-                                   );
+    // this variables can be overwritten per soap engine (in ngnpro_soap_engines.inc)
+    var $templatesPath             = './templates';
+    var $proxy                     = "proxy.example.com";
     var $SupportCompany            = "Example company";
     var $SupportCDRsite            = "https://cdrtool.example.com/CDRTool";
     var $SupportWEBsite            = "https://www.example.com/help";
     var $SupportEmail              = "Support <support@example.com>";
-    var $SIPsettingsURL 	       = "https://cdrtool.example.com/sip_settings.phtml";
-    var $xcaproot   		       = "https://cdrtool.example.com/xcap-root/";
-
-    var $templatesPath             = './templates';
+    var $SipSettingsPage 	       = "https://cdrtool.example.com/sip_settings.phtml";
+    var $xcap_root   		       = "https://cdrtool.example.com/xcap-root/";
+	var $pstn_access               = false;
+    var $voicemailServer           = "vm.example.com";
+    var $voicemailAccessNumber     = "*70";
     var $changePrivacyAccessNumber = "*67";
     var $checkPrivacyAccessNumber  = "*68";
+    // end variables
 
     var $tab			           = "settings";
     var $phonebook_img             = "<img src=images/pb.gif border=0>";
@@ -234,7 +236,7 @@ class SIPSettings {
             $this->tabs[prepaid]=_("Prepaid");
         }
 
-        if ($this->enablePresence) {
+        if ($this->presenceEngine) {
         	$this->tabs[presence]=_("Presence");
         }
 
@@ -309,6 +311,50 @@ class SIPSettings {
             $this->ratingEngine=$this->soapEngines[$this->soapEngine]['ratingEngine'];
         } else {
             $this->ratingEngine=$this->soapEngine;
+        }
+
+        // overwrite default settings
+
+        if (strlen($this->soapEngines[$this->soapEngine]['sip_proxy'])) {
+        	$this->proxy           = $this->soapEngines[$this->soapEngine]['sip_proxy'];
+        }
+
+        if (strlen($this->soapEngines[$this->soapEngine]['support_company'])) {
+        	$this->SupportCompany  = $this->soapEngines[$this->soapEngine]['support_company'];
+        }
+
+        if (strlen($this->soapEngines[$this->soapEngine]['support_web'])) {
+        	$this->SupportWEBsite  = $this->soapEngines[$this->soapEngine]['support_web'];
+        }
+
+        if (strlen($this->soapEngines[$this->soapEngine]['support_email'])) {
+        	$this->SupportEmail    = $this->soapEngines[$this->soapEngine]['support_email'];
+        }
+
+        if (strlen($this->soapEngines[$this->soapEngine]['sip_settings_page'])) {
+        	$this->SipSettingsPage = $this->soapEngines[$this->soapEngine]['sip_settings_page'];
+        }
+
+        if (strlen($this->soapEngines[$this->soapEngine]['xcap_root'])) {
+        	$this->xcap_root       = $this->soapEngines[$this->soapEngine]['xcap_root'];
+        }
+
+        if (strlen($this->soapEngines[$this->soapEngine]['cdrtool_address'])) {
+        	$this->SupportCDRsite  = $this->soapEngines[$this->soapEngine]['cdrtool_address'];
+        }
+
+        if ($this->soapEngines[$this->soapEngine]['pstn_access']) {
+        	$this->pstn_access     = $this->soapEngines[$this->soapEngine]['pstn_access'];
+        }
+
+        if ($this->soapEngines[$this->soapEngine]['voicemail_server']) {
+        	$this->voicemailServer = $this->soapEngines[$this->soapEngine]['voicemail_server'];
+        }
+
+        if ($this->loginCredentials['templates_path']) {
+        	$this->templatesPath   = $this->loginCredentials['templates_path'];
+        } else if ($this->soapEngines[$this->soapEngine]['templates_path']) {
+        	$this->templatesPath   = $this->soapEngines[$this->soapEngine]['templates_path'];
         }
 
         $this->soapRemoteId=$this->soapEngines[$this->soapEngine]['depends'];
@@ -875,7 +921,7 @@ class SIPSettings {
     }
 
     function getVoicemail () {
-        dprint("getVoicemail()");
+        dprint("getVoicemail(engine=$this->voicemailEngine)");
 
         $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
         $result     = $this->VoicemailPort->getAccount($this->sipId);
@@ -903,7 +949,7 @@ class SIPSettings {
         $this->voicemail['Email']          = $result->email;
         $this->voicemail['Info']           = $result->info;
         $this->voicemail['Options']        = $result->options;
-        $this->voicemail['Account']        = $result->mailbox.'@'.$this->voicemail['Server'];
+        $this->voicemail['Account']        = $result->mailbox.'@'.$this->voicemailServer;
 
         // used by template system
 		$this->voicemailMailbox=$result->mailbox;
@@ -1019,37 +1065,18 @@ class SIPSettings {
     function getResellerSettings () {
         dprint("getResellerSettings($this->reseller)");
 
-        $this->CustomerPort->addHeader($this->SoapAuthCustomer);
-        $result     = $this->CustomerPort->getAccount(intval($this->reseller));
- 
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (CustomerPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        }
-
-        foreach ($result->properties as $_property) {
-            $this->resellerProperties[$_property->name]=$_property->value;
-        }
-
-		$this->resellerProperties['language'] = $result->language;
-        $this->resellerProperties['timezone'] = $result->timezone;
-
-		//dprint_r($this->resellerProperties);
-
-        $this->proxy            = $this->resellerProperties['sip_proxy_server'];
-        $this->SupportCompany   = $this->resellerProperties['support_organization'];
-        $this->SupportWEBsite	= $this->resellerProperties['support_web'];
-        $this->SupportEmail	    = $this->resellerProperties['support_email'];
-
         $this->logoFile         = $this->getFileTemplate("logo","logo");
         $this->headerFile       = $this->getFileTemplate("header.phtml");
         $this->footerFile       = $this->getFileTemplate("footer.phtml");
         $this->cssFile          = $this->getFileTemplate("main.css");
 
-		if ($this->resellerProperties['pstn_access']) {
+        $this->SIPACLS['blocked']   =array("Group"=>"blocked",
+                                        "WEBName" =>sprintf(_("Account blocked")),
+                                        "SubscriberMayEditIt"=>"0",
+                                        "SubscriberMaySeeIt"=>0
+                                        );
+
+        if ($this->pstn_access) {
             $this->SIPACLS['free-pstn']    =array("Group"=>"free-pstn",
                                                 "WEBName" =>   sprintf(_("Access to PSTN")),
                                                 "WEBComment"=> sprintf(_("Caller-ID")),
@@ -1057,12 +1084,6 @@ class SIPSettings {
                                                 "SubscriberMaySeeIt"=>1
                                                 );
         }
-
-        $this->SIPACLS['blocked']   =array("Group"=>"blocked",
-                                        "WEBName" =>sprintf(_("Account blocked")),
-                                        "SubscriberMayEditIt"=>"0",
-                                        "SubscriberMaySeeIt"=>0
-                                        );
 
         if ($this->Preferences['advanced']) {
             $this->SIPACLS['voicemail']=array("Group"=>"voicemail",
@@ -1089,6 +1110,72 @@ class SIPSettings {
                                           "SubscriberMayEditIt" => "0",
                                           "SubscriberMaySeeIt"  => 0
                                           );
+
+		if (!$this->reseller) {
+            return true;
+        }
+
+        $this->CustomerPort->addHeader($this->SoapAuthCustomer);
+        $result     = $this->CustomerPort->getAccount(intval($this->reseller));
+ 
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (CustomerPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        foreach ($result->properties as $_property) {
+            $this->resellerProperties[$_property->name]=$_property->value;
+        }
+
+		$this->resellerProperties['language'] = $result->language;
+        $this->resellerProperties['timezone'] = $result->timezone;
+
+		//dprint_r($this->resellerProperties);
+
+        // overwrite settings from soap engine
+		if ($this->resellerProperties['sip_proxy']) {
+        	$this->proxy             = $this->resellerProperties['sip_proxy'];
+        }
+
+        if ($this->resellerProperties['support_company']) {
+        	$this->SupportCompany    = $this->resellerProperties['support_company'];
+        }
+
+        if ($this->resellerProperties['support_web']) {
+        	$this->SupportWEBsite	 = $this->resellerProperties['support_web'];
+        }
+
+        if ($this->resellerProperties['support_email']) {
+        	$this->SupportEmail	     = $this->resellerProperties['support_email'];
+        }
+
+        if ($this->resellerProperties['sip_settings_page']) {
+        	$this->sip_settings_page = $this->resellerProperties['sip_settings_page'];
+        }
+
+        if ($this->resellerProperties['xcap_root']) {
+        	$this->xcap_root	     = $this->resellerProperties['xcap_root'];
+        }
+
+        if ($this->resellerProperties['cdrtool_address']) {
+        	$this->SupportCDRsite	 = $this->resellerProperties['cdrtool_address'];
+        }
+
+        if ($this->resellerProperties['pstn_access']) {
+        	$this->pstn_access	 = $this->resellerProperties['pstn_access'];
+        }
+
+        if ($this->pstn_access) {
+            $this->SIPACLS['free-pstn']    =array("Group"=>"free-pstn",
+                                                "WEBName" =>   sprintf(_("Access to PSTN")),
+                                                "WEBComment"=> sprintf(_("Caller-ID")),
+                                                "SubscriberMayEditIt"=>"0",
+                                                "SubscriberMaySeeIt"=>1
+                                                );
+        }
 
     }
 
@@ -1294,7 +1381,7 @@ class SIPSettings {
         </tr>
         ";
 
-        if ($this->enablePresence) {
+        if ($this->presenceEngine) {
             $chapter=sprintf(_("Presence settings"));
             $this->showChapter($chapter);
 
@@ -1308,7 +1395,7 @@ class SIPSettings {
             <tr>
             	<td class=border>XCAP root
             	</td>
-            	<td class=border>$this->xcaproot
+            	<td class=border>$this->xcap_root
             </td>
             </tr>
             ";
@@ -1864,11 +1951,12 @@ class SIPSettings {
             </td>
             </tr>
             ";
-            if ($this->voicemail['AccessNumber']) {
+
+            if ($this->voicemailAccessNumber) {
                print "
                <tr $bgcolor>
                <td colspan=2 class=border>";
-               printf(_("Dial %s to listen to your messages or change preferences. "),$this->voicemail['AccessNumber']);
+               printf(_("Dial %s to listen to your messages or change preferences. "),$this->voicemailAccessNumber);
                print "</td>
                </tr>
                ";
@@ -4768,7 +4856,7 @@ class SIPSettings {
         }
 
         print "<td class=$class_groups>";
-        dprint_r($this->acceptRules['groups']);
+        //dprint_r($this->acceptRules['groups']);
 
         if (count($this->acceptRules['groups'])>2) {
 
@@ -5012,7 +5100,6 @@ class SIPSettings {
         $this->getAliases();
 
         $this->countAliases=count($this->aliases);
-        $this->voicemailAccessNumber=$this->voicemail['AccessNumber'];
 
         if (!$this->email) {
             print "<p><font color=blue>";
@@ -5500,7 +5587,7 @@ class SIPSettings {
             } elseif (file_exists("$this->templatesPath/default/$name")) {
                 return "$this->templatesPath/default/$name";
             } else {
-                //dprint("$name not found");
+                dprint("File $this->templatesPath/default/$name not found");
                 return false;
             }
         }

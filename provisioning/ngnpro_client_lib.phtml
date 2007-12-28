@@ -1446,20 +1446,22 @@ class Domains extends Records {
             <p>
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
+            ";
+            if ($this->version > 1) {
+                print "
                 <td><b>Id</b></th>
+                <td><b>Customer</b></td>
+                <td colspan=3><b>Domain</b></td>
+                <td><b>Change date</b></td>
+                <td><b>Action</b></td>
                 ";
-                if ($this->version > 1) {
-	                print "<td><b>Customer</b></td>
-    	            <td colspan=3><b>Domain</b></td>
-        	        <td><b>Change date</b></td>
-            	    <td><b>Action</b></td>
-                	";
-                } else {
-	                print "
-    	            <td><b>Domain</b></td>
-        	        <td><b>Action</b></td>
-            	    ";
-                }
+            } else {
+                print "
+                <td><b>Id</b></th>
+                <td colspan=3><b>Domain</b></td>
+                <td><b>Action</b></td>
+                ";
+            }
                 print "
             </tr>
             ";
@@ -1558,6 +1560,17 @@ class Domains extends Records {
                         urlencode($this->SOAPEngine->service),
                         urlencode($domain)
                         );
+
+                        $_sip_accounts_url = $this->url.sprintf("&service=sip_accounts@%s&domain_filter=%s",
+                        urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($domain)
+                        );
+
+                        $_sip_aliases_url = $this->url.sprintf("&service=sip_aliases@%s&domain_filter=%s",
+                        urlencode($this->SOAPEngine->soapEngine),
+                        urlencode($domain)
+                        );
+
     
                         if ($_REQUEST['action'] == 'Delete' &&
                             $_REQUEST['domain_filter'] == $domain) {
@@ -1570,11 +1583,15 @@ class Domains extends Records {
                         <tr bgcolor=%s>
                         <td>%s</td>
                         <td>%s</td>
+                        <td><a href=%s>Sip accounts</a></td>
+                        <td><a href=%s>Sip aliases</a></td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
                         $bgcolor,
                         $index,
                         $domain,
+                        $_sip_accounts_url,
+                        $_sip_aliases_url,
                         $_url,
                         $actionText
                         );
@@ -6796,6 +6813,10 @@ class Customers extends Records {
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
+                                 'xcap_root'           => array('name'      => 'XCAP Root URL',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'customer'
+                                                               ),
                                  'support_web'         => array('name'      => 'Support web site',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
@@ -6804,7 +6825,7 @@ class Customers extends Records {
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'support_organization'=> array('name'      => 'Support organization',
+                                 'support_company'     => array('name'      => 'Support organization',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),

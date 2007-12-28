@@ -1,8 +1,9 @@
 cdrtool (6.0.1) unstable; urgency=low
 
   * Fixed update of billing_rates entries from csv files
+  * Overwrite defaults from sip_settings class per NGNPro connection
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 27 Dec 2007 00:13:48 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 28 Dec 2007 12:01:54 +0100
 
 cdrtool (6.0) unstable; urgency=low
 

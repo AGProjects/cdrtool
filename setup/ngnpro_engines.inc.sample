@@ -1,40 +1,51 @@
 <?
-// Connections to NGN-Pro
+// Connections to NGNPro servers
 
 $soapEngines=array(
-                           'se' => array('name'=> 'SOAP Engine',
-                                         'username'=> 'username',
-                                         'password'=> 'password',
-                                         'url'     => 'http://sip.example.com:9200/',
-                                         'voicemailEngine' => 've',
-                                         'presenceEngine'  => 'pe',
-                                         'recordGenerator' => 'rg'
+                           'eng1' => array('name'            => 'SOAP Engine',
+                                         'username'          => 'username',
+                                         'password'          => 'password',
+                                         'url'               => 'http://sip.example.com:9200/',
+                                         'voicemailEngine'   => 'eng1_vm',
+                                         'presenceEngine'    => 'eng1_ssp',
+                                         'recordGenerator'   => 'rg1',
+                                         'sip_proxy'         => 'proxy.example.com',
+                                         'support_company'   => 'Support Company B.V.',
+                                         'support_web'       => 'http://www.example.com',
+                                         'support_email'     => 'support@example.com',
+                                         'sip_settings_page' => 'http://cdr.example.com/sip_settings.phtml',
+                                         'cdrtool_address'   => 'http://cdr.example.com/CDRTool/',
+                                         'xcap_root'         => 'http://cdr.example.com/xcap-root/',
+                                         'voicemail_server'  => 'vm.example.com',
+                                         'pstn_access'       => true,
+                                         'templates_path'    => './templates'
                                          ),
-                           'pe' => array('name'=> 'Simple Soap Proxy',
+                           'eng1_ssp' => array('name'=> 'Simple Soap Proxy',
                                          'url'     => 'http://ssp.example.com:9300/ssp/',
                                          'skip'    => true
                                          ),
-                           've' => array('name'=> 'Voicemail',
+                           'eng1_vm' => array('name'=> 'Voicemail',
                                          'username'=> 'username',
                                          'password'=> 'password',
                                          'url'     => 'http://vm.example.com:9200/',
                                          'skip'    =>  true
                                          )
                   );
+                  
 
 // Used to generate SIP accounts and ENUM mappings in bulk
 $recordGenerators =array (
-                          'rg'=>array(
-                                      'sipEngine' => 'se',
-                                      'enumEngine'=> 'se'
+                          'rg1'=>array(
+                                      'sipEngine' => 'eng1',
+                                      'enumEngine'=> 'eng1'
                                      )
                          );
 
-$resellerFilters=array('default'  => array('soapFilter'      => 'se'
+$resellerFilters=array('default'  => array('soapFilter'      => 'eng1'
                                           ),
-                       '1000'     => array('soapFilter'      => 'se:sip_accounts',
-                                           'recordGenerator' => 'rg',
-                                           'soapEngine'      => 'node03'
+                       '1000'     => array('soapFilter'      => 'eng1:sip_accounts',
+                                           'recordGenerator' => 'rg1',
+                                           'soapEngine'      => 'eng2'
                                            )
                        );
 ?>
