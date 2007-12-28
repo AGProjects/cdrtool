@@ -556,6 +556,8 @@ class SIPSettings {
         	$this->answerTimeout=intval($this->answerTimeoutDefault);
         }
 
+  		$this->xcap_root     .= "@".$this->domain."/";
+
         //dprint_r($result);
 
     	//dprint_r($this->Preferences);
