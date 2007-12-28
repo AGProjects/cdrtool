@@ -353,8 +353,8 @@ class SOAPEngine {
 
             $this->defaultEnumTLD  = $this->soapEngines[$this->soapEngine]['defaultEnumTLD'];
 
-			if (strlen($this->soapEngines[$this->soapEngine]['soapEngineSettingsPage'])) {
-            	$this->soapEngineSettingsPage=$this->soapEngines[$this->soapEngine]['soapEngineSettingsPage'];
+			if (strlen($this->soapEngines[$this->soapEngine]['sipEngine'])) {
+            	$this->soapEngineSettingsPage=$this->soapEngines[$this->soapEngine]['sipEngine'];
             }
 
 			if (strlen($this->soapEngines[$this->soapEngine]['SipSettingsPage'])) {
