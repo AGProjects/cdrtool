@@ -667,6 +667,7 @@ class Records {
     var $recordGenerator    = false;
 	var $customerProperties = array();
     var $loginProperties    = array();
+	var $errorMessage       = '';
 
     function Records(&$SOAPEngine) {
     	$this->SOAPEngine         = &$SOAPEngine;
@@ -7406,7 +7407,7 @@ class Customers extends Records {
                 $_add_url = $this->url.sprintf("&service=%s&showAddForm=1",
 	            urlencode($this->SOAPEngine->service)
                 );
-    	        printf ("<a href=%s>Add new customer</a> ",$_add_url);
+    	        printf ("<a href=%s>Register new login account</a> ",$_add_url);
 
 
             if ($this->adminonly) {
@@ -7415,7 +7416,7 @@ class Customers extends Records {
 	            	urlencode($this->SOAPEngine->service),
     	            urlencode($this->filters['reseller'])
 	        	    );
-    	        	printf (" | <a href=%s>Add customer under reseller %s</a> ",$_add_url,$this->filters['reseller']);
+    	        	printf (" | <a href=%s>Register new login account under reseller %s</a> ",$_add_url,$this->filters['reseller']);
                 }
             }
 
@@ -8243,9 +8244,9 @@ class Customers extends Records {
         }
     }
 
-    function showAddForm() {
+    function showAddForm($confirmPassword=false) {
 
-        print "<h3>Add new customer</h3>";
+        print "<h3>Register new login account</h3>";
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "
         <p>
@@ -8258,7 +8259,7 @@ class Customers extends Records {
         if ($this->adminonly && $this->filters['reseller']) {
             printf ("<tr><td class=border>Reseller</td>
             <td class=border>%s</td></tr>",$this->filters['reseller']);
-        } else {
+        } else if ($this->reseller) {
             printf ("<tr><td class=border>Reseller</td>
             <td class=border>%s</td></tr>",$this->reseller);
         }
@@ -8365,16 +8366,31 @@ class Customers extends Records {
                     ${$_var}[1]
                     );
                 } else {
+                    $type='text';
+                    if (strstr($item,'password')) $type='password';
+
                     printf ("
                     <tr>
                     <td class=border valign=top>%s</td>
-                    <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                    <td class=border><input name=%s_form size=30 type=%s value='%s'></td>
                     </tr>
                     ",
                     $item_name,
                     $item,
+                    $type,
                     $_REQUEST[$item_form]
                     );
+
+                    if ($item=='password' && $confirmPassword) {
+                        printf ("
+                        <tr>
+                        <td class=border valign=top><font color=red>Confirm password</font></td>
+                        <td class=border><input name=confirm_password_form size=30 type=password value='%s'></td>
+                        </tr>
+                        ",
+                        $_REQUEST[confirm_password_form]
+                        );
+                    }
                 }
             }
         }
@@ -8386,7 +8402,7 @@ class Customers extends Records {
         ";
     }
 
-    function addRecord($dictionary=array()) {
+    function addRecord($dictionary=array(),$confirmPassword) {
 
         foreach (array_keys($this->addFields) as $item) {
 
@@ -8419,6 +8435,16 @@ class Customers extends Records {
         $customer['billingAddress'] = $customer['address']."\n".
                                       $customer['postcode']." ".$customer['city']."\n".
                                       $_state.$customer['country'];
+
+		if ($confirmPassword) {
+            if (!strlen($customer['password'])) {
+            	$this->errorMessage='Password cannot be empty';
+        		return false;
+            } else if ($customer['password'] != $_REQUEST['confirm_password_form']) {
+            	$this->errorMessage='Password is not confirmed';
+        		return false;
+            }
+        }
 
         if (!strlen($customer['password'])) $customer['password'] = $this->RandomPassword(6);
 
