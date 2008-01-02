@@ -496,15 +496,17 @@ To log to syslog about missing rates or incorrect setup of the rating tables
 enable 'reportMissingRates' in $CDRTool['rating'] section of global.inc
 
 
-Re-rating calls
----------------
+Re-rating calls and historical rating
+-------------------------------------
 
 Sometime is useful to be able to change the rates for calls that have been
 already normalized and rated, for example after changing the rating tables
-you wish to apply the changes for the previous month for a customer. To
-re-rate the CDRs based do the following:
+you wish to apply the changes for the previous month for a customer.
 
-1. Change the rates (using cvs files or by using the WEB interface)
+To re-rate the CDRs do the following:
+
+1. Change the current rates by using cvs files/WEB interface or add rates
+   valid for specific dates/destinations in the rates_history table
 
 2. Re-normalize the calls to be re-rated by either selecting ReNormalize
    check-box in the search screen or by changing the Normalized field in the
@@ -527,7 +529,11 @@ Notes
 
 Renormalization process can take long time during which your database
 (radacct table) will be locked. Perform this operation only during low
-traffic periods.
+traffic periods. 
+
+It is advisable to re-rate only the CDRs for destinations that have
+different rates. To do this, select a filter in the CDR search screen, if
+the selection is right re-run the query by selecting Re-normalize button.
 
 After renormalization, the monthly usage information used by the quota
 system will be out of date. At the next run of the quotaCheck script, a full
