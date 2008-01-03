@@ -2742,6 +2742,10 @@ class RatingTables {
         values (NOW(),'ImportScript','localhost','%s','%s','Imported %s','%s')",
         $watermark,$results,$filename,$dir
         );
+
+        $log=sprintf ("Imported file %s, %d records have been affected\n",$filename,$results);
+    	syslog(LOG_NOTICE, $log);
+
         dprint($query);
         if (!$this->cdrtool->query($query)) {
             printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
