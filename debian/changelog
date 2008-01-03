@@ -2,8 +2,10 @@ cdrtool (6.0.1) unstable; urgency=low
 
   * Fixed update of billing_rates entries from csv files
   * Overwrite defaults from sip_settings class per NGNPro connection
+  * Added contrib directory
+  * Added freeradius patch for freeradius cvs version from Norm Brandinger
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 28 Dec 2007 12:01:54 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 03 Jan 2008 15:41:11 +0100
 
 cdrtool (6.0) unstable; urgency=low
 
