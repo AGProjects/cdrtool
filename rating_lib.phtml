@@ -1316,7 +1316,7 @@ class RatingTables {
                 addslashes($application),
                 addslashes($connectCost)
                 );
-                //dprint($query);
+                dprint($query);
                 if (!$this->cdrtool->query($query)) {
                     printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     return false;
@@ -1342,6 +1342,7 @@ class RatingTables {
                 addslashes($destination),
                 addslashes($application)
                 );
+                dprint($query);
                 if (!$this->cdrtool->query($query)) {
                     printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     return false;
@@ -1367,6 +1368,7 @@ class RatingTables {
                 addslashes($application)
                 );
 
+                dprint($query);
                 if (!$this->cdrtool->query($query)) {
                     printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     return false;
@@ -1439,7 +1441,7 @@ class RatingTables {
                     addslashes($application),
                     addslashes($connectCost)
                     );
-                    //dprint($query);
+                    dprint($query);
 
                     if (!$this->cdrtool->query($query)) {
                         printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
@@ -1453,13 +1455,7 @@ class RatingTables {
                 }
             }
 
-            $j++;
-
-            if ($j=="10000") {
-                dprint("Loaded another $j rates");
-                flush();
-                $j=0;
-            }
+            $this->showImportProgress($file);
 
             $i++;
         }
@@ -1703,6 +1699,8 @@ class RatingTables {
                 $j=0;
             }
 
+    		$this->showImportProgress($file);
+
             $i++;
         }
 
@@ -1918,6 +1916,9 @@ class RatingTables {
                     }
                 }
             }
+
+            $this->showImportProgress($file);
+
             $i++;
         }
 
@@ -2082,6 +2083,8 @@ class RatingTables {
                  }
 
             }
+
+            $this->showImportProgress($file);
 
             $i++;
         }
@@ -2315,6 +2318,9 @@ class RatingTables {
                     }
                 }
             }
+
+            $this->showImportProgress($file);
+
             $i++;
         }
 
@@ -2692,19 +2698,17 @@ class RatingTables {
                 if ($filename != "." && $filename != "..") {
                     foreach ($this->importFilesPatterns as $_pattern) {
                         if (strstr($filename,$_pattern) && preg_match("/\.csv$/",$filename)) {
-                            //if (!in_array($filename,$files)) {
-                                $fullPath=$dir."/".$filename;
-                                if ($content=file_get_contents($fullPath)) {
-                                    $watermark=$filename."-".md5($content);
-                                    if ($this->hasFileBeenImported($filename,$watermark)) break;
+                            $fullPath=$dir."/".$filename;
+                            if ($content=file_get_contents($fullPath)) {
+                                $watermark=$filename."-".md5($content);
+                                if ($this->hasFileBeenImported($filename,$watermark)) break;
 
-                                    $this->filesToImport[]=array( 'name'      => $filename,
-                                                                  'watermark' => $watermark,
-                                                                  'type'      => $_pattern,
-                                                                  'path'      => $fullPath
-                                                                  );
-                                }
-                            //}
+                                $this->filesToImport[]=array( 'name'      => $filename,
+                                                              'watermark' => $watermark,
+                                                              'type'      => $_pattern,
+                                                              'path'      => $fullPath
+                                                              );
+                            }
 
                             break;
                         }
@@ -2742,6 +2746,16 @@ class RatingTables {
         if (!$this->cdrtool->query($query)) {
             printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
             return false;
+        }
+    }
+
+    function showImportProgress ($filename='unspecified',$increment=10000) {
+        $this->importIndex++;
+    
+        if ($this->importIndex == $increment) {
+            printf ("Loaded %d records from '%s' ...\n",$this->importIndex,$filename);
+            flush();
+            $this->importIndex=0;
         }
     }
 }

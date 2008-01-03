@@ -4240,11 +4240,15 @@ class SIPSettings {
                     printf ("<input type=text name=name value='%s'>",$this->PhonebookEntries[$_entry]->name);
                     print "<a href=\"javascript: document.Entry$found.submit()\">Update</a>";
                 } else {
+                	$fname    = $this->PhonebookEntries[$_entry]->firstName;
+	                $lname    = $this->PhonebookEntries[$_entry]->lastName;
+
 	                if ($fname || $lname) {
     	                print "<a onClick=\"return toggleVisibility('row$found')\" href=#>$fname $lname</a>";
         	        } else {
             	        print "<a onClick=\"return toggleVisibility('row$found')\" href=#>Edit</a>";
                 	}
+
 	                print "
     	            <table border=0 class=extrainfo id=row$found cellpadding=0 cellspacing=0 width=100%>
                     <tr>
@@ -4260,8 +4264,8 @@ class SIPSettings {
                     print "</td>";
                     print "<td><input type=text name=last_name value=\"$lname\"></td>";
                     print "</tr>";
-                    //print "<tr><td><input type=submit value=Save></td></tr>";
 
+                    print "<tr><td><input type=submit value=Save></td></tr>";
                     print "
         	        </table>
             	    ";
@@ -4273,8 +4277,6 @@ class SIPSettings {
         		if ($this->SOAPversion > 1) {
                 	printf ("<select name=group onChange=\"location.href='%s&task=update&uri=%s&name=%s&group='+this.options[this.selectedIndex].value\">",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($this->PhonebookEntries[$_entry]->name));
                 } else {
-                	$fname    = $this->PhonebookEntries[$_entry]->firstName;
-	                $lname    = $this->PhonebookEntries[$_entry]->lastName;
                 	printf ("<select name=group onChange=\"location.href='%s&task=update&uri=%s&first_name=%s&last_name=%s&group='+this.options[this.selectedIndex].value\">",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($fname),urlencode($lname));
                 }
 
