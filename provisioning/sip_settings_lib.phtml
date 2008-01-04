@@ -35,6 +35,8 @@ class SIPSettings {
     var $voicemailAccessNumber     = "*70";
     var $changePrivacyAccessNumber = "*67";
     var $checkPrivacyAccessNumber  = "*68";
+	var $enableThor                = false;
+
     // end variables
 
     var $tab			           = "settings";
@@ -282,6 +284,8 @@ class SIPSettings {
         } else {
             $this->customerEngine=$this->soapEngine;
         }
+
+        if ($this->soapEngines[$this->soapEngine]) $this->enableThor=true;
 
         if (strlen($this->loginCredentials['presenceEngine'])) {
             $this->presenceEngine=$this->loginCredentials['presenceEngine'];
@@ -932,7 +936,7 @@ class SIPSettings {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            if ($error_fault->detail->exception->errorcode != "2000") {
+            if ($error_fault->detail->exception->errorcode != "2000" && $error_fault->detail->exception->errorcode != "1010") {
             	printf ("<p><font color=red>Error (VoicemailPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             	return false;
             } else {
@@ -973,6 +977,11 @@ class SIPSettings {
         <td align=left>
         ";
         printf (("%s &lt;sip:%s@%s&gt;"),$this->fullName,$this->username,$this->domain);
+
+        if ($this->enableThor && $this->homeNode=$this->getSipThorHomeNode()) {
+        	printf (" Home node is %s. ",$this->homeNode);
+        }
+
         print "
         </td>
         <td align=right valign=top>
@@ -5309,16 +5318,24 @@ class SIPSettings {
 
             $online_icon='';
 
+            if (in_array($_watcher,$this->presenceRules['allow'])) {
+                $display_status = 'allow';
+            } elseif (in_array($_watcher,$this->presenceRules['deny'])) {
+                $display_status = 'deny';
+            } else {
+                $display_status = $this->presenceWatchers[$_watcher]['status'];
+            }
+
             if ($this->presenceWatchers[$_watcher]['online'] == 1) {
                 $online_icon="<img src=images/buddy_online.jpg border=0>";
             } else {
                 $online_icon="<img src=images/buddy_offline.jpg border=0>";
             }
 
-            if ($this->presenceWatchers[$_watcher]['status'] == 'deny') {
+            if ($_status == 'deny') {
                 $online_icon="<img src=images/buddy_banned.jpg border=0>";
                 $color='red';
-            } else if ($this->presenceWatchers[$_watcher]['status'] == 'confirm') {
+            } else if ($display_status == 'confirm') {
                 $color='blue';
             } else {
                 $color='green';
@@ -5330,10 +5347,13 @@ class SIPSettings {
             <td class=border><font color=%s>%s</font></td>
             <td class=border>
             <select name=watcher_status[]>
-            ", $_watcher,$color,$_watcher);
+            ",
+            $_watcher,
+            $color,
+            $_watcher);
 
             unset($selected);
-            $selected[$this->presenceWatchers[$_watcher]['status']]='selected';
+            $selected[$display_status]='selected';
 
             foreach ($this->presenceStatuses as $_status) {
                 printf ("<option %s value=%s>%s",$selected[$_status],$_status,ucfirst($_status));
@@ -5736,6 +5756,20 @@ class SIPSettings {
         } else {
             // do nothing
         }
+    }
+
+    function getSipThorHomeNode () {
+    	$socket = fsockopen($this->proxy, 9500, $errno, $errstr, 1);
+        $request=sprintf("lookup sip_proxy for %s",$this->account);
+
+        if (fputs($socket,"$request\n") !== false) {
+            return;
+  			$ret = fgets($socket,4096);
+        }
+
+        fclose($socket);
+
+ 		return $ret;
     }
 }
 
