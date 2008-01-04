@@ -73,7 +73,7 @@ class SIPSettings {
                                            'delete_voicemail',
                                            'voicemail_password',
                                            'region',
-                                           'answerTimeout',
+                                           'timeout',
                                            'owner'
                                            );
     var $presenceStatuses   = array('allow','deny','confirm');
@@ -84,8 +84,8 @@ class SIPSettings {
                                     'away'      => 'buddy_away.jpg'
                                     );
     var $emergencyRegions   = array();
-	var $answerTimeoutDefault = 35;
-    var $answerTimeoutEls=array(
+	var $timeoutDefault = 35;
+    var $timeoutEls=array(
              "5" =>"5 s",
              "10"=>"10 s",
              "15"=>"15 s",
@@ -535,13 +535,14 @@ class SIPSettings {
         $this->groups    = $result->groups;
         if ($this->SOAPversion > 1) {
         	$this->quickdial = $result->quickdialPrefix;
+        	$this->timeout   = intval($result->timeout);
         } else {
         	$this->quickdial = $result->quickdial;
+	        $this->timeout   = intval($result->answerTimeout);
         }
         $this->quota     = $result->quota;
         $this->prepaid   = $result->prepaid;
         $this->region    = $result->region;
-        $this->answerTimeout = intval($result->answerTimeout);
 
         $this->account   = $this->username."@".$this->domain;
         $this->fullName  = $this->firstName." ".$this->lastName;
@@ -555,9 +556,9 @@ class SIPSettings {
 
         $this->result    = $result;
 
-		if (!$this->answerTimeout) {
-        	$this->answerTimeoutWasNotSet=1;
-        	$this->answerTimeout=intval($this->answerTimeoutDefault);
+		if (!$this->timeout) {
+        	$this->timeoutWasNotSet=1;
+        	$this->timeout=intval($this->timeoutDefault);
         }
 
   		$this->xcap_root     .= "@".$this->domain."/";
@@ -2415,13 +2416,21 @@ class SIPSettings {
             	$this->setDiversions();
             }
 
-            if ($this->answerTimeoutWasNotSet || $answerTimeout != $this->answerTimeout) {
+            if ($this->timeoutWasNotSet || $timeout != $this->timeout) {
                 $this->somethingChanged=1;
-            	$result->answerTimeout=intval($answerTimeout);
+		        if ($this->SOAPversion > 1) {
+                	$result->timeout=intval($timeout);
+                } else {
+            		$result->answerTimeout=intval($timeout);
+                }
             }
         }
 
-		$result->answerTimeout=intval($result->answerTimeout);
+		if ($this->SOAPversion > 1) {
+			$result->timeout=intval($result->timeout);
+        } else {
+        	$result->answerTimeout=intval($result->answerTimeout);
+        }
 
         if ($this->somethingChanged) {
 
@@ -3433,11 +3442,11 @@ class SIPSettings {
                     print _("Timeout");
                     print " ";
     
-                    $selected_timeout[$this->answerTimeout]="selected";
+                    $selected_timeout[$this->timeout]="selected";
     
-                    print "<select name=answerTimeout>";
-                    foreach (array_keys($this->answerTimeoutEls) as $_el) {
-                        printf ("<option value=\"%s\" %s>%s",$_el,$selected_timeout[$_el],$this->answerTimeoutEls[$_el]);
+                    print "<select name=timeout>";
+                    foreach (array_keys($this->timeoutEls) as $_el) {
+                        printf ("<option value=\"%s\" %s>%s",$_el,$selected_timeout[$_el],$this->timeoutEls[$_el]);
                     }
                     print "</select>";
                 } else if ($condition=="FUNC") {
