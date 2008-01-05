@@ -2335,7 +2335,7 @@ class RatingTables {
     }
 
     function LoadRatingTables () {
-        $log=sprintf("Memory usage: %0.2f MB",memory_get_usage()/1024/1024);
+        $log=sprintf("Memory usage: %0.2fMB, memory limit: %sB",memory_get_usage()/1024/1024,ini_get('memory_limit'));
         syslog(LOG_NOTICE, $log);
 
     	$loaded['customers']    = $this->LoadCustomersTable();
@@ -2349,7 +2349,8 @@ class RatingTables {
         	syslog(LOG_NOTICE, "Loaded $loaded[$_load] $_load");
         }
 
-        $log=sprintf("Memory usage: %0.2f MB",memory_get_usage()/1024/1024);
+        $log=sprintf("Memory usage: %0.2fMB, memory limit: %sB",memory_get_usage()/1024/1024,ini_get('memory_limit'));
+
         syslog(LOG_NOTICE, $log);
         return $loaded;
     }
@@ -4229,7 +4230,7 @@ class RatingEngine {
 
             if ( $_now > $this->lastMinuteStatisticsTime + 60 && $_intervalMinute > 0) {
 
-	            $log=sprintf("Normalization done in %d s, memory usage: %0.2f MB",$d,memory_get_usage()/1024/1024);
+	            $log=sprintf("Normalization done in %d s, memory usage: %0.2f MB, memory limit: %sB",$d,memory_get_usage()/1024/1024,ini_get('memory_limit'));
                 $_cpsTotal  = $this->sessionCounter/$_runtime;
 
                 $_cpsMinute = $this->lastMinuteSessionCounter/$_intervalMinute;
@@ -4247,7 +4248,7 @@ class RatingEngine {
                 $this->lastMinuteSessionCounter=0;
                 $this->lastMinuteStatisticsTime=time();
 
-                $log=sprintf ("Load last minute: %s calls @ %s cps, memory: %0.2f MB, uptime: %0.1 hours",
+                $log=sprintf ("Load last minute: %s calls @ %s cps, memory: %0.2f MB, uptime: %0.1f hours",
                 $this->statistics['lastMinute']['calls'],
                 sprintf("%.2f",$this->statistics['lastMinute']['cps']),
                 memory_get_usage()/1024/1024,

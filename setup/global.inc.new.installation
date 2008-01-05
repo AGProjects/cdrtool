@@ -4,6 +4,7 @@
 # 1. Change all hostnames and passwords according to the installation
 # 2. Copy this file to /var/www/CDRTool/global.inc
 #
+ini_set('memory_limit','256M');
 
 ###########################################
 # System and web paths
