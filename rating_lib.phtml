@@ -105,7 +105,6 @@ class Rate {
                     break;
                 }
 
-                //dprint("read: $line");
                 if (preg_match("/^\n/",$line) || preg_match("/^END/",$line)) {
                     dprint("Found \\n or END");
                     break;
@@ -120,7 +119,7 @@ class Rate {
                 $this->rateInfo.=$line;
 
             }
-            //dprint_r($this->rateInfo);
+
         }
 
     }
@@ -128,7 +127,7 @@ class Rate {
     function calculate(&$dictionary) {
         dprint("<b>Rate->calculate()</b>");
 
-		if ($this->duration > $this->minimumDuration) return 0;
+		if ($this->duration > $this->minimumDuration) return false;
 
         /////////////////////////////////////////////////////
         // required fields passed from a CDR structure
@@ -206,7 +205,7 @@ class Rate {
         dprint("Billing ENUMtld: $this->ENUMtld");
 
 		if (!$this->GetProfiles()) {
-            return 0;
+            return false;
         }
 
         $this->trafficKB=number_format($this->traffic/1024,0,"","");
@@ -269,15 +268,15 @@ class Rate {
                     $dayofyear       = date("Y-m-d",$this->timestampBilling);
                 } else {
                     $dayofweek       = date("w",$this->timestampBilling+$durationRatedTotal);
-                    $hourofday       = $foundRate["nextHourOfDay"];
+                    $hourofday       = $foundRate['nextHourOfDay'];
                     $dayofyear       = date("Y-m-d",$this->timestampBilling+$durationRatedTotal);
                 }
 
                 $foundRate           = $this->GetRate($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
-                $durationRatedTotal  = $durationRatedTotal + $foundRate["duration"];
+                $durationRatedTotal  = $durationRatedTotal + $foundRate['duration'];
 
 				if (!$foundRate['rate']) {
-                    return 0;
+                    return false;
                 }
 
                 $foundRates[]        = $foundRate;
@@ -289,7 +288,6 @@ class Rate {
                     $body="Rating of call $this->id (DestId=$this->DestinationId) has more than 10 spans. It could be a serious bug.\n";
                     mail($this->toEmail, "CDRTool rating problem", $body , $this->extraHeaders);
         			syslog(LOG_NOTICE, "Error: Rating of call $this->id (DestId=$this->DestinationId) has more than 10 spans.");
-                    return 0;
                     break;
                 }
             }
@@ -313,9 +311,9 @@ class Rate {
                 }
             }
 
-            $connectCost     = $thisRate[values][connectCost];
-            $durationRate    = $thisRate[values][durationRate];
-            $trafficRate     = $thisRate[values][trafficRate];
+            $connectCost     = $thisRate['values']['connectCost'];
+            $durationRate    = $thisRate['values']['durationRate'];
+            $trafficRate     = $thisRate['values']['trafficRate'];
 
 			if ($span=="1") {
             	$connectCostSpan=$connectCost;
@@ -428,7 +426,7 @@ class Rate {
             $this->pricePrint="";
         }
 
-        return 1;
+        return true;
     }
 
     function GetProfiles() {
@@ -478,10 +476,10 @@ class Rate {
 
         if (!$this->allProfiles[profile1] || !$this->allProfiles[profile2] ) {
             dprint("Cannot find billing profiles for $this->BillingPartyId");
-            return 0;
+            return false;
         }
 
-        return 1;
+        return true;
     }
 
     function GetRate($dayofyear,$dayofweek,$hourofday,$durationRatedAlready) {
@@ -704,7 +702,7 @@ class Rate {
             $subject=$this->CDRS->CDRTool['provider']['service']." - CDRTool rating problem";
             mail($this->toEmail, $subject, $log, $this->extraHeaders);
         	syslog(LOG_NOTICE, $log);
-            return 0;
+            return false;
         }
 
         if ($this->nextProfile == "24") $this->nextProfile = 0;
@@ -773,7 +771,7 @@ class Rate {
         return $rate;
     }
 
-    function MaxSessionTime($dictionary) {
+    function MaxSessionTime(&$dictionary) {
         // Used for prepaid application
         dprint("<b>Rate->MaxSessionTime()</b>");
 
@@ -791,7 +789,7 @@ class Rate {
         $this->duration          = $dictionary['duration'];
         $this->aNumber           = $dictionary['aNumber'];
         $this->cNumber           = $dictionary['cNumber'];
-        $this->RatingTables      = $dictionary['RatingTables'];
+        $this->RatingTables      = &$dictionary['RatingTables'];
         $this->applicationType   = $dictionary['Application'];
         $Balance      			 = $dictionary['Balance'];
 
@@ -799,7 +797,7 @@ class Rate {
 
         if (!$this->DestinationId) {
             dprint("Could not find any destination id found for $this->cNumber");
-            return 0;
+            return false;
         }
 
         $this->billingTimezone    = $this->GetBillingTimezone();
@@ -832,7 +830,7 @@ class Rate {
                 $dayofyear       = date("Y-m-d",$this->timestampBilling);
             } else {
                 $dayofweek       = date("w",$this->timestampBilling+$durationRatedTotal);
-                $hourofday       = $foundRate["nextHourOfDay"];
+                $hourofday       = $foundRate['nextHourOfDay'];
                 $dayofyear       = date("Y-m-d",$this->timestampBilling+$durationRatedTotal);
             }
 
@@ -861,8 +859,8 @@ class Rate {
 
             $j++;
 
-            $connectCost     = $thisRate[values][connectCost];
-            $durationRate    = $thisRate[values][durationRate];
+            $connectCost     = $thisRate['values']['connectCost'];
+            $durationRate    = $thisRate['values']['durationRate'];
 
             if ($span=="1") {
                 $connectCostSpan=$connectCost;
@@ -870,7 +868,7 @@ class Rate {
 
                 if ($connectCost && $Balance <= $setupBalanceRequired) {
                     syslog(LOG_NOTICE,"Balance too small: $Balance <= $setupBalanceRequired");
-                    return 0;
+                    return false;
                 }
 
                 $Balance = $Balance-$setupBalanceRequired;
@@ -891,7 +889,7 @@ class Rate {
 
             if ($Balance > $spanPrice) {
                 $Balance = $Balance-$spanPrice;
-            	$durationRatedTotal   = $durationRatedTotal+ $foundRate["duration"];
+            	$durationRatedTotal   = $durationRatedTotal+ $foundRate['duration'];
 
             } else {
 
@@ -927,7 +925,7 @@ class Rate {
             }
         }
 
-    	return 0;
+    	return false;
     }
 }
 
@@ -1170,7 +1168,7 @@ class RatingTables {
                                                  "exceptions" =>array(),
                                                  "domainFilterColumn"=>"account",
                                                  "fields"=>array("account"=>array("size"=>35,
-                                                                               "name"=>"Account",
+                                                                               "name"=>"SIP prepaid account",
                                                                                "readonly"=>0
                                                                                 ),
                                                                  "balance"=>array("size"=>10,
@@ -1181,15 +1179,15 @@ class RatingTables {
                                                                                  "readonly"=>1
                                                                                  ),
                                                                  "call_lock"=>array("size"=>1,
-                                                                 				 "name"=>"Lock",
+                                                                 				 "name"=>"Active",
                                                                                  "readonly"=>0
                                                                                  ),
                                                                  "call_in_progress"=>array("size"=>18,
-                                                                 				 "name"=>"Start time",
+                                                                 				 "name"=>"Last call start time",
                                                                                  "readonly"=>1
                                                                                  ),
                                                                  "last_call_price"=>array("size"=>10,
-                                                                 				 "name"=>"Last price",
+                                                                 				 "name"=>"Last call price",
                                                                                  "readonly"=>1
                                                                                  ),
                                                                  "maxsessiontime"=>array("size"=>5,
@@ -1216,6 +1214,9 @@ class RatingTables {
                                                                  "number"=>array("size"=>20,
                                                                  				 "name"=>"Card number"
                                                                                  ),
+                                                                 "id"=>array("size"=>20,
+                                                                 				 "name"=>"Card id"
+                                                                                 ),
                                                                  "value"=>array("size"=>6,
                                                                  				 "name"=>"Card value"
                                                                                  ),
@@ -1234,7 +1235,7 @@ class RatingTables {
 
     function ImportCSVFiles($dir=false) {
         $mustReload=0;
-        if (!$dir) $dir=$this->CDRTool["Path"]."/csv";
+        if (!$dir) $dir=$this->CDRTool['Path']."/csv";
 
         $this->scanFilesForImport($dir);
 
@@ -1255,7 +1256,7 @@ class RatingTables {
 
     function ImportRates($file) {
         dprint("ImportRates($file)");
-        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
+        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
         $i=0;
         $inserted = 0;
@@ -1473,7 +1474,7 @@ class RatingTables {
 
     function ImportRatesHistory($file) {
         dprint("ImportRatesHistory($file)");
-        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
+        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
         $i=0;
         $inserted = 0;
@@ -1718,7 +1719,7 @@ class RatingTables {
     function ImportCustomers($file) {
         dprint("ImportCustomers($file)");
 
-        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
+        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
         $i=0;
         $inserted = 0;
@@ -1934,7 +1935,7 @@ class RatingTables {
     function ImportDestinations($file) {
         dprint("ImportDestinations($file)");
 
-        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
+        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
         $i=0;
         $inserted = 0;
@@ -2101,7 +2102,7 @@ class RatingTables {
     function ImportProfiles($file) {
         dprint("ImportProfiles($file)");
 
-        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return 0;
+        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
         $i=0;
         $inserted = 0;
@@ -2334,7 +2335,9 @@ class RatingTables {
     }
 
     function LoadRatingTables () {
-        $loaded=array();
+        $log=sprintf("Memory usage: %0.2f MB",memory_get_usage()/1024/1024);
+        syslog(LOG_NOTICE, $log);
+
     	$loaded['customers']    = $this->LoadCustomersTable();
         $loaded['profiles']     = $this->LoadProfilesTable();
         $loaded['rates']        = $this->LoadRatesTable();
@@ -2378,7 +2381,7 @@ class RatingTables {
         if ($updateCustomer && !$this->cdrtool->num_rows()) {
         	$log=sprintf("Customer %s of type %s not found ",$customerFilter['customer'],$customerFilter['type']);
         	syslog(LOG_NOTICE, $log);
-            return 0;
+            return false;
         }
 
         $i=0;
@@ -2510,7 +2513,6 @@ class RatingTables {
                 $i++;
                 $_app=$this->cdrtool->Record['application'];
                 if (!strlen($_app)) $_app='audio';
-
                 $_rates[$this->cdrtool->Record['name']][$this->cdrtool->Record['destination']][$_app]=
                 array(
                      "durationRate"    => $this->cdrtool->Record['durationRate'],
@@ -2648,12 +2650,12 @@ class RatingTables {
 
     function checkRatingEngineConnection () {
     	global $RatingEngine;
-      	if ($RatingEngine["socketIP"] && $RatingEngine["socketPort"] &&
-        	$fp = fsockopen ($RatingEngine["socketIP"], $RatingEngine["socketPort"], $errno, $errstr, 2)) {
+      	if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] &&
+        	$fp = fsockopen ($RatingEngine['socketIP'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
           	fclose($fp);
-          	return 1;
+          	return true;
       	}
-        return 0;
+        return false;
   	}
 
     function showCustomers($filter) {
@@ -2691,7 +2693,7 @@ class RatingTables {
     }
 
     function scanFilesForImport($dir) {
-        if (!$dir) $dir=$this->CDRTool["Path"]."/csv";
+        if (!$dir) $dir=$this->CDRTool['Path']."/csv";
 
         if ($handle = opendir($dir)) {
             while (false !== ($filename = readdir($handle))) {
@@ -2727,13 +2729,13 @@ class RatingTables {
                 $log=sprintf ("File %s has already been imported at %s.\n",$filename,$this->cdrtool->f('date'));
     			syslog(LOG_NOTICE, $log);
                 print $log;
-                return 1;
+                return true;
             } else {
-                return 0;
+                return false;
             }
         } else {
             printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
-            return 0;
+            return false;
         }
     }
 
@@ -2780,7 +2782,7 @@ class SERQuota {
 
         if (!class_exists($this->AccountsDBClass)) {
             print("Info: No database defined for SIP accounts $this->cdr_source.\n");
-        	return 0;
+        	return false;
         }
 
        	$this->AccountsDB       = new $this->AccountsDBClass;
@@ -2856,7 +2858,7 @@ class SERQuota {
 
         if (!$this->AccountsDBClass) {
             print("Info: No database defined for SIP accounts.\n");
-            return 0;
+            return false;
         }
 
 		if (!$this->LoadAccountsfromCache()) {
@@ -2868,7 +2870,7 @@ class SERQuota {
                 if (!$this->AccountsDB->query($query)) {
                     $log=sprintf("Error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
                     syslog(LOG_NOTICE,$log);
-                    return 0;
+                    return false;
                 }
         
                 $log=sprintf("Read %d accounts from Thor database\n",$this->AccountsDB->num_rows());
@@ -2899,7 +2901,7 @@ class SERQuota {
                 if (!$this->AccountsDB->query($query)) {
                     $log=sprintf("Error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
                     syslog(LOG_NOTICE,$log);
-                    return 0;
+                    return false;
                 }
         
                 $log=sprintf("Read %d accounts from SER database\n",$this->AccountsDB->num_rows());
@@ -3020,7 +3022,7 @@ class SERQuota {
 
     function ShowAccountsWithQuota($treshhold='') {
 
-		if (!$this->LoadAccounts()) return 0;
+		if (!$this->LoadAccounts()) return false;
 
         foreach (array_keys($this->Accounts) as $_subscriber) {
 			if ($this->Accounts[$_subscriber]['quota'] ) {
@@ -3049,7 +3051,7 @@ class SERQuota {
 
         if (!$this->AccountsDBClass) {
             print("Info: No database defined for SIP accounts.\n");
-            return 0;
+            return false;
         }
 
 		if ($this->enableThor) {
@@ -3060,7 +3062,7 @@ class SERQuota {
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf("Error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
                 syslog(LOG_NOTICE,$log);
-                return 0;
+                return false;
             }
     
             while ($this->AccountsDB->next_record()) {
@@ -3235,7 +3237,7 @@ class SERQuota {
 
         if (!$this->AccountsDBClass) {
             print("Info: No database defined for SIP accounts.\n");
-            return 0;
+            return false;
         }
 
 		$this->cachedUsage=array();
@@ -3263,7 +3265,7 @@ class SERQuota {
             }
         }
 
-        return 1;
+        return true;
     }
 
     function checkQuota($notify) {
@@ -3424,7 +3426,7 @@ class SERQuota {
             return "Traffic $trafficMB > $maxtraffic MB";
         }
     
-        return 0;
+        return false;
     }
 
     function notifyAccount($account) {
@@ -3434,7 +3436,7 @@ class SERQuota {
         list($username,$domain)=explode("@",$account);
 
         if (!$DATASOURCES[$this->cdr_source][UserQuotaNotify]) {
-            return 0;
+            return false;
         }
 
         $providerName=$this->notificationAddresses[$domain]['providerName'];
@@ -3479,7 +3481,7 @@ class SERQuota {
 
         if (!$toEmail || !$fromEmail) {
             dprint("missing From or Rcpt");
-            return 0;
+            return false;
         }
 
         $seen_bcc[$toEmail]++;
@@ -3541,17 +3543,17 @@ class SERQuota {
             syslog(LOG_NOTICE,$log);
             return false;
         }
-        return 1;
+        return true;
     }
 
     function blockAccountRemote($account) {
         if (!is_object($this->soapclient)) {
-            return 1;
+            return true;
         }
 
         list($username,$domain)=explode("@",$account);
 
-        if (!$username || !$domain) return 1;
+        if (!$username || !$domain) return true;
 
         $this->soapclient->addHeader($this->SoapAuth);
         $result     = $this->soapclient->addToGroup(array("username" => $username,"domain"=> $domain), "quota");
@@ -3575,11 +3577,11 @@ class SERQuota {
                 mail($to, "CDRTool SOAP client failure", $email_body, $extraHeaders);
             }
 
-            return 0;
+            return false;
         } else {
             $log=sprintf ("Block remote account %s at %s",$account,$this->NGNProURL);
 	        syslog(LOG_NOTICE, $log);
-            return 1;
+            return true;
         }
 
     }
@@ -3592,7 +3594,7 @@ class SERQuota {
         foreach ($accounts as $account) {
             list($username,$domain)=explode("@",$account);
     
-            if (!$username || !$domain) return 1;
+            if (!$username || !$domain) return true;
     
             $this->soapclient->addHeader($this->SoapAuth);
             $result     = $this->soapclient->removeFromGroup(array("username" => $username,"domain"=> $domain), "quota");
@@ -3626,9 +3628,9 @@ class SERQuota {
     function saveQuotaInitFlag() {
     	if (is_object($this->CDRS->mc)) {
             if ($this->CDRS->mc->set($this->mc_key_init,'1',0,0)) {
-                return 1;
+                return true;
             } else {
-                return 0;
+                return false;
             }
         } else {
             $query=sprintf("delete from memcache where `key`= '%s'",$this->mc_key_init);
@@ -3644,9 +3646,9 @@ class SERQuota {
 
             dprint($query);
             if ($this->db->query($query) && $this->db->affected_rows()) {
-                return 1;
+                return true;
             } else {
-                return 0;
+                return false;
             }
         }
     }
@@ -3654,15 +3656,15 @@ class SERQuota {
     function deleteQuotaInitFlag() {
     	if (is_object($this->CDRS->mc)) {
             if (!$this->CDRS->mc->delete($this->mc_key_init)) {
-                return 0;
+                return false;
             }
         }
 
         $query=sprintf("delete from memcache where `key`= '%s'",$this->mc_key_init);
         dprint($query);
-        if (!$this->db->query($query)) return 0;
+        if (!$this->db->query($query)) return false;
 
-        return 1;
+        return true;
     }
 
     function cacheMonthlyUsage() {
@@ -3768,7 +3770,7 @@ class SERQuota {
 
         if (!$this->AccountsDBClass) {
             print("Info: No database defined for SIP accounts.\n");
-            return 0;
+            return false;
         }
 
         if (is_object($this->CDRS->mc)) {
@@ -3835,7 +3837,7 @@ class SERQuota {
 			syslog(LOG_NOTICE, $log);
         }
 
-        return 1;
+        return true;
     }
 
     function compareUsage() {
@@ -3895,11 +3897,11 @@ class RatingEngine {
             	$this->balance[$this->db->f('account')] = $this->db->f('balance');
         		$log=sprintf("Loaded prepaid account %s with balance %s",$this->db->f('account'),$this->db->f('balance'));
       			syslog(LOG_NOTICE, $log);
-                return 1;
+                return true;
             } else {
         		$log=sprintf("Error: Prepaid account %s does not exist",$account);
       			syslog(LOG_NOTICE, $log);
-                return 0;
+                return false;
             }
         } else {
         	while($this->db->next_record()) {
@@ -3912,7 +3914,7 @@ class RatingEngine {
             }
         	$log=sprintf("Loaded %d prepaid accounts",count($this->balance));
       		syslog(LOG_NOTICE, $log);
-            return 1;
+            return true;
         }
     }
 
@@ -3938,7 +3940,7 @@ class RatingEngine {
         if ($d >0 ) syslog(LOG_NOTICE, "Loaded rating tables in $d seconds");
 
         $this->db->query("update settings set var_value ='' where var_name = 'reloadRating'");
-        return 1;
+        return true;
     }
 
     function reloadCustomers ($customerFilter) {
@@ -3949,12 +3951,12 @@ class RatingEngine {
         $d=$e-$b;
         if ($d >0 ) syslog(LOG_NOTICE, "Reloaded customers in $d seconds");
 
-        return 1;
+        return true;
     }
 
     function reloadDomains () {
 		if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete($this->CDRS->mc_key_domains);
-        return 1;
+        return true;
     }
 
     function reloadSipAccountsWithQuota () {
@@ -3964,7 +3966,7 @@ class RatingEngine {
             	syslog(LOG_NOTICE, $log);
             }
         }
-        return 1;
+        return true;
     }
 
     function reloadPrepaidAccounts($account='') {
@@ -3994,17 +3996,17 @@ class RatingEngine {
 
         if (!$BillingPartyId) {
             syslog(LOG_NOTICE, "DebitBalance() error: missing BillingPartyId");
-            return 0;
+            return false;
         }
 
 		if (strlen($BillingPartyId) > 254) {
             syslog(LOG_NOTICE, "DebitBalance() error: BillingPartyId > 254 chars");
-            return 0;
+            return false;
         }
 
         if (!$BillingPartyId || !strlen($balance)) {
         	syslog(LOG_NOTICE, "DebitBalance() error: missing BillingPartyId or balance");
-            return 0;
+            return false;
         }
 
         if ($this->balance[$BillingPartyId]) {
@@ -4035,11 +4037,11 @@ class RatingEngine {
         		$this->db->query($query);
                 $this->db->next_record();
                 $this->balance[$BillingPartyId]=$this->db->f('balance');
-                return 1;
+                return true;
             } else {
                 $log=sprintf ("DebitBalance error: %s (%s)",$this->db->Error,$this->db->Errno);
                 syslog(LOG_NOTICE, $log);
-        		return 0;
+        		return false;
             }
 
         } else {
@@ -4052,7 +4054,7 @@ class RatingEngine {
 
         if (!is_numeric($balance)) {
             syslog(LOG_NOTICE, "CreditBalance() error: balance \"$balance\"is invalid");
-            return 0;
+            return false;
         }
 
         $BillingPartyId=trim($BillingPartyId);
@@ -4062,12 +4064,12 @@ class RatingEngine {
 
         if (!$BillingPartyId) {
             syslog(LOG_NOTICE, "CreditBalance() error: missing BillingPartyId");
-            return 0;
+            return false;
         }
 
 		if (strlen($BillingPartyId) > 254) {
             syslog(LOG_NOTICE, "CreditBalance() error: BillingPartyId > 254 chars");
-            return 0;
+            return false;
         }
 
         if ($this->balance[$BillingPartyId]) {
@@ -4087,12 +4089,12 @@ class RatingEngine {
             	$this->balance[$BillingPartyId]=$this->balance[$BillingPartyId]+$balance;
                 $log=sprintf ("Prepaid account $BillingPartyId credited with $balance");
                 syslog(LOG_NOTICE, $log);
-                return 1;
+                return true;
             } else {
                 $error_msg=$this->db->Error;
                 $log=sprintf ("CreditBalance() error: failed to debit balance ($error_msg)");
                 syslog(LOG_NOTICE, $log);
-        		return 0;
+        		return false;
             }
 
         } else {
@@ -4111,12 +4113,12 @@ class RatingEngine {
             	$this->balance[$BillingPartyId]=$this->balance[$BillingPartyId]+$balance;
                 $log=sprintf ("Added prepaid account $BillingPartyId with balance=$balance");
                 syslog(LOG_NOTICE, $log);
-                return 1;
+                return true;
             } else {
                 $error_msg=$this->db->Error;
                 $log=sprintf ("CreditBalance() error: failed to credit balance ($error_msg)");
                 syslog(LOG_NOTICE, $log);
-                return 0;
+                return false;
             }
         }
     }
@@ -4159,7 +4161,7 @@ class RatingEngine {
         dprint_r($_els);
         syslog(LOG_NOTICE, $tinput);
 
-        if (!$_els[0]) return 0;
+        if (!$_els[0]) return false;
 
         // read fields from input
         unset($NetFields);
@@ -4176,7 +4178,7 @@ class RatingEngine {
             if (strlen($_key) && $seenField[$_key]) {
                 $log=sprintf ("Error: '$_key' attribute is present more than once in $tinput");
                 syslog(LOG_NOTICE, $log);
-                return 0;
+                return false;
             } else {
                 if (strlen($_key)) {
             		$NetFields[$_key]=$_value;
@@ -4202,14 +4204,14 @@ class RatingEngine {
                 dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
-                return 0;
+                return false;
             }
 
             if (!$NetFields['to']) {
                 dprint("Missing To parameter.");
                 $log=sprintf ("Error: Missing To parameter");
                     syslog(LOG_NOTICE, $log);
-                return 0;
+                return false;
             }
 
             if (!strlen($NetFields['duration'])) {
@@ -4375,19 +4377,19 @@ class RatingEngine {
                 if ($maxduration<0) {
                		$log = sprintf ("Error: maxduration is negative ($maxduration)");
                 	syslog(LOG_NOTICE, $log);
-                	return 0;
+                	return false;
                 }
 
                 if (!$Rate->billingTimezone) {
                		$log = sprintf ("Error: cannot figure out the billing timezone");
                 	syslog(LOG_NOTICE, $log);
-                	return 0;
+                	return false;
                 }
 
                 if (!$Rate->startTimeBilling) {
                		$log = sprintf ("Error: cannot figure out the billing start time");
                 	syslog(LOG_NOTICE, $log);
-                	return 0;
+                	return false;
                 }
 
                 $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Balance=%s MaxSessionTime=%s",
@@ -4431,7 +4433,7 @@ class RatingEngine {
                 return $maxduration;
 
             } else {
-                return 0;
+                return false;
             }
         } else if ($NetFields['action'] == "debitbalance") {
 
@@ -4522,14 +4524,14 @@ class RatingEngine {
                 dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
-                return 0;
+                return false;
             }
 
             if (!$NetFields['value']) {
                 dprint("Missing Value parameter.");
                 $log=sprintf ("Error: Missing Value parameter");
                     syslog(LOG_NOTICE, $log);
-                return 0;
+                return false;
             }
 
             $log=sprintf ("Customer        : %s",$NetFields['from']);
@@ -4545,7 +4547,7 @@ class RatingEngine {
             if ($result) {
                 return $result;
             } else {
-                return 0;
+                return false;
             }
 
         } else if ($NetFields['action'] == "showprice") {
@@ -4554,21 +4556,21 @@ class RatingEngine {
                 dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
-                return 0;
+                return false;
             }
 
             if (!$NetFields['to']) {
                 dprint("Missing To parameter.");
                 $log=sprintf ("Error: Missing To parameter");
                     syslog(LOG_NOTICE, $log);
-                return 0;
+                return false;
             }
 
             if (!strlen($NetFields['duration'])) {
                 dprint("Missing Duration parameter.");
                 $log=sprintf ("Error: Missing Duration parameter");
                     syslog(LOG_NOTICE, $log);
-                return 0;
+                return false;
             }
 
 			if ($NetFields['timestamp']) {
@@ -4638,7 +4640,7 @@ class RatingEngine {
                 dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
-                return 0;
+                return false;
             }
 
         	$log=sprintf ("Customer        : %s",$NetFields['from']);
@@ -4706,46 +4708,46 @@ class RatingEngine {
             dprint("Invalid request. ");
             $log=sprintf ("Error: Invalid request");
                 syslog(LOG_NOTICE, $log);
-            return 0;
+            return false;
         }
     }
 }
 
 function reloadRatingEngineTables () {
     global $RatingEngine;
-    if ($RatingEngine["socketIP"] && $RatingEngine["socketPort"] &&
-        $fp = fsockopen ($RatingEngine["socketIP"], $RatingEngine["socketPort"], $errno, $errstr, 2)) {
+    if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] &&
+        $fp = fsockopen ($RatingEngine['socketIP'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
         fputs($fp, "ReloadRatingTables\n");
         fclose($fp);
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 function reloadPrepaidAccounts($account='') {
     global $RatingEngine;
-    if ($RatingEngine["socketIP"] && $RatingEngine["socketPort"] &&
-        $fp = fsockopen ($RatingEngine["socketIP"], $RatingEngine["socketPort"], $errno, $errstr, 2)) {
+    if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] &&
+        $fp = fsockopen ($RatingEngine['socketIP'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
         $account=trim($account);
         $cmd="ReloadPrepaidAccounts";
         if (strlen($account)) $cmd .= sprintf(" Account=%s",$account);
         $cmd.="\n";
         fputs($fp,$cmd);
         fclose($fp);
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 function reloadSipAccountsWithQuota () {
     global $RatingEngine;
-    if ($RatingEngine["socketIP"] && $RatingEngine["socketPort"] &&
-        $fp = fsockopen ($RatingEngine["socketIP"], $RatingEngine["socketPort"], $errno, $errstr, 2)) {
+    if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] &&
+        $fp = fsockopen ($RatingEngine['socketIP'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
         fputs($fp, "reloadSipAccountsWithQuota\n");
         fclose($fp);
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 ?>

@@ -78,10 +78,10 @@ require("provisioning/ngnpro_engines.inc");
 
 if ($resellerFilters[$loginCredentials['reseller']]) {
 	$loginCredentials['soapFilter']      = $resellerFilters[$loginCredentials['reseller']]['soapFilter'];
-    $loginCredentials['recordGenerator'] = $resellerFilters[$loginCredentials['reseller']]['recordGenerator'];
+    $loginCredentials['record_generator'] = $resellerFilters[$loginCredentials['reseller']]['record_generator'];
 } else if ($resellerFilters['default']) {
 	$loginCredentials['soapFilter']      = $resellerFilters['default']['soapFilter'];
-    $loginCredentials['recordGenerator'] = $resellerFilters['default']['recordGenerator'];
+    $loginCredentials['record_generator'] = $resellerFilters['default']['record_generator'];
 }
 
 $loginCredentials['resellerFilters'] = $resellerFilters;
@@ -95,9 +95,9 @@ if ($_REQUEST['generatorId']) {
         $generator->showGeneratorForm();
     }
 } else {
-	$SOAPEngine = new SOAPEngine($_REQUEST['service'],$soapEngines,$loginCredentials);
-    $_class     = $SOAPEngine->recordsClass;
-    $RECORDS    = new $_class(&$SOAPEngine);
+	$SoapEngine = new SoapEngine($_REQUEST['service'],$soapEngines,$loginCredentials);
+    $_class     = $SoapEngine->recordsClass;
+    $RECORDS    = new $_class(&$SoapEngine);
     
     if ($_REQUEST['action']=='Add')    $RECORDS->addRecord();
     if ($_REQUEST['action']=='Copy')   $RECORDS->copyRecord();

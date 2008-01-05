@@ -31,11 +31,11 @@ class SIPSettings {
     var $SipSettingsPage 	       = "https://cdrtool.example.com/sip_settings.phtml";
     var $xcap_root   		       = "https://cdrtool.example.com/xcap-root";
 	var $pstn_access               = false;
-    var $voicemailServer           = "vm.example.com";
+    var $voicemail_server          = "vm.example.com";
     var $voicemailAccessNumber     = "*70";
     var $changePrivacyAccessNumber = "*67";
     var $checkPrivacyAccessNumber  = "*68";
-	var $enableThor                = false;
+	var $enable_thor               = false;
 
     // end variables
 
@@ -238,7 +238,7 @@ class SIPSettings {
             $this->tabs[prepaid]=_("Prepaid");
         }
 
-        if ($this->presenceEngine) {
+        if ($this->presence_engine) {
         	$this->tabs[presence]=_("Presence");
         }
 
@@ -275,38 +275,38 @@ class SIPSettings {
         $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
         // Presence
-        $this->SOAPurlPresence=$this->soapEngines[$this->presenceEngine]['url'];
+        $this->SOAPurlPresence=$this->soapEngines[$this->presence_engine]['url'];
 
-        if (strlen($this->loginCredentials['customerEngine'])) {
-            $this->customerEngine=$this->loginCredentials['customerEngine'];
-        } else if (strlen($this->soapEngines[$this->soapEngine]['customerEngine'])) {
-            $this->customerEngine=$this->soapEngines[$this->soapEngine]['customerEngine'];
+        if (strlen($this->loginCredentials['customer_engine'])) {
+            $this->customer_engine=$this->loginCredentials['customer_engine'];
+        } else if (strlen($this->soapEngines[$this->soapEngine]['customer_engine'])) {
+            $this->customer_engine=$this->soapEngines[$this->soapEngine]['customer_engine'];
         } else {
-            $this->customerEngine=$this->soapEngine;
+            $this->customer_engine=$this->soapEngine;
         }
 
-        if ($this->soapEngines[$this->soapEngine]) $this->enableThor=true;
+        if ($this->soapEngines[$this->soapEngine]) $this->enable_thor=true;
 
-        if (strlen($this->loginCredentials['presenceEngine'])) {
-            $this->presenceEngine=$this->loginCredentials['presenceEngine'];
-        } else if (strlen($this->soapEngines[$this->soapEngine]['presenceEngine'])) {
-            $this->presenceEngine=$this->soapEngines[$this->soapEngine]['presenceEngine'];
+        if (strlen($this->loginCredentials['presence_engine'])) {
+            $this->presence_engine=$this->loginCredentials['presence_engine'];
+        } else if (strlen($this->soapEngines[$this->soapEngine]['presence_engine'])) {
+            $this->presence_engine=$this->soapEngines[$this->soapEngine]['presence_engine'];
         }
 
-        if (strlen($this->loginCredentials['voicemailEngine'])) {
-            $this->voicemailEngine=$this->loginCredentials['voicemailEngine'];
-        } else if (strlen($this->soapEngines[$this->soapEngine]['voicemailEngine'])) {
-            $this->voicemailEngine=$this->soapEngines[$this->soapEngine]['voicemailEngine'];
+        if (strlen($this->loginCredentials['voicemail_engine'])) {
+            $this->voicemail_engine=$this->loginCredentials['voicemail_engine'];
+        } else if (strlen($this->soapEngines[$this->soapEngine]['voicemail_engine'])) {
+            $this->voicemail_engine=$this->soapEngines[$this->soapEngine]['voicemail_engine'];
         } else {
-            $this->voicemailEngine=$this->soapEngine;
+            $this->voicemail_engine=$this->soapEngine;
         }
 
-        if (strlen($this->loginCredentials['enumEngine'])) {
-            $this->enumEngine=$this->loginCredentials['enumEngine'];
-        } else if (strlen($this->soapEngines[$this->soapEngine]['enumEngine'])) {
-            $this->enumEngine=$this->soapEngines[$this->soapEngine]['enumEngine'];
+        if (strlen($this->loginCredentials['enum_engine'])) {
+            $this->enum_engine=$this->loginCredentials['enum_engine'];
+        } else if (strlen($this->soapEngines[$this->soapEngine]['enum_engine'])) {
+            $this->enum_engine=$this->soapEngines[$this->soapEngine]['enum_engine'];
         } else {
-            $this->enumEngine=$this->soapEngine;
+            $this->enum_engine=$this->soapEngine;
         }
 
         if (strlen($this->loginCredentials['ratingEngine'])) {
@@ -352,7 +352,7 @@ class SIPSettings {
         }
 
         if ($this->soapEngines[$this->soapEngine]['voicemail_server']) {
-        	$this->voicemailServer = $this->soapEngines[$this->soapEngine]['voicemail_server'];
+        	$this->voicemail_server = $this->soapEngines[$this->soapEngine]['voicemail_server'];
         }
 
         if ($this->loginCredentials['templates_path']) {
@@ -404,10 +404,10 @@ class SIPSettings {
         }
 
         // voicemail
-        $this->SOAPurlVoicemail = $this->soapEngines[$this->voicemailEngine]['url'];
+        $this->SOAPurlVoicemail = $this->soapEngines[$this->voicemail_engine]['url'];
         $this->SOAPloginVoicemail = array(
-                               "username"    => $this->soapEngines[$this->voicemailEngine]['username'],
-                               "password"    => $this->soapEngines[$this->voicemailEngine]['password'],
+                               "username"    => $this->soapEngines[$this->voicemail_engine]['username'],
+                               "password"    => $this->soapEngines[$this->voicemail_engine]['password'],
                                "admin"       => true,
                                "impersonate" => intval($this->reseller)
                                );
@@ -419,14 +419,14 @@ class SIPSettings {
         $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
         if ($this->showSoapConnectionInfo && $this->SOAPurlVoicemail != $this->SOAPurl)  {
-        	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassVoicemailPort,$this->SOAPurlVoicemail,$this->SOAPurlVoicemail,$this->soapEngines[$this->voicemailEngine]['username']);
+        	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassVoicemailPort,$this->SOAPurlVoicemail,$this->SOAPurlVoicemail,$this->soapEngines[$this->voicemail_engine]['username']);
         }
 
         // enum
-        $this->SOAPurlEnum = $this->soapEngines[$this->enumEngine]['url'];
+        $this->SOAPurlEnum = $this->soapEngines[$this->enum_engine]['url'];
         $this->SOAPloginEnum = array(
-                               "username"    => $this->soapEngines[$this->enumEngine]['username'],
-                               "password"    => $this->soapEngines[$this->enumEngine]['password'],
+                               "username"    => $this->soapEngines[$this->enum_engine]['username'],
+                               "password"    => $this->soapEngines[$this->enum_engine]['password'],
                                "admin"       => true,
                                "impersonate" => intval($this->reseller)
                                );
@@ -438,7 +438,7 @@ class SIPSettings {
         $this->EnumPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
         if ($this->showSoapConnectionInfo && $this->SOAPurlEnum != $this->SOAPurl)  {
-        	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassEnumPort,$this->SOAPurlEnum,$this->SOAPurlEnum,$this->soapEngines[$this->enumEngine]['username']);
+        	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassEnumPort,$this->SOAPurlEnum,$this->SOAPurlEnum,$this->soapEngines[$this->enum_engine]['username']);
         }
 
         // rating
@@ -461,10 +461,10 @@ class SIPSettings {
         }
 
         // customer
-        $this->SOAPurlCustomer = $this->soapEngines[$this->customerEngine]['url'];
+        $this->SOAPurlCustomer = $this->soapEngines[$this->customer_engine]['url'];
         $this->SOAPloginCustomer = array(
-                               "username"    => $this->soapEngines[$this->customerEngine]['username'],
-                               "password"    => $this->soapEngines[$this->customerEngine]['password'],
+                               "username"    => $this->soapEngines[$this->customer_engine]['username'],
+                               "password"    => $this->soapEngines[$this->customer_engine]['password'],
                                "admin"       => true
                                );
 
@@ -475,12 +475,12 @@ class SIPSettings {
         $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
         if ($this->showSoapConnectionInfo && $this->SOAPurlCustomer != $this->SOAPurl)  {
-        	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassCustomerPort,$this->SOAPurlCustomer,$this->SOAPurlCustomer,$this->soapEngines[$this->customerEngine]['username']);
+        	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassCustomerPort,$this->SOAPurlCustomer,$this->SOAPurlCustomer,$this->soapEngines[$this->customer_engine]['username']);
         }
 
         // presence
-		if ($this->presenceEngine) {
-        	$this->SOAPurlPresence = $this->soapEngines[$this->presenceEngine]['url'];
+		if ($this->presence_engine) {
+        	$this->SOAPurlPresence = $this->soapEngines[$this->presence_engine]['url'];
         	$this->PresencePort    = new $this->soapClassPresencePort($this->SOAPurlPresence);
         	$this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT,        5);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
@@ -928,7 +928,7 @@ class SIPSettings {
     }
 
     function getVoicemail () {
-        dprint("getVoicemail(engine=$this->voicemailEngine)");
+        dprint("getVoicemail(engine=$this->voicemail_engine)");
 
         $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
         $result     = $this->VoicemailPort->getAccount($this->sipId);
@@ -956,7 +956,7 @@ class SIPSettings {
         $this->voicemail['Email']          = $result->email;
         $this->voicemail['Info']           = $result->info;
         $this->voicemail['Options']        = $result->options;
-        $this->voicemail['Account']        = $result->mailbox.'@'.$this->voicemailServer;
+        $this->voicemail['Account']        = $result->mailbox.'@'.$this->voicemail_server;
 
         // used by template system
 		$this->voicemailMailbox=$result->mailbox;
@@ -979,7 +979,7 @@ class SIPSettings {
         ";
         printf (("%s &lt;sip:%s@%s&gt;"),$this->fullName,$this->username,$this->domain);
 
-        if ($this->enableThor && $this->homeNode=$this->getSipThorHomeNode()) {
+        if ($this->enable_thor && $this->homeNode=$this->getSipThorHomeNode()) {
         	printf (" Home node is %s. ",$this->homeNode);
         }
 
@@ -1393,7 +1393,7 @@ class SIPSettings {
         </tr>
         ";
 
-        if ($this->presenceEngine) {
+        if ($this->presence_engine) {
             $chapter=sprintf(_("Presence settings"));
             $this->showChapter($chapter);
 
