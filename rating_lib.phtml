@@ -615,7 +615,7 @@ class Rate {
                 }
 
                 if (!$found_history) {
-                	$this->rateValues=$this->RatingTables->rates[$this->rateName][$this->DestinationId][$this->applicationType];
+                	$this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->applicationType);
                 }
 
             } else {
@@ -684,14 +684,13 @@ class Rate {
                     }
     
                     if (!$found_history) {
-                        $this->rateValues=$this->RatingTables->rates[$this->rateName][$this->DestinationId][$this->applicationType];
+                		$this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->applicationType);
                     }
 
                 } else {
                     dprint("No rates for destination $this->DestinationId in alternative profile=$this->profileNameAlt.");
                 }
             }
-
         }
 
         if (!$this->rateValues) {
@@ -927,6 +926,39 @@ class Rate {
 
     	return false;
     }
+
+    function lookupRateValues ($rateName,$DestinationId,$applicationType='audio') {
+        // lookup rate from MySQL
+        $query=sprintf("select * from billing_rates
+        where name = '%s' and
+        destination = '%s' and
+        application = '%s'
+        ",
+        addslashes($rateName),
+        addslashes($DestinationId),
+        addslashes($applicationType)
+        );
+        //syslog(LOG_NOTICE, $query);
+
+        if (!$this->CDRS->cdrtool->query($query)) {
+            printf ("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
+            return false;
+        }
+
+        if ($this->CDRS->cdrtool->num_rows()) {
+        	$this->CDRS->cdrtool->next_record();
+            return array(
+                            "durationRate"    => $this->CDRS->cdrtool->Record['durationRate'],
+                            "trafficRate"     => $this->CDRS->cdrtool->Record['trafficRate'],
+                            "connectCost"     => $this->CDRS->cdrtool->Record['connectCost']
+                           );
+        } else {
+            return false;
+        }
+
+    	//return $this->RatingTables->rates[$rateName][$DestinationId][$applicationType];
+    }
+
 }
 
 class RatingTables {
@@ -2340,7 +2372,7 @@ class RatingTables {
 
     	$loaded['customers']    = $this->LoadCustomersTable();
         $loaded['profiles']     = $this->LoadProfilesTable();
-        $loaded['rates']        = $this->LoadRatesTable();
+        //$loaded['rates']        = $this->LoadRatesTable();
         $loaded['ratesHistory'] = $this->LoadRatesHistoryTable();
         $loaded['holidays']     = $this->LoadHolidaysTable();
         $loaded['enumTlds']     = $this->LoadENUMtldsTable();
@@ -2501,6 +2533,9 @@ class RatingTables {
     }
 
     function LoadRatesTable() {
+        return true;
+        // Lookup of rates is done directly in MySQL, it is more efficient than loading them in the memory
+
         $query="select * from billing_rates order by destination";
         if (!$this->cdrtool->query($query)) {
             printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
@@ -2520,6 +2555,11 @@ class RatingTables {
                      "trafficRate"     => $this->cdrtool->Record['trafficRate'],
                      "connectCost"     => $this->cdrtool->Record['connectCost']
                 );
+
+                if ($i % 50000 == 0) {
+                	$log=sprintf("Loaded %d out of %d rates",$i,$rows);
+        			syslog(LOG_NOTICE, $log);
+                }
             }
         }
 
@@ -2760,7 +2800,7 @@ class RatingTables {
         $this->importIndex++;
     
         if ($this->importIndex == $increment) {
-            printf ("Loaded %d records from '%s' ...\n",$this->importIndex,$filename);
+            printf ("Loaded %d records from %s\n",$this->importIndex,$filename);
             flush();
             $this->importIndex=0;
         }
@@ -4144,7 +4184,9 @@ class RatingEngine {
         "ShowPrepaidAccounts Filter=123@example.com\n".
         "ShowMemory\n".
         "ReloadSipAccountsWithQuota\n".
-        "ReloadDomains";
+        "ReloadDomains\n".
+        "dump name=variable";
+
         return $help;
     }
 
@@ -4687,7 +4729,6 @@ class RatingEngine {
                                       'type'=>$NetFields['type']);
             }
             return $this->reloadCustomers($_customerFilter);
-
         } else if ($NetFields['action'] == "reloadprepaidaccounts") {
             return $this->reloadPrepaidAccounts($NetFields['account']);
         } else if ($NetFields['action'] == "showmemory") {

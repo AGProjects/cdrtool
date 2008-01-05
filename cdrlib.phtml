@@ -78,6 +78,8 @@ class CDRS {
         $this->CDRTool         = $CDRTool;
         $this->DATASOURCES     = $DATASOURCES;
 
+        $this->cdrtool->Halt_On_Error="no";
+
         $this->table           = $this->DATASOURCES[$this->cdr_source]['table'];
 
 
