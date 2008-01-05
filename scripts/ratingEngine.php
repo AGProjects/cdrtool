@@ -56,6 +56,9 @@ if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] && $RatingEngine['C
 }
 
 // Load daemon functionality
+syslog(LOG_NOTICE,"Starting rating engine ...");
+$b=time();
+
 require_once(dirname(realpath($_SERVER['PHP_SELF'])). '/daemon.php');
 $d = new Daemon('ratingEngine','/var/run/ratingEngine.pid');
 $d->start();
@@ -95,6 +98,10 @@ $CDRS->RatingTables->LoadRatingTables();
 // Init RatingEngine engine
 $RatingEngine = new RatingEngine($CDRS);
 $RatingEngine->loadPrepaidAccounts();
+
+$d=time()-$b;
+
+syslog(LOG_NOTICE,"Ready to answer requests, startup time $d seconds");
 
 // Start main loop here
 while (true) { 

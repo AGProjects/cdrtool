@@ -353,7 +353,7 @@ class SoapEngine {
 
             $this->impersonate  = intval($this->soapEngines[$this->soapEngine]['impersonate']);
 
-            $this->defaultEnumTLD  = $this->soapEngines[$this->soapEngine]['defaultEnumTLD'];
+            $this->default_enum_tld  = $this->soapEngines[$this->soapEngine]['default_enum_tld'];
 
 			if (strlen($this->soapEngines[$this->soapEngine]['sip_engine'])) {
             	$this->soapEngineSettingsPage=$this->soapEngines[$this->soapEngine]['sip_engine'];
@@ -1281,6 +1281,9 @@ class Records {
         return false;
     }
 
+    function checkRecord() {
+        return true;
+    }
 }
 
 class Domains extends Records {
@@ -3549,8 +3552,8 @@ class ENUMranges extends Records {
         $info   = trim($_REQUEST['info']);
 
         if (!strlen($tld)) {
-            if (strlen($this->SoapEngine->defaultEnumTLD)) {
-                $tld=$this->SoapEngine->defaultEnumTLD;
+            if (strlen($this->SoapEngine->default_enum_tld)) {
+                $tld=$this->SoapEngine->default_enum_tld;
             } else {
         		$tld='e164.arpa';
             }
@@ -3698,8 +3701,8 @@ class ENUMranges extends Records {
                 }
             }
 
-            if (strlen($this->SoapEngine->defaultEnumTLD) && !$seen[$this->SoapEngine->defaultEnumTLD]) {
-            	$this->allowedDomains[]=$this->SoapEngine->defaultEnumTLD;
+            if (strlen($this->SoapEngine->default_enum_tld) && !$seen[$this->SoapEngine->default_enum_tld]) {
+            	$this->allowedDomains[]=$this->SoapEngine->default_enum_tld;
             }
         }
     }
@@ -4759,8 +4762,8 @@ class ENUMmappings extends Records {
                     $seen[$range->id->tld]++;
                 }
             }
-            if (strlen($this->SoapEngine->defaultEnumTLD) && !$seen[$this->SoapEngine->defaultEnumTLD]) {
-            	$this->allowedDomains[]=$this->SoapEngine->defaultEnumTLD;
+            if (strlen($this->SoapEngine->default_enum_tld) && !$seen[$this->SoapEngine->default_enum_tld]) {
+            	$this->allowedDomains[]=$this->SoapEngine->default_enum_tld;
             }
         }
     }
@@ -4786,8 +4789,8 @@ class ENUMmappings extends Records {
         $number=$prefix.$number;
 
         if (!strlen($tld)) {
-            if (strlen($this->SoapEngine->defaultEnumTLD)) {
-                $tld=$this->SoapEngine->defaultEnumTLD;
+            if (strlen($this->SoapEngine->default_enum_tld)) {
+                $tld=$this->SoapEngine->default_enum_tld;
             } else {
         		$tld='e164.arpa';
             }

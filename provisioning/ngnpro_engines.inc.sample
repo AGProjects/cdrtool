@@ -13,7 +13,7 @@ $soapEngines=array(
                                          'name'                => 'SIP platform',
                                          'username'            => 'admin',
                                          'password'            => 'passwd',
-                                         'url'                 => 'http://example.com:9200/',
+                                         'url'                 => 'http://sip.example.com:9200/',
                                          'version'             => 3,
                                          'record_generator'    => 'rg',
                                          'sip_engine'          => 'sip',
@@ -21,18 +21,18 @@ $soapEngines=array(
                                          'customer_engine'     => 'sip',
                                          'voicemail_engine'    => 'vm',
                                          'customer_properties' => $customerProperties,
-                                         'sip_proxy'           => 'sip.dns-hosting.info',
-                                         'voicemail_server'    => 'vm.dns-hosting.info',
-                                         'xcap_root'           => 'https://secure.dns-hosting.info/xcap-root',
-                                         'support_email'       => 'support@ag-projects.com',
-                                         'support_web'         => 'https://secure.dns-hosting.info',
+                                         'sip_proxy'           => 'sip.example.com',
+                                         'voicemail_server'    => 'vm.example.com',
+                                         'xcap_root'           => 'https://cdr.example.com/xcap-root',
+                                         'support_email'       => 'support@example.com',
+                                         'support_web'         => 'https://web.example.com',
                                          'enable_thor'         => false,
                                          'pstn_access'         => false
                                          ),
                            'vm' => array('name'=> 'Voicemail server',
                                          'username'=> 'admin',
                                          'password'=> 'password',
-                                         'url'     => 'http://vm01p.example.com:9200/',
+                                         'url'     => 'http://vm.example.com:9200/',
                                          'skip'    =>  true
                                          ),
                            'ssp' => array('name'=> 'Simple Soap Proxy',
@@ -48,9 +48,9 @@ $recordGenerators =array (
                                      )
                          );
 
-$resellerFilters=array('default'  => array('soapFilter'        => 'sip'
+$resellerFilters=array('default'  => array('soap_filter'        => 'sip'
                                           ),
-                       '1745'     => array('soapFilter'        => 'sip:customers,enum_ranges,enum_numbers sip2:sip_domains,sip_accounts,sip_aliases,trusted_peers',
+                       '1745'     => array('soap_filter'        => 'sip:customers,enum_ranges,enum_numbers sip2:sip_domains,sip_accounts,sip_aliases,trusted_peers',
                                            'record_generator'  => 'rg',
                                            'voicemail_engine'  => 'vm'
                                            )

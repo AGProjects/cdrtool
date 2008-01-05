@@ -42,11 +42,11 @@ $loginCredentials=array(
                         );
 
 if ($resellerFilters[$loginCredentials['reseller']]) {
-	$loginCredentials['soapEngine']      = $resellerFilters[$loginCredentials['reseller']]['soapEngine'];
-} else if ($_REQUEST['soapEngine']) {
-    $loginCredentials['soapEngine']=$_REQUEST['soapEngine'];
+	$loginCredentials['soap_engine']      = $resellerFilters[$loginCredentials['reseller']]['soap_engine'];
+} else if ($_REQUEST['soap_engine']) {
+    $loginCredentials['soap_engine']=$_REQUEST['soap_engine'];
 } else if ($resellerFilters['default']) {
-	$loginCredentials['soapEngine']      = $resellerFilters['default']['soapEngine'];
+	$loginCredentials['soap_engine']      = $resellerFilters['default']['soap_engine'];
 }
 
 $SIPSettings = new $SIPSettings_class($account,$loginCredentials,$soapEngines);
