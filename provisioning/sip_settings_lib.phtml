@@ -12,7 +12,7 @@
 
 class SIPSettings {
 
-    var $loginType                 = 'subscriber';
+    var $login_type                 = 'subscriber';
     var $soapClassSipPort          = 'WebService_NGNPro_SipPort';
     var $soapClassEnumPort         = 'WebService_NGNPro_EnumPort';
     var $soapClassRatingPort       = 'WebService_NGNPro_RatingPort';
@@ -23,7 +23,6 @@ class SIPSettings {
 
     // this variables can be overwritten per soap engine (in ngnpro_soap_engines.inc)
     var $templatesPath             = './templates';
-    var $proxy                     = "proxy.example.com";
     var $SupportCompany            = "Example company";
     var $SupportCDRsite            = "https://cdrtool.example.com/CDRTool";
     var $SupportWEBsite            = "https://www.example.com/help";
@@ -31,6 +30,7 @@ class SIPSettings {
     var $SipSettingsPage 	       = "https://cdrtool.example.com/sip_settings.phtml";
     var $xcap_root   		       = "https://cdrtool.example.com/xcap-root";
 	var $pstn_access               = false;
+    var $proxy                     = "proxy.example.com";
     var $voicemail_server          = "vm.example.com";
     var $voicemailAccessNumber     = "*70";
     var $changePrivacyAccessNumber = "*67";
@@ -110,11 +110,11 @@ class SIPSettings {
         dprint_r($loginCredentials);
 
 		$this->loginCredentials   = &$loginCredentials;
-        if ($loginCredentials['loginType']) {
-        	$this->loginType          = $loginCredentials['loginType'];
+        if ($loginCredentials['login_type']) {
+        	$this->login_type          = $loginCredentials['login_type'];
         }
 
-        if ($this->loginType == "admin") {
+        if ($this->login_type == "admin") {
             if ($_REQUEST['reseller']) {
             	$this->reseller = $_REQUEST['reseller'];
             } else {
@@ -130,8 +130,8 @@ class SIPSettings {
         	$this->customer           = $loginCredentials['customer'];
         }
 
-		if (strlen($loginCredentials['soapEngine'])) {
-            $this->soapEngine=$loginCredentials['soapEngine'];
+		if (strlen($loginCredentials['soap_engine'])) {
+            $this->soapEngine=$loginCredentials['soap_engine'];
         }
 
         //dprint("Using engine: $this->soapEngine");
@@ -143,7 +143,7 @@ class SIPSettings {
 
         $this->getAccount($account);
 
-        if ($this->loginType == "admin") {
+        if ($this->login_type == "admin") {
             $this->pageURL=$this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&soapEngine=$this->soapEngine";
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
@@ -152,7 +152,7 @@ class SIPSettings {
             <input type=hidden name=adminonly value=1>
             ";
 
-        } else if ($this->loginType == "reseller") {
+        } else if ($this->login_type == "reseller") {
 
             $this->pageURL=$this->settingsPage."?account=$this->account&reseller=$this->reseller&soapEngine=$this->soapEngine";
             $this->hiddenElements="
@@ -652,9 +652,9 @@ class SIPSettings {
     function setLanguage() {
         dprint("setLanguage()");
 
-        if ($this->loginType == 'reseller') {
+        if ($this->login_type == 'reseller') {
             $lang = $this->ResellerLanguage;
-        } else if ($this->loginType == 'subscriber') {
+        } else if ($this->login_type == 'subscriber') {
             $lang = $this->Preferences['language'];
         } else {
             $lang = "en";
@@ -988,7 +988,7 @@ class SIPSettings {
         <td align=right valign=top>
         ";
     
-        if ($this->loginType == 'subscriber') {
+        if ($this->login_type == 'subscriber') {
             print "<a href=sip_logout.phtml>";
             print _("Logout");
             print "</a>";
@@ -1669,7 +1669,7 @@ class SIPSettings {
         ";
         */
 	    
-        if ($this->loginType != 'subscriber' && in_array("free-pstn",$this->groups)) {
+        if ($this->login_type != 'subscriber' && in_array("free-pstn",$this->groups)) {
 
             if (in_array("quota",$this->groups)) {
             	$td_class="orange";
@@ -1721,7 +1721,7 @@ class SIPSettings {
 
         foreach (array_keys($this->SIPACLS) as $key) {
 
-            if ($this->loginType == 'subscriber' && !$this->SIPACLS[$key]['SubscriberMaySeeIt']) {
+            if ($this->login_type == 'subscriber' && !$this->SIPACLS[$key]['SubscriberMaySeeIt']) {
                 continue;
             }
 
@@ -1737,14 +1737,14 @@ class SIPSettings {
                 $checked_box[$key]="checked";
             }
 
-            if ($this->loginType == 'subscriber' && !$checked_box[$key] && $key=="free-pstn") {
+            if ($this->login_type == 'subscriber' && !$checked_box[$key] && $key=="free-pstn") {
                 continue;
             }
 
             $elementName    = $this->SIPACLS[$key]["WEBName"];
             $elementComment = $this->SIPACLS[$key]["WEBComment"];
 
-			if ($this->loginType == 'subscriber') {
+			if ($this->login_type == 'subscriber') {
                 if ($this->SIPACLS[$key]["SubscriberMayEditIt"]) {
                     $disabled_box = "";
                 } else {
@@ -1765,7 +1765,7 @@ class SIPSettings {
             <input type=checkbox value=1 name=$key $checked_box[$key] $disabled_box>
             ";
 
-            if ($this->loginType != 'subscriber') {
+            if ($this->login_type != 'subscriber') {
                 if ($key=="free-pstn") {
                     print "$elementComment: <input type=text size=15 maxsize=15 name=rpid value=\"$this->rpid\">";
                 } else {
@@ -1785,7 +1785,7 @@ class SIPSettings {
             ";
         }
 
-        if ($this->loginType != 'subscriber') {
+        if ($this->login_type != 'subscriber') {
 
 	        // prepaid
         	if ($this->prepaid) $checked_prepaid="checked";
@@ -1901,7 +1901,7 @@ class SIPSettings {
         ";
 
         if ($this->voicemail['Account'] &&
-        	($this->loginType == 'admin' || $this->loginType == 'reseller')) {
+        	($this->login_type == 'admin' || $this->login_type == 'reseller')) {
             printf (" (Mailbox %s) ",$this->voicemail['Account']);
         }
 
@@ -1979,7 +1979,7 @@ class SIPSettings {
 
     function showOwner() {
 
-		if ($this->loginType == 'admin' || $this->loginType == 'reseller') {
+		if ($this->login_type == 'admin' || $this->login_type == 'reseller') {
             print "
             <tr $bgcolor>
             <td class=border>";
@@ -2302,7 +2302,7 @@ class SIPSettings {
             }
         }
 
-        if ($this->loginType != 'subscriber') {
+        if ($this->login_type != 'subscriber') {
             if (strcmp($quota,$this->quota) != 0) {
                 if (!$quota) $quota=0;
                 $result->quota=intval($quota);
@@ -2343,7 +2343,7 @@ class SIPSettings {
             // $val is set to 1 if web checkbox is ticked
             $val = $_REQUEST[$key];
 
-            if ($this->loginType != 'subscriber' || $this->SIPACLS[$key]['SubscriberMayEditIt']) {
+            if ($this->login_type != 'subscriber' || $this->SIPACLS[$key]['SubscriberMayEditIt']) {
 
                 // toggle prepaid
                 if ($key == "prepaid") $result->prepaid=intval($val);
@@ -2374,7 +2374,7 @@ class SIPSettings {
         }
 
         if ($language && $language != $this->Preferences['language'] ) {
-            if ($this->loginType == 'subscriber') {;
+            if ($this->login_type == 'subscriber') {;
                 dprint("Set lang $language");
                 changeLanguage($language);
             }
@@ -2485,7 +2485,7 @@ class SIPSettings {
 
         }
 
-        if ($this->loginType != 'subscriber' && $this->voicemail['Account'] && !$this->createdVoicemailnow) {
+        if ($this->login_type != 'subscriber' && $this->voicemail['Account'] && !$this->createdVoicemailnow) {
             $delete_voicemail = $_REQUEST['delete_voicemail'];
 
             //$log=sprintf("delete_voicemail_orig=%s",$this->voicemail['Options']->delete);
@@ -5668,7 +5668,7 @@ class SIPSettings {
 
 
     function showBillingProfiles() {
-		if ($this->loginType != 'admin' && $this->loginType != 'reseller' || !in_array("free-pstn",$this->groups)) {
+		if ($this->login_type != 'admin' && $this->login_type != 'reseller' || !in_array("free-pstn",$this->groups)) {
             return true;
         }
 
@@ -5707,7 +5707,7 @@ class SIPSettings {
         ";
     }
     function updateBillingProfiles() {
-		if ($this->loginType != 'admin' && $this->loginType != 'reseller') {
+		if ($this->login_type != 'admin' && $this->login_type != 'reseller') {
             return true;
         }
 

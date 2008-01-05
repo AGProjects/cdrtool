@@ -17,19 +17,19 @@
 
     if ($adminonly) {
         $loginCredentials=array(
-                                'loginType'          => 'admin',
-                                'reseller'           => $reseller,
-                                'customer'           => $customer,
-                                'extraFormElements'  => array()
+                                'login_type'          => 'admin',
+                                'reseller'            => $reseller,
+                                'customer'            => $customer,
+                                'extra_form_elements' => array()
                                 );
     } else {
         $loginCredentials=array(
-                                'loginType'          => 'reseller',
-                                'soapUsername'       => $soapUsername,
-                                'soapPassword'       => $soapPassword,
-                                'reseller'           => $reseller,
-                                'customer'           => $customer,
-                                'extraFormElements'  => array()
+                                'login_type'          => 'reseller',
+                                'soap_username'        => $soapUsername,
+                                'soap_password'        => $soapPassword,
+                                'reseller'            => $reseller,
+                                'customer'            => $customer,
+                                'extra_form_elements' => array()
                                 );
     
     }
@@ -123,7 +123,7 @@ class SoapEngine {
     var $adminonly     = 0;
     var $customer      = 0;
     var $reseller      = 0;
-    var $loginType     = 'reseller';
+    var $login_type     = 'reseller';
 	var $allowedPorts  = array();
     var $timeout       = 5;
     var $exception     = array();
@@ -294,10 +294,10 @@ class SoapEngine {
 
         dprint_r($this->loginCredentials);
 
-        if ($this->loginCredentials['loginType'] == 'admin') $this->adminonly = 1;
+        if ($this->loginCredentials['login_type'] == 'admin') $this->adminonly = 1;
 
-        if (strlen($this->loginCredentials['soapFilter'])) {
-            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->loginCredentials['soapFilter']);
+        if (strlen($this->loginCredentials['soap_filter'])) {
+            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->loginCredentials['soap_filter']);
         } else {
         	$this->soapEngines = $soapEngines;
         }
@@ -316,7 +316,7 @@ class SoapEngine {
                 $service   = $_ports[0].'@'.$_engines[0];
             }
 
-	        $this->extraFormElements    = $this->loginCredentials['extraFormElements'];
+	        $this->extraFormElements    = $this->loginCredentials['extra_form_elements'];
 
             $this->service = $service;
 
@@ -393,11 +393,11 @@ class SoapEngine {
             	$this->customer = $_REQUEST['customer_filter'];
             }
 
-            if (strlen($loginCredentials['soapUsername']) && $this->version > 1) {
-            	$this->soapUsername=$loginCredentials['soapUsername'];
+            if (strlen($loginCredentials['soap_username']) && $this->version > 1) {
+            	$this->soapUsername=$loginCredentials['soap_username'];
                 $this->SOAPlogin = array(
                                        "username"    => $this->soapUsername,
-                                       "password"    => $loginCredentials['soapPassword'],
+                                       "password"    => $loginCredentials['soap_password'],
                                        "admin"       => false
                                        );
             } else {
@@ -3349,8 +3349,8 @@ class ENUMranges extends Records {
                     }
 
 					if ($this->adminonly) {
-                    	if ($this->loginCredentials['resellerFilters'][$range->reseller]['record_generator']) {
-                            $generator_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->loginCredentials['resellerFilters'][$range->reseller]['record_generator'],$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
+                    	if ($this->loginCredentials['reseller_filters'][$range->reseller]['record_generator']) {
+                            $generator_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->loginCredentials['reseller_filters'][$range->reseller]['record_generator'],$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
                         } else  if (strlen($this->SoapEngine->record_generator)) {
                             $generator_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->SoapEngine->record_generator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
                         }
@@ -7816,7 +7816,7 @@ class Customers extends Records {
         print "
         <table border=0>";
 
-        if ($this->loginCredentials['loginType'] == 'admin') {
+        if ($this->loginCredentials['login_type'] == 'admin') {
             printf ("<tr bgcolor=lightgrey>
             <td class=border>Category</td>
             <td class=border>Permission</td>
@@ -7824,7 +7824,7 @@ class Customers extends Records {
             <td class=border>Value</td>
             <td class=border>Description</td>
             </tr>");
-        } else if ($this->loginCredentials['loginType'] == 'reseller') {
+        } else if ($this->loginCredentials['login_type'] == 'reseller') {
             printf ("<tr bgcolor=lightgrey>
             <td class=border>Permission</td>
             <td class=border>Property</td>
@@ -7850,7 +7850,7 @@ class Customers extends Records {
 
 			$_permission=$this->allProperties[$item]['permission'];
 
-            if ($this->loginCredentials['loginType'] == 'admin') {
+            if ($this->loginCredentials['login_type'] == 'admin') {
             	if ($this->allProperties[$item]['permission'] == 'admin' &&
                         $customer->id != $customer->reseller &&
                         $this->allProperties[$item]['resellerMayManageForChildAccounts']) {
@@ -7872,7 +7872,7 @@ class Customers extends Records {
                 $this->allProperties[$item]['value'],
                 $this->allProperties[$item]['name']
                 );
-            } else if ($this->loginCredentials['loginType'] == 'reseller') {
+            } else if ($this->loginCredentials['login_type'] == 'reseller') {
                 // logged in as reseller
 
                 if ($this->allProperties[$item]['permission'] == 'admin') {
@@ -8650,8 +8650,8 @@ class record_generator extends SoapEngine {
             return false;
         }
 
-        if (strlen($this->loginCredentials['soapFilter'])) {
-            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->loginCredentials['soapFilter']);
+        if (strlen($this->loginCredentials['soap_filter'])) {
+            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->loginCredentials['soap_filter']);
         } else {
         	$this->soapEngines = $soapEngines;
         }

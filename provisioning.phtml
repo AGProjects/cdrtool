@@ -46,7 +46,7 @@ if ($CDRTool['impersonate']) {
 		$loginCredentials=array(
                         'customer'           => $_customer,
                         'reseller'           => $_reseller,
-                        'loginType'          => 'admin'
+                        'login_type'          => 'admin'
                         );
 
     } else if (preg_match("/^(\[1-9][0-9]*)$/",$CDRTool['impersonate'],$m)) {
@@ -54,11 +54,11 @@ if ($CDRTool['impersonate']) {
 		$loginCredentials=array(
                         'customer'           => $_customer,
                         'reseller'           => $_customer,
-                        'loginType'          => 'admin'
+                        'login_type'          => 'admin'
                         );
     } else if ($CDRTool['impersonate'] == '0' || $CDRTool['impersonate'] = '0.0') {
 		$loginCredentials=array(
-                        'loginType'          => 'admin'
+                        'login_type'          => 'admin'
                         );
     } else {
         page_close();
@@ -77,14 +77,14 @@ require_once("provisioning/ngnpro_client_lib.phtml");
 require("provisioning/ngnpro_engines.inc");
 
 if ($resellerFilters[$loginCredentials['reseller']]) {
-	$loginCredentials['soapFilter']      = $resellerFilters[$loginCredentials['reseller']]['soapFilter'];
+	$loginCredentials['soap_filter']      = $resellerFilters[$loginCredentials['reseller']]['soap_filter'];
     $loginCredentials['record_generator'] = $resellerFilters[$loginCredentials['reseller']]['record_generator'];
 } else if ($resellerFilters['default']) {
-	$loginCredentials['soapFilter']      = $resellerFilters['default']['soapFilter'];
+	$loginCredentials['soap_filter']      = $resellerFilters['default']['soap_filter'];
     $loginCredentials['record_generator'] = $resellerFilters['default']['record_generator'];
 }
 
-$loginCredentials['resellerFilters'] = $resellerFilters;
+$loginCredentials['reseller_filters'] = $resellerFilters;
 
 if ($_REQUEST['generatorId']) {
     $generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,$loginCredentials);
