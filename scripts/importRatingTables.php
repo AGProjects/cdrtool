@@ -10,10 +10,12 @@ Header("Content-Disposition: inline; filename=Rating.txt");
 header("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
 header("Pragma: no-cache");
 
+ini_set('max_execution_time','36000');
+
 $RatingTables= new RatingTables();
-if ($RatingTables->ImportCSVFiles()) {
-    if (!reloadRatingEngineTables()) {
-        print "Error: Cannot connect to network Rating Engine $errstr ($errno). ";
-    }
+$RatingTables->ImportCSVFiles();
+
+if ($RatingTables->mustReload && !reloadRatingEngineTables()) {
+	print "Error: cannot connect to network rating engine\n";
 }
 ?>
