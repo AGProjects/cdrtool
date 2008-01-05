@@ -496,8 +496,8 @@ To log to syslog about missing rates or incorrect setup of the rating tables
 enable 'reportMissingRates' in $CDRTool['rating'] section of global.inc
 
 
-Re-rating calls and historical rating
--------------------------------------
+Renormalizing CDRs and historical rating
+----------------------------------------
 
 Sometime is useful to be able to change the rates for calls that have been
 already normalized and rated, for example after changing the rating tables
@@ -528,8 +528,8 @@ To re-rate the CDRs do the following:
 Notes
 
 Renormalization process can take long time during which your database
-(radacct table) will be locked. Perform this operation only during low
-traffic periods. 
+(radacct table) will be intermitently locked. Perform this operation
+only during low traffic periods. 
 
 It is advisable to re-rate only the CDRs for destinations that have
 different rates. To do this, select a filter in the CDR search screen, if
@@ -546,7 +546,7 @@ week-ends. Holidays are global and cannot be specified per customer.
 
 
 Known limitations
-------------------
+-----------------
 
 The rating engine does not calculate rates based on the outbound carriers or
 outbound gateways, the rates are based per calling party and not per called
@@ -572,10 +572,8 @@ The rating tables have been populated durring the tests with:
 
 Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 8135 destinations
 Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 6 profilesPSTN
-Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 16277 ratesPSTN
 Aug 11 11:25:43 sip03 CDRTool[4945]: Loaded 4 holidays
 Aug 11 11:25:44 sip03 CDRTool[4945]: Loaded 7273 prepaid accounts
-
 
 Tests results for the postpaid application:
 
@@ -601,3 +599,6 @@ The pre-calculated maximum duration of prepaid calls may be affected by
 rating plans with custom time increments and minimum charged durations. Do
 not use minimum durations or custom increments for customers using the
 prepaid application.
+
+The rates are read directly from MySQL from version 6.1 instead of
+beeing cached as they are found based on a known index.
