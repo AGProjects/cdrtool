@@ -47,6 +47,8 @@ $db->Halt_On_Error ="no";
 $db1= new DB_CDRTool;
 $db1->Halt_On_Error ="no";
 
+$skipReloadForTables=array('billing_rates','prepaid_cards');
+
 // delimiter for exporting records
 if ($CDRTool['rating']['delimiter']) {
     $delimiter=$CDRTool['rating']['delimiter'];
@@ -224,7 +226,7 @@ if ($action =="update" && $table) {
                         }
                     }
                 } else {
-                    if ($table != 'prepaid_cards') {
+                	if (!in_array($table,$skipReloadForTables)) {
             			if (!$db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'")){
             				printf ("<font color=red>Database error: %s (%s)</font>",$db->Error,$db->Errno);
 	                    }
@@ -301,7 +303,7 @@ if ($action =="update" && $table) {
             dprint($endquery);
             if ($db->query($endquery)) {
             	$affected_rows=$db->affected_rows();
-	        	if ($affected_rows) {
+	        	if ($affected_rows && !in_array($table,$skipReloadForTables)) {
                 	$db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
                 }
 
@@ -353,7 +355,8 @@ if ($action =="update" && $table) {
 
 				$affected_rows=$db->affected_rows();
 
-                if ($affected_rows) {
+	        	if ($affected_rows && !in_array($table,$skipReloadForTables)) {
+
                 	$db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
                 }
             } else {
@@ -444,7 +447,7 @@ if ($action =="update" && $table) {
 
 				$affected_rows=$db->affected_rows();
 
-                if ($affected_rows) {
+	        	if ($affected_rows && !in_array($table,$skipReloadForTables)) {
                 	$db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
                 	print "$affected_rows rates copied. ";
                 }
@@ -543,7 +546,8 @@ if ($action =="update" && $table) {
                 dprint($query);
                 if ($db->query($query)) {
 					$affected_rows=$db->affected_rows();
-                    if ($affected_rows) {
+	        		if ($affected_rows && !in_array($table,$skipReloadForTables)) {
+
                     	$db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
                         $db->query("select LAST_INSERT_ID() as lid");
                         $db->next_record();
@@ -566,7 +570,9 @@ if ($action =="update" && $table) {
             dprint($query);
             if ($db->query($query)) {
 				$affected_rows=$db->affected_rows();
-	        	if ($affected_rows) $db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+	        	if ($affected_rows && !in_array($table,$skipReloadForTables)) {
+                	$db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+                }
                 $log_entity=sprintf("id=%s",$id);
 
             } else {
