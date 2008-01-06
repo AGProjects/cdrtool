@@ -36,20 +36,20 @@ if (class_exists($_reseller_class)) {
 	$SIPSettings_class=$_class;
 }
 
-$loginCredentials=array(
+$login_credentials=array(
                         'login_type'  => 'admin',
                         'reseller'   => $_REQUEST['reseller']
                         );
 
-if ($resellerFilters[$loginCredentials['reseller']]) {
-	$loginCredentials['soap_engine']      = $resellerFilters[$loginCredentials['reseller']]['soap_engine'];
+if ($resellerFilters[$login_credentials['reseller']]) {
+	$login_credentials['soap_engine']      = $resellerFilters[$login_credentials['reseller']]['soap_engine'];
 } else if ($_REQUEST['soap_engine']) {
-    $loginCredentials['soap_engine']=$_REQUEST['soap_engine'];
+    $login_credentials['soap_engine']=$_REQUEST['soap_engine'];
 } else if ($resellerFilters['default']) {
-	$loginCredentials['soap_engine']      = $resellerFilters['default']['soap_engine'];
+	$login_credentials['soap_engine']      = $resellerFilters['default']['soap_engine'];
 }
 
-$SIPSettings = new $SIPSettings_class($account,$loginCredentials,$soapEngines);
+$SIPSettings = new $SIPSettings_class($account,$login_credentials,$soapEngines);
 
 if (!$export) {
     $title  = "SIP settings of $account";
@@ -64,9 +64,9 @@ if ($action=="Save settings") {
         $SIPSettings->saveSettings();
         unset($SIPSettings);
         if (in_array($domain,$freeDomains)) {
-            $SIPSettings = new $SIPSettings_class($account,$loginCredentials,$soapEngines);
+            $SIPSettings = new $SIPSettings_class($account,$login_credentials,$soapEngines);
         } else {
-            $SIPSettings = new $SIPSettings_class($account,$loginCredentials,$soapEngines);
+            $SIPSettings = new $SIPSettings_class($account,$login_credentials,$soapEngines);
         }
     } else {
         print "<font color=red>";

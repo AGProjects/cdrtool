@@ -13,17 +13,17 @@
 
     // login using your favorite php session management and read data from the login function
 
-	// loginCredentials can overwrite many defaults, see SoapEngine->SoapEngine() function
+	// login_credentials can overwrite many defaults, see SoapEngine->SoapEngine() function
 
     if ($adminonly) {
-        $loginCredentials=array(
+        $login_credentials=array(
                                 'login_type'          => 'admin',
                                 'reseller'            => $reseller,
                                 'customer'            => $customer,
                                 'extra_form_elements' => array()
                                 );
     } else {
-        $loginCredentials=array(
+        $login_credentials=array(
                                 'login_type'          => 'reseller',
                                 'soap_username'        => $soapUsername,
                                 'soap_password'        => $soapPassword,
@@ -45,8 +45,8 @@
     ////////////////////////////////
     
     $sip_engine           = 'sip_accounts@engine';
-    $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$loginCredentials);
-    $_sip_class          = $this->SipSoapEngine->recordsClass;
+    $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$login_credentials);
+    $_sip_class          = $this->SipSoapEngine->records_class;
     $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
     
     $sipAccount = array('account'  => 'user@example.com',
@@ -66,8 +66,8 @@
     ////////////////////////////////
     
     $sip_engine           = 'sip_accounts@engine';
-    $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$loginCredentials);
-    $_sip_class          = $this->SipSoapEngine->recordsClass;
+    $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$login_credentials);
+    $_sip_class          = $this->SipSoapEngine->records_class;
     $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
     
     $sipDomain = array('domain'  => 'example.com',
@@ -82,8 +82,8 @@
     ///////////////////////////////
     
     $sip_engine           = 'sip_aliases@engine';
-    $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$loginCredentials);
-    $_sip_class          = $this->SipSoapEngine->recordsClass;
+    $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$login_credentials);
+    $_sip_class          = $this->SipSoapEngine->records_class;
     $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
     
     $sipAlias = array('alias'    => 'user@example1.com',
@@ -100,8 +100,8 @@
     ///////////////////////////////////
     
     $enum_engine           = 'enum_numbers@engine';
-    $this->EnumSoapEngine = new SoapEngine($enum_engine,$soapEngines,$loginCredentials);
-    $_enum_class          = $this->EnumSoapEngine->recordsClass;
+    $this->EnumSoapEngine = new SoapEngine($enum_engine,$soapEngines,$login_credentials);
+    $_enum_class          = $this->EnumSoapEngine->records_class;
     $this->enumRecords    = new $_enum_class(&$this->EnumSoapEngine);
     
     $enumMapping = array('tld'      => $tld,
@@ -130,72 +130,72 @@ class SoapEngine {
 
     var $ports=array(
                         'customers'      => array(
-                                           'recordsClass' => 'Customers',
+                                           'records_class' => 'Customers',
                                            'name'         => 'Login accounts',
-                                           'soapClass'    => 'WebService_NGNPro_CustomerPort',
+                                           'soap_class'    => 'WebService_NGNPro_CustomerPort',
                                            'category'     => 'general',
                                            'description'  => 'Manage login accounts, customer information  and properties. Customer id can be assigned to entities like SIP domains and ENUM ranges. Use % to match a pattern. '
                                            ),
                         'sip_domains'    => array(
-                                           'recordsClass' => 'Domains',
+                                           'records_class' => 'Domains',
                                            'name'         => 'SIP domains',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort',
+                                           'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'     => 'sip',
                                            'description'  => 'Manage SIP domains (e.g example.com) served by the SIP Proxy. Use % to match a pattern. '
                                            ),
                         'sip_accounts'   => array(
-                                           'recordsClass' => 'SipAccounts',
+                                           'records_class' => 'SipAccounts',
                                            'name'         => 'SIP accounts',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort',
+                                           'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'     => 'sip',
                                            'description'  => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use % to match a pattern. '
                                            ),
                         'sip_aliases'    => array(
-                                           'recordsClass' => 'SipAliases',
+                                           'records_class' => 'SipAliases',
                                            'name'         => 'SIP aliases',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort',
+                                           'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'     => 'sip',
                                            'description'  => 'Manage aliases for SIP destinations (e.g. user1@example1.com alias to user2@example2.com). Use % to match a pattern. '
                                            ),
                         'trusted_peers'  => array(
-                                           'recordsClass' => 'TrustedPeers',
+                                           'records_class' => 'TrustedPeers',
                                            'name'         => 'SIP trusted IPs',
-                                           'soapClass'    => 'WebService_NGNPro_SipPort',
+                                           'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'     => 'sip',
                                            'description'  => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. '
                                            ),
                         'enum_ranges'    => array(
-                                           'recordsClass' => 'EnumRanges',
+                                           'records_class' => 'EnumRanges',
                                            'name'         => 'ENUM ranges',
-                                           'soapClass'    => 'WebService_NGNPro_EnumPort',
+                                           'soap_class'    => 'WebService_NGNPro_EnumPort',
                                            'category'     => 'enum',
                                            'description'  => 'Manage ENUM ranges that hold ENUM numbers. Use % to match a pattern. '
                                            ),
                         'enum_numbers'   => array(
-                                           'recordsClass' => 'EnumMappings',
+                                           'records_class' => 'EnumMappings',
                                            'name'         => 'ENUM numbers',
-                                           'soapClass'    => 'WebService_NGNPro_EnumPort',
+                                           'soap_class'    => 'WebService_NGNPro_EnumPort',
                                            'category'     => 'enum',
                                            'description'  => 'Manage ENUM numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use % to match a pattern. '
                                            ),
                         'pstn_gateway_groups' => array(
-                                           'recordsClass' => 'GatewayGroups',
+                                           'records_class' => 'GatewayGroups',
                                            'name'         => 'PSTN groups',
-                                           'soapClass'    => 'WebService_NGNPro_NetworkPort',
+                                           'soap_class'    => 'WebService_NGNPro_NetworkPort',
                                            'category'     => 'pstn',
                                            'description'  => 'Manage groups of gateways used to call to the PSTN. You must add individual gateways to each group. '
                                            ),
                         'pstn_gateways'  => array(
-                                           'recordsClass' => 'Gateways',
+                                           'records_class' => 'Gateways',
                                            'name'         => 'PSTN gateways',
-                                           'soapClass'    => 'WebService_NGNPro_NetworkPort',
+                                           'soap_class'    => 'WebService_NGNPro_NetworkPort',
                                            'category'     => 'pstn',
                                            'description'  => 'Manage gateways used to call to the PSTN. Set the IP address and IP protocol. '
                                            ),
                         'pstn_routes'    => array(
-                                           'recordsClass' => 'Routes',
+                                           'records_class' => 'Routes',
                                            'name'         => 'PSTN routes',
-                                           'soapClass'    => 'WebService_NGNPro_NetworkPort',
+                                           'soap_class'    => 'WebService_NGNPro_NetworkPort',
                                            'category'     => 'pstn',
                                            'description'  => 'Assign gateways groups to PSTN prefixes. Use % to match a pattern. '
                                            )
@@ -238,7 +238,7 @@ class SoapEngine {
         return $soapEngines_checked;
     }
 
-    function SoapEngine($service,$soapEngines,$loginCredentials=array()) {
+    function SoapEngine($service,$soapEngines,$login_credentials=array()) {
 
         /*
         	service is port@engine where:
@@ -258,29 +258,29 @@ class SoapEngine {
                                );
         */
 
-		$this->loginCredentials = &$loginCredentials;
+		$this->login_credentials = &$login_credentials;
 
-        if (is_array($this->loginCredentials['ports'])) {
+        if (is_array($this->login_credentials['ports'])) {
             $_ports=array();
             foreach (array_keys($this->ports) as $_key) {
-                if (in_array($_key,array_keys($this->loginCredentials['ports']))) {
-                    if (strlen($this->loginCredentials['ports'][$_key]['recordsClass'])){
-                		$_ports[$_key]['recordsClass']=$this->loginCredentials['ports'][$_key]['recordsClass'];
+                if (in_array($_key,array_keys($this->login_credentials['ports']))) {
+                    if (strlen($this->login_credentials['ports'][$_key]['records_class'])){
+                		$_ports[$_key]['records_class']=$this->login_credentials['ports'][$_key]['records_class'];
                     } else {
-                        $_ports[$_key]['recordsClass']=$this->ports[$_key]['recordsClass'];
+                        $_ports[$_key]['records_class']=$this->ports[$_key]['records_class'];
                     }
-                    if (strlen($this->loginCredentials['ports'][$_key]['soapClass'])){
-                		$_ports[$_key]['soapClass']=$this->loginCredentials['ports'][$_key]['soapClass'];
+                    if (strlen($this->login_credentials['ports'][$_key]['soap_class'])){
+                		$_ports[$_key]['soap_class']=$this->login_credentials['ports'][$_key]['soap_class'];
                     } else {
-                        $_ports[$_key]['soapClass']=$this->ports[$_key]['soapClass'];
+                        $_ports[$_key]['soap_class']=$this->ports[$_key]['soap_class'];
                     }
-                    if (strlen($this->loginCredentials['ports'][$_key]['name'])){
-                		$_ports[$_key]['name']=$this->loginCredentials['ports'][$_key]['name'];
+                    if (strlen($this->login_credentials['ports'][$_key]['name'])){
+                		$_ports[$_key]['name']=$this->login_credentials['ports'][$_key]['name'];
                     } else {
                         $_ports[$_key]['name']=$this->ports[$_key]['name'];
                     }
-                    if (strlen($this->loginCredentials['ports'][$_key]['description'])){
-                		$_ports[$_key]['description']=$this->loginCredentials['ports'][$_key]['description'];
+                    if (strlen($this->login_credentials['ports'][$_key]['description'])){
+                		$_ports[$_key]['description']=$this->login_credentials['ports'][$_key]['description'];
                     } else {
                         $_ports[$_key]['description']=$this->ports[$_key]['description'];
                     }
@@ -292,12 +292,12 @@ class SoapEngine {
             $this->ports=$_ports;
         }
 
-        dprint_r($this->loginCredentials);
+        dprint_r($this->login_credentials);
 
-        if ($this->loginCredentials['login_type'] == 'admin') $this->adminonly = 1;
+        if ($this->login_credentials['login_type'] == 'admin') $this->adminonly = 1;
 
-        if (strlen($this->loginCredentials['soap_filter'])) {
-            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->loginCredentials['soap_filter']);
+        if (strlen($this->login_credentials['soap_filter'])) {
+            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->login_credentials['soap_filter']);
         } else {
         	$this->soapEngines = $soapEngines;
         }
@@ -316,7 +316,7 @@ class SoapEngine {
                 $service   = $_ports[0].'@'.$_engines[0];
             }
 
-	        $this->extraFormElements    = $this->loginCredentials['extra_form_elements'];
+	        $this->extraFormElements    = $this->login_credentials['extra_form_elements'];
 
             $this->service = $service;
 
@@ -332,12 +332,12 @@ class SoapEngine {
 
             if (count($this->allowedPorts[$this->soapEngine]) > 0 && in_array($_els[0],$this->allowedPorts[$this->soapEngine])) {
             	$this->port = $_els[0];
-            	$this->recordsClass   = $this->ports[$this->port]['recordsClass'];
-            	$this->soapClass      = $this->ports[$this->port]['soapClass'];
+            	$this->records_class   = $this->ports[$this->port]['records_class'];
+            	$this->soap_class      = $this->ports[$this->port]['soap_class'];
             }  else {
             	$this->port = $_els[0];
-            	$this->recordsClass   = $this->ports[$this->port]['recordsClass'];
-            	$this->soapClass      = $this->ports[$this->port]['soapClass'];
+            	$this->records_class   = $this->ports[$this->port]['records_class'];
+            	$this->soap_class      = $this->ports[$this->port]['soap_class'];
             }
 
             $this->service    = $this->port.'@'.$this->soapEngine;
@@ -367,37 +367,37 @@ class SoapEngine {
             	$this->customer_properties=$this->soapEngines[$this->soapEngine]['customer_properties'];
             }
 
-	        if (strlen($this->loginCredentials['record_generator'])) {
-            	$this->record_generator=$this->loginCredentials['record_generator'];
+	        if (strlen($this->login_credentials['record_generator'])) {
+            	$this->record_generator=$this->login_credentials['record_generator'];
             } else if (strlen($this->soapEngines[$this->soapEngine]['record_generator'])) {
             	$this->record_generator=$this->soapEngines[$this->soapEngine]['record_generator'];
             }
 
-	        if (strlen($this->loginCredentials['customer_engine'])) {
-            	$this->customer_engine=$this->loginCredentials['customer_engine'];
+	        if (strlen($this->login_credentials['customer_engine'])) {
+            	$this->customer_engine=$this->login_credentials['customer_engine'];
             } else if (strlen($this->soapEngines[$this->soapEngine]['customer_engine'])) {
             	$this->customer_engine=$this->soapEngines[$this->soapEngine]['customer_engine'];
             } else {
             	$this->customer_engine=$this->soapEngine;
             }
 
-            if (strlen($loginCredentials['reseller'])) {
-            	$this->reseller = $loginCredentials['reseller'];
+            if (strlen($login_credentials['reseller'])) {
+            	$this->reseller = $login_credentials['reseller'];
             } else if ($this->adminonly && $_REQUEST['reseller_filter']){
                 $this->reseller = $_REQUEST['reseller_filter'];
             }
 
-            if (strlen($loginCredentials['customer'])) {
-            	$this->customer = $loginCredentials['customer'];
+            if (strlen($login_credentials['customer'])) {
+            	$this->customer = $login_credentials['customer'];
             } else if ($this->adminonly && $_REQUEST['customer_filter']){
             	$this->customer = $_REQUEST['customer_filter'];
             }
 
-            if (strlen($loginCredentials['soap_username']) && $this->version > 1) {
-            	$this->soapUsername=$loginCredentials['soap_username'];
+            if (strlen($login_credentials['soap_username']) && $this->version > 1) {
+            	$this->soapUsername=$login_credentials['soap_username'];
                 $this->SOAPlogin = array(
                                        "username"    => $this->soapUsername,
-                                       "password"    => $loginCredentials['soap_password'],
+                                       "password"    => $login_credentials['soap_password'],
                                        "admin"       => false
                                        );
             } else {
@@ -414,15 +414,15 @@ class SoapEngine {
             $this->SOAPurl=$this->soapEngines[$this->soapEngine]['url'];
 
             if ($this->adminonly)  {
-            	//printf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClass,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
+            	//printf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soap_class,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
             }
 
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
     		// Instantiate the SOAP client
-            if (!class_exists($this->soapClass)) return ;
+            if (!class_exists($this->soap_class)) return ;
 
-            $this->soapclient = new $this->soapClass($this->SOAPurl);
+            $this->soapclient = new $this->soap_class($this->SOAPurl);
 
             $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
@@ -450,7 +450,7 @@ class SoapEngine {
             	$this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
 
     			// Instantiate the SOAP client dependency
-            	$this->soapclientRemote = new $this->soapClass($this->SOAPurlRemote);
+            	$this->soapclientRemote = new $this->soap_class($this->SOAPurlRemote);
 
             	$this->soapclientRemote->setOpt('curl', CURLOPT_TIMEOUT, $this->timeout);
             	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
@@ -604,7 +604,7 @@ class Records {
     function Records(&$SoapEngine) {
     	$this->SoapEngine         = &$SoapEngine;
         $this->version            = &$this->SoapEngine->version;
-        $this->loginCredentials   = &$this->SoapEngine->loginCredentials;
+        $this->login_credentials   = &$this->SoapEngine->login_credentials;
 
         $this->sorting['sortBy']    = trim($_REQUEST['sortBy']);
         $this->sorting['sortOrder'] = trim($_REQUEST['sortOrder']);
@@ -626,8 +626,8 @@ class Records {
 
         if ($this->adminonly) {
         	$this->url .= sprintf('&adminonly=%s',$this->adminonly);
-            if ($this->loginCredentials['reseller']) {
-        		$this->filters['reseller']=$this->loginCredentials['reseller'];
+            if ($this->login_credentials['reseller']) {
+        		$this->filters['reseller']=$this->login_credentials['reseller'];
             } else {
         		$this->filters['reseller']=trim($_REQUEST['reseller_filter']);
             }
@@ -1023,8 +1023,8 @@ class Records {
     }
 
     function showCustomerForm($name='customer_filter') {
-        if ($this->loginCredentials['customer'] != $this->loginCredentials['reseller']) {
-            printf ("%s",$this->loginCredentials['customer']);
+        if ($this->login_credentials['customer'] != $this->login_credentials['reseller']) {
+            printf ("%s",$this->login_credentials['customer']);
         } else {
             if (count($this->customers)) {
                 $select_customer[$this->filters['customer']]='selected';
@@ -1042,8 +1042,8 @@ class Records {
 
     function showResellerForm($name='reseller_filter') {
         if (!$this->adminonly) return;
-        if ($this->loginCredentials['reseller']) {
-            printf ("%s",$this->loginCredentials['reseller']);
+        if ($this->login_credentials['reseller']) {
+            printf ("%s",$this->login_credentials['reseller']);
         } else {
             if (count($this->resellers)) {
                 $select_reseller[$this->filters['reseller']]='selected';
@@ -1193,15 +1193,15 @@ class Records {
 
     function customerFromLogin($dictionary=array()) {
 
-        if ($this->loginCredentials['reseller']) {
-            $reseller = $this->loginCredentials['reseller'];
+        if ($this->login_credentials['reseller']) {
+            $reseller = $this->login_credentials['reseller'];
 
             if ($dictionary['customer']) {
                 $customer = $dictionary['customer'];
             } else if ($_REQUEST['customer']) {
                 $customer = $_REQUEST['customer'];
             } else {
-                $customer = $this->loginCredentials['customer'];
+                $customer = $this->login_credentials['customer'];
             }
         } else {
             if ($dictionary['reseller']) {
@@ -3352,8 +3352,8 @@ class ENUMranges extends Records {
                     }
 
 					if ($this->adminonly) {
-                    	if ($this->loginCredentials['reseller_filters'][$range->reseller]['record_generator']) {
-                            $generator_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->loginCredentials['reseller_filters'][$range->reseller]['record_generator'],$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
+                    	if ($this->login_credentials['reseller_filters'][$range->reseller]['record_generator']) {
+                            $generator_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->login_credentials['reseller_filters'][$range->reseller]['record_generator'],$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
                         } else  if (strlen($this->SoapEngine->record_generator)) {
                             $generator_link=sprintf('<a href=%s&generatorId=%s&range=%s@%s&len=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->SoapEngine->record_generator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
                         }
@@ -3914,7 +3914,7 @@ class ENUMranges extends Records {
     }
 }
 
-class ENUMmappings extends Records {
+class EnumMappings extends Records {
 
     var $sortElements=array('changeDate' => 'Change date',
                             'number'     => 'Number',
@@ -4014,7 +4014,7 @@ class ENUMmappings extends Records {
                               "schemas"=>array("http://"))
         );
 
-    function ENUMmappings(&$SoapEngine) {
+    function EnumMappings(&$SoapEngine) {
         if ($_REQUEST['range_filter']) {
         	list($_prefix,$_tld_filter)= explode("@",$_REQUEST['range_filter']);
             if ($_prefix && !$_REQUEST['number_filter']) {
@@ -7812,14 +7812,14 @@ class Customers extends Records {
         <td valign=top>";
         /*
         print "<pre>";
-		print_r($this->loginCredentials);
+		print_r($this->login_credentials);
         print "</pre>";
         */
 
         print "
         <table border=0>";
 
-        if ($this->loginCredentials['login_type'] == 'admin') {
+        if ($this->login_credentials['login_type'] == 'admin') {
             printf ("<tr bgcolor=lightgrey>
             <td class=border>Category</td>
             <td class=border>Permission</td>
@@ -7827,7 +7827,7 @@ class Customers extends Records {
             <td class=border>Value</td>
             <td class=border>Description</td>
             </tr>");
-        } else if ($this->loginCredentials['login_type'] == 'reseller') {
+        } else if ($this->login_credentials['login_type'] == 'reseller') {
             printf ("<tr bgcolor=lightgrey>
             <td class=border>Permission</td>
             <td class=border>Property</td>
@@ -7853,7 +7853,7 @@ class Customers extends Records {
 
 			$_permission=$this->allProperties[$item]['permission'];
 
-            if ($this->loginCredentials['login_type'] == 'admin') {
+            if ($this->login_credentials['login_type'] == 'admin') {
             	if ($this->allProperties[$item]['permission'] == 'admin' &&
                         $customer->id != $customer->reseller &&
                         $this->allProperties[$item]['resellerMayManageForChildAccounts']) {
@@ -7875,7 +7875,7 @@ class Customers extends Records {
                 $this->allProperties[$item]['value'],
                 $this->allProperties[$item]['name']
                 );
-            } else if ($this->loginCredentials['login_type'] == 'reseller') {
+            } else if ($this->login_credentials['login_type'] == 'reseller') {
                 // logged in as reseller
 
                 if ($this->allProperties[$item]['permission'] == 'admin') {
@@ -8640,12 +8640,12 @@ class record_generator extends SoapEngine {
     var $allowedPorts = array();
 	var $maxRecords   = 1000;
 
-    function record_generator($generatorId,$record_generators,$soapEngines,$loginCredentials=array()) {
+    function record_generator($generatorId,$record_generators,$soapEngines,$login_credentials=array()) {
     	$this->record_generators = $record_generators;
         $this->generatorId      = $generatorId;
-		$this->loginCredentials = $loginCredentials;
+		$this->login_credentials = $login_credentials;
 
-        dprint_r($this->loginCredentials);
+        dprint_r($this->login_credentials);
 		$keys = array_keys($this->record_generators);
 		if (!$generatorId) $generatorId=$keys[0];
 
@@ -8653,8 +8653,8 @@ class record_generator extends SoapEngine {
             return false;
         }
 
-        if (strlen($this->loginCredentials['soap_filter'])) {
-            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->loginCredentials['soap_filter']);
+        if (strlen($this->login_credentials['soap_filter'])) {
+            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->login_credentials['soap_filter']);
         } else {
         	$this->soapEngines = $soapEngines;
         }
@@ -8666,8 +8666,8 @@ class record_generator extends SoapEngine {
                 dprint("sip port not avaliable");
             } else {
                 $sip_engine           = 'sip_accounts@'.$this->record_generators[$generatorId]['sip_engine'];
-                $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$loginCredentials);
-                $_sip_class          = $this->SipSoapEngine->recordsClass;
+                $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$login_credentials);
+                $_sip_class          = $this->SipSoapEngine->records_class;
                 $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
                 $this->sipRecords->getAllowedDomains();
             }
@@ -8682,8 +8682,8 @@ class record_generator extends SoapEngine {
             } else {
                 // enum mappings
                 $enum_engine           = 'enum_numbers@'.$this->record_generators[$generatorId]['enum_engine'];
-                $this->EnumSoapEngine = new SoapEngine($enum_engine,$soapEngines,$loginCredentials);
-                $_enum_class          = $this->EnumSoapEngine->recordsClass;
+                $this->EnumSoapEngine = new SoapEngine($enum_engine,$soapEngines,$login_credentials);
+                $_enum_class          = $this->EnumSoapEngine->records_class;
                 $this->enumRecords    = new $_enum_class(&$this->EnumSoapEngine);
                 $this->enumRecords->getAllowedDomains();
             }
@@ -9770,7 +9770,7 @@ class SIPAliasesActions extends Actions {
 
 }
 
-class ENUMMappingsActions extends Actions {
+class EnumMappingsActions extends Actions {
     var $actions=array(
                        'delete'         => 'Delete ENUM mappings',
                        'changettl'      => 'Change TTL to:',
@@ -9784,7 +9784,7 @@ class ENUMMappingsActions extends Actions {
                               'ttl'      => 'integer'
                               );
 
-    function ENUMMappingsActions(&$SoapEngine) {
+    function EnumMappingsActions(&$SoapEngine) {
         $this->Actions(&$SoapEngine);
     }
 

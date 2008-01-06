@@ -36,14 +36,14 @@ $layout->showTopMenu($title);
 
 global $CDRTool;
 
-$loginCredentials=array();
+$login_credentials=array();
 
 if ($CDRTool['impersonate']) {
     if (preg_match("/^([1-9][0-9]*)\.([1-9][0-9]*)$/",$CDRTool['impersonate'],$m)) {
         $_customer=$m[1];
         $_reseller=$m[2];
 
-		$loginCredentials=array(
+		$login_credentials=array(
                         'customer'           => $_customer,
                         'reseller'           => $_reseller,
                         'login_type'          => 'admin'
@@ -51,13 +51,13 @@ if ($CDRTool['impersonate']) {
 
     } else if (preg_match("/^(\[1-9][0-9]*)$/",$CDRTool['impersonate'],$m)) {
         $_customer=$m[1];
-		$loginCredentials=array(
+		$login_credentials=array(
                         'customer'           => $_customer,
                         'reseller'           => $_customer,
                         'login_type'          => 'admin'
                         );
     } else if ($CDRTool['impersonate'] == '0' || $CDRTool['impersonate'] = '0.0') {
-		$loginCredentials=array(
+		$login_credentials=array(
                         'login_type'          => 'admin'
                         );
     } else {
@@ -76,18 +76,18 @@ require_once("provisioning/ngnpro_soap_library.phtml");
 require_once("provisioning/ngnpro_client_lib.phtml");
 require("provisioning/ngnpro_engines.inc");
 
-if ($resellerFilters[$loginCredentials['reseller']]) {
-	$loginCredentials['soap_filter']      = $resellerFilters[$loginCredentials['reseller']]['soap_filter'];
-    $loginCredentials['record_generator'] = $resellerFilters[$loginCredentials['reseller']]['record_generator'];
+if ($resellerFilters[$login_credentials['reseller']]) {
+	$login_credentials['soap_filter']      = $resellerFilters[$login_credentials['reseller']]['soap_filter'];
+    $login_credentials['record_generator'] = $resellerFilters[$login_credentials['reseller']]['record_generator'];
 } else if ($resellerFilters['default']) {
-	$loginCredentials['soap_filter']      = $resellerFilters['default']['soap_filter'];
-    $loginCredentials['record_generator'] = $resellerFilters['default']['record_generator'];
+	$login_credentials['soap_filter']      = $resellerFilters['default']['soap_filter'];
+    $login_credentials['record_generator'] = $resellerFilters['default']['record_generator'];
 }
 
-$loginCredentials['reseller_filters'] = $resellerFilters;
+$login_credentials['reseller_filters'] = $resellerFilters;
 
 if ($_REQUEST['generatorId']) {
-    $generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,$loginCredentials);
+    $generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,$login_credentials);
     if ($_REQUEST['action']=='Generate') {
         $generator->generateRecords();
         $generator->showGeneratorForm();
@@ -95,8 +95,8 @@ if ($_REQUEST['generatorId']) {
         $generator->showGeneratorForm();
     }
 } else {
-	$SoapEngine = new SoapEngine($_REQUEST['service'],$soapEngines,$loginCredentials);
-    $_class     = $SoapEngine->recordsClass;
+	$SoapEngine = new SoapEngine($_REQUEST['service'],$soapEngines,$login_credentials);
+    $_class     = $SoapEngine->records_class;
     $RECORDS    = new $_class(&$SoapEngine);
     
     if ($_REQUEST['action']=='Add')    $RECORDS->addRecord();
