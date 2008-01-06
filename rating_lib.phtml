@@ -55,30 +55,7 @@ class Rate {
         if ($this->bccEmail)  $this->extraHeaders=$this->extraHeaders.",".$this->bccEmail;
     }
 
-    function GetBillingTimezone() {
-
-        if ($this->RatingTables->customers[$this->BillingPartyId]['timezone']) {
-
-            dprint("Found billing party = $this->BillingPartyId");
-            return $this->RatingTables->customers[$this->BillingPartyId]['timezone'];
-
-        } elseif ($this->RatingTables->customers[$this->domain]['timezone']) {
-
-            dprint("Found billing party = $this->domain");
-            return $this->RatingTables->customers[$this->domain]['timezone'];
-
-        } elseif ($this->RatingTables->customers[$this->gateway]['timezone']) {
-
-            dprint("Found billing party = $this->gateway");
-            return $this->RatingTables->customers[$this->gateway]['timezone'];
-
-        } else {
-            dprint("Found billing party = default");
-        	return $this->CDRS->CDRTool['provider']['timezone'];
-        }
-    }
-
-    function getRateFromNetwork(&$RateDictionary,&$fp) {
+    function lookupRateFromNetwork(&$RateDictionary,&$fp) {
     	$countEndofLines=0;
         //dprint_r($RateDictionary);
         $cmd="ShowPrice";
@@ -101,7 +78,7 @@ class Rate {
                 $line = fgets($fp,1024);
 
                 if (!$line) {
-                    syslog(LOG_NOTICE, "Error: getRateFromNetwork(): connection to network socket died");
+                    syslog(LOG_NOTICE, "Error: lookupRateFromNetwork(): connection to network socket died");
                     break;
                 }
 
@@ -186,7 +163,10 @@ class Rate {
             dprint("Could not find destination id for $this->cNumber");
         }
 
-        $this->billingTimezone    = $this->GetBillingTimezone();
+		if (!$this->lookupProfiles()) {
+            return false;
+        }
+
 		$this->startTimeBilling   = getLocalTime($this->billingTimezone,$this->timestamp);
         list($dateText,$timeText) = explode(" ",trim($this->startTimeBilling));
 
@@ -203,10 +183,6 @@ class Rate {
         dprint("Billing domain: $this->domain");
         dprint("Billing gateway: $this->gateway");
         dprint("Billing ENUMtld: $this->ENUMtld");
-
-		if (!$this->GetProfiles()) {
-            return false;
-        }
 
         $this->trafficKB=number_format($this->traffic/1024,0,"","");
 
@@ -272,7 +248,7 @@ class Rate {
                     $dayofyear       = date("Y-m-d",$this->timestampBilling+$durationRatedTotal);
                 }
 
-                $foundRate           = $this->GetRate($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
+                $foundRate           = $this->lookupRate($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
                 $durationRatedTotal  = $durationRatedTotal + $foundRate['duration'];
 
 				if (!$foundRate['rate']) {
@@ -429,7 +405,7 @@ class Rate {
         return true;
     }
 
-    function GetProfiles() {
+    function lookupProfiles() {
 
         /*
         lookup the profile_name in billing_customers in the following order:
@@ -443,47 +419,64 @@ class Rate {
             than lookup rates in profileX_alt
         */
 
-        if ($this->RatingTables->customers[$this->BillingPartyId]['profile1'] && $this->RatingTables->customers[$this->BillingPartyId]['profile2']) {
-            // Account XXX@domain.com has rating profiles assigned
-            $this->allProfiles     = $this->RatingTables->customers[$this->BillingPartyId];
-            $this->CustomerProfile = "subscriber=$this->BillingPartyId";
-            $this->increment       = $this->RatingTables->customers[$this->BillingPartyId]['increment'];
-            $this->min_duration    = $this->RatingTables->customers[$this->BillingPartyId]['min_duration'];
+        $query=sprintf("select * from billing_customers
+        where subscriber = '%s'
+        or domain = '%s'
+        or gateway = '%s'
+        or (subscriber = '' and domain = '' and gateway = '')
+        ",
+        addslashes($this->BillingPartyId),
+        addslashes($this->domain),
+        addslashes($this->gateway)
+        );
 
-        } elseif ($this->RatingTables->customers[$this->domain]['profile1'] && $this->RatingTables->customers[$this->domain]['profile2']) {
-            // Domain domain.com has rating profiles assigned
-            $this->allProfiles     = $this->RatingTables->customers[$this->domain];
-            $this->CustomerProfile = "domain=$this->domain";
-            $this->increment       = $this->RatingTables->customers[$this->domain]['increment'];
-            $this->min_duration    = $this->RatingTables->customers[$this->domain]['min_duration'];
-
-        } elseif ($this->RatingTables->customers[$this->gateway]['profile1'] && $this->RatingTables->customers[$this->gateway]['profile2']) {
-            // Gateway (Source IP) has rating profiles assigned
-            $this->allProfiles     = $this->RatingTables->customers[$this->gateway];
-            $this->CustomerProfile = "gateway=$this->gateway";
-            $this->increment       = $this->RatingTables->customers[$this->gateway]['increment'];
-            $this->min_duration    = $this->RatingTables->customers[$this->gateway]['min_duration'];
-
-        } elseif ($this->RatingTables->customers['default']['profile1'] && $this->RatingTables->customers['default']['profile2']) {
-            // Otherwise we use the default profiles
-            $this->allProfiles     = $this->RatingTables->customers['default'];
-            $this->CustomerProfile = "default";
-            $this->increment       = $this->RatingTables->customers['default']['increment'];
-            $this->min_duration    = $this->RatingTables->customers['default']['min_duration'];
-        }
-
-		if ($this->min_duration > 1) $this->minimumDurationCharged = $this->min_duration;
-
-        if (!$this->allProfiles[profile1] || !$this->allProfiles[profile2] ) {
-            dprint("Cannot find billing profiles for $this->BillingPartyId");
+        if (!$this->CDRS->cdrtool->query($query)) {
+            printf ("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
             return false;
         }
 
-        return true;
+        if ($this->CDRS->cdrtool->num_rows()) {
+        	$this->CDRS->cdrtool->next_record();
+
+			if ($this->CDRS->cdrtool->Record['profile_name1'] && $this->CDRS->cdrtool->Record['profile_name2']) {
+	        	$this->allProfiles = array (
+                                            "profile1"     => $this->CDRS->cdrtool->Record['profile_name1'],
+                                            "profile2"     => $this->CDRS->cdrtool->Record['profile_name2'],
+                                            "profile1_alt" => $this->CDRS->cdrtool->Record['profile_name1_alt'],
+                                            "profile2_alt" => $this->CDRS->cdrtool->Record['profile_name2_alt'],
+                                            "timezone"     => $this->CDRS->cdrtool->Record['timezone'],
+                                            "increment"    => $this->CDRS->cdrtool->Record['increment'],
+                                            "min_duration" => $this->CDRS->cdrtool->Record['min_duration'],
+                                            "country_code" => $this->CDRS->cdrtool->Record['country_code']
+                                        );
+
+                if ($this->CDRS->cdrtool->Record['subscriber']) {
+            		$this->CustomerProfile = sprintf("subscriber=%s",$this->CDRS->cdrtool->Record['subscriber']);
+                } else if ($this->CDRS->cdrtool->Record['domain']) {
+            		$this->CustomerProfile = sprintf("domain=%s",$this->CDRS->cdrtool->Record['domain']);
+                } else if ($this->CDRS->cdrtool->Record['gateway']) {
+            		$this->CustomerProfile = sprintf("gateway=%s",$this->CDRS->cdrtool->Record['gateway']);
+                } else {
+            		$this->CustomerProfile = "default";
+                }
+
+                $this->increment       = $this->CDRS->cdrtool->Record['increment'];
+                $this->min_duration    = $this->CDRS->cdrtool->Record['min_duration'];
+				$this->billingTimezone = $this->CDRS->cdrtool->Record['timezone'];
+
+				if ($this->min_duration > 1) $this->minimumDurationCharged = $this->min_duration;
+
+                return true;
+            } else {
+            	return false;
+            }
+        } else {
+        	return false;
+        }
     }
 
-    function GetRate($dayofyear,$dayofweek,$hourofday,$durationRatedAlready) {
-        dprint("<b>GetRate(DayOfYear=$dayofyear,DayOfWeek=$dayofweek,HourOfDay=$hourofday,durationRatedAlready=$durationRatedAlready)</b>");
+    function lookupRate($dayofyear,$dayofweek,$hourofday,$durationRatedAlready) {
+        dprint("<b>lookupRate(DayOfYear=$dayofyear,DayOfWeek=$dayofweek,HourOfDay=$hourofday,durationRatedAlready=$durationRatedAlready)</b>");
 
         /*
         // Required information from CDR structure
@@ -799,7 +792,8 @@ class Rate {
             return false;
         }
 
-        $this->billingTimezone    = $this->GetBillingTimezone();
+        $this->lookupProfiles();
+
 		$this->startTimeBilling   = getLocalTime($this->billingTimezone,$this->timestamp);
         list($dateText,$timeText) = explode(" ",trim($this->startTimeBilling));
 
@@ -816,8 +810,6 @@ class Rate {
         $i=0;
         $durationRatedTotal=0;
 
-        $this->GetProfiles();
-
         while ($Balance > 0 ) {
             $span++;
 
@@ -833,7 +825,7 @@ class Rate {
                 $dayofyear       = date("Y-m-d",$this->timestampBilling+$durationRatedTotal);
             }
 
-            $foundRate            = $this->GetRate($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
+            $foundRate            = $this->lookupRate($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
 
             if ($this->rateNotFound) {
                 // break here to avoid loops
@@ -927,7 +919,7 @@ class Rate {
     	return false;
     }
 
-    function lookupRateValues ($rateName,$DestinationId,$applicationType='audio') {
+    function lookupRateValues($rateName,$DestinationId,$applicationType='audio') {
         // lookup rate from MySQL
         $query=sprintf("select * from billing_rates
         where name = '%s' and
@@ -2378,9 +2370,7 @@ class RatingTables {
         $log=sprintf("Memory usage: %0.2fMB, memory limit: %sB",memory_get_usage()/1024/1024,ini_get('memory_limit'));
         syslog(LOG_NOTICE, $log);
 
-    	$loaded['customers']    = $this->LoadCustomersTable();
         $loaded['profiles']     = $this->LoadProfilesTable();
-        //$loaded['rates']        = $this->LoadRatesTable();
         $loaded['ratesHistory'] = $this->LoadRatesHistoryTable();
         $loaded['holidays']     = $this->LoadHolidaysTable();
         $loaded['enumTlds']     = $this->LoadENUMtldsTable();
@@ -2393,188 +2383,6 @@ class RatingTables {
 
         syslog(LOG_NOTICE, $log);
         return $loaded;
-    }
-
-    function LoadCustomersTable($customerFilter='') {
-        $query="select * from billing_customers";
-
-        if (is_array($customerFilter)) {
-            if (strlen(trim($customerFilter['customer'])) &&
-            	(
-                 $customerFilter['type'] == "subscriber" ||
-                 $customerFilter['type'] == "domain" ||
-                 $customerFilter['type'] == "gateway"
-                )) {
-            	$query.=sprintf (" where %s = '%s'",
-                			      $customerFilter['type'],
-                                  trim($customerFilter['customer']));
-                $updateCustomer=true;
-            }
-        }
-
-        dprint($query);
-
-        if (!$this->cdrtool->query($query)) {
-            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
-            return false;
-        }
-
-        if ($updateCustomer && !$this->cdrtool->num_rows()) {
-        	$log=sprintf("Customer %s of type %s not found ",$customerFilter['customer'],$customerFilter['type']);
-        	syslog(LOG_NOTICE, $log);
-            return false;
-        }
-
-        $i=0;
-        while($this->cdrtool->next_record()) {
-
-            $subscriber   = $this->cdrtool->Record['subscriber'];
-            $domain       = $this->cdrtool->Record['domain'];
-            $gateway      = $this->cdrtool->Record['gateway'];
-
-            $profile1     = $this->cdrtool->Record['profile_name1'];
-            $profile1_alt = $this->cdrtool->Record['profile_name1_alt'];
-
-            $profile2     = $this->cdrtool->Record['profile_name2'];
-            $profile2_alt = $this->cdrtool->Record['profile_name2_alt'];
-
-            $timezone     = $this->cdrtool->Record['timezone'];
-
-            $increment    = $this->cdrtool->Record['increment'];
-            $min_duration = $this->cdrtool->Record['min_duration'];
-
-            $country_code = $this->cdrtool->Record['country_code'];
-
-            if ($profile1 || $profile2) {
-                $i++;
-                if ($subscriber) {
-                    $_els=explode(" ",trim($subscriber));
-                    foreach ($_els as $_el) {
-                    	$_el=trim($_el);
-                    	$_customers[$_el]=
-                        	array (
-                        	"profile1"     => $profile1,
-                        	"profile2"     => $profile2,
-	                        "profile1_alt" => $profile1_alt,
-    	                    "profile2_alt" => $profile2_alt,
-            	            "timezone"     => $timezone,
-                            "increment"    => $increment,
-                            "min_duration" => $min_duration,
-                            "country_code" => $country_code
-                	        );
-                    }
-                    continue;
-                }
-
-                if ($domain) {
-                    $_els=explode(" ",trim($domain));
-                    foreach ($_els as $_el) {
-                    	$_el=trim($_el);
-	                    $_customers[$_el]=
-    	                    array (
-        	                "profile1"     => $profile1,
-            	            "profile2"     => $profile2,
-                	        "profile1_alt" => $profile1_alt,
-                    	    "profile2_alt" => $profile2_alt,
-	                        "timezone"     => $timezone,
-                            "increment"    => $increment,
-                            "min_duration" => $min_duration,
-                            "country_code" => $country_code
-                        );
-                    }
-                    continue;
-                }
-
-                if ($gateway) {
-                    $_els=explode(" ",trim($gateway));
-                    foreach ($_els as $_el) {
-                    	$_el=trim($_el);
-	                    $_customers[$_el]=
-                            array (
-                            "profile1"     => $profile1,
-                            "profile2"     => $profile2,
-                            "profile1_alt" => $profile1_alt,
-                            "profile2_alt" => $profile2_alt,
-                            "timezone"     => $timezone,
-                            "increment"    => $increment,
-                            "min_duration" => $min_duration,
-                            "country_code" => $country_code
-                        );
-                    }
-                    continue;
-                }
-
-                $_customers['default']=
-                        array (
-                        "profile1"     => $profile1,
-                        "profile2"     => $profile2,
-                        "profile1_alt" => $profile1_alt,
-                        "profile2_alt" => $profile2_alt,
-                        "timezone"     => $timezone,
-                        "increment"    => $increment,
-                        "min_duration" => $min_duration,
-                        "country_code" => $country_code
-                        );
-             }
-
-         }
-
-         if ($updateCustomer) {
-            if ($this->customers[$customerFilter['customer']]) {
-                // update customer
-                $this->customers[$customerFilter['customer']]=$_customers;
-                $log=sprintf("Updated customer %s",$customerFilter['customer']);
-        		syslog(LOG_NOTICE, $log);
-            } else {
-                // append customer
-                $this->customers=array_merge($this->customers,$_customers);
-                $log=sprintf("Added customer %s",$customerFilter['customer']);
-        		syslog(LOG_NOTICE, $log);
-            }
-         } else {
-            // load all customers
-		 	$this->customers=$_customers;
-         }
-
-         dprint("Loaded $i customers");
-         return $i;
-    }
-
-    function LoadRatesTable() {
-        return true;
-        // Lookup of rates is done directly in MySQL, it is more efficient than loading them in the memory
-
-        $query="select * from billing_rates order by destination";
-        if (!$this->cdrtool->query($query)) {
-            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
-            return false;
-        }
-
-        $i=0;
-        $rows=$this->cdrtool->num_rows();
-        while($this->cdrtool->next_record()) {
-            if ($this->cdrtool->Record['name'] && $this->cdrtool->Record['destination']) {
-                $i++;
-                $_app=$this->cdrtool->Record['application'];
-                if (!strlen($_app)) $_app='audio';
-                $_rates[$this->cdrtool->Record['name']][$this->cdrtool->Record['destination']][$_app]=
-                array(
-                     "durationRate"    => $this->cdrtool->Record['durationRate'],
-                     "trafficRate"     => $this->cdrtool->Record['trafficRate'],
-                     "connectCost"     => $this->cdrtool->Record['connectCost']
-                );
-
-                if ($i % 50000 == 0) {
-                	$log=sprintf("Loaded %d out of %d rates",$i,$rows);
-        			syslog(LOG_NOTICE, $log);
-                }
-            }
-        }
-
-		$this->rates=$_rates;
-        $this->ratesCount=$i;
-        dprint("Loaded $i rates");
-        return $i;
     }
 
     function LoadENUMtldsTable() {
@@ -2708,6 +2516,7 @@ class RatingTables {
   	}
 
     function showCustomers($filter) {
+        return true;
         foreach (array_keys($this->customers) as $key) {
             if (strlen($filter)) {
                 if (preg_match("/$filter/",$key)) {
@@ -2732,13 +2541,6 @@ class RatingTables {
         	$ENUMtlds=$ENUMtlds.$key."\n";
         }
         return $ENUMtlds;
-    }
-
-    function showRates() {
-        foreach (array_keys($this->rates) as $key) {
-        	$rates=$rates.$key."\n";
-        }
-        return $rates;
     }
 
     function scanFilesForImport($dir) {
@@ -3993,13 +3795,6 @@ class RatingEngine {
     }
 
     function reloadCustomers ($customerFilter) {
-        $b=time();
-        $this->CDRS->RatingTables->LoadCustomersTable($customerFilter);
-
-        $e=time();
-        $d=$e-$b;
-        if ($d >0 ) syslog(LOG_NOTICE, "Reloaded customers in $d seconds");
-
         return true;
     }
 
@@ -4183,9 +3978,6 @@ class RatingEngine {
         "AddBalance     From=sip:123@example.com Value=10.00\n".
         "GetBalance     From=sip:123@example.com\n".
         "ReloadRatingTables\n".
-        "ReloadCustomers Customer=123@example.com Type=[Subscriber|Domain|Gateway]\n".
-        "ShowCustomers Filter=123@example.com\n".
-        "ShowRates\n".
         "ShowProfiles\n".
         "ShowENUMtlds\n".
         "ReloadPrepaidAccounts Account=abc@example.com\n".
@@ -4709,14 +4501,10 @@ class RatingEngine {
 
         } else if ($NetFields['action'] == "showprepaidaccounts") {
             return trim($this->showPrepaidAccounts($NetFields['filter']));
-        } else if ($NetFields['action'] == "showcustomers") {
-            return trim($this->CDRS->RatingTables->showCustomers($NetFields['filter']));
         } else if ($NetFields['action'] == "showprofiles") {
             return trim($this->CDRS->RatingTables->showProfiles());
         } else if ($NetFields['action'] == "showenumtlds") {
             return trim($this->CDRS->RatingTables->showENUMtlds());
-        } else if ($NetFields['action'] == "showrates") {
-            return trim($this->CDRS->RatingTables->showRates());
         } else if ($NetFields['action'] == "version") {
             $version_file=$this->CDRS->CDRTool['Path']."/version";
             $version="CDRTool version ".trim(file_get_contents($version_file));
@@ -4739,11 +4527,9 @@ class RatingEngine {
         } else if ($NetFields['action'] == "reloadprepaidaccounts") {
             return $this->reloadPrepaidAccounts($NetFields['account']);
         } else if ($NetFields['action'] == "showmemory") {
-            $return = sprintf ("%s destinations\n%s customers\n%s profiles\n%s rates\n%s holidays\n%s prepaid accounts\n%s sessions\n%s sessions last minute\n%s sessions last hour\n%s sessions last day",
+            $return = sprintf ("%s destinations\n%s profiles\n%s holidays\n%s prepaid accounts\n%s sessions\n%s sessions last minute\n%s sessions last hour\n%s sessions last day",
             $this->CDRS->destinationsCount,
-            count($this->CDRS->RatingTables->customers),
             count($this->CDRS->RatingTables->profiles),
-            $this->CDRS->RatingTables->ratesCount,
             count($this->CDRS->RatingTables->holidays),
             count($this->balance),
             count($this->sessionCounter),

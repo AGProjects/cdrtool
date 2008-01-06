@@ -4140,7 +4140,7 @@ class CDR_ser_acc extends CDR {
             $this->aNumberPrint="<font color=blue>".htmlentities($this->aNumber)."</font>";
             $this->cNumberPrint="<font color=blue>".htmlentities($this->cNumber)."</font>";
             $cNumberfromSIP=$this->o_uri;
-            $this->DestinationId = $this->CDRS->getDestinationId($cNumberfromSIP);
+            $this->DestinationId = $this->CDRS->lookupDestination($cNumberfromSIP);
             $this->destinationName=trim($this->CDRS->destinations[$this->DestinationId]);
         } else {
             $this->aNumberPrint=htmlentities($this->aNumber);

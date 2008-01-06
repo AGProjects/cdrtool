@@ -1099,7 +1099,7 @@ class CDRS {
 
         if ($type=="destination" && $NumberStack['E164']) {
             // lookup destination id for the E164 number
-            $dst_struct                     = $this->getDestinationId($NumberStack[E164],$subscriber,$domain,$gateway);
+            $dst_struct                     = $this->lookupDestination($NumberStack[E164],$subscriber,$domain,$gateway);
             $NumberStack['DestinationId']   = $dst_struct[0];
             $NumberStack['destinationName'] = $dst_struct[1];
 
@@ -1117,7 +1117,7 @@ class CDRS {
                                               $NumberStack['domain'];
             }
         } else {
-            $dst_struct                     = $this->getDestinationId($Number,$subscriber,$domain,$gateway);
+            $dst_struct                     = $this->lookupDestination($Number,$subscriber,$domain,$gateway);
             $NumberStack['DestinationId']   = $dst_struct[0];
             $NumberStack['destinationName'] = $dst_struct[1];
 
@@ -1135,8 +1135,8 @@ class CDRS {
 
     }
 
-    function getDestinationId($destination,$subscriber="",$domain="",$gateway="") {
-        dprint("getDestinationId($destination,$subscriber,$domain,$gateway)");
+    function lookupDestination($destination,$subscriber="",$domain="",$gateway="") {
+        dprint("lookupDestination($destination,$subscriber,$domain,$gateway)");
 
         if (!$destination) {
             dprint("Missing destination number.");
@@ -1860,7 +1860,7 @@ class CDR {
                 	dprint("Get rates from network ...");
 
                     // get pricing from network rating engine
-					$Rate->getRateFromNetwork(&$this->NetworkRateDictionary,&$this->CDRS->RatingEngineSocket);
+					$Rate->lookupRateFromNetwork(&$this->NetworkRateDictionary,&$this->CDRS->RatingEngineSocket);
 			        dprint_r($this->NetworkRateDictionary);
 
                 } else {
