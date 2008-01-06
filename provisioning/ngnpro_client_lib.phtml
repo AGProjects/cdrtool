@@ -33,6 +33,16 @@
                                 );
     
     }
+
+    // login_credentials can overwite SoapEngine->ports
+	$login_credentials['ports']['customers'] = array(
+                                           'records_class' => 'Customers',
+                                           'name'          => 'Login accounts',
+                                           'soap_class'    => 'WebService_NGNPro_CustomerPort',
+                                           'category'      => 'general',
+                                           'description'   => 'Manage login accounts, customer information  and properties. Customer id can be assigned to entities like SIP domains and ENUM ranges. Use % to match a pattern. '
+                                           );
+
     
     require_once("provisioning/ngnpro_soap_library.phtml");
     require_once("provisioning/ngnpro_client_lib.phtml");
