@@ -9306,9 +9306,6 @@ class SipAccountsActions extends Actions {
 
     function SipAccountsActions(&$SoapEngine) {
         $this->Actions(&$SoapEngine);
-        if ($this->version > 1) {
-            $this->actions['changecustomer']='Change customer to:';
-        }
     }
 
     function execute($selectionKeys,$action,$sub_action_parameter) {
