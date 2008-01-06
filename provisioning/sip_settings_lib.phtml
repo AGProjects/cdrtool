@@ -10,7 +10,7 @@
 
 */
 
-class SIPSettings {
+class SipSettings {
 
     var $login_type                 = 'subscriber';
     var $soapClassSipPort          = 'WebService_NGNPro_SipPort';
@@ -102,7 +102,7 @@ class SIPSettings {
 
 	var $exportFilename = "export.txt";
 
-    function SIPSettings($account,$loginCredentials=array(),$soapEngines=array()) {
+    function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
     	$this->soapEngines        = $soapEngines;
 
         $debug=sprintf("<font color=blue><p><b>Initialize class %s(%s)</b></font>",get_class($this),$account);
@@ -5115,7 +5115,7 @@ class SIPSettings {
     }
 
     function sendEmail() {
-        dprint ("SIPSettings->sendEmail($this->email)");
+        dprint ("SipSettings->sendEmail($this->email)");
 
 		$this->getVoicemail();
         $this->getENUMmappings();
@@ -5155,7 +5155,7 @@ class SIPSettings {
     }
 
     function checkSettings() {
-        dprint ("SIPSettings->checkSettings()");
+        dprint ("SipSettings->checkSettings()");
 
         foreach ($this->WEBdictionary as $el) {
             ${$el}=trim($_REQUEST[$el]);

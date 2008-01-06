@@ -27,13 +27,13 @@ $account = $_REQUEST['account'];
 $action  = $_REQUEST['action'];
 $export  = $_REQUEST['export'];
 
-$_class='SIPSettings';
+$_class='SipSettings';
 $_reseller_class=$_class.$_REQUEST['reseller'];
 
 if (class_exists($_reseller_class)) {
-	$SIPSettings_class=$_reseller_class;
+	$SipSettings_class=$_reseller_class;
 } else {
-	$SIPSettings_class=$_class;
+	$SipSettings_class=$_class;
 }
 
 $login_credentials=array(
@@ -49,48 +49,48 @@ if ($resellerFilters[$login_credentials['reseller']]) {
 	$login_credentials['soap_engine']      = $resellerFilters['default']['soap_engine'];
 }
 
-$SIPSettings = new $SIPSettings_class($account,$login_credentials,$soapEngines);
+$SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
 
 if (!$export) {
     $title  = "SIP settings of $account";
-    $header = $SIPSettings->headerFile;
-    $css    = $SIPSettings->cssFile;
+    $header = $SipSettings->headerFile;
+    $css    = $SipSettings->cssFile;
     include($header);
     include($css);
 }
 
 if ($action=="Save settings") {
-    if ($SIPSettings->checkSettings()) {
-        $SIPSettings->saveSettings();
-        unset($SIPSettings);
+    if ($SipSettings->checkSettings()) {
+        $SipSettings->saveSettings();
+        unset($SipSettings);
         if (in_array($domain,$freeDomains)) {
-            $SIPSettings = new $SIPSettings_class($account,$login_credentials,$soapEngines);
+            $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
         } else {
-            $SIPSettings = new $SIPSettings_class($account,$login_credentials,$soapEngines);
+            $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
         }
     } else {
         print "<font color=red>";
-        printf (_("Error: %s"),$SIPSettings->error);
+        printf (_("Error: %s"),$SipSettings->error);
         print "</font>";
     }
 } else if ($action=="set barring prefixes") {
-    $SIPSettings->setBarringPrefixes();
+    $SipSettings->setBarringPrefixes();
 } else if ($action=="set presence") {
-    $SIPSettings->setPresence();
+    $SipSettings->setPresence();
 } else if ($action=="set reject members") {
-    $SIPSettings->setRejectMembers();
+    $SipSettings->setRejectMembers();
 } else if ($action=="set accept rules") {
-    $SIPSettings->setAcceptRules();
+    $SipSettings->setAcceptRules();
 } else if ($action=="set aliases") {
-    $SIPSettings->setAliases();
+    $SipSettings->setAliases();
 } else if ($action=="Send settings") {
-    $SIPSettings->sendEmail();
+    $SipSettings->sendEmail();
 } else if ($tab=="phonebook" && $export) {
-    $SIPSettings->exportPhonebook($userAgent);
+    $SipSettings->exportPhonebook($userAgent);
 }
 
 if (!$export) {
-	$SIPSettings->showAccount();
+	$SipSettings->showAccount();
     print "
     </body>
     </html>

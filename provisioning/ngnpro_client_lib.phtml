@@ -899,7 +899,7 @@ class Records {
         }
     }
 
-    function performActions() {
+    function execute() {
 		$this->showSeachForm();
 
 		$this->getRecordKeys();
@@ -909,7 +909,7 @@ class Records {
 
 		if (class_exists($class_name)) {
             $actions=new $class_name(&$this->SoapEngine);
-            $actions->performActions(&$this->selectionKeys,$_REQUEST['sub_action'],trim($_REQUEST['sub_action_parameter']));
+            $actions->execute(&$this->selectionKeys,$_REQUEST['sub_action'],trim($_REQUEST['sub_action_parameter']));
         }
     }
 
@@ -1403,13 +1403,13 @@ class Domains extends Records {
                 <td><b>Customer</b></td>
                 <td colspan=3><b>Domain</b></td>
                 <td><b>Change date</b></td>
-                <td><b>Action</b></td>
+                <td><b>Actions</b></td>
                 ";
             } else {
                 print "
                 <td><b>Id</b></th>
                 <td colspan=3><b>Domain</b></td>
-                <td><b>Action</b></td>
+                <td><b>Actions</b></td>
                 ";
             }
                 print "
@@ -1896,13 +1896,13 @@ class Domains extends Records {
 
 }
 
-class SIPAccounts extends Records {
+class SipAccounts extends Records {
     var $sortElements=array('changeDate' => 'Change date',
                             'username'   => 'Username',
                             'domain'     => 'Domain'
                             );
 
-    function SIPAccounts(&$SoapEngine) {
+    function SipAccounts(&$SoapEngine) {
         $this->filters = array('username' => strtolower(trim($_REQUEST['username_filter'])),
                                'domain'   => strtolower(trim($_REQUEST['domain_filter'])),
                                'fullname' => trim($_REQUEST['fullname_filter'])
@@ -2049,7 +2049,7 @@ class SIPAccounts extends Records {
                 <td><b>Groups</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Change date</b></td>
-                <td><b>Action</b></td>
+                <td><b>Actions</b></td>
             </tr>
             ";
 
@@ -2605,9 +2605,9 @@ class SIPAccounts extends Records {
     }
 }
 
-class SIPAliases extends Records {
+class SipAliases extends Records {
 
-    function SIPAliases(&$SoapEngine) {
+    function SipAliases(&$SoapEngine) {
 
 		$target_filters_els=explode("@",trim($_REQUEST['target_username_filter']));
         $targetUsername=$target_filters_els[0];
@@ -2776,7 +2776,7 @@ class SIPAliases extends Records {
                 <td><b>Target</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Change date</b></td>
-                <td><b>Action</b></td>
+                <td><b>Actions</b></td>
             </tr>
             ";
 
@@ -3178,7 +3178,7 @@ class SIPAliases extends Records {
     }
 }
 
-class ENUMranges extends Records {
+class EnumRanges extends Records {
 	// only admin can add prefixes below
     var $deniedPrefixes=array('1','20','210','211','212','213','214','215','216','217','218','219','220','221','222','223','224','225','226','227','228','229','230','231','232','233','234','235','236','237','238','239','240','241','242','243','244','245','246','247','248','249','250','251','252','253','254','255','256','257','258','259','260','261','262','263','264','265','266','267','268','269','27','280','281','282','283','284','285','286','287','288','289','290','291','292','293','294','295','296','297','298','299','30','31','32','33','34','350','351','352','353','354','355','356','357','358','359','36','370','371','372','373','374','375','376','377','378','379','380','381','382','383','384','385','386','387','388','389','39','40','41','420','421','422','423','424','425','426','427','428','429','43','44','45','46','47','48','49','500','501','502','503','504','505','506','507','508','509','51','52','53','54','55','56','57','58','590','591','592','593','594','595','596','597','598','599','60','61','62','63','64','65','66','670','671','672','673','674','675','676','677','678','679','680','681','682','683','684','685','686','687','688','689','690','691','692','693','694','695','696','697','698','699','7','800','801','802','803','804','805','806','807','808','809','81','82','830','831','832','833','834','835','836','837','838','839','84','850','851','852','853','854','855','856','857','858','859','86','870','871','872','873','874','875','876','877','878','879','880','881','882','883','884','885','886','887','888','889','890','891','892','893','894','895','896','897','898','899','90','91','92','93','94','95','960','961','962','963','964','965','966','967','968','969','970','971','972','973','974','975','976','977','978','979','98','990','991','992','993','994','995','996','997','998','999');
 
@@ -3193,7 +3193,7 @@ class ENUMranges extends Records {
                               'ttl'         => array('type'=>'integer'),
                               );
 
-    function ENUMranges(&$SoapEngine) {
+    function EnumRanges(&$SoapEngine) {
 
         $this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
                                  'tld'          => trim($_REQUEST['tld_filter']),
@@ -3293,7 +3293,7 @@ class ENUMranges extends Records {
                     <td><b>Size</b></td>
                     <td colspan=2><b>Used</b></td>
                     <td><b>Change date</b></td>
-                    <td><b>Action</b></td>
+                    <td><b>Actions</b></td>
             		</tr>
                     ";
                 } else {
@@ -3308,7 +3308,7 @@ class ENUMranges extends Records {
                     <td><b>Size</b></td>
                     <td colspan=2><b>Used</b></td>
                     <td><b>Change date</b></td>
-                    <td><b>Action</b></td>
+                    <td><b>Actions</b></td>
             		</tr>
                     ";
                 }
@@ -4120,7 +4120,7 @@ class EnumMappings extends Records {
                     <td><b>Prio</b></td>
                     <td><b>Owner</b></td>
                     <td><b>Change date</b></td>
-                    <td><b>Action</b></td>
+                    <td><b>Actions</b></td>
                     ";
                 } else {
                     print "
@@ -4132,7 +4132,7 @@ class EnumMappings extends Records {
                     <td><b>TTL</b></td>
                     <td><b>Prio</b></td>
                     <td><b>Owner</b></td>
-                    <td><b>Action</b></td>
+                    <td><b>Actions</b></td>
                     ";
                 }
                 print "
@@ -5250,7 +5250,7 @@ class TrustedPeers extends Records {
 
                 if ($this->version > 1) print "<td><b>Change date</b></td>";
 
-                print "<td><b>Action</b></td>
+                print "<td><b>Actions</b></td>
 
 
             </tr>
@@ -5554,7 +5554,7 @@ class GatewayGroups extends Records {
                 if ($this->version > 1) print "<td><b>Change date</b></td>";
                 print "
 
-                <td><b>Action</b></td>
+                <td><b>Actions</b></td>
             </tr>
             ";
 
@@ -5878,7 +5878,7 @@ class Gateways extends Records {
                 <td><b>Strip</b></td>
                 <td><b>Prefix</b></td>
                 <td><b>Change date</b></td>
-                <td><b>Action</b></td>
+                <td><b>Actions</b></td>
             </tr>
             ";
 
@@ -6285,7 +6285,7 @@ class Routes extends Records {
                 <td><b>Gateway Group</b></td>
                 <td><b>Priority</b></td>
                 <td><b>Change date</b></td>
-                <td><b>Action</b></td>
+                <td><b>Actions</b></td>
             </tr>
             ";
 
@@ -7393,7 +7393,7 @@ class Customers extends Records {
                 <td><b>E-mail</b></td>
                 <td><b>Telephone</b></td>
                 <td><b>Change date</b></td>
-                <td><b>Action</b></td>
+                <td><b>Actions</b></td>
             </tr>
             ";
 
@@ -7457,7 +7457,7 @@ class Customers extends Records {
                     <td><a href=mailto:%s>%s</a></td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td><a href=%s>%s</a>",
+                    <td>",
                     $bgcolor,
                     $index,
                     $_customer_url,
@@ -7471,9 +7471,7 @@ class Customers extends Records {
                     $customer->email,
                     $customer->email,
                     $customer->tel,
-                    $customer->changeDate,
-                    $_url,
-                    $actionText
+                    $customer->changeDate
                     );
 
 					$this->showExtraActions($customer);
@@ -8642,7 +8640,7 @@ class Presence {
     }
 }
 
-class record_generator extends SoapEngine {
+class recordGenerator extends SoapEngine {
 
 	//this class generates in bulk enum numbers and sip accounts
 
@@ -8650,7 +8648,7 @@ class record_generator extends SoapEngine {
     var $allowedPorts = array();
 	var $maxRecords   = 1000;
 
-    function record_generator($generatorId,$record_generators,$soapEngines,$login_credentials=array()) {
+    function recordGenerator($generatorId,$record_generators,$soapEngines,$login_credentials=array()) {
     	$this->record_generators = $record_generators;
         $this->generatorId      = $generatorId;
 		$this->login_credentials = $login_credentials;
@@ -9214,7 +9212,7 @@ class Actions {
         $this->adminonly  = $this->SoapEngine->adminonly;
     }
 
-    function performActions($selectionKeys,$action,$sub_action_parameter) {
+    function execute($selectionKeys,$action,$sub_action_parameter) {
     }
 
     function showActionsForm($filters,$sorting,$hideParameter=false) {
@@ -9287,7 +9285,7 @@ class Actions {
     }
 }
 
-class SIPAccountsActions extends Actions {
+class SipAccountsActions extends Actions {
     var $actions=array('block'          => 'Block SIP accounts',
                        'deblock'        => 'Deblock SIP accounts',
                        'enable_pstn'    => 'Enable access to PSTN for the SIP accounts',
@@ -9306,14 +9304,14 @@ class SIPAccountsActions extends Actions {
                        'changeowner'    => 'Change owner to:'
                        );
 
-    function SIPAccountsActions(&$SoapEngine) {
+    function SipAccountsActions(&$SoapEngine) {
         $this->Actions(&$SoapEngine);
         if ($this->version > 1) {
             $this->actions['changecustomer']='Change customer to:';
         }
     }
 
-    function performActions($selectionKeys,$action,$sub_action_parameter) {
+    function execute($selectionKeys,$action,$sub_action_parameter) {
         if (!in_array($action,array_keys($this->actions))) {
             print "<font color=red>Error: Invalid action $action</font>";
         	return false;
@@ -9736,16 +9734,16 @@ class SIPAccountsActions extends Actions {
 
 }
 
-class SIPAliasesActions extends Actions {
+class SipAliasesActions extends Actions {
     var $actions=array(
                        'delete'         => 'Delete SIP aliases'
                        );
 
-    function SIPAliases(&$SoapEngine) {
+    function SipAliasesActions(&$SoapEngine) {
         $this->Actions(&$SoapEngine);
     }
 
-    function performActions($selectionKeys,$action,$sub_action_parameter) {
+    function execute($selectionKeys,$action,$sub_action_parameter) {
         if (!in_array($action,array_keys($this->actions))) {
             print "<font color=red>Error: Invalid action $action</font>";
         	return false;
@@ -9798,7 +9796,7 @@ class EnumMappingsActions extends Actions {
         $this->Actions(&$SoapEngine);
     }
 
-    function performActions($selectionKeys,$action,$sub_action_parameter) {
+    function execute($selectionKeys,$action,$sub_action_parameter) {
         if (!in_array($action,array_keys($this->actions))) {
             print "<font color=red>Error: Invalid action $action</font>";
         	return false;
@@ -9919,7 +9917,7 @@ class CustomersActions extends Actions {
         $this->Actions(&$SoapEngine);
     }
 
-    function performActions($selectionKeys,$action,$sub_action_parameter) {
+    function execute($selectionKeys,$action,$sub_action_parameter) {
 
         if (!in_array($action,array_keys($this->actions))) {
             print "<font color=red>Error: Invalid action $action</font>";
