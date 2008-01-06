@@ -9,8 +9,9 @@ cdrtool (6.1.0) unstable; urgency=low
   * Many fixes in provisioning client
   * Lookup customers and rates in MySQL, there is no memory limit anymore
   * Importing rating does not lock the rating engine anymore
+  * Fixed billing of calls over the minimum duration
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 06 Jan 2008 02:31:19 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 06 Jan 2008 11:52:19 +0100
 
 cdrtool (6.0) unstable; urgency=low
 

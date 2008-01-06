@@ -10,10 +10,10 @@
 class Rate {
     var $priceDenominator       = 10000; // allow sub cents
     var $priceDecimalDigits     = 4;     // web display
-    var $minimumDurationCharged = 0;     // 0 to cancel it
-    var $durationPeriodRated    = 60;    // in seconds
+    var $minimumDurationCharged = 0;     // round call for rating to minimum X seconds, is overwritten by settings per customer, 0 to disable
+    var $durationPeriodRated    = 60;    // how the prices are indicated in the billing_rates, default is per minute
     var $trafficSizeRated       = 1024;  // in KBytes, default 1MByte
-	var $minimumDuration        = 0;      // minimum duration to rate, if call is shorter the price is zero
+	var $minimumDuration        = 0;     // minimum duration considered to apply rates for a call, if call is shorter the price is zero
 	var $ENUMtld                = '';
 	var $ENUMdiscount           = 0;     // how much percentage to substract from the final price
 	var $price                  = 0;
@@ -30,7 +30,6 @@ class Rate {
         }
 
         if ($this->CDRS->CDRTool['rating']['minimumDurationCharged']) {
-            // round call for rating to minimum X seconds, is overwritten by settings per customer
             $this->minimumDurationCharged=$this->CDRS->CDRTool['rating']['minimumDurationCharged'];
         }
 
@@ -104,7 +103,11 @@ class Rate {
     function calculate(&$dictionary) {
         dprint("<b>Rate->calculate()</b>");
 
-		if ($this->duration > $this->minimumDuration) return false;
+		if ($this->minimumDuration && $this->duration < $this->minimumDuration) {
+  			syslog(LOG_NOTICE, "Duration less than minimum $this->minimumDuration");
+            $this->rateInfo .= "   Duration < $this->minimumDuration s\n";
+        	return false;
+        }
 
         /////////////////////////////////////////////////////
         // required fields passed from a CDR structure
