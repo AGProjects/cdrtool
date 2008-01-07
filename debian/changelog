@@ -1,3 +1,9 @@
+cdrtool (6.1.1) unstable; urgency=low
+
+  * Corrected default login account sql insert statement
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 07 Jan 2008 21:44:39 +0100
+
 cdrtool (6.1.0) unstable; urgency=low
 
   * Fixed update of billing_rates entries from csv files
