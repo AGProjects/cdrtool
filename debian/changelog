@@ -1,3 +1,9 @@
+cdrtool (6.1.2) unstable; urgency=high
+
+  * Fixed detection of CDR duration when minimumDuration was set
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 08 Jan 2008 11:18:35 +0100
+
 cdrtool (6.1.1) unstable; urgency=low
 
   * Corrected default login account sql insert statement

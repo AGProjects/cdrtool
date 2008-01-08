@@ -103,12 +103,6 @@ class Rate {
     function calculate(&$dictionary) {
         dprint("<b>Rate->calculate()</b>");
 
-		if ($this->minimumDuration && $this->duration < $this->minimumDuration) {
-  			syslog(LOG_NOTICE, "Duration less than minimum $this->minimumDuration");
-            $this->rateInfo .= "   Duration < $this->minimumDuration s\n";
-        	return false;
-        }
-
         /////////////////////////////////////////////////////
         // required fields passed from a CDR structure
         //
@@ -142,6 +136,12 @@ class Rate {
         $this->aNumber           = $dictionary['aNumber'];
         $this->cNumber           = $dictionary['cNumber'];
         $this->ENUMtld           = $dictionary['ENUMtld'];
+
+		if ($this->minimumDuration && $this->duration < $this->minimumDuration) {
+  			syslog(LOG_NOTICE, "Duration less than minimum $this->minimumDuration");
+            $this->rateInfo .= "   Duration < $this->minimumDuration s\n";
+        	return false;
+        }
 
 		if ($this->ENUMtld && $this->ENUMtld != 'n/a' && $this->ENUMtld != 'none' && $this->RatingTables->ENUMtlds[$this->ENUMtld]) {
         	$this->ENUMdiscount = $this->RatingTables->ENUMtlds[$this->ENUMtld]['discount'];
@@ -409,6 +409,8 @@ class Rate {
     }
 
     function lookupProfiles() {
+        dprint("<b>Rate->lookupProfiles()</b>");
+        unset($this->allProfiles);
 
         /*
         lookup the profile_name in billing_customers in the following order:
@@ -433,10 +435,18 @@ class Rate {
         addslashes($this->gateway)
         );
 
+        //syslog(LOG_NOTICE, $query);
+        dprint($query);
+
         if (!$this->CDRS->cdrtool->query($query)) {
-            printf ("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
+            print $log;
+        	syslog(LOG_NOTICE, $log);
             return false;
         }
+
+        $log=sprintf("Found %d rows",$this->CDRS->cdrtool->num_rows());
+        dprint($log);
 
         if ($this->CDRS->cdrtool->num_rows()) {
         	$this->CDRS->cdrtool->next_record();
@@ -923,6 +933,7 @@ class Rate {
     }
 
     function lookupRateValues($rateName,$DestinationId,$applicationType='audio') {
+        dprint("<b>lookupRateValues()</b>");
         // lookup rate from MySQL
         $query=sprintf("select * from billing_rates
         where name = '%s' and
@@ -934,11 +945,17 @@ class Rate {
         addslashes($applicationType)
         );
         //syslog(LOG_NOTICE, $query);
+        dprint($query);
 
         if (!$this->CDRS->cdrtool->query($query)) {
-            printf ("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
+            print $log;
+        	syslog(LOG_NOTICE, $log);
             return false;
         }
+
+        $log=sprintf("Found %d rows",$this->CDRS->cdrtool->num_rows());
+        dprint($log);
 
         if ($this->CDRS->cdrtool->num_rows()) {
         	$this->CDRS->cdrtool->next_record();
