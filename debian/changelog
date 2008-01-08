@@ -1,3 +1,10 @@
+cdrtool (6.1.3) unstable; urgency=high
+
+  * Fixed calculation of rating profiles when using having specific 
+    gateways/domains/subscribers
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 08 Jan 2008 13:06:34 +0100
+
 cdrtool (6.1.2) unstable; urgency=high
 
   * Fixed detection of CDR duration when minimumDuration was set

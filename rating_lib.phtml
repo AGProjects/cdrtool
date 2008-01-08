@@ -429,6 +429,10 @@ class Rate {
         or domain = '%s'
         or gateway = '%s'
         or (subscriber = '' and domain = '' and gateway = '')
+        order by subscriber desc,
+        domain desc,
+        gateway desc
+        limit 1
         ",
         addslashes($this->BillingPartyId),
         addslashes($this->domain),
