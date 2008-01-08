@@ -5523,8 +5523,12 @@ class SipSettings {
             return false;
         }
 
+        /*
+        print "<pre>";
+        print_r($result);
+        print "</pre>";
+        */
 
-        dprint_r($result);
         foreach ($result as $_watcher) {
         	$this->presenceWatchers[$_watcher->id]['status']=$_watcher->status;
             $this->presenceWatchers[$_watcher->id]['online']=$_watcher->online;
