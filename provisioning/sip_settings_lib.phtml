@@ -979,8 +979,10 @@ class SipSettings {
         ";
         printf (("%s &lt;sip:%s@%s&gt;"),$this->fullName,$this->username,$this->domain);
 
-        if ($this->enable_thor && $this->homeNode=$this->getSipThorHomeNode()) {
-        	printf (" Home node is %s. ",$this->homeNode);
+        if ($this->enable_thor) {
+        	if ($this->homeNode=getSipThorHomeNode($this->account,$this->proxy)) {
+        		printf (" on SipThor node %s ",$this->homeNode);
+            }
         }
 
         print "
@@ -5767,20 +5769,6 @@ class SipSettings {
             // do nothing
         }
     }
-
-    function getSipThorHomeNode () {
-    	$socket = fsockopen($this->proxy, 9500, $errno, $errstr, 1);
-        $request=sprintf("lookup sip_proxy for %s",$this->account);
-
-        if (fputs($socket,"$request\n") !== false) {
-            return;
-  			$ret = fgets($socket,4096);
-        }
-
-        fclose($socket);
-
- 		return $ret;
-    }
 }
 
 function normalizeURI($uri) {
@@ -5905,6 +5893,22 @@ function getLocalTime($timezone,$timestamp) {
 	$LocalTime=date("Y-m-d H:i:s", $timestamp);
     putenv("TZ=$tz");
     return $LocalTime;
+}
+
+function getSipThorHomeNode ($account,$proxy) {
+    if (!$account || !$proxy) return false;
+    $socket = fsockopen($proxy, 9500, $errno, $errstr, 1);
+    if (!$socket) {
+        return false;
+    }
+    
+    $request=sprintf("lookup sip_proxy for %s",$account);
+    
+    if (fputs($socket,"$request\r\n") !== false) {
+        $ret = fgets($socket,4096);
+    }
+    fclose($socket);
+    return $ret;
 }
 
 ?>

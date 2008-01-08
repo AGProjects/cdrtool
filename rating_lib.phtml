@@ -150,8 +150,6 @@ class Rate {
             }
         }
 
-        //////////////////////////////////////////////////////////
-
         if (!$this->duration) $this->duration = 0;
 		if (!$this->traffic)  $this->traffic  = 0;
 
@@ -167,6 +165,7 @@ class Rate {
         }
 
 		if (!$this->lookupProfiles()) {
+            dprint("Could not find profiles");
             return false;
         }
 

@@ -4,8 +4,9 @@ cdrtool (6.1.3) unstable; urgency=high
     gateways/domains/subscribers
   * Fixed default port alocation for NGNPro version < 3
   * Allow set of reseller 0.0 (admin) in login account
+  * Show SipThor node in Sip settings title bar
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 08 Jan 2008 14:45:44 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 08 Jan 2008 23:31:56 +0100
 
 cdrtool (6.1.2) unstable; urgency=high
 
