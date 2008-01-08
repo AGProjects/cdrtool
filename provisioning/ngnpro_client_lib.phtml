@@ -139,6 +139,13 @@ class SoapEngine {
     var $exception     = array();
 
     var $ports=array(
+                        'sip_accounts'   => array(
+                                           'records_class' => 'SipAccounts',
+                                           'name'         => 'SIP accounts',
+                                           'soap_class'    => 'WebService_NGNPro_SipPort',
+                                           'category'     => 'sip',
+                                           'description'  => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use % to match a pattern. '
+                                           ),
                         'customers'      => array(
                                            'records_class' => 'Customers',
                                            'name'         => 'Login accounts',
@@ -152,13 +159,6 @@ class SoapEngine {
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'     => 'sip',
                                            'description'  => 'Manage SIP domains (e.g example.com) served by the SIP Proxy. Use % to match a pattern. '
-                                           ),
-                        'sip_accounts'   => array(
-                                           'records_class' => 'SipAccounts',
-                                           'name'         => 'SIP accounts',
-                                           'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'     => 'sip',
-                                           'description'  => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use % to match a pattern. '
                                            ),
                         'sip_aliases'    => array(
                                            'records_class' => 'SipAliases',
@@ -340,25 +340,47 @@ class SoapEngine {
 
             $this->soapEngineSettingsPage = $this->soapEngine;
 
-            if (count($this->allowedPorts[$this->soapEngine]) > 0 && in_array($_els[0],$this->allowedPorts[$this->soapEngine])) {
-            	$this->port = $_els[0];
-            	$this->records_class   = $this->ports[$this->port]['records_class'];
-            	$this->soap_class      = $this->ports[$this->port]['soap_class'];
-            }  else {
-            	$this->port = $_els[0];
-            	$this->records_class   = $this->ports[$this->port]['records_class'];
-            	$this->soap_class      = $this->ports[$this->port]['soap_class'];
+            if (strlen($this->soapEngines[$this->soapEngine]['version'])) {
+            	$this->version = $this->soapEngines[$this->soapEngine]['version'];
             }
+
+            if ($this->version > 1) {
+                $default_port='customers';
+            } else {
+                $default_port='sip_accounts';
+            }
+
+            if (count($this->allowedPorts[$this->soapEngine]) > 0 ) {
+            	if (in_array($_els[0],$this->allowedPorts[$this->soapEngine])) {
+                    $this->port=$_els[0];
+            	} else if (in_array($default_port,$this->allowedPorts[$this->soapEngine])) {
+            		$this->port = $default_port;
+                } else {
+                    foreach (array_keys($this->ports) as $_p) {
+            			if ($this->version <= 1 && $_p = 'customers') continue;
+
+            			if (in_array($_p,$this->allowedPorts[$this->soapEngine])) {
+		            		$this->port = $_p;
+                        	break;
+                        }
+                    }
+                }
+            } else {
+                if ($_els[0]) {
+            		$this->port = $_els[0];
+                } else {
+            		$this->port = $default_port;
+                }
+            }
+
+            $this->records_class   = $this->ports[$this->port]['records_class'];
+            $this->soap_class      = $this->ports[$this->port]['soap_class'];
 
             $this->service    = $this->port.'@'.$this->soapEngine;
 
             foreach(array_keys($this->soapEngines) as $_key ) {
             	$this->skipEngines[$_key]=$this->soapEngines[$_key]['skipEngines'];
                 $this->skip[$_key]=$this->soapEngines[$_key]['skip'];
-            }
-
-            if (strlen($this->soapEngines[$this->soapEngine]['version'])) {
-            	$this->version = $this->soapEngines[$this->soapEngine]['version'];
             }
 
             $this->impersonate  = intval($this->soapEngines[$this->soapEngine]['impersonate']);

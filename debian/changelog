@@ -1,9 +1,11 @@
 cdrtool (6.1.3) unstable; urgency=high
 
-  * Fixed calculation of rating profiles when using having specific 
+  * Fixed calculation of rating profiles when using having specific
     gateways/domains/subscribers
+  * Fixed default port alocation for NGNPro version < 3
+  * Allow set of reseller 0.0 (admin) in login account
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 08 Jan 2008 13:06:34 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 08 Jan 2008 14:45:44 +0100
 
 cdrtool (6.1.2) unstable; urgency=high
 

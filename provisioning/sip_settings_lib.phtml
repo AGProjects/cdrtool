@@ -5603,8 +5603,9 @@ class SipSettings {
             foreach ($extensions as $_ext) {
 
 				$file=$this->templatesPath.'/'.$this->reseller.'/'.$name.'.'.$_ext;
-                //dprint("Trying $file ");
-            	if (file_exists($file)) return $file;
+            	if (file_exists($file)) {
+                	return $file;
+                }
             }
             foreach ($extensions as $_ext) {
             	if (file_exists("$this->templatesPath/default/$name.$_ext")) {
