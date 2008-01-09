@@ -5343,7 +5343,7 @@ class SipSettings {
                 $online_icon="<img src=images/buddy_offline.jpg border=0>";
             }
 
-            if ($_status == 'deny') {
+            if ($display_status == 'deny') {
                 $online_icon="<img src=images/buddy_banned.jpg border=0>";
                 $color='red';
             } else if ($display_status == 'confirm') {
@@ -5476,8 +5476,11 @@ class SipSettings {
         }
 
         $j=0;
+        $seen_watcher=array();
         foreach($_REQUEST['watcher'] as $_w) {
             if (!strlen($_w)) continue;
+            if ($seen_watcher[$_w]) continue;
+            $seen_watcher[$_w]++;
             if (!strstr($_w,'@')) {
             	if ($_REQUEST['watcher_status'][$j] == 'delete') continue;
                 $domain_policy[$_REQUEST['watcher_status'][$j]][]=$_w;
@@ -5486,8 +5489,11 @@ class SipSettings {
         }
 
         $j=0;
+        $seen_watcher=array();
         foreach($_REQUEST['watcher'] as $_w) {
             if (!strlen($_w)) continue;
+            if ($seen_watcher[$_w]) continue;
+            $seen_watcher[$_w]++;
 
          	if ($_REQUEST['watcher_status'][$j] == 'delete') continue;
 
@@ -5498,6 +5504,9 @@ class SipSettings {
             }
             $j++;
         }
+
+        //dprint("Set policy:");
+        //dprint_r($policy);
 
         $result = $this->PresencePort->setPolicy(array("username" =>$this->username,"domain"   =>$this->domain),$this->password,$policy);
 
@@ -5523,11 +5532,7 @@ class SipSettings {
             return false;
         }
 
-        /*
-        print "<pre>";
-        print_r($result);
-        print "</pre>";
-        */
+        //dprint_r($result);
 
         foreach ($result as $_watcher) {
         	$this->presenceWatchers[$_watcher->id]['status']=$_watcher->status;
