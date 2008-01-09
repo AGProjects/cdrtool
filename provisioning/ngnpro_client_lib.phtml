@@ -146,6 +146,13 @@ class SoapEngine {
                                            'category'     => 'sip',
                                            'description'  => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use % to match a pattern. '
                                            ),
+                        'enum_numbers'   => array(
+                                           'records_class' => 'EnumMappings',
+                                           'name'         => 'Phone numbers',
+                                           'soap_class'    => 'WebService_NGNPro_EnumPort',
+                                           'category'     => 'enum',
+                                           'description'  => 'Manage phone numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use % to match a pattern. '
+                                           ),
                         'customers'      => array(
                                            'records_class' => 'Customers',
                                            'name'         => 'Login accounts',
@@ -169,24 +176,17 @@ class SoapEngine {
                                            ),
                         'trusted_peers'  => array(
                                            'records_class' => 'TrustedPeers',
-                                           'name'         => 'SIP trusted IPs',
+                                           'name'         => 'Trusted peers',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'     => 'sip',
                                            'description'  => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. '
                                            ),
                         'enum_ranges'    => array(
                                            'records_class' => 'EnumRanges',
-                                           'name'         => 'ENUM ranges',
+                                           'name'         => 'Number ranges',
                                            'soap_class'    => 'WebService_NGNPro_EnumPort',
                                            'category'     => 'enum',
-                                           'description'  => 'Manage ENUM ranges that hold ENUM numbers. Use % to match a pattern. '
-                                           ),
-                        'enum_numbers'   => array(
-                                           'records_class' => 'EnumMappings',
-                                           'name'         => 'ENUM numbers',
-                                           'soap_class'    => 'WebService_NGNPro_EnumPort',
-                                           'category'     => 'enum',
-                                           'description'  => 'Manage ENUM numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use % to match a pattern. '
+                                           'description'  => 'Manage phone number ranges that hold individual phone numbers. Use % to match a pattern. '
                                            ),
                         'pstn_gateway_groups' => array(
                                            'records_class' => 'GatewayGroups',
@@ -4133,7 +4133,7 @@ class EnumMappings extends Records {
                 if ($this->version > 1) {
                     print "
                     <td><b>Customer</b></td>
-                    <td><b>Number</b></td>
+                    <td><b>Phone number</b></td>
                     <td><b>TLD</b></td>
                     <td><b>Info</b></td>
                     <td><b>Srv</b></td>
@@ -4146,7 +4146,7 @@ class EnumMappings extends Records {
                     ";
                 } else {
                     print "
-                    <td><b>Number</b></td>
+                    <td><b>Phone number</b></td>
                     <td><b>TLD</b></td>
                     <td><b>Info</b></td>
                     <td><b>Srv</b></td>
@@ -5892,15 +5892,28 @@ class Gateways extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) print "<td><b>Customer</b></td>";
-                print"
-                <td><b>Name</b></th>
-                <td><b>Group</b></td>
-                <td><b>Address</b></td>
-                <td><b>Strip</b></td>
-                <td><b>Prefix</b></td>
-                <td><b>Change date</b></td>
-                <td><b>Actions</b></td>
+                if ($this->version > 1) {
+                	print "
+                    <td><b>Customer</b></td>
+                    <td><b>Name</b></th>
+                    <td><b>Group</b></td>
+                    <td><b>Address</b></td>
+                    <td><b>Strip</b></td>
+                    <td><b>Prefix</b></td>
+                    <td><b>Change date</b></td>
+                    <td><b>Actions</b></td>
+                    ";
+                 } else {
+                	print "
+                    <td><b>Name</b></th>
+                    <td><b>Group</b></td>
+                    <td><b>Address</b></td>
+                    <td><b>Strip</b></td>
+                    <td><b>Prefix</b></td>
+                    <td><b>Actions</b></td>
+                    ";
+                 }
+            print "
             </tr>
             ";
 
@@ -6301,13 +6314,25 @@ class Routes extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) print "<td><b>Customer</b></td>";
-                print"
-                <td><b>Prefix</b></th>
-                <td><b>Gateway Group</b></td>
-                <td><b>Priority</b></td>
-                <td><b>Change date</b></td>
-                <td><b>Actions</b></td>
+                if ($this->version > 1) {
+                    print "
+                    <td><b>Customer</b></td>
+                    <td><b>Prefix</b></th>
+                    <td><b>Gateway Group</b></td>
+                    <td><b>Priority</b></td>
+                    <td><b>Change date</b></td>
+                    <td><b>Actions</b></td>
+                    ";
+                 } else {
+                    print "
+                    <td><b>Prefix</b></th>
+                    <td><b>Gateway Group</b></td>
+                    <td><b>Priority</b></td>
+                    <td><b>Actions</b></td>
+                    ";
+                 }
+
+            print "
             </tr>
             ";
 
@@ -6404,7 +6429,6 @@ class Routes extends Records {
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
-                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
                         $bgcolor,
@@ -6412,7 +6436,6 @@ class Routes extends Records {
                         $route->prefix,
                         $route->gatewayGroup,
                         $route->priority,
-                        $route->changeDate,
                         $_url,
                         $actionText
                         );
@@ -7405,15 +7428,13 @@ class Customers extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
-                ";
-                if ($this->version > 1) print "<td><b>Customer</b></td>";
-                print"
+                <td><b>Customer</b></td>
                 <td><b>Username</b></td>
-                <td><b>Name</b></td>
+                <td><b>Full name</b></td>
                 <td><b>Organization</b></td>
                 <td><b>Country</b></td>
                 <td><b>E-mail</b></td>
-                <td><b>Telephone</b></td>
+                <td><b>Phone number</b></td>
                 <td><b>Change date</b></td>
                 <td><b>Actions</b></td>
             </tr>
