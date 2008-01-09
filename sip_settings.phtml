@@ -43,8 +43,8 @@ $login_credentials=array(
 
 if ($resellerFilters[$login_credentials['reseller']]) {
 	$login_credentials['soap_engine']      = $resellerFilters[$login_credentials['reseller']]['soap_engine'];
-} else if ($_REQUEST['soap_engine']) {
-    $login_credentials['soap_engine']=$_REQUEST['soap_engine'];
+} else if ($_REQUEST['soapEngine']) {
+    $login_credentials['soap_engine']=$_REQUEST['soapEngine'];
 } else if ($resellerFilters['default']) {
 	$login_credentials['soap_engine']      = $resellerFilters['default']['soap_engine'];
 }
