@@ -154,9 +154,9 @@ class CDRS_ser_radius extends CDRS {
         ";
 
         if ($this->DATASOURCES[$this->cdr_source]['enableThor']) {
-	        print "<td><b>Thor node</b></td>";
+	        print "<td><b>Sip Thor node</b></td>";
         } else {
-	        print "<td><b>SIP Proxy</b></td>";
+	        print "<td><b>Sip Proxy</b></td>";
         }
 
         print "
@@ -4336,7 +4336,7 @@ class SIP_trace {
                 $fromip = $_trace->fromIp;
             }
 
-            $_ip=explode(":",$toip);
+        	$_ip=explode(":",$toip);
             if ($_ip[0] && !$this->seen_ip[$_ip[0]] && $this->isProxy($_ip[0])) {
             	$this->seen_ip[$_ip[0]]++;
             }
@@ -4350,7 +4350,6 @@ class SIP_trace {
                 $this->column[$toip]   = $columns+1;
                 $columns++;
             }
-
 
             preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/",$_trace->date,$m);
             $timestamp = mktime($m[4],$m[5],$m[6],$m[2],$m[3],$m[1]);
@@ -4623,7 +4622,7 @@ class SIP_trace {
                 urlencode($callid),
                 urlencode($fromtag),
                 $justIP,
-                $justIP
+                $_key
                 );
             	printf ("<td align=center class=border><b><font color=blue>%s</font><br>%s</b></td>",$isProxy,$trace_link);
             } else {

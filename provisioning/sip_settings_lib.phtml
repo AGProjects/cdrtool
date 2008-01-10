@@ -2096,7 +2096,9 @@ class SipSettings {
                     print "<tr>";
                         print "<td align=left>";
                         print _("Location");
-                        print ": $contact ";
+                        print ": ";
+                        if (strlen($transport)) print "$transport:";
+                        print "$contact ";
                         if ($publicContact != $contact) {
                         	print " ($publicContact)";
                         }
