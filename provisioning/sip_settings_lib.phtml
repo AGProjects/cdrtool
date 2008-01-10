@@ -1261,7 +1261,8 @@ class SipSettings {
         } else {
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->getSipDeviceLocations(array($this->sipId));
-    
+
+            //dprint_r($result);
             if (PEAR::isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
