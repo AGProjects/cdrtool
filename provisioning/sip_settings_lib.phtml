@@ -1250,7 +1250,8 @@ class SipSettings {
                                              "contact"    	 => $contact,
                                              "publicContact" => $publicContact,
                                              "expires"       => $locationStructure->expires,
-                                             "user_agent"    => $locationStructure->userAgent
+                                             "user_agent"    => $locationStructure->userAgent,
+                                             "transport"     => $locationStructure->transport
                                          );
                 }
 
@@ -1277,10 +1278,11 @@ class SipSettings {
                     } else {
                     	$publicContact=$contact;
                     }
-                    $this->locations[]=array("contact"    => $contact,
-                                             "publicContact"    => $publicContact,
-                                             "expires"    => $locationStructure->expires,
-                                             "user_agent" => $locationStructure->userAgent
+                    $this->locations[]=array("contact"       => $contact,
+                                             "publicContact" => $publicContact,
+                                             "expires"       => $locationStructure->expires,
+                                             "user_agent"    => $locationStructure->userAgent,
+                                             "transport"     => $locationStructure->transport
                                          );
                 }
                 //dprint_r($this->locations);
@@ -2065,11 +2067,12 @@ class SipSettings {
 
             foreach (array_keys($this->locations) as $location) {
                 $j++;
-                $contact    = $this->locations[$location][contact];
-                $publicContact    = $this->locations[$location][publicContact];
-                $expires    = normalizeTime($this->locations[$location][expires]);
-                $user_agent = $this->locations[$location][user_agent];
-                $UAImage    = getImageForUserAgent($user_agent);
+                $contact       = $this->locations[$location]['contact'];
+                $publicContact = $this->locations[$location]['publicContact'];
+                $expires       = normalizeTime($this->locations[$location]['expires']);
+                $user_agent    = $this->locations[$location]['user_agent'];
+                $transport     = $this->locations[$location]['transport'];
+                $UAImage       = getImageForUserAgent($user_agent);
 
                 print "<tr>";
                 print "<td class=border align=center>";
@@ -2087,6 +2090,7 @@ class SipSettings {
                     print "<tr>";
                         print "<td align=left><i>$user_agent</i></td>";
                         print "<td align=right>";
+                        if ($transport == 'tls') print "<img src=images/lock15.gif border=0><br>";
                         print "</td>";
                     print "</tr>";
                     print "<tr>";
