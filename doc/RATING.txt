@@ -544,6 +544,25 @@ Holidays must be added as individual days YYYY-MM-DD in table
 billing_holidays. The profile applied for holidays is the same as for
 week-ends. Holidays are global and cannot be specified per customer.
 
+Renormalization process does not affect the balance of prepaid users.
+Prepaid is a real time un-reversible process, it goes in one direction. The
+prepaid balance is changed only by placing a call or adding credit to it.
+There are several reasons for this:
+
+- The balance before and after each CDR is not known to be able to roll it
+  back at a later time
+- Re-rating correctly is mathematically not possible for prepaid users that
+  have calls in progress
+- If the prices are higher than previously debited and end up with a
+  negative balance, the software cannot force the user to pay more
+  retroactively
+
+Re-normalization for the purpose of re-rating is useful only for postpaid
+accounts where you send an invoice at the end of the month and your can
+change things back and forth. If you need to perform manual credit/debit
+operations to some prepaid users because of faulty pricing, you can edit in
+CDRTool in the prepaid table the balance by using + or -.
+
 
 Known limitations
 -----------------
@@ -556,7 +575,6 @@ Price discounts (except those on ENUM tld) must be applied outside CDRTool,
 in the billing system that prints the actual invoices. CDRTool has no
 possibility to rate only calls after X minutes per month for subscriber Y,
 all calls are rated uniformly.
-
 
 Performance
 -----------

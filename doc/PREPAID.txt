@@ -115,3 +115,9 @@ or H323 devices.
 
 http://sourceforge.net/projects/frad-cdrtool
 
+
+Notes
+-----
+
+The balance is debited correctly regardless of the moment of CDR
+normalization. Renormalization of calls do not recalculate balance.

@@ -1254,16 +1254,12 @@ class SipSettings {
                                              "transport"     => $locationStructure->transport
                                          );
                 }
-
-                //dprint_r($this->locations);
-        
             }
 
         } else {
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->getSipDeviceLocations(array($this->sipId));
 
-            //dprint_r($result);
             if (PEAR::isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
@@ -1285,11 +1281,10 @@ class SipSettings {
                                              "transport"     => $locationStructure->transport
                                          );
                 }
-                //dprint_r($this->locations);
-        
             }
-
         }
+
+        dprint_r($this->locations);
     }
 
     function getVoicemailForwarding () {
