@@ -23,7 +23,6 @@ if ($_REQUEST['public']) {
 } else {
 	$authorize=1;
 }
-//print "debug" ;
 
 if ($authorize==1) {
 	page_open(array(
@@ -47,7 +46,7 @@ $cdr_source  = $_REQUEST['cdr_source'];
 
 if (!$authorize || in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
 
-    $title="CDRTool SIP trace: session $callid $method $status";
+    $title=sprintf("SIP session %s",$callid);
     include("header.phtml");
     
     $sipTrace = new SIP_trace($cdr_source);
