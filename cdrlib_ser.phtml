@@ -4318,9 +4318,10 @@ class SIP_trace {
 
         foreach ($result as $_trace) {
 
-            if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->toIp,$m)) {
-                $toip     = $m[2];
-                $protocol = $m[1];
+            if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$_trace->toIp,$m)) {
+                $toip      = $m[2];
+                $transport = $m[1];
+                $toport    = $m[3];
             } else {
                 $toip     = $_trace->toIp;
             }
@@ -4330,8 +4331,9 @@ class SIP_trace {
             	$this->seen_ip[$_ip[0]]++;
             }
 
-            if (preg_match("/^(udp|tcp|tls):(.*)$/",$_trace->fromIp,$m)) {
-                $fromip = $m[2];
+            if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$_trace->fromIp,$m)) {
+                $fromip    = $m[2];
+                $fromport  = $m[3];
             } else {
                 $fromip = $_trace->fromIp;
             }
@@ -4362,8 +4364,10 @@ class SIP_trace {
                                'direction'  => $_trace->direction,
                                'fromip'     => $fromip,
                                'toip'       => $toip,
+                               'fromport'   => $fromport,
+                               'toport'     => $toport,
                                'method'     => $_trace->method,
-                               'protocol'   => $protocol,
+                               'transport'  => $transport,
                                'date'       => $_trace->date,
                                'status'     => $_trace->status,
                                'timestamp'  => $timestamp,
@@ -4430,13 +4434,15 @@ class SIP_trace {
     
             while ($this->db->next_record()) {
     
-                if (preg_match("/^(udp|tcp|tls):(.*)$/",$this->db->f('toip'),$m)) {
-                    $toip = $m[2];
-                    $protocol = $m[1];
+                if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$this->db->f('toip'),$m)) {
+                    $toip      = $m[2];
+                    $transport = $m[1];
+                    $toport    = $m[3];
                 }
 
-                if (preg_match("/^(udp|tcp|tls):(.*)$/",$this->db->f('fromip'),$m)) {
-                    $fromip = $m[2];
+                if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$this->db->f('fromip'),$m)) {
+                    $fromip   = $m[2];
+                    $fromport = $m[3];
                 } else {
                     $fromip = $this->db->f('fromip');
                 }
@@ -4458,7 +4464,9 @@ class SIP_trace {
                                    'fromip'    => $fromip,
                                    'toip'      => $toip,
                                    'method'    => $this->db->f('method'),
-                                   'protocol'  => $protocol,
+                                   'fromport'  => $fromport,
+                                   'toport'    => $toport,
+                                   'transport' => $transport,
                                    'date'      => $this->db->f('date'),
                                    'status'    => $this->db->f('status'),
                                    'timestamp' => $this->db->f('timestamp'),
@@ -4648,6 +4656,7 @@ class SIP_trace {
             $timestamp = $this->trace_array[$key]['timestamp'];
             $method    = $this->trace_array[$key]['method'];
             $isProxy   = $this->trace_array[$key]['isProxy'];
+            $transport  = $this->trace_array[$key]['transport'];
 
             $msg_possition   = $this->trace_array[$key]['msg_possition'];
             $arrow_possition = $this->trace_array[$key]['arrow_possition'];
@@ -4759,7 +4768,6 @@ class SIP_trace {
             </td>
             <td class=bbot>$status_color$i/$this->rows&nbsp;</font></td>
             <td class=bbot><nobr>$status_color$date</nobr></font>
-            </td>
             ";
 
             $column_current=1;
@@ -4799,12 +4807,18 @@ class SIP_trace {
                         print "<img src=status/images/30/$sip_phone_img border=0>";
                         print "<img src=images/$arrow border=0>";
                     }
+
+                    print "<br>";
+                    if ($transport == 'tls') print "<img src=images/lock15.gif border=0> ";
+                    printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['fromport']);
+
                 } else {
                 	print "<td class=bbot>";
                 }
 
                 if ($msg_possition == $column_current) {
                     print $cell_content;
+                    printf ("<br>port %d",$this->trace_array[$key]['toport']);
                 } else {
                 	print "&nbsp;";
                 }

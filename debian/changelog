@@ -2,8 +2,10 @@ cdrtool (6.1.5) unstable; urgency=low
 
   * Added lock icon when SIP UA registered using TLS contact
   * Added more information about renormalizing prepaid calls
+  * Show port number and transport protocol in sip trace
+  * Group trace message per IP instead of ip:port
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 13 Jan 2008 11:08:43 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 13 Jan 2008 11:39:39 +0100
 
 cdrtool (6.1.4) unstable; urgency=low
 
