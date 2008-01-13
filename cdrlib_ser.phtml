@@ -4322,25 +4322,31 @@ class SIP_trace {
                 $toip      = $m[2];
                 $transport = $m[1];
                 $toport    = $m[3];
+            } else if (preg_match("/^(.*):(.*)$/",$_trace->toIp,$m)) {
+                $toip      = $m[1];
+                $transport = 'udp';
+                $toport    = $m[2];
             } else {
-                $toip     = $_trace->toIp;
-            }
-
-            $_ip=explode(":",$fromip);
-            if ($_ip[0] && !$this->seen_ip[$_ip[0]] && $this->isProxy($_ip[0])) {
-            	$this->seen_ip[$_ip[0]]++;
+                $toip      = $_trace->toIp;
+                $transport = 'udp';
             }
 
             if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$_trace->fromIp,$m)) {
                 $fromip    = $m[2];
                 $fromport  = $m[3];
+            } else if (preg_match("/^(.*):(.*)$/",$_trace->fromIp,$m)) {
+                $fromip    = $m[1];
+                $fromport  = $m[2];
             } else {
-                $fromip = $_trace->fromIp;
+                $fromip    = $_trace->fromIp;
             }
 
-        	$_ip=explode(":",$toip);
-            if ($_ip[0] && !$this->seen_ip[$_ip[0]] && $this->isProxy($_ip[0])) {
-            	$this->seen_ip[$_ip[0]]++;
+            if (!$this->seen_ip[$toip] && $this->isProxy($toip)) {
+            	$this->seen_ip[$toip]++;
+            }
+
+            if (!$this->seen_ip[$fromip] && $this->isProxy($fromip)) {
+            	$this->seen_ip[$fromip]++;
             }
 
             if (!$this->column[$fromip]) {
@@ -4398,17 +4404,7 @@ class SIP_trace {
 			$this->seen_ip=array();
 			$this->trace_array=$this->getTraceFromThor($proxyIP,$callid,$fromtag);
 
-            /*
-            foreach (array_keys($this->seen_ip) as $ip) {
-            	$trace=$this->getTraceFromThor($ip,$callid,$fromtag);
-                $this->trace_array=array_merge($this->trace_array,$trace);
-
-                //print_r($trace);
-            }
-            */
-
             $this->rows = count($this->trace_array);
-			//print_r($this->seen_ip);
 
         } else {
             // get trace from SQL
@@ -4438,14 +4434,34 @@ class SIP_trace {
                     $toip      = $m[2];
                     $transport = $m[1];
                     $toport    = $m[3];
+                } else if (preg_match("/^(.*):(.*)$/",$this->db->f('toip'),$m)) {
+                    $toip      = $m[1];
+                    $transport = 'udp';
+                    $toport    = $m[2];
+                } else {
+                    $toip = $this->db->f('toip');
+                    $toport    = '5060';
                 }
 
                 if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$this->db->f('fromip'),$m)) {
                     $fromip   = $m[2];
                     $fromport = $m[3];
+                } else if (preg_match("/^(.*):(.*)$/",$this->db->f('fromip'),$m)) {
+                    $fromip   = $m[1];
+                    $fromport = $m[2];
                 } else {
                     $fromip = $this->db->f('fromip');
+                    $fromipo = '5060';
                 }
+
+                if (!$this->seen_ip[$toip] && $this->isProxy($toip)) {
+                    $this->seen_ip[$toip]++;
+                }
+    
+                if (!$this->seen_ip[$fromip] && $this->isProxy($fromip)) {
+                    $this->seen_ip[$fromip]++;
+                }
+    
 
                 if (!$this->column[$fromip]) {
                     $this->column[$fromip]=$columns+1;
