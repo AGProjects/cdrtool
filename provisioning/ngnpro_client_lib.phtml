@@ -510,8 +510,9 @@ class SoapEngine {
             $this->url  .= sprintf('&%s=%s',$element,urlencode($this->extraFormElements[$element]));
         }
 
-		$this->support_email = $this->soapEngines[$this->soapEngine]['support_email'];
-        $this->support_web   = $this->soapEngines[$this->soapEngine]['support_web'];
+		$this->support_email   = $this->soapEngines[$this->soapEngine]['support_email'];
+        $this->support_web     = $this->soapEngines[$this->soapEngine]['support_web'];
+        $this->welcome_message = $this->soapEngines[$this->soapEngine]['welcome_message'];
 
     }
 
@@ -676,8 +677,8 @@ class Records {
         	$this->SipSettingsPage=$this->SoapEngine->SipSettingsPage;
         }
 
-		$this->support_email = $this->SoapEngine->support_email;
-        $this->support_web   = $this->SoapEngine->support_web;
+		$this->support_email   = $this->SoapEngine->support_email;
+        $this->support_web     = $this->SoapEngine->support_web;
     }
 
 
@@ -1315,6 +1316,11 @@ class Records {
 
     function checkRecord() {
         return true;
+    }
+
+    function showWelcomeMessage() {
+    	if (!strlen($this->SoapEngine->welcome_message)) return ;
+    	printf ("%s",$this->SoapEngine->welcome_message);
     }
 }
 
