@@ -4810,7 +4810,11 @@ class SIP_trace {
 
                     print "<br>";
                     if ($transport == 'tls') print "<img src=images/lock15.gif border=0> ";
-                    printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['fromport']);
+                    if ($direction == 'in') {
+                    	printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['fromport']);
+                    } else {
+                    	printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['toport']);
+                    }
 
                 } else {
                 	print "<td class=bbot>";
@@ -4818,7 +4822,12 @@ class SIP_trace {
 
                 if ($msg_possition == $column_current) {
                     print $cell_content;
-                    printf ("<br>port %d",$this->trace_array[$key]['toport']);
+                    print "<br>";
+                    if ($direction == 'in') {
+                    	printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['toport']);
+                    } else {
+                    	printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['fromport']);
+                    }
                 } else {
                 	print "&nbsp;";
                 }

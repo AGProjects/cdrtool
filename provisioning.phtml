@@ -98,7 +98,9 @@ if ($_REQUEST['generatorId']) {
 	$SoapEngine = new SoapEngine($_REQUEST['service'],$soapEngines,$login_credentials);
     $_class     = $SoapEngine->records_class;
     $RECORDS    = new $_class(&$SoapEngine);
-    
+
+    $RECORDS->showWelcomeMessage();
+
     if ($_REQUEST['action']=='Add')    $RECORDS->addRecord();
     if ($_REQUEST['action']=='Copy')   $RECORDS->copyRecord();
     if ($_REQUEST['action']=='Delete') $RECORDS->deleteRecord();
