@@ -1231,11 +1231,11 @@ class RatingTables {
                                                                                  "readonly"=>0
                                                                                  ),
                                                                  "call_in_progress"=>array("size"=>18,
-                                                                 				 "name"=>"Last call start time",
+                                                                 				 "name"=>"Call in progress",
                                                                                  "readonly"=>1
                                                                                  ),
                                                                  "last_call_price"=>array("size"=>10,
-                                                                 				 "name"=>"Last call price",
+                                                                 				 "name"=>"Last price",
                                                                                  "readonly"=>1
                                                                                  ),
                                                                  "maxsessiontime"=>array("size"=>5,
@@ -4273,7 +4273,8 @@ class RatingEngine {
 
                 	// mark the account that is locked during call
                     $query=sprintf("update %s
-                    set call_in_progress = NOW(),
+                    set
+                    call_in_progress = NOW(),
                     call_lock      = '1',
                     destination    = '%s',
                     maxsessiontime = '%s'

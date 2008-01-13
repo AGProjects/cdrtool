@@ -74,7 +74,14 @@ if ($CDRTool['impersonate']) {
 
 require_once("provisioning/ngnpro_soap_library.phtml");
 require_once("provisioning/ngnpro_client_lib.phtml");
-require("provisioning/ngnpro_engines.inc");
+
+if (file_exists("provisioning/ngnpro_engines.inc")) {
+	include_once("provisioning/ngnpro_engines.inc");
+} else {
+    page_close();
+    printf ("Error: you must copy provisioning/ngnpro_engines.inc.sample to provisioning/ngnpro_engines.inc and edit it before trying again");
+    exit;
+}
 
 if ($resellerFilters[$login_credentials['reseller']]) {
 	$login_credentials['soap_filter']      = $resellerFilters[$login_credentials['reseller']]['soap_filter'];
