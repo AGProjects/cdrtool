@@ -3,30 +3,38 @@ The quota system
 ----------------
 
 The quota system works with OpenSER data sources. It enforces usage limits
-for post-paid accounts. The quota system builds incremental statistics with
-usage information from the normalized SIP sessions, it compares the curent
-usage with the monthlyquota assigned by administrator and blocks the
-accounts in the SIP Proxy when the quota is exceeded. The system will not
-stop in real-time ongoing calls but provides in practice a perfect
-protection against fraudulent usage on a platform basis.
+for post-paid accounts. 
 
-The quota system is efficient, it does not impose a high load on the CDR
-database by using an efficient caching and a memcached server. The usage
-data is incrementally updated during the normalization process thus
-offloading the server from scanning the whole CDR table at each checking
-interval. The process is able to check the quotas for 100K users in less
-then 60 seconds.
+The system is based on collected statistics and its accuracy is never 100%.
+Variations between actual usage and quota limits depends on the number and
+moment of calls that were still in progress during the block operation for
+users who exceeded their quota. On a platform basis the fraud is minimized
+even if the system is not 100% accurate.
+
+The quota system builds incremental statistics with usage information from
+the normalized SIP sessions, it compares the curent usage with the monthly
+quota assigned by administrator and blocks the accounts in the SIP Proxy
+when the quota is exceeded. The system will not stop in real-time ongoing
+calls but provides in practice a perfect protection against fraudulent usage
+on a platform basis.
+
+The quota system does not impose a high load on the CDR database by using an
+efficient caching and a memcached server. The usage data is incrementally
+updated during the normalization process thus offloading the server from
+scanning the whole CDR table at each checking interval. The process is able
+to check the quotas for 100K users in less then 60 seconds.
 
 To start/stop memcache server used by the quota system use:
 
-/etc/init.d/cdrtool
+/etc/init.d/cdrtool stopmemcache
+/etc/init.d/cdrtool startmemcache
 
 Memcached can be manually downloaded from http://www.danga.com/memcached or
 is automatically installed during debian package installation. Beware that
 memcached server has no built in security, for this reason is advisable to
 configure it to listen only on a private network interface.
 
-The quota is checked from cron by the job:
+The quota is checked by a cron job:
 
 /var/www/CDRTool/scripts/SER/quotaCheck.php
 
