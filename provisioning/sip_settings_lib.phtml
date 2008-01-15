@@ -567,7 +567,8 @@ class SipSettings {
         	$this->timeout=intval($this->timeoutDefault);
         }
 
-  		$this->xcap_root     .= "@".$this->domain."/";
+
+  		$this->xcap_root     = rtrim($this->xcap_root,'/')."@".$this->domain."/";
 
         //dprint_r($result);
 
@@ -1177,7 +1178,9 @@ class SipSettings {
         }
 
         if ($this->resellerProperties['xcap_root']) {
-        	$this->xcap_root	     = $this->resellerProperties['xcap_root'];
+        	$this->xcap_root	  = rtrim($this->resellerProperties['xcap_root'],'/');
+  			$this->xcap_root     .= "@".$this->domain."/";
+
         }
 
         if ($this->resellerProperties['cdrtool_address']) {
@@ -1186,6 +1189,10 @@ class SipSettings {
 
         if (isset($this->resellerProperties['pstn_access'])) {
         	$this->pstn_access	 = $this->resellerProperties['pstn_access'];
+        }
+
+        if (isset($this->resellerProperties['voicemail_server'])) {
+        	$this->voicemail_server	 = $this->resellerProperties['voicemail_server'];
         }
 
         if (isset($this->resellerProperties['absolute_voicemail_uri'])) {
