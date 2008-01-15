@@ -36,6 +36,7 @@ class SipSettings {
     var $changePrivacyAccessNumber = "*67";
     var $checkPrivacyAccessNumber  = "*68";
 	var $enable_thor               = false;
+	var $absolute_voicemail_uri    = false; // use <voice-mailbox>
 
     // end variables
 
@@ -355,6 +356,10 @@ class SipSettings {
 
         if ($this->soapEngines[$this->sip_engine]['voicemail_server']) {
         	$this->voicemail_server = $this->soapEngines[$this->sip_engine]['voicemail_server'];
+        }
+
+        if (isset($this->soapEngines[$this->sip_engine]['absolute_voicemail_uri'])) {
+        	$this->absolute_voicemail_uri = $this->soapEngines[$this->sip_engine]['absolute_voicemail_uri'];
         }
 
         if ($this->loginCredentials['templates_path']) {
@@ -1179,8 +1184,12 @@ class SipSettings {
         	$this->SupportCDRsite	 = $this->resellerProperties['cdrtool_address'];
         }
 
-        if ($this->resellerProperties['pstn_access']) {
+        if (isset($this->resellerProperties['pstn_access'])) {
         	$this->pstn_access	 = $this->resellerProperties['pstn_access'];
+        }
+
+        if (isset($this->resellerProperties['absolute_voicemail_uri'])) {
+        	$this->absolute_voicemail_uri = $this->resellerProperties['absolute_voicemail_uri'];
         }
 
         if ($this->pstn_access) {
@@ -2296,7 +2305,6 @@ class SipSettings {
         }
 
         if (!$this->voicemail['Account'] && $voicemail) {
-            dprint ("Create voicemail account ...");
             if ($this->addVoicemail()) {
                 $this->setVoicemailDiversions();
                 $this->createdVoicemailnow=1;
@@ -2617,7 +2625,7 @@ class SipSettings {
             if ($diversions[$key] && $diversions[$key] != "<voice-mailbox>" && !preg_match("/^sips?:/",$diversions[$key])) {
             	$diversionsSOAP[$key]="sip:".$diversions[$key];
                 $voicemailUri="sip:".$this->voicemail['Account'];
-                if (!$this->useAbsoluteVoicemailURI && $diversionsSOAP[$key] == $voicemailUri) {
+                if (!$this->absolute_voicemail_uri && $diversionsSOAP[$key] == $voicemailUri) {
             		$diversionsSOAP[$key] = "<voice-mailbox>";
                 }
  			} else {
@@ -2657,7 +2665,7 @@ class SipSettings {
                         $error_msg  = $result->getMessage();
 	                    $error_fault= $result->getFault();
     	                $error_code = $result->getCode();
-        	            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+        	            printf ("<p><font color=red>Error1 (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             	        return false;
                 	}
             	}
@@ -2672,7 +2680,7 @@ class SipSettings {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    printf ("<p><font color=red>Error2 (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                     return false;
                 }
             }
@@ -2795,7 +2803,7 @@ class SipSettings {
 
 		if ($this->getVoicemail()) {
 
-            if (!$this->useAbsoluteVoicemailURI) {
+            if (!$this->absolute_voicemail_uri) {
             	$diversions['FBUS']="<voice-mailbox>";
             	$diversions['FNOA']="<voice-mailbox>";
             	$diversions['FNOL']="<voice-mailbox>";
@@ -2807,8 +2815,6 @@ class SipSettings {
 
             if (is_object($this->SipPortRemote)) {
                 dprint("setDiversionsRemote");
-                // if we have remote SOAP connection defined
-				//dprint_r($result);
 
         		$this->SipPortRemote->addHeader($this->SoapAuthRemote);
                 $resultRemote     = $this->SipPortRemote->setCallDiversions($this->sipId,$diversions);
@@ -5160,7 +5166,7 @@ class SipSettings {
     }
 
     function checkSettings() {
-        dprint ("SipSettings->checkSettings()");
+        dprint ("checkSettings()");
 
         foreach ($this->WEBdictionary as $el) {
             ${$el}=trim($_REQUEST[$el]);
