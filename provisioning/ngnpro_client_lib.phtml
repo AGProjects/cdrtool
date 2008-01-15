@@ -338,7 +338,7 @@ class SoapEngine {
             	$this->soapEngine = $_els[1];
             }
 
-            $this->soapEngineSettingsPage = $this->soapEngine;
+            $this->sip_engine = $this->soapEngine;
 
             if (strlen($this->soapEngines[$this->soapEngine]['version'])) {
             	$this->version = $this->soapEngines[$this->soapEngine]['version'];
@@ -388,7 +388,7 @@ class SoapEngine {
             $this->default_enum_tld  = $this->soapEngines[$this->soapEngine]['default_enum_tld'];
 
 			if (strlen($this->soapEngines[$this->soapEngine]['sip_engine'])) {
-            	$this->soapEngineSettingsPage=$this->soapEngines[$this->soapEngine]['sip_engine'];
+            	$this->sip_engine=$this->soapEngines[$this->soapEngine]['sip_engine'];
             }
 
 			if (strlen($this->soapEngines[$this->soapEngine]['SipSettingsPage'])) {
@@ -2140,9 +2140,9 @@ class SipAccounts extends Records {
                     }
 
                     if ($this->SipSettingsPage) {
-                        $url=sprintf('%s?account=%s@%s&reseller=%s&soapEngine=%s',
+                        $url=sprintf('%s?account=%s@%s&reseller=%s&sip_engine=%s',
                         $this->SipSettingsPage,$account->id->username,$account->id->domain,
-                        $resellerSipSettingsPage,$this->SoapEngine->soapEngineSettingsPage);
+                        $resellerSipSettingsPage,$this->SoapEngine->sip_engine);
 
                         if ($this->adminonly) $url  .= sprintf('&adminonly=%s',$this->adminonly);
 

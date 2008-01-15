@@ -130,11 +130,11 @@ class SipSettings {
         	$this->customer           = $loginCredentials['customer'];
         }
 
-		if (strlen($loginCredentials['soap_engine'])) {
-            $this->soapEngine=$loginCredentials['soap_engine'];
+		if (strlen($loginCredentials['sip_engine'])) {
+            $this->sip_engine=$loginCredentials['sip_engine'];
         }
 
-        //dprint("Using engine: $this->soapEngine");
+        //dprint("Using engine: $this->sip_engine");
 
         $this->settingsPage       = $_SERVER['PHP_SELF'];
         $this->tab                = $_REQUEST['tab'];
@@ -144,28 +144,28 @@ class SipSettings {
         $this->getAccount($account);
 
         if ($this->login_type == "admin") {
-            $this->pageURL=$this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&soapEngine=$this->soapEngine";
+            $this->pageURL=$this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&sip_engine=$this->sip_engine";
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
             <input type=hidden name=reseller value=$this->reseller>
-            <input type=hidden name=soapEngine value=$this->soapEngine>
+            <input type=hidden name=sip_engine value=$this->sip_engine>
             <input type=hidden name=adminonly value=1>
             ";
 
         } else if ($this->login_type == "reseller") {
 
-            $this->pageURL=$this->settingsPage."?account=$this->account&reseller=$this->reseller&soapEngine=$this->soapEngine";
+            $this->pageURL=$this->settingsPage."?account=$this->account&reseller=$this->reseller&sip_engine=$this->sip_engine";
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
             <input type=hidden name=reseller value=$this->reseller>
-            <input type=hidden name=soapEngine value=$this->soapEngine>
+            <input type=hidden name=sip_engine value=$this->sip_engine>
             ";
         } else {
 
             $this->pageURL=$this->settingsPage."?account=$this->account";
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
-            <input type=hidden name=soapEngine value=$this->soapEngine>
+            <input type=hidden name=sip_engine value=$this->sip_engine>
             ";
         }
 
@@ -251,8 +251,8 @@ class SipSettings {
         require_once("ngnpro_soap_library.phtml");
 
         // Sip, Voicemail and Customer ports share same login
-        $this->SOAPurl=$this->soapEngines[$this->soapEngine]['url'];
-        $this->SOAPversion=$this->soapEngines[$this->soapEngine]['version'];
+        $this->SOAPurl=$this->soapEngines[$this->sip_engine]['url'];
+        $this->SOAPversion=$this->soapEngines[$this->sip_engine]['version'];
 
         if (strlen($this->loginCredentials['soapUsername'])) {
             $this->SOAPlogin = array(
@@ -264,12 +264,12 @@ class SipSettings {
 
         } else {
             $this->SOAPlogin = array(
-                                   "username"    => $this->soapEngines[$this->soapEngine]['username'],
-                                   "password"    => $this->soapEngines[$this->soapEngine]['password'],
+                                   "username"    => $this->soapEngines[$this->sip_engine]['username'],
+                                   "password"    => $this->soapEngines[$this->sip_engine]['password'],
                                    "admin"       => true,
                                    "impersonate" => intval($this->reseller)
                                    );
-			$this->soapUsername = $this->soapEngines[$this->soapEngine]['username'];
+			$this->soapUsername = $this->soapEngines[$this->sip_engine]['username'];
         }
 
         $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
@@ -281,89 +281,89 @@ class SipSettings {
 
         if (strlen($this->loginCredentials['customer_engine'])) {
             $this->customer_engine=$this->loginCredentials['customer_engine'];
-        } else if (strlen($this->soapEngines[$this->soapEngine]['customer_engine'])) {
-            $this->customer_engine=$this->soapEngines[$this->soapEngine]['customer_engine'];
+        } else if (strlen($this->soapEngines[$this->sip_engine]['customer_engine'])) {
+            $this->customer_engine=$this->soapEngines[$this->sip_engine]['customer_engine'];
         } else {
-            $this->customer_engine=$this->soapEngine;
+            $this->customer_engine=$this->sip_engine;
         }
 
-        if ($this->soapEngines[$this->soapEngine]) $this->enable_thor=true;
+        if ($this->soapEngines[$this->sip_engine]) $this->enable_thor=true;
 
         if (strlen($this->loginCredentials['presence_engine'])) {
             $this->presence_engine=$this->loginCredentials['presence_engine'];
-        } else if (strlen($this->soapEngines[$this->soapEngine]['presence_engine'])) {
-            $this->presence_engine=$this->soapEngines[$this->soapEngine]['presence_engine'];
+        } else if (strlen($this->soapEngines[$this->sip_engine]['presence_engine'])) {
+            $this->presence_engine=$this->soapEngines[$this->sip_engine]['presence_engine'];
         }
 
         if (strlen($this->loginCredentials['voicemail_engine'])) {
             $this->voicemail_engine=$this->loginCredentials['voicemail_engine'];
-        } else if (strlen($this->soapEngines[$this->soapEngine]['voicemail_engine'])) {
-            $this->voicemail_engine=$this->soapEngines[$this->soapEngine]['voicemail_engine'];
+        } else if (strlen($this->soapEngines[$this->sip_engine]['voicemail_engine'])) {
+            $this->voicemail_engine=$this->soapEngines[$this->sip_engine]['voicemail_engine'];
         } else {
-            $this->voicemail_engine=$this->soapEngine;
+            $this->voicemail_engine=$this->sip_engine;
         }
 
         if (strlen($this->loginCredentials['enum_engine'])) {
             $this->enum_engine=$this->loginCredentials['enum_engine'];
-        } else if (strlen($this->soapEngines[$this->soapEngine]['enum_engine'])) {
-            $this->enum_engine=$this->soapEngines[$this->soapEngine]['enum_engine'];
+        } else if (strlen($this->soapEngines[$this->sip_engine]['enum_engine'])) {
+            $this->enum_engine=$this->soapEngines[$this->sip_engine]['enum_engine'];
         } else {
-            $this->enum_engine=$this->soapEngine;
+            $this->enum_engine=$this->sip_engine;
         }
 
         if (strlen($this->loginCredentials['rating_engine'])) {
             $this->rating_engine=$this->loginCredentials['rating_engine'];
-        } else if (strlen($this->soapEngines[$this->soapEngine]['rating_engine'])) {
-            $this->rating_engine=$this->soapEngines[$this->soapEngine]['rating_engine'];
+        } else if (strlen($this->soapEngines[$this->sip_engine]['rating_engine'])) {
+            $this->rating_engine=$this->soapEngines[$this->sip_engine]['rating_engine'];
         } else {
-            $this->rating_engine=$this->soapEngine;
+            $this->rating_engine=$this->sip_engine;
         }
 
         // overwrite default settings
 
-        if (strlen($this->soapEngines[$this->soapEngine]['sip_proxy'])) {
-        	$this->proxy           = $this->soapEngines[$this->soapEngine]['sip_proxy'];
+        if (strlen($this->soapEngines[$this->sip_engine]['sip_proxy'])) {
+        	$this->proxy           = $this->soapEngines[$this->sip_engine]['sip_proxy'];
         }
 
-        if (strlen($this->soapEngines[$this->soapEngine]['support_company'])) {
-        	$this->SupportCompany  = $this->soapEngines[$this->soapEngine]['support_company'];
+        if (strlen($this->soapEngines[$this->sip_engine]['support_company'])) {
+        	$this->SupportCompany  = $this->soapEngines[$this->sip_engine]['support_company'];
         }
 
-        if (strlen($this->soapEngines[$this->soapEngine]['support_web'])) {
-        	$this->SupportWEBsite  = $this->soapEngines[$this->soapEngine]['support_web'];
+        if (strlen($this->soapEngines[$this->sip_engine]['support_web'])) {
+        	$this->SupportWEBsite  = $this->soapEngines[$this->sip_engine]['support_web'];
         }
 
-        if (strlen($this->soapEngines[$this->soapEngine]['support_email'])) {
-        	$this->SupportEmail    = $this->soapEngines[$this->soapEngine]['support_email'];
+        if (strlen($this->soapEngines[$this->sip_engine]['support_email'])) {
+        	$this->SupportEmail    = $this->soapEngines[$this->sip_engine]['support_email'];
         }
 
-        if (strlen($this->soapEngines[$this->soapEngine]['sip_settings_page'])) {
-        	$this->SipSettingsPage = $this->soapEngines[$this->soapEngine]['sip_settings_page'];
+        if (strlen($this->soapEngines[$this->sip_engine]['sip_settings_page'])) {
+        	$this->SipSettingsPage = $this->soapEngines[$this->sip_engine]['sip_settings_page'];
         }
 
-        if (strlen($this->soapEngines[$this->soapEngine]['xcap_root'])) {
-        	$this->xcap_root       = $this->soapEngines[$this->soapEngine]['xcap_root'];
+        if (strlen($this->soapEngines[$this->sip_engine]['xcap_root'])) {
+        	$this->xcap_root       = $this->soapEngines[$this->sip_engine]['xcap_root'];
         }
 
-        if (strlen($this->soapEngines[$this->soapEngine]['cdrtool_address'])) {
-        	$this->SupportCDRsite  = $this->soapEngines[$this->soapEngine]['cdrtool_address'];
+        if (strlen($this->soapEngines[$this->sip_engine]['cdrtool_address'])) {
+        	$this->SupportCDRsite  = $this->soapEngines[$this->sip_engine]['cdrtool_address'];
         }
 
-        if ($this->soapEngines[$this->soapEngine]['pstn_access']) {
-        	$this->pstn_access     = $this->soapEngines[$this->soapEngine]['pstn_access'];
+        if ($this->soapEngines[$this->sip_engine]['pstn_access']) {
+        	$this->pstn_access     = $this->soapEngines[$this->sip_engine]['pstn_access'];
         }
 
-        if ($this->soapEngines[$this->soapEngine]['voicemail_server']) {
-        	$this->voicemail_server = $this->soapEngines[$this->soapEngine]['voicemail_server'];
+        if ($this->soapEngines[$this->sip_engine]['voicemail_server']) {
+        	$this->voicemail_server = $this->soapEngines[$this->sip_engine]['voicemail_server'];
         }
 
         if ($this->loginCredentials['templates_path']) {
         	$this->templatesPath   = $this->loginCredentials['templates_path'];
-        } else if ($this->soapEngines[$this->soapEngine]['templates_path']) {
-        	$this->templatesPath   = $this->soapEngines[$this->soapEngine]['templates_path'];
+        } else if ($this->soapEngines[$this->sip_engine]['templates_path']) {
+        	$this->templatesPath   = $this->soapEngines[$this->sip_engine]['templates_path'];
         }
 
-        $this->soapRemoteId=$this->soapEngines[$this->soapEngine]['depends'];
+        $this->sip_engine_remote=$this->soapEngines[$this->sip_engine]['depends'];
 
         // Instantiate the SOAP clients
         // sip
@@ -377,19 +377,18 @@ class SipSettings {
         }
 
         // sip remote
-        if (strlen($this->soapRemoteId) && in_array($this->soapRemoteId,array_keys($this->soapEngines))) {
-            $this->soapEngineRemote = $this->soapEngines[$this->soapRemoteId];
-            $impersonateRemote=intval($this->soapEngines[$this->soapRemoteId]['impersonate']);
+        if (strlen($this->sip_engine_remote) && in_array($this->sip_engine_remote,array_keys($this->soapEngines))) {
+            $impersonateRemote=intval($this->soapEngines[$this->sip_engine_remote]['impersonate']);
 
             $this->SOAPloginRemote = array(
-                                   "username"    => $this->soapEngines[$this->soapRemoteId]['username'],
-                                   "password"    => $this->soapEngines[$this->soapRemoteId]['password'],
+                                   "username"    => $this->soapEngines[$this->sip_engine_remote]['username'],
+                                   "password"    => $this->soapEngines[$this->sip_engine_remote]['password'],
                                    "admin"       => true,
                                    "impersonate" => $impersonateRemote
                                );
 
             //print_r($this->SOAPloginRemote);
-            $this->SOAPurlRemote=$this->soapEngines[$this->soapRemoteId]['url'];
+            $this->SOAPurlRemote=$this->soapEngines[$this->sip_engine_remote]['url'];
             $this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
 
             // Instantiate the SOAP client depends
@@ -400,7 +399,7 @@ class SipSettings {
             $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
             if ($this->showSoapConnectionInfo)  {
-                printf ("and sync to <a href=%swsdl target=wsdl>%s</a> as %s ",$this->SOAPurlRemote,$this->SOAPurlRemote,$this->soapEngines[$this->soapRemoteId]['username']);
+                printf ("and sync to <a href=%swsdl target=wsdl>%s</a> as %s ",$this->SOAPurlRemote,$this->SOAPurlRemote,$this->soapEngines[$this->sip_engine_remote]['username']);
             }
 
         }
