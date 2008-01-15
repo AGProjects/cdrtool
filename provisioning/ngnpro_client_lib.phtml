@@ -1505,7 +1505,7 @@ class Domains extends Records {
                         urlencode($domain->domain)
                         );
 
-                        $_sip_aliases_url = $this->url.sprintf("&service=sip_aliases@%s&domain_filter=%s",
+                        $_sip_aliases_url = $this->url.sprintf("&service=sip_aliases@%s&alias_domain_filter=%s",
                         urlencode($this->SoapEngine->soapEngine),
                         urlencode($domain->domain)
                         );
@@ -8118,6 +8118,10 @@ class Customers extends Records {
                 $customer->$item = trim($_REQUEST[$var_name]);
             }
         }
+
+		$customer->tel  = preg_replace("/[^\+0-9]/","",$customer->tel);
+        $customer->fax  = preg_replace("/[^\+0-9]/","",$customer->fax);
+        $customer->enum = preg_replace("/[^\+0-9]/","",$customer->enum);
 
         $function=array('commit'   => array('name'       => 'updateAccount',
                                             'parameters' => array($customer),

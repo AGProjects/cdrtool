@@ -4310,10 +4310,14 @@ class SIP_trace {
             return false;
         }
 
-        //print "<pre>";
+        /*
+        print "<pre>";
+        print_r($result);
+        print "</pre>";
+        */
+
         $columns=0;
 
-        //print_r($result);
         $trace_array=array();
 
         foreach ($result as $_trace) {
@@ -4614,8 +4618,12 @@ class SIP_trace {
             }
         }
 
-        //print "<pre>";
-        //print_r($this->trace_array);
+        /*
+        print "<pre>";
+        print_r($this->trace_array);
+        print "</pre>";
+        */
+
         print "
         <p>
         <a name=#top>
@@ -5106,10 +5114,12 @@ class SIPonline {
         if ($domain) {
             $query.=sprintf(" and domain = '%s' ",$domain);
         }
-		$query.="
+
+        $query.="
         group by user_agent
         order by c DESC";
         dprint($query);
+
         $this->locationDB->query($query);
         while ($this->locationDB->next_record()) {
             $this->countUA[$this->locationDB->f('user_agent')]=$this->locationDB->f('c');

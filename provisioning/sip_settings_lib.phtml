@@ -274,6 +274,8 @@ class SipSettings {
 
         $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
+		//dprint_r($this->SoapAuth);
+
         // Presence
         $this->SOAPurlPresence=$this->soapEngines[$this->presence_engine]['url'];
 
@@ -309,12 +311,12 @@ class SipSettings {
             $this->enum_engine=$this->soapEngine;
         }
 
-        if (strlen($this->loginCredentials['ratingEngine'])) {
-            $this->ratingEngine=$this->loginCredentials['ratingEngine'];
-        } else if (strlen($this->soapEngines[$this->soapEngine]['ratingEngine'])) {
-            $this->ratingEngine=$this->soapEngines[$this->soapEngine]['ratingEngine'];
+        if (strlen($this->loginCredentials['rating_engine'])) {
+            $this->rating_engine=$this->loginCredentials['rating_engine'];
+        } else if (strlen($this->soapEngines[$this->soapEngine]['rating_engine'])) {
+            $this->rating_engine=$this->soapEngines[$this->soapEngine]['rating_engine'];
         } else {
-            $this->ratingEngine=$this->soapEngine;
+            $this->rating_engine=$this->soapEngine;
         }
 
         // overwrite default settings
@@ -442,10 +444,10 @@ class SipSettings {
         }
 
         // rating
-        $this->SOAPurlRating = $this->soapEngines[$this->ratingEngine]['url'];
+        $this->SOAPurlRating = $this->soapEngines[$this->rating_engine]['url'];
         $this->SOAPloginRating = array(
-                               "username"    => $this->soapEngines[$this->ratingEngine]['username'],
-                               "password"    => $this->soapEngines[$this->ratingEngine]['password'],
+                               "username"    => $this->soapEngines[$this->rating_engine]['username'],
+                               "password"    => $this->soapEngines[$this->rating_engine]['password'],
                                "admin"       => true,
                                "impersonate" => intval($this->reseller)
                                );
@@ -457,7 +459,7 @@ class SipSettings {
         $this->RatingPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
         if ($this->showSoapConnectionInfo  && $this->SOAPurlRating != $this->SOAPurl)  {
-        	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassRatingPort,$this->SOAPurlRating,$this->SOAPurlRating,$this->soapEngines[$this->ratingEngine]['username']);
+        	printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassRatingPort,$this->SOAPurlRating,$this->SOAPurlRating,$this->soapEngines[$this->rating_engine]['username']);
         }
 
         // customer
@@ -493,7 +495,7 @@ class SipSettings {
     }
 
     function getAccount($account) {
-        dprint("getAccount($account)");
+        dprint("getAccount($account, engine=$this->soapEngine)");
 
         list($username,$domain)=explode("@",trim($account));
 
@@ -666,7 +668,7 @@ class SipSettings {
 
 
     function getOwnerSettings() {
-        dprint("getOwnerSettings($this->owner)");
+        dprint("getOwnerSettings($this->owner, engine=$this->customer_engine)");
         if (!$this->owner) {
             return false;
         }
@@ -961,7 +963,7 @@ class SipSettings {
         // used by template system
 		$this->voicemailMailbox=$result->mailbox;
 
-        dprint_r($this->voicemail);
+        //dprint_r($this->voicemail);
         return true;
     }
 
@@ -1077,7 +1079,7 @@ class SipSettings {
     }
 
     function getResellerSettings () {
-        dprint("getResellerSettings($this->reseller)");
+        dprint("getResellerSettings($this->reseller,engine=$this->customer_engine)");
 
         $this->logoFile         = $this->getFileTemplate("logo","logo");
         $this->headerFile       = $this->getFileTemplate("header.phtml");
@@ -2296,7 +2298,7 @@ class SipSettings {
 
         if (!$this->voicemail['Account'] && $voicemail) {
             dprint ("Create voicemail account ...");
-            if ($this->createVoicemail()) {
+            if ($this->addVoicemail()) {
                 $this->setVoicemailDiversions();
                 $this->createdVoicemailnow=1;
             }
@@ -2895,8 +2897,8 @@ class SipSettings {
         return true;
     }
 
-    function createVoicemail() {
-        dprint("creatingVoicemail()");
+    function addVoicemail() {
+        dprint("addVoicemail()");
 
         $password=$this->RandomPassword();
         
@@ -3496,7 +3498,7 @@ class SipSettings {
     }
 
     function getENUMmappings () {
-		dprint("getENUMmappings()");
+		dprint("getENUMmappings(engine=$this->enum_engine)");
 
     	$filter=array(
                       'type'     => 'sip',
@@ -3521,7 +3523,7 @@ class SipSettings {
                      );
 
         // Insert credetials
-        $this->EnumPort->addHeader($this->SoapAuth);
+        $this->EnumPort->addHeader($this->SoapAuthEnum);
         $result = $this->EnumPort->getNumbers($Query);
 
         if (PEAR::isError($result)) {
