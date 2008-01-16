@@ -22,19 +22,19 @@ class SipSettings {
     var $showSoapConnectionInfo    = false;
 
     // this variables can be overwritten per soap engine (in ngnpro_soap_engines.inc)
-    var $templatesPath             = './templates';
-    var $SupportCompany            = "Example company";
-    var $SupportCDRsite            = "https://cdrtool.example.com/CDRTool";
-    var $SupportWEBsite            = "https://www.example.com/help";
-    var $SupportEmail              = "Support <support@example.com>";
-    var $SipSettingsPage 	       = "https://cdrtool.example.com/sip_settings.phtml";
+    var $templates_path            = './templates';
+    var $support_company           = "Example company";
+    var $cdrtool_address           = "https://cdrtool.example.com/CDRTool";
+    var $support_web               = "https://www.example.com/help";
+    var $support_email             = "Support <support@example.com>";
+    var $sip_settings_page 	       = "https://cdrtool.example.com/sip_settings.phtml";
     var $xcap_root   		       = "https://cdrtool.example.com/xcap-root";
 	var $pstn_access               = false;
     var $proxy                     = "proxy.example.com";
     var $voicemail_server          = "vm.example.com";
-    var $voicemailAccessNumber     = "*70";
-    var $changePrivacyAccessNumber = "*67";
-    var $checkPrivacyAccessNumber  = "*68";
+    var $voicemail_access_number     = "*70";
+    var $change_privacy_access_number = "*67";
+    var $check_privacy_access_number  = "*68";
 	var $enable_thor               = false;
 	var $absolute_voicemail_uri    = false; // use <voice-mailbox>
 
@@ -327,19 +327,19 @@ class SipSettings {
         }
 
         if (strlen($this->soapEngines[$this->sip_engine]['support_company'])) {
-        	$this->SupportCompany  = $this->soapEngines[$this->sip_engine]['support_company'];
+        	$this->support_company  = $this->soapEngines[$this->sip_engine]['support_company'];
         }
 
         if (strlen($this->soapEngines[$this->sip_engine]['support_web'])) {
-        	$this->SupportWEBsite  = $this->soapEngines[$this->sip_engine]['support_web'];
+        	$this->support_web  = $this->soapEngines[$this->sip_engine]['support_web'];
         }
 
         if (strlen($this->soapEngines[$this->sip_engine]['support_email'])) {
-        	$this->SupportEmail    = $this->soapEngines[$this->sip_engine]['support_email'];
+        	$this->support_email    = $this->soapEngines[$this->sip_engine]['support_email'];
         }
 
         if (strlen($this->soapEngines[$this->sip_engine]['sip_settings_page'])) {
-        	$this->SipSettingsPage = $this->soapEngines[$this->sip_engine]['sip_settings_page'];
+        	$this->sip_settings_page = $this->soapEngines[$this->sip_engine]['sip_settings_page'];
         }
 
         if (strlen($this->soapEngines[$this->sip_engine]['xcap_root'])) {
@@ -347,7 +347,7 @@ class SipSettings {
         }
 
         if (strlen($this->soapEngines[$this->sip_engine]['cdrtool_address'])) {
-        	$this->SupportCDRsite  = $this->soapEngines[$this->sip_engine]['cdrtool_address'];
+        	$this->cdrtool_address  = $this->soapEngines[$this->sip_engine]['cdrtool_address'];
         }
 
         if ($this->soapEngines[$this->sip_engine]['pstn_access']) {
@@ -363,9 +363,9 @@ class SipSettings {
         }
 
         if ($this->loginCredentials['templates_path']) {
-        	$this->templatesPath   = $this->loginCredentials['templates_path'];
+        	$this->templates_path   = $this->loginCredentials['templates_path'];
         } else if ($this->soapEngines[$this->sip_engine]['templates_path']) {
-        	$this->templatesPath   = $this->soapEngines[$this->sip_engine]['templates_path'];
+        	$this->templates_path   = $this->soapEngines[$this->sip_engine]['templates_path'];
         }
 
         $this->sip_engine_remote=$this->soapEngines[$this->sip_engine]['depends'];
@@ -1114,7 +1114,7 @@ class SipSettings {
                                         );
             $this->SIPACLS['anonymous']=array("Group"=>"anonymous",
                                         "WEBName" =>sprintf (_("Privacy")),
-                                        "WEBComment"=>sprintf(_("Dial %s to change or %s to check status "),$this->changePrivacyAccessNumber, $this->checkPrivacyAccessNumber),
+                                        "WEBComment"=>sprintf(_("Dial %s to change or %s to check status "),$this->change_privacy_access_number, $this->check_privacy_access_number),
                                         "SubscriberMaySeeIt"=>1,
                                         "SubscriberMayEditIt"=>1
                                         );
@@ -1162,15 +1162,15 @@ class SipSettings {
         }
 
         if ($this->resellerProperties['support_company']) {
-        	$this->SupportCompany    = $this->resellerProperties['support_company'];
+        	$this->support_company    = $this->resellerProperties['support_company'];
         }
 
         if ($this->resellerProperties['support_web']) {
-        	$this->SupportWEBsite	 = $this->resellerProperties['support_web'];
+        	$this->support_web	 = $this->resellerProperties['support_web'];
         }
 
         if ($this->resellerProperties['support_email']) {
-        	$this->SupportEmail	     = $this->resellerProperties['support_email'];
+        	$this->support_email	     = $this->resellerProperties['support_email'];
         }
 
         if ($this->resellerProperties['sip_settings_page']) {
@@ -1180,11 +1180,10 @@ class SipSettings {
         if ($this->resellerProperties['xcap_root']) {
         	$this->xcap_root	  = rtrim($this->resellerProperties['xcap_root'],'/');
   			$this->xcap_root     .= "@".$this->domain."/";
-
         }
 
         if ($this->resellerProperties['cdrtool_address']) {
-        	$this->SupportCDRsite	 = $this->resellerProperties['cdrtool_address'];
+        	$this->cdrtool_address	 = $this->resellerProperties['cdrtool_address'];
         }
 
         if (isset($this->resellerProperties['pstn_access'])) {
@@ -1981,11 +1980,11 @@ class SipSettings {
             </tr>
             ";
 
-            if ($this->voicemailAccessNumber) {
+            if ($this->voicemail_access_number) {
                print "
                <tr $bgcolor>
                <td colspan=2 class=border>";
-               printf(_("Dial %s to listen to your messages or change preferences. "),$this->voicemailAccessNumber);
+               printf(_("Dial %s to listen to your messages or change preferences. "),$this->voicemail_access_number);
                print "</td>
                </tr>
                ";
@@ -3642,8 +3641,8 @@ class SipSettings {
             print "
             <tr>
               <td class=border>";
-                if ($this->SupportCDRsite) {
-                    print "<a href=$this->SupportCDRsite target=cdrtool>";
+                if ($this->cdrtool_address) {
+                    print "<a href=$this->cdrtool_address target=cdrtool>";
                     print _("Summary");
                     print "</a>";
                 } else {
@@ -5166,7 +5165,7 @@ class SipSettings {
         $smarty->assign('client', $this);
         $body = $smarty->fetch($tpl);
 
-        if (mail($this->email, $subject, $body, "From: $this->SupportEmail")) {
+        if (mail($this->email, $subject, $body, "From: $this->support_email")) {
             print "<p>";
             printf (_("SIP settings have been sent to %s"), $this->email);
         }
@@ -5623,32 +5622,32 @@ class SipSettings {
 
     function getFileTemplate($name, $type="file") {
     
-        //dprint("getFileTemplate(name=$name, type=$type, path=$this->templatesPath)");
+        //dprint("getFileTemplate(name=$name, type=$type, path=$this->templates_path)");
 
         if ($type=='logo') {
             $extensions=array('png','gif','jpg');
             foreach ($extensions as $_ext) {
 
-				$file=$this->templatesPath.'/'.$this->reseller.'/'.$name.'.'.$_ext;
+				$file=$this->templates_path.'/'.$this->reseller.'/'.$name.'.'.$_ext;
             	if (file_exists($file)) {
                 	return $file;
                 }
             }
             foreach ($extensions as $_ext) {
-            	if (file_exists("$this->templatesPath/default/$name.$_ext")) {
-                    return "$this->templatesPath/default/$name.$_ext";
+            	if (file_exists("$this->templates_path/default/$name.$_ext")) {
+                    return "$this->templates_path/default/$name.$_ext";
                 }
             }
             return false;
 
         } else {
-            if (file_exists("$this->templatesPath/$this->reseller/$name")) {
-                return "$this->templatesPath/$this->reseller/$name";
+            if (file_exists("$this->templates_path/$this->reseller/$name")) {
+                return "$this->templates_path/$this->reseller/$name";
                 //dprint("Found $this->reseller/$name");
-            } elseif (file_exists("$this->templatesPath/default/$name")) {
-                return "$this->templatesPath/default/$name";
+            } elseif (file_exists("$this->templates_path/default/$name")) {
+                return "$this->templates_path/default/$name";
             } else {
-                dprint("File $this->templatesPath/default/$name not found");
+                dprint("File $this->templates_path/default/$name not found");
                 return false;
             }
         }
@@ -5658,14 +5657,14 @@ class SipSettings {
         $file = "sip_settings_email_$language.tpl";
         $file2 = "sip_settings_email.tpl";
     
-        if (file_exists("$this->templatesPath/$this->reseller/$file")) {
-            return "$this->templatesPath/$this->reseller/$file";
-        } elseif (file_exists("$this->templatesPath/$this->reseller/$file2")) {
-            return "$this->templatesPath/$this->reseller/$file2";
-        } elseif (file_exists("$this->templatesPath/default/$file")) {
-            return "$this->templatesPath/default/$file";
-        } elseif (file_exists("$this->templatesPath/default/$file2")) {
-            return "$this->templatesPath/default/$file2";
+        if (file_exists("$this->templates_path/$this->reseller/$file")) {
+            return "$this->templates_path/$this->reseller/$file";
+        } elseif (file_exists("$this->templates_path/$this->reseller/$file2")) {
+            return "$this->templates_path/$this->reseller/$file2";
+        } elseif (file_exists("$this->templates_path/default/$file")) {
+            return "$this->templates_path/default/$file";
+        } elseif (file_exists("$this->templates_path/default/$file2")) {
+            return "$this->templates_path/default/$file2";
         } else {
             return false;
         }
