@@ -2668,16 +2668,16 @@ class SipAliases extends Records {
         dprint("init SipAliases");
 
 		$target_filters_els=explode("@",trim($_REQUEST['target_username_filter']));
-        $targetUsername=$target_filters_els[0];
+        $target_username=$target_filters_els[0];
         if (count($target_filters_els) > 1) {
-        	$targetDomain=$target_filters_els[1];
+        	$target_domain=$target_filters_els[1];
         }
 
-        $this->filters   = array('aliasUsername'     => strtolower(trim($_REQUEST['alias_username_filter'])),
-                                 'aliasDomain'       => strtolower(trim($_REQUEST['alias_domain_filter'])),
-                                 'targetUsername'    => strtolower($targetUsername),
-                                 'targetDomain'      => strtolower($targetDomain)
-                           );
+        $this->filters   = array('alias_username'    => strtolower(trim($_REQUEST['alias_username_filter'])),
+                                 'alias_domain'      => strtolower(trim($_REQUEST['alias_domain_filter'])),
+                                 'target_username'   => strtolower($target_username),
+                                 'target_domain'      => strtolower($target_domain)
+                                 );
 
 
 		$this->Records(&$SoapEngine);
@@ -2703,10 +2703,10 @@ class SipAliases extends Records {
     function getRecordKeys() {
 
         // Filter
-        $filter=array('aliasUsername'  => $this->filters['aliasUsername'],
-                      'aliasDomain'    => $this->filters['aliasDomain'],
-                      'targetUsername' => $this->filters['targetUsername'],
-                      'targetDomain'   => $this->filters['targetDomain'],
+        $filter=array('aliasUsername'  => $this->filters['alias_username'],
+                      'aliasDomain'    => $this->filters['alias_domain'],
+                      'targetUsername' => $this->filters['target_username'],
+                      'targetDomain'   => $this->filters['target_domain'],
                       'owner'          => intval($this->filters['owner']),
                       'customer'       => intval($this->filters['customer']),
                       'reseller'       => intval($this->filters['reseller'])
@@ -2731,7 +2731,7 @@ class SipAliases extends Records {
                         'range'   => $range
                         );
 
-        //print_r($Query);
+        //dprint_r($Query);
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
@@ -2763,10 +2763,10 @@ class SipAliases extends Records {
 		$this->showSeachForm();
 
         // Filter
-        $filter=array('aliasUsername'  => $this->filters['aliasUsername'],
-                      'aliasDomain'    => $this->filters['aliasDomain'],
-                      'targetUsername' => $this->filters['targetUsername'],
-                      'targetDomain'   => $this->filters['targetDomain'],
+        $filter=array('aliasUsername'  => $this->filters['alias_username'],
+                      'aliasDomain'    => $this->filters['alias_domain'],
+                      'targetUsername' => $this->filters['target_username'],
+                      'targetDomain'   => $this->filters['target_domain'],
                       'owner'          => intval($this->filters['owner']),
                       'customer'       => intval($this->filters['customer']),
                       'reseller'       => intval($this->filters['reseller'])
@@ -2987,30 +2987,30 @@ class SipAliases extends Records {
             return true;
         }
 
-        if ($dictionary['aliasUsername']) {
-        	$aliasUsername=$dictionary['aliasUsername'];
+        if ($dictionary['alias_username']) {
+        	$alias_username=$dictionary['alias_username'];
         } else {
-        	$aliasUsername=$this->filters['aliasUsername'];
+        	$alias_username=$this->filters['alias_username'];
         }
 
-        if ($dictionary['aliasDomain']) {
-        	$aliasDomain=$dictionary['aliasDomain'];
+        if ($dictionary['alias_domain']) {
+        	$alias_domain=$dictionary['alias_domain'];
         } else {
-        	$aliasDomain=$this->filters['aliasDomain'];
+        	$alias_domain=$this->filters['alias_domain'];
         }
 
-        if (!strlen($aliasUsername) || !strlen($aliasDomain)) {
+        if (!strlen($alias_username) || !strlen($alias_domain)) {
             print "<p><font color=red>Error: missing SIP alias username or domain. </font>";
             return false;
         }
 
-        $alias=array('username' => $aliasUsername,
-                     'domain'   => $aliasDomain
+        $alias=array('username' => $alias_username,
+                     'domain'   => $alias_domain
         			);
 
         $function=array('commit'   => array('name'       => 'deleteAlias',
                                             'parameters' => array($alias),
-                                            'logs'       => array('success' => sprintf('<p>SIP alias %s@%s has been deleted',$this->filters['aliasUsername'],$this->filters['aliasDomain'])
+                                            'logs'       => array('success' => sprintf('<p>SIP alias %s@%s has been deleted',$this->filters['alias_username'],$this->filters['alias_domain'])
                                                                   )
                                            )
 
@@ -3021,14 +3021,14 @@ class SipAliases extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Alias<input type=text size=15 name=alias_username_filter value='%s'>",$this->filters['aliasUsername']);
+        printf (" Alias<input type=text size=15 name=alias_username_filter value='%s'>",$this->filters['alias_username']);
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
-            if ($this->filters['aliasDomain'] && !in_array($this->filters['aliasDomain'],$this->allowedDomains)) {
-            	printf ("<input type=text size=15 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
+            if ($this->filters['alias_domain'] && !in_array($this->filters['alias_domain'],$this->allowedDomains)) {
+            	printf ("<input type=text size=15 name=alias_domain_filter value='%s'>",$this->filters['alias_domain']);
             } else {
-                $selected_domain[$this->filters['aliasDomain']]='selected';
+                $selected_domain[$this->filters['alias_domain']]='selected';
                 printf ("<select name=alias_domain_filter>
                 <option>");
     
@@ -3039,7 +3039,7 @@ class SipAliases extends Records {
                 printf ("</select>");
             }
         } else {
-            printf ("<input type=text size=15 name=alias_domain_filter value='%s'>",$this->filters['aliasDomain']);
+            printf ("<input type=text size=15 name=alias_domain_filter value='%s'>",$this->filters['alias_domain']);
         }
 
         printf (" Target<input type=text size=15 name=target_username_filter value='%s'>",trim($_REQUEST['target_username_filter']));
@@ -9975,10 +9975,8 @@ class SipAliasesActions extends Actions {
                                                     'logs'       => array('success' => sprintf('SIP alias %s@%s has been deleted',$key['username'],$key['domain'])
                                                                           )
                                                    )
-        
                                 );
-    
-                //$this->SoapEngine->execute($function);
+                $this->SoapEngine->execute($function);
             }
         }
         print "</ol>";
