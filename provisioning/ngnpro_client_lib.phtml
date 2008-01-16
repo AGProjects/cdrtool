@@ -8874,7 +8874,7 @@ class recordGenerator extends SoapEngine {
             }
         }
 
-		//dprint_r($this->template);
+		dprint_r($this->template);
 
         $i=0;
 
@@ -8918,8 +8918,9 @@ class recordGenerator extends SoapEngine {
                                     'reseller' => $this->template['reseller']
                                     );
 
-                if ($this->template['firstName']) $sipAccount['firstName'] = $this->template['firstName'];
-                if ($this->template['lastName'])  $sipAccount['lastName']  = $this->template['lastName'];
+                if ($this->template['firstName']) {
+                	$sipAccount['fullName'] = $this->template['firstName'].' '.$this->template['lastName'];
+                }
                 if ($this->template['email'])     $sipAccount['email']     = $this->template['email'];
 
             } else {
