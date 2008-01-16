@@ -2304,7 +2304,7 @@ class SipAccounts extends Records {
             printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
         }
 
-        //printf (" Name<input type=text size=15 name=fullname_filter value='%s'>",$this->filters['fullname']);
+        printf (" Name<input type=text size=15 name=fullname_filter value='%s'>",$this->filters['fullname']);
     }
 
     function deleteRecord($dictionary=array()) {
@@ -3123,6 +3123,12 @@ class SipAliases extends Records {
 	        $target_els = explode("@", trim($_REQUEST['target']));
         }
 
+    	if ($dictionary['owner']) {
+    		$owner = $dictionary['owner'];
+        } else {
+	        $owner = $_REQUEST['owner'];
+        }
+
         $username=$alias_els[0];
 
         if (strlen($alias_els[1])) {
@@ -3162,7 +3168,7 @@ class SipAliases extends Records {
                      'target' => array('username' => $target_els[0],
                                        'domain'   => $target_els[1]
                                        ),
-                     'owner'  => intval($_REQUEST['owner']),
+                     'owner'      => intval($owner),
                      'customer'   => intval($customer),
                      'reseller'   => intval($reseller)
         			);
@@ -8743,7 +8749,9 @@ class recordGenerator extends SoapEngine {
 
 	var $template     = array();
     var $allowedPorts = array();
-	var $maxRecords   = 1000;
+	var $maxRecords   = 500;
+	var $minimum_number_length = 4;
+    var $maximum_number_length = 15;
 
     function recordGenerator($generatorId,$record_generators,$soapEngines,$login_credentials=array()) {
     	$this->record_generators = $record_generators;
@@ -8858,6 +8866,11 @@ class recordGenerator extends SoapEngine {
                 $this->template['email']     = $customer->email;
                 $this->template['firstName'] = $customer->firstName;
                 $this->template['lastName']  = $customer->lastName;
+                if (!strlen($this->template['info'])) {
+                	$this->template['info'] = $customer->firstName.' '.$customer->lastName;
+                }
+            } else {
+                printf ("<font color=red>Error: cannot retrieve customer information for owner %d</font>",$this->template['owner']);
             }
         }
 
@@ -8932,25 +8945,24 @@ class recordGenerator extends SoapEngine {
         $nr_records=trim($_REQUEST['nr_records']);
 
         if (!is_numeric($nr_records) || $nr_records < 1 || $nr_records > $this->maxRecords) {
-            print "<font color=red>Error: number of records must be a number between 1 and $this->maxRecords</font>";
+            printf ("<font color=red>Error: number of records must be a number between 1 and %d</font>",$this->maxRecords);
             return false;
         }
 
         $this->template['nr_records'] = $nr_records;
 
-        // length of generated record
         $number_length=trim($_REQUEST['number_length']);
 
-        if (!is_numeric($number_length) || $number_length < 4 || $number_length > 15) {
-            print "<font color=red>Error: number length must be a number between 4 and 15</font>";
+        if (!is_numeric($number_length) || $number_length < $this->minimum_number_length || $number_length > $this->maximum_number_length) {
+            printf ("<font color=red>Error: number length must be a number between 4 and 15</font>",$this->minimum_number_length,$this->maximum_number_length);
             return false;
         }
 
         $this->template['number_length'] = $number_length;
 
         $strip_digits=trim($_REQUEST['strip_digits']);
-        if (!is_numeric($strip_digits) || $strip_digits <0 || $number_length < $strip_digits + 3) {
-            print "<font color=red>Error: strip digits must be smaller then $number_length</font>";
+        if (!is_numeric($strip_digits) || $strip_digits < 0 || $number_length < $strip_digits + 3) {
+            printf ("<font color=red>Error: strip digits + 3 must be smaller then %d</font>",$number_length);
             return false;
         }
 
@@ -8959,16 +8971,18 @@ class recordGenerator extends SoapEngine {
         // sip domain
         $domain=trim($_REQUEST['domain']);
         if (!strlen($domain)) {
-            print "<font color=red>Error: SIP domain missing</font>";
+            print "<font color=red>Error: SIP domain is missing</font>";
             return false;
         }
         $this->template['domain'] = $domain;
 
         $add_prefix=trim($_REQUEST['add_prefix']);
         if (strlen($add_prefix) && !is_numeric($add_prefix)) {
-            print "<font color=red>Error: Prefix must be numeric</font>";
+            print "<font color=red>Error: Add prefix must be numeric</font>";
             return false;
         }
+
+        $this->template['add_prefix'] = $add_prefix;
 
         $owner=trim($_REQUEST['owner']);
         if (strlen($owner) && !is_numeric($owner)) {
@@ -8976,13 +8990,10 @@ class recordGenerator extends SoapEngine {
             return false;
         }
 
-        $this->template['add_prefix'] = $add_prefix;
-
         // check ENUM TLD
         list($rangePrefix,$tld)=explode('@',trim($_REQUEST['range']));
 
 		$this->template['range']    = trim($_REQUEST['range']);
-
         $this->template['rangePrefix']   = intval($rangePrefix);
         $this->template['tld']      = $tld;
         $this->template['quota']    = intval($_REQUEST['quota']);
@@ -9007,6 +9018,7 @@ class recordGenerator extends SoapEngine {
             $this->template['maxNumbers']  = $this->template['lastNumber'] - $this->template['firstNumber'] + 1;
 
         } else {
+            // we have a digit boundry
             $this->template['firstNumber'] = $this->template['rangePrefix'].str_pad($start,$this->template['digitsAfterRange'],'0');
             $this->template['lastNumber']  = sprintf("%.0f", $this->template['firstNumber'] + pow(10,$this->template['digitsAfterRange']-strlen($this->template['add_prefix'])));
             $this->template['maxNumbers']  = pow(10,$this->template['digitsAfterRange']-strlen($this->template['add_prefix']));
