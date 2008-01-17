@@ -5622,7 +5622,7 @@ class SipSettings {
 
     function getFileTemplate($name, $type="file") {
     
-        //dprint("getFileTemplate(name=$name, type=$type, path=$this->templates_path)");
+        dprint("getFileTemplate(name=$name, type=$type, path=$this->templates_path)");
 
         if ($type=='logo') {
             $extensions=array('png','gif','jpg');
@@ -5656,7 +5656,9 @@ class SipSettings {
     function getEmailTemplate($language='en') {
         $file = "sip_settings_email_$language.tpl";
         $file2 = "sip_settings_email.tpl";
-    
+
+        dprint("templates_path = $this->templates_path");
+
         if (file_exists("$this->templates_path/$this->reseller/$file")) {
             return "$this->templates_path/$this->reseller/$file";
         } elseif (file_exists("$this->templates_path/$this->reseller/$file2")) {

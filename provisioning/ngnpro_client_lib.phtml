@@ -2441,6 +2441,8 @@ class SipAccounts extends Records {
 
     function addRecord($dictionary=array()) {
 
+        dprint_r($dictionary);
+
     	if ($dictionary['account']) {
     		$account_els  = explode("@", $dictionary['account']);
             $this->skipSaveProperties=true;
@@ -8856,6 +8858,11 @@ class recordGenerator extends SoapEngine {
                         'category'   => 'web',
                         'value'      => strval($this->template['add_prefix']),
                         'permission' => 'customer'
+                       ),
+                  array('name'       => 'enum_generator_rpid_strip_digits',
+                        'category'   => 'web',
+                        'value'      => strval($this->template['rpid_strip_digits']),
+                        'permission' => 'customer'
                        )
                   );
 
@@ -8874,8 +8881,7 @@ class recordGenerator extends SoapEngine {
             }
         }
 
-		dprint_r($this->template);
-
+		//dprint_r($this->template);
         $i=0;
 
         while ($i < $this->template['nr_records']) {
@@ -8893,9 +8899,7 @@ class recordGenerator extends SoapEngine {
                                  'type'     => 'sip',
                                  'mapto'    => $mapto,
                                  'info'     => $this->template['info'],
-                                 'owner'    => $this->template['owner'],
-                                 'customer' => $this->template['customer'],
-                                 'reseller' => $this->template['reseller']
+                                 'owner'    => $this->template['owner']
                                 );
 
             if ($this->template['create_sip']) {
@@ -8905,7 +8909,11 @@ class recordGenerator extends SoapEngine {
             	}
 
                 $groups=array();
-                if ($this->template['pstn']) $groups[]='free-pstn';
+
+                if ($this->template['pstn']) {
+                	$groups[]='free-pstn';
+                }
+
             	printf ('and sip account %s@%s ',$username,$this->template['domain']);
     
                 $sipAccount = array('account'  => $username.'@'.$this->template['domain'],
@@ -8913,19 +8921,26 @@ class recordGenerator extends SoapEngine {
                                     'prepaid'  => $this->template['prepaid'],
                                     'password' => $this->template['password'],
                                     'groups'   => $groups,
-                                    'owner'    => $this->template['owner'],
-                                    'customer' => $this->template['customer'],
-                                    'reseller' => $this->template['reseller']
+                                    'owner'    => $this->template['owner']
                                     );
 
                 if ($this->template['firstName']) {
-                	$sipAccount['fullName'] = $this->template['firstName'].' '.$this->template['lastName'];
+                	$sipAccount['fullname'] = $this->template['firstName'].' '.$this->template['lastName'];
                 }
-                if ($this->template['email'])     $sipAccount['email']     = $this->template['email'];
+
+                if ($this->template['email'])     {
+                	$sipAccount['email']     = $this->template['email'];
+                }
+
+                if ($this->template['pstn'] && strlen($number) > intval($this->template['rpid_strip_digits'])) {
+                    $sipAccount['rpid']=substr($number,intval($this->template['rpid_strip_digits']));
+                }
 
             } else {
                 unset($sipAccount);
             }
+
+			//dprint_r($sipAccount);
 
             if (is_array($enumMapping)) $this->enumRecords->addRecord($enumMapping);
             if (is_array($sipAccount))  $this->sipRecords->addRecord($sipAccount);
@@ -8940,6 +8955,8 @@ class recordGenerator extends SoapEngine {
     function checkGenerateRequest() {
         // check number of records
         $this->template['create_sip']=trim($_REQUEST['create_sip']);
+
+        $this->template['rpid_strip_digits']=intval($_REQUEST['rpid_strip_digits']);
 
         $this->template['info']=trim($_REQUEST['info']);
 
@@ -9278,15 +9295,22 @@ class recordGenerator extends SoapEngine {
             </tr>
             ",$checked_prepaid);
 
+            if ($_REQUEST['rpid_strip_digits']) {
+                $rpid_strip_digits=$_REQUEST['rpid_strip_digits'];
+            } else if ($rpid_strip_digits = $this->sipRecords->getLoginProperty('enum_generator_rpid_strip_digits')) {
+            } else {
+            	$rpid_strip_digits=0;
+            }
+
             print "
             <tr>
             <td>";
-            print _("Prefix Caller-ID");
+            print _("Strip digits from Caller-ID");
             printf ("
-            <td align=right><input type=text size=10 name=rpid_prefix value='%s'>
+            <td align=right><input type=text size=10 name=rpid_strip_digits value='%s'>
             </td>
             </tr>
-            ",$_REQUEST['rpid_prefix']);
+            ",$rpid_strip_digits);
 
             print "
             <tr>
