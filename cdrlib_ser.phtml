@@ -5078,7 +5078,7 @@ class SIPonline {
 		if ($DATASOURCES[$datasource]['db_class_siponline']) {
         	$locationDB_class=$DATASOURCES[$datasource]['db_class_siponline'];
         } else {
-        	$locationDB_class=DB_ser;
+        	$locationDB_class=DB_openser;
         }
 
         $this->locationDB = new $locationDB_class;

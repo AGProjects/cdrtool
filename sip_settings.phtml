@@ -2,10 +2,30 @@
 header("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
 header("Pragma: no-cache");
 include("./global.inc");
-page_open(
+
+if ($_REQUEST['reseller']) {
+	page_open(
             array("sess" => "CDRTool_Session",
                   "auth" => "CDRTool_Auth",
                   "perm" => "CDRTool_Perm"));
+
+	$account     = $_REQUEST['account'];
+    $login_type  = "admin";
+	$sip_engine  = $_REQUEST['sip_engine'];
+
+	$perm->check("provisioning");
+
+
+} else {
+	page_open(array("sess" => "SIP_Subscriber_Session",
+                    "auth" => "SIP_Subscriber_Auth")
+             );
+    $account	 = $SIP['account'];
+	$reseller  	 = $SIP['reseller'];
+    $customer  	 = $SIP['customer'];
+    $sip_engine  = $SIP['engine'];
+    $login_type  = "subscriber";
+}
 
 $title="SIP settings page";
 
@@ -17,13 +37,10 @@ if (is_readable("local/header.phtml")) {
     include("header.phtml");
 }
 
-$perm->check("provisioning");
-
 require_once('provisioning/sip_settings_lib.phtml');
 require_once("provisioning/ngnpro_engines.inc");
 include_once("local/provisioning.phtml");
 
-$account = $_REQUEST['account'];
 $action  = $_REQUEST['action'];
 $export  = $_REQUEST['export'];
 
@@ -37,16 +54,17 @@ if (class_exists($_reseller_class)) {
 }
 
 $login_credentials=array(
-                        'login_type'  => 'admin',
-                        'reseller'   => $_REQUEST['reseller']
+                        'login_type' => $login_type,
+                        'reseller'   => $_REQUEST['reseller'],
+                        'sip_engine' => $sip_engine
                         );
 
-if ($resellerFilters[$login_credentials['reseller']]) {
-	$login_credentials['soap_engine']      = $resellerFilters[$login_credentials['reseller']]['soap_engine'];
-} else if ($_REQUEST['soapEngine']) {
-    $login_credentials['soap_engine']=$_REQUEST['soapEngine'];
-} else if ($resellerFilters['default']) {
-	$login_credentials['soap_engine']      = $resellerFilters['default']['soap_engine'];
+if ($resellerFilters[$login_credentials['reseller']]['sip_engine']) {
+	$login_credentials['sip_engine']      = $resellerFilters[$login_credentials['reseller']]['sip_engine'];
+} else if ($_REQUEST['sip_engine']) {
+    $login_credentials['sip_engine']=$_REQUEST['sip_engine'];
+} else if ($resellerFilters['default']['sip_engine']) {
+	$login_credentials['sip_engine']      = $resellerFilters['default']['sip_engine'];
 }
 
 $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);

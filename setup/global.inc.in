@@ -54,7 +54,7 @@ $RatingEngine=array("socketIP"   => "IP.address.of.the.private.interface.of.cdrt
 $SOAPServer=array("cdr_source"        =>"ser_radius",
                   "location"          =>"https://provider.com/CDRTool/SOAP/server.php",
                   "wsdl"              =>"https://provider.com/CDRTool/SOAP/WSDL/",
-                  "DB_ser"    	      =>"DB_ser",
+                  "DB_openser"    	      =>"DB_openser",
                   "UserNameField"     =>"UserName",
                   "CanonicalURIField" =>"CanonicalURI"
                   );
@@ -138,7 +138,7 @@ class DB_radius extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
-class DB_ser extends DB_Sql {
+class DB_openser extends DB_Sql {
   var $Host     = "sipdb";
   var $Database = "ser";
   var $User     = "ser";
@@ -195,14 +195,14 @@ $DATASOURCES=array(
                     "class"              => "CDRS_ser_radius",
                     "db_class"           => array("DB_radius2","DB_radius"),  
                     "table"              => "radacct",      // or radacct".date("Ym") if sql.conf uses the mysql procedure to auto-rotate tables
-                    "db_class_siponline" => "DB_ser", 	    // location of openser location table	
+                    "db_class_siponline" => "DB_openser", 	    // location of openser location table	
                     "rateField"          => "Rate",
                     "rating"             => "1",
                     "priceField"         => "Price",
                     "DestinationIdField" => "DestinationId",
                     "normalizedField"    => "Normalized",
                     "BillingPartyIdField"=> "UserName",
-                    "AccountsDBClass"	 => "DB_ser",
+                    "AccountsDBClass"	 => "DB_openser",
                     "enableThor"         => false,	  // set true if using SIP Thor      
                     "domain_table"	 => "domain",     // table of AccountsDBClass that holds domains served by the sip proxy
                     "subscriber_table"	 => "subscriber", // table of AccountsDBClass that holds susbcribers served by the sip proxy
@@ -268,7 +268,7 @@ $DATASOURCES=array(
                     ),
 "sip_trace"   =>array(
                     "name"               => "SIP trace",
-                    "db_class"           => "DB_ser",
+                    "db_class"           => "DB_openser",
                     "table"              => "sip_trace",
                     "purgeRecordsAfter"  => "7",
                     "SIPProxies"        => array("10.0.0.1"=>"SIP Proxy 1",

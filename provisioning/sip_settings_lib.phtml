@@ -102,6 +102,9 @@ class SipSettings {
              );
 
 	var $exportFilename = "export.txt";
+	var $presenceRules=array();
+    var $enums=array();
+    var $barringPrefixes=array();
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
     	$this->soapEngines        = $soapEngines;
@@ -288,8 +291,6 @@ class SipSettings {
             $this->customer_engine=$this->sip_engine;
         }
 
-        if ($this->soapEngines[$this->sip_engine]) $this->enable_thor=true;
-
         if (strlen($this->loginCredentials['presence_engine'])) {
             $this->presence_engine=$this->loginCredentials['presence_engine'];
         } else if (strlen($this->soapEngines[$this->sip_engine]['presence_engine'])) {
@@ -360,6 +361,10 @@ class SipSettings {
 
         if (isset($this->soapEngines[$this->sip_engine]['absolute_voicemail_uri'])) {
         	$this->absolute_voicemail_uri = $this->soapEngines[$this->sip_engine]['absolute_voicemail_uri'];
+        }
+
+        if (isset($this->soapEngines[$this->sip_engine]['enable_thor'])) {
+        	$this->enable_thor=$this->soapEngines[$this->sip_engine]['enable_thor'];
         }
 
         if ($this->loginCredentials['templates_path']) {
@@ -499,7 +504,7 @@ class SipSettings {
     }
 
     function getAccount($account) {
-        dprint("getAccount($account, engine=$this->soapEngine)");
+        dprint("getAccount($account, engine=$this->sip_engine)");
 
         list($username,$domain)=explode("@",trim($account));
 
@@ -539,6 +544,7 @@ class SipSettings {
         $this->timezone  = $result->timezone;
         $this->email     = $result->email;
         $this->groups    = $result->groups;
+
         if ($this->SOAPversion > 1) {
         	$this->quickdial = $result->quickdialPrefix;
         	$this->timeout   = intval($result->timeout);
@@ -560,6 +566,14 @@ class SipSettings {
 
 		$this->getOwnerSettings();
 
+        if ($result->reseller) {
+			$this->reseller  = $result->reseller;
+        }
+
+        if ($result->customer) {
+        	$this->customer  = $result->customer;
+        }
+
         $this->result    = $result;
 
 		if (!$this->timeout) {
@@ -569,10 +583,6 @@ class SipSettings {
 
 
   		$this->xcap_root     = rtrim($this->xcap_root,'/')."@".$this->domain."/";
-
-        //dprint_r($result);
-
-    	//dprint_r($this->Preferences);
 
     }
 
@@ -1300,7 +1310,7 @@ class SipSettings {
             }
         }
 
-        dprint_r($this->locations);
+        //dprint_r($this->locations);
     }
 
     function getVoicemailForwarding () {
@@ -3321,14 +3331,14 @@ class SipSettings {
         print "</td></tr>";
     }
 
-    function showDiversions($conditions) {
+    function showDiversions($conditions=array()) {
         // for busy not online or unconditional
         foreach (array_keys($this->CallPrefDictionary) as $condition) {
         	$_prefName = $condition."_lastOther";
         	$this->CallPrefLastOther[$condition]= $this->Preferences[$_prefName];
         }
 
-        if (!$conditions) {
+        if (!count($conditions)) {
             $conditions=$this->CallPrefDictionary;
         }
 
@@ -4614,7 +4624,7 @@ class SipSettings {
 
         $this->acceptRules['groups']     = $result->nonEmptyGroups;
 
-        dprint_r($this->acceptRules);
+        //dprint_r($this->acceptRules);
 
         return true;
     }
@@ -4867,9 +4877,9 @@ class SipSettings {
         $_checked_groups="";
 
         print "<td>";
-        if (in_array("everybody",$this->acceptRules['temporary']['groups'])) {
+        if (is_array($this->acceptRules['temporary']['groups']) &&in_array("everybody",$this->acceptRules['temporary']['groups'])) {
             $_checked_everybody="checked";
-        } else if (in_array("nobody",$this->acceptRules['temporary']['groups'])) {
+        } else if (is_array($this->acceptRules['temporary']['groups']) && in_array("nobody",$this->acceptRules['temporary']['groups'])) {
             $_checked_nobody="checked";
         } else if (!in_array('everybody',$this->acceptRules['temporary']['groups']) &&
                    !in_array('nobody',$this->acceptRules['temporary']['groups']) &&
@@ -5039,9 +5049,9 @@ class SipSettings {
             $_checked_nobody="";
             $_checked_groups="";
 
-            if (in_array("everybody",$this->acceptRules['persistent'][$profile]['groups'])) {
+            if (is_array($this->acceptRules['persistent'][$profile]['groups']) && in_array("everybody",$this->acceptRules['persistent'][$profile]['groups'])) {
             	$_checked_everybody="checked";
-            } else if (in_array("nobody",$this->acceptRules['persistent'][$profile]['groups'])) {
+            } else if (is_array($this->acceptRules['persistent'][$profile]['groups']) && in_array("nobody",$this->acceptRules['persistent'][$profile]['groups'])) {
             	$_checked_nobody="checked";
             } else if (!in_array('everybody',$this->acceptRules['persistent'][$profile]['groups']) &&
                        !in_array('nobody',$this->acceptRules['persistent'][$profile]['groups']) &&
@@ -5344,9 +5354,9 @@ class SipSettings {
 
             $online_icon='';
 
-            if (in_array($_watcher,$this->presenceRules['allow'])) {
+            if (is_array($this->presenceRules['allow']) && in_array($_watcher,$this->presenceRules['allow'])) {
                 $display_status = 'allow';
-            } elseif (in_array($_watcher,$this->presenceRules['deny'])) {
+            } elseif (is_array($this->presenceRules['deny']) && in_array($_watcher,$this->presenceRules['deny'])) {
                 $display_status = 'deny';
             } else {
                 $display_status = $this->presenceWatchers[$_watcher]['status'];
@@ -5622,7 +5632,7 @@ class SipSettings {
 
     function getFileTemplate($name, $type="file") {
     
-        dprint("getFileTemplate(name=$name, type=$type, path=$this->templates_path)");
+        //dprint("getFileTemplate(name=$name, type=$type, path=$this->templates_path)");
 
         if ($type=='logo') {
             $extensions=array('png','gif','jpg');
@@ -5643,11 +5653,9 @@ class SipSettings {
         } else {
             if (file_exists("$this->templates_path/$this->reseller/$name")) {
                 return "$this->templates_path/$this->reseller/$name";
-                //dprint("Found $this->reseller/$name");
             } elseif (file_exists("$this->templates_path/default/$name")) {
                 return "$this->templates_path/default/$name";
             } else {
-                dprint("File $this->templates_path/default/$name not found");
                 return false;
             }
         }

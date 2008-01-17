@@ -83,7 +83,14 @@ class DB_radius2 extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
-class DB_ser extends DB_Sql {
+class DB_subscribers extends DB_Sql {
+  var $Host     = "sipdb";
+  var $Database = "openser";
+  var $User     = "openser";
+  var $Password = "PASSWORD";
+}
+
+class DB_openser extends DB_Sql {
   var $Host     = "sipdb";
   var $Database = "openser";
   var $User     = "openser";
@@ -158,7 +165,7 @@ $DATASOURCES=array(
                     ),
 "sip_trace"   =>array(
                     "name"               => "SIP trace",
-                    "db_class"           => "DB_ser",
+                    "db_class"           => "DB_openser",
                     "table"              => "sip_trace",
                     "purgeRecordsAfter"  => "7",
                     "invisible"          => 1 

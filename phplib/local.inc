@@ -301,6 +301,124 @@ class CDRTool_Perm extends Perm {
   }
 }
 
+class SIP_Subscriber_Session extends Session {
+  var $classname      = "SIP_Subscriber_Session";
+  var $auto_init      = "SIP_setup.inc";
+  var $cookiename     = "SIPCookie2";        ## defaults to classname
+  var $magic          = "3333jhjjjss13";      ## ID seed
+  var $mode           = "cookie";            ## We propagate session IDs with cookies
+  var $fallback_mode  = "get";
+  var $allowcache     = "public";
+  var $lifetime       = 0;                   ## 0 = do session cookies, else minutes
+  var $that_class     = "CDRTool_CT_Sql";     ## name of data storage container
+  var $gc_probability = 5;
+}
+
+class SIP_Subscriber_Auth extends Auth {
+  // use this auth for SIP accounts
+  var $classname      = "SIP_Subscriber_Auth";
+  var $lifetime       =  0;
+  var $magic          = "d66mmmg111dsgzz";  ## Challenge seed
+  var $database_class = "DB_subscribers";
+  var $database_table = "subscriber";
+
+  function auth_loginform() {
+
+    global $sess;
+    global $max_login_attempts;
+
+    $username    = $_POST["username"];
+    $password    = $_POST["password"];
+    $challenge   = $_POST["challenge"];
+    $step        = $_POST["step"];
+    $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
+
+    $sess->register("challenge");
+
+    if (!$challenge) {
+		$challenge = md5(uniqid($this->magic));
+	}
+
+    include("sip_login.phtml");
+  }
+  
+  function auth_validatelogin() {
+        global $SIP;
+
+        $username    = $_POST["username"];
+        $password    = $_POST["password"];
+        $challenge   = $_POST["challenge"];
+        $response    = $_POST["response"];
+
+        if(isset($username)) {
+            $this->auth["uname"]=$username;
+        }
+
+        $a=explode("@",$username);
+        $domain= $a[1];
+        if (count($a) !=2 ) return false;
+
+		global $domainFilters, $resellerFilters, $soapEngines ;
+
+        require_once('SOAP/Client.php');
+		require_once("provisioning/ngnpro_soap_library.phtml");
+		require_once("provisioning/ngnpro_engines.inc");
+
+        $SIP['account']    = $username;
+
+        if ($domainFilters[$domain]['sip_engine']) {
+            $SIP['engine']   = $domainFilters[$domain]['sip_engine'];
+            $SIP['customer'] = $domainFilters[$domain]['customer'];
+            $SIP['reseller'] = $domainFilters[$domain]['reseller'];
+ 
+        } else if ($domainFilters['default']['sip_engine']) {
+            $SIP['engine']=$domainFilters['default']['sip_engine'];
+        } else {
+            print "Error: no domainFilter available in ngnpro_engines.inc";
+            return false;
+        }
+
+        $this->SOAPlogin=array(
+                               "username" => $soapEngines[$SIP['engine']]['username'],
+                               "password" => $soapEngines[$SIP['engine']]['password'],
+                               "admin"    => true
+        );
+
+        $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+
+        $this->SipPort  = new WebService_NGNPro_SipPort($soapEngines[$SIP['engine']]['url']);
+
+        $log=sprintf ("Forward authorization to %s",$soapEngines[$SIP['engine']]['url']);
+
+        dprint($log);
+
+        $this->SipPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+        $this->SipPort->addHeader($this->SoapAuth);
+
+        $result     = $this->SipPort->getAccount(array("username" =>$a[0],"domain"   =>$domain));
+
+        //dprint_r($result);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        $pass_md5  	       = md5($result->password);
+        $expected_response = md5("$username:$pass_md5:$challenge");
+
+        if ($expected_response == $response) {
+            return true;
+       } else {
+            return false;
+       }
+    }
+}
 function otp_sms($tel,$message,$hideoutput) {
     $tel=preg_replace("/[^0-9]/","",$tel);
     $tel="+".$tel;
