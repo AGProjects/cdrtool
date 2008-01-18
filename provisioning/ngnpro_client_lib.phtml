@@ -456,7 +456,6 @@ class SoapEngine {
 
             $this->soapclient = new $this->soap_class($this->SOAPurl);
 
-            $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
@@ -484,7 +483,6 @@ class SoapEngine {
     			// Instantiate the SOAP client dependency
             	$this->soapclientRemote = new $this->soap_class($this->SOAPurlRemote);
 
-            	$this->soapclientRemote->setOpt('curl', CURLOPT_TIMEOUT, $this->timeout);
             	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
             }
@@ -503,7 +501,6 @@ class SoapEngine {
                 $this->SOAPurlCustomers    = $this->soapEngines[$this->customer_engine]['url'];
 	            $this->soapclientCustomers = new WebService_NGNPro_CustomerPort($this->SOAPurlCustomers);
 
-    	        $this->soapclientCustomers->setOpt('curl', CURLOPT_TIMEOUT, $this->timeout);
         	    $this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             	$this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
             }
@@ -526,6 +523,7 @@ class SoapEngine {
     }
 
     function execute($function) {
+        $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
 
         /*
         $function=array('commit'   => array('name'       => 'addAccount',
@@ -550,6 +548,7 @@ class SoapEngine {
         }
 
         if (is_object($this->soapclientRemote)) {
+          	$this->soapclientRemote->setOpt('curl', CURLOPT_TIMEOUT, $this->timeout);
 
             $this->soapclientRemote->addHeader($this->SoapAuthRemote);
 
@@ -931,11 +930,16 @@ class Records {
         }
     }
 
-    function execute() {
+    function executeActions() {
 		$this->showSeachForm();
 
+        $this->SoapEngine->timeout = 60;
+
+        $this->SoapEngine->soapclient->setOpt('curl', CURLOPT_TIMEOUT,$this->SoapEngine->timeout);
+
 		$this->getRecordKeys();
-    	//print_r($this->selectionKeys);
+
+        dprint_r($this->selectionKeys);
 
         $class_name=get_class($this).'Actions';
 

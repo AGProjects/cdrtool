@@ -661,6 +661,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
     
         $presentity['note']     = $note;
 
+		dprint_r($presentity);
         $result = $this->PresencePort->setPresenceInformation(array("username" =>$SIPaccount['username'],"domain"   =>$SIPaccount['domain']),$SIPaccount['password'], $presentity);
     
         if (PEAR::isError($result)) {

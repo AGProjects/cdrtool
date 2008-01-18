@@ -114,7 +114,7 @@ if ($_REQUEST['generatorId']) {
     if ($_REQUEST['action']=='Update') $RECORDS->updateRecord();
 
     if ($_REQUEST['action']=='PerformActions') {
-        $RECORDS->execute();
+        $RECORDS->executeActions();
     } else {
         $RECORDS->listRecords();
     }
