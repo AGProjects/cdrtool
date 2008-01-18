@@ -30,7 +30,7 @@ class SipSettings {
     var $sip_settings_page 	       = "https://cdrtool.example.com/sip_settings.phtml";
     var $xcap_root   		       = "https://cdrtool.example.com/xcap-root";
 	var $pstn_access               = false;
-    var $proxy                     = "proxy.example.com";
+    var $sip_proxy                 = "proxy.example.com";
     var $voicemail_server          = "vm.example.com";
     var $voicemail_access_number     = "*70";
     var $change_privacy_access_number = "*67";
@@ -324,7 +324,7 @@ class SipSettings {
         // overwrite default settings
 
         if (strlen($this->soapEngines[$this->sip_engine]['sip_proxy'])) {
-        	$this->proxy           = $this->soapEngines[$this->sip_engine]['sip_proxy'];
+        	$this->sip_proxy        = $this->soapEngines[$this->sip_engine]['sip_proxy'];
         }
 
         if (strlen($this->soapEngines[$this->sip_engine]['support_company'])) {
@@ -997,7 +997,7 @@ class SipSettings {
         printf (("%s &lt;sip:%s@%s&gt;"),$this->fullName,$this->username,$this->domain);
 
         if ($this->enable_thor) {
-        	if ($this->homeNode=getSipThorHomeNode($this->account,$this->proxy)) {
+        	if ($this->homeNode=getSipThorHomeNode($this->account,$this->sip_proxy)) {
         		printf (" on SipThor node %s ",$this->homeNode);
             }
         }
@@ -1168,7 +1168,7 @@ class SipSettings {
 
         // overwrite settings from soap engine
 		if ($this->resellerProperties['sip_proxy']) {
-        	$this->proxy             = $this->resellerProperties['sip_proxy'];
+        	$this->sip_proxy             = $this->resellerProperties['sip_proxy'];
         }
 
         if ($this->resellerProperties['support_company']) {
@@ -1411,7 +1411,7 @@ class SipSettings {
         print _("Outbound Proxy");
         print "
         </td>
-        <td class=border>$this->proxy
+        <td class=border>$this->sip_proxy
         </td>
         </tr>
         <tr>
@@ -5929,9 +5929,9 @@ function getLocalTime($timezone,$timestamp) {
     return $LocalTime;
 }
 
-function getSipThorHomeNode ($account,$proxy) {
-    if (!$account || !$proxy) return false;
-    $socket = fsockopen($proxy, 9500, $errno, $errstr, 1);
+function getSipThorHomeNode ($account,$sip_proxy) {
+    if (!$account || !$sip_proxy) return false;
+    $socket = fsockopen($sip_proxy, 9500, $errno, $errstr, 1);
     if (!$socket) {
         return false;
     }

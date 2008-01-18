@@ -183,9 +183,9 @@ class CDRS {
         if ($this->DATASOURCES[$this->cdr_source]['AccountsDBClass'] && class_exists($this->DATASOURCES[$this->cdr_source]['AccountsDBClass'])) {
             $this->AccountsDB       = new $this->DATASOURCES[$this->cdr_source]['AccountsDBClass'];
             $this->AccountsDBClass  = $this->DATASOURCES[$this->cdr_source]['AccountsDBClass'];
-        } else if (class_exists('DB_ser')) {
-            $this->AccountsDB       = new DB_ser();
-            $this->AccountsDBClass  = 'DB_ser';
+        } else if (class_exists('DB_openser')) {
+            $this->AccountsDB       = new DB_openser();
+            $this->AccountsDBClass  = 'DB_openser';
         }
     
         if ($this->DATASOURCES[$this->cdr_source]['BillingIdField']) {

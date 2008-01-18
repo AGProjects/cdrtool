@@ -27,12 +27,12 @@ class SIPstatistics {
         $this->generateMrtgConfigScript   = $CDRTool['Path']."/scripts/generateMrtgConfig.php";
 
         $this->db        = new DB_cdrtool();
-        $this->ser_db    = new DB_ser();
+        $this->ser_db    = new DB_openser();
 
         if (class_exists('DB_siponline')) {
         	$this->online_db = new DB_siponline();
         } else {
-        	$this->online_db = new DB_ser();
+        	$this->online_db = new DB_openser();
         }
 
 
