@@ -693,7 +693,7 @@ class Records {
     function showEngineSelection() {
         $selected_soapEngine[$this->SoapEngine->service]='selected';
 
-        printf ("<select name=service onChange=\"document.soapengine.submit.disabled = true; location.href = '%s&service=' + this.options[this.selectedIndex].value\">",$this->url);
+        printf ("<select name=service onChange=\"document.engines.submit.disabled = true; location.href = '%s&service=' + this.options[this.selectedIndex].value\">",$this->url);
         $j=1;
         foreach (array_keys($this->SoapEngine->soapEngines) as $_engine) {
         	if ($this->SoapEngine->skip[$_engine]) continue;
@@ -786,7 +786,7 @@ class Records {
         <tr>
 
         ";
-        printf ("<form method=post name=soapengine action=%s>",$_SERVER['PHP_SELF']);
+        printf ("<form method=post name=engines action=%s>",$_SERVER['PHP_SELF']);
         print "
         <td align=left>
         ";
@@ -7346,7 +7346,7 @@ class Customers extends Records {
         <tr>
         ";
 
-        printf ("<form method=post name=soapengine action=%s>",$_SERVER['PHP_SELF']);
+        printf ("<form method=post name=engines action=%s>",$_SERVER['PHP_SELF']);
         print "
         <td align=left>
         ";

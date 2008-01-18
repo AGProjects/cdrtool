@@ -4,9 +4,9 @@ body {
 	font-size: 10pt;
 	font-style: normal;
 }
-a:link {color: color:#3366FF; text-decoration:none; font-weight: normal;}
+a:link {color: #3366FF; text-decoration:none; font-weight: normal;}
 a:active {color:red; font-weight: normal;}
-a:visited {color: color:#3366FF; text-decoration:none; font-weight: normal;}
+a:visited {color:#3366FF; text-decoration:none; font-weight: normal;}
 a:hover {color: red;}
 td.mh4 {color: #DA70D6;font-size: 7.5pt}
 a.mh4 {color: #DA70D6;text-decoration:none;}
@@ -15,10 +15,10 @@ a.title {color:#FF6600; text-decoration:none;}
 a.title:visited {color: #FF6600; text-decoration:none; font-weight: normal;}
 a.zvon {color:#87CEFA;font-size: 7.5pt; text-decoration:none;}
 a.zvon:visited {color:#87CEFA;font-size: 7.5pt; text-decoration:none; font-weight: normal;}
-a:zvon:hover {color:red;}
+a.zvon:hover {color:red;}
 a.pdf {color:red;font-size: 7.5pt; text-decoration:none;}
 a.pdf:visited {color:red;font-size: 7.5pt; text-decoration:none; font-weight: normal;}
-a:pdf:hover {color:silver;}
+a.pdf:hover {color:silver;}
 a.menu {color:#2F4F4F; text-decoration:none;}
 a.menu:visited {color: #2F4F4F; text-decoration:none; font-weight: normal;}
 a.hf {color: #FF6600;font-size: 10pt;font-weight: bold;line-height: 15pt;text-decoration:none;}
@@ -192,7 +192,7 @@ td.borderns {
 }
 
 .input100 {
-  nowidth: 100%;
+  width: 100%;
   height: auto;
 }
 
