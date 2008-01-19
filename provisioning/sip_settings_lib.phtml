@@ -105,6 +105,7 @@ class SipSettings {
 	var $presenceRules=array();
     var $enums=array();
     var $barringPrefixes=array();
+    var $presenceWatchers=array();
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
     	$this->soapEngines        = $soapEngines;
@@ -1600,7 +1601,7 @@ class SipSettings {
         </td>
         <td class=borderns>";
 
-      	print "<input class=input100 type=password size=15 name=sip_password value=\"$this->password\">";
+      	print "<input type=password size=15 name=sip_password value=\"$this->password\">";
 
         print _("Language");
         print "

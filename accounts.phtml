@@ -1,18 +1,17 @@
 <?
 include("global.inc");
 
-$title           = "Login accounts";
+page_open(array("sess" => "CDRTool_Session",
+                "auth" => "CDRTool_Auth",
+                "perm" => "CDRTool_Perm")
+          );
 
+$title           = "Login accounts";
 if (is_readable("local/header.phtml")) {
     include("local/header.phtml");
 } else {
     include("header.phtml");
 }
-
-page_open(array("sess" => "CDRTool_Session",
-                "auth" => "CDRTool_Auth",
-                "perm" => "CDRTool_Perm")
-          );
 
 $loginname=$auth->auth["uname"];
 

@@ -1,11 +1,8 @@
 <?
 include("global.inc");
-include("header.phtml");
-    
-$errorReporting = (E_ALL & ~(E_NOTICE | E_WARNING));
-//$errorReporting = 1; // temporary until warnings are fixed
-error_reporting($errorReporting);
 
+#$verbose=1;
+    
 if ($_REQUEST['public']) {
     $db = new DB_CDRTool;
     $key="callid-".trim($_REQUEST['callid']).trim($_REQUEST['fromtag']);
@@ -38,8 +35,9 @@ if ($authorize==1) {
 	unset($perm);
 }
 
-#$verbose=1;
+include("header.phtml");
 require("cdrlib.phtml");
+
 
 $callid      = $_REQUEST['callid'];
 $fromtag     = $_REQUEST['fromtag'];

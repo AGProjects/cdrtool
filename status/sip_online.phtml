@@ -1,9 +1,6 @@
 <?
 include("../global.inc");
 
-$title="OpenSER online subscribers";
-include("../header.phtml");
-
 page_open(
     array("sess" => "CDRTool_Session",
           "auth" => "CDRTool_Auth",
@@ -11,6 +8,9 @@ page_open(
           ));
 
 $perm->check("statistics");
+
+$title="OpenSER online subscribers";
+include("../header.phtml");
 
 include("../cdrlib.phtml");
 

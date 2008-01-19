@@ -25,19 +25,13 @@ if ($_REQUEST['reseller']) {
     $login_type  = "subscriber";
 }
 
-$title="SIP settings page";
-if (is_readable("local/header.phtml")) {
-    include("local/header.phtml");
-} else {
-    include("header.phtml");
-}
-
-
 //$verbose=1;
 
 require_once('provisioning/sip_settings_lib.phtml');
 require_once("provisioning/ngnpro_engines.inc");
-include_once("local/provisioning.phtml");
+if (file_exists("local/provisioning.phtml")) {
+	include_once("local/provisioning.phtml");
+}
 
 $action  = $_REQUEST['action'];
 $export  = $_REQUEST['export'];
@@ -71,8 +65,17 @@ if (!$export) {
     $title  = "SIP settings of $account";
     $header = $SipSettings->headerFile;
     $css    = $SipSettings->cssFile;
-    include($header);
-    include($css);
+    if (file_exists($header)) {
+    	include($header);
+    } else {
+        if (is_readable("local/header.phtml")) {
+        	include("local/header.phtml");
+    	} else {
+        	include("header.phtml");
+    	}
+    }
+
+    if (file_exists($css)) include($css);
 }
 
 if ($action=="Save settings") {

@@ -13,6 +13,12 @@
 include("./global.inc");
 set_time_limit(600);
 
+page_open(
+            array("sess" => "CDRTool_Session",
+                  "auth" => "CDRTool_Auth",
+                  "perm" => "CDRTool_Perm")
+         );
+
 $title="SIP and ENUM provisioning";
 
 if (is_readable("local/header.phtml")) {
@@ -20,13 +26,6 @@ if (is_readable("local/header.phtml")) {
 } else {
     include("header.phtml");
 }
-
-page_open(
-            array("sess" => "CDRTool_Session",
-                  "auth" => "CDRTool_Auth",
-                  "perm" => "CDRTool_Perm")
-         );
-
 
 $perm->check("provisioning");
 

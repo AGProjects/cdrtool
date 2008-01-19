@@ -136,6 +136,7 @@ class SoapEngine {
 	var $allowedPorts  = array();
     var $timeout       = 5;
     var $exception     = array();
+	var $extraFormElements = array();
 
     var $ports=array(
                         'sip_accounts'   => array(
@@ -329,7 +330,9 @@ class SoapEngine {
                 $service   = $_ports[0].'@'.$_engines[0];
             }
 
-	        $this->extraFormElements    = $this->login_credentials['extra_form_elements'];
+            if (is_array($this->login_credentials['extra_form_elements'])) {
+	        	$this->extraFormElements    = $this->login_credentials['extra_form_elements'];
+            }
 
             $this->service = $service;
 
@@ -715,7 +718,7 @@ class Records {
         	if ($j > 1) printf ("<option value=''>--------\n");
             foreach (array_keys($this->SoapEngine->ports) as $_port) {
                 $idx=$_port.'@'.$_engine;
-                if (in_array($_port,$this->SoapEngine->skip_engines[$_engine])) continue;
+                if (is_array($this->SoapEngine->skip_engines[$_engine]) && in_array($_port,$this->SoapEngine->skip_engines[$_engine])) continue;
                 if (count($this->SoapEngine->allowedPorts[$_engine]) > 0 && !in_array($_port,$this->SoapEngine->allowedPorts[$_engine])) continue;
                 if ($_port == 'customers' && $this->SoapEngine->soapEngines[$_engine]['version'] <= 1) continue;
                 if ($this->SoapEngine->ports[$_port]['resellers_only']) {
@@ -2265,9 +2268,8 @@ class SipAccounts extends Records {
 						$sip_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
                     }
 
-
                     unset($groups);
-                    foreach ($account->groups as $_grp) $groups.=$_grp.' ';
+                    if (is_array($account->groups)) foreach ($account->groups as $_grp) $groups.=$_grp.' ';
 
                     if ($this->version > 1) {
                         $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",

@@ -1,6 +1,13 @@
 <?
 include("./global.inc");
 
+page_open(
+            array("sess" => "CDRTool_Session",
+                  "auth" => "CDRTool_Auth",
+                  "perm" => "CDRTool_Perm"));
+
+$perm->check("rates");
+
 $export= $_REQUEST['export'];
 $table = $_REQUEST['table'];
 
@@ -32,13 +39,6 @@ if (!$export) {
         exit ;
     }
 }
-
-page_open(
-            array("sess" => "CDRTool_Session",
-                  "auth" => "CDRTool_Auth",
-                  "perm" => "CDRTool_Perm"));
-
-$perm->check("rates");
 
 $PHP_SELF           = $_SERVER['PHP_SELF'];
 $REMOTE_ADDR        = $_SERVER['REMOTE_ADDR'];
