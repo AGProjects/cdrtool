@@ -148,6 +148,7 @@ td.cmh {color: #00853F;}
   border: 0px solid #cccccc;
   border-collapse: collapse;
 }
+
 th.sft {
   text-align: left;
   vertical-align: bottom;
@@ -159,8 +160,16 @@ th.sft {
   color: black;
   background-color: transparent;
 }
+
 td.sft { 
   padding-top: 7px;
+  background-color: transparent;
+}
+
+td.bbot {
+  border-bottom: 1px solid #666666;
+  vertical-align: middle;
+  padding-top: 1px;
   background-color: transparent;
 }
 
@@ -227,3 +236,4 @@ td.white {
    font-size: 7pt;
    color: black;
 }
+
