@@ -2514,7 +2514,7 @@ class SipSettings {
 
         }
 
-        if ($this->login_type != 'subscriber' && $this->voicemail['Account'] && !$this->createdVoicemailnow) {
+        if ($this->voicemail['Account'] && !$this->createdVoicemailnow) {
             $delete_voicemail = $_REQUEST['delete_voicemail'];
 
             //$log=sprintf("delete_voicemail_orig=%s",$this->voicemail['Options']->delete);

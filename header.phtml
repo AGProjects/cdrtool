@@ -4,6 +4,8 @@ header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
 header("Expires: " . gmdate("D, d M Y H:i:s") . " GMT");
 header("ETag: ",randomstring());
 
+global $CDRTool; 
+
 printf("<HTML>
 <HEAD>
   <TITLE>CDRTool - $title</TITLE>

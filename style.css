@@ -4,10 +4,10 @@ body {
 	font-size: 10pt;
 	font-style: normal;
 }
-a:link {text-decoration:none; font-weight: normal;}
-a:active {color:red; font-weight: normal;}
-a:visited {text-decoration:none; font-weight: normal;}
-a:hover {color: red;}
+a.link {text-decoration:none; font-weight: normal;}
+a.active {color:red; font-weight: normal;}
+a.visited {text-decoration:none; font-weight: normal;}
+a.hover {color: red;}
 td.mh4 {color: #DA70D6;font-size: 7.5pt}
 a.mh4 {color: #DA70D6;text-decoration:none;}
 a.mh4:visited {color: #DA70D6;text-decoration:none;}
@@ -99,7 +99,7 @@ h4 {font-family: Verdana, Arial, Helvetica, sans-serif;
 .sel2 {color: #FF7F50;font-size: 7.5pt;}
 .let {color: blue;font-size: 8pt;font-weight: normal;}
 .right {text-align: right;}
-p {text-align: justify;font-size: 8pt;line-height: 11pt;}
+p {font-size: 8pt;line-height: 11pt;}
 p.para0 {margin-left: 0.2cm;}
 p.para1 {margin-left: 1cm;}
 p.para2 {margin-left: 2cm;}
@@ -148,7 +148,6 @@ td.cmh {color: #00853F;}
   border: 0px solid #cccccc;
   border-collapse: collapse;
 }
-
 th.sft {
   text-align: left;
   vertical-align: bottom;
@@ -160,13 +159,12 @@ th.sft {
   color: black;
   background-color: transparent;
 }
-
 td.sft { 
   padding-top: 7px;
   background-color: transparent;
 }
 
-td.bbot {
+td.bbot { 
   border-bottom: 1px solid #666666;
   vertical-align: middle;
   padding-top: 1px;
@@ -203,6 +201,13 @@ table.settings {
   empty-cells: show;
 }
 
+.extrainfo {
+   display: none;
+   font-family: Verdana, Arial, Helvetica, sans-serif;
+   font-size: 7pt;
+   color: black;
+}
+
 table.bar {
   border: 1px solid #666666;
   border-collapse: collapse;
@@ -229,11 +234,3 @@ td.white {
 }
 
 .border		    { border: 1px solid #cccccc; }
-
-.extrainfo {
-   display: none;
-   font-family: Verdana, Arial, Helvetica, sans-serif;
-   font-size: 7pt;
-   color: black;
-}
-

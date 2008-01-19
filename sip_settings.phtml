@@ -1,12 +1,6 @@
 <?
 include("./global.inc");
 
-if (is_readable("local/header.phtml")) {
-    include("local/header.phtml");
-} else {
-    include("header.phtml");
-}
-
 if ($_REQUEST['reseller']) {
 	page_open(
             array("sess" => "CDRTool_Session",
@@ -32,6 +26,12 @@ if ($_REQUEST['reseller']) {
 }
 
 $title="SIP settings page";
+if (is_readable("local/header.phtml")) {
+    include("local/header.phtml");
+} else {
+    include("header.phtml");
+}
+
 
 //$verbose=1;
 
