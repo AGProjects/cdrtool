@@ -2,6 +2,12 @@
 include("global.inc");
 set_time_limit(1800);
 
+page_open(
+    array("sess" => "CDRTool_Session",
+          "auth" => "CDRTool_Auth",
+          "perm" => "CDRTool_Perm"
+          ));
+
 $export      = $_REQUEST['export'];
 $SERVER_NAME = $_SERVER['SERVER_NAME'];
 
@@ -28,12 +34,6 @@ if (!$export) {
     Header("Content-type: text/plain");
     Header("Content-Disposition: inline; filename=CDR.txt");
 }
-
-page_open(
-    array("sess" => "CDRTool_Session",
-          "auth" => "CDRTool_Auth",
-          "perm" => "CDRTool_Perm"
-          ));
 
 $perm->check("callsearch");
 

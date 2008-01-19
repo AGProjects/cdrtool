@@ -41,7 +41,6 @@ class CDRTool_Auth extends Auth {
     $password    = $_POST["password"];
     $challenge   = $_POST["challenge"];
     $response    = $_POST["response"];
-    $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
 
     $max_login_attempts=5;
 
@@ -50,7 +49,7 @@ class CDRTool_Auth extends Auth {
 		$challenge = md5(uniqid($this->magic));
 	}
 
-	$query="select * from spam where ip = '$REMOTE_ADDR'";
+	$query=sprintf("select * from spam where ip = '%s'",$_SERVER['REMOTE_ADDR']);
     $this->db->query($query);
 
     if ($this->db->num_rows()) {
@@ -72,16 +71,16 @@ class CDRTool_Auth extends Auth {
             unset($spam_login_tries);
         }
     }
-           
+
 	if ($spam_login_tries < $max_login_attempts) {
         $title="Login";
-        if (is_readable("local/header.phtml")) {
-            include("local/header.phtml");
+        if (is_readable("$CDRTool[Path]/local/header.phtml")) {
+            include("$CDRTool[Path]/local/header.phtml");
         } else {
-            include("header.phtml");
+            include("$CDRTool[Path]/header.phtml");
         }
+
         $layout = new pageLayoutLocal();
-        //$layout->showHeader();
         $layout->showLoginForm($this);
         $layout->showFooter();
 
@@ -90,16 +89,16 @@ class CDRTool_Auth extends Auth {
             $log_time=Date("Y-m-d H:i:s",time());
             $log_query=sprintf("insert into log (date,login,ip,description,results)
             values ('%s','%s','%s','%s attempts to wrong login', 'IP blocked until %s')",
-            $log_time,addslashes($username),$REMOTE_ADDR,$spam_login_tries,$next_try);
+            $log_time,addslashes($username),$_SERVER['REMOTE_ADDR'],$spam_login_tries,$next_try);
 
             $this->db->query($log_query);
 
         }
 
         $new_stamp=time();		
-        $query="update spam
+        $query=sprintf("update spam
         set tries = tries + 1
-        where ip =  '$REMOTE_ADDR' ";
+        where ip =  '%s' ",$_SERVER['REMOTE_ADDR']);
         $this->db->query($query);
     
         print "
@@ -834,7 +833,9 @@ class pageLayout {
 		$this->hasAGProjectslogo=1;
 
         print "
-        <center>
+        <table border=0 align=center>
+        <tr>
+        <td>
         <a href=http://ag-projects.com target=agprojects><img src=images/CDRTool.gif border=0></a>
         <p>
         <h2>Terms and conditions</h2>
@@ -842,15 +843,19 @@ class pageLayout {
         <form action=callsearch.phtml method=post>
         <textarea name=legal rows=20 cols=60 wrap=virtual readonly=yes>$legalNotice</textarea>
         <p>
-        You are logged in as $loginname ";
-        if ($loginName) print "($loginName). ";
-        print "<p>
+        You are logged in as $loginname
+
+        <p>
         If you agree with the Terms and Conditions, <br>
         press on <b>I agree</b> button to continue.
         <p>
         <input type=submit value=\"I agree\">
         <input type=hidden name=previous_page value=license_page>
         </form>
+        </td>
+        </tr>
+        </table>
+
         ";
     }   
  
@@ -860,7 +865,7 @@ class pageLayout {
             $thisYear=date("Y",time());
             print "
             <p>
-            <table width=100% border=0>
+            <table width=100% border=0 align=center>
             <tr>
             <td align=right>
             <a href=http://ag-projects.com target=agprojects><img src=images/PoweredbyAGProjects.gif border=0>

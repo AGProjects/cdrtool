@@ -1,11 +1,9 @@
 <?
 include("./global.inc");
-page_open(
-            array("sess" => "CDRTool_Session",
-                  "auth" => "CDRTool_Auth",
-                  "perm" => "CDRTool_Perm"));
 
-$perm->check("rates");
+$export= $_REQUEST['export'];
+$table = $_REQUEST['table'];
+
 $table_fname=array(
                    "destinations"          => "destinations.csv",
                    "billing_customers"     => "customers.csv",
@@ -16,6 +14,31 @@ $table_fname=array(
                    "billing_enum_tlds"     => "enumtld.csv"
                    );
 
+if (!$export) {
+    $title="Rating tables";
+    if (is_readable("local/header.phtml")) {
+        include("local/header.phtml");
+    } else {
+        include("header.phtml");
+    }
+
+    $maxrowsperpage=15;
+} else {
+    if ($table_fname[$table]) {
+        Header("Content-type: text/plain");
+        Header("Content-Disposition: inline; filename=$table_fname[$table]");
+        $maxrowsperpage=1000000;
+    } else {
+        exit ;
+    }
+}
+
+page_open(
+            array("sess" => "CDRTool_Session",
+                  "auth" => "CDRTool_Auth",
+                  "perm" => "CDRTool_Perm"));
+
+$perm->check("rates");
 
 $PHP_SELF           = $_SERVER['PHP_SELF'];
 $REMOTE_ADDR        = $_SERVER['REMOTE_ADDR'];
@@ -54,27 +77,6 @@ if ($CDRTool['rating']['delimiter']) {
     $delimiter=$CDRTool['rating']['delimiter'];
 } else {
 	$delimiter=",";
-}
-
-if (!$export) {
-    $title="Rating tables";
-    if (is_readable("local/header.phtml")) {
-        include("local/header.phtml");
-    } else {
-        include("header.phtml");
-    }
-	$maxrowsperpage=15;
-} else {
-    if ($table_fname[$table]) {
-        Header("Content-type: text/plain");
-        Header("Content-Disposition: inline; filename=$table_fname[$table]");
-        header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-        header("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
-        header("Pragma: no-cache");
-        $maxrowsperpage=1000000;
-    } else {
-        exit ;
-    }
 }
 
 include("rating_lib.phtml");
@@ -644,8 +646,8 @@ $rows=$db->Record[0];
 
 if (!$export) {
     print "
-    <center>
-    <p>
+    <table border=0 align=center>
+    <tr><td>
     ";
     
     if ($rows == 0) {
@@ -678,7 +680,9 @@ if (!$export) {
     print " | <a href=doc/RATING.txt target=rating_help>Rating documentation</a>";
 
     print "
-    </center>
+    </td>
+    </tr>
+    </table>
     ";
 }
 

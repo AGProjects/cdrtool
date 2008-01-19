@@ -11,6 +11,9 @@
 */
 
 include("./global.inc");
+set_time_limit(600);
+
+$title="SIP and ENUM provisioning";
 
 if (is_readable("local/header.phtml")) {
     include("local/header.phtml");
@@ -21,11 +24,9 @@ if (is_readable("local/header.phtml")) {
 page_open(
             array("sess" => "CDRTool_Session",
                   "auth" => "CDRTool_Auth",
-                  "perm" => "CDRTool_Perm"));
+                  "perm" => "CDRTool_Perm")
+         );
 
-$title="SIP and ENUM provisioning";
-
-set_time_limit(600);
 
 $perm->check("provisioning");
 

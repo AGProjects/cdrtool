@@ -1,6 +1,7 @@
 <?
 include("global.inc");
-
+include("header.phtml");
+    
 $errorReporting = (E_ALL & ~(E_NOTICE | E_WARNING));
 //$errorReporting = 1; // temporary until warnings are fixed
 error_reporting($errorReporting);
@@ -39,6 +40,7 @@ if ($authorize==1) {
 
 #$verbose=1;
 require("cdrlib.phtml");
+
 $callid      = $_REQUEST['callid'];
 $fromtag     = $_REQUEST['fromtag'];
 $proxyIP     = $_REQUEST['proxyIP'];
@@ -47,8 +49,6 @@ $cdr_source  = $_REQUEST['cdr_source'];
 if (!$authorize || in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
 
     $title=sprintf("SIP session %s",$callid);
-    include("header.phtml");
-    
     $sipTrace = new SIP_trace($cdr_source);
     $sipTrace->show($callid,$fromtag,$proxyIP);
 

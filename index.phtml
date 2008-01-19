@@ -1,8 +1,4 @@
 <?
-$errorReporting = (E_ALL & ~E_NOTICE);
-$errorReporting = 1;
-error_reporting($errorReporting);
-
 include("global.inc");
 
 if ($DATASOURCES) {
@@ -27,12 +23,12 @@ if ($DATASOURCES) {
         }
     }
 
-    if (is_readable("local/header.phtml")) {
-        include("local/header.phtml");
-    } else {
-        include("header.phtml");
-    }
-    
+	if (is_readable("local/header.phtml")) {
+		include_once("local/header.phtml");
+	} else {
+		include_once("header.phtml");
+	}
+
     $layout = new pageLayoutLocal();
     $layout->showHeader();
     $layout->showLegalNotice();
@@ -40,10 +36,6 @@ if ($DATASOURCES) {
     page_close();
 
 } else {
-    $errorReporting = (E_ALL & ~E_NOTICE);
-    $errorReporting = 1;
-    error_reporting($errorReporting);
-
     $Setup = new SETUP ();
     $Setup->showIntro();
 }

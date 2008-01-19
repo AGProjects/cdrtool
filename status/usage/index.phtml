@@ -1,5 +1,9 @@
 <?
 include("../../global.inc");
+
+$title='Platform usage';
+
+include("../../header.phtml");
 page_open(
      array("sess" => "CDRTool_Session",
            "auth" => "CDRTool_Auth",
@@ -19,7 +23,6 @@ if (strlen($CDRTool['filter']['domain'])) {
     $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
 }
 
-include("../../header.phtml");
 ?>
 
 <h2>Consolidated SIP platform usage statistics</h2>

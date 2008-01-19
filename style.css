@@ -220,3 +220,10 @@ td.white {
 }
 
 .border		    { border: 1px solid #cccccc; }
+
+.extrainfo {
+   display: none;
+   font-family: Verdana, Arial, Helvetica, sans-serif;
+   font-size: 7pt;
+   color: black;
+}
