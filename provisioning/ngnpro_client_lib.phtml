@@ -1,5 +1,4 @@
 <?
-
 /*
     Copyright (c) 2007 AG Projects
     http://ag-projects.com
@@ -144,7 +143,7 @@ class SoapEngine {
                                            'name'         => 'SIP accounts',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'     => 'sip',
-                                           'description'  => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use % to match a pattern. '
+                                           'description'  => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use % to match a pattern. ',
                                            ),
                         'enum_numbers'   => array(
                                            'records_class' => 'EnumMappings',
@@ -179,7 +178,8 @@ class SoapEngine {
                                            'name'         => 'Trusted peers',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'     => 'sip',
-                                           'description'  => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. '
+                                           'description'  => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. ',
+                                           'resellers_only' => true
                                            ),
                         'enum_ranges'    => array(
                                            'records_class' => 'EnumRanges',
@@ -193,21 +193,24 @@ class SoapEngine {
                                            'name'         => 'PSTN groups',
                                            'soap_class'    => 'WebService_NGNPro_NetworkPort',
                                            'category'     => 'pstn',
-                                           'description'  => 'Manage groups of gateways used to call to the PSTN. You must add individual gateways to each group. '
+                                           'description'  => 'Manage groups of gateways used to call to the PSTN. You must add individual gateways to each group. ',
+                                           'resellers_only' => true
                                            ),
                         'pstn_gateways'  => array(
                                            'records_class' => 'Gateways',
                                            'name'         => 'PSTN gateways',
                                            'soap_class'    => 'WebService_NGNPro_NetworkPort',
                                            'category'     => 'pstn',
-                                           'description'  => 'Manage gateways used to call to the PSTN. Set the IP address and IP protocol. '
+                                           'description'  => 'Manage gateways used to call to the PSTN. Set the IP address and IP protocol. ',
+                                           'resellers_only' => true
                                            ),
                         'pstn_routes'    => array(
                                            'records_class' => 'Routes',
                                            'name'         => 'PSTN routes',
                                            'soap_class'    => 'WebService_NGNPro_NetworkPort',
                                            'category'     => 'pstn',
-                                           'description'  => 'Assign gateways groups to PSTN prefixes. Use % to match a pattern. '
+                                           'description'  => 'Assign gateways groups to PSTN prefixes. Use % to match a pattern. ',
+                                           'resellers_only' => true
                                            )
                         );
 
@@ -678,8 +681,7 @@ class Records {
 
         $this->getResellers();
         $this->getCustomers();
-
-        $this->getLoginProperties();
+		$this->getLoginAccount();
 
         if (strlen($this->SoapEngine->sip_settings_page)) {
         	$this->sip_settings_page=$this->SoapEngine->sip_settings_page;
@@ -691,21 +693,32 @@ class Records {
 
 
     function showEngineSelection() {
-        $selected_soapEngine[$this->SoapEngine->service]='selected';
+    $selected_soapEngine[$this->SoapEngine->service]=' selected';
 
-        printf ("<select name=service onChange=\"document.engines.submit.disabled = true; location.href = '%s&service=' + this.options[this.selectedIndex].value\">",$this->url);
+    printf("<script type=\"text/JavaScript\">\n");
+	printf("function jumpMenu(targ,selObj,restore){\n");
+	printf("\teval(targ+\".location='\"+selObj.options[selObj.selectedIndex].value+\"'\");\n");
+	printf("\tif (restore) selObj.selectedIndex=0;\n");
+	printf("}\n");
+	printf("</script>\n");
+
+	printf("<select name=\"service\" onChange=\"jumpMenu('parent',this,0)\">");
+
         $j=1;
         foreach (array_keys($this->SoapEngine->soapEngines) as $_engine) {
         	if ($this->SoapEngine->skip[$_engine]) continue;
 
-        	if ($j > 1) printf ("<option value=''>--------");
+        	if ($j > 1) printf ("<option value=''>--------\n");
             foreach (array_keys($this->SoapEngine->ports) as $_port) {
                 $idx=$_port.'@'.$_engine;
                 if (in_array($_port,$this->SoapEngine->skip_engines[$_engine])) continue;
                 if (count($this->SoapEngine->allowedPorts[$_engine]) > 0 && !in_array($_port,$this->SoapEngine->allowedPorts[$_engine])) continue;
-                if ($_port == 'customers' && $this->SoapEngine->soapEngines[$_engine]['version'] < 2) continue;
-                printf ("<option value='%s@%s' %s>%s@%s",$_port,$_engine,$selected_soapEngine[$idx],$this->SoapEngine->ports[$_port]['name'],$this->SoapEngine->soapEngines[$_engine]['name']);
+                if ($_port == 'customers' && $this->SoapEngine->soapEngines[$_engine]['version'] <= 1) continue;
+            	if (!$this->loginAccount->resellerActive && $this->SoapEngine->ports[$_port]['resellers_only'] ) continue;
+
+				printf ("<option value=\"%s&service=%s@%s\"%s>%s@%s\n",$this->url,$_port,$_engine,$selected_soapEngine[$idx],$this->SoapEngine->ports[$_port]['name'],$this->SoapEngine->soapEngines[$_engine]['name']);
             }
+
             $j++;
         }
         printf ("</select>");
@@ -804,7 +817,7 @@ class Records {
         Order";
         $this->showSortForm();
 
-        $this->printHiddenFormElements();
+        $this->printHiddenFormElements('skipServiceElement');
 
         print "
         </td>
@@ -899,8 +912,10 @@ class Records {
 
     }
 
-    function printHiddenFormElements () {
-        printf("<input type=hidden name=service value='%s'>",$this->SoapEngine->service);
+    function printHiddenFormElements ($skipServiceElement='') {
+        if (!$skipServiceElement) {
+    		printf("<input type=hidden name=service value='%s'>",$this->SoapEngine->service);
+        }
 
         if ($this->adminonly) {
         	printf("<input type=hidden name=adminonly value='%s'>",$this->adminonly);
@@ -950,11 +965,11 @@ class Records {
     }
 
     function getCustomers() {
-    	if (!$this->version <= 1 ) return;
-
-        if (!$this->filters['reseller']) {
-            return;
+        if (!$this->SoapEngine->customer_engine) {
+            dprint ("No customer_engine available");
+        	return true;
         }
+        if (!$this->filters['reseller']) return;
 
         // Filter
         $filter=array('reseller'=>intval($this->filters['reseller']));
@@ -1007,11 +1022,14 @@ class Records {
     }
 
     function getResellers() {
-    	if (!$this->version <= 1 ) return;
-        if (!$this->adminonly) {
-        	return;
+        if (!$this->SoapEngine->customer_engine) {
+            dprint ("No customer_engine available");
+        	return true;
         }
+
+        if (!$this->adminonly) return;
         // Filter
+
         $filter=array('reseller'=>intval($this->filters['reseller']));
 
         $range=array('start' => 0,
@@ -1063,9 +1081,57 @@ class Records {
             	$i++;
             }
 
-            //print_r($this->resellers);
+            dprint_r($this->resellers);
             return true;
         }
+    }
+
+    function getLoginAccount() {
+        if (!$this->SoapEngine->customer_engine) {
+            dprint ("No customer_engine available");
+        	return true;
+        }
+
+        if (!$this->customer) {
+            dprint ("No customer available");
+        	return true;
+        }
+
+        $filter=array('customer'=>intval($this->customer));
+
+        $range=array('start' => 0,
+                     'count' => 100
+                     );
+
+        // Order
+        $orderBy = array('attribute' => 'customer',
+                         'direction' => 'ASC'
+                         );
+
+        // Compose query
+        $Query=array('filter'     => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+
+        // Insert credetials
+        $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
+
+        // Call function
+        $result     = $this->SoapEngine->soapclientCustomers->getResellers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            $this->loginAccount=$result->accounts[0];
+            $this->loginProperties=$this->loginAccount['properties'];
+        }
+
     }
 
     function showCustomerForm($name='customer_filter') {
@@ -1680,6 +1746,7 @@ class Domains extends Records {
             print "
 	        </td>
             ";
+
             $this->printHiddenFormElements();
 
             print "
@@ -1898,6 +1965,7 @@ class Domains extends Records {
 
         printf ("<input type=hidden name=domain_filter value='%s'",$domain->domain);
         $this->printFiltersToForm();
+
         $this->printHiddenFormElements();
 
         print "</form>";
@@ -2391,7 +2459,7 @@ class SipAccounts extends Records {
         if (count($this->allowedDomains) > 0) {
             print "@<select name=domain>";
             foreach ($this->allowedDomains as $_domain) {
-                printf ("<option value=%s %s>%s\n",$_domain,$selected_domain[$_domain],$_domain);
+                printf ("<option value='%s' %s>%s\n",$_domain,$selected_domain[$_domain],$_domain);
             }
             print "</select>";
 
@@ -3086,7 +3154,7 @@ class SipAliases extends Records {
             if (count($this->allowedDomains) > 0) {
                 print "@<select name=domain>";
                 foreach ($this->allowedDomains as $_domain) {
-                    printf ("<option value=%s %s>%s\n",$_domain,$selected_domain[$_domain],$_domain);
+                    printf ("<option value='%s' %s>%s\n",$_domain,$selected_domain[$_domain],$_domain);
                 }
                 print "</select>";
     
@@ -4573,7 +4641,7 @@ class EnumMappings extends Records {
         foreach ($this->ranges as $_range) {
         	$rangeId=$_range['prefix'].'@'.$_range['tld'];
         	//printf ("<option value=%s %s>%s +%s",$rangeId,$selected_range[$rangeId],$_range['tld'],$_range['prefix']);
-            printf ("<option value=%s %s>+%s",$rangeId,$selected_range[$rangeId],$_range['prefix']);
+            printf ("<option value='%s' %s>+%s",$rangeId,$selected_range[$rangeId],$_range['prefix']);
         }
 
         print "</select>";
@@ -4714,7 +4782,7 @@ class EnumMappings extends Records {
 
         foreach ($this->ranges as $_range) {
         	$rangeId=$_range['prefix'].'@'.$_range['tld'];
-        	printf ("<option value=%s %s>%s +%s",$rangeId,$selected_range[$rangeId],$_range['tld'],$_range['prefix']);
+        	printf ("<option value='%s' %s>%s +%s",$rangeId,$selected_range[$rangeId],$_range['tld'],$_range['prefix']);
         }
 
         print "</select>";
@@ -9092,7 +9160,7 @@ class recordGenerator extends SoapEngine {
             print "<select name=range>";
             foreach ($this->enumRecords->ranges as $_range) {
                 $rangeId=$_range['prefix'].'@'.$_range['tld'];
-                printf ("<option value=%s %s>+%s under %s",$rangeId,$selected_range[$rangeId],$_range['prefix'],$_range['tld']);
+                printf ("<option value='%s' %s>+%s under %s",$rangeId,$selected_range[$rangeId],$_range['prefix'],$_range['tld']);
             }
             print "</select>";
         }
