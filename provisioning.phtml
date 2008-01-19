@@ -10,22 +10,20 @@
     on a remote NGN-Pro server
 */
 
-header("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
-header("Pragma: no-cache");
-
 include("./global.inc");
-page_open(
-            array("sess" => "CDRTool_Session",
-                  "auth" => "CDRTool_Auth",
-                  "perm" => "CDRTool_Perm"));
-
-$title="SIP and ENUM provisioning";
 
 if (is_readable("local/header.phtml")) {
     include("local/header.phtml");
 } else {
     include("header.phtml");
 }
+
+page_open(
+            array("sess" => "CDRTool_Session",
+                  "auth" => "CDRTool_Auth",
+                  "perm" => "CDRTool_Perm"));
+
+$title="SIP and ENUM provisioning";
 
 set_time_limit(600);
 

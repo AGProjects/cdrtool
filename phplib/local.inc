@@ -941,4 +941,20 @@ class E164 {
     }
 }
 
+function RandomString($len=11) {
+    $alf=array("a","b","c","d","e","f",
+           "h","i","j","k","l","m",
+           "n","p","r","s","t","w",
+           "x","y","1","2","3","4",
+           "5","6","7","8","9");
+    $i=0;
+    while($i < $len) {
+        srand((double)microtime()*1000000);
+        $randval = rand(0,28);
+        $string="$string"."$alf[$randval]";
+        $i++;
+    }
+    return $string;
+}
+
 ?>

@@ -4,9 +4,9 @@ body {
 	font-size: 10pt;
 	font-style: normal;
 }
-a:link {color: #3366FF; text-decoration:none; font-weight: normal;}
+a:link {text-decoration:none; font-weight: normal;}
 a:active {color:red; font-weight: normal;}
-a:visited {color:#3366FF; text-decoration:none; font-weight: normal;}
+a:visited {text-decoration:none; font-weight: normal;}
 a:hover {color: red;}
 td.mh4 {color: #DA70D6;font-size: 7.5pt}
 a.mh4 {color: #DA70D6;text-decoration:none;}
@@ -99,7 +99,7 @@ h4 {font-family: Verdana, Arial, Helvetica, sans-serif;
 .sel2 {color: #FF7F50;font-size: 7.5pt;}
 .let {color: blue;font-size: 8pt;font-weight: normal;}
 .right {text-align: right;}
-p {font-size: 8pt;line-height: 11pt;}
+p {text-align: justify;font-size: 8pt;line-height: 11pt;}
 p.para0 {margin-left: 0.2cm;}
 p.para1 {margin-left: 1cm;}
 p.para2 {margin-left: 2cm;}
@@ -164,13 +164,6 @@ td.sft {
   background-color: transparent;
 }
 
-td.bbot { 
-  border-bottom: 1px solid #666666;
-  vertical-align: middle;
-  padding-top: 1px;
-  background-color: transparent;
-}
-
 .hidden {
   display: none;
   font-family: Verdana, Arial, Helvetica, sans-serif;
@@ -199,13 +192,6 @@ td.borderns {
 table.settings {
   border: none;
   empty-cells: show;
-}
-
-.extrainfo {
-   display: none;
-   font-family: Verdana, Arial, Helvetica, sans-serif;
-   font-size: 7pt;
-   color: black;
 }
 
 table.bar {

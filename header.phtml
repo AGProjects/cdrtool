@@ -1,10 +1,16 @@
 <?
-printf("<HTML>
+header("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+header("Expires: " . gmdate("D, d M Y H:i:s") . " GMT");
+header("ETag: ",randomstring());
+
+printf("
+<HTML>
 <HEAD>
   <TITLE>CDRTool - $title</TITLE>
   <META NAME=Description CONTENT=
-  \"CDR mediation for Voice over IP (SER, Asterisk and Cisco)\">
-  <META NAME=Keywords CONTENT=\"Asterisk, SIP Express router, Cisco\">
+  \"CDR mediation and rating engine for OpenSER\">
+  <META NAME=Keywords CONTENT=\"OpenSER, Asterisk, SIP Express router, Cisco\">
   <LINK REL=\"SHORTCUT ICON\" HREF=\"images/cdrtool.ico\">
   <LINK REL=\"icon\" HREF=\"images/cdrtool.ico\" TYPE=\"image/ico\">
   <SCRIPT language=\"JavaScript1.2\" src=\"main.js\" type=\"text/javascript\"></SCRIPT>
