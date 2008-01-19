@@ -679,8 +679,10 @@ class Records {
 
       	$this->filters['customer'] = trim($_REQUEST['customer_filter']);
 
-        $this->getResellers();
+        //$this->getResellers();
+
         $this->getCustomers();
+
 		$this->getLoginAccount();
 
         if (strlen($this->SoapEngine->sip_settings_page)) {
