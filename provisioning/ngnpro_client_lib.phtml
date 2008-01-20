@@ -7442,7 +7442,7 @@ class Customers extends Records {
         ";
         $this->showSortForm();
 
-        $this->printHiddenFormElements();
+        $this->printHiddenFormElements('skipServiceElement');
 
         print "
         </td>
@@ -7477,7 +7477,7 @@ class Customers extends Records {
                      );
 
         // Order
-        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'customer';
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
         if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
 
         $orderBy = array('attribute' => $this->sorting['sortBy'],
