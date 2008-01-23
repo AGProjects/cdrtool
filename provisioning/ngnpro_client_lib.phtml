@@ -2565,10 +2565,16 @@ class SipAccounts extends Records {
         }
 
 		if (strlen($name_els[1])) {
-            $lastName=$name_els[1];
+            $j=1;
+            while ($j < count($name_els)) {
+            	$lastName .= $name_els[$j].' ';
+                $j++;
+            }
         } else {
             $lastName=$username;
         }
+
+        $lastName=trim($lastName);
 
         if (strlen($dictionary['timezone'])) {
             $timezone=$dictionary['timezone'];
@@ -4265,11 +4271,11 @@ class EnumMappings extends Records {
                     <td><b>Phone number</b></td>
                     <td><b>TLD</b></td>
                     <td><b>Info</b></td>
+                    <td><b>Owner</b></td>
                     <td><b>Srv</b></td>
                     <td><b>Map to</b></td>
                     <td><b>TTL</b></td>
                     <td><b>Prio</b></td>
-                    <td><b>Owner</b></td>
                     <td><b>Change date</b></td>
                     <td><b>Actions</b></td>
                     ";
@@ -4388,11 +4394,11 @@ class EnumMappings extends Records {
                                 $number->id->number,
                                 $number->id->tld,
                                 $number->info,
+                                $_owner_url,
                                 ucfirst($_mapping->type),
                                 $_mapping->mapto,
                                 $_mapping->ttl,
                                 $_mapping->priority,
-                                $_owner_url,
                                 $number->changeDate,
                                 $_url,
                                 $actionText
@@ -4416,11 +4422,11 @@ class EnumMappings extends Records {
                                 $number->id->number,
                                 $number->id->tld,
                                 $number->info,
+                                $number->owner,
                                 ucfirst($_mapping->type),
                                 $_mapping->mapto,
                                 $_mapping->ttl,
                                 $_mapping->priority,
-                                $number->owner,
                                 $_url,
                                 $actionText
                                 );
@@ -4434,11 +4440,11 @@ class EnumMappings extends Records {
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td>%s</td>
-                                <td>%s</td>
-                                <td>%s</td>
-                                <td>%s</td>
                                 <td></td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
                                 <td>%s</td>
                                 <td><a href=%s>%s</a></td>
                                 </tr>",
@@ -4458,10 +4464,10 @@ class EnumMappings extends Records {
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td>%s</td>
-                                <td>%s</td>
-                                <td>%s</td>
                                 <td></td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
                                 <td>%s</td>
                                 <td><a href=%s>%s</a></td>
                                 </tr>",
@@ -4646,12 +4652,11 @@ class EnumMappings extends Records {
 
     function showSeachFormCustom() {
 
-        print " Number<select name=range_filter><option>";
+        print " <select name=range_filter><option>";
         $selected_range[$_REQUEST['range_filter']]='selected';
         foreach ($this->ranges as $_range) {
         	$rangeId=$_range['prefix'].'@'.$_range['tld'];
-        	//printf ("<option value=%s %s>%s +%s",$rangeId,$selected_range[$rangeId],$_range['tld'],$_range['prefix']);
-            printf ("<option value='%s' %s>+%s",$rangeId,$selected_range[$rangeId],$_range['prefix']);
+            printf ("<option value='%s' %s>%s +%s",$rangeId,$selected_range[$rangeId],$_range['tld'],$_range['prefix']);
         }
 
         print "</select>";
@@ -5188,17 +5193,26 @@ class EnumMappings extends Records {
 
     function showRecord($number) {
 
-        print "<table border=0 cellpadding=10>";
-        print "
-        <tr>
-        <td valign=top>
-        <table border=0>";
+        print "<table border=0>";
+        print "<tr>";
+        print "<td>";
+        print "<h3>Number</h3>";
+        print "</td><td>";
+        print "<h3>Mappings</h3>";
+        print "</td>";
+        print "</tr>";
+
+        print "<tr>";
+        print "<td valign=top>";
+
+        print "<table border=0>";
+        print "<tr>";
+        print "<td>Property</td>";
+        print "<td>Value</td>";
+        print "</tr>";
+
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
-
-        print "<tr>
-        <td colspan=2><input type=submit value=Update>
-        </td></tr>";
 
         printf ("<tr><td class=border>DNS name</td><td class=border>%s</td></td>",
         $this->tel2enum($number->id->number,$number->id->tld));
@@ -5233,13 +5247,92 @@ class EnumMappings extends Records {
 
         printf ("<input type=hidden name=tld_filter value='%s'",$number->id->tld);
         printf ("<input type=hidden name=number_filter value='%s'",$number->id->number);
+
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
 
-        print "</form>";
         print "
         </table>
         ";
+
+        print "</td><td valign=top>";
+
+        print "<table border=0>";
+        print "<tr>";
+        print "<td></td>";
+        print "<td>Type</td>";
+        print "<td>Map to</td>";
+        print "<td>TTL</td>";
+        print "<td>Priority</td>";
+        print "</tr>";
+
+        foreach ($number->mappings as $_mapping) {
+            $j++;
+        	unset($selected_type);
+            print "<tr>";
+            print "<td>$j</td>";
+            $selected_type[$_mapping->type]='selected';
+
+            printf ("
+            <td class=border><select name=mapping_type[]>");
+            reset($this->NAPTR_services);
+	        while (list($k,$v) = each($this->NAPTR_services)) {
+    	        printf ("<option value='%s' %s>%s",$k,$selected_type[$k],$this->NAPTR_services[$k]['webname']);
+        	}
+
+            print "
+            </select>
+            </td>";
+
+            printf ("
+            <td class=border><input name=mapping_mapto[] size=30 value='%s'></td>
+            <td class=border><input name=mapping_ttl[] size=6 value='%s'></td>
+            <td class=border><input name=mapping_priority[] size=6 value='%s'></td>",
+            $_mapping->mapto,
+            $_mapping->ttl,
+            $_mapping->priority
+            );
+            print "</tr>";
+        }
+
+        $j++;
+        print "<tr>";
+        print "<td></td>";
+
+        printf ("
+        <td class=border><select name=mapping_type[]>");
+        reset($this->NAPTR_services);
+        while (list($k,$v) = each($this->NAPTR_services)) {
+            printf ("<option value='%s'>%s",$k,$this->NAPTR_services[$k]['webname']);
+        }
+
+        print "
+        </select>
+        </td>";
+
+        printf ("
+        <td class=border><input name=mapping_mapto[] size=30></td>
+        <td class=border><input name=mapping_ttl[] size=6></td>
+        <td class=border><input name=mapping_priority[] size=6></td>"
+        );
+
+        print "</tr>";
+
+        print "</table>";
+
+        print "</td>";
+        print "</tr>";
+
+        print "
+        <tr>
+        <td>
+        <input type=submit value=Update>
+        </td>
+        </tr>
+        ";
+        print "</form>";
+        print "</table>";
+
     }
 
     function getRecord($enumid) {
@@ -5275,6 +5368,7 @@ class EnumMappings extends Records {
 
         $new_mappings=array();
 
+        /*
         foreach ($number->mappings as $_mapping) {
             foreach (array_keys($this->mapping_fields) as $field) {
                 if ($this->mapping_fields[$field] == 'integer') {
@@ -5286,9 +5380,44 @@ class EnumMappings extends Records {
 
             $new_mappings[]=$new_mapping;
         }
+        */
+
+        $j=0;
+        while ($j< count($_REQUEST['mapping_type'])) {
+            $mapto=$_REQUEST['mapping_mapto'][$j];
+            $type=$_REQUEST['mapping_type'][$j];
+            if (strlen($mapto)) {
+                if (preg_match("/^([a-z0-9]+:\/\/)(.*)$/i",$mapto,$m)) {
+                    $_scheme = $m[1];
+                    $_value  = $m[2];
+                } else if (preg_match("/^([a-z0-9]+:)(.*)$/i",$mapto,$m)) {
+                    $_scheme = $m[1];
+                    $_value  = $m[2];
+                } else {
+                    $_scheme = '';
+                    $_value  = $mapto;
+                }
+
+        		reset($this->NAPTR_services);
+                if (!$_scheme || !in_array($_scheme,$this->NAPTR_services[trim($type)]['schemas'])) {
+                    $_scheme=$this->NAPTR_services[trim($type)]['schemas'][0];
+                }
+        
+                $mapto=$_scheme.$_value;
+    
+                $new_mappings[]=array('type'     => $type,
+                                       'ttl'      => intval($_REQUEST['mapping_ttl'][$j]),
+                                       'mapto'    => $mapto,
+                                       'priority' => intval($_REQUEST['mapping_priority'][$j])
+                                       );
+            }
+
+            $j++;
+        }
 
         $number->mappings=$new_mappings;
 
+        print_r($new_mappings2);
         if (!is_array($number->mappings)) $number->mappings=array();
 
         foreach (array_keys($this->Fields) as $item) {
@@ -8951,7 +9080,7 @@ class recordGenerator extends SoapEngine {
             }
         }
 
-		//dprint_r($this->template);
+		dprint_r($this->template);
         $i=0;
 
         while ($i < $this->template['nr_records']) {
@@ -9082,7 +9211,7 @@ class recordGenerator extends SoapEngine {
         list($rangePrefix,$tld)=explode('@',trim($_REQUEST['range']));
 
 		$this->template['range']    = trim($_REQUEST['range']);
-        $this->template['rangePrefix']   = intval($rangePrefix);
+        $this->template['rangePrefix'] = $rangePrefix;
         $this->template['tld']      = $tld;
         $this->template['quota']    = intval($_REQUEST['quota']);
         $this->template['owner']    = intval($owner);
@@ -9108,7 +9237,7 @@ class recordGenerator extends SoapEngine {
         } else {
             // we have a digit boundry
             $this->template['firstNumber'] = $this->template['rangePrefix'].str_pad($start,$this->template['digitsAfterRange'],'0');
-            $this->template['lastNumber']  = sprintf("%.0f", $this->template['firstNumber'] + pow(10,$this->template['digitsAfterRange']-strlen($this->template['add_prefix'])));
+            $this->template['lastNumber']  = sprintf("%.0f", $this->template['firstNumber'] + pow(10,$this->template['digitsAfterRange']-strlen($this->template['add_prefix'])) - 1);
             $this->template['maxNumbers']  = pow(10,$this->template['digitsAfterRange']-strlen($this->template['add_prefix']));
         }
 
