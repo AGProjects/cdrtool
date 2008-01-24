@@ -4194,6 +4194,8 @@ class EnumMappings extends Records {
             $_tld_filter=trim($_REQUEST['tld_filter']);
         }
 
+        $_number_filter=ltrim($_number_filter,'+');
+
         $this->filters   = array('number'       => $_number_filter,
                                  'tld'          => $_tld_filter,
                                  'range'        => trim($_REQUEST['range_filter']),
@@ -4272,7 +4274,7 @@ class EnumMappings extends Records {
                     <td><b>TLD</b></td>
                     <td><b>Info</b></td>
                     <td><b>Owner</b></td>
-                    <td><b>Srv</b></td>
+                    <td><b>Type</b></td>
                     <td><b>Map to</b></td>
                     <td><b>TTL</b></td>
                     <td><b>Prio</b></td>
@@ -4284,7 +4286,7 @@ class EnumMappings extends Records {
                     <td><b>Phone number</b></td>
                     <td><b>TLD</b></td>
                     <td><b>Info</b></td>
-                    <td><b>Srv</b></td>
+                    <td><b>Type</b></td>
                     <td><b>Map to</b></td>
                     <td><b>TTL</b></td>
                     <td><b>Prio</b></td>
@@ -4652,6 +4654,7 @@ class EnumMappings extends Records {
 
     function showSeachFormCustom() {
 
+        /*
         print " <select name=range_filter><option>";
         $selected_range[$_REQUEST['range_filter']]='selected';
         foreach ($this->ranges as $_range) {
@@ -4660,8 +4663,9 @@ class EnumMappings extends Records {
         }
 
         print "</select>";
+        */
 
-        printf ("<input type=text size=12 name=number_filter value='%s'>",$_REQUEST['number_filter']);
+        printf (" Number <input type=text size=15 name=number_filter value='%s'>",$_REQUEST['number_filter']);
 
         printf (" <nobr>Map to");
         print "<select name=type_filter>
@@ -4767,7 +4771,7 @@ class EnumMappings extends Records {
 		//if ($this->selectionActive) return;
 
 		if (!count($this->ranges)) {
-            print "<p><font color=red>You must create at least one ENUM range before adding ENUM numbers</font>";
+            //print "<p><font color=red>You must create at least one ENUM range before adding ENUM numbers</font>";
 			return false;
         }
 
@@ -5206,10 +5210,6 @@ class EnumMappings extends Records {
         print "<td valign=top>";
 
         print "<table border=0>";
-        print "<tr>";
-        print "<td>Property</td>";
-        print "<td>Value</td>";
-        print "</tr>";
 
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
@@ -5260,10 +5260,10 @@ class EnumMappings extends Records {
         print "<table border=0>";
         print "<tr>";
         print "<td></td>";
-        print "<td>Type</td>";
-        print "<td>Map to</td>";
-        print "<td>TTL</td>";
-        print "<td>Priority</td>";
+        print "<td class=border>Type</td>";
+        print "<td class=border>Map to</td>";
+        print "<td class=border>TTL</td>";
+        print "<td class=border>Priority</td>";
         print "</tr>";
 
         foreach ($number->mappings as $_mapping) {
