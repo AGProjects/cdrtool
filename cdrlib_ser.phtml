@@ -4414,8 +4414,7 @@ class SIP_trace {
             // get trace from SQL
 
             $query=sprintf("select *,UNIX_TIMESTAMP(date) as timestamp
-            from %s where callid = '%s'
-            and traced_user = '' order by id asc",
+            from %s where callid = '%s' order by id asc",
             $this->table,
             $callid);
     

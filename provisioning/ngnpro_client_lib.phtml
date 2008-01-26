@@ -2672,8 +2672,6 @@ class SipAccounts extends Records {
                      'timezone'   => $timezone,
                      'email'      => $email,
                      'owner'      => $owner,
-                     'customer'   => intval($customer),
-                     'reseller'   => intval($reseller),
                      'groups'     => $groups,
                      'prepaid'    => $prepaid,
                      'quota'      => $quota,
@@ -3258,9 +3256,7 @@ class SipAliases extends Records {
                      'target' => array('username' => $target_els[0],
                                        'domain'   => $target_els[1]
                                        ),
-                     'owner'      => intval($owner),
-                     'customer'   => intval($customer),
-                     'reseller'   => intval($reseller)
+                     'owner'      => intval($owner)
         			);
 
         $deleteAlias=array('username' => strtolower($username),
@@ -4080,6 +4076,8 @@ class EnumRanges extends Records {
 }
 
 class EnumMappings extends Records {
+	var $default_ttl = 3600;
+    var $default_priority = 5;
 
     var $sortElements=array('changeDate' => 'Change date',
                             'number'     => 'Number',
@@ -5050,8 +5048,6 @@ class EnumMappings extends Records {
         $enum_number=array('id'       => $enum_id,
                            'owner'    => $owner,
                            'info'     => $info,
-                           'customer' => intval($customer),
-                           'reseller' => intval($reseller),
                            'mappings' => array(array('type'     => $type,
                                                      'mapto'    => $mapto,
                                                      'ttl'      => $ttl,
@@ -5384,8 +5380,14 @@ class EnumMappings extends Records {
 
         $j=0;
         while ($j< count($_REQUEST['mapping_type'])) {
-            $mapto=$_REQUEST['mapping_mapto'][$j];
-            $type=$_REQUEST['mapping_type'][$j];
+            $mapto    = $_REQUEST['mapping_mapto'][$j];
+            $type     = $_REQUEST['mapping_type'][$j];
+            $ttl      = intval($_REQUEST['mapping_ttl'][$j]);
+            $priority = intval($_REQUEST['mapping_priority'][$j]);
+
+            if (!$ttl) $ttl = $this->default_ttl;
+            if (!$priority) $priority = $this->default_priority;
+
             if (strlen($mapto)) {
                 if (preg_match("/^([a-z0-9]+:\/\/)(.*)$/i",$mapto,$m)) {
                     $_scheme = $m[1];
@@ -5405,10 +5407,10 @@ class EnumMappings extends Records {
         
                 $mapto=$_scheme.$_value;
     
-                $new_mappings[]=array('type'     => $type,
-                                       'ttl'      => intval($_REQUEST['mapping_ttl'][$j]),
+                $new_mappings[]=array('type'      => $type,
+                                       'ttl'      => $ttl,
                                        'mapto'    => $mapto,
-                                       'priority' => intval($_REQUEST['mapping_priority'][$j])
+                                       'priority' => $priority
                                        );
             }
 
@@ -6392,30 +6394,6 @@ class Gateways extends Records {
     		$prefix   = trim($_REQUEST['prefix']);
         }
 
-        if ($this->adminonly) {
-        	if ($dictionary['reseller']) {
-                $reseller=$dictionary['reseller'];
-            } else {
-            	$reseller = trim($_REQUEST['reseller']);
-            }
-        	if ($dictionary['customer']) {
-                $customer=$dictionary['customer'];
-            } else {
-            	$customer = trim($_REQUEST['customer']);
-            }
-            if (!$customer) $customer=$reseller;
-        } else {
-        	$reseller = $this->reseller;
-        	if ($dictionary['customer']) {
-                $customer=$dictionary['customer'];
-            } else {
-            	$customer = trim($_REQUEST['customer']);
-            }
-            if (!$customer || !in_array($customer,array_keys($this->customers))) {
-                $customer=$reseller;
-            }
-        }
-
 		if (!strlen($name) || !strlen($group) || !strlen($address)) {
             printf ("<p><font color=red>Error: Missing gateway name, group or address</font>");
             return false;
@@ -6449,9 +6427,7 @@ class Gateways extends Records {
                      'uriScheme' => 'sip',
                      'transport' => $transport,
                      'strip'     => intval($strip),
-                     'prefix'    => $prefix,
-                     'customer'    => intval($customer),
-                     'reseller'    => intval($reseller)
+                     'prefix'    => $prefix
         			);
 
         $function=array('commit'   => array('name'       => 'addGateway',
@@ -6790,30 +6766,6 @@ class Routes extends Records {
     		$priority   = trim($_REQUEST['priority']);
         }
 
-        if ($this->adminonly) {
-        	if ($dictionary['reseller']) {
-                $reseller=$dictionary['reseller'];
-            } else {
-            	$reseller = trim($_REQUEST['reseller']);
-            }
-        	if ($dictionary['customer']) {
-                $customer=$dictionary['customer'];
-            } else {
-            	$customer = trim($_REQUEST['customer']);
-            }
-            if (!$customer) $customer=$reseller;
-        } else {
-        	$reseller = $this->reseller;
-        	if ($dictionary['customer']) {
-                $customer=$dictionary['customer'];
-            } else {
-            	$customer = trim($_REQUEST['customer']);
-            }
-            if (!$customer || !in_array($customer,array_keys($this->customers))) {
-                $customer=$reseller;
-            }
-        }
-
 		if (!strlen($prefix) || !strlen($gatewayGroup)) {
             printf ("<p><font color=red>Error: Missing prefix or gatewayGroup. </font>");
             return false;
@@ -6822,9 +6774,7 @@ class Routes extends Records {
         $route=array(
                      'prefix'       => $prefix,
                      'gatewayGroup' => $gatewayGroup,
-                     'priority'     => intval($priority),
-                     'customer'     => intval($customer),
-                     'reseller'     => intval($reseller)
+                     'priority'     => intval($priority)
                      );
 
 		$routes=array($route);
@@ -6898,131 +6848,6 @@ class Routes extends Records {
         printf (" </select>");
 
     }
-}
-
-class DomainStatistics extends Records {
-
-    var $maxrowsperpage= 200;
-
-    function DomainStatistics(&$SoapEngine) {
-        $this->filters   = array('domain'       => trim($_REQUEST['domain_filter']));
-
-		$this->Records(&$SoapEngine);
-    }
-
-    function listRecords() {
-
-		$this->showSeachForm();
-
-        // Insert credetials
-        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
-
-		$filter=$this->filters['domain'];
-
-        // Call function
-        $result     = $this->SoapEngine->soapclient->getDomainStatistics($filter);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-
-        } else {
-
-			$this->rows = count($result);
-
-            //print_r($result);
-
-            print "
-            <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
-            </table>
-            <p>
-            <table border=0 cellpadding=2 width=100%>
-            <tr bgcolor=lightgrey>
-                <td><b>Id</b></th>
-                <td><b>SIP domain</b></td>
-                <td><b>SIP subscribers</b></td>
-                <td><b>Online subscribers</b></td>
-                <td><b>Online SIP devices</b></td>
-            </tr>
-            ";
-
-            if (!$this->next)  $this->next=0;
-
-            if ($this->rows > $this->maxrowsperpage)  {
-                $maxrows = $this->maxrowsperpage + $this->next;
-                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
-            } else {
-                $maxrows=$this->rows;
-            }
-
-            $i=0;
-
-			if ($this->rows) {
-                while ($i < $maxrows)  {
-    
-                    $domain = $result[$i];
-                    if (!strlen($domain->users)) break;
-
-                    $index = $this->next+$i+1;
-    
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                    	$bgcolor="lightgrey";
-                    } else {
-                        $bgcolor="white";
-                    }
-
-        			$_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($domain->domain)
-                    );
-
-                    if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['domain_filter'] == $domain->domain) {
-                		$_url .= "&confirm=1";
-                        $actionText = "<font color=red>Confirm</font>";
-                    } else {
-                        $actionText = "Delete";
-                    }
-
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    </tr>",
-                    $bgcolor,
-                    $index,
-                    $domain->domain,
-                    $domain->users,
-                    $domain->onlineUsers,
-                    $domain->onlineDevices
-                    );
-
-                    $i++;
-                }
-			}
-
-            print "</table>";
-
-            $this->showPagination($maxrows);
-
-            return true;
-        }
-    }
-
-    function showSeachFormCustom() {
-        printf (" Domain<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
-    }
-
 }
 
 class Customers extends Records {
@@ -9235,11 +9060,13 @@ class recordGenerator extends SoapEngine {
             $this->template['maxNumbers']  = $this->template['lastNumber'] - $this->template['firstNumber'] + 1;
 
         } else {
-            // we have a digit boundry
+            dprint("we have a digit boundry");
             $this->template['firstNumber'] = $this->template['rangePrefix'].str_pad($start,$this->template['digitsAfterRange'],'0');
             $this->template['lastNumber']  = sprintf("%.0f", $this->template['firstNumber'] + pow(10,$this->template['digitsAfterRange']-strlen($this->template['add_prefix'])) - 1);
             $this->template['maxNumbers']  = pow(10,$this->template['digitsAfterRange']-strlen($this->template['add_prefix']));
         }
+
+		dprint_r($this->template);
 
         if ($this->template['maxNumbers'] < $this->template['nr_records']) {
             printf ("<font color=red>Error: Insufficient numbers in range, requested = %d, available = %d</font>",$this->template['nr_records'],$this->template['maxNumbers']);

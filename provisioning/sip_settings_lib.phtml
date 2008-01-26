@@ -130,6 +130,7 @@ class SipSettings {
             } else {
             	$this->customer = $loginCredentials['customer'];
             }
+
         } else {
         	$this->reseller           = $loginCredentials['reseller'];
         	$this->customer           = $loginCredentials['customer'];
@@ -1108,14 +1109,11 @@ class SipSettings {
                                         "SubscriberMaySeeIt"=>0
                                         );
 
-        if ($this->pstn_access) {
-            $this->SIPACLS['free-pstn']    =array("Group"=>"free-pstn",
-                                                "WEBName" =>   sprintf(_("Access to PSTN")),
-                                                "WEBComment"=> sprintf(_("Caller-ID")),
-                                                "SubscriberMayEditIt"=>"0",
-                                                "SubscriberMaySeeIt"=>1
-                                                );
-        }
+        $this->SIPACLS['intercept']   =array("Group"=>"Intercept",
+                                        "WEBName" =>sprintf(_("SIP trace")),
+                                        "SubscriberMayEditIt"=>"0",
+                                        "SubscriberMaySeeIt"=>0
+                                        );
 
         if ($this->Preferences['advanced']) {
             $this->SIPACLS['voicemail']=array("Group"=>"voicemail",
@@ -1217,7 +1215,6 @@ class SipSettings {
                                                 "SubscriberMaySeeIt"=>1
                                                 );
         }
-
     }
 
     function getDiversions() {
