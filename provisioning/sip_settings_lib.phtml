@@ -22,6 +22,8 @@ class SipSettings {
     var $showSoapConnectionInfo    = false;
 
     // this variables can be overwritten per soap engine (in ngnpro_soap_engines.inc)
+    // and in reseller properties
+
     var $templates_path            = './templates';
     var $support_company           = "Example company";
     var $cdrtool_address           = "https://cdrtool.example.com/CDRTool";
@@ -32,11 +34,13 @@ class SipSettings {
 	var $pstn_access               = false;
     var $sip_proxy                 = "proxy.example.com";
     var $voicemail_server          = "vm.example.com";
-    var $voicemail_access_number     = "*70";
+    var $voicemail_access_number   = "*70";
+	var $absolute_voicemail_uri    = false; // use <voice-mailbox>
+    var $FUNC_access_number        = "*21*";
+
     var $change_privacy_access_number = "*67";
     var $check_privacy_access_number  = "*68";
 	var $enable_thor               = false;
-	var $absolute_voicemail_uri    = false; // use <voice-mailbox>
 
     // end variables
 
@@ -75,7 +79,8 @@ class SipSettings {
                                            'voicemail_password',
                                            'region',
                                            'timeout',
-                                           'owner'
+                                           'owner',
+                                           'mobile_number'
                                            );
     var $presenceStatuses   = array('allow','deny','confirm');
     var $presenceActivities = array('busy'      => 'buddy_busy.jpg',
@@ -361,6 +366,14 @@ class SipSettings {
         	$this->voicemail_server = $this->soapEngines[$this->sip_engine]['voicemail_server'];
         }
 
+        if ($this->soapEngines[$this->sip_engine]['voicemail_access_number']) {
+        	$this->voicemail_access_number = $this->soapEngines[$this->sip_engine]['voicemail_access_number'];
+        }
+
+        if ($this->soapEngines[$this->sip_engine]['FUNC_access_number']) {
+        	$this->FUNC_access_number = $this->soapEngines[$this->sip_engine]['FUNC_access_number'];
+        }
+
         if (isset($this->soapEngines[$this->sip_engine]['absolute_voicemail_uri'])) {
         	$this->absolute_voicemail_uri = $this->soapEngines[$this->sip_engine]['absolute_voicemail_uri'];
         }
@@ -521,7 +534,7 @@ class SipSettings {
             return false;
         }
 
-        //dprint_r($result);
+        dprint_r($result);
 
         $this->owner     = $result->owner;
 
@@ -586,6 +599,7 @@ class SipSettings {
 
   		$this->xcap_root     = rtrim($this->xcap_root,'/')."@".$this->domain."/";
 
+        $this->getMobileNumber();
     }
 
 	function showAccount() {
@@ -666,6 +680,16 @@ class SipSettings {
         </table>
         <p>
         ";
+    }
+
+    function getMobileNumber() {
+        $this->mobile_number='';
+
+        if ($this->Preferences['mobile_number']) {
+        	$this->mobile_number=$this->Preferences['mobile_number'];
+        } else if ($this->SIP['customer']['mobile']) {
+        	$this->mobile_number=$this->SIP['customer']['mobile'];
+        }
     }
 
     function setLanguage() {
@@ -1033,13 +1057,28 @@ class SipSettings {
     	if (!$this->Preferences['advanced']) {
             return true;
         }
-        $this->divertTargets[]=array("name"  => _("No diversion"),
-                                      "value" => "",
-                                      "description"  => "Disabled");
+
+        if ($this->FUNC_access_number) {
+            $_access_number=$this->FUNC_access_number;
+        } else {
+            $_access_number='';
+        }
+
+        $this->divertTargets[] = array("name"          => _("No diversion"),
+                                       "value"         => "",
+                                       "description"   => "Disabled",
+                                       "access_number" => $_access_number
+                                       );
 
         if ($this->voicemail['Account']) {
         	$vmf=$this->getVoicemailForwarding();
             if (is_array($vmf)) {
+                if ($this->FUNC_access_number) {
+                    $vmf['access_number']=$this->FUNC_access_number.'1';
+                } else {
+                	$vmf['access_number']='';
+                }
+
             	$this->divertTargets[]=$vmf;
             }
         }
@@ -1072,14 +1111,22 @@ class SipSettings {
                     $seen[$tel_enum]++;
                 }
 
-                if ($this->SIP['customer']['mobile']) {
-                    $tel  = preg_replace("/[^\d+]/", "", $this->SIP['customer']['mobile']);
+                if ($this->mobile_number) {
+                    $tel  = preg_replace("/[^\d+]/", "", $this->mobile_number);
                     $tel_enum = str_replace("+", "00", $tel);
                     $telf = $tel_enum . "@" . $this->domain;
                     if (!$seen[$tel_enum] && !in_array($tel_enum,$this->enums)) {
-                        $this->divertTargets[]=array("name"  => sprintf (_("Mobile %s"),$tel),
-                                                      "value" => $telf,
-                                                      "description"  => "Mobile");
+                        if ($this->FUNC_access_number) {
+                        	$_access_number=$this->FUNC_access_number.'0';
+                        } else {
+                        	$_access_number='';
+                        }
+
+                        $this->divertTargets[] = array("name"        => sprintf (_("Mobile %s"),$tel),
+                                                       "value"       => $telf,
+                                                       "description" => "Mobile",
+                                                       "access_number"  => $_access_number
+                                                       );
                     }
                     $seen[$tel_enum]++;
                 }
@@ -1087,9 +1134,17 @@ class SipSettings {
 
         }
 
+        if ($this->FUNC_access_number) {
+            $_access_number=$this->FUNC_access_number.' + number';
+        } else {
+            $_access_number='';
+        }
+
         $this->divertTargets[]=array("name"  => sprintf (_("Other")),
                                       "value" => "",
-                                      "description"  => "Other");
+                                      "description"  => "Other",
+                                      "access_number" => $_access_number
+                                      );
 
         //dprint_r($this->divertTargets);
 
@@ -1201,6 +1256,14 @@ class SipSettings {
 
         if (isset($this->resellerProperties['voicemail_server'])) {
         	$this->voicemail_server	 = $this->resellerProperties['voicemail_server'];
+        }
+
+        if (isset($this->resellerProperties['voicemail_access_number'])) {
+        	$this->voicemail_access_number = $this->resellerProperties['voicemail_access_number'];
+        }
+
+        if (isset($this->resellerProperties['FUNC_access_number'])) {
+        	$this->FUNC_access_number = $this->resellerProperties['FUNC_access_number'];
         }
 
         if (isset($this->resellerProperties['absolute_voicemail_uri'])) {
@@ -1831,6 +1894,7 @@ class SipSettings {
 
         if ($this->Preferences['advanced']) {
             $this->showQuickDial();
+            $this->showMobileNumber();
         	$this->showVoicemail();
         }
 
@@ -1972,31 +2036,31 @@ class SipSettings {
 
             if (!$this->voicemail['DisableOptions']) {
 
-            print "
-            <tr $bgcolor>
-            <td class=border>";
-
-            print _("Password");
-            print "</td>
-            <td class=border>
-            ";
-
-            printf ("<input type=text size=15 name=voicemail_password value=\"%s\">",$this->voicemail['Password']);
-
-            print "
-            </td>
-            </tr>
-            ";
-
-            if ($this->voicemail_access_number) {
-               print "
-               <tr $bgcolor>
-               <td colspan=2 class=border>";
-               printf(_("Dial %s to listen to your messages or change preferences. "),$this->voicemail_access_number);
-               print "</td>
-               </tr>
-               ";
-        	}
+                print "
+                <tr $bgcolor>
+                <td class=border>";
+    
+                print _("Password");
+                print "</td>
+                <td class=border>
+                ";
+    
+                printf ("<input type=text size=15 name=voicemail_password value=\"%s\">",$this->voicemail['Password']);
+    
+                print "
+                </td>
+                </tr>
+                ";
+    
+                if ($this->voicemail_access_number) {
+                   print "
+                   <tr $bgcolor>
+                   <td colspan=2 class=border>";
+                   printf(_("Dial %s to listen to your messages or change preferences. "),$this->voicemail_access_number);
+                   print "</td>
+                   </tr>
+                   ";
+                }
             }
     	}
     }
@@ -2020,38 +2084,6 @@ class SipSettings {
     }
 
     function showDeviceLocations() {
-        if (in_array("multi-targets",$this->groups)) {
-
-            print "
-            <tr>
-              <td height=3 colspan=2></td>
-            </tr>
-            <tr>
-              <td class=border colspan=2 bgcolor=lightgrey>";
-                print "
-                <table border=0 cellpadding=0 cellspacing=0 width=100%>
-                <tr>
-                <td align=left>
-                ";
-                print "<b>";
-                print _("SIP devices cannot be registered for this SIP account while 'Multiple targets' setting is enabled.");
-                print "</b>
-                </td>
-                <td align=right><b>";
-                print _("");
-                print "</b>
-                </td>
-                </tr>
-                </table>
-                ";
-                print "
-              </td>
-            </tr>
-            ";
-
-            return;
-        }
-
 	    $this->getDeviceLocations();
 
         if (count($this->locations)) {
@@ -2436,6 +2468,12 @@ class SipSettings {
             		$result->quickdial=$quickdial;
                 }
 
+            	$this->somethingChanged=1;
+            }
+
+			$mobile_number  = preg_replace("/[^\+0-9]/","",$mobile_number);
+            if ($this->Preferences['mobile_number'] != $mobile_number) {
+            	$this->setPreference('mobile_number',$mobile_number);
             	$this->somethingChanged=1;
             }
 
@@ -3341,9 +3379,6 @@ class SipSettings {
         }
 
         foreach (array_keys($conditions) as $condition) {
-            if (in_array("multi-targets",$this->groups) && ($condition == 'FBUS' || $condition == 'FNOA' || $condition == 'FNOL')) {
-                continue;
-            }
 
             $found++;
             $rr=floor($found/2);
@@ -3400,89 +3435,83 @@ class SipSettings {
             </SCRIPT>
             ";
 
-            if (in_array("multi-targets",$this->groups) && ($condition == 'FBUS' || $condition == 'FNOA' || $condition == 'FNOL')) {
-                print "Not possible when 'Multiple targets' is enabled";
+            print "<table border=0 cellspacing=0 cellpadding=0>
+            <tr><td>";
 
+            print "<select name=$select_name onChange=$set_uri_java(this)>\n";
+
+            if ($this->CallPrefDbURI[$condition]) {
+                $this->CallPrefUriType[$condition]=='Other';
             } else {
-
-                print "<table border=0 cellspacing=0 cellpadding=0>
-                <tr><td>";
-    
-                print "<select name=$select_name onChange=$set_uri_java(this)>\n";
-    
-                if ($this->CallPrefDbURI[$condition]) {
-                    $this->CallPrefUriType[$condition]=='Other';
-                } else {
-                    $this->CallPrefUriType[$condition]=='Disabled';
-                }
-    
-                $foundSelected=0;
-                $nr_targets=count($this->divertTargets);
-    
-                foreach ($this->divertTargets as $idx => $phone) {
-    
-                    $name = $phone['name'];
-                    if ($phone['description'] == 'Other')
-                        $value = $lastOther;
-                    else
-                        $value = $phone['value'];
-    
-                    if ($this->CallPrefDbURI[$condition] == "<voice-mailbox>") {
-                        $this->CallPrefDbURI[$condition] = $this->voicemail['Account'];
-                    }
-    
-                    if (!$foundSelected &&
-                        ($this->CallPrefDbURI[$condition]==$phone['value'] || $idx==$nr_targets-1)) {
-                        print "<option value=\"$idx\" selected>$name</option>\n";
-                        $pref_value = $value;
-                        $this->CallPrefUriType[$condition]=$phone['description'];
-                        $foundSelected=1;
-                    } else {
-                        print "<option value=\"$idx\">$name</option>\n";
-                    }
-                }
-    
-                print "</select>";
-    
-                print "
-                </td><td>";
-    
-                if ($this->CallPrefUriType[$condition]=='Other')
-                    $style = "visible";
-                else
-                    $style = "hidden";
-    
-                $pref_value=$this->CallPrefDbURI[$condition];
-    
-                print "
-                    <span>
-                    <td>
-                      <input class=$style type=text size=40
-                             name=$condition value=\"$pref_value\"
-                             onChange=$update_text_java(this)>
-                    </span>
-                    ";
-                if ($condition=="FNOA") {
-                    print " ";
-                    print _("Timeout");
-                    print " ";
-    
-                    $selected_timeout[$this->timeout]="selected";
-    
-                    print "<select name=timeout>";
-                    foreach (array_keys($this->timeoutEls) as $_el) {
-                        printf ("<option value=\"%s\" %s>%s",$_el,$selected_timeout[$_el],$this->timeoutEls[$_el]);
-                    }
-                    print "</select>";
-                } else if ($condition=="FUNC") {
-                    printf (_(" Dial %s + NUMBER to change"),"*21*");
-                }
-    
-                print "
-                </td>
-                </tr>
-                </table>";
+                $this->CallPrefUriType[$condition]=='Disabled';
             }
+
+            $foundSelected=0;
+            $nr_targets=count($this->divertTargets);
+
+            foreach ($this->divertTargets as $idx => $phone) {
+
+                $name = $phone['name'];
+                if ($phone['access_number']) $name .= sprintf(' (Dial %s)',$phone['access_number']);
+
+                if ($phone['description'] == 'Other')
+                    $value = $lastOther;
+                else
+                    $value = $phone['value'];
+
+                if ($this->CallPrefDbURI[$condition] == "<voice-mailbox>") {
+                    $this->CallPrefDbURI[$condition] = $this->voicemail['Account'];
+                }
+
+                if (!$foundSelected &&
+                    ($this->CallPrefDbURI[$condition]==$phone['value'] || $idx==$nr_targets-1)) {
+                    print "<option value=\"$idx\" selected>$name</option>\n";
+                    $pref_value = $value;
+                    $this->CallPrefUriType[$condition]=$phone['description'];
+                    $foundSelected=1;
+                } else {
+                    print "<option value=\"$idx\">$name</option>\n";
+                }
+            }
+
+            print "</select>";
+
+            print "
+            </td><td>";
+
+            if ($this->CallPrefUriType[$condition]=='Other')
+                $style = "visible";
+            else
+                $style = "hidden";
+
+            $pref_value=$this->CallPrefDbURI[$condition];
+
+            print "
+                <span>
+                <td>
+                  <input class=$style type=text size=40
+                         name=$condition value=\"$pref_value\"
+                         onChange=$update_text_java(this)>
+                </span>
+                ";
+            if ($condition=="FNOA") {
+                print " ";
+                print _("Timeout");
+                print " ";
+
+                $selected_timeout[$this->timeout]="selected";
+
+                print "<select name=timeout>";
+                foreach (array_keys($this->timeoutEls) as $_el) {
+                    printf ("<option value=\"%s\" %s>%s",$_el,$selected_timeout[$_el],$this->timeoutEls[$_el]);
+                }
+                print "</select>";
+            }
+
+            print "
+            </td>
+            </tr>
+            </table>";
 
             print "
 
@@ -3490,6 +3519,7 @@ class SipSettings {
             </tr>
             ";
         }
+
     }
 
     function logoTableStart() {
@@ -3634,6 +3664,24 @@ class SipSettings {
           </td>
         </tr>
         ";
+    }
+
+
+    function showMobileNumber() {
+
+   		if ($this->SOAPversion <= 1) return;
+
+    print "
+        <tr>
+          <td class=border>";
+            print _("Mobile number");
+            printf ("
+          </td>
+          <td class=border align=left>
+            <input type=text size=15 maxsize=64 name=mobile_number value='%s'>
+          </td>
+        </tr>
+        ",$this->Preferences['mobile_number']);
     }
 
     function showLastCalls() {
