@@ -489,7 +489,7 @@ function checkEmail($email) {
 class DomainAuth {
 
     function DomainAuth () {
-        $this->userDB   = new DB_ser;
+        $this->userDB   = new DB_openser;
         $this->allowedDataSourcesSubscriber = array('ser_radius');
     }
 
