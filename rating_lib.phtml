@@ -2699,17 +2699,16 @@ class SERQuota {
  		dprint_r($this->notificationAddresses);
 
         if ($DATASOURCES[$this->cdr_source]['soapEngineId']) {
-
             require_once("provisioning/ngnpro_soap_library.phtml");
             require_once("provisioning/ngnpro_engines.inc");
 
-            if (in_array($soapEngineId,array_keys($soapEngines))) {
+            if (in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
         
-                $this->SOAPurl  = $soapEngines[$soapEngineId]['url'];
+                $this->SOAPurl  = $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['url'];
                 $this->SOAPlogin = array(
-                                           "username"    => $soapEngines[$soapEngineId]['username'],
-                                           "password"    => $soapEngines[$soapEngineId]['password'],
-                                           "admin"       => $soapEngines[$soapEngineId]['admin']
+                                           "username"    => $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['username'],
+                                           "password"    => $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['password'],
+                                           "admin"       => true
                                            );
         
                 $this->SoapAuth=array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
@@ -2724,7 +2723,6 @@ class SERQuota {
     
         }
 
-        $this->initOK=1;
     }
 
     function LoadAccounts() {
@@ -2760,8 +2758,8 @@ class SERQuota {
                     $_accounts[$_account]=array('timezone'   => $_profile->timezone,
                                                 'quota'      => $_profile->quota,
                                                 'email'      => $_profile->email,
-                                                'first_name' => $_profile->firstName,
-                                                'last_name'  => $_profile->lastName
+                                                'first_name' => $_profile->first_name,
+                                                'last_name'  => $_profile->last_name
                                                 );
                     if (in_array('quota',$_profile->groups)) {
                         $_accounts[$account]['block_by_quota']= 1;
@@ -2837,7 +2835,7 @@ class SERQuota {
 
         foreach (array_keys($this->Accounts) as $account) {
             if (!strlen($account)) continue;
-            $mc_value.= sprintf("%s:quota=%s;email=%s;fn=%s%s;block_by_quota=%d\n",
+            $mc_value.= sprintf("%s:quota=%s;email=%s;first_name=%s;last_name=%s;block_by_quota=%d\n",
             $account,
             $this->Accounts[$account]['quota'],
             $this->Accounts[$account]['email'],
@@ -3146,8 +3144,6 @@ class SERQuota {
         dprint("checkQuota($notify)");
         global $UserQuota;
 
-		if (!$this->initOK) return ;
-
         $this->cacheMonthlyUsage();
         $this->LoadAccounts();
 
@@ -3380,54 +3376,62 @@ class SERQuota {
     function blockAccount($account) {
         list($username,$domain)=explode("@",$account);
 
-      	$this->blockAccountRemote($account);
+        if (is_object($this->soapclient)) {
+      		return  $this->blockAccountRemote($account);
+        } else {
+
+            $log=sprintf ("Unblock account %s in sql",$account);
+            syslog(LOG_NOTICE, $log);
+
+            // update OpenSER database using SQL query
+            $query=sprintf("delete from grp
+            where username = '%s'
+            and   domain   = '%s'
+            and   grp      = '%s'",
+            addslashes($username),
+            addslashes($domain),
+            addslashes($this->quotaGroup)
+            );
     
-        $query=sprintf("delete from grp
-        where username = '%s'
-        and   domain   = '%s'
-        and   grp      = '%s'",
-        addslashes($username),
-        addslashes($domain),
-        addslashes($this->quotaGroup)
-        );
-
-        dprint($query);
-
-        if (!$this->AccountsDB->query($query)) {
-            $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
-            print $log;
-            syslog(LOG_NOTICE,$log);
-            return false;
+            dprint($query);
+    
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                print $log;
+                syslog(LOG_NOTICE,$log);
+                return false;
+            }
+    
+            $query=sprintf("insert into grp
+            (username,domain,grp,last_modified)
+            values
+            ('%s','%s','%s',NOW())",
+            addslashes($username),
+            addslashes($domain),
+            addslashes($this->quotaGroup)
+            );
+    
+            dprint($query);
+    
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                print $log;
+                syslog(LOG_NOTICE,$log);
+                return false;
+            } else {
+                return true;
+            }
         }
-
-        $query=sprintf("insert into grp
-        (username,domain,grp,last_modified)
-        values
-        ('%s','%s','%s',NOW())",
-        addslashes($username),
-        addslashes($domain),
-        addslashes($this->quotaGroup)
-        );
-
-        dprint($query);
-
-        if (!$this->AccountsDB->query($query)) {
-            $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
-            print $log;
-            syslog(LOG_NOTICE,$log);
-            return false;
-        }
-        return true;
     }
 
     function blockAccountRemote($account) {
-        if (!is_object($this->soapclient)) {
-            return true;
-        }
-
         list($username,$domain)=explode("@",$account);
 
-        if (!$username || !$domain) return true;
+        if (!$username || !$domain) {
+            $log=sprintf("Error: misssing username/domain in blockAccountRemote()");
+	        syslog(LOG_NOTICE, $log);
+        	return false;
+        }
 
         $this->soapclient->addHeader($this->SoapAuth);
         $result     = $this->soapclient->addToGroup(array("username" => $username,"domain"=> $domain), "quota");
@@ -3442,8 +3446,8 @@ class SERQuota {
 
             if ($error_fault->detail->exception->errorcode != "1030") {
 
-                $from         = $this->CDRTool[provider][fromEmail];
-                $to           = $this->CDRTool[provider][toEmail];
+                $from         = $this->CDRTool['provider']['fromEmail'];
+                $to           = $this->CDRTool['provider']['toEmail'];
                 $extraHeaders = "From: $from";
                 $email_body   = "Remote SOAP request failure when calling blockAccountRemote(): \n\n".
                                 $log;
@@ -3453,7 +3457,7 @@ class SERQuota {
 
             return false;
         } else {
-            $log=sprintf ("Block remote account %s at %s",$account,$this->NGNProURL);
+            $log=sprintf ("Block account %s at %s",$account,$this->SOAPurl );
 	        syslog(LOG_NOTICE, $log);
             return true;
         }
@@ -3493,7 +3497,7 @@ class SERQuota {
                     mail($to, "CDRTool SOAP failure", $email_body, $extraHeaders);
                 }
             } else {
-                $log=sprintf ("Unblock remote account %s at %s",$account,$this->NGNProURL);
+                $log=sprintf ("Unblock remote account %s at %s",$account,$this->SOAPurl);
                 syslog(LOG_NOTICE, $log);
             }
         }

@@ -3347,9 +3347,21 @@ class EnumRanges extends Records {
 
     var $Fields=array(
                               'customer'    => array('type'=>'integer'),
-                              'info'        => array('type'=>'string'),
-                              'size'        => array('type'=>'integer'),
-                              'ttl'         => array('type'=>'integer'),
+                              'info'        => array('type'=>'string',
+                                                     'help' =>'Range description'
+                                                     ),
+                              'size'        => array('type'=>'integer',
+                                                     'help'=>'Maximum number of telephone numbers'
+                                                     ),
+                              'ttl'         => array('type'=>'integer',
+                                                     'help'=>'Cache period in DNS clients'
+                                                     ),
+                              'minDigits'         => array('type'=>'integer',
+                                                           'help'=>'Minimum number of digits for telephone numbers'
+                                                           ),
+                              'maxDigits'         => array('type'=>'integer',
+                                                           'help'=>'Maximum number of digits for telephone numbers'
+                              								)
                               );
 
     function EnumRanges(&$SoapEngine) {
@@ -3367,8 +3379,10 @@ class EnumRanges extends Records {
                   	        	      'prefix'     => 'Prefix',
                     	        	  'tld'        => 'TLD'
 	                        	     );
-            $this->Fields['nameservers'] = array('type'=>'string',
-                                                 'name'=>'Name servers');
+            $this->Fields['nameservers'] = array('type'=>'text',
+                                                 'name'=>'Name servers',
+                                                 'help'=>'Name servers authoritative for this DNS zone'
+                                                 );
 
         }
     }
@@ -3879,6 +3893,7 @@ class EnumRanges extends Records {
 
     function showRecord($range) {
 
+        dprint_r($range);
         print "<table border=0 cellpadding=10>";
         print "
         <tr>
@@ -3891,12 +3906,21 @@ class EnumRanges extends Records {
         <td colspan=2><input type=submit value=Update>
         </td></tr>";
 
-        printf ("<tr><td class=border>DNS name</td><td class=border>%s</td></td>",
+        printf ("<tr><td class=border>DNS zone</td><td class=border>%s</td></td>",
         $this->tel2enum($range->id->prefix,$range->id->tld));
 
 		if ($this->adminonly) {
 
             foreach (array_keys($this->FieldsAdminOnly) as $item) {
+                if ($item == 'nameservers') {
+                    foreach ($range->$item as $_item) {
+                        $nameservers.=$_item."\n";
+                    }
+                    $item_value=$nameservers;
+                } else {
+                    $item_value=$range->$item;
+                }
+
                 if ($this->FieldsAdminOnly[$item]['name']) {
                     $item_name=$this->FieldsAdminOnly[$item]['name'];
                 } else {
@@ -3906,20 +3930,24 @@ class EnumRanges extends Records {
                 if ($this->FieldsAdminOnly[$item]['type'] == 'text') {
                     printf ("<tr>
                     <td class=border valign=top>%s</td>
-                    <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                    <td class=border><textarea cols=30 name=%s_form rows=5>%s</textarea></td>
+                    <td class=border valign=top>%s</td>
                     </tr>",
                     $item_name,
                     $item,
-                    $range->$item
+                    $item_value,
+                    $this->FieldsAdminOnly[$item]['help']
                     );
                 } else {
                     printf ("<tr>
                     <td class=border valign=top>%s</td>
                     <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                    <td class=border>%s</td>
                     </tr>",
                     $item_name,
                     $item,
-                    $range->$item
+                    $item_value,
+                    $this->FieldsAdminOnly[$item]['help']
                     );
                 }
             }
@@ -3935,33 +3963,33 @@ class EnumRanges extends Records {
             if ($item == 'nameservers') {
                 foreach ($range->$item as $_item) {
                     $nameservers.=$_item."\n";
-                }
+            	}
+                $item_value=$nameservers;
+            } else {
+                $item_value=$range->$item;
+            }
 
+            if ($this->Fields[$item]['type'] == 'text') {
                 printf ("<tr>
                 <td class=border valign=top>%s</td>
-                <td class=border><textarea cols=30 name=%s_form rows=6>%s</textarea></td>
+                <td class=border><textarea cols=30 name=%s_form rows=5>%s</textarea></td>
+                <td class=border valign=top>%s</td>
                 </tr>",
                 $item_name,
                 $item,
-                $nameservers
-                );
-            } elseif ($this->Fields[$item]['type'] == 'text') {
-                printf ("<tr>
-                <td class=border valign=top>%s</td>
-                <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
-                </tr>",
-                $item_name,
-                $item,
-                $range->$item
+                $item_value,
+                $this->Fields[$item]['help']
                 );
             } else {
                 printf ("<tr>
                 <td class=border valign=top>%s</td>
                 <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                <td class=border>%s</td>
                 </tr>",
                 $item_name,
                 $item,
-                $range->$item
+                $item_value,
+                $this->Fields[$item]['help']
                 );
             }
         }
@@ -4018,7 +4046,6 @@ class EnumRanges extends Records {
 		if ($this->adminonly) {
             foreach (array_keys($this->FieldsAdminOnly) as $item) {
                 $var_name=$item.'_form';
-                //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
                 if ($this->FieldsAdminOnly[$item]['type'] == 'integer') {
                     $range->$item = intval($_REQUEST[$var_name]);
                 } else {
@@ -6390,12 +6417,12 @@ class Gateways extends Records {
             printf (" Strip: <select name=strip>");
             $t=0;
             while ($t<10) {
-                print "<option value=$t>$t";
+                print "<option value=$t>$t digits";
                 $t++;
             }
 
             print "</select>";
-            printf (" Prefix<input type=text size=5 name=prefix>");
+            printf (" Add prefix<input type=text size=5 name=prefix>");
 
             print "
 	        </td>

@@ -721,21 +721,22 @@ class pageLayout {
             print " <a href=callsearch.phtml>CDRs</a> ";
         }
         if ($perm->have_perm("rates")) {
-            print " | <a href=rating_tables.phtml>Rating</a>";
-        }
-        
-        if ($perm->have_perm("statistics")) {
-            print " | <a href=status/sip_online.phtml target=siponline>Registrar</a>";
-            print " | <a href=status/media_sessions.phtml target=mediasessions>Sessions</a>";
-            print " | <a href=status/usage/index.phtml target=usage>Statistics</a>";
+            print " | <a href=rating_tables.phtml>Rating tables</a>";
         }
 
         if ($perm->have_perm("provisioning")) {
-            print " | <a href=provisioning.phtml>NGNPro</a>";
+            print " | <a href=provisioning.phtml>SIP accounts</a>";
+        }
+
+        
+        if ($perm->have_perm("statistics")) {
+            print " | <a href=status/sip_online.phtml target=siponline>SIP registrar</a>";
+            print " | <a href=status/media_sessions.phtml target=mediasessions>RTP sessions</a>";
+            print " | <a href=status/usage/index.phtml target=usage>Usage</a>";
         }
 
         print " | <a href=log.phtml>Logs</a>";
-        print " | <a href=accounts.phtml>Accounts</a>";
+        print " | <a href=accounts.phtml>Login accounts</a>";
         
         $now_print=Date("Y-m-d H:i:s",time());
         $tz=$CDRTool['provider']['timezone'];
