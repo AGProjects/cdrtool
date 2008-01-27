@@ -3346,7 +3346,7 @@ class EnumRanges extends Records {
     function EnumRanges(&$SoapEngine) {
         dprint("init EnumRanges");
 
-        $this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
+        $this->filters   = array('prefix'       => trim(ltrim($_REQUEST['prefix_filter']),'+'),
                                  'tld'          => trim($_REQUEST['tld_filter']),
                                  'info'         => trim($_REQUEST['info_filter'])
                                  );
@@ -4194,7 +4194,7 @@ class EnumMappings extends Records {
 
         $_number_filter=ltrim($_number_filter,'+');
 
-        $this->filters   = array('number'       => $_number_filter,
+        $this->filters   = array('number'       => ltrim($_number_filter,'+'),
                                  'tld'          => $_tld_filter,
                                  'range'        => trim($_REQUEST['range_filter']),
                                  'type'         => trim($_REQUEST['type_filter']),
@@ -4327,6 +4327,43 @@ class EnumMappings extends Records {
                     $j=1;
 
                     foreach ($number->mappings as $_mapping) {
+                    	unset($sip_engine);
+                    	foreach (array_keys($this->login_credentials['reseller_filters']) as $_res) {
+                            if ($_res == $number->reseller) {
+                                if ($this->login_credentials['reseller_filters'][$_res]['sip_engine']) {
+                                	$sip_engine=$this->login_credentials['reseller_filters'][$_res]['sip_engine'];
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!$sip_engine) {
+                            if ($this->login_credentials['reseller_filters']['default']['sip_engine']) {
+                            	$sip_engine=$this->login_credentials['reseller_filters']['default']['sip_engine'];
+                            } else {
+                            	$sip_engine=$this->SoapEngine->sip_engine;
+                            }
+                        }
+
+                        if (preg_match("/^sip:(.*)$/",$_mapping->mapto,$m) && $this->sip_settings_page) {
+                            $url=sprintf('%s?account=%s&reseller=%s&sip_engine=%s',
+                            $this->sip_settings_page,$m[1], $number->reseller,$sip_engine);
+    
+                            if ($this->adminonly) $url  .= sprintf('&adminonly=%s',$this->adminonly);
+    
+                            foreach (array_keys($this->SoapEngine->extraFormElements) as $element) {
+                                if (!strlen($this->SoapEngine->extraFormElements[$element])) continue;
+                                $url  .= sprintf('&%s=%s',$element,urlencode($this->SoapEngine->extraFormElements[$element]));
+                            }
+    
+                            $mapto=sprintf("
+                            <a href=\"javascript:void(null);\" onClick=\"return window.open('%s', 'SIP_Settings',
+                            'toolbar=1,status=1,menubar=1,scrollbars=1,resizable=1,width=800,height=720')\">
+                            sip:%s</a>",$url,$m[1]);
+                        } else {
+                            $mapto=sprintf("%s",$_mapping->mapto);
+                        }
+
                         $_url = $this->url.sprintf("&service=%s&action=Delete&number_filter=%s&tld_filter=%s&mapto_filter=%s",
                         urlencode($this->SoapEngine->service),
                         urlencode($number->id->number),
@@ -4396,7 +4433,7 @@ class EnumMappings extends Records {
                                 $number->info,
                                 $_owner_url,
                                 ucfirst($_mapping->type),
-                                $_mapping->mapto,
+                                $mapto,
                                 $_mapping->ttl,
                                 $_mapping->priority,
                                 $number->changeDate,
@@ -4424,7 +4461,7 @@ class EnumMappings extends Records {
                                 $number->info,
                                 $number->owner,
                                 ucfirst($_mapping->type),
-                                $_mapping->mapto,
+                                $mapto,
                                 $_mapping->ttl,
                                 $_mapping->priority,
                                 $_url,
@@ -4450,7 +4487,7 @@ class EnumMappings extends Records {
                                 </tr>",
                                 $bgcolor,
                                 ucfirst($_mapping->type),
-                                $_mapping->mapto,
+                                $mapto,
                                 $_mapping->ttl,
                                 $_mapping->priority,
                                 $number->changeDate,
@@ -4473,7 +4510,7 @@ class EnumMappings extends Records {
                                 </tr>",
                                 $bgcolor,
                                 ucfirst($_mapping->type),
-                                $_mapping->mapto,
+                                $mapto,
                                 $_mapping->ttl,
                                 $_mapping->priority,
                                 $_url,
