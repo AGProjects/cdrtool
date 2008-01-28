@@ -111,6 +111,7 @@ class SipSettings {
     var $enums=array();
     var $barringPrefixes=array();
     var $presenceWatchers=array();
+    var $SipUaAImagesPath="status/images";
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
     	$this->soapEngines        = $soapEngines;
@@ -2130,10 +2131,10 @@ class SipSettings {
                 if (preg_match("/(unidata|snom|eyebeam|csco)/i",$user_agent,$m)) {
 					$_ua=strtolower($m[1]);
         			print "<a href=$this->pageURL&tab=phonebook&export=1&userAgent=$_ua target=export>";
-                	print "<img src=\"status/images/30/$UAImage\" border=0>";
+                	printf("<img src='%s/30/%s' border=0>",$this->SipUaAImagesPath,$UAImage);
                     print "</a>";
                 } else {
-                	print "<img src=\"status/images/30/$UAImage\" border=0>";
+                	printf ("<img src='%s/30/%s' border=0>",$this->SipUaAImagesPath,$UAImage);
                 }
                 print "</td>";
                 print "<td class=border align=left>";
@@ -5921,7 +5922,8 @@ function getImageForUserAgent($agent) {
                      "Audiocodes-Sip" => "audiocodes-mp124.png",
                      "Nokia"	      => "nokia.png",
                      "CopperJet"	  => "copperjet16162p.png",
-                     "Ekiga"	      => "ekiga.png"
+                     "Ekiga"	      => "ekiga.png",
+                     "sofia-sip"      => "Nokia810.png"
                      );
 
     foreach ($userAgentImages as $agentRegexp => $image) {

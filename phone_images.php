@@ -36,7 +36,8 @@ $userAgentImages = array("Asterisk"       => "asterisk.png",
                          "Audiocodes-Sip-Gateway-MP" => "audiocodes-mp124.png",
                          "Nokia"	  => "nokia.png",
                          "CopperJet"	  => "copperjet16162p.png",
-                         "Ekiga"	  => "ekiga.png"
+                         "Ekiga"	  => "ekiga.png",
+                         "sofia-sip"      => "Nokia810.png"
                          );
 
 ?>
