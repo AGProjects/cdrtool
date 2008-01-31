@@ -124,6 +124,8 @@ class Rate {
         $this->domain            = $dictionary['domain'];
         $this->gateway           = $dictionary['gateway'];
 
+		if (!$this->gateway) $this->gateway='0.0.0.0';
+
         // Contain all rating tables load once when
         // normalization process starts in CDRS parent class
         $this->RatingTables      = &$dictionary['RatingTables'];
