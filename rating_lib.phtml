@@ -4387,7 +4387,16 @@ class RatingEngine {
             }
 
             if ($result) {
-                return "Ok";
+                $RateReturn="Ok";
+                if (strlen($Rate->price)) {
+                    $RateReturn.="\n".$Rate->price;
+                    if (strlen($Rate->rateInfo)) {
+                        $RateReturn.="\n".trim($Rate->rateInfo);
+                    }
+                }
+
+				return $RateReturn;
+
             } else {
                 return "Failed";
             }
