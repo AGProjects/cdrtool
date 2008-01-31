@@ -108,7 +108,6 @@ class Rate {
         //
 
         // Session start time
-        $this->id                = $dictionary['id'];
         $this->callId            = $dictionary['callId'];
         $this->timestamp         = $dictionary['timestamp'];
 
@@ -265,9 +264,9 @@ class Rate {
 
                 if ($i > 10) {
                     // possible loop because of wrong coding make sure we can end this somehow
-                    $body="Rating of call $this->id (DestId=$this->DestinationId) has more than 10 spans. It could be a serious bug.\n";
+                    $body="Rating of call $this->callId (DestId=$this->DestinationId) has more than 10 spans. It could be a serious bug.\n";
                     mail($this->toEmail, "CDRTool rating problem", $body , $this->extraHeaders);
-        			syslog(LOG_NOTICE, "Error: Rating of call $this->id (DestId=$this->DestinationId) has more than 10 spans.");
+        			syslog(LOG_NOTICE, "Error: Rating of call $this->callId (DestId=$this->DestinationId) has more than 10 spans.");
                     break;
                 }
             }
@@ -4466,7 +4465,7 @@ class RatingEngine {
             if ($NetFields['application']) $application=$NetFields['application'];
 
             $CDRStructure=array (
-                              $this->CDRS->CDRFields['id']  	        => $NetFields['id'],
+                              $this->CDRS->CDRFields['callId']          => $NetFields['callid'],
                               $this->CDRS->CDRFields['timestamp']       => $timestamp,
                               $this->CDRS->CDRFields['duration']        => $NetFields['duration'],
                               $this->CDRS->CDRFields['aNumber']  	    => $NetFields['from'],
@@ -4486,7 +4485,7 @@ class RatingEngine {
 
             // Build Rate dictionary containing normalized CDR fields
             $RateDictionary=array(
-                                  'id'              => $CDR->id,
+                                  'callId'          => $CDR->callId,
                                   'timestamp'       => $CDR->timestamp,
                                   'duration'        => $CDR->duration,
                                   'DestinationId'   => $CDR->DestinationId,

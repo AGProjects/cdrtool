@@ -912,13 +912,13 @@ class CDRS {
                 // The rating table will be used in each instance of
                 // CDR structure but we load the rating related data once
 				global $RatingEngine;
-				if ($this->DATASOURCES[$this->cdr_source][EnableNetworkRating] && $RatingEngine["socketIP"] && $RatingEngine["socketPort"] ) {
+				if ($this->DATASOURCES[$this->cdr_source]['EnableNetworkRating'] && $RatingEngine['socketIP'] && $RatingEngine['socketPort'] ) {
 
-        			$fp = fsockopen ($RatingEngine["socketIP"], $RatingEngine["socketPort"], $errno, $errstr, 2);
+        			$fp = fsockopen ($RatingEngine['socketIP'], $RatingEngine['socketPort'], $errno, $errstr, 2);
                     if ($fp) {
                         $this->RatingEngineSocket = $fp;
                     } else {
-                    	$target=$RatingEngine["socketIP"].":".$RatingEngine["socketPort"];
+                    	$target=$RatingEngine['socketIP'].":".$RatingEngine['socketPort'];
                         print "<p>";
                         print "<font color=red>Cannot connect to rating engine $target: $errstr ($errno). </font>";
                         syslog(LOG_NOTICE, "Error: Cannot connect to rating engine $errstr ($errno)");
@@ -1867,7 +1867,7 @@ class CDR {
                 	dprint("Reading rates from the MySQL tables ...");
 
                     $RateDictionary=array(
-                                          'id'              => $this->id,
+                                          'callId'          => $this->callId,
                                           'timestamp'       => $this->timestamp,
                                           'duration'        => $this->duration,
                                           'DestinationId'   => $this->DestinationId,
@@ -1884,34 +1884,9 @@ class CDR {
                                           'ENUMtld'         => $this->ENUMtld
                                           );
 
-                    $RateDictionaryDebug=array(
-                                          'id'              => $this->id,
-                                          'timestamp'       => $this->timestamp,
-                                          'duration'        => $this->duration,
-                                          'DestinationId'   => $this->DestinationId,
-                                          'inputTraffic'    => $this->inputTraffic,
-                                          'outputTraffic'   => $this->outputTraffic,
-                                          'BillingPartyId'  => $this->BillingPartyId,
-                                          'domain'          => $this->domain,
-                                          'gateway'         => $this->gateway,
-                                          'applicationType' => $this->applicationType,
-                                          'aNumber'         => $this->aNumber,
-                                          'cNumber'         => $this->cNumber,
-                                          'destinationName' => $this->destinationName,
-                                          'ENUMtld'         => $this->ENUMtld
-                                          );
-
-			        dprint_r($RateDictionaryDebug);
-
                     $Rate->calculate(&$RateDictionary);
 
                 }
-
-                /*
-                dprint_r($Rate->price);
-                dprint_r($Rate->pricePrint);
-                dprint_r($Rate->rateInfo);
-                */
 
                 if ($this->CDRS->priceField) {
                     if (!$Rate->price) $Rate->pricePrint="";

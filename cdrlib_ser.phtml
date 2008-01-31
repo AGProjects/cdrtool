@@ -2375,7 +2375,7 @@ class CDR_ser_radius extends CDR {
         $this->disconnectPrint=$this->NormalizeDisconnect($this->disconnect);
 
         $this->NetworkRateDictionary=array(
-                                  'Id'              => $this->id,
+                                  'callId'          => $this->callId,
                                   'Timestamp'       => $this->timestamp,
                                   'Duration'        => $this->duration,
                                   'inputTraffic'    => $this->inputTraffic,
