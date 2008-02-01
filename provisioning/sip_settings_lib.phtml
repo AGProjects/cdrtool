@@ -58,6 +58,8 @@ class SipSettings {
                                            'free-pstn',
                                            'blocked',
                                            'sip_password',
+                                           'first_name',
+                                           'last_name',
                                            'quota',
                                            'language',
                                            'quota_reset',
@@ -1657,6 +1659,36 @@ class SipSettings {
         print "
         <tr>
         <td class=border>";
+        print _("First name");
+        print "
+        </td>
+        <td class=borderns>";
+
+      	print "<input type=text size=15 name=first_name value=\"$this->firstName\">";
+
+        print "
+        </td>
+        </tr>
+        ";
+
+        print "
+        <tr>
+        <td class=border>";
+        print _("Last name");
+        print "
+        </td>
+        <td class=borderns>";
+
+      	print "<input type=text size=15 name=last_name value=\"$this->lastName\">";
+
+        print "
+        </td>
+        </tr>
+        ";
+
+        print "
+        <tr>
+        <td class=border>";
         print _("Password");
         print "
         </td>
@@ -2333,6 +2365,12 @@ class SipSettings {
             $this->email=$mailto;
             $this->somethingChanged=1;
             $this->emailHasChanged=1;
+        }
+
+        if ($first_name && $this->firstName != $first_name) {
+            $result->firstName = $first_name;
+            $this->first_name  = $first_name;
+            $this->somethingChanged=1;
         }
 
 		$this->properties=$result->properties;
