@@ -2373,6 +2373,12 @@ class SipSettings {
             $this->somethingChanged=1;
         }
 
+        if ($last_name && $this->lastName != $last_name) {
+            $result->lastName = $last_name;
+            $this->last_name  = $last_name;
+            $this->somethingChanged=1;
+        }
+
 		$this->properties=$result->properties;
 
         if ($advanced) {
