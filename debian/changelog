@@ -1,3 +1,10 @@
+cdrtool (6.1.6) unstable; urgency=low
+
+  * Fixed load of customer profiles for prepaid calls when 
+    no default customer defined
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 03 Feb 2008 00:28:15 +0100
+
 cdrtool (6.1.5) unstable; urgency=low
 
   * Added lock icon when SIP UA registered using TLS contact
