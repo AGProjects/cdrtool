@@ -2374,18 +2374,19 @@ class SipSettings {
             $result->email=$mailto;
             $this->email=$mailto;
             $this->somethingChanged=1;
-            $this->emailHasChanged=1;
+            $this->voicemailOptionsHaveChanged=1;
         }
 
         if ($first_name && $this->firstName != $first_name) {
             $result->firstName = $first_name;
-            $this->first_name  = $first_name;
+            $this->firstName  = $first_name;
             $this->somethingChanged=1;
+            $this->voicemailOptionsHaveChanged=1;
         }
 
         if ($last_name && $this->lastName != $last_name) {
             $result->lastName = $last_name;
-            $this->last_name  = $last_name;
+            $this->lastName  = $last_name;
             $this->somethingChanged=1;
         }
 
@@ -2624,7 +2625,7 @@ class SipSettings {
                 $this->voicemail['Password']=$voicemail_password;
             }
 
-        	if ($this->emailHasChanged || $this->voicemailOptionsHaveChanged) {
+        	if ($this->voicemailOptionsHaveChanged) {
             	$this->updateVoicemail();
             }
         }
@@ -2970,6 +2971,7 @@ class SipSettings {
 
         $account=array("sipId"    => $this->sipId,
                        "email"    => $this->email,
+                       "name"     => $this->firstName.' '.$this->lastName,
                        "password" => $this->voicemail['Password'],
                        "options"  => $this->voicemail['Options']
                        );
