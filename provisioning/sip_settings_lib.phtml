@@ -31,16 +31,17 @@ class SipSettings {
     var $support_email             = "Support <support@example.com>";
     var $sip_settings_page 	       = "https://cdrtool.example.com/sip_settings.phtml";
     var $xcap_root   		       = "https://cdrtool.example.com/xcap-root";
-	var $pstn_access               = false;
+    var $pstn_access               = false;
     var $sip_proxy                 = "proxy.example.com";
     var $voicemail_server          = "vm.example.com";
     var $voicemail_access_number   = "*70";
-	var $absolute_voicemail_uri    = false; // use <voice-mailbox>
+    var $absolute_voicemail_uri    = false; // use <voice-mailbox>
     var $FUNC_access_number        = "*21*";
 
     var $change_privacy_access_number = "*67";
     var $check_privacy_access_number  = "*68";
-	var $enable_thor               = false;
+    var $enable_thor               = false;
+    var $sip_accounts_lite         = false;  // show basic settings by default, and advanced if property advanced is set to 1
 
     // end variables
 
@@ -385,6 +386,10 @@ class SipSettings {
         	$this->enable_thor=$this->soapEngines[$this->sip_engine]['enable_thor'];
         }
 
+        if (isset($this->soapEngines[$this->sip_engine]['sip_accounts_lite'])) {
+        	$this->sip_accounts_lite=$this->soapEngines[$this->sip_engine]['sip_accounts_lite'];
+        }
+
         if ($this->loginCredentials['templates_path']) {
         	$this->templates_path   = $this->loginCredentials['templates_path'];
         } else if ($this->soapEngines[$this->sip_engine]['templates_path']) {
@@ -546,6 +551,10 @@ class SipSettings {
 
 		foreach ($result->properties as $_property) {
         	$this->Preferences[$_property->name]=$_property->value;
+        }
+
+        if (!$this->sip_accounts_lite) {
+            $this->Preferences['advanced']=1;
         }
 
         if (!$this->Preferences['language']) {
@@ -1114,28 +1123,30 @@ class SipSettings {
                     $seen[$tel_enum]++;
                 }
 
-                if ($this->mobile_number) {
-                    $tel  = preg_replace("/[^\d+]/", "", $this->mobile_number);
-                    $tel_enum = str_replace("+", "00", $tel);
-                    $telf = $tel_enum . "@" . $this->domain;
-                    if (!$seen[$tel_enum] && !in_array($tel_enum,$this->enums)) {
-                        if ($this->FUNC_access_number) {
-                        	$_access_number=$this->FUNC_access_number.'0';
-                        } else {
-                        	$_access_number='';
-                        }
-
-                        $this->divertTargets[] = array("name"        => sprintf (_("Mobile %s"),$tel),
-                                                       "value"       => $telf,
-                                                       "description" => "Mobile",
-                                                       "access_number"  => $_access_number
-                                                       );
-                    }
-                    $seen[$tel_enum]++;
-                }
             }
 
         }
+
+        if ($this->mobile_number) {
+            $tel  = preg_replace("/[^\d+]/", "", $this->mobile_number);
+            $tel_enum = str_replace("+", "00", $tel);
+            $telf = $tel_enum . "@" . $this->domain;
+            if (!$seen[$tel_enum] && !in_array($tel_enum,$this->enums)) {
+                if ($this->FUNC_access_number) {
+                    $_access_number=$this->FUNC_access_number.'0';
+                } else {
+                    $_access_number='';
+                }
+
+                $this->divertTargets[] = array("name"        => sprintf (_("Mobile %s"),$tel),
+                                               "value"       => $telf,
+                                               "description" => "Mobile",
+                                               "access_number"  => $_access_number
+                                               );
+            }
+            $seen[$tel_enum]++;
+        }
+
 
         if ($this->FUNC_access_number) {
             $_access_number=$this->FUNC_access_number.' + number';
@@ -1308,7 +1319,6 @@ class SipSettings {
                 $uri=$m[2];
             }
         	$this->CallPrefDbURI[$condition]=$uri;
-            $SIPcache['diversions'][$condition]=$uri;
         }
 
         //dprint_r($this->CallPrefDbURI);
