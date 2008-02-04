@@ -38,7 +38,7 @@ install: build
 	cp -a setup/csv debian/cdrtool/usr/share/doc/cdrtool/rating-sample-files
 	cp -a images debian/cdrtool/var/www/CDRTool/
 	cp -a provisioning debian/cdrtool/var/www/CDRTool/
-	cp -a template debian/cdrtool/var/www/CDRTool/
+	cp -a templates debian/cdrtool/var/www/CDRTool/
 	cp -a contrib debian/cdrtool/var/www/CDRTool/
 	cp -a doc debian/cdrtool/var/www/CDRTool/
 	cp -a phplib debian/cdrtool/var/www/CDRTool/
