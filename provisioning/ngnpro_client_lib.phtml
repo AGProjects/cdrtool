@@ -8893,7 +8893,7 @@ class recordGenerator extends SoapEngine {
                 $this->sipRecords->getAllowedDomains();
             }
         } else {
-            printf ("<font color=red>Error: soapengineId %s does not exist</font>",$this->record_generators[$generatorId]['sip_engine']);
+            printf ("<font color=red>Error: sip_engine %s does not exist</font>",$this->record_generators[$generatorId]['sip_engine']);
         }
 
         if (in_array($this->record_generators[$generatorId]['enum_engine'],array_keys($this->soapEngines))) {
@@ -8908,7 +8908,7 @@ class recordGenerator extends SoapEngine {
                 $this->enumRecords    = new $_enum_class(&$this->EnumSoapEngine);
             }
         } else {
-            printf ("<font color=red>Error: soapengineId %s does not exist</font>",$this->record_generators[$generatorId]['enum_engine']);
+            printf ("<font color=red>Error: enum_engine %s does not exist</font>",$this->record_generators[$generatorId]['enum_engine']);
         }
 
         if (in_array($this->record_generators[$generatorId]['customer_engine'],array_keys($this->soapEngines))) {
@@ -8921,7 +8921,7 @@ class recordGenerator extends SoapEngine {
                 $this->customerRecords    = new $_customer_class(&$this->CustomerSoapEngine);
             }
         } else {
-            printf ("<font color=red>Error: soapengineId %s does not exist</font>",$this->record_generators[$generatorId]['enum_engine']);
+            printf ("<font color=red>Error: customer_engine %s does not exist</font>",$this->record_generators[$generatorId]['customer_engine']);
         }
 
 		if ($_REQUEST['reseller_filter']) $this->template['reseller']=intval($_REQUEST['reseller_filter']);

@@ -3,8 +3,9 @@ cdrtool (6.1.7) unstable; urgency=low
   * Set mobile_number per SIP account
   * Add sip_accounts_lite to soap engine settings
   * Update voicemail full name when sip account firstname or lastname changes
+  * Create templates_c dir required by smarty
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 03 Feb 2008 15:18:34 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 04 Feb 2008 18:34:36 +0100
 
 cdrtool (6.1.6) unstable; urgency=low
 

@@ -28,6 +28,8 @@ set -e
 case "$1" in
     configure)
         find /var/www/CDRTool/scripts/ -name \*.php -exec chmod +x {} \;
+        chmod g+w /var/www/CDRTool/templates_c
+        chgrp www-data /var/www/CDRTool/templates_c
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
