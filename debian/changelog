@@ -4,8 +4,9 @@ cdrtool (6.1.7) unstable; urgency=low
   * Add sip_accounts_lite to soap engine settings
   * Update voicemail full name when sip account firstname or lastname changes
   * Create templates_c dir required by smarty
+  * Added templates directory for sending welcome note
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 04 Feb 2008 18:34:36 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 04 Feb 2008 18:46:30 +0100
 
 cdrtool (6.1.6) unstable; urgency=low
 
