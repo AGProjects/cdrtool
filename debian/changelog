@@ -1,3 +1,5 @@
+  * Fixed buildStatistics call in cron.d (env LANG=C)  -> 6.1.8 ?
+
 cdrtool (6.1.7) unstable; urgency=low
 
   * Set mobile_number per SIP account
