@@ -1,0 +1,33 @@
+<?
+include("./global.inc");
+
+page_open(
+            array("sess" => "CDRTool_Session",
+                  "auth" => "CDRTool_Auth",
+                  "perm" => "CDRTool_Perm"));
+
+$perm->check("admin");
+
+$title="MySQL replication status";
+
+if (is_readable("local/header.phtml")) {
+    include("local/header.phtml");
+} else {
+    include("header.phtml");
+}
+
+$layout = new pageLayoutLocal();
+$layout->showTopMenu($title);
+
+require("mysql_replication_lib.phtml");
+
+$ReplicationOverview = new ReplicationOverview($replicated_databases);
+$ReplicationOverview->showOverview();
+    
+print "
+</body>
+</html>
+";
+
+page_close();
+?>

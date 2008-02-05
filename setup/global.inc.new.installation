@@ -98,24 +98,18 @@ class DB_openser extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
-// Used by /var/www/CDRTool/scripts/replicationStatus.php
-class DB1 extends DB_Sql {
-  var $Host     = "10.0.0.1";
-  var $Database = "radius";
-  var $User     = "root";
-  var $Password = "PASSWORD";
-  var $Halt_On_Error ="no";
-}
-
-class DB2 extends DB_Sql {
-  var $Host     = "10.0.0.2";
-  var $Database = "radius";
-  var $User     = "root";
-  var $Password = "PASSWORD";
-  var $Halt_On_Error ="no";
-}
-
-$CDRTool['mysql_clusters']=array('production'=>array('DB1','DB2'));
+$replicated_databases=array(
+                 "db1"=>array('ip'      =>'10.0.0.131',
+                                  'slave_of'=>'db-log2',
+			      	  'user'    =>'root',
+                                  'password'=>'password'
+                                  ),
+                 "db2"=>array('ip'      =>'10.0.0.132',
+                                  'slave_of'=>'db-log1',
+		      	          'user'    =>'root',
+                                  'password'=>'password'
+                                  )
+                 );
 
 class DomainAuthLocal extends DomainAuth {	// defined in phplib/local.inc
 }
