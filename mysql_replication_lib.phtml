@@ -7,22 +7,24 @@
 
 To use this library create a web page like this:
 
-$hostnames=array("db1"=>array('ip'       => '10.0.0.131',
-                              'slave_of' => 'db2',
-                              'user'     => 'root',
-                              'password' => 'pass'
-                                  ),
-                 "db2"=>array('ip'       => '10.0.0.132',
-                              'slave_of' => 'db1'
-                              'user'     => 'root',
-                              'password' => 'pass'
-                              )
+$replicated_databases=array(
+                 "cluster1" => array("db1"=>array('ip'       => '10.0.0.131',
+                                                 'slave_of' => 'db2',
+                                                 'user'     => 'root',
+                                                 'password' => 'pass'
+                                                     ),
+                                     "db2"=>array('ip'       => '10.0.0.132',
+                                                  'slave_of' => 'db1'
+                                                  'user'     => 'root',
+                                                  'password' => 'pass'
+                                                  )
+                                     )
                  );
 
 
 require("mysql_replication_lib.phtml");
 
-$ReplicationOverview = new ReplicationOverview($hostnames);
+$ReplicationOverview = new ReplicationOverview($clusters);
 $ReplicationOverview->showOverview();
 
 */
@@ -42,11 +44,15 @@ class MySQLReplicationStatus {
 	var $slave_status_query="show slave status";
     var $master_status_query="show master status";
 
-    function MySQLReplicationStatus($host,$hostnames) {
+    function MySQLReplicationStatus($host,$clusters) {
 
-        $db=new DBx ($host,$hostnames[$host]['user'],$hostnames[$host]['password']);
+        $db = new DBx ($clusters[$host]['ip'],$clusters[$host]['user'],$clusters[$host]['password']);
 
-        $db->query($this->slave_status_query);
+        if (!$db->query($this->slave_status_query)) {
+            printf ("<p><font color=red>MySQL error: %s (%s) for query: %s</font>",$db->Error,$db->Errno,$this->slave_status_query);
+            return false;
+        }
+
 		$db->next_record();
 
         $this->slave_master         = $db->f('Master_Host');
@@ -60,7 +66,11 @@ class MySQLReplicationStatus {
         $this->slave_last_error 	= $db->f('Last_Error');
         $this->slave_seconds_behind = $db->f('Seconds_Behind_Master');
 
-        $db->query($this->master_status_query);
+        if (!$db->query($this->master_status_query)) {
+            printf ("<p><font color=red>MySQL error: %s (%s) for query: %s</font>",$db->Error,$db->Errno,$this->slave_status_query);
+            return;
+        }
+
 		$db->next_record();
 
     	$this->master_position	    = $db->f('Position');
@@ -69,30 +79,35 @@ class MySQLReplicationStatus {
     }
 }
 
-
 class ReplicationOverview {
     var $status=array();
 
-    function ReplicationOverview($hostnames=array()) {
-    	$this->hostnames=$hostnames;
-        $this->host = $_REQUEST['repair'];
+    function ReplicationOverview($clusters=array()) {
+    	$this->clusters = $clusters;
 
-        foreach (array_keys($this->hostnames) as $key) {
-            $this->status[$key]= new MySQLReplicationStatus($key,$this->hostnames);
+        $this->cluster = $_REQUEST['cluster'];
+        $this->server  = $_REQUEST['server'];
+
+		$cluster_names=array_keys($this->clusters);
+
+        if (!$this->cluster) $this->cluster = $cluster_names[0];
+
+        foreach (array_keys($this->clusters[$this->cluster]) as $key) {
+            $this->status[$key]= new MySQLReplicationStatus($key,$this->clusters[$this->cluster]);
         }
 
-        foreach (array_keys($this->hostnames) as $key) {
-            if ($key==$this->host) {
-                $this->master_hostname=$this->hostnames[$key]['slave_of'];
-                $this->master_ip=$this->hostnames[$this->master_hostname]['ip'];
-                $this->master=$this->hostnames[$key]['slave_of'];
+        foreach (array_keys($this->clusters[$this->cluster]) as $key) {
+            if ($this->server && $key==$this->server) {
+                $this->master_hostname=$this->clusters[$this->cluster][$key]['slave_of'];
+                $this->master_ip=$this->clusters[$this->cluster][$this->master_hostname]['ip'];
+                $this->master=$this->clusters[$this->cluster][$key]['slave_of'];
                 break;
             }
         }
 
-        foreach (array_keys($this->hostnames) as $key) {
-        	if ($this->hostnames[$key]['slave_of'] == $this->master && $key!=$this->host) {
-                $this->slave_ip=$this->hostnames[$key]['ip'];
+        foreach (array_keys($this->clusters[$this->cluster]) as $key) {
+        	if ($this->server && $this->clusters[$this->cluster][$key]['slave_of'] == $this->master && $key != $this->server) {
+                $this->slave_ip=$this->clusters[$this->cluster][$key]['ip'];
                 $this->slave_hostname =$key;
                 break;
             }
@@ -101,16 +116,31 @@ class ReplicationOverview {
 
     function showOverview() {
 
-        print "
+        print "<p>
+        Available MySQL clusters: ";
+
+        foreach (array_keys($this->clusters) as $key) {
+            printf (" <a href=%s?cluster=%s>$key</a> ",$_SERVER['PHP_SELF'],$key);
+        }
+        
+
+        printf ("
         <table border=0>
         <tr>
+        <td></td>
+        <td colspan=%s class=border align=center><h1>%s</h1></td>
+        </tr>
+        <tr>
         <th></th>
-        ";
-        
-        foreach (array_keys($this->hostnames) as $key) {
-            printf ("<th>%s (%s)",$key,$this->hostnames[$key]['ip']);
-            if ($this->host != $key) {
-            	printf ("<br><a href=%s?repair=%s>Click to learn how to repair me</a></th>",$_SERVER['PHP_SELF'],$key);
+        ",
+        count($this->clusters[$this->cluster]),
+        $this->cluster
+        );
+
+        foreach (array_keys($this->clusters[$this->cluster]) as $key) {
+            printf ("<th class=border>%s (%s)",$key,$this->clusters[$this->cluster][$key]['ip']);
+            if ($this->server != $key) {
+            	printf ("<br><a href=%s?server=%s&cluster=%s>Click to learn how to repair me</a></th>",$_SERVER['PHP_SELF'],urlencode($key),urlencode($this->cluster));
             }
         }
         
@@ -120,7 +150,7 @@ class ReplicationOverview {
         print "<tr>
         <td></td>";
         
-        foreach (array_keys($this->hostnames) as $key) {
+        foreach (array_keys($this->clusters[$this->cluster]) as $key) {
             print "<td class=border valign=top>";
         
             print "
@@ -185,17 +215,26 @@ class ReplicationOverview {
         ";
  }
 
-    function printStep ($hostname,$instructions='') {
+    function printStep ($hostname,$instructions='',$downtime=false) {
         $this->step++;
         print "<tr>
         <td>$this->step
         </td>";
 
-        foreach (array_keys($this->hostnames) as $key) {
-            if ($key==$hostname) {
-                print "<td class=border><pre>$instructions</pre></td>";
+        foreach (array_keys($this->clusters[$this->cluster]) as $key) {
+            if ($downtime && $key==$this->master_hostname) {
+                $bgcolor="red";
             } else {
-                print "<td class=border></td>";
+                $bgcolor="white";
+            }
+            if ($key==$hostname) {
+                print "<td class=border bgcolor=$bgcolor><pre>$instructions</pre></td>";
+            } else {
+            	if ($downtime && $key==$this->master_hostname) {
+                	print "<td class=border bgcolor=$bgcolor valign=middle align=center><b><font color=white>Downtime</font></b></td>";
+                } else {
+                	print "<td class=border></td>";
+                }
             }
         }
         print "</tr>";
@@ -204,7 +243,7 @@ class ReplicationOverview {
 
     function printInstructions() {
 
-    if (!$this->host) return;
+    if (!$this->server) return;
 
 if ($this->slave_hostname) {
 
@@ -232,7 +271,7 @@ show slave status;
 slave stop;
 ",$this->master_hostname);
 
-$this->printStep($this->slave_hostname,$text);
+$this->printStep($this->slave_hostname,$text,true);
 
 $text="unlock tables;";
 
@@ -257,7 +296,7 @@ $text="
 
 ";
 
-$this->printStep($this->host,$text);
+$this->printStep($this->server,$text);
 
 $text=sprintf("
 rsync -avzP --delete /var/lib/mysql %s:/var/lib/
@@ -265,7 +304,7 @@ rsync -avzP --delete /var/lib/mysql %s:/var/lib/
 /etc/init.d/mysql start
 
 /etc/init.d/monit start
-",$this->host);
+",$this->server);
 
 $this->printStep($this->slave_hostname,$text);
 
@@ -290,15 +329,15 @@ MASTER_LOG_POS=%s.pos;
 
 slave start;
 
-",$this->host,
-$this->host,
+",$this->server,
+$this->server,
 $this->master_ip,
-$this->hostnames[$this->master_hostname]['replication_user'],
-$this->hostnames[$this->master_hostname]['replication_password'],
+$this->clusters[$this->cluster][$this->master_hostname]['replication_user'],
+$this->clusters[$this->cluster][$this->master_hostname]['replication_password'],
 $this->master_hostname,
 $this->master_hostname
 );
-$this->printStep($this->host,$text);
+$this->printStep($this->server,$text);
 
 $text=sprintf("
 
@@ -314,11 +353,11 @@ MASTER_LOG_POS=%s.pos;
 
 slave start;
 ",
-$this->hostnames[$this->host]['ip'],
-$this->hostnames[$this->host]['replication_user'],
-$this->hostnames[$this->host]['replication_password'],
-$this->host,
-$this->host
+$this->clusters[$this->cluster][$this->server]['ip'],
+$this->clusters[$this->cluster][$this->server]['replication_user'],
+$this->clusters[$this->cluster][$this->server]['replication_password'],
+$this->server,
+$this->server
 );
 
 $this->printStep($this->master_hostname,$text);
@@ -334,7 +373,7 @@ $text="
 
 ";
 
-$this->printStep($this->host,$text);
+$this->printStep($this->server,$text);
 
 
 $text=sprintf("
@@ -361,10 +400,10 @@ rsync -avzP --delete /var/lib/mysql %s:/var/lib/
 ",
 $this->master_hostname,
 $this->master_hostname,
-$this->host
+$this->server
 );
 
-$this->printStep($this->master_hostname,$text);
+$this->printStep($this->master_hostname,$text,true);
 
 $text=sprintf("
 (cd /var/lib/mysql/; rm *.info *relay-bin*)
@@ -386,15 +425,15 @@ MASTER_LOG_POS=%s.pos;
 
 slave start;
 
-",$this->host,
-$this->host,
+",$this->server,
+$this->server,
 $this->master_ip,
-$this->hostnames[$this->master_hostname]['replication_user'],
-$this->hostnames[$this->master_hostname]['replication_password'],
+$this->clusters[$this->cluster][$this->master_hostname]['replication_user'],
+$this->clusters[$this->cluster][$this->master_hostname]['replication_password'],
 $this->master_hostname,
 $this->master_hostname
 );
-$this->printStep($this->host,$text);
+$this->printStep($this->server,$text);
 
 $text=sprintf("
 
@@ -410,11 +449,11 @@ MASTER_LOG_POS=%s.pos;
 
 slave start;
 ",
-$this->hostnames[$this->host]['ip'],
-$this->hostnames[$this->host]['replication_user'],
-$this->hostnames[$this->host]['replication_password'],
-$this->host,
-$this->host
+$this->clusters[$this->cluster][$this->server]['ip'],
+$this->clusters[$this->cluster][$this->server]['replication_user'],
+$this->clusters[$this->cluster][$this->server]['replication_password'],
+$this->server,
+$this->server
 );
 
 $this->printStep($this->master_hostname,$text);

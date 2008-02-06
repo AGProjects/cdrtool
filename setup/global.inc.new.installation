@@ -98,19 +98,23 @@ class DB_openser extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
-$replicated_databases=array(
-                 "db1"=>array('ip'      =>'10.0.0.131',
-                                  'slave_of'=>'db-log2',
-			      	  'user'    =>'root',
-                                  'password'=>'password'
-                                  ),
-                 "db2"=>array('ip'      =>'10.0.0.132',
-                                  'slave_of'=>'db-log1',
-		      	          'user'    =>'root',
-                                  'password'=>'password'
-                                  )
+$replicated_databases=array('cluster1'=>array(
+                                              "db1"=>array('ip'      =>'10.0.0.131',
+                                                               'slave_of'=>'db-log2',
+                                                               'user'    =>'process',
+                                                               'password'=>'password',
+                                                               'replication_user'    =>'replication',
+                                                               'replication_password'=>'password'
+                                                               ),
+                                              "db2"=>array('ip'      =>'10.0.0.132',
+                                                               'slave_of'=>'db-log1',
+                                                               'user'    =>'process',
+                                                               'password'=>'password',
+                                                               'replication_user'    =>'replication',
+                                                               'replication_password'=>'password'
+                           )                                    )
                  );
-
+                 
 class DomainAuthLocal extends DomainAuth {	// defined in phplib/local.inc
 }
 
