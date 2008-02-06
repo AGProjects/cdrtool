@@ -1,10 +1,13 @@
 cdrtool (6.1.8) unstable; urgency=low
 
   * Fixed mrtg buildStatistics call in cron.d (env LANG=C)
-  * Added web page to show replications status and dynamic 
+  * Added web page to show replications status and dynamic
     instructions about how to fix it
+  * Replace $CDRTool['mysql_clusters'] in global.inc with 
+    $replicated_databases (see setup/global.inc.in for syntax)
+  * Delete DB1 and DB2 definitions from global.inc
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 05 Feb 2008 20:23:55 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 06 Feb 2008 08:58:37 +0100
 
 cdrtool (6.1.7) unstable; urgency=low
 
