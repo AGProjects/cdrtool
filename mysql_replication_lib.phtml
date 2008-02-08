@@ -245,6 +245,11 @@ class ReplicationOverview {
 
     if (!$this->server) return;
 
+
+$text="root ssh keys must be shared between machines";
+
+$this->printStep($this->master_hostname,$text);
+
 if ($this->slave_hostname) {
 
 $text=sprintf("

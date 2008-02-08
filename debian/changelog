@@ -1,8 +1,14 @@
 cdrtool (6.1.9) unstable; urgency=low
 
   * Support multiple clusters for mysql replication monitor
-
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 06 Feb 2008 11:54:25 +0100
+  * Fixed vulnerability related to missing BYE and MediaProxy 
+    radius Update action (reported by Inaki Baz Castil)
+    You  must reload the sql stored procedures from 
+    setup/radius/OpenSER/radius_accounting.proc or 
+    update Freeradius with setup/radius/OpenSER/sql.conf 
+    when not using the stored procedures
+  
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 08 Feb 2008 21:58:09 +0100
 
 cdrtool (6.1.8) unstable; urgency=low
 
