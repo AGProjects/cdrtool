@@ -62,7 +62,7 @@
                         'quota'    => $quota,
                         'prepaid'  => $prepaid,
                         'password' => $password,
-                        'groups'   => array('group1','group2'),
+                        'pstn'     => true,
                         'owner'    => $owner,
                         'customer' => $customer,
                         'reseller' => $reseller
@@ -530,7 +530,6 @@ class SoapEngine {
 
     function execute($function) {
         $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
-
         /*
         $function=array('commit'   => array('name'       => 'addAccount',
                                             'parameters' => array($param1,$param2),
@@ -567,10 +566,10 @@ class SoapEngine {
 
                 $this->exception   = $this->error_fault->detail->exception;
 
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurlRemote,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
                 return false;
             } else {
-            	printf ("<p><font color=green>%s at %s </font>",$function['commit']['logs']['success'],$this->SOAPurlRemote);
+            	printf ("<p><font color=green>%s at %s </font>\n",$function['commit']['logs']['success'],$this->SOAPurlRemote);
 
                 $this->soapclient->addHeader($this->SoapAuth);
             	$result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
@@ -582,7 +581,7 @@ class SoapEngine {
 
                     $this->exception   = $this->error_fault->detail->exception;
 
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
 
 					if ($function['rollback']['name']) {
 
@@ -595,16 +594,16 @@ class SoapEngine {
                             $this->error_msg=$result->getMessage();
                             $this->error_fault=$result->getFault();
                             $this->error_code=$result->getCode();
-                            printf ("<p><font color=red>Error roll back at %s: %s (%s): %s</font>",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
+                            printf ("<p><font color=red>Error roll back at %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
                         } else {
-            				printf ("<p><font color=green>Rolled back action at %s </font>",$this->SOAPurlRemote);
+            				printf ("<p><font color=green>Rolled back action at %s </font>\n",$this->SOAPurlRemote);
                         }
                     }
 
                     return false;
                 } else {
                     if ($function['commit']['logs']['success']) {
-                    	printf ("<p><font color=green>%s at %s </font>",$function['commit']['logs']['success'],$this->SOAPurl);
+                    	printf ("<p><font color=green>%s at %s </font>\n",$function['commit']['logs']['success'],$this->SOAPurl);
                     }
                 }
             }
@@ -612,8 +611,7 @@ class SoapEngine {
         } else {
 
 	     	$this->soapclient->addHeader($this->SoapAuth);
-            $result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
-
+            $result = call_user_func_array(array(&$this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
             if (PEAR::isError($result)) {
                 $this->error_msg   = $result->getMessage();
                 $this->error_fault = $result->getFault();
@@ -623,10 +621,10 @@ class SoapEngine {
 
                 dprint_r($this->soapResponse);
 
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
             } else {
             	if ($function['commit']['logs']['success']) {
-                	printf ("<p><font color=green>%s </font>",$function['commit']['logs']['success']);
+                	printf ("<p><font color=green>%s </font>\n",$function['commit']['logs']['success']);
                 }
             }
         }
@@ -2531,7 +2529,6 @@ class SipAccounts extends Records {
     }
 
     function addRecord($dictionary=array()) {
-
         dprint_r($dictionary);
 
     	if ($dictionary['account']) {
@@ -2699,9 +2696,8 @@ class SipAccounts extends Records {
                                             'parameters' => array($deleteAccount)
                                             )
                         );
-     
-        return $this->SoapEngine->execute($function);
 
+        return $this->SoapEngine->execute($function);
     }
 
     function getAllowedDomains() {

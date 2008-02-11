@@ -37,6 +37,9 @@ class SipSettings {
     var $voicemail_access_number   = "*70";
     var $absolute_voicemail_uri    = false; // use <voice-mailbox>
     var $FUNC_access_number        = "*21*";
+    var $FNOL_access_number        = "*22*";
+    var $FNOA_access_number        = "*23*";
+    var $FBUS_access_number        = "*23*";
 
     var $change_privacy_access_number = "*67";
     var $check_privacy_access_number  = "*68";
@@ -257,6 +260,11 @@ class SipSettings {
         	$this->tabs[presence]=_("Presence");
         }
 
+		$this->access_numbers=array("FUNC"=>$this->FUNC_access_number,
+                                    "FNOA"=>$this->FNOA_access_number,
+                                    "FBUS"=>$this->FBUS_access_number,
+                                    "FNOL"=>$this->FNOL_access_number
+                                    );
     }
 
     function initSoapClient() {
@@ -376,6 +384,14 @@ class SipSettings {
 
         if ($this->soapEngines[$this->sip_engine]['FUNC_access_number']) {
         	$this->FUNC_access_number = $this->soapEngines[$this->sip_engine]['FUNC_access_number'];
+        }
+
+        if ($this->soapEngines[$this->sip_engine]['FNOA_access_number']) {
+        	$this->FNOA_access_number = $this->soapEngines[$this->sip_engine]['FNOA_access_number'];
+        }
+
+        if ($this->soapEngines[$this->sip_engine]['FBUS_access_number']) {
+        	$this->FBUS_access_number = $this->soapEngines[$this->sip_engine]['FBUS_access_number'];
         }
 
         if (isset($this->soapEngines[$this->sip_engine]['absolute_voicemail_uri'])) {
@@ -1070,27 +1086,14 @@ class SipSettings {
             return true;
         }
 
-        if ($this->FUNC_access_number) {
-            $_access_number=$this->FUNC_access_number;
-        } else {
-            $_access_number='';
-        }
-
         $this->divertTargets[] = array("name"          => _("No diversion"),
                                        "value"         => "",
-                                       "description"   => "Disabled",
-                                       "access_number" => $_access_number
+                                       "description"   => "Disabled"
                                        );
 
         if ($this->voicemail['Account']) {
         	$vmf=$this->getVoicemailForwarding();
             if (is_array($vmf)) {
-                if ($this->FUNC_access_number) {
-                    $vmf['access_number']=$this->FUNC_access_number.'1';
-                } else {
-                	$vmf['access_number']='';
-                }
-
             	$this->divertTargets[]=$vmf;
             }
         }
@@ -1132,32 +1135,18 @@ class SipSettings {
             $tel_enum = str_replace("+", "00", $tel);
             $telf = $tel_enum . "@" . $this->domain;
             if (!$seen[$tel_enum] && !in_array($tel_enum,$this->enums)) {
-                if ($this->FUNC_access_number) {
-                    $_access_number=$this->FUNC_access_number.'0';
-                } else {
-                    $_access_number='';
-                }
-
                 $this->divertTargets[] = array("name"        => sprintf (_("Mobile %s"),$tel),
                                                "value"       => $telf,
-                                               "description" => "Mobile",
-                                               "access_number"  => $_access_number
+                                               "description" => "Mobile"
                                                );
             }
             $seen[$tel_enum]++;
         }
 
 
-        if ($this->FUNC_access_number) {
-            $_access_number=$this->FUNC_access_number.' + number';
-        } else {
-            $_access_number='';
-        }
-
         $this->divertTargets[]=array("name"  => sprintf (_("Other")),
                                       "value" => "",
-                                      "description"  => "Other",
-                                      "access_number" => $_access_number
+                                      "description"  => "Other"
                                       );
 
         //dprint_r($this->divertTargets);
@@ -1278,6 +1267,14 @@ class SipSettings {
 
         if (isset($this->resellerProperties['FUNC_access_number'])) {
         	$this->FUNC_access_number = $this->resellerProperties['FUNC_access_number'];
+        }
+
+        if (isset($this->resellerProperties['FNOA_access_number'])) {
+        	$this->FNOA_access_number = $this->resellerProperties['FNOA_access_number'];
+        }
+
+        if (isset($this->resellerProperties['FBUS_access_number'])) {
+        	$this->FBUS_access_number = $this->resellerProperties['FBUS_access_number'];
         }
 
         if (isset($this->resellerProperties['absolute_voicemail_uri'])) {
@@ -3509,7 +3506,18 @@ class SipSettings {
             foreach ($this->divertTargets as $idx => $phone) {
 
                 $name = $phone['name'];
-                if ($phone['access_number']) $name .= sprintf(' (Dial %s)',$phone['access_number']);
+
+                if ($this->access_numbers[$condition]) {
+                    if ($phone['description'] == "Mobile") {
+	                	$name .= sprintf(' (Dial %s0)',$this->access_numbers[$condition]);
+                    } else if ($phone['description'] == "Voicemail") {
+	                	$name .= sprintf(' (Dial %s1)',$this->access_numbers[$condition]);
+                    } else if ($phone['description'] == "Disabled") {
+	                	$name .= sprintf(' (Dial %s)',$this->access_numbers[$condition]);
+                    } else if ($phone['description'] == "Other") {
+	                	$name .= sprintf(' (Dial %s+ NUMBER)',$this->access_numbers[$condition]);
+    	            }
+                }
 
                 if ($phone['description'] == 'Other')
                     $value = $lastOther;
@@ -3563,6 +3571,10 @@ class SipSettings {
                     printf ("<option value=\"%s\" %s>%s",$_el,$selected_timeout[$_el],$this->timeoutEls[$_el]);
                 }
                 print "</select>";
+            }
+
+            if ($condition=="FUNV") {
+                printf ("Dial %s2*X where X = number of minutes, 0 to reset", $this->access_numbers['FUNC']);
             }
 
             print "

@@ -253,7 +253,7 @@ $this->printStep($this->master_hostname,$text);
 if ($this->slave_hostname) {
 
 $text=sprintf("
-mysql -u root -P
+mysql -u root -p
 
 flush tables with read lock;
 
@@ -268,7 +268,7 @@ $this->printStep($this->master_hostname,$text);
 
 $text=sprintf("
 
-mysql -u root -P
+mysql -u root -p
 
 show slave status;
 # wait until same file/pos as %s is displayed)
@@ -321,7 +321,7 @@ $text=sprintf("
 
 /etc/init.d/monit start
 
-mysql -u root -P
+mysql -u root -p
 
 show master status;
 # write down the file and possition %s.file %s.pos
@@ -346,7 +346,7 @@ $this->printStep($this->server,$text);
 
 $text=sprintf("
 
-mysql -u root -P
+mysql -u root -p
 
 stop slave;
 
@@ -383,7 +383,7 @@ $this->printStep($this->server,$text);
 
 $text=sprintf("
 
-mysql -u root -P
+mysql -u root -p
 
 flush tables with read lock;
 
@@ -417,7 +417,7 @@ $text=sprintf("
 
 /etc/init.d/monit start
 
-mysql -u root -P
+mysql -u root -p
 
 show master status;
 # write down the file and possition %s.file %s.pos
@@ -442,7 +442,7 @@ $this->printStep($this->server,$text);
 
 $text=sprintf("
 
-mysql -u root -P
+mysql -u root -p
 
 stop slave;
 
