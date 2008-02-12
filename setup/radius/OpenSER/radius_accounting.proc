@@ -416,7 +416,7 @@ BEGIN
 		WHERE
 		AcctSessionId = ?
 		AND ((SipToTag = ? AND SipFromTag = ?) OR (SipToTag = ? AND SipFromTag = ?))
-		AND ConnectInfo_stop IS NULL AND MediaInfo != 'timeout';");
+		AND ConnectInfo_stop IS NULL AND (MediaInfo IS NULL OR MediaInfo != 'timeout');");
 		PREPARE update_rad1 FROM @updstmt1;
 		EXECUTE update_rad1 USING @v_AcctStopTime, @v_AcctStopTime,
 			@v_AcctStopDelay, @v_ConnectInfo_stop, @v_RTPStatistics,
@@ -456,7 +456,7 @@ BEGIN
 			WHERE
 			AcctSessionId = ?
 			AND ((SipToTag = ? AND SipFromTag = ?) OR (SipToTag = ? AND SipFromTag = ?))
-			AND ConnectInfo_stop IS NULL AND MediaInfo != 'timeout';");
+			AND ConnectInfo_stop IS NULL AND (MediaInfo IS NULL OR MediaInfo != 'timeout') ;");
 			PREPARE update_rad2 FROM @updstmt2;
 			EXECUTE update_rad2 USING @v_AcctStopTime, @v_AcctStopTime,
 				@v_AcctStopDelay, @v_ConnectInfo_stop, @v_RTPStatistics,

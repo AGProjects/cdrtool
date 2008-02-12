@@ -1,3 +1,13 @@
+cdrtool (6.2.1) unstable; urgency=low
+
+  * Correct update of radius records when mediaproxy field is NULL or !timeout
+    You  must reload the sql stored procedures from
+    setup/radius/OpenSER/radius_accounting.proc or
+    update Freeradius with setup/radius/OpenSER/sql.conf
+    when not using the stored procedures
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Feb 2008 19:27:11 +0100
+
 cdrtool (6.2.0) unstable; urgency=high
 
   * Fixed corrupted phone_images.php file

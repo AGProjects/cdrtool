@@ -3858,30 +3858,30 @@ class RatingEngine {
         return $accounts;
     }
 
-    function DebitBalance($BillingPartyId,$balance) {
+    function DebitBalance($account,$balance) {
 
-        $BillingPartyId=trim($BillingPartyId);
+        $account=trim($account);
 
- 		if (preg_match("/^(.*):(.*)$/",$BillingPartyId,$m)) {
-        	$BillingPartyId=$m[2];
+ 		if (preg_match("/^(.*):(.*)$/",$account,$m)) {
+        	$account=$m[2];
         }
 
-        if (!$BillingPartyId) {
+        if (!$account) {
             syslog(LOG_NOTICE, "DebitBalance() error: missing BillingPartyId");
             return false;
         }
 
-		if (strlen($BillingPartyId) > 254) {
+		if (strlen($account) > 254) {
             syslog(LOG_NOTICE, "DebitBalance() error: BillingPartyId > 254 chars");
             return false;
         }
 
-        if (!$BillingPartyId || !strlen($balance)) {
+        if (!$account || !strlen($balance)) {
         	syslog(LOG_NOTICE, "DebitBalance() error: missing BillingPartyId or balance");
             return false;
         }
 
-        if ($this->balance[$BillingPartyId]) {
+        if ($this->balance[$account]) {
 
             $query=sprintf("update %s
             set balance          = balance - '%s',
@@ -3894,7 +3894,7 @@ class RatingEngine {
             addslashes($this->table),
             addslashes($balance),
             addslashes($balance),
-            addslashes($BillingPartyId)
+            addslashes($account)
             );
             dprint($query);
 
@@ -3902,13 +3902,13 @@ class RatingEngine {
 
                 $query=sprintf("select balance from %s where account = '%s'",
                 addslashes($this->table),
-                addslashes($BillingPartyId)
+                addslashes($account)
                 );
 
                 dprint($query);
         		$this->db->query($query);
                 $this->db->next_record();
-                $this->balance[$BillingPartyId]=$this->db->f('balance');
+                $this->balance[$account]=$this->db->f('balance');
                 return true;
             } else {
                 $log=sprintf ("DebitBalance error: %s (%s)",$this->db->Error,$this->db->Errno);
@@ -3917,54 +3917,74 @@ class RatingEngine {
             }
 
         } else {
-            syslog(LOG_NOTICE, "DebitBalance() error: BillingPartyId=$BillingPartyId does not exist");
+            syslog(LOG_NOTICE, "DebitBalance() error: Account=$account does not exist");
             return "none";
         }
     }
 
-    function CreditBalance($BillingPartyId,$balance) {
+    function CreditBalance($account,$balance) {
 
         if (!is_numeric($balance)) {
             syslog(LOG_NOTICE, "CreditBalance() error: balance \"$balance\"is invalid");
             return false;
         }
 
-        $BillingPartyId=trim($BillingPartyId);
-		if (preg_match("/^(.*):(.*)$/",$BillingPartyId,$m)) {
-        	$BillingPartyId=$m[2];
+        $account=trim($account);
+		if (preg_match("/^(.*):(.*)$/",$account,$m)) {
+        	$account=$m[2];
         }
 
-        if (!$BillingPartyId) {
-            syslog(LOG_NOTICE, "CreditBalance() error: missing BillingPartyId");
+        if (!$account) {
+            syslog(LOG_NOTICE, "CreditBalance() error: missing account");
             return false;
         }
 
-		if (strlen($BillingPartyId) > 254) {
-            syslog(LOG_NOTICE, "CreditBalance() error: BillingPartyId > 254 chars");
+	if (strlen($account) > 128) {
+            syslog(LOG_NOTICE, "CreditBalance() error: account > 128 chars");
             return false;
         }
 
-        if ($this->balance[$BillingPartyId]) {
+        if ($this->balance[$account]) {
             $query=sprintf("update %s
             set balance   = balance + '%s',
             change_date   = NOW()
             where account = '%s'",
             addslashes($this->table),
             addslashes($balance),
-            addslashes($BillingPartyId)
+            addslashes($account)
             );
 
             dprint($query);
 
             $this->db->query($query);
+
+		    list($prepaidUser,$prepaidDomain)=explode("@",$account);
+
             if ($this->db->affected_rows()) {
-            	$this->balance[$BillingPartyId]=$this->balance[$BillingPartyId]+$balance;
-                $log=sprintf ("Prepaid account $BillingPartyId credited with $balance");
+            	$this->balance[$account]=$this->balance[$account]+$balance;
+                $log=sprintf ("Prepaid account $account credited with $balance");
                 syslog(LOG_NOTICE, $log);
+
+                // log to prepaid_history
+                $query=sprintf("insert into prepaid_history
+                (username,domain,action,number,value,balance,date)
+                values 
+                ('%s','%s','Set balance','manual update','%s','%s',NOW())",
+                addslashes($prepaidUser),
+                addslashes($prepaidDomain),
+                addslashes($balance),
+                addslashes($this->balance[$account])
+                );
+                dprint($query);
+
+                if (!$this->db->query($query)) {
+                    $log=sprintf("Error: %s (%s)",$this->db->Error,$this->db->Errno);
+	                syslog(LOG_NOTICE, $log);
+                }
+
                 return true;
             } else {
-                $error_msg=$this->db->Error;
-                $log=sprintf ("CreditBalance() error: failed to debit balance ($error_msg)");
+                $log=sprintf ("CreditBalance() error: failed to debit balance: %s (%s)",$this->db->Error,$this->db->Errno);
                 syslog(LOG_NOTICE, $log);
         		return false;
             }
@@ -3975,20 +3995,39 @@ class RatingEngine {
             values ('%s','%s',NOW())",
             addslashes($this->table),
             addslashes($balance),
-            addslashes($BillingPartyId)
+            addslashes($account)
             );
 
             dprint($query);
 
             $this->db->query($query);
+
             if ($this->db->affected_rows()) {
-            	$this->balance[$BillingPartyId]=$this->balance[$BillingPartyId]+$balance;
-                $log=sprintf ("Added prepaid account $BillingPartyId with balance=$balance");
+            	$this->balance[$account]=$this->balance[$account]+$balance;
+                $log=sprintf ("Added prepaid account $account with balance=$balance");
                 syslog(LOG_NOTICE, $log);
+                // log to prepaid_history
+                $query=sprintf("insert into prepaid_history 
+                (username,domain,action,number,value,balance,date) 
+                values 
+                ('%s','%s','Set balance','manual update','%s','%s',NOW())",
+                addslashes($prepaidUser),
+                addslashes($prepaidDomain),
+                addslashes($balance),
+                addslashes($balance)
+                );
+
+                dprint($query);
+        		$this->db->query($query);
+
+                if (!$this->db->query($query)) {
+                    $log=sprintf("Error: %s (%s)",$this->db->Error,$this->db->Errno);
+	                syslog(LOG_NOTICE, $log);
+                }
+
                 return true;
             } else {
-                $error_msg=$this->db->Error;
-                $log=sprintf ("CreditBalance() error: failed to credit balance ($error_msg)");
+                $log=sprintf ("CreditBalance() error: failed to credit balance: %s (%s)",$this->db->Error,$this->db->Errno);
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
@@ -4003,8 +4042,8 @@ class RatingEngine {
         "MaxSessionTime From=sip:123@example.com To=sip:0031650222333 Duration=7200 Lock=1\n".
         "DebitBalance   From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
         "ShowPrice      From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
-        "AddBalance     From=sip:123@example.com Value=10.00\n".
-        "GetBalance     From=sip:123@example.com\n".
+        "AddBalance     From=123@example.com Value=10.00\n".
+        "GetBalance     From=123@example.com\n".
         "ReloadRatingTables\n".
         "ShowProfiles\n".
         "ShowENUMtlds\n".
