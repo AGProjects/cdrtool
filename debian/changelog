@@ -7,7 +7,7 @@ cdrtool (6.2.1) unstable; urgency=low
     when not using the stored procedures
   * Log add balance to prepaid_history table
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Feb 2008 19:30:15 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Feb 2008 19:32:04 +0100
 
 cdrtool (6.2.0) unstable; urgency=high
 
