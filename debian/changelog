@@ -5,8 +5,9 @@ cdrtool (6.2.1) unstable; urgency=low
     setup/radius/OpenSER/radius_accounting.proc or
     update Freeradius with setup/radius/OpenSER/sql.conf
     when not using the stored procedures
+  * Log add balance to prepaid_history table
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Feb 2008 19:27:11 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Feb 2008 19:30:15 +0100
 
 cdrtool (6.2.0) unstable; urgency=high
 
