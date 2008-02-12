@@ -10,8 +10,9 @@ cdrtool (6.1.9) unstable; urgency=low
     setup/radius/OpenSER/radius_accounting.proc or
     update Freeradius with setup/radius/OpenSER/sql.conf
     when not using the stored procedures
+  * Specify if output of soap functions is html formatted or not
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Feb 2008 03:17:34 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Feb 2008 03:34:45 +0100
 
 cdrtool (6.1.8) unstable; urgency=low
 

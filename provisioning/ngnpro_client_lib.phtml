@@ -528,7 +528,7 @@ class SoapEngine {
 
     }
 
-    function execute($function) {
+    function execute($function,$html=true) {
         $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
         /*
         $function=array('commit'   => array('name'       => 'addAccount',
@@ -548,7 +548,11 @@ class SoapEngine {
         */
 
         if (!$function['commit']['name']) {
-            print "<font color=red>Error: no function name supplied</font>";
+            if ($html) {
+            	print "<font color=red>Error: no function name supplied</font>";
+            } else {
+            	print "Error: no function name supplied\n";
+            }
             return false;
         }
 
@@ -566,10 +570,19 @@ class SoapEngine {
 
                 $this->exception   = $this->error_fault->detail->exception;
 
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurlRemote,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
+            	if ($html) {
+                	printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurlRemote,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
+                } else {
+                	printf ("Error from %s: %s (%s): %s\n",$this->SOAPurlRemote,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
+                }
+
                 return false;
             } else {
-            	printf ("<p><font color=green>%s at %s </font>\n",$function['commit']['logs']['success'],$this->SOAPurlRemote);
+            	if ($html) {
+            		printf ("<p><font color=green>%s at %s </font>\n",$function['commit']['logs']['success'],$this->SOAPurlRemote);
+                } else {
+            		printf ("%s at %s\n",$function['commit']['logs']['success'],$this->SOAPurlRemote);
+                }
 
                 $this->soapclient->addHeader($this->SoapAuth);
             	$result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
@@ -581,8 +594,11 @@ class SoapEngine {
 
                     $this->exception   = $this->error_fault->detail->exception;
 
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
-
+	            	if ($html) {
+    	                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
+                    } else {
+    	                printf ("Error from %s: %s (%s): %s\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
+                    }
 					if ($function['rollback']['name']) {
 
             			$this->soapclientRemote->addHeader($this->SoapAuthRemote);
@@ -594,16 +610,30 @@ class SoapEngine {
                             $this->error_msg=$result->getMessage();
                             $this->error_fault=$result->getFault();
                             $this->error_code=$result->getCode();
-                            printf ("<p><font color=red>Error roll back at %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
+
+	            			if ($html) {
+                            	printf ("<p><font color=red>Error roll back at %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
+                            } else {
+                            	printf ("Error roll back at %s: %s (%s): %s\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
+                            }
+
                         } else {
-            				printf ("<p><font color=green>Rolled back action at %s </font>\n",$this->SOAPurlRemote);
+	            			if ($html) {
+            					printf ("<p><font color=green>Rolled back action at %s </font>\n",$this->SOAPurlRemote);
+                            } else {
+            					printf ("Rolled back action at %s\n",$this->SOAPurlRemote);
+                            }
                         }
                     }
 
                     return false;
                 } else {
                     if ($function['commit']['logs']['success']) {
-                    	printf ("<p><font color=green>%s at %s </font>\n",$function['commit']['logs']['success'],$this->SOAPurl);
+	            		if ($html) {
+                    		printf ("<p><font color=green>%s at %s </font>\n",$function['commit']['logs']['success'],$this->SOAPurl);
+                        } else {
+                    		printf ("%s at %s\n",$function['commit']['logs']['success'],$this->SOAPurl);
+                        }
                     }
                 }
             }
@@ -619,18 +649,25 @@ class SoapEngine {
 
                 $this->exception   = $this->error_fault->detail->exception;
 
-                dprint_r($this->soapResponse);
-
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
+	            if ($html) {
+                	printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
+                } else {
+                	printf ("Error from %s: %s (%s): %s\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
+                }
             } else {
             	if ($function['commit']['logs']['success']) {
-                	printf ("<p><font color=green>%s </font>\n",$function['commit']['logs']['success']);
+		            if ($html) {
+                		printf ("<p><font color=green>%s </font>\n",$function['commit']['logs']['success']);
+                    } else {
+                		printf ("%s\n",$function['commit']['logs']['success']);
+                    }
                 }
             }
         }
 
         return true;
     }
+
 }
 
 class Records {
@@ -641,10 +678,11 @@ class Records {
     var $selectionKeys      = array();
     var $resellers          = array();
     var $customers          = array();
-    var $record_generator    = false;
+    var $record_generator   = false;
 	var $customer_properties = array();
     var $loginProperties    = array();
 	var $errorMessage       = '';
+    var $html               = true;
 
     function Records(&$SoapEngine) {
     	$this->SoapEngine         = &$SoapEngine;
@@ -939,7 +977,6 @@ class Records {
 
     function getAllowedDomains() {
     }
-
 
     function showActionsForm() {
         if (!$this->selectionActive) {
@@ -1725,7 +1762,7 @@ class Domains extends Records {
                                            );
 
         unset($this->filters);
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function showAddForm() {
@@ -1796,7 +1833,7 @@ class Domains extends Records {
                                             'parameters' => array($domainStructure))
                                            );
 
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
 
     }
 
@@ -2018,12 +2055,12 @@ class Domains extends Records {
 
         $function=array('commit'   => array('name'       => 'updateDomain',
                                             'parameters' => array($domain),
-                                            'logs'       => array('success' => sprintf('<p>Domain %s has been updated',$domain->domain))),
+                                            'logs'       => array('success' => sprintf('Domain %s has been updated',$domain->domain))),
                         'rollback' => array('name'       => 'updateDomain',
                                             'parameters' => array($domain_old))
                         );
 
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
 
     }
 
@@ -2425,14 +2462,14 @@ class SipAccounts extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteAccount',
                                             'parameters' => array($account),
-                                            'logs'       => array('success' => sprintf('<p>SIP account %s@%s has been deleted',$this->filters['username'],$this->filters['domain'])
+                                            'logs'       => array('success' => sprintf('SIP account %s@%s has been deleted',$this->filters['username'],$this->filters['domain'])
                                                                   )
                                            )
 
                         );
 
         unset($this->filters);
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function showAddForm() {
@@ -2691,13 +2728,13 @@ class SipAccounts extends Records {
 
         $function=array('commit'   => array('name'       => 'addAccount',
                                             'parameters' => array($account),
-                                            'logs'       => array('success' => sprintf('<p>SIP account %s@%s has been added',$username,$domain))),
+                                            'logs'       => array('success' => sprintf('SIP account %s@%s has been added',$username,$domain))),
                         'rollback' => array('name'       => 'deleteAlias',
                                             'parameters' => array($deleteAccount)
                                             )
                         );
 
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function getAllowedDomains() {
@@ -3103,14 +3140,14 @@ class SipAliases extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteAlias',
                                             'parameters' => array($alias),
-                                            'logs'       => array('success' => sprintf('<p>SIP alias %s@%s has been deleted',$this->filters['alias_username'],$this->filters['alias_domain'])
+                                            'logs'       => array('success' => sprintf('SIP alias %s@%s has been deleted',$this->filters['alias_username'],$this->filters['alias_domain'])
                                                                   )
                                            )
 
                         );
 
         unset($this->filters);
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function showSeachFormCustom() {
@@ -3270,13 +3307,13 @@ class SipAliases extends Records {
 
         $function=array('commit'   => array('name'       => 'addAlias',
                                             'parameters' => array($alias),
-                                            'logs'       => array('success' => sprintf('<p>SIP alias %s@%s has been added',$username,$domain))),
+                                            'logs'       => array('success' => sprintf('SIP alias %s@%s has been added',$username,$domain))),
                         'rollback' => array('name'       => 'deleteAlias',
                                             'parameters' => array($deleteAlias)
                                             )
                         );
      
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function getAllowedDomains() {
@@ -3664,13 +3701,13 @@ class EnumRanges extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteRange',
                                             'parameters' => array($rangeId),
-                                            'logs'       => array('success' => sprintf('<p>ENUM range +%s under %s has been deleted',$this->filters['prefix'],$this->filters['tld'])
+                                            'logs'       => array('success' => sprintf('ENUM range +%s under %s has been deleted',$this->filters['prefix'],$this->filters['tld'])
                                                                   )
                                             )
                         );
 
         unset($this->filters);
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function showAddForm() {
@@ -3786,13 +3823,13 @@ class EnumRanges extends Records {
 
         $function=array('commit'   => array('name'       => 'addRange',
                                             'parameters' => array($range),
-                                            'logs'       => array('success' => sprintf('<p>ENUM range +%s under %s has been added',$prefix,$tld))),
+                                            'logs'       => array('success' => sprintf('ENUM range +%s under %s has been added',$prefix,$tld))),
                         'rollback' => array('name'       => 'deleteRange',
                                             'parameters' => array($deleteRange)
                                             )
                         );
      
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
 
     }
 
@@ -4052,12 +4089,12 @@ class EnumRanges extends Records {
 
         $function=array('commit'   => array('name'       => 'updateRange',
                                             'parameters' => array($range),
-                                            'logs'       => array('success' => sprintf('<p>ENUM range +%s under %s has been updated',$rangeid['prefix'],$rangeid['tld']))),
+                                            'logs'       => array('success' => sprintf('ENUM range +%s under %s has been updated',$rangeid['prefix'],$rangeid['tld']))),
                         'rollback' => array('name'       => 'updateRange',
                                             'parameters' => array($range_old))
                         );
      
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
 
     }
 
@@ -4809,7 +4846,7 @@ class EnumMappings extends Records {
     
                 $function=array('commit'   => array('name'       => 'updateNumber',
                                                     'parameters' => array($result_new),
-                                                    'logs'       => array('success' => sprintf('<p>ENUM mapping %s has been deleted',$mapto))),
+                                                    'logs'       => array('success' => sprintf('ENUM mapping %s has been deleted',$mapto))),
                                 'rollback' => array('name'       => 'updateNumber',
                                                     'parameters' => array($result)
                                                     )
@@ -4818,7 +4855,7 @@ class EnumMappings extends Records {
             } else {
                 $function=array('commit'   => array('name'       => 'deleteNumber',
                                                     'parameters' => array($enum_id),
-                                                    'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been deleted',$number,$tld))),
+                                                    'logs'       => array('success' => sprintf('ENUM number +%s under %s has been deleted',$number,$tld))),
                                 'rollback' => array('name'       => 'addNumber',
                                                     'parameters' => array($result)
                                                     )
@@ -4826,7 +4863,7 @@ class EnumMappings extends Records {
             }
 
             unset($this->filters);
-            return $this->SoapEngine->execute($function);
+            return $this->SoapEngine->execute($function,$this->html);
 
         } else {
             return false;
@@ -5165,13 +5202,13 @@ class EnumMappings extends Records {
 
                 $function=array('commit'   => array('name'       => 'addNumber',
                                                     'parameters' => array($enum_number),
-                                                    'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been added',$number,$tld))),
+                                                    'logs'       => array('success' => sprintf('ENUM number +%s under %s has been added',$number,$tld))),
                                 'rollback' => array('name'       => 'deleteNumber',
                                                     'parameters' => array($enumId)
                                                     )
                                 );
              
-                return $this->SoapEngine->execute($function);
+                return $this->SoapEngine->execute($function,$this->html);
             } else {
                 printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
@@ -5203,12 +5240,12 @@ class EnumMappings extends Records {
 
             $function=array('commit'   => array('name'       => 'updateNumber',
                                                 'parameters' => array($result_new),
-                                                'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been updated',$number,$tld))),
+                                                'logs'       => array('success' => sprintf('ENUM number +%s under %s has been updated',$number,$tld))),
                             'rollback' => array('name'       => 'updateNumber',
                                                 'parameters' => array($result))
                             );
              
-            return $this->SoapEngine->execute($function);
+            return $this->SoapEngine->execute($function,$this->html);
         }
     }
 
@@ -5504,12 +5541,12 @@ class EnumMappings extends Records {
         //print_r($number);
         $function=array('commit'   => array('name'       => 'updateNumber',
                                             'parameters' => array($number),
-                                            'logs'       => array('success' => sprintf('<p>ENUM number +%s under %s has been updated',$enumid['number'],$enumid['tld']))),
+                                            'logs'       => array('success' => sprintf('ENUM number +%s under %s has been updated',$enumid['number'],$enumid['tld']))),
                         'rollback' => array('name'       => 'updateNumber',
                                             'parameters' => array($number_old))
                         );
      
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
 
     }
 }
@@ -5794,13 +5831,13 @@ class TrustedPeers extends Records {
 
         $function=array('commit'   => array('name'       => 'addTrustedPeer',
                                             'parameters' => array($peer),
-                                            'logs'       => array('success' => sprintf('<p>Trusted peers %s has been added',$ipaddress))),
+                                            'logs'       => array('success' => sprintf('Trusted peers %s has been added',$ipaddress))),
                         'rollback' => array('name'       => 'deleteTrustedPeer',
                                             'parameters' => array($peer)
                                             )
                         );
      
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function deleteRecord($dictionary=array()) {
@@ -5816,11 +5853,11 @@ class TrustedPeers extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteTrustedPeer',
                                             'parameters' => array($this->filters['ip']),
-                                            'logs'       => array('success' => sprintf('<p>Trusted peers %s has been deleted',$this->filters['ip'])))
+                                            'logs'       => array('success' => sprintf('Trusted peers %s has been deleted',$this->filters['ip'])))
                         );
      
         unset($this->filters);
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function showSeachFormCustom() {
@@ -6106,13 +6143,13 @@ class GatewayGroups extends Records {
 
         $function=array('commit'   => array('name'       => 'addGatewayGroup',
                                             'parameters' => array($structure),
-                                            'logs'       => array('success' => sprintf('<p>Gateway group %s has been added',$name))),
+                                            'logs'       => array('success' => sprintf('Gateway group %s has been added',$name))),
                         'rollback' => array('name'       => 'deleteGatewayGroup',
                                             'parameters' => array($structure)
                                             )
                         );
      
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function deleteRecord($dictionary=array()) {
@@ -6134,14 +6171,14 @@ class GatewayGroups extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteGatewayGroup',
                                             'parameters' => array($name),
-                                            'logs'       => array('success' => sprintf('<p>Gateway group %s has been deleted',$name))),
+                                            'logs'       => array('success' => sprintf('Gateway group %s has been deleted',$name))),
                         'rollback' => array('name'       => 'addGatewayGroup',
                                             'parameters' => array($this->filters['group'])
                                             )
                         );
      
         unset($this->filters);
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function showSeachFormCustom() {
@@ -6501,14 +6538,14 @@ class Gateways extends Records {
 
         $function=array('commit'   => array('name'       => 'addGateway',
                                             'parameters' => array($gateway),
-                                            'logs'       => array('success' => sprintf('<p>Gateway grup %s has been added',$address))),
+                                            'logs'       => array('success' => sprintf('Gateway grup %s has been added',$address))),
                         'rollback' => array('name'       => 'deleteGateway',
                                             'parameters' => array($name)
                                             )
                         );
      
         unset($this->filters);
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function deleteRecord($dictionary=array()) {
@@ -6530,10 +6567,10 @@ class Gateways extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteGateway',
                                             'parameters' => array($name),
-                                            'logs'       => array('success' => sprintf('<p>Gateway grup %s has been deleted',$name)))
+                                            'logs'       => array('success' => sprintf('Gateway grup %s has been deleted',$name)))
                         );
         unset($this->filters);
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
 
     }
 
@@ -6850,14 +6887,14 @@ class Routes extends Records {
 
         $function=array('commit'   => array('name'       => 'addRoutes',
                                             'parameters' => array($routes),
-                                            'logs'       => array('success' => sprintf('<p>Route %s has been added',$prefix))),
+                                            'logs'       => array('success' => sprintf('Route %s has been added',$prefix))),
                         'rollback' => array('name'       => 'deleteRoutes',
                                             'parameters' => array($routes)
                                             )
                         );
      
         unset($this->filters);
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
 
     }
 
@@ -6898,11 +6935,11 @@ class Routes extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteRoutes',
                                             'parameters' => array($routes),
-                                            'logs'       => array('success' => sprintf('<p>Route %s has been deleted',$prefix)))
+                                            'logs'       => array('success' => sprintf('Route %s has been deleted',$prefix)))
                         );
      
         unset($this->filters);
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function showSeachFormCustom() {
@@ -7719,12 +7756,12 @@ class Customers extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteAccount',
                                             'parameters' => array(intval($this->filters['customer'])),
-                                            'logs'       => array('success' => sprintf('<p>Customer id %s has been deleted',$this->filters['customer'])))
+                                            'logs'       => array('success' => sprintf('Customer id %s has been deleted',$this->filters['customer'])))
                         );
 
      	$this->filters=array();
 
-        return $this->SoapEngine->execute($function);
+        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function getRecord($id) {
@@ -8277,14 +8314,14 @@ class Customers extends Records {
 
         $function=array('commit'   => array('name'       => 'updateAccount',
                                             'parameters' => array($customer),
-                                            'logs'       => array('success' => sprintf('<p>Customer id %s has been updated',$customer->id))
+                                            'logs'       => array('success' => sprintf('Customer id %s has been updated',$customer->id))
                                             ),
                         'rollback' => array('name'       => 'updateAccount',
                                             'parameters' => array($customer_old)
                                             )
                         );
      
-        if ($this->SoapEngine->execute($function)) {
+        if ($this->SoapEngine->execute($function,$this->html)) {
             $this->updateAfter($customer);
             return true;
         } else {
@@ -8401,14 +8438,14 @@ class Customers extends Records {
 
             $function=array('commit'   => array('name'       => 'addAccount',
                                                 'parameters' => array($customer_new),
-                                                'logs'       => array('success' => sprintf('<p>Customer id %s has been copied',$customer->id))
+                                                'logs'       => array('success' => sprintf('Customer id %s has been copied',$customer->id))
                                                 ),
                             'rollback' => array('name'       => 'deleteAccount',
                                                 'parameters' => array($customer_new)
                                                 )
                             );
     
-            if ($this->SoapEngine->execute($function)) {
+            if ($this->SoapEngine->execute($function,$this->html)) {
                 // Reset filters to find the copy
                 $this->filters=array();
                 $this->filters['username']=$customer_new->username;
@@ -8650,11 +8687,11 @@ class Customers extends Records {
 
         $function=array('commit'   => array('name'       => 'addAccount',
                                             'parameters' => array($customer),
-                                            'logs'       => array('success' => sprintf('<p>Login account %s %s has been added',$customer['firstName'],$customer['lastName']))
+                                            'logs'       => array('success' => sprintf('Login account %s %s has been added',$customer['firstName'],$customer['lastName']))
                                             )
                        );
 
-        if ($this->SoapEngine->execute($function)) {
+        if ($this->SoapEngine->execute($function,$this->html)) {
             if ($dictionary['notify'] || $_REQUEST['notify']) $this->notify($customer);
 
      		$this->showAddForm=false;
@@ -9679,7 +9716,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function);
+                $this->SoapEngine->execute($function,$this->html);
 
         	} else if ($action=='deblock') {
 
@@ -9691,7 +9728,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function);
+                $this->SoapEngine->execute($function,$this->html);
 
         	} else if ($action=='removefromgroup') {
             	if (!strlen($sub_action_parameter)) {
@@ -9707,7 +9744,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function);
+                $this->SoapEngine->execute($function,$this->html);
 
         	} else if ($action=='addtogroup') {
             	if (!strlen($sub_action_parameter)) {
@@ -9723,7 +9760,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function);
+                $this->SoapEngine->execute($function,$this->html);
 
         	} else if ($action=='deblock_quota') {
 
@@ -9735,7 +9772,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function);
+                $this->SoapEngine->execute($function,$this->html);
 
         	} else if ($action=='disable_pstn') {
 
@@ -9747,7 +9784,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function);
+                $this->SoapEngine->execute($function,$this->html);
 
         	} else if ($action=='enable_pstn') {
 
@@ -9759,7 +9796,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function);
+                $this->SoapEngine->execute($function,$this->html);
 
         	} else if ($action=='delete') {
 
@@ -9771,7 +9808,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function);
+                $this->SoapEngine->execute($function,$this->html);
 
         	} else if ($action=='prepaid') {
         		$this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -9801,7 +9838,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                	$this->SoapEngine->execute($function);
+                	$this->SoapEngine->execute($function,$this->html);
         		}
         	} else if ($action=='postpaid') {
         		$this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -9829,7 +9866,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                	$this->SoapEngine->execute($function);
+                	$this->SoapEngine->execute($function,$this->html);
 
         		}
         	} else if ($action=='setquota') {
@@ -9858,7 +9895,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                	$this->SoapEngine->execute($function);
+                	$this->SoapEngine->execute($function,$this->html);
 
         		}
                 
@@ -9897,7 +9934,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                	$this->SoapEngine->execute($function);
+                	$this->SoapEngine->execute($function,$this->html);
 
         		}
         	} else if ($action=='rpidasusername') {
@@ -9928,7 +9965,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                	$this->SoapEngine->execute($function);
+                	$this->SoapEngine->execute($function,$this->html);
 
         		}
         	} else if ($action=='prefixtorpid') {
@@ -9963,7 +10000,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                	$this->SoapEngine->execute($function);
+                	$this->SoapEngine->execute($function,$this->html);
 
         		}
         	} else if ($action=='changecustomer' && $this->version > 1) {
@@ -9998,7 +10035,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                	$this->SoapEngine->execute($function);
+                	$this->SoapEngine->execute($function,$this->html);
 
         		}
         	} else if ($action=='changeowner') {
@@ -10033,7 +10070,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                	$this->SoapEngine->execute($function);
+                	$this->SoapEngine->execute($function,$this->html);
 
         		}
         	} else if ($action=='changefirstname') {
@@ -10062,7 +10099,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                	$this->SoapEngine->execute($function);
+                	$this->SoapEngine->execute($function,$this->html);
 
         		}
         	} else if ($action=='changelastname') {
@@ -10091,7 +10128,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                	$this->SoapEngine->execute($function);
+                	$this->SoapEngine->execute($function,$this->html);
 
         		}
         	} else if ($action=='addbalance') {
@@ -10123,7 +10160,7 @@ class SipAccountsActions extends Actions {
                                                    )
         
                                 );
-                $this->SoapEngine->execute($function);
+                $this->SoapEngine->execute($function,$this->html);
 
             }
         }
@@ -10166,7 +10203,7 @@ class SipAliasesActions extends Actions {
                                                                           )
                                                    )
                                 );
-                $this->SoapEngine->execute($function);
+                $this->SoapEngine->execute($function,$this->html);
             }
         }
         print "</ol>";
@@ -10219,7 +10256,7 @@ class EnumMappingsActions extends Actions {
         
                                 );
     
-                $this->SoapEngine->execute($function);
+                $this->SoapEngine->execute($function,$this->html);
             } else if ($action  == 'changettl') {
         		$this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 		        $number     = $this->SoapEngine->soapclient->getNumber($enum_id);
@@ -10264,7 +10301,7 @@ class EnumMappingsActions extends Actions {
                                                        )
             
                                     );
-                	$this->SoapEngine->execute($function);
+                	$this->SoapEngine->execute($function,$this->html);
         		}
             } else if ($action  == 'changeowner') {
         		$this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -10297,7 +10334,7 @@ class EnumMappingsActions extends Actions {
                                                                               )
                                                        )
                                     );
-                	$this->SoapEngine->execute($function);
+                	$this->SoapEngine->execute($function,$this->html);
         		}
             } else if ($action  == 'changeinfo') {
         		$this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -10325,7 +10362,7 @@ class EnumMappingsActions extends Actions {
                                                                               )
                                                        )
                                     );
-                	$this->SoapEngine->execute($function);
+                	$this->SoapEngine->execute($function,$this->html);
         		}
             }
         }
@@ -10362,7 +10399,7 @@ class CustomersActions extends Actions {
                     	                           'logs'       => array('success' => sprintf('Customer id %s has been deleted',$key)))
         	            	    );
 
-                $this->SoapEngine->execute($function);
+                $this->SoapEngine->execute($function,$this->html);
             }
         }
 
