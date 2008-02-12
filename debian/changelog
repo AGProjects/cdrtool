@@ -1,22 +1,17 @@
-cdrtool (6.2.0) unstable; urgency=low
+cdrtool (6.1.9) unstable; urgency=low
 
   * Fixed memory leak related to calling the same soap function several times
   * Added separate accee numbers for FUNV, FBUS, FNOL, FNOA
   * Fixed load of customer properties in ngnpro client
-
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Feb 2008 03:09:47 +0100
-
-cdrtool (6.1.9) unstable; urgency=low
-
   * Support multiple clusters for mysql replication monitor
-  * Fixed vulnerability related to missing BYE and MediaProxy 
+  * Fixed vulnerability related to missing BYE and MediaProxy
     radius Update action (reported by Inaki Baz Castil)
-    You  must reload the sql stored procedures from 
-    setup/radius/OpenSER/radius_accounting.proc or 
-    update Freeradius with setup/radius/OpenSER/sql.conf 
+    You  must reload the sql stored procedures from
+    setup/radius/OpenSER/radius_accounting.proc or
+    update Freeradius with setup/radius/OpenSER/sql.conf
     when not using the stored procedures
-  
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 08 Feb 2008 21:58:09 +0100
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Feb 2008 03:17:34 +0100
 
 cdrtool (6.1.8) unstable; urgency=low
 
