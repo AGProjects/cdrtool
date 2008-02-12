@@ -1138,7 +1138,7 @@ class Records {
             return false;
         } else {
             $this->loginAccount=$result->accounts[0];
-            $this->loginProperties=$this->loginAccount['properties'];
+            $this->loginProperties=$this->loginAccount->properties;
         }
 
     }

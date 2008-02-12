@@ -1,8 +1,10 @@
 cdrtool (6.2.0) unstable; urgency=low
 
   * Fixed memory leak related to calling the same soap function several times
+  * Added separate accee numbers for FUNV, FBUS, FNOL, FNOA
+  * Fixed load of customer properties in ngnpro client
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 11 Feb 2008 23:42:49 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Feb 2008 03:09:47 +0100
 
 cdrtool (6.1.9) unstable; urgency=low
 
