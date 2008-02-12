@@ -1,3 +1,9 @@
+cdrtool (6.1.10) unstable; urgency=low
+
+  * Fixed corrupted phone_images.php file
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Feb 2008 14:06:42 +0100
+
 cdrtool (6.1.9) unstable; urgency=low
 
   * Fixed memory leak related to calling the same soap function several times

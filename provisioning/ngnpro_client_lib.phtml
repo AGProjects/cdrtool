@@ -134,7 +134,7 @@ class SoapEngine {
     var $reseller      = 0;
     var $login_type     = 'reseller';
 	var $allowedPorts  = array();
-    var $timeout       = 5;
+    var $timeout       = 15;
     var $exception     = array();
 	var $extraFormElements = array();
 
@@ -461,6 +461,7 @@ class SoapEngine {
             if (!class_exists($this->soap_class)) return ;
 
             $this->soapclient = new $this->soap_class($this->SOAPurl);
+	        $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
 
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
@@ -2193,6 +2194,7 @@ class SipAccounts extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getAccounts($Query);
 
+
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
@@ -2277,7 +2279,6 @@ class SipAccounts extends Records {
                     } else {
                         $actionText = "Delete";
                     }
-
 
 					if ($account->reseller) {
                     	$resellersip_settings_page=$account->reseller;
