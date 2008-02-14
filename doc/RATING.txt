@@ -58,6 +58,10 @@ the type of session and day of the week.
 The billing_customers table field that matches the Source IP is gateway. Do
 not use hostnames for this field.
 
+"gateway" or "trusted peer" terms are used interchangebly in this
+document. They bott relate to the source IP address that generated the
+SIP session.
+
 
 Determination of the destination
 --------------------------------

@@ -46,7 +46,9 @@ $simplewire_Password 	= "DDDDD";
 
 $RatingEngine=array("socketIP"   => "IP.address.of.the.private.interface.of.cdrtool.example.com",
                     "socketPort" => "9024",
-                    "CDRS_class" => "ser_radius");
+                    "CDRS_class" => "ser_radius",
+                    "prepaid_lock" => true
+                    );
 
 ###########################################
 # SOAP server for SER prepaid and last calls

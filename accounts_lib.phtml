@@ -424,7 +424,7 @@ function showForm($id="") {
      <b>Filters</b>
      </tr>
      ";
-     print "<tr><td>Gateways</td><td>";
+     print "<tr><td>Trusted peers</td><td>";
      $f->show_element("gatewayFilter","");
      print "</td></tr>";
      print "<tr><td>Domains</td><td>";
@@ -434,14 +434,6 @@ function showForm($id="") {
      $f->show_element("aNumberFilter","");
      print "</td></tr>";
      print "</td></tr>";
-     /*
-     print "<tr><td>Services</td><td>";
-     $f->show_element("serviceFilter","");
-     print "</td></tr>";
-     print "<tr><td>CompIds</td><td>";
-     $f->show_element("compidFilter","");
-     print "</td></tr>";
-     */
      print "<tr><td>After date</td><td>";
      $f->show_element("afterDateFilter","");
      print "</td></tr>";

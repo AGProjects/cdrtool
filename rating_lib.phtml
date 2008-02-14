@@ -1007,7 +1007,7 @@ class RatingTables {
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
                                                  				 "gateway"=>array("size"=>15,
-                                                                                  "name"=>"Gateway"
+                                                                                  "name"=>"Trusted peer"
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
                                                                  				 "name"=>"Domain"
@@ -1029,7 +1029,7 @@ class RatingTables {
                                                  "domainFilterColumn"=>"domain",
                                                  "exceptions" =>array('country_code'),
                                                  "fields"=>array("gateway"=>array("size"=>15,
-                                                                                  "name"=>"Gateway"
+                                                                                  "name"=>"Trusted peer"
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
                                                                  				 "name"=>"Domain"
@@ -1072,7 +1072,7 @@ class RatingTables {
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
                                                  				 "gateway"=>array("size"=>15,
-                                                                                  "name"=>"Gateway"
+                                                                                  "name"=>"Trusted peer"
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
                                                                  				 "name"=>"Domain"
@@ -1118,7 +1118,7 @@ class RatingTables {
                                                  "exceptions" =>array('trafficRate'),
                                                  "fields"=>array(
                                                  				 "gateway"=>array("size"=>15,
-                                                                                  "name"=>"Gateway"
+                                                                                  "name"=>"Trusted peer"
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
                                                                  				 "name"=>"Domain"
@@ -1151,7 +1151,7 @@ class RatingTables {
                                                  "exceptions" =>array('trafficRate'),
                                                  "fields"=>array(
                                                  				 "gateway"=>array("size"=>15,
-                                                                                  "name"=>"Gateway"
+                                                                                  "name"=>"Trusted peer"
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
                                                                  				 "name"=>"Domain"
@@ -1190,7 +1190,7 @@ class RatingTables {
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
                                                  				 "gateway"=>array("size"=>15,
-                                                                                  "name"=>"Gateway"
+                                                                                  "name"=>"Trusted peer"
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
                                                                  				 "name"=>"Domain"
@@ -3736,8 +3736,18 @@ class SERQuota {
 }
 
 class RatingEngine {
+    // set in global.inc $RatingEngine['prepaid_lock'] = 0;
+    // to disable lock when doing prepaid calls
+    // While so one may perform multiple calls in parallel using the same
+    // prepaid balance it also means that a negative balance can be reached
+    var $prepaid_lock = 1;
 
     function RatingEngine (&$CDRS) {
+      	global $RatingEngine;
+		if ($RatingEngine['prepaid_lock'] == false || $RatingEngine['prepaid_lock'] == 0) {
+            $this->prepaid_lock=0;
+        }
+
         $this->CDRS		= &$CDRS;
 		$this->db       = new DB_CDRTool;
         $this->table    = "prepaid";
@@ -4319,11 +4329,12 @@ class RatingEngine {
                     $query=sprintf("update %s
                     set
                     call_in_progress = NOW(),
-                    call_lock      = '1',
+                    call_lock      = '%s',
                     destination    = '%s',
                     maxsessiontime = '%s'
                     where account  = '%s'",
                     addslashes($this->table),
+                    addslashes($this->prepaid_lock),
                     addslashes($CDR->destinationPrint),
                     addslashes($maxduration),
                     addslashes($CDR->BillingPartyId));

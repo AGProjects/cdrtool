@@ -99,7 +99,7 @@ To see the calls in progress go to Rating -> Prepaid -> Search with Lock = 1
 
 If the connection between the SIP Proxy call control module and CDRTool
 rating engine is broken it is possible to have prepaid accounts that
-remained locked becuase no DebitBalance command has been received. To unlock
+remained locked because no DebitBalance command has been received. To unlock
 these accounts find them in Rating -> Prepaid section and set Lock to 0.
 
 
@@ -121,3 +121,8 @@ Notes
 
 The balance is debited correctly regardless of the moment of CDR
 normalization. Renormalization of calls do not recalculate balance.
+
+By default only one call at a time can be performed using a prepaid account.
+You may enable multiple parallel calls using the same prepaid call if you
+accept the idea that the balance might become negative. For this set in
+global.inc $RatingEngine['prepaid_lock'] to false.
