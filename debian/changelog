@@ -1,3 +1,18 @@
+cdrtool (6.2.3) unstable; urgency=low
+
+  * 
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 14 Feb 2008 16:32:14 +0100
+
+cdrtool (6.2.2) unstable; urgency=low
+
+  * Added setting in global.inc $RatingEngine['prepaid_lock'] to enable
+    multiple parallel calls using the same prepaid account, this is done by
+    disabling the lock (setting it to 0 or false). Disable the lock only if
+    you accept that the balance might become negative
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 14 Feb 2008 16:31:37 +0100
+
 cdrtool (6.2.1) unstable; urgency=low
 
   * Correct update of radius records when mediaproxy field is NULL or !timeout
@@ -6,12 +21,8 @@ cdrtool (6.2.1) unstable; urgency=low
     update Freeradius with setup/radius/OpenSER/sql.conf
     when not using the stored procedures
   * Log add balance to prepaid_history table
-  * Added setting in global.inc $RatingEngine['prepaid_lock'] to enable
-    multiple parallel calls using the same prepaid account, this is done by
-    disabling the lock (setting it to 0 or false). Disable the lock only if
-    you accept that the balance might become negative
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 14 Feb 2008 15:36:39 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Feb 2008 19:32:04 +0100
 
 cdrtool (6.2.0) unstable; urgency=high
 
@@ -22,7 +33,7 @@ cdrtool (6.2.0) unstable; urgency=high
 cdrtool (6.1.9) unstable; urgency=low
 
   * Fixed memory leak related to calling the same soap function several times
-  * Added separate accee numbers for FUNV, FBUS, FNOL, FNOA
+  * Added separate access numbers for FUNV, FBUS, FNOL, FNOA
   * Fixed load of customer properties in ngnpro client
   * Support multiple clusters for mysql replication monitor
   * Fixed vulnerability related to missing BYE and MediaProxy
