@@ -2080,6 +2080,7 @@ class SipAccounts extends Records {
                                'domain'   => strtolower(trim($_REQUEST['domain_filter'])),
                                'firstname'=> trim($_REQUEST['firstname_filter']),
                                'lastname' => trim($_REQUEST['lastname_filter']),
+                               'email'    => trim($_REQUEST['email_filter']),
                                'owner'    => trim($_REQUEST['owner_filter']),
                                'customer' => trim($_REQUEST['customer_filter']),
                                'reseller' => trim($_REQUEST['reseller_filter'])
@@ -2100,6 +2101,7 @@ class SipAccounts extends Records {
                       'domain'   => $this->filters['domain'],
                       'firstName'=> $this->filters['firstname'],
                       'lastName' => $this->filters['lastname'],
+                      'email'    => $this->filters['email'],
                       'owner'    => intval($this->filters['owner']),
                       'customer' => intval($this->filters['customer']),
                       'reseller' => intval($this->filters['reseller'])
@@ -2164,6 +2166,7 @@ class SipAccounts extends Records {
                       'domain'   => $this->filters['domain'],
                       'firstName'=> $this->filters['firstname'],
                       'lastName' => $this->filters['lastname'],
+                      'email'    => $this->filters['email'],
                       'owner'    => intval($this->filters['owner']),
                       'customer' => intval($this->filters['customer']),
                       'reseller' => intval($this->filters['reseller'])
@@ -2429,8 +2432,9 @@ class SipAccounts extends Records {
         }
 
 		if ($this->version > 1) {
-	        printf (" First<input type=text size=15 name=firstname_filter value='%s'>",$this->filters['firstname']);
-    	    printf (" Last<input type=text size=15 name=lastname_filter value='%s'>",$this->filters['lastname']);
+	        printf (" FN<input type=text size=10 name=firstname_filter value='%s'>",$this->filters['firstname']);
+    	    printf (" LN<input type=text size=10 name=lastname_filter value='%s'>",$this->filters['lastname']);
+            printf (" Email<input type=text size=10 name=email_filter value='%s'>",$this->filters['email']);
         }
     }
 

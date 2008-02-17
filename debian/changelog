@@ -1,15 +1,10 @@
-cdrtool (6.2.3) unstable; urgency=low
-
-  * 
-
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 14 Feb 2008 16:32:14 +0100
-
 cdrtool (6.2.2) unstable; urgency=low
 
   * Added setting in global.inc $RatingEngine['prepaid_lock'] to enable
     multiple parallel calls using the same prepaid account, this is done by
     disabling the lock (setting it to 0 or false). Disable the lock only if
     you accept that the balance might become negative
+  * Added email filter to Sip->getAccounts()
 
  -- Adrian Georgescu <ag@ag-projects.com>  Thu, 14 Feb 2008 16:31:37 +0100
 
