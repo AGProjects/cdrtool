@@ -330,8 +330,9 @@ class Rate {
             if ($span=="1" && $thisRate[profile]) {
                 $this->rateInfo .= 
                 " Connect fee: $connectCostPrint\n".
+                "   StartTime: $this->startTimeBilling ($this->billingTimezone)\n".
                 "--\n";
-                $this->rateSyslog=$this->rateSyslog."ConnectFee=$connectCostPrint ";
+                $this->rateSyslog .= "ConnectFee=$connectCostPrint ";
             	$this->price  = $this->price+$connectCostSpan/$this->priceDenominator*$payConnect;
             }
 
@@ -339,7 +340,7 @@ class Rate {
             "        Span: $span\n".
             "    Duration: $durationForRating s\n";
 
-            $this->rateSyslog=$this->rateSyslog."Span=$span Duration=$durationForRating DestId=$this->DestinationId $thisRate[customer]";
+            $this->rateSyslog .= "Span=$span Duration=$durationForRating DestId=$this->DestinationId $thisRate[customer]";
 
             if ($this->CDRS->CSCODE) {
                 // We found a Peer Carrier so we will change BillingPartyId
@@ -353,24 +354,23 @@ class Rate {
             	"     Carrier: $CarrierName\n";
             }
 
-            if ($thisRate[profile]) {
+            if ($thisRate['profile']) {
                 $this->rateInfo .= 
-                "   StartTime: $this->startTimeBilling ($this->billingTimezone)\n".
                 "   ProfileId: $thisRate[profile] for $thisRate[day]\n".
                 "      RateId: $thisRate[rate] for $thisRate[interval]h\n".
                 "        Rate: $durationRatePrint / $this->durationPeriodRated s\n".
                 "       Price: $spanPricePrint\n";
                 #" TrafficRate: $trafficRatePrint / $this->trafficSizeRated KBytes\n".
-                $this->rateSyslog=$this->rateSyslog." Profile=$thisRate[profile] Period=$thisRate[day] Rate=$thisRate[rate] Interval=$thisRate[interval] Cost=$durationRatePrint/$this->durationPeriodRated";
+                $this->rateSyslog .= " Profile=$thisRate[profile] Period=$thisRate[day] Rate=$thisRate[rate] Interval=$thisRate[interval] Cost=$durationRatePrint/$this->durationPeriodRated";
 
             } else {
                 $this->rateInfo .= 
                 "   ProfileId: none\n".
                 "      RateId: none\n";
-                $this->rateSyslog=$this->rateSyslog." Profile=none, Rate=none";
+                $this->rateSyslog .= " Profile=none, Rate=none";
             }
 
-			$this->rateSyslog=$this->rateSyslog." Price=".sprintf("%.4f",$spanPrice);
+			$this->rateSyslog .= " Price=".sprintf("%.4f",$spanPrice);
 	       	syslog(LOG_NOTICE, $this->rateSyslog);
 
             dprint ($this->price);
