@@ -5,10 +5,11 @@ cdrtool (6.2.2) unstable; urgency=low
     disabling the lock (setting it to 0 or false). Disable the lock only if
     you accept that the balance might become negative
   * Added email filter to Sip->getAccounts()
-  * Log the call start time in the head of rating info to eliminate 
+  * Log the call start time in the head of rating info to eliminate
     the confusion when rating calls that span multiple profiles
+  * Show total call duration in rate info head
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 17 Feb 2008 16:33:40 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 17 Feb 2008 16:43:29 +0100
 
 cdrtool (6.2.1) unstable; urgency=low
 
