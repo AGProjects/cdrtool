@@ -134,7 +134,7 @@ class SoapEngine {
     var $reseller      = 0;
     var $login_type     = 'reseller';
 	var $allowedPorts  = array();
-    var $timeout       = 15;
+    var $timeout       = 10;
     var $exception     = array();
 	var $extraFormElements = array();
 
@@ -385,8 +385,10 @@ class SoapEngine {
             $this->service    = $this->port.'@'.$this->soapEngine;
 
             foreach(array_keys($this->soapEngines) as $_key ) {
-            	$this->skip_engines[$_key]=$this->soapEngines[$_key]['skip_engines'];
                 $this->skip[$_key]=$this->soapEngines[$_key]['skip'];
+                if ($this->soapEngines[$_key]['skip_ports']) {
+            		$this->skip_ports[$_key]=$this->soapEngines[$_key]['skip_ports'];
+                }
             }
 
             $this->impersonate  = intval($this->soapEngines[$this->soapEngine]['impersonate']);
@@ -750,12 +752,13 @@ class Records {
 
         $j=1;
         foreach (array_keys($this->SoapEngine->soapEngines) as $_engine) {
-        	if ($this->SoapEngine->skip[$_engine]) continue;
-
+    	   	if ($this->SoapEngine->skip[$_engine]) continue;
         	if ($j > 1) printf ("<option value=''>--------\n");
             foreach (array_keys($this->SoapEngine->ports) as $_port) {
                 $idx=$_port.'@'.$_engine;
-                if (is_array($this->SoapEngine->skip_engines[$_engine]) && in_array($_port,$this->SoapEngine->skip_engines[$_engine])) continue;
+
+                if (in_array($_port,$this->SoapEngine->skip_ports[$_engine])) continue;
+
                 if (count($this->SoapEngine->allowedPorts[$_engine]) > 0 && !in_array($_port,$this->SoapEngine->allowedPorts[$_engine])) continue;
                 if ($_port == 'customers' && $this->SoapEngine->soapEngines[$_engine]['version'] <= 1) continue;
                 if ($this->SoapEngine->ports[$_port]['resellers_only']) {
@@ -8826,7 +8829,7 @@ class Presence {
 
         $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-        $this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT, 1);
+        $this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT, $this->SoapEngine->timeout);
 
         $allowed_activities=array('open',
                                   'idle',
@@ -8872,7 +8875,7 @@ class Presence {
 
         $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-        $this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT, 1);
+        $this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT, $this->SoapEngine->timeout);
 
         $result = $this->PresencePort->getPresenceInformation(array("username" =>$SIPaccount['username'],"domain"   =>$SIPaccount['domain']),$SIPaccount['password']);
     
