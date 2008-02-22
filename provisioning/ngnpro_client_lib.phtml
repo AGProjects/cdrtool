@@ -257,8 +257,8 @@ class SoapEngine {
         /*
         	service is port@engine where:
 
-         	- port is an available NGNPro web service
-            - engine is a connection to remote NGNPro server
+         	- port is an available NGNPro service
+            - engine is a connection to an NGNPro server
 
          	soapEngines is an array of NGNPro connections and
             settings belonging to them:
@@ -453,10 +453,8 @@ class SoapEngine {
 
             $this->SOAPurl=$this->soapEngines[$this->soapEngine]['url'];
 
-            if ($this->adminonly)  {
-            	//printf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soap_class,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
-            }
-
+            $log=sprintf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soap_class,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
+            dprint($log);
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
     		// Instantiate the SOAP client
@@ -468,32 +466,36 @@ class SoapEngine {
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-			$this->soapDepends=$this->soapEngines[$this->soapEngine]['depends'];
+			//dprint_r($this->login_credentials);
 
-            if (strlen($this->soapDepends) && in_array($this->soapDepends,array_keys($this->soapEngines))) {
-				$this->soapEngineRemote  = $this->soapEngines[$this->soapDepends];
-                $this->impersonateRemote = intval($this->soapEngines[$this->soapDepends]['impersonate']);
+			if (strlen($this->soapEngines[$this->soapEngine]['depends'])) {
+				$this->soapRemote=$this->soapEngines[$this->soapEngine]['depends'];
 
-    	        $this->SOAPloginRemote = array(
-        	                           "username"    => $this->soapEngines[$this->soapDepends]['username'],
-            	                       "password"    => $this->soapEngines[$this->soapDepends]['password'],
-                	                   "admin"       => true,
-                    	               "impersonate" => $this->impersonateRemote
-                                   );
-
-                dprint_r($this->SOAPloginRemote);
-            	$this->SOAPurlRemote=$this->soapEngines[$this->soapDepends]['url'];
-
-                if ($this->adminonly)  {
-            		//printf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
+                if (strlen($this->soapRemote) && in_array($this->soapRemote,array_keys($this->soapEngines))) {
+                    $this->soapEngineRemote  = $this->soapEngines[$this->soapRemote];
+                    $this->impersonateRemote = intval($this->soapEngines[$this->soapRemote]['impersonate']);
+    
+                    $this->SOAPloginRemote = array(
+                                           "username"    => $this->soapEngines[$this->soapRemote]['username'],
+                                           "password"    => $this->soapEngines[$this->soapRemote]['password'],
+                                           "admin"       => true,
+                                           "impersonate" => $this->impersonateRemote
+                                       );
+    
+                    dprint_r($this->SOAPloginRemote);
+                    $this->SOAPurlRemote=$this->soapEngines[$this->soapRemote]['url'];
+    
+                    if ($this->adminonly)  {
+                        //printf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
+                    }
+                    $this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
+    
+                    // Instantiate the SOAP client dependency
+                    $this->soapclientRemote = new $this->soap_class($this->SOAPurlRemote);
+    
+                    $this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+                    $this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
                 }
-            	$this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
-
-    			// Instantiate the SOAP client dependency
-            	$this->soapclientRemote = new $this->soap_class($this->SOAPurlRemote);
-
-            	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-            	$this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
             }
 
 	    	if ($this->customer_engine) {
@@ -533,6 +535,7 @@ class SoapEngine {
 
     function execute($function,$html=true) {
         $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
+
         /*
         $function=array('commit'   => array('name'       => 'addAccount',
                                             'parameters' => array($param1,$param2),
@@ -1143,7 +1146,7 @@ class Records {
         }
 
         if (!$this->customer) {
-            dprint ("No customer available");
+            //dprint ("No customer available");
         	return true;
         }
 
@@ -7486,6 +7489,37 @@ class Customers extends Records {
         $this->customer_properties = &$this->SoapEngine->customer_properties;
 		$this->allProperties=array_merge($this->propertiesItems,$this->customer_properties);
 
+		if ($_REQUEST['action'] == 'Add' || $_REQUEST['action'] == 'Copy' ||
+            $_REQUEST['action'] == 'Delete' || $_REQUEST['action'] == 'Update') {
+
+            if ($this->reseller) {
+                $customer_engine_remote=$this->SoapEngine->login_credentials['reseller_filters'][$this->reseller]['customer_engine_remote'];
+    
+                if (strlen($customer_engine_remote)) {
+    
+                    if (in_array($customer_engine_remote,array_keys($this->SoapEngine->soapEngines))) {
+                        $this->SOAPloginCustomerRemote = array(
+                                               "username"    => $this->SoapEngine->soapEngines[$customer_engine_remote]['username'],
+                                               "password"    => $this->SoapEngine->soapEngines[$customer_engine_remote]['password'],
+                                               "admin"       => true,
+                                               "impersonate" => $this->reseller
+                                           );
+        
+                        //dprint_r($this->SOAPloginCustomerRemote);
+                        $this->SOAPurlCustomerRemote=$this->SoapEngine->soapEngines[$customer_engine_remote]['url'];
+        
+                        $log=sprintf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlCustomerRemote,$this->SOAPurlCustomerRemote);
+                        dprint($log);
+    
+                        $this->SoapAuthCustomerRemote = array('auth', $this->SOAPloginCustomerRemote , 'urn:AGProjects:NGNPro', 0, '');
+    
+                        $this->SoapEngineCustomerRemote = new $this->SoapEngine->soap_class($this->SOAPurlCustomerRemote);
+                        $this->SoapEngineCustomerRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+                        $this->SoapEngineCustomerRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+                    }
+                }
+            }
+        }
     }
 
     function showSeachForm() {
@@ -7769,7 +7803,19 @@ class Customers extends Records {
 
      	$this->filters=array();
 
-        return $this->SoapEngine->execute($function,$this->html);
+        if ($this->SoapEngine->execute($function,$this->html)) {
+            if (is_object($this->SoapEngineCustomerRemote)) {
+                // delete remote
+                $function=array('commit'   => array('name'       => 'deleteAccount',
+                                                    'parameters' => array(intval($this->filters['customer'])),
+                                                    'logs'       => array('failure' => sprintf('Error deleting customer id %s remotely',$this->filters['customer'])))
+                                );
+                $this->SoapEngineCustomerRemote->execute($function,$this->html);
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 
     function getRecord($id) {
@@ -8330,6 +8376,28 @@ class Customers extends Records {
                         );
      
         if ($this->SoapEngine->execute($function,$this->html)) {
+
+            // update remote
+            if (is_object($this->SoapEngineCustomerRemote)) {
+                $function=array('commit'   => array('name'       => 'updateAccount',
+                                                    'parameters' => array($customer),
+                                                    'logs'       => array('failure' => sprintf('Error: customer id %s could not be remotely updated',$customer->id))
+                                                    )
+                                );
+
+                // we fail to update remote and we rollback local update too
+                if (!$this->SoapEngineCustomerRemote->execute($function,$this->html)) {
+                    $function=array('commit'   => array('name'       => 'updateAccount',
+                                                        'parameters' => array($customer_old)
+                                                        )
+                                    );
+                    $this->SoapEngine->execute($function,$this->html);
+    
+                    return false;
+                }
+            }
+
+
             $this->updateAfter($customer);
             return true;
         } else {
@@ -8700,9 +8768,32 @@ class Customers extends Records {
                        );
 
         if ($this->SoapEngine->execute($function,$this->html)) {
-            if ($dictionary['notify'] || $_REQUEST['notify']) $this->notify($customer);
+            if (is_object($this->SoapEngineCustomerRemote)) {
+            	if ($_id = $this->getCustomerId($customer['username'])) {
+                	$customerRemote=$customer;
+                    $customerRemote['id'] = $_id;
+                    $function=array('commit'   => array('name'       => 'addAccount',
+                                                        'parameters' => array($customerRemote),
+                                                        'logs'       => array('failure' => sprintf('Failed to add remote login account %s %s',$customerRemote['firstName'],$customerRemote['lastName']))
+                                                        )
+                                   );
+			        if (!$this->SoapEngineCustomerRemote->execute($function,$this->html)) {
+                        $function=array('commit'   => array('name'       => 'deleteAccount',
+                                                            'parameters' => array(intval($_id)),
+                                                            'logs'       => array('success' => sprintf('Customer id %s has been deleted',$this->filters['customer'])))
+                                        );
+                
+                        $this->SoapEngine->execute($function,$this->html);
 
+                        return false;
+                    }
+                }
+            }
+
+            // We have succesfully added customer entry
      		$this->showAddForm=false;
+
+            if ($dictionary['notify'] || $_REQUEST['notify']) $this->notify($customer);
 
             return true;
 
@@ -8804,6 +8895,34 @@ class Customers extends Records {
             }
         }
         return false;
+    }
+
+    function getCustomerId($username) {
+        if (!strlen($username)) return false;
+        $filter  = array('username' => $username);
+        $range   = array('start' => 0,'count' => 1);
+        $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
+        $Query=array('filter'     => $filter,'orderBy' => $orderBy,'range'   => $range);
+
+        // Insert credetials
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SoapEngine->soapclient->getCustomers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            if (count($result->accounts) == 1) {
+                return $result->accounts[0]->id;
+            } else {
+                return false;
+            }
+        }
     }
 }
 

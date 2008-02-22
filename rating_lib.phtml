@@ -3777,7 +3777,7 @@ class RatingEngine {
             $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
             print $log;
             syslog(LOG_NOTICE,$log);
-            return false;
+            return 0;
         }
 
         if ($account) {
@@ -3786,11 +3786,11 @@ class RatingEngine {
             	$this->balance[$this->db->f('account')] = $this->db->f('balance');
         		$log=sprintf("Loaded prepaid account %s with balance %s",$this->db->f('account'),$this->db->f('balance'));
       			syslog(LOG_NOTICE, $log);
-                return true;
+                return 1;
             } else {
         		$log=sprintf("Error: Prepaid account %s does not exist",$account);
       			syslog(LOG_NOTICE, $log);
-                return false;
+                return 0;
             }
         } else {
         	while($this->db->next_record()) {
@@ -3803,7 +3803,7 @@ class RatingEngine {
             }
         	$log=sprintf("Loaded %d prepaid accounts",count($this->balance));
       		syslog(LOG_NOTICE, $log);
-            return true;
+            return 1;
         }
     }
 
@@ -3829,16 +3829,16 @@ class RatingEngine {
         if ($d >0 ) syslog(LOG_NOTICE, "Loaded rating tables in $d seconds");
 
         $this->db->query("update settings set var_value ='' where var_name = 'reloadRating'");
-        return true;
+        return 1;
     }
 
     function reloadCustomers ($customerFilter) {
-        return true;
+        return 1;
     }
 
     function reloadDomains () {
 		if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete($this->CDRS->mc_key_domains);
-        return true;
+        return 1;
     }
 
     function reloadSipAccountsWithQuota () {
@@ -3848,7 +3848,7 @@ class RatingEngine {
             	syslog(LOG_NOTICE, $log);
             }
         }
-        return true;
+        return 1;
     }
 
     function reloadPrepaidAccounts($account='') {
@@ -3868,6 +3868,42 @@ class RatingEngine {
         return $accounts;
     }
 
+    function getBalanceHistory($account,$limit=50) {
+
+        list($username,$domain)=explode("@",$account);
+        if (!strlen($username) || !strlen($domain)) return 0;
+        $query=sprintf("select * from prepaid_history where username = '%s' and domain = '%s' order by id desc",
+        addslashes($username),
+        addslashes($domain)
+        );
+
+        if ($limit) $query.= sprintf (" limit %d",$limit);
+
+        dprint($query);
+    
+        if (!$this->db->query($query)) {
+            $log=sprintf ("getBalanceHistory error: %s (%s)",$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE, $log);
+            return 0;
+        }
+
+        unset($line);
+        $line .= sprintf("%s\n",$this->db->num_rows());
+
+        while ($this->db->next_record()) {
+            $line .= sprintf
+            ("Action='%s'\tSource='%s'\tValue='%s'\tDate='%s'\tBalance='%s'\n",
+            $this->db->f('action'),
+            $this->db->f('number'),
+            $this->db->f('value'),
+            $this->db->f('date'),
+            $this->db->f('balance')
+            );
+        }
+
+        return $line;
+    }
+
     function DebitBalance($account,$balance) {
 
         $account=trim($account);
@@ -3878,17 +3914,17 @@ class RatingEngine {
 
         if (!$account) {
             syslog(LOG_NOTICE, "DebitBalance() error: missing BillingPartyId");
-            return false;
+            return 0;
         }
 
 		if (strlen($account) > 254) {
             syslog(LOG_NOTICE, "DebitBalance() error: BillingPartyId > 254 chars");
-            return false;
+            return 0;
         }
 
         if (!$account || !strlen($balance)) {
         	syslog(LOG_NOTICE, "DebitBalance() error: missing BillingPartyId or balance");
-            return false;
+            return 0;
         }
 
         if ($this->balance[$account]) {
@@ -3919,11 +3955,11 @@ class RatingEngine {
         		$this->db->query($query);
                 $this->db->next_record();
                 $this->balance[$account]=$this->db->f('balance');
-                return true;
+                return 1;
             } else {
                 $log=sprintf ("DebitBalance error: %s (%s)",$this->db->Error,$this->db->Errno);
                 syslog(LOG_NOTICE, $log);
-        		return false;
+        		return 0;
             }
 
         } else {
@@ -3936,7 +3972,7 @@ class RatingEngine {
 
         if (!is_numeric($balance)) {
             syslog(LOG_NOTICE, "CreditBalance() error: balance \"$balance\"is invalid");
-            return false;
+            return 0;
         }
 
         $account=trim($account);
@@ -3946,15 +3982,15 @@ class RatingEngine {
 
         if (!$account) {
             syslog(LOG_NOTICE, "CreditBalance() error: missing account");
-            return false;
+            return 0;
         }
 
-	if (strlen($account) > 128) {
+		if (strlen($account) > 128) {
             syslog(LOG_NOTICE, "CreditBalance() error: account > 128 chars");
-            return false;
+            return 0;
         }
 
-        if ($this->balance[$account]) {
+        if (strlen($this->balance[$account])) {
             $query=sprintf("update %s
             set balance   = balance + '%s',
             change_date   = NOW()
@@ -3992,11 +4028,11 @@ class RatingEngine {
 	                syslog(LOG_NOTICE, $log);
                 }
 
-                return true;
+                return 1;
             } else {
                 $log=sprintf ("CreditBalance() error: failed to debit balance: %s (%s)",$this->db->Error,$this->db->Errno);
                 syslog(LOG_NOTICE, $log);
-        		return false;
+        		return 0;
             }
 
         } else {
@@ -4035,11 +4071,11 @@ class RatingEngine {
 	                syslog(LOG_NOTICE, $log);
                 }
 
-                return true;
+                return 1;
             } else {
                 $log=sprintf ("CreditBalance() error: failed to credit balance: %s (%s)",$this->db->Error,$this->db->Errno);
                 syslog(LOG_NOTICE, $log);
-                return false;
+                return 0;
             }
         }
     }
@@ -4050,18 +4086,20 @@ class RatingEngine {
         "Help\n".
 		"ShowAccounts\n".
         "MaxSessionTime From=sip:123@example.com To=sip:0031650222333 Duration=7200 Lock=1\n".
-        "DebitBalance   From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
         "ShowPrice      From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
-        "AddBalance     From=123@example.com Value=10.00\n".
-        "GetBalance     From=123@example.com\n".
         "ReloadRatingTables\n".
         "ShowProfiles\n".
         "ShowENUMtlds\n".
-        "ReloadPrepaidAccounts Account=abc@example.com\n".
-        "ShowPrepaidAccounts Filter=123@example.com\n".
         "ShowMemory\n".
         "ReloadSipAccountsWithQuota\n".
-        "ReloadDomains";
+        "ReloadDomains\n".
+        "AddBalance     From=123@example.com Value=10.00\n".
+        "GetBalance     From=123@example.com\n".
+        "GetBalanceHistory    From=123@example.com\n".
+        "DebitBalance   From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
+        "ReloadPrepaidAccounts Account=abc@example.com\n".
+        "ShowPrepaidAccounts Filter=123@example.com\n"
+        ;
 
         return $help;
     }
@@ -4080,7 +4118,7 @@ class RatingEngine {
         dprint_r($_els);
         syslog(LOG_NOTICE, $tinput);
 
-        if (!$_els[0]) return false;
+        if (!$_els[0]) return 0;
 
         // read fields from input
         unset($NetFields);
@@ -4097,7 +4135,7 @@ class RatingEngine {
             if (strlen($_key) && $seenField[$_key]) {
                 $log=sprintf ("Error: '$_key' attribute is present more than once in $tinput");
                 syslog(LOG_NOTICE, $log);
-                return false;
+                return 0;
             } else {
                 if (strlen($_key)) {
             		$NetFields[$_key]=$_value;
@@ -4123,14 +4161,14 @@ class RatingEngine {
                 dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
-                return false;
+                return 0;
             }
 
             if (!$NetFields['to']) {
                 dprint("Missing To parameter.");
                 $log=sprintf ("Error: Missing To parameter");
                     syslog(LOG_NOTICE, $log);
-                return false;
+                return 0;
             }
 
             if (!strlen($NetFields['duration'])) {
@@ -4298,19 +4336,19 @@ class RatingEngine {
                 if ($maxduration<0) {
                		$log = sprintf ("Error: maxduration is negative ($maxduration)");
                 	syslog(LOG_NOTICE, $log);
-                	return false;
+                	return 0;
                 }
 
                 if (!$Rate->billingTimezone) {
                		$log = sprintf ("Error: cannot figure out the billing timezone");
                 	syslog(LOG_NOTICE, $log);
-                	return false;
+                	return 0;
                 }
 
                 if (!$Rate->startTimeBilling) {
                		$log = sprintf ("Error: cannot figure out the billing start time");
                 	syslog(LOG_NOTICE, $log);
-                	return false;
+                	return 0;
                 }
 
                 $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Balance=%s MaxSessionTime=%s",
@@ -4344,7 +4382,7 @@ class RatingEngine {
                     if (!$this->db->query($query)) {
                         $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                         syslog(LOG_NOTICE,$log);
-                        return false;
+                        return 0;
                     }
 
                     if (!$this->db->affected_rows()) {
@@ -4356,7 +4394,7 @@ class RatingEngine {
                 return $maxduration;
 
             } else {
-                return false;
+                return 0;
             }
         } else if ($NetFields['action'] == "debitbalance") {
 
@@ -4456,30 +4494,32 @@ class RatingEngine {
                 dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
-                return false;
+                return 0;
             }
 
-            if (!$NetFields['value']) {
+            if (!is_numeric($NetFields['value'])) {
                 dprint("Missing Value parameter.");
-                $log=sprintf ("Error: Missing Value parameter");
+                $log=sprintf ("Error: Missing Value parameter, it must be numeric");
                     syslog(LOG_NOTICE, $log);
-                return false;
+                return 0;
             }
 
-            $log=sprintf ("Customer        : %s",$NetFields['from']);
+            $log=sprintf ("Account         : %s",$NetFields['from']);
                 syslog(LOG_NOTICE, $log);
             $log=sprintf ("Balance         : %s",$this->balance[$NetFields['from']]);
                 syslog(LOG_NOTICE, $log);
 
             $result = $this->CreditBalance($NetFields['from'],$NetFields['value']);
 
-            $log=sprintf ("New Balance     : %s",$this->balance[$NetFields['from']]);
+            if (intval($NetFields['value']) != 0) {
+            	$log=sprintf ("New Balance     : %s",$this->balance[$NetFields['from']]);
                 syslog(LOG_NOTICE, $log);
+            }
 
             if ($result) {
                 return $result;
             } else {
-                return false;
+                return 0;
             }
 
         } else if ($NetFields['action'] == "showprice") {
@@ -4488,21 +4528,21 @@ class RatingEngine {
                 dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
-                return false;
+                return 0;
             }
 
             if (!$NetFields['to']) {
                 dprint("Missing To parameter.");
                 $log=sprintf ("Error: Missing To parameter");
                     syslog(LOG_NOTICE, $log);
-                return false;
+                return 0;
             }
 
             if (!strlen($NetFields['duration'])) {
                 dprint("Missing Duration parameter.");
                 $log=sprintf ("Error: Missing Duration parameter");
                     syslog(LOG_NOTICE, $log);
-                return false;
+                return 0;
             }
 
 			if ($NetFields['timestamp']) {
@@ -4572,7 +4612,7 @@ class RatingEngine {
                 dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
-                return false;
+                return 0;
             }
 
         	$log=sprintf ("Customer        : %s",$NetFields['from']);
@@ -4586,6 +4626,17 @@ class RatingEngine {
             	$balance=number_format($this->balance[$NetFields['from']],4,".","");
             }
             return $balance;
+
+        } else if ($NetFields['action'] == "getbalancehistory") {
+            if (!$NetFields['from']) {
+                dprint("Missing From parameter.");
+                $log=sprintf ("Error: Missing From parameter");
+                    syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+
+            $history=$this->getBalanceHistory($NetFields['from']);
+            return trim($history);
 
         } else if ($NetFields['action'] == "showprepaidaccounts") {
             return trim($this->showPrepaidAccounts($NetFields['filter']));
@@ -4633,7 +4684,7 @@ class RatingEngine {
             dprint("Invalid request. ");
             $log=sprintf ("Error: Invalid request");
                 syslog(LOG_NOTICE, $log);
-            return false;
+            return 0;
         }
     }
 }

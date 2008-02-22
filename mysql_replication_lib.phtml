@@ -49,7 +49,7 @@ class MySQLReplicationStatus {
         $db = new DBx ($clusters[$host]['ip'],$clusters[$host]['user'],$clusters[$host]['password']);
 
         if (!$db->query($this->slave_status_query)) {
-            printf ("<p><font color=red>MySQL error: %s (%s) for query: %s</font>",$db->Error,$db->Errno,$this->slave_status_query);
+            printf ("<p><font color=red>Error from MySQL server %s: %s (%s) for query: %s</font>",$clusters[$host]['ip'],$db->Error,$db->Errno,$this->slave_status_query);
             return false;
         }
 
@@ -246,7 +246,7 @@ class ReplicationOverview {
     if (!$this->server) return;
 
 
-$text="root ssh keys must be shared between machines";
+$text="The ssh public keys for user root must be shared <br>between machines. Test scp as root between machines.";
 
 $this->printStep($this->master_hostname,$text);
 
@@ -260,7 +260,7 @@ flush tables with read lock;
 show master status;
 
 # write down the file and possition %s.file %s.pos
-# do not exit the mysql console
+<font color=red># do not exit the mysql console</font>
 
 ",$this->master_hostname,$this->master_hostname);
 
