@@ -3913,17 +3913,12 @@ class RatingEngine {
         }
 
         if (!$account) {
-            syslog(LOG_NOTICE, "DebitBalance() error: missing BillingPartyId");
+            syslog(LOG_NOTICE, "DebitBalance() error: missing account");
             return 0;
         }
 
-		if (strlen($account) > 254) {
-            syslog(LOG_NOTICE, "DebitBalance() error: BillingPartyId > 254 chars");
-            return 0;
-        }
-
-        if (!$account || !strlen($balance)) {
-        	syslog(LOG_NOTICE, "DebitBalance() error: missing BillingPartyId or balance");
+        if (!is_numeric($balance)) {
+        	syslog(LOG_NOTICE, "DebitBalance() error: balance");
             return 0;
         }
 
@@ -3985,10 +3980,7 @@ class RatingEngine {
             return 0;
         }
 
-		if (strlen($account) > 128) {
-            syslog(LOG_NOTICE, "CreditBalance() error: account > 128 chars");
-            return 0;
-        }
+  	    list($prepaidUser,$prepaidDomain)=explode("@",$account);
 
         if (strlen($this->balance[$account])) {
             $query=sprintf("update %s
@@ -4000,11 +3992,7 @@ class RatingEngine {
             addslashes($account)
             );
 
-            dprint($query);
-
             $this->db->query($query);
-
-		    list($prepaidUser,$prepaidDomain)=explode("@",$account);
 
             if ($this->db->affected_rows()) {
             	$this->balance[$account]=$this->balance[$account]+$balance;
@@ -4021,7 +4009,6 @@ class RatingEngine {
                 addslashes($balance),
                 addslashes($this->balance[$account])
                 );
-                dprint($query);
 
                 if (!$this->db->query($query)) {
                     $log=sprintf("Error: %s (%s)",$this->db->Error,$this->db->Errno);
@@ -4044,14 +4031,13 @@ class RatingEngine {
             addslashes($account)
             );
 
-            dprint($query);
-
             $this->db->query($query);
 
             if ($this->db->affected_rows()) {
             	$this->balance[$account]=$this->balance[$account]+$balance;
                 $log=sprintf ("Added prepaid account $account with balance=$balance");
                 syslog(LOG_NOTICE, $log);
+
                 // log to prepaid_history
                 $query=sprintf("insert into prepaid_history 
                 (username,domain,action,number,value,balance,date) 
@@ -4062,9 +4048,6 @@ class RatingEngine {
                 addslashes($balance),
                 addslashes($balance)
                 );
-
-                dprint($query);
-        		$this->db->query($query);
 
                 if (!$this->db->query($query)) {
                     $log=sprintf("Error: %s (%s)",$this->db->Error,$this->db->Errno);
@@ -4080,25 +4063,88 @@ class RatingEngine {
         }
     }
 
+    function DeleteBalance($account) {
+
+        $account=trim($account);
+		if (preg_match("/^(.*):(.*)$/",$account,$m)) {
+        	$account=$m[2];
+        }
+
+        if (!$account) {
+            syslog(LOG_NOTICE, "DeleteBalance() error: missing account");
+            return 0;
+        }
+
+        $query=sprintf("delete from %s where account = '%s'",
+        addslashes($this->table),addslashes($account)
+        );
+
+        if (!$this->db->query($query)) {
+            $log=sprintf("DeleteBalance error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE, $log);
+            return 0;
+        }
+
+        unset($this->balance[$account]);
+
+        $log=sprintf ("Prepaid account %s has been deleted",$account);
+        syslog(LOG_NOTICE, $log);
+
+        return 1;
+    }
+
+    function DeleteBalanceHistory($account) {
+
+        $account=trim($account);
+		if (preg_match("/^(.*):(.*)$/",$account,$m)) {
+        	$account=$m[2];
+        }
+
+        if (!$account) {
+            syslog(LOG_NOTICE, "DeleteBalanceHistory() error: missing account");
+            return 0;
+        }
+
+        list($username,$domain)=explode('@',$account);
+
+        $query=sprintf("delete from prepaid_history where username = '%s' and domain = '%s'",
+        addslashes($username),
+        addslashes($domain)
+        );
+
+        if (!$this->db->query($query)) {
+            $log=sprintf("DeleteBalanceHistory error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE, $log);
+            return 0;
+        }
+
+        $log=sprintf ("History of prepaid account %s has been deleted",$account);
+        syslog(LOG_NOTICE, $log);
+
+        return 1;
+    }
+
     function showHelp() {
         $help=
         "Version\n".
         "Help\n".
 		"ShowAccounts\n".
-        "MaxSessionTime From=sip:123@example.com To=sip:0031650222333 Duration=7200 Lock=1\n".
-        "ShowPrice      From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
+        "MaxSessionTime        From=sip:123@example.com To=sip:0031650222333 Duration=7200 Lock=1\n".
+        "ShowPrice             From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
         "ReloadRatingTables\n".
         "ShowProfiles\n".
         "ShowENUMtlds\n".
         "ShowMemory\n".
         "ReloadSipAccountsWithQuota\n".
         "ReloadDomains\n".
-        "AddBalance     From=123@example.com Value=10.00\n".
-        "GetBalance     From=123@example.com\n".
-        "GetBalanceHistory    From=123@example.com\n".
-        "DebitBalance   From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
+        "AddBalance            From=123@example.com Value=10.00\n".
+        "GetBalance            From=123@example.com\n".
+        "GetBalanceHistory     From=123@example.com\n".
+        "DeleteBalance         From=123@example.com\n".
+        "DeleteBalanceHistory  From=123@example.com\n".
+        "DebitBalance          From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
         "ReloadPrepaidAccounts Account=abc@example.com\n".
-        "ShowPrepaidAccounts Filter=123@example.com\n"
+        "ShowPrepaidAccounts   Filter=123@example.com\n"
         ;
 
         return $help;
@@ -4435,8 +4481,10 @@ class RatingEngine {
             $CDR->normalize();
 
 			if (!is_array($this->balance) || !array_key_exists($CDR->BillingPartyId,$this->balance)) {
+                /*
                 $log=sprintf ("Warning: Account %s is not prepaid",$CDR->BillingPartyId);
-                    syslog(LOG_NOTICE, $log);
+                syslog(LOG_NOTICE, $log);
+                */
                 return "Not Prepaid";
             }
 
@@ -4521,6 +4569,28 @@ class RatingEngine {
             } else {
                 return 0;
             }
+
+        } else if ($NetFields['action'] == "deletebalance") {
+
+        	if (!$NetFields['from']) {
+                dprint("Missing From parameter.");
+                $log=sprintf ("Error: Missing From parameter");
+                    syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+
+            return $this->DeleteBalance($NetFields['from']);
+
+        } else if ($NetFields['action'] == "deletebalancehistory") {
+
+        	if (!$NetFields['from']) {
+                dprint("Missing From parameter.");
+                $log=sprintf ("Error: Missing From parameter");
+                    syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+
+            return $this->DeleteBalanceHistory($NetFields['from']);
 
         } else if ($NetFields['action'] == "showprice") {
 
@@ -4615,13 +4685,8 @@ class RatingEngine {
                 return 0;
             }
 
-        	$log=sprintf ("Customer        : %s",$NetFields['from']);
-				syslog(LOG_NOTICE, $log);
-            $log=sprintf ("Balance         : %s",$this->balance[$NetFields['from']]);
-				syslog(LOG_NOTICE, $log);
-
 			if (!$this->balance[$NetFields['from']]) {
-                $balance="0.00";
+                $balance=sprintf("%0.4f",0);
             } else {
             	$balance=number_format($this->balance[$NetFields['from']],4,".","");
             }

@@ -75,7 +75,8 @@ class MySQLReplicationStatus {
 
     	$this->master_position	    = $db->f('Position');
     	$this->master_log_file	    = $db->f('File');
-
+        $this->slave_of     	    = $clusters[$host]['slave_of'];
+        $this->color         	    = $clusters[$host]['color'];
     }
 }
 
@@ -153,16 +154,8 @@ class ReplicationOverview {
         foreach (array_keys($this->clusters[$this->cluster]) as $key) {
             print "<td class=border valign=top>";
         
-            print "
-            <table>
-            <tr>
-            <td>Slave status</td><td>Master status</td></tr>
-            ";
-            print "<tr>";
-            print "
-            <td valign=top>
-            ";
-        
+            print "<table border=1>";
+
             if ($this->status[$key]->slave_sql_running == 'No') {
                 $sql_color="red";
             } else {
@@ -174,33 +167,25 @@ class ReplicationOverview {
             } else {
                 $io_color="white";
             }
-        
-            print "<table border=1>";
+
+            printf ("<tr><td colspan=2 bgcolor=lightgrey>Master status</td></tr>");
+
+            printf ("<tr><td class=border>Log file</td><td><font color=%s>%s</font></td></tr>",$this->status[$key]->color,$this->status[$key]->master_log_file);
+            printf ("<tr><td class=border>Position</td><td>%s</td></tr>",$this->status[$key]->master_position);
+
+            printf ("<tr><td colspan=2 bgcolor=lightgrey>Slave status</td></tr>");
+
             printf ("<tr><td class=border>Master host</td><td>%s</td></tr>",$this->status[$key]->slave_master);
             printf ("<tr><td class=border>Master port</td><td>%s</td></tr>",$this->status[$key]->slave_master_port);
-            printf ("<tr><td class=border>Log file</td><td>%s</td></tr>",$this->status[$key]->slave_log_file);
+            printf ("<tr><td class=border>Log file</td><td><font color=%s>%s</font></td></tr>",$this->status[$this->status[$key]->slave_of]->color,$this->status[$key]->slave_log_file);
             printf ("<tr><td class=border>Position</td><td>%s</td></tr>",$this->status[$key]->slave_position);
             printf ("<tr><td class=border>SQL thread</td><td bgcolor=%s>%s</td></tr>",$sql_color,$this->status[$key]->slave_sql_running);
             printf ("<tr><td class=border>IO thread</td><td bgcolor=%s>%s</td></tr>",$io_color,$this->status[$key]->slave_io_running);
             printf ("<tr><td class=border>Delay</td><td>%s</td></tr>",$this->status[$key]->slave_seconds_behind);
             printf ("<tr><td class=border>Last error</td><td>%s</td></tr>",$this->status[$key]->slave_last_error);
             printf ("<tr><td class=border>Last errno</td><td>%s</td></tr>",$this->status[$key]->slave_last_errno);
-            print "</table>";
-            print "
-            </td>
-            ";
-        
-            print "
-            <td valign=top>
-            ";
-            print "<table border=1>";
-            printf ("<tr><td class=border>Log file</td><td>%s</td></tr>",$this->status[$key]->master_log_file);
-            printf ("<tr><td class=border>Position</td><td>%s</td></tr>",$this->status[$key]->master_position);
-            print "</table>";
-        
-            print "
-            </td>
-            </table>
+
+            print "</table>
             ";
         
             print "</td>";
@@ -259,7 +244,7 @@ flush tables with read lock;
 
 show master status;
 
-# write down the file and possition %s.file %s.pos
+# write down file a& possition %s.file %s.pos
 <font color=red># do not exit the mysql console</font>
 
 ",$this->master_hostname,$this->master_hostname);
@@ -271,7 +256,7 @@ $text=sprintf("
 mysql -u root -p
 
 show slave status;
-# wait until same file/pos as %s is displayed)
+# wait until same file/pos as %s is displayed
 
 slave stop;
 ",$this->master_hostname);
