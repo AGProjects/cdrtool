@@ -179,7 +179,8 @@ $replicated_databases=array('cluster1'=>array(
                                                                'user'    =>'process',
                                                                'password'=>'password',
                                                                'replication_user'    =>'replication',
-                                                               'replication_password'=>'password'
+                                                               'replication_password'=>'password',
+                                                               'active_master' => true
                                                                ),
                                               "db2"=>array('ip'      =>'10.0.0.132',
                                                                'slave_of'=>'db-log1',

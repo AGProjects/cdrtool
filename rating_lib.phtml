@@ -139,7 +139,7 @@ class Rate {
         $this->ENUMtld           = $dictionary['ENUMtld'];
 
 		if ($this->minimumDuration && $this->duration < $this->minimumDuration) {
-  			syslog(LOG_NOTICE, "Duration less than minimum $this->minimumDuration");
+  			//syslog(LOG_NOTICE, "Duration less than minimum $this->minimumDuration");
             $this->rateInfo .= "   Duration < $this->minimumDuration s\n";
         	return false;
         }
@@ -1228,7 +1228,7 @@ class RatingTables {
                                                                                  "readonly"=>1
                                                                                  ),
                                                                  "call_lock"=>array("size"=>1,
-                                                                 				 "name"=>"Active",
+                                                                 				 "name"=>"Lock",
                                                                                  "readonly"=>0
                                                                                  ),
                                                                  "call_in_progress"=>array("size"=>18,
@@ -4128,23 +4128,23 @@ class RatingEngine {
         $help=
         "Version\n".
         "Help\n".
-		"ShowAccounts\n".
         "MaxSessionTime        From=sip:123@example.com To=sip:0031650222333 Duration=7200 Lock=1\n".
         "ShowPrice             From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
-        "ReloadRatingTables\n".
-        "ShowProfiles\n".
-        "ShowENUMtlds\n".
-        "ShowMemory\n".
-        "ReloadSipAccountsWithQuota\n".
-        "ReloadDomains\n".
         "AddBalance            From=123@example.com Value=10.00\n".
         "GetBalance            From=123@example.com\n".
         "GetBalanceHistory     From=123@example.com\n".
         "DeleteBalance         From=123@example.com\n".
         "DeleteBalanceHistory  From=123@example.com\n".
-        "DebitBalance          From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
+        "DebitBalance          From=sip:123@example.com To=sip:0031650222333@example.com Duration=59\n".
+        "ShowPrepaidAccounts   Filter=123@example.com\n".
         "ReloadPrepaidAccounts Account=abc@example.com\n".
-        "ShowPrepaidAccounts   Filter=123@example.com\n"
+        "ReloadRatingTables\n".
+        "ReloadSipAccountsWithQuota\n".
+        "ReloadDomains\n".
+		"ShowAccounts\n".
+        "ShowProfiles\n".
+        "ShowENUMtlds\n".
+        "ShowMemory\n"
         ;
 
         return $help;

@@ -3,33 +3,6 @@
 // arbitrary number of mysql servers and instructions about how to fix
 // a broken replication process
 
-/*
-
-To use this library create a web page like this:
-
-$replicated_databases=array(
-                 "cluster1" => array("db1"=>array('ip'       => '10.0.0.131',
-                                                 'slave_of' => 'db2',
-                                                 'user'     => 'root',
-                                                 'password' => 'pass'
-                                                     ),
-                                     "db2"=>array('ip'       => '10.0.0.132',
-                                                  'slave_of' => 'db1'
-                                                  'user'     => 'root',
-                                                  'password' => 'pass'
-                                                  )
-                                     )
-                 );
-
-
-require("mysql_replication_lib.phtml");
-
-$ReplicationOverview = new ReplicationOverview($clusters);
-$ReplicationOverview->showOverview();
-
-*/
-
-
 class DBx extends DB_Sql {
   function DBx($host='localhost', $user, $password) {
       $this->Host = $host;
@@ -87,7 +60,7 @@ class ReplicationOverview {
     	$this->clusters = $clusters;
 
         $this->cluster = $_REQUEST['cluster'];
-        $this->server  = $_REQUEST['server'];
+        $this->repair['server_to_repair']  = $_REQUEST['server'];
 
 		$cluster_names=array_keys($this->clusters);
 
@@ -98,21 +71,44 @@ class ReplicationOverview {
         }
 
         foreach (array_keys($this->clusters[$this->cluster]) as $key) {
-            if ($this->server && $key==$this->server) {
-                $this->master_hostname=$this->clusters[$this->cluster][$key]['slave_of'];
-                $this->master_ip=$this->clusters[$this->cluster][$this->master_hostname]['ip'];
-                $this->master=$this->clusters[$this->cluster][$key]['slave_of'];
-                break;
+        	foreach (array_keys($this->clusters[$this->cluster]) as $key2) {
+                if ($key == $key2) continue;
+                if ($this->clusters[$this->cluster][$key2]['slave_of'] == $key) {
+                    $this->is_master[$key]++;
+                }
             }
         }
 
-        foreach (array_keys($this->clusters[$this->cluster]) as $key) {
-        	if ($this->server && $this->clusters[$this->cluster][$key]['slave_of'] == $this->master && $key != $this->server) {
-                $this->slave_ip=$this->clusters[$this->cluster][$key]['ip'];
-                $this->slave_hostname =$key;
-                break;
+      	if ($this->repair['server_to_repair']) {
+
+    		$this->repair['master_server']=$this->clusters[$this->cluster][$this->repair['server_to_repair']]['slave_of'];
+
+            foreach (array_keys($this->clusters[$this->cluster]) as $key) {
+            	if ($this->repair['server_to_repair'] == $this->clusters[$this->cluster][$key]['slave_of']) {
+                	$this->repair['has_slave']= $key;
+                    break;
+                }
             }
+
+            foreach (array_keys($this->clusters[$this->cluster]) as $key) {
+                if ($this->clusters[$this->cluster][$key]['slave_of'] == $this->repair['master_server'] && $key != $this->repair['server_to_repair']) {
+                    $this->repair['snapshot_server'] = $key;
+                    break;
+                }
+            }
+
+            if (!$this->repair['snapshot_server']) {
+                $this->repair['snapshot_server']=$this->repair['master_server'];
+            }
+
+			if ($this->repair['snapshot_server'] != $this->repair['master_server']) {
+                if ($this->clusters[$this->cluster][$this->repair['snapshot_server']]['active_master']) {
+                	$this->repair['snapshot_server'] = $this->repair['master_server'];
+                }
+            }
+
         }
+
     }
 
     function showOverview() {
@@ -140,8 +136,10 @@ class ReplicationOverview {
 
         foreach (array_keys($this->clusters[$this->cluster]) as $key) {
             printf ("<th class=border>%s (%s)",$key,$this->clusters[$this->cluster][$key]['ip']);
-            if ($this->server != $key) {
-            	printf ("<br><a href=%s?server=%s&cluster=%s>Click to learn how to repair me</a></th>",$_SERVER['PHP_SELF'],urlencode($key),urlencode($this->cluster));
+            if ($this->repair['server_to_repair'] != $key) {
+            	printf ("<br><a href=%s?server=%s&cluster=%s>How to repair me</a></th>",$_SERVER['PHP_SELF'],urlencode($key),urlencode($this->cluster));
+            } else {
+            	printf ("<br><a href=%s?server=%s&cluster=%s>Repair instructions</a></th>",$_SERVER['PHP_SELF'],urlencode($key),urlencode($this->cluster));
             }
         }
         
@@ -168,12 +166,17 @@ class ReplicationOverview {
                 $io_color="white";
             }
 
-            printf ("<tr><td colspan=2 bgcolor=lightgrey>Master status</td></tr>");
+			if ($this->is_master[$key]) {
+            	printf ("<tr><td colspan=2 bgcolor=lightgrey><b>Master status</b></td></tr>");
+                printf ("<tr><td class=border>Log file</td><td><font color=%s>%s</font></td></tr>",$this->status[$key]->color,$this->status[$key]->master_log_file);
+                printf ("<tr><td class=border>Position</td><td>%s</td></tr>",$this->status[$key]->master_position);
+            } else {
+            	printf ("<tr><td colspan=2><font color=lightgrey>Master status</font></td></tr>");
+                printf ("<tr><td class=border><font color=lightgrey>Log file</font></td><td><font color=lightgrey>%s</font></td></tr>",$this->status[$key]->master_log_file);
+                printf ("<tr><td class=border><font color=lightgrey>Position</font></td><td><font color=lightgrey>%s</font></td></tr>",$this->status[$key]->master_position);
+            }
 
-            printf ("<tr><td class=border>Log file</td><td><font color=%s>%s</font></td></tr>",$this->status[$key]->color,$this->status[$key]->master_log_file);
-            printf ("<tr><td class=border>Position</td><td>%s</td></tr>",$this->status[$key]->master_position);
-
-            printf ("<tr><td colspan=2 bgcolor=lightgrey>Slave status</td></tr>");
+            printf ("<tr><td colspan=2 bgcolor=lightgrey><b>Slave of %s status</b></td></tr>",$this->status[$key]->slave_of);
 
             printf ("<tr><td class=border>Master host</td><td>%s</td></tr>",$this->status[$key]->slave_master);
             printf ("<tr><td class=border>Master port</td><td>%s</td></tr>",$this->status[$key]->slave_master_port);
@@ -207,7 +210,7 @@ class ReplicationOverview {
         </td>";
 
         foreach (array_keys($this->clusters[$this->cluster]) as $key) {
-            if ($downtime && $key==$this->master_hostname) {
+            if ($downtime && $key==$this->repair['master_server']) {
                 $bgcolor="red";
             } else {
                 $bgcolor="white";
@@ -215,7 +218,7 @@ class ReplicationOverview {
             if ($key==$hostname) {
                 print "<td class=border bgcolor=$bgcolor><pre>$instructions</pre></td>";
             } else {
-            	if ($downtime && $key==$this->master_hostname) {
+            	if ($downtime && $key==$this->repair['master_server']) {
                 	print "<td class=border bgcolor=$bgcolor valign=middle align=center><b><font color=white>Downtime</font></b></td>";
                 } else {
                 	print "<td class=border></td>";
@@ -226,17 +229,18 @@ class ReplicationOverview {
 
     }
 
+
     function printInstructions() {
 
-    if (!$this->server) return;
+    if (!$this->repair['server_to_repair']) return;
 
+$text="The ssh public keys for user root must be shared <br>between machines. Test scp as root between machines. ";
+$text.=sprintf("<br>Using %s to take snapshot.",$this->repair['snapshot_server']);
 
-$text="The ssh public keys for user root must be shared <br>between machines. Test scp as root between machines.";
+$this->printStep($this->repair['master_server'],$text);
 
-$this->printStep($this->master_hostname,$text);
-
-if ($this->slave_hostname) {
-
+    if ($this->repair['snapshot_server'] != $this->repair['master_server']) {
+        // lock master and wait for snapshot server to catch up with the master server
 $text=sprintf("
 mysql -u root -p
 
@@ -244,115 +248,46 @@ flush tables with read lock;
 
 show master status;
 
-# write down file a& possition %s.file %s.pos
+# note file & possition %s.file %s.pos
 <font color=red># do not exit the mysql console</font>
 
-",$this->master_hostname,$this->master_hostname);
+",$this->repair['master_server'],$this->repair['master_server']);
 
-$this->printStep($this->master_hostname,$text);
+$this->printStep($this->repair['master_server'],$text);
 
 $text=sprintf("
 
 mysql -u root -p
 
 show slave status;
-# wait until same file/pos as %s is displayed
+# wait until same possition as %s
 
 slave stop;
-",$this->master_hostname);
+",$this->repair['master_server']);
 
-$this->printStep($this->slave_hostname,$text,true);
+$this->printStep($this->repair['snapshot_server'],$text,true);
 
 $text="unlock tables;";
 
-$this->printStep($this->master_hostname,$text);
+$this->printStep($this->repair['master_server'],$text);
 
-
-$text="
-
-/etc/init.d/monit stop
-
-/etc/init.d/mysql stop
-
-";
-
-$this->printStep($this->slave_hostname,$text);
-
-$text="
-
-/etc/init.d/monit stop
-
-/etc/init.d/mysql stop
-
-";
-
-$this->printStep($this->server,$text);
-
-$text=sprintf("
-rsync -avzP --delete /var/lib/mysql %s:/var/lib/
-
-/etc/init.d/mysql start
-
-/etc/init.d/monit start
-",$this->server);
-
-$this->printStep($this->slave_hostname,$text);
-
-
-$text=sprintf("
-(cd /var/lib/mysql/; rm *.info *relay-bin*)
-
-/etc/init.d/mysql start
-
-/etc/init.d/monit start
-
-mysql -u root -p
-
-show master status;
-# write down the file and possition %s.file %s.pos
-
-CHANGE MASTER TO MASTER_HOST='%s',
-MASTER_USER='%s',
-MASTER_PASSWORD='%s',
-MASTER_LOG_FILE='%s.file',
-MASTER_LOG_POS=%s.pos;
-
-slave start;
-
-",$this->server,
-$this->server,
-$this->master_ip,
-$this->clusters[$this->cluster][$this->master_hostname]['replication_user'],
-$this->clusters[$this->cluster][$this->master_hostname]['replication_password'],
-$this->master_hostname,
-$this->master_hostname
-);
-$this->printStep($this->server,$text);
-
-$text=sprintf("
-
-mysql -u root -p
-
-stop slave;
-
-CHANGE MASTER TO MASTER_HOST='%s',
-MASTER_USER='%s',
-MASTER_PASSWORD='%s',
-MASTER_LOG_FILE='%s.file',
-MASTER_LOG_POS=%s.pos;
-
-slave start;
-",
-$this->clusters[$this->cluster][$this->server]['ip'],
-$this->clusters[$this->cluster][$this->server]['replication_user'],
-$this->clusters[$this->cluster][$this->server]['replication_password'],
-$this->server,
-$this->server
-);
-
-$this->printStep($this->master_hostname,$text);
 
     } else {
+$text=sprintf("
+
+mysql -u root -p
+
+slave stop;
+
+show master status;
+# note file & possition %s.file %s.pos
+",$this->repair['snapshot_server'],
+$this->repair['snapshot_server']
+);
+
+$this->printStep($this->repair['snapshot_server'],$text);
+
+    }
 
 
 $text="
@@ -363,37 +298,33 @@ $text="
 
 ";
 
-$this->printStep($this->server,$text);
+$this->printStep($this->repair['snapshot_server'],$text);
 
-
-$text=sprintf("
-
-mysql -u root -p
-
-flush tables with read lock;
-
-show master status;
-# write down the file and possition %s.file %s.pos
-
-unlock tables;
+$text="
 
 /etc/init.d/monit stop
 
 /etc/init.d/mysql stop
 
+";
+
+$this->printStep($this->repair['server_to_repair'],$text);
+
+$text=sprintf("
 rsync -avzP --delete /var/lib/mysql %s:/var/lib/
+
+",$this->repair['server_to_repair']);
+
+$this->printStep($this->repair['snapshot_server'],$text);
+
+$text=sprintf("
 
 /etc/init.d/mysql start
 
 /etc/init.d/monit start
+",$this->repair['server_to_repair']);
 
-",
-$this->master_hostname,
-$this->master_hostname,
-$this->server
-);
-
-$this->printStep($this->master_hostname,$text,true);
+$this->printStep($this->repair['snapshot_server'],$text);
 
 $text=sprintf("
 (cd /var/lib/mysql/; rm *.info *relay-bin*)
@@ -405,7 +336,7 @@ $text=sprintf("
 mysql -u root -p
 
 show master status;
-# write down the file and possition %s.file %s.pos
+# note %s.file %s.pos
 
 CHANGE MASTER TO MASTER_HOST='%s',
 MASTER_USER='%s',
@@ -415,15 +346,15 @@ MASTER_LOG_POS=%s.pos;
 
 slave start;
 
-",$this->server,
-$this->server,
-$this->master_ip,
-$this->clusters[$this->cluster][$this->master_hostname]['replication_user'],
-$this->clusters[$this->cluster][$this->master_hostname]['replication_password'],
-$this->master_hostname,
-$this->master_hostname
+",$this->repair['server_to_repair'],
+$this->repair['server_to_repair'],
+$this->clusters[$this->cluster][$this->repair['master_server']]['ip'],
+$this->clusters[$this->cluster][$this->repair['master_server']]['replication_user'],
+$this->clusters[$this->cluster][$this->repair['master_server']]['replication_password'],
+$this->repair['master_server'],
+$this->repair['master_server']
 );
-$this->printStep($this->server,$text);
+$this->printStep($this->repair['server_to_repair'],$text);
 
 $text=sprintf("
 
@@ -439,16 +370,18 @@ MASTER_LOG_POS=%s.pos;
 
 slave start;
 ",
-$this->clusters[$this->cluster][$this->server]['ip'],
-$this->clusters[$this->cluster][$this->server]['replication_user'],
-$this->clusters[$this->cluster][$this->server]['replication_password'],
-$this->server,
-$this->server
+$this->clusters[$this->cluster][$this->repair['server_to_repair']]['ip'],
+$this->clusters[$this->cluster][$this->repair['server_to_repair']]['replication_user'],
+$this->clusters[$this->cluster][$this->repair['server_to_repair']]['replication_password'],
+$this->repair['server_to_repair'],
+$this->repair['server_to_repair']
 );
 
-$this->printStep($this->master_hostname,$text);
-
-    }
+if ($this->clusters[$this->cluster][$this->repair['master_server']]['slave_of'] == $this->repair['server_to_repair']) {
+	$this->printStep($this->repair['master_server'],$text);
 }
+
+}
+
 }
 ?>

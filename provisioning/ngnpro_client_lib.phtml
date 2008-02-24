@@ -3029,6 +3029,12 @@ class SipAliases extends Records {
                         urlencode($this->SoapEngine->customer_engine),
                         urlencode($alias->customer)
                         );
+
+                        $_sip_accounts_url = $this->url.sprintf("&service=sip_accounts@%s&username_filter=%s&domain_filter=%s",
+                        urlencode($this->SoapEngine->soapEngine),
+                        urlencode($alias->target->username),
+                        urlencode($alias->target->domain)
+                        );
     
 						if ($alias->owner) {
                             $_owner_url = sprintf
@@ -3047,7 +3053,7 @@ class SipAliases extends Records {
                         <td>%s</td>
                         <td><a href=%s>%s.%s</a></td>
                         <td>%s@%s</td>
-                        <td>%s@%s</td>
+                        <td><a href=%s>%s@%s</a></td>
                         <td>%s</td>
                         <td>%s</td>
                         <td><a href=%s>%s</a></td>
@@ -3060,6 +3066,7 @@ class SipAliases extends Records {
                         $alias->reseller,
                         $alias->id->username,
                         $alias->id->domain,
+                        $_sip_accounts_url,
                         $alias->target->username,
                         $alias->target->domain,
                         $_owner_url,
