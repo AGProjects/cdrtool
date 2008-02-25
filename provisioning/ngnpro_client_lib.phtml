@@ -678,7 +678,7 @@ class SoapEngine {
 
 class Records {
 	var $maxrowsperpage     = '15';
-    var $sip_settings_page    = 'sip_settings.phtml';
+    var $sip_settings_page  = 'sip_settings.phtml';
     var $allowedDomains     = array();
     var $selectionActive    = false;
     var $selectionKeys      = array();
@@ -689,6 +689,7 @@ class Records {
     var $loginProperties    = array();
 	var $errorMessage       = '';
     var $html               = true;
+    var $filters            = array();
 
     function Records(&$SoapEngine) {
     	$this->SoapEngine         = &$SoapEngine;
@@ -7065,6 +7066,7 @@ class Customers extends Records {
                                                                'category'  => 'web',
                                                                'permission'  => 'customer'
                                                                )
+
                                  );
 
     var $FieldsReadOnly=array(
@@ -7501,15 +7503,16 @@ class Customers extends Records {
 
             if ($this->reseller) {
                 $customer_engine_remote=$this->SoapEngine->login_credentials['reseller_filters'][$this->reseller]['customer_engine_remote'];
-    
-                if (strlen($customer_engine_remote)) {
+
+                if (strlen($customer_engine_remote) && $this->SoapEngine->soapEngine != $customer_engine_remote) {
+                    // replicate change
 
                     if (in_array($customer_engine_remote,array_keys($this->SoapEngine->soapEngines))) {
                         $this->SOAPloginCustomerRemote = array(
                                                "username"    => $this->SoapEngine->soapEngines[$customer_engine_remote]['username'],
                                                "password"    => $this->SoapEngine->soapEngines[$customer_engine_remote]['password'],
                                                "admin"       => true,
-                                               "impersonate" => $this->reseller
+                                               "impersonate" => intval($this->reseller)
                                            );
         
                         //dprint_r($this->SOAPloginCustomerRemote);
@@ -7808,31 +7811,29 @@ class Customers extends Records {
                                             'logs'       => array('success' => sprintf('Customer id %s has been deleted',$this->filters['customer'])))
                         );
 
-     	$this->filters=array();
-
-
         if ($this->SoapEngine->execute($function,$this->html)) {
-
             if (is_object($this->SoapEngineCustomerRemote)) {
 
 				$this->SoapEngineCustomerRemote->addHeader($this->SoapAuthCustomerRemote);
-        		$result     = $this->SoapEngineCustomerRemote->deleteAccount($customer);
+        		$result     = $this->SoapEngineCustomerRemote->deleteAccount(intval($this->filters['customer']));
         		
                 if (PEAR::isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlCustomerRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
-                    return false;
-                } else {
-                    return true;
+                    if ($error_fault->detail->exception->errorcode != 5000)  {
+                    	printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlCustomerRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    	return false;
+                    }
                 }
             }
 
         } else {
             return false;
         }
+
+        $this->filters=array();
+        return true;
     }
 
     function getRecord($id) {
@@ -7879,6 +7880,10 @@ class Customers extends Records {
         <td align=right>";
 
         printf ("<input type=hidden name=customer_filter value=%s>",$customer->id);
+
+        if ($this->adminonly) {
+        	printf ("<input type=hidden name=reseller_filter value=%s>",$customer->reseller);
+        }
 
       	if ($this->adminonly || $this->reseller == $customer->reseller) {
         	if ($_REQUEST['action'] != 'Delete') {
@@ -8538,6 +8543,33 @@ class Customers extends Records {
                             );
     
             if ($this->SoapEngine->execute($function,$this->html)) {
+                // update remote
+                if (is_object($this->SoapEngineCustomerRemote)) {
+                    if ($_id = $this->getCustomerId($customer_new->username)) {
+
+                        $customerRemote=$customer_new;
+                        $customerRemote->id = intval($_id);
+    
+                        $this->SoapEngineCustomerRemote->addHeader($this->SoapAuthCustomerRemote);
+                        $result     = $this->SoapEngineCustomerRemote->addAccount($customerRemote);
+
+                        if (PEAR::isError($result)) {
+                            $error_msg  = $result->getMessage();
+                            $error_fault= $result->getFault();
+                            $error_code = $result->getCode();
+                            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlCustomerRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+    
+                            $function=array('commit'   => array('name'       => 'deleteAccount',
+                                                                'parameters' => array(intval($_id)),
+                                                                'logs'       => array('success' => sprintf('Customer id %s could not be copied ',$this->filters['customer'])))
+                                            );
+                    
+                            $this->SoapEngine->execute($function,$this->html);
+                            return false;
+                        }
+                    }
+                }
+
                 // Reset filters to find the copy
                 $this->filters=array();
                 $this->filters['username']=$customer_new->username;
@@ -8805,10 +8837,7 @@ class Customers extends Records {
                                         );
                 
                         $this->SoapEngine->execute($function,$this->html);
-
                         return false;
-                    } else {
-                        return true;
                     }
                 }
             }
