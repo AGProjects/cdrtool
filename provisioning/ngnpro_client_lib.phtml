@@ -7503,7 +7503,7 @@ class Customers extends Records {
                 $customer_engine_remote=$this->SoapEngine->login_credentials['reseller_filters'][$this->reseller]['customer_engine_remote'];
     
                 if (strlen($customer_engine_remote)) {
-    
+
                     if (in_array($customer_engine_remote,array_keys($this->SoapEngine->soapEngines))) {
                         $this->SOAPloginCustomerRemote = array(
                                                "username"    => $this->SoapEngine->soapEngines[$customer_engine_remote]['username'],
@@ -7518,7 +7518,7 @@ class Customers extends Records {
                         $log=sprintf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlCustomerRemote,$this->SOAPurlCustomerRemote);
                         dprint($log);
     
-                        $this->SoapAuthCustomerRemote = array('auth', $this->SOAPloginCustomerRemote , 'urn:AGProjects:NGNPro', 0, '');
+                        $this->SoapAuthCustomerRemote  = array('auth', $this->SOAPloginCustomerRemote , 'urn:AGProjects:NGNPro', 0, '');
     
                         $this->SoapEngineCustomerRemote = new $this->SoapEngine->soap_class($this->SOAPurlCustomerRemote);
                         $this->SoapEngineCustomerRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
@@ -7810,16 +7810,26 @@ class Customers extends Records {
 
      	$this->filters=array();
 
+
         if ($this->SoapEngine->execute($function,$this->html)) {
+
             if (is_object($this->SoapEngineCustomerRemote)) {
-                // delete remote
-                $function=array('commit'   => array('name'       => 'deleteAccount',
-                                                    'parameters' => array(intval($this->filters['customer'])),
-                                                    'logs'       => array('failure' => sprintf('Error deleting customer id %s remotely',$this->filters['customer'])))
-                                );
-                $this->SoapEngineCustomerRemote->execute($function,$this->html);
+
+				$this->SoapEngineCustomerRemote->addHeader($this->SoapAuthCustomerRemote);
+        		$result     = $this->SoapEngineCustomerRemote->deleteAccount($customer);
+        		
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlCustomerRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+
+                    return false;
+                } else {
+                    return true;
+                }
             }
-            return true;
+
         } else {
             return false;
         }
@@ -8325,6 +8335,8 @@ class Customers extends Records {
             }
         }
 
+        $customer_old->properties=$properties;
+
         foreach (array_keys($this->allProperties) as $item) {
             $var_name   = $item.'_form';
             $var_value  = trim($_REQUEST[$var_name]);
@@ -8386,24 +8398,21 @@ class Customers extends Records {
 
             // update remote
             if (is_object($this->SoapEngineCustomerRemote)) {
-                $function=array('commit'   => array('name'       => 'updateAccount',
-                                                    'parameters' => array($customer),
-                                                    'logs'       => array('failure' => sprintf('Error: customer id %s could not be remotely updated',$customer->id))
-                                                    )
-                                );
 
-                // we fail to update remote and we rollback local update too
-                if (!$this->SoapEngineCustomerRemote->execute($function,$this->html)) {
-                    $function=array('commit'   => array('name'       => 'updateAccount',
-                                                        'parameters' => array($customer_old)
-                                                        )
-                                    );
-                    $this->SoapEngine->execute($function,$this->html);
-    
+				$this->SoapEngineCustomerRemote->addHeader($this->SoapAuthCustomerRemote);
+        		$result     = $this->SoapEngineCustomerRemote->updateAccount($customer);
+        		
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlCustomerRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+
                     return false;
+                } else {
+                    return true;
                 }
             }
-
 
             $this->updateAfter($customer);
             return true;
@@ -8775,24 +8784,31 @@ class Customers extends Records {
                        );
 
         if ($this->SoapEngine->execute($function,$this->html)) {
+            // update remote
             if (is_object($this->SoapEngineCustomerRemote)) {
             	if ($_id = $this->getCustomerId($customer['username'])) {
                 	$customerRemote=$customer;
-                    $customerRemote['id'] = $_id;
-                    $function=array('commit'   => array('name'       => 'addAccount',
-                                                        'parameters' => array($customerRemote),
-                                                        'logs'       => array('failure' => sprintf('Failed to add remote login account %s %s',$customerRemote['firstName'],$customerRemote['lastName']))
-                                                        )
-                                   );
-			        if (!$this->SoapEngineCustomerRemote->execute($function,$this->html)) {
+                    $customerRemote['id'] = intval($_id);
+
+					$this->SoapEngineCustomerRemote->addHeader($this->SoapAuthCustomerRemote);
+        			$result     = $this->SoapEngineCustomerRemote->addAccount($customerRemote);
+
+                    if (PEAR::isError($result)) {
+                        $error_msg  = $result->getMessage();
+                        $error_fault= $result->getFault();
+                        $error_code = $result->getCode();
+                        printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlCustomerRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+
                         $function=array('commit'   => array('name'       => 'deleteAccount',
                                                             'parameters' => array(intval($_id)),
-                                                            'logs'       => array('success' => sprintf('Customer id %s has been deleted',$this->filters['customer'])))
+                                                            'logs'       => array('success' => sprintf('Customer id %s could not be created ',$this->filters['customer'])))
                                         );
                 
                         $this->SoapEngine->execute($function,$this->html);
 
                         return false;
+                    } else {
+                        return true;
                     }
                 }
             }
