@@ -1218,13 +1218,20 @@ class SipSettings {
             return false;
         }
 
+        //dprint_r($result);
+
 		reset($this->CallPrefDictionary);
         foreach(array_keys($this->CallPrefDictionary) as $condition) {
             $uri=$result->$condition;
-            //if ($uri =="<voice-mailbox>") $uri = $this->voicemail['Account'];
+
+			if ($uri == "<voice-mailbox>" && $this->absolute_voicemail_uri) {
+            	$uri = $this->voicemail['Account'];
+            }
+
             if (preg_match("/^(sip:|sips:)(.*)$/i",$uri,$m)) {
                 $uri=$m[2];
             }
+
         	$this->CallPrefDbURI[$condition]=$uri;
         }
 
@@ -2538,11 +2545,13 @@ class SipSettings {
                 $divert_changed=1;
             }
 
-            if ($diversions[$key] && $diversions[$key] != "<voice-mailbox>") {
-            	$diversionsSOAP[$key]='sip:'.$diversions[$key];
-
-                if ($this->absolute_voicemail_uri && $diversionsSOAP[$key] == "<voice-mailbox>") {
-            		$diversionsSOAP[$key] = 'sip:'.$this->voicemail['Account'];
+            if ($diversions[$key]) {
+            	if ($diversions[$key] == "<voice-mailbox>") {
+                    if ($this->absolute_voicemail_uri) {
+                        $diversionsSOAP[$key] = 'sip:'.$this->voicemail['Account'];
+                    }
+                } else {
+                	$diversionsSOAP[$key]='sip:'.$diversions[$key];
                 }
 
  			} else {
