@@ -124,7 +124,7 @@ class SipSettings {
 
         $debug=sprintf("<font color=blue><p><b>Initialize class %s(%s)</b></font>",get_class($this),$account);
         dprint($debug);
-        dprint_r($loginCredentials);
+        //dprint_r($loginCredentials);
 
 		$this->loginCredentials   = &$loginCredentials;
         if ($loginCredentials['login_type']) {
@@ -412,8 +412,6 @@ class SipSettings {
         	$this->templates_path   = $this->soapEngines[$this->sip_engine]['templates_path'];
         }
 
-        $this->sip_engine_remote=$this->soapEngines[$this->sip_engine]['depends'];
-
         // Instantiate the SOAP clients
         // sip
         $this->SipPort       = new $this->soapClassSipPort($this->SOAPurl);
@@ -423,34 +421,6 @@ class SipSettings {
 
         if ($this->showSoapConnectionInfo)  {
         	printf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassSipPort,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
-        }
-
-        // sip remote
-        if (strlen($this->sip_engine_remote) && in_array($this->sip_engine_remote,array_keys($this->soapEngines))) {
-            $impersonateRemote=intval($this->soapEngines[$this->sip_engine_remote]['impersonate']);
-
-            $this->SOAPloginRemote = array(
-                                   "username"    => $this->soapEngines[$this->sip_engine_remote]['username'],
-                                   "password"    => $this->soapEngines[$this->sip_engine_remote]['password'],
-                                   "admin"       => true,
-                                   "impersonate" => $impersonateRemote
-                               );
-
-            //print_r($this->SOAPloginRemote);
-            $this->SOAPurlRemote=$this->soapEngines[$this->sip_engine_remote]['url'];
-            $this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
-
-            // Instantiate the SOAP client depends
-            $this->SipPortRemote = new $this->soapClassSipPort($this->SOAPurlRemote);
-
-            $this->SipPortRemote->setOpt('curl', CURLOPT_TIMEOUT,        5);
-            $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-            $this->SipPortRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-
-            if ($this->showSoapConnectionInfo)  {
-                printf ("and sync to <a href=%swsdl target=wsdl>%s</a> as %s ",$this->SOAPurlRemote,$this->SOAPurlRemote,$this->soapEngines[$this->sip_engine_remote]['username']);
-            }
-
         }
 
         // voicemail
@@ -558,7 +528,7 @@ class SipSettings {
             return false;
         }
 
-        dprint_r($result);
+        //dprint_r($result);
 
         $this->owner     = $result->owner;
 
@@ -888,48 +858,17 @@ class SipSettings {
 
             //dprint_r($_aliasObject);
 
-            if (is_object($this->SipPortRemote)) {
-                dprint("addAliasRemote");
-                $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-                $resultRemote     = $this->SipPortRemote->addAlias($_aliasObject);
-    
-                if (PEAR::isError($resultRemote)) {
-                    $error_msg  = $resultRemote->getMessage();
-                    $error_fault= $resultRemote->getFault();
-                    $error_code = $resultRemote->getCode();
-                    printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                } else {
-    
-                    dprint("addAliasLocal");
+            dprint("addAlias");
 
-    				dprint_r($this->SoapAuth);
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->addAlias($_aliasObject);
 
-                    $this->SipPort->addHeader($this->SoapAuth);
-                    $result     = $this->SipPort->AddAlias($_aliasObject);
-    
-                    if (PEAR::isError($result)) {
-                        $error_msg  = $result->getMessage();
-                        $error_fault= $result->getFault();
-                        $error_code = $result->getCode();
-                        printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                        return false;
-                    }
-                }
-    
-            } else {
-                dprint("addAliasLocal");
-    
-                $this->SipPort->addHeader($this->SoapAuth);
-                $result     = $this->SipPort->addAlias($_aliasObject);
-    
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                }
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
             }
         }
 
@@ -952,46 +891,17 @@ class SipSettings {
                                );
             dprint_r($_aliasObject);
 
-            if (is_object($this->SipPortRemote)) {
-                dprint("deleteAliasRemote");
-                $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-                $resultRemote     = $this->SipPortRemote->deleteAlias($_aliasObject);
-    
-                if (PEAR::isError($resultRemote)) {
-                    $error_msg  = $resultRemote->getMessage();
-                    $error_fault= $resultRemote->getFault();
-                    $error_code = $resultRemote->getCode();
-                    printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                } else {
-    
-                    dprint("deleteAliasLocal");
-    
-                    $this->SipPort->addHeader($this->SoapAuth);
-                    $result     = $this->SipPort->deleteAlias($_aliasObject);
-    
-                    if (PEAR::isError($result)) {
-                        $error_msg  = $result->getMessage();
-                        $error_fault= $result->getFault();
-                        $error_code = $result->getCode();
-                        printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                        return false;
-                    }
-                }
-    
-            } else {
-                dprint("deleteAliasLocal");
-    
-                $this->SipPort->addHeader($this->SoapAuth);
-                $result     = $this->SipPort->deleteAlias($_aliasObject);
-    
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                }
+            dprint("deleteAlias");
+ 
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->deleteAlias($_aliasObject);
+ 
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
             }
         }
 
@@ -1030,7 +940,7 @@ class SipSettings {
         $this->voicemail['Account']        = $result->mailbox.'@'.$this->voicemail_server;
 
         // used by template system
-		$this->voicemailMailbox=$result->mailbox;
+		$this->voicemailMailbox            = $result->mailbox;
 
         //dprint_r($this->voicemail);
         return true;
@@ -1311,7 +1221,7 @@ class SipSettings {
 		reset($this->CallPrefDictionary);
         foreach(array_keys($this->CallPrefDictionary) as $condition) {
             $uri=$result->$condition;
-            if ($uri =="<voice-mailbox>") $uri = $this->voicemail['Account'];
+            //if ($uri =="<voice-mailbox>") $uri = $this->voicemail['Account'];
             if (preg_match("/^(sip:|sips:)(.*)$/i",$uri,$m)) {
                 $uri=$m[2];
             }
@@ -1323,61 +1233,29 @@ class SipSettings {
 
     function getDeviceLocations() {
         dprint("getDeviceLocations()");
-        if (is_object($this->SipPortRemote)) {
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->getSipDeviceLocations(array($this->sipId));
 
-            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            $result     = $this->SipPortRemote->getSipDeviceLocations(array($this->sipId));
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }  else {
-                foreach ($result[0]->locations as $locationStructure) {
-                    $contact=$locationStructure->address.":".$locationStructure->port;
-                    if ($locationStructure->publicAddress) {
-                    	$publicContact=$locationStructure->publicAddress.":".$locationStructure->publicPort;
-                    } else {
-                    	$publicContact=$contact;
-                    }
-
-                    $this->locations[]=array(
-                                             "contact"    	 => $contact,
-                                             "publicContact" => $publicContact,
-                                             "expires"       => $locationStructure->expires,
-                                             "user_agent"    => $locationStructure->userAgent,
-                                             "transport"     => $locationStructure->transport
-                                         );
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }  else {
+            foreach ($result[0]->locations as $locationStructure) {
+                $contact=$locationStructure->address.":".$locationStructure->port;
+                if ($locationStructure->publicAddress) {
+                    $publicContact=$locationStructure->publicAddress.":".$locationStructure->publicPort;
+                } else {
+                    $publicContact=$contact;
                 }
-            }
-
-        } else {
-            $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->getSipDeviceLocations(array($this->sipId));
-
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }  else {
-                foreach ($result[0]->locations as $locationStructure) {
-                    $contact=$locationStructure->address.":".$locationStructure->port;
-                    if ($locationStructure->publicAddress) {
-                    	$publicContact=$locationStructure->publicAddress.":".$locationStructure->publicPort;
-                    } else {
-                    	$publicContact=$contact;
-                    }
-                    $this->locations[]=array("contact"       => $contact,
-                                             "publicContact" => $publicContact,
-                                             "expires"       => $locationStructure->expires,
-                                             "user_agent"    => $locationStructure->userAgent,
-                                             "transport"     => $locationStructure->transport
-                                         );
-                }
+                $this->locations[]=array("contact"       => $contact,
+                                         "publicContact" => $publicContact,
+                                         "expires"       => $locationStructure->expires,
+                                         "user_agent"    => $locationStructure->userAgent,
+                                         "transport"     => $locationStructure->transport
+                                     );
             }
         }
 
@@ -1391,8 +1269,14 @@ class SipSettings {
             return;
         }
 
+		if ($this->absolute_voicemail_uri) {
+            $value=$this->voicemail['Account'];
+        } else {
+            $value="<voice-mailbox>";
+        }
+
 		return array("name"  => sprintf (_("Voice mailbox")),
-            	   "value" => $this->voicemail['Account'],
+            	   "value" => $value,
                    "description"  => "Voicemail");
     }
 
@@ -2232,46 +2116,17 @@ class SipSettings {
             }
         }
 
-        if (is_object($this->SipPortRemote)) {
-            dprint("setBarringPrefixesRemote");
-            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            $resultRemote     = $this->SipPortRemote->setBarringPrefixes($this->sipId,$prefixes);
+        dprint("setBarringPrefixes");
 
-            if (PEAR::isError($resultRemote)) {
-                $error_msg  = $resultRemote->getMessage();
-                $error_fault= $resultRemote->getFault();
-                $error_code = $resultRemote->getCode();
-                printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->setBarringPrefixes($this->sipId,$prefixes);
 
-                dprint("setBarringPrefixesLocal");
-
-                $this->SipPort->addHeader($this->SoapAuth);
-                $result     = $this->SipPort->setBarringPrefixes($this->sipId,$prefixes);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                }
-            }
-
-        } else {
-            dprint("setBarringPrefixesLocal");
-
-            $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->setBarringPrefixes($this->sipId,$prefixes);
-
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
         }
     }
 
@@ -2426,11 +2281,6 @@ class SipSettings {
                 $result->groups = array_unique(array_diff($this->groups,array('quota')));
                 $this->somethingChanged=1;
 
-                if (is_object($this->SipPortRemote)) {
-                    $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-                    $this->SipPortRemote->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain), "quota");
-                }
-
                 $this->SipPort->addHeader($this->SoapAuth);
                 $this->SipPort->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain), "quota");
             }
@@ -2558,47 +2408,17 @@ class SipSettings {
 
  			//dprint_r($result);
 
-            if (is_object($this->SipPortRemote)) {
-                dprint("saveSettingsRemote");
-                // if we have remote SOAP connection defined
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->updateAccount($result);
 
-        		$this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            	$resultRemote     = $this->SipPortRemote->updateAccount($result);
-
-            	if (PEAR::isError($resultRemote)) {
-                	$error_msg  = $resultRemote->getMessage();
-                	$error_fault= $resultRemote->getFault();
-                	$error_code = $resultRemote->getCode();
-                	printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                	return false;
-            	} else {
-                	dprint("saveSettingsLocal");
-                    $this->SipPort->addHeader($this->SoapAuth);
-                    $result     = $this->SipPort->updateAccount($result);
-        
-                    if (PEAR::isError($result)) {
-                        $error_msg  = $result->getMessage();
-                        $error_fault= $result->getFault();
-                        $error_code = $result->getCode();
-                        printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                        return false;
-                    }
-            	}
-
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
             } else {
-
-        		$this->SipPort->addHeader($this->SoapAuth);
-            	$result     = $this->SipPort->updateAccount($result);
-    
-            	if (PEAR::isError($result)) {
-               		$error_msg  = $result->getMessage();
-                	$error_fault= $result->getFault();
-                	$error_code = $result->getCode();
-                	printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                	return false;
-            	} else {
-                	dprint("Call updateAccount");
-            	}
+                dprint("Call updateAccount");
             }
 
         }
@@ -2659,13 +2479,9 @@ class SipSettings {
             	$selectedURI = $this->divertTargets[$selectedIdx]['value'];
             }
 
-            if (!preg_match("/^sips?:/",$selectedURI)) {
-                $uri="sip:".$selectedURI;
-            } else {
-            	$uri = $selectedURI;
-            }
+			$uri = $selectedURI;
 
-            if (!$this->voicemail['Account'] && $uri_description=='Voicemail') {
+            if (!$this->voicemail['Account'] && $uri_description == 'Voicemail') {
                 dprint("No voicemail account found");
                 $uri_description='Disabled';
             }
@@ -2674,15 +2490,15 @@ class SipSettings {
 
                 if ($uri_description=='Disabled' && $this->CallPrefUriType[$condition]!='Disabled') {
                     $diversions[$condition]="";
-                } else if ($uri_description!='Disabled' && $selectedURI) {
+                } else if ($uri_description != 'Disabled' && $selectedURI) {
                     if (checkURI($selectedURI)) {
                         if ($this->CallPrefUriType[$condition]=='Disabled') {
                     		$diversions[$condition]="";
                         } else {
-                            if ("sip:" . $this->CallPrefDbURI[$condition] != $uri) {
+                            if ($this->CallPrefDbURI[$condition] != $uri) {
                                 $diversions[$condition]=$uri;
                             } else {
-			                   	$diversions[$condition]=$this->CallPrefDbURI[$condition];
+                                $diversions[$condition]=$this->CallPrefDbURI[$condition];
                             }
                         }
 
@@ -2703,11 +2519,7 @@ class SipSettings {
             if (!$uri_description) $uri_description="Other";
 
             if ($uri_description == 'Other') {
-    			if (preg_match("/^(sip:|sips:)(.*)$/",$uri,$m)) {
-                	$last_other=$m[2];
-                } else {
-                	$last_other=$uri;
-                }
+            	$last_other=$uri;
             } else {
                 $last_other = $this->CallPrefLastOther[$condition];
             }
@@ -2720,19 +2532,19 @@ class SipSettings {
         }
 
 		//dprint_r($this->CallPrefDbURI);
-        //dprint_r($diversions);
 
         foreach(array_keys($this->CallPrefDbURI) as $key) {
             if ($this->CallPrefDbURI[$key] != $diversions[$key]) {
                 $divert_changed=1;
             }
 
-            if ($diversions[$key] && $diversions[$key] != "<voice-mailbox>" && !preg_match("/^sips?:/",$diversions[$key])) {
-            	$diversionsSOAP[$key]="sip:".$diversions[$key];
-                $voicemailUri="sip:".$this->voicemail['Account'];
-                if (!$this->absolute_voicemail_uri && $diversionsSOAP[$key] == $voicemailUri) {
-            		$diversionsSOAP[$key] = "<voice-mailbox>";
+            if ($diversions[$key] && $diversions[$key] != "<voice-mailbox>") {
+            	$diversionsSOAP[$key]='sip:'.$diversions[$key];
+
+                if ($this->absolute_voicemail_uri && $diversionsSOAP[$key] == "<voice-mailbox>") {
+            		$diversionsSOAP[$key] = 'sip:'.$this->voicemail['Account'];
                 }
+
  			} else {
                 if ($diversions[$key]) $diversionsSOAP[$key]=$diversions[$key];
             }
@@ -2743,51 +2555,19 @@ class SipSettings {
         }
 
         if ($divert_changed) {
-        	dprint_r($diversionsSOAP);
+        	//dprint_r($diversionsSOAP);
 
-            if (is_object($this->SipPortRemote)) {
-                dprint("setDiversionsRemote");
-                // if we have remote SOAP connection defined
-				//dprint_r($result);
+            dprint("setDiversions");
 
-        		$this->SipPortRemote->addHeader($this->SoapAuthRemote);
-                $resultRemote     = $this->SipPortRemote->setCallDiversions($this->sipId,$diversionsSOAP);
-
-            	if (PEAR::isError($resultRemote)) {
-                	$error_msg  = $resultRemote->getMessage();
-                	$error_fault= $resultRemote->getFault();
-                	$error_code = $resultRemote->getCode();
-                	printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                	return false;
-            	} else {
-
-	                dprint("setDiversionsLocal");
-
-                    $this->SipPort->addHeader($this->SoapAuth);
-                	$result     = $this->SipPort->setCallDiversions($this->sipId,$diversionsSOAP);
-
-                    if (PEAR::isError($result)) {
-                        $error_msg  = $result->getMessage();
-	                    $error_fault= $result->getFault();
-    	                $error_code = $result->getCode();
-        	            printf ("<p><font color=red>Error1 (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            	        return false;
-                	}
-            	}
-
-            } else {
-	            dprint("setDiversionsLocal");
-
-                $this->SipPort->addHeader($this->SoapAuth);
-                $result     = $this->SipPort->setCallDiversions($this->sipId,$diversionsSOAP);
-        
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error2 (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                }
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->setCallDiversions($this->sipId,$diversionsSOAP);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error2 (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
             }
         }
     }
@@ -2837,8 +2617,11 @@ class SipSettings {
             $uri=$this->CallPrefLastOther[$condition];
         }
 
+
         if (strlen($uri)) {
-        	if (!preg_match("/^(sip:|sips:)/",$uri)) $uri="sip:".$uri;
+	         if ($uri != "<voice-mailbox>") {
+        		if (!preg_match("/^(sip:|sips:)/",$uri)) $uri="sip:".$uri;
+             }
         } else {
             $uri=NULL;
         }
@@ -2846,59 +2629,32 @@ class SipSettings {
         reset($this->CallPrefDictionary);
         foreach(array_keys($this->CallPrefDictionary) as $_condition) {
             $uri=$result->$_condition;
-            if ($uri =="<voice-mailbox>") $uri = $this->voicemail['Account'];
+
+            if ($this->absolute_voicemail_uri && $uri == "<voice-mailbox>") {
+                $uri = $this->voicemail['Account'];
+            }
+
             if (preg_match("/^(sip:|sips:)(.*)$/i",$uri,$m)) {
                 $uri=$m[2];
             }
+
             //if (!$uri) $uri=NULL;
         	$this->CallPrefDbURI[$condition]=$uri;
         }
 
 		dprint_r($this->CallPrefDbURI);
 
-        if (is_object($this->SipPortRemote)) {
-            dprint("setDiversionsRemote");
-            // if we have remote SOAP connection defined
-            //dprint_r($result);
+        dprint("setDiversions");
 
-            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            $resultRemote     = $this->SipPortRemote->setCallDiversions($this->sipId,$result);
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->setCallDiversions($this->sipId,$result);
 
-            if (PEAR::isError($resultRemote)) {
-                $error_msg  = $resultRemote->getMessage();
-                $error_fault= $resultRemote->getFault();
-                $error_code = $resultRemote->getCode();
-                printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-
-                dprint("setDiversionsLocal");
-
-                $this->SipPort->addHeader($this->SoapAuth);
-                $result     = $this->SipPort->setCallDiversions($this->sipId,$result);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                }
-            }
-
-        } else {
-            dprint("setDiversionsLocal");
-
-            $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->setCallDiversions($this->sipId,$result);
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
         }
 
 	}
@@ -2918,47 +2674,17 @@ class SipSettings {
                 $diversions['FNOL']="sip:".$this->voicemail['Account'];
             }
 
-            if (is_object($this->SipPortRemote)) {
-                dprint("setDiversionsRemote");
+            dprint("setDiversions");
 
-        		$this->SipPortRemote->addHeader($this->SoapAuthRemote);
-                $resultRemote     = $this->SipPortRemote->setCallDiversions($this->sipId,$diversions);
-
-            	if (PEAR::isError($resultRemote)) {
-                	$error_msg  = $resultRemote->getMessage();
-                	$error_fault= $resultRemote->getFault();
-                	$error_code = $resultRemote->getCode();
-                	printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                	return false;
-            	} else {
-
-	                dprint("setDiversionsLocal");
-
-                    $this->SipPort->addHeader($this->SoapAuth);
-                	$result     = $this->SipPort->setCallDiversions($this->sipId,$diversions);
-
-                    if (PEAR::isError($result)) {
-                        $error_msg  = $result->getMessage();
-	                    $error_fault= $result->getFault();
-    	                $error_code = $result->getCode();
-        	            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            	        return false;
-                	}
-            	}
-
-            } else {
-	            dprint("setDiversionsLocal");
-
-                $this->SipPort->addHeader($this->SoapAuth);
-                $result     = $this->SipPort->setCallDiversions($this->sipId,$diversions);
-        
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                }
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->setCallDiversions($this->sipId,$diversions);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
             }
         }
     }
@@ -2985,24 +2711,6 @@ class SipSettings {
             print "$error_msg\n";
             printf ("<p><font color=red>Error (VoicemailPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
-        } else {
-            if (is_object($this->VoicemailPortRemote)) {
-                // if we have remote SOAP connection defined
-                //dprint_r($result);
-
-                dprint("update Voicemail remote");
-
-                $this->VoicemailPortRemote->addHeader($this->SoapAuthRemote);
-                $resultRemote     = $this->VoicemailPortRemote->updateAccount($account);
-
-                if (PEAR::isError($resultRemote)) {
-                    $error_msg  = $resultRemote->getMessage();
-                    $error_fault= $resultRemote->getFault();
-                    $error_code = $resultRemote->getCode();
-                    printf ("<p><font color=red>Error (VoicemailPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                }
-            }
         }
  
         return true;
@@ -3031,44 +2739,6 @@ class SipSettings {
             print "$error_msg\n";
             printf ("<p><font color=red>Error (VoicemailPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
-
-        } else {
-
-            if (is_object($this->VoicemailPortRemote)) {
-                // if we have remote SOAP connection defined
-
-                $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
-                $result     = $this->VoicemailPort->getAccount($this->sipId);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    if ($error_fault->detail->exception->errorcode != "2000") {
-                        printf ("<p><font color=red>Error (VoicemailPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                        return false;
-                    } else {
-                        return true;
-                    }
-                } else {
-                	dprint("create Voicemail remote");
-
-                    $this->VoicemailPortRemote->addHeader($this->SoapAuthRemote);
-                    $resultRemote     = $this->VoicemailPortRemote->addAccount($result);
-    
-                    if (PEAR::isError($resultRemote)) {
-                        $error_msg  = $resultRemote->getMessage();
-                        $error_fault= $resultRemote->getFault();
-                        $error_code = $resultRemote->getCode();
-                        if ($error_fault->detail->exception->errorcode != "2000") {
-                           printf ("<p><font color=red>Error (VoicemailPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                           return false;
-                        } else {
-                           return true;
-                        }
-                    }
-                }
-            }
         }
 
         return true;
@@ -3088,23 +2758,6 @@ class SipSettings {
             print "$error_msg\n";
             printf ("<p><font color=red>Error (VoicemailPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
-        } else {
-            if (is_object($this->VoicemailPortRemote)) {
-                // if we have remote SOAP connection defined
-				//dprint_r($result);
-
-                dprint("delete Voicemail remote");
-                $this->VoicemailPortRemote->addHeader($this->SoapAuthRemote);
-                $resultRemote     = $this->VoicemailPortRemote->deleteAccount($this->sipId);
-
-                if (PEAR::isError($resultRemote)) {
-                    $error_msg  = $resultRemote->getMessage();
-                    $error_fault= $resultRemote->getFault();
-                    $error_code = $resultRemote->getCode();
-                    printf ("<p><font color=red>Error (VoicemailPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                }
-            }
         }
 
         return true;
@@ -3238,53 +2891,24 @@ class SipSettings {
 
     function GetPrepaidAccountInfo() {
         dprint("GetPrepaidAccountInfo()");
-        if (is_object($this->SipPortRemote)) {
-            dprint("GetPrepaidAccountInfoRemote");
-            // if we have remote SOAP connection defined
-            //dprint_r($result);
-
-            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-   			if ($this->SOAPversion > 1) {
-            	$result     = $this->SipPortRemote->getPrepaidStatusNew(array($this->sipId));
-            } else {
-            	$result     = $this->SipPortRemote->getPrepaidStatus($this->sipId);
-            }
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }  else {
-   				if ($this->SOAPversion > 1) {
-                	return $result[0];
-                } else {
-                	return $result;
-                }
-            }
-
+        $this->SipPort->addHeader($this->SoapAuth);
+        if ($this->SOAPversion > 1) {
+            $result     = $this->SipPort->getPrepaidStatusNew(array($this->sipId));
         } else {
-            dprint("GetPrepaidAccountInfoLocal");
-            $this->SipPort->addHeader($this->SoapAuth);
-   			if ($this->SOAPversion > 1) {
-            	$result     = $this->SipPort->getPrepaidStatusNew(array($this->sipId));
+            $result     = $this->SipPort->getPrepaidStatus($this->sipId);
+        }
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }  else {
+            if ($this->SOAPversion > 1) {
+                return $result[0];
             } else {
-            	$result     = $this->SipPort->getPrepaidStatus($this->sipId);
-            }
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }  else {
-   				if ($this->SOAPversion > 1) {
-                	return $result[0];
-                } else {
-                	return $result;
-                }
+                return $result;
             }
         }
     }
@@ -3301,36 +2925,19 @@ class SipSettings {
                              );
         }
 
-        if (is_object($this->SipPortRemote)) {
-            dprint("AddPrepaidBalanceRemote($prepaidCard,$prepaidId)");
+        dprint("AddPrepaidBalanceLocal($prepaidCard,$prepaidId)");
 
-            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            $result     = $this->SipPortRemote->addBalanceFromVoucher($this->sipId,$card);
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }  else {
-                return $result;
-            }
-        } else {
-            dprint("AddPrepaidBalanceLocal($prepaidCard,$prepaidId)");
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->addBalanceFromVoucher($this->sipId,$card);
 
-            $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->addBalanceFromVoucher($this->sipId,$card);
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }  else {
-                return $result;
-            }
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }  else {
+            return $result;
         }
     }
 
@@ -3365,37 +2972,19 @@ class SipSettings {
         print "</td>";
         print "</tr>";
 
-        if (is_object($this->SipPortRemote)) {
-            dprint("showBalanceHistoryRemote");
-            // if we have remote SOAP connection defined
-            //dprint_r($result);
-
-            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            $result     = $this->SipPortRemote->getCreditHistory($this->sipId);
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+        dprint("showBalanceHistory");
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->getCreditHistory($this->sipId);
+ 
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            if ($error_fault->detail->exception->errorcode != "2000") {
+                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             }
-
-        } else {
-            dprint("showBalanceHistoryLocal");
-            $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->getCreditHistory($this->sipId);
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                if ($error_fault->detail->exception->errorcode != "2000") {
-                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                }
-            }
-
         }
-
+ 
         if (is_array($result)) {
             foreach ($result as $_line) {
                 $found++;
@@ -3523,10 +3112,6 @@ class SipSettings {
                     $value = $lastOther;
                 else
                     $value = $phone['value'];
-
-                if ($this->CallPrefDbURI[$condition] == "<voice-mailbox>") {
-                    $this->CallPrefDbURI[$condition] = $this->voicemail['Account'];
-                }
 
                 if (!$foundSelected &&
                     ($this->CallPrefDbURI[$condition]==$phone['value'] || $idx==$nr_targets-1)) {
@@ -3907,31 +3492,15 @@ class SipSettings {
                           "received"=>$CallQuery
                           );
 
-        if (is_object($this->SipPortRemote)) {
-            dprint("getCallsRemote");
-            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            $result     = $this->SipPortRemote->getCalls($this->sipId,$CallsQuery);
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->getCalls($this->sipId,$CallsQuery);
 
-        } else {
-
-            $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->getCalls($this->sipId,$CallsQuery);
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
         }
 
         //dprint_r($result);
@@ -3977,31 +3546,15 @@ class SipSettings {
 
         $CallsQuery=array("placed"=>$CallQuery);
 
-        if (is_object($this->SipPortRemote)) {
-            dprint("getCallStatisticsRemote");
-            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            $result     = $this->SipPortRemote->getCallStatistics($this->sipId,$CallsQuery);
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->getCallStatistics($this->sipId,$CallsQuery);
 
-        } else {
-
-            $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->getCallStatistics($this->sipId,$CallsQuery);
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
         }
 
         dprint_r($result);
@@ -4019,45 +3572,16 @@ class SipSettings {
 
         $phonebookEntry=array('uri'       => $uri);
 
-        if (is_object($this->SipPortRemote)) {
-            dprint("addPhonebookEntryRemote");
-            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            $resultRemote     = $this->SipPortRemote->addPhonebookEntry($this->sipId,$phonebookEntry);
+        dprint("addPhonebookEntry");
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->addPhoneBookEntry($this->sipId,$phonebookEntry);
 
-            if (PEAR::isError($resultRemote)) {
-                $error_msg  = $resultRemote->getMessage();
-                $error_fault= $resultRemote->getFault();
-                $error_code = $resultRemote->getCode();
-                printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-
-                dprint("addPhonebookEntryLocal");
-
-                $this->SipPort->addHeader($this->SoapAuth);
-                $result     = $this->SipPort->addPhonebookEntry($this->sipId,$phonebookEntry);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                }
-            }
-
-        } else {
-            dprint("addPhonebookEntryLocal");
-        	$this->SipPort->addHeader($this->SoapAuth);
-	        $result     = $this->SipPort->addPhoneBookEntry($this->sipId,$phonebookEntry);
-
-        	if (PEAR::isError($result)) {
-	            $error_msg  = $result->getMessage();
-    	        $error_fault= $result->getFault();
-        	    $error_code = $result->getCode();
-            	printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-	            return false;
-    	    }
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
         }
 
 
@@ -4088,45 +3612,16 @@ class SipSettings {
 
 		//dprint_r($phonebookEntry);
 
-        if (is_object($this->SipPortRemote)) {
-            dprint("updatePhonebookEntryRemote");
-            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            $resultRemote     = $this->SipPortRemote->updatePhonebookEntry($this->sipId,$phonebookEntry);
+        dprint("updatePhonebookEntry");
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->updatePhoneBookEntry($this->sipId,$phonebookEntry);
 
-            if (PEAR::isError($resultRemote)) {
-                $error_msg  = $resultRemote->getMessage();
-                $error_fault= $resultRemote->getFault();
-                $error_code = $resultRemote->getCode();
-                printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-
-                dprint("updatePhonebookEntryLocal");
-
-                $this->SipPort->addHeader($this->SoapAuth);
-                $result     = $this->SipPort->updatePhonebookEntry($this->sipId,$phonebookEntry);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                }
-            }
-
-        } else {
-            dprint("updatePhonebookEntryLocal");
-        	$this->SipPort->addHeader($this->SoapAuth);
-	        $result     = $this->SipPort->updatePhoneBookEntry($this->sipId,$phonebookEntry);
-
-        	if (PEAR::isError($result)) {
-	            $error_msg  = $result->getMessage();
-    	        $error_fault= $result->getFault();
-        	    $error_code = $result->getCode();
-            	printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-	            return false;
-    	    }
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
         }
 
         return true;
@@ -4138,46 +3633,16 @@ class SipSettings {
 
         $uri = $_REQUEST['uri'];
 
-        if (is_object($this->SipPortRemote)) {
-            dprint("deletePhonebookEntryRemote");
-            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            $resultRemote     = $this->SipPortRemote->deletePhoneBookEntry($this->sipId,$uri);
-
-            if (PEAR::isError($resultRemote)) {
-                $error_msg  = $resultRemote->getMessage();
-                $error_fault= $resultRemote->getFault();
-                $error_code = $resultRemote->getCode();
-                if ($error_fault->detail->exception->errorcode!="1040") {
-                	printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                	return false;
-                }
-            }
-
-            dprint("deletePhonebookEntryLocal");
-
-            $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->deletePhoneBookEntry($this->sipId,$uri);
-
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }
-
-        } else {
-            dprint("deletePhonebookEntryLocal");
-        	$this->SipPort->addHeader($this->SoapAuth);
-	        $result     = $this->SipPort->deletePhoneBookEntry($this->sipId,$uri);
-
-        	if (PEAR::isError($result)) {
-	            $error_msg  = $result->getMessage();
-    	        $error_fault= $result->getFault();
-        	    $error_code = $result->getCode();
-            	printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-	            return false;
-    	    }
+        dprint("deletePhonebookEntry");
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->deletePhoneBookEntry($this->sipId,$uri);
+ 
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
         }
 
         return true;
@@ -4602,46 +4067,17 @@ class SipSettings {
             if (strlen($_member)) $members[]=$_member;
         }
 
-        if (is_object($this->SipPortRemote)) {
-            dprint("setRejectMembersRemote");
-            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            $resultRemote     = $this->SipPortRemote->setRejectMembers($this->sipId,$members);
+        dprint("setRejectMembers");
 
-            if (PEAR::isError($resultRemote)) {
-                $error_msg  = $resultRemote->getMessage();
-                $error_fault= $resultRemote->getFault();
-                $error_code = $resultRemote->getCode();
-                printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->setRejectMembers($this->sipId,$members);
 
-                dprint("setRejectMembersLocal");
-
-                $this->SipPort->addHeader($this->SoapAuth);
-                $result     = $this->SipPort->setRejectMembers($this->sipId,$members);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                }
-            }
-
-        } else {
-            dprint("setRejectMembersLocal");
-
-            $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->setRejectMembers($this->sipId,$members);
-
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
         }
     }
 
@@ -4819,46 +4255,17 @@ class SipSettings {
 
         //dprint_r($rules);
 
-        if (is_object($this->SipPortRemote)) {
-            dprint("setAcceptRulesRemote");
-            $this->SipPortRemote->addHeader($this->SoapAuthRemote);
-            $resultRemote     = $this->SipPortRemote->setAcceptRules($this->sipId,$rules);
+        dprint("setAcceptRules");
 
-            if (PEAR::isError($resultRemote)) {
-                $error_msg  = $resultRemote->getMessage();
-                $error_fault= $resultRemote->getFault();
-                $error_code = $resultRemote->getCode();
-                printf ("<p><font color=red>Error (SipPortRemote): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->setAcceptRules($this->sipId,$rules);
 
-                dprint("setAcceptRulesLocal");
-
-                $this->SipPort->addHeader($this->SoapAuth);
-                $result     = $this->SipPort->setAcceptRules($this->sipId,$rules);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                }
-            }
-
-        } else {
-            dprint("setAcceptRulesLocal");
-
-            $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->setAcceptRules($this->sipId,$rules);
-
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
         }
 
         return true;
