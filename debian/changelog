@@ -19,10 +19,11 @@ cdrtool (6.2.2) unstable; urgency=low
   * Added posibility to replicate customer entries in Customer Port
   * Added getPrepaidHistory function to the rating engine
   * Replaced false with 0 and true with 1 for the return values from rating engine
-  * Show database ip address when replication monitor returns an error 
+  * Show database ip address when replication monitor returns an error
   * Fixed name of sip_ports settings
+  * Added setup/crontabs directory for non debian installations
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 27 Feb 2008 12:54:47 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 27 Feb 2008 13:00:21 +0100
 
 cdrtool (6.2.1) unstable; urgency=low
 
