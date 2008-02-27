@@ -8,8 +8,21 @@ cdrtool (6.2.2) unstable; urgency=low
   * Log the call start time in the head of rating info to eliminate
     the confusion when rating calls that span multiple profiles
   * Show total call duration in rate info head
+  * Use <voice-mailbox> instead of absolute URIs for call diversions
+  * Removed unnecessary code used in the past for replication of changes to remote soap engine
+  * Fixed replication of customer account to remote platform
+  * Add active_master to replicatedDatabases in global.inc
+  * Added web link between sip target and sip_accounts
+  * Rewrite of mysql monitoring functions
+  * Added DeleteBalance and DeleteBalance History commands to rating engine
+  * Use colors in mysql replication status
+  * Added posibility to replicate customer entries in Customer Port
+  * Added getPrepaidHistory function to the rating engine
+  * Replaced false with 0 and true with 1 for the return values from rating engine
+  * Show database ip address when replication monitor returns an error 
+  * Fixed name of sip_ports settings
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 17 Feb 2008 16:43:29 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 27 Feb 2008 12:54:47 +0100
 
 cdrtool (6.2.1) unstable; urgency=low
 
