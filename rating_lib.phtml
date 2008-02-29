@@ -940,11 +940,8 @@ class Rate {
     function lookupRateValues($rateName,$DestinationId,$applicationType='audio') {
         dprint("<b>lookupRateValues()</b>");
         // lookup rate from MySQL
-        $query=sprintf("select * from billing_rates
-        where name = '%s' and
-        destination = '%s' and
-        application = '%s'
-        ",
+        $query=sprintf("select durationRate, trafficRate, connectCost from billing_rates
+        where name = '%s' and destination = '%s' and application = '%s'",
         addslashes($rateName),
         addslashes($DestinationId),
         addslashes($applicationType)
@@ -965,10 +962,10 @@ class Rate {
         if ($this->CDRS->cdrtool->num_rows()) {
         	$this->CDRS->cdrtool->next_record();
             return array(
-                            "durationRate"    => $this->CDRS->cdrtool->Record['durationRate'],
-                            "trafficRate"     => $this->CDRS->cdrtool->Record['trafficRate'],
-                            "connectCost"     => $this->CDRS->cdrtool->Record['connectCost']
-                           );
+                        "durationRate"    => $this->CDRS->cdrtool->Record['durationRate'],
+                        "trafficRate"     => $this->CDRS->cdrtool->Record['trafficRate'],
+                        "connectCost"     => $this->CDRS->cdrtool->Record['connectCost']
+                       );
         } else {
             return false;
         }

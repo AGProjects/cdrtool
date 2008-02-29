@@ -1077,11 +1077,13 @@ class SipSettings {
                                         "SubscriberMaySeeIt"=>0
                                         );
 
+        /*
         $this->SIPACLS['intercept']   =array("Group"=>"Intercept",
                                         "WEBName" =>sprintf(_("SIP trace")),
                                         "SubscriberMayEditIt"=>"0",
                                         "SubscriberMaySeeIt"=>0
                                         );
+        */
 
         if ($this->Preferences['advanced']) {
             $this->SIPACLS['voicemail']=array("Group"=>"voicemail",
@@ -1329,17 +1331,17 @@ class SipSettings {
         print "
         <tr>
         <td class=border>";
-        print _("SIP address");
+        print _("Address");
         print "
         </td>
-        <td class=border>$this->account
+        <td class=border>sip:$this->account
         </td>
         </tr>
 		";
 		print "
         <tr>
         <td class=border>";
-        print _("Display name");
+        print _("Full name");
         print "
         </td>
         <td class=border>$this->fullName
@@ -1357,7 +1359,6 @@ class SipSettings {
         print "
         <tr>
         <td class=border>";
-        print "SIP ";
         print _("Domain");
         print "
         </td>
@@ -1369,8 +1370,7 @@ class SipSettings {
         print "
         <tr>
         <td class=border>";
-        #print "SIP ";
-        print _("Outbound Proxy");
+        print _("Outbound proxy");
         print "
         </td>
         <td class=border>$this->sip_proxy
@@ -1387,13 +1387,13 @@ class SipSettings {
 
             print "
             <tr>
-            	<td class=border>Mode
+            	<td class=border>Presence mode
             	</td>
             	<td class=border>Presence agent (RFC3903) with XCAP policy (RFC4825)
             	</td>
             </tr>
             <tr>
-            	<td class=border>XCAP root
+            	<td class=border>XCAP root URL
             	</td>
             	<td class=border>$this->xcap_root
             </td>

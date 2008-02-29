@@ -51,6 +51,7 @@ if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] && $RatingEngine['C
     $address 	= $RatingEngine['socketIP'];
     $port 	    = $RatingEngine['socketPort'];
     $cdr_source = $RatingEngine['CDRS_class'];
+    $log_delay  = $RatingEngine['log_delay'];
 } else {
     die('Please define RatingEngine[socketIP], RatingEngine[socketPort] and RatingEngine[CDRS_class] in global.inc');
 }
@@ -90,14 +91,13 @@ socket_listen($sock, $max_clients);
 // Init CDRS
 $CDR_class  = $DATASOURCES[$cdr_source]["class"];
 $CDRS       = new $CDR_class($cdr_source);
-
-// Load rating tables
+     // Load rating tables
 $CDRS->RatingTables = new RatingTables();
 $CDRS->RatingTables->LoadRatingTables();
 
 // Init RatingEngine engine
-$RatingEngine = new RatingEngine($CDRS);
-$RatingEngine->loadPrepaidAccounts();
+$RatingEngineServer = new RatingEngine($CDRS);
+$RatingEngineServer->loadPrepaidAccounts();
 
 $d=time()-$b;
 
@@ -145,9 +145,18 @@ while (true) {
                 socket_shutdown($con, 2);
                 unset($clients[$pos]);
             } elseif ($tinput) {
-                $output=$RatingEngine->processNetworkInput($tinput);
+                $b=microtime(true);
+                $output=$RatingEngineServer->processNetworkInput($tinput);
                 $output=$output."\n\n";
                 socket_write($con, $output);
+                if ($log_delay) {
+                    $e=microtime(true);
+                    $d=$e-$b;
+                    if ($d >= $log_delay) {
+                        syslog(LOG_NOTICE,"Warning: request took $d seconds");
+                	}
+                }
+
             }
         }
     }
