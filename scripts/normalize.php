@@ -44,7 +44,7 @@ while (list($k,$v) = each($DATASOURCES)) {
         if ($CDRS->status['cdr_to_normalize']) {
             $speed=0;
             if ($d) $speed=number_format($CDRS->status['cdr_to_normalize']/$d,0,"","");
-        	$log=sprintf("%d CDRs, %d normalized in %s s @ %s cps\n",$CDRS->status['cdr_to_normalize'],$CDRS->status['normalized'],$d,$speed);
+        	$log=sprintf(" %d CDRs, %d normalized in %s s @ %s cps\n",$CDRS->status['cdr_to_normalize'],$CDRS->status['normalized'],$d,$speed);
             print $log;
         	syslog(LOG_NOTICE,$log);
         }
@@ -67,7 +67,7 @@ while (list($k,$v) = each($DATASOURCES)) {
 
                 $speed=0;
                 if ($d) $speed=number_format($CDRS->status['cdr_to_normalize']/$d,0,"","");
-                $log=sprintf("%d CDRs, %d normalized in %s s @ %s cps\n",$CDRS->status['cdr_to_normalize'],$CDRS->status['normalized'],$d,$speed);
+                $log=sprintf(" %d CDRs, %d normalized in %s s @ %s cps\n",$CDRS->status['cdr_to_normalize'],$CDRS->status['normalized'],$d,$speed);
                 print $log;
                 syslog(LOG_NOTICE,$log);
             }

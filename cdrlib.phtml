@@ -883,9 +883,7 @@ class CDRS {
 
         $lockName=sprintf("%s:%s",$this->cdr_source,$table);
 
-        if (!getNormalizeLock($lockName)) {
-            $log=sprintf("Normalization already in progress");
-            syslog(LOG_NOTICE, $log);
+        if (!$this->getNormalizeLock($lockName)) {
             return 1;
         }
 
@@ -1674,6 +1672,56 @@ class CDRS {
 
         return $_usage;
      }
+
+     function getNormalizeLock($lockname='') {
+
+        syslog(LOG_NOTICE, "getting lock for $lockname");
+
+        if (!$locker = new DB_Locker()) {
+            $log=sprintf("Error: cannot init locker database. ");
+            syslog(LOG_NOTICE, $log);
+            return 0;
+        }
+     
+        if (!$lockname) {
+            $log=sprintf("Error: no lockname provided. ");
+            syslog(LOG_NOTICE, $log);
+            return 0;
+        }
+     
+     	unset($this->lock_connection_id);
+
+        register_shutdown_function("unLockNormalization",$locker,$lockname);
+     
+        $query=sprintf("SELECT GET_LOCK('%s',0)",$lockname);
+
+        if ($locker->query($query)) {
+            $locker->next_record();
+            $return = $locker->Record[0];
+
+            $query=sprintf("SELECT IS_USED_LOCK('%s')",$lockname);
+            if ($locker->query($query)) {
+                $locker->next_record();
+                $this->lock_connection_id=$locker->Record[0];
+            }
+
+            if ($return == 0) {
+            	$log=sprintf(" Warning: data source %s normalize in progress, lock id %s",$lockname,$this->lock_connection_id);
+            	syslog(LOG_NOTICE, $log);
+                print "$log\n";
+                return 0;
+            } else {
+            	$log=sprintf(" Normalize lock id %s aquired for %s",$this->lock_connection_id,$lockname);
+            	syslog(LOG_NOTICE, $log);
+                print "$log\n";
+                return 1;
+            }
+
+        } else {
+            syslog(LOG_NOTICE, "Error: failed to request mysql lock");
+            return 0;
+        }
+     }
 }
 
 class CDRS_unknown extends CDRS {
@@ -2118,39 +2166,8 @@ foreach ($CDRToolModules as $module) {
     if (is_readable($module_filename)) include($module_filename);
 }
 
-function getNormalizeLock($lockname='') {
-
-   if (!$locker = new DB_Locker()) {
-       $log=sprintf("Error: cannot init locker database. ");
-       syslog(LOG_NOTICE, $log);
-       return 0;
-   }
-
-   if (!$lockname) {
-       $log=sprintf("Error: no lockname provided. ");
-       syslog(LOG_NOTICE, $log);
-       return 0;
-   }
-
-   $log=sprintf("Lock %s",$lockname);
-   syslog(LOG_NOTICE, $log);
-
-   register_shutdown_function("unLockNormalization",$locker,$lockname);
-
-   $query=sprintf("SELECT GET_LOCK('%s',1)",$lockname);
-
-   dprint($query);
-
-   if (!$locker->query($query) || !$locker->next_record()) {
-       return 0;
-   } else {
-       return $locker->Record[0];
-   }
-}
-
 function unLockNormalization ($dbid,$lockname) {
 	$query=sprintf("SELECT RELEASE_LOCK('%s')",$lockname);
-    dprint($query);
     $log=sprintf("Unlock %s",$lockname);
     syslog(LOG_NOTICE, $log);
 
