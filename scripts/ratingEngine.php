@@ -153,8 +153,9 @@ while (true) {
                     $e=microtime(true);
                     $d=$e-$b;
                     if ($d >= $log_delay) {
-                        syslog(LOG_NOTICE,"Warning: request took $d seconds");
-                	}
+                         $log=sprintf("Warning: request took %.4f seconds",$d);
+                         syslog(LOG_NOTICE,$log);
+               	    }
                 }
 
             }

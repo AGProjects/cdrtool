@@ -709,9 +709,11 @@ class Rate {
             $log=sprintf("Error: Cannot find rates for callid=%s, billing party=%s, customer %s, gateway=%s, destination=%s, profile=%s, app=%s",
             $this->callId,$this->BillingPartyId,$this->CustomerProfile,$this->gateway,$this->DestinationId,$this->profileName,$this->applicationType);
             dprint($log);
+            /*
             $subject=$this->CDRS->CDRTool['provider']['service']." - CDRTool rating problem";
             mail($this->toEmail, $subject, $log, $this->extraHeaders);
-        	syslog(LOG_NOTICE, $log);
+        	*/
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -893,9 +895,6 @@ class Rate {
             $spanPrice            = $this->price+$setupBalanceRequired*$payConnect+
                                     $durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator;
 
-            //syslog(LOG_NOTICE,"price=$this->price+$connectCostSpan/$this->priceDenominator*$payConnect+$durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator=$spanPrice");
-
-
             if ($Balance > $spanPrice) {
                 $Balance = $Balance-$spanPrice;
             	$durationRatedTotal   = $durationRatedTotal+ $foundRate['duration'];
@@ -905,16 +904,6 @@ class Rate {
 				$durationAllowedinThisSpan = $Balance /
                                              $durationRate * $this->durationPeriodRated * $this->priceDenominator;
 				$rateOfThisSpan=$durationRate/$this->priceDenominator;
-
-            	/*
-                syslog(LOG_NOTICE,"Balance                   = $Balance");
-                syslog(LOG_NOTICE,"setupBalanceRequired      = $setupBalanceRequired");
-                syslog(LOG_NOTICE,"rateOfThisSpan            = $rateOfThisSpan");
-                syslog(LOG_NOTICE,"spanPrice                 = $spanPrice");
-                syslog(LOG_NOTICE,"durationRatedTotal        = $durationRatedTotal");
-                syslog(LOG_NOTICE,"durationPeriodRated       = $this->durationPeriodRated");
-                syslog(LOG_NOTICE,"durationAllowedinThisSpan = $durationAllowedinThisSpan");
-                */
 
                 $durationRatedTotal=$durationRatedTotal + $durationAllowedinThisSpan;
 
@@ -969,8 +958,6 @@ class Rate {
         } else {
             return false;
         }
-
-    	//return $this->RatingTables->rates[$rateName][$DestinationId][$applicationType];
     }
 }
 
@@ -3903,8 +3890,6 @@ class RatingEngine {
 
     function DebitBalance($account,$balance) {
 
-        $account=trim($account);
-
  		if (preg_match("/^(.*):(.*)$/",$account,$m)) {
         	$account=$m[2];
         }
@@ -3915,7 +3900,7 @@ class RatingEngine {
         }
 
         if (!is_numeric($balance)) {
-        	syslog(LOG_NOTICE, "DebitBalance() error: balance");
+        	syslog(LOG_NOTICE, "DebitBalance() error: balance must be numeric");
             return 0;
         }
 
@@ -3929,33 +3914,31 @@ class RatingEngine {
             call_lock            = '0',
             maxsessiontime       = '0'
             where account        = '%s'",
-            addslashes($this->table),
-            addslashes($balance),
-            addslashes($balance),
+            $this->table,
+            $balance,
+            $balance,
             addslashes($account)
             );
-            dprint($query);
 
             if ($this->db->query($query)) {
 
                 $query=sprintf("select balance from %s where account = '%s'",
-                addslashes($this->table),
+                $this->table,
                 addslashes($account)
                 );
 
-                dprint($query);
         		$this->db->query($query);
                 $this->db->next_record();
                 $this->balance[$account]=$this->db->f('balance');
                 return 1;
             } else {
-                $log=sprintf ("DebitBalance error: %s (%s)",$this->db->Error,$this->db->Errno);
+                $log=sprintf ("DebitBalance() error: %s (%s)",$this->db->Error,$this->db->Errno);
                 syslog(LOG_NOTICE, $log);
         		return 0;
             }
 
         } else {
-            syslog(LOG_NOTICE, "DebitBalance() error: Account=$account does not exist");
+            syslog(LOG_NOTICE, "DebitBalance() error: Account $account does not exist");
             return "none";
         }
     }
@@ -3968,6 +3951,7 @@ class RatingEngine {
         }
 
         $account=trim($account);
+
 		if (preg_match("/^(.*):(.*)$/",$account,$m)) {
         	$account=$m[2];
         }
@@ -3984,8 +3968,8 @@ class RatingEngine {
             set balance   = balance + '%s',
             change_date   = NOW()
             where account = '%s'",
-            addslashes($this->table),
-            addslashes($balance),
+            $this->table,
+            $balance,
             addslashes($account)
             );
 
@@ -4003,8 +3987,8 @@ class RatingEngine {
                 ('%s','%s','Set balance','manual update','%s','%s',NOW())",
                 addslashes($prepaidUser),
                 addslashes($prepaidDomain),
-                addslashes($balance),
-                addslashes($this->balance[$account])
+                $balance,
+                $this->balance[$account]
                 );
 
                 if (!$this->db->query($query)) {
@@ -4023,8 +4007,8 @@ class RatingEngine {
             $query=sprintf("insert into %s
             (balance, account, change_date)
             values ('%s','%s',NOW())",
-            addslashes($this->table),
-            addslashes($balance),
+            $this->table,
+            $balance,
             addslashes($account)
             );
 
@@ -4042,8 +4026,8 @@ class RatingEngine {
                 ('%s','%s','Set balance','manual update','%s','%s',NOW())",
                 addslashes($prepaidUser),
                 addslashes($prepaidDomain),
-                addslashes($balance),
-                addslashes($balance)
+                $balance,
+                $balance
                 );
 
                 if (!$this->db->query($query)) {
@@ -4062,7 +4046,6 @@ class RatingEngine {
 
     function DeleteBalance($account) {
 
-        $account=trim($account);
 		if (preg_match("/^(.*):(.*)$/",$account,$m)) {
         	$account=$m[2];
         }
@@ -4073,7 +4056,7 @@ class RatingEngine {
         }
 
         $query=sprintf("delete from %s where account = '%s'",
-        addslashes($this->table),addslashes($account)
+        $this->table,addslashes($account)
         );
 
         if (!$this->db->query($query)) {
