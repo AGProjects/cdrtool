@@ -4,7 +4,7 @@
 # this script must be run once at the beginning of the calendar month
 
 define_syslog_variables();
-openlog("CDRTool", LOG_PID, LOG_LOCAL0);
+openlog("CDRTool quota", LOG_PID, LOG_LOCAL0);
 
 $path=dirname(realpath($_SERVER['PHP_SELF']));
 include($path."/../../global.inc");

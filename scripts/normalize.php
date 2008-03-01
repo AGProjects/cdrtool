@@ -7,7 +7,7 @@ include($path."/../global.inc");
 include($path."/../cdrlib.phtml");
 
 define_syslog_variables();
-openlog("CDRTool", LOG_PID, LOG_LOCAL0);
+openlog("CDRTool normalization", LOG_PID, LOG_LOCAL0);
 
 $lockFile="/var/lock/CDRTool_normalize.lock";
 

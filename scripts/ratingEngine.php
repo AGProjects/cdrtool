@@ -36,7 +36,7 @@
 // Set time limit to indefinite execution
 set_time_limit (0);
 define_syslog_variables();
-openlog("CDRTool", LOG_PID, LOG_LOCAL0);
+openlog("CDRTool rating engine", LOG_PID, LOG_LOCAL0);
 
 $path=dirname(realpath($_SERVER['PHP_SELF']));
 $version_file=$path."/../version";
