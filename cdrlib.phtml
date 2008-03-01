@@ -1675,8 +1675,6 @@ class CDRS {
 
      function getNormalizeLock($lockname='') {
 
-        syslog(LOG_NOTICE, "getting lock for $lockname");
-
         if (!$locker = new DB_Locker()) {
             $log=sprintf("Error: cannot init locker database. ");
             syslog(LOG_NOTICE, $log);
