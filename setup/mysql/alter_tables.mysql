@@ -454,3 +454,34 @@ alter table prepaid_cards change column blocked blocked smallint unsigned not nu
 alter table prepaid_history change column value value decimal(10,4)  not null; 
 alter table prepaid_history change column balance balance decimal(10,4)  not null;
 alter table auth_user change column reseller impersonate varchar(50) not null;
+
+6.2.3
+alter table cdrtool.billing_customers change column domain domain varchar(64) not null;
+alter table cdrtool.billing_customers change column subscriber subscriber varchar(128) not null;
+alter table cdrtool.billing_customers change column gateway gateway varchar(15) not null;
+
+alter table cdrtool.billing_profiles change column domain domain varchar(64) not null;
+alter table cdrtool.billing_profiles change column subscriber subscriber varchar(128) not null;
+alter table cdrtool.billing_profiles change column gateway gateway varchar(15) not null;
+
+alter table cdrtool.billing_rates change column domain domain varchar(64) not null;
+alter table cdrtool.billing_rates change column subscriber subscriber varchar(128) not null;
+alter table cdrtool.billing_rates change column gateway gateway varchar(15) not null;
+
+alter table cdrtool.billing_rates_history change column domain domain varchar(64) not null;
+alter table cdrtool.billing_rates_history change column subscriber subscriber varchar(128) not null;
+alter table cdrtool.billing_rates_history change column gateway gateway varchar(15) not null;
+
+alter table cdrtool.billing_enum_tlds change column domain domain varchar(64) not null;
+alter table cdrtool.billing_enum_tlds change column subscriber subscriber varchar(128) not null;
+alter table cdrtool.billing_enum_tlds change column gateway gateway varchar(15) not null;
+
+alter table cdrtool.billing_ratesNGN change column domain domain varchar(64) not null;
+alter table cdrtool.billing_ratesNGN change column subscriber subscriber varchar(128) not null;
+alter table cdrtool.billing_ratesNGN change column gateway gateway varchar(15) not null;
+
+optimize table billing_rates;
+optimize table billing_rates_history;
+optimize table billing_customers;
+optimize table billing_profiles;
+

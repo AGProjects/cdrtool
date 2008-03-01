@@ -121,9 +121,9 @@ CREATE TABLE `auth_user` (
 DROP TABLE IF EXISTS `billing_customers`;
 CREATE TABLE `billing_customers` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(50) NOT NULL default '',
-  `domain` varchar(50) NOT NULL default '',
-  `subscriber` varchar(50) NOT NULL default '',
+  `gateway` varchar(15) NOT NULL default '',
+  `domain` varchar(64) NOT NULL default '',
+  `subscriber` varchar(128) NOT NULL default '',
   `profile_name1` varchar(25) NOT NULL,
   `profile_name1_alt` varchar(25) NOT NULL,
   `profile_name2` varchar(25) NOT NULL,
@@ -157,9 +157,9 @@ CREATE TABLE `billing_holidays` (
 DROP TABLE IF EXISTS `billing_profiles`;
 CREATE TABLE `billing_profiles` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(50) NOT NULL default '',
-  `domain` varchar(50) NOT NULL default '',
-  `subscriber` varchar(50) NOT NULL default '',
+  `gateway` varchar(15) NOT NULL default '',
+  `domain` varchar(64) NOT NULL default '',
+  `subscriber` varchar(128) NOT NULL default '',
   `name` varchar(25) NOT NULL,
   `rate_name1` varchar(25) NOT NULL default '',
   `hour1` smallint(5) unsigned NOT NULL default '0',
@@ -178,9 +178,9 @@ CREATE TABLE `billing_profiles` (
 DROP TABLE IF EXISTS `billing_enum_tlds`;
 CREATE TABLE `billing_enum_tlds` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(50) NOT NULL default '',
-  `domain` varchar(50) NOT NULL default '',
-  `subscriber` varchar(50) NOT NULL default '',
+  `gateway` varchar(15) NOT NULL default '',
+  `domain` varchar(64) NOT NULL default '',
+  `subscriber` varchar(128) NOT NULL default '',
   `enum_tld` varchar(100) NOT NULL,
   `e164_regexp` varchar(100) NOT NULL,
   `discount` varchar(25) NOT NULL default '',
@@ -196,9 +196,9 @@ CREATE TABLE `billing_enum_tlds` (
 DROP TABLE IF EXISTS `billing_profilesNGN`;
 CREATE TABLE `billing_profilesNGN` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(50) NOT NULL default '',
-  `domain` varchar(50) NOT NULL default '',
-  `subscriber` varchar(50) NOT NULL default '',
+  `gateway` varchar(15) NOT NULL default '',
+  `domain` varchar(64) NOT NULL default '',
+  `subscriber` varchar(128) NOT NULL default '',
   `name` varchar(25) NOT NULL default '',
   `rate` varchar(25) NOT NULL default '',
   `application` varchar(255) NOT NULL default '',
@@ -214,9 +214,9 @@ CREATE TABLE `billing_profilesNGN` (
 DROP TABLE IF EXISTS `billing_rates`;
 CREATE TABLE `billing_rates` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(50) NOT NULL default '',
-  `domain` varchar(50) NOT NULL default '',
-  `subscriber` varchar(50) NOT NULL default '',
+  `gateway` varchar(15) NOT NULL default '',
+  `domain` varchar(64) NOT NULL default '',
+  `subscriber` varchar(128) NOT NULL default '',
   `name` varchar(25) NOT NULL,
   `destination` varchar(100) NOT NULL,
   `durationRate` varchar(25) NOT NULL default '',
@@ -236,9 +236,9 @@ CREATE TABLE `billing_rates` (
 DROP TABLE IF EXISTS `billing_ratesNGN`;
 CREATE TABLE `billing_ratesNGN` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(50) NOT NULL default '',
-  `domain` varchar(50) NOT NULL default '',
-  `subscriber` varchar(50) NOT NULL default '',
+  `gateway` varchar(15) NOT NULL default '',
+  `domain` varchar(64) NOT NULL default '',
+  `subscriber` varchar(128) NOT NULL default '',
   `name` varchar(25) NOT NULL default '',
   `TrafficRate` varchar(25) NOT NULL default '',
   `ConnectCost` varchar(255) NOT NULL default '',
@@ -254,9 +254,9 @@ CREATE TABLE `billing_ratesNGN` (
 DROP TABLE IF EXISTS `billing_rates_history`;
 CREATE TABLE `billing_rates_history` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(50) NOT NULL default '',
-  `domain` varchar(50) NOT NULL default '',
-  `subscriber` varchar(50) NOT NULL default '',
+  `gateway` varchar(15) NOT NULL default '',
+  `domain` varchar(64) NOT NULL default '',
+  `subscriber` varchar(128) NOT NULL default '',
   `name` varchar(25) NOT NULL default '',
   `destination` varchar(100) NOT NULL default '',
   `durationRate` varchar(25) NOT NULL default '',
@@ -289,9 +289,9 @@ CREATE TABLE `db_sequence` (
 DROP TABLE IF EXISTS `destinations`;
 CREATE TABLE `destinations` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(50) NOT NULL default '',
-  `domain` varchar(50) NOT NULL default '',
-  `subscriber` varchar(50) NOT NULL default '',
+  `gateway` varchar(15) NOT NULL default '',
+  `domain` varchar(64) NOT NULL default '',
+  `subscriber` varchar(128) NOT NULL default '',
   `dest_id` varchar(100) NOT NULL,
   `dest_name` varchar(255) NOT NULL default '',
   PRIMARY KEY  (`id`),
