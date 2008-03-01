@@ -1,3 +1,14 @@
+cdrtool (6.2.3) unstable; urgency=low
+
+  * Print information about the normalize lock in syslog and to stdout
+  * Log if rating engine takes more time to complete. Must set
+    $RatingEngine['log_delay'] to a value in micro seconds in global.inc and
+    restart ratingEngine
+  * Small html changes in sip settings page
+  * Renamed RatingEngine object to differ from the same setting name from global.inc
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 01 Mar 2008 13:09:09 +0100
+
 cdrtool (6.2.2) unstable; urgency=low
 
   * Added setting in global.inc $RatingEngine['prepaid_lock'] to enable
