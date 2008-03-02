@@ -1704,14 +1704,14 @@ class CDRS {
             }
 
             if ($return == 0) {
-            	$log=sprintf(" Warning: data source %s normalize in progress, lock id %s",$lockname,$this->lock_connection_id);
+            	$log=sprintf(" Warning: data source %s normalize in progress, lock id %s ",$lockname,$this->lock_connection_id);
             	syslog(LOG_NOTICE, $log);
                 print "$log\n";
                 return 0;
             } else {
-            	$log=sprintf(" Normalize lock id %s aquired for %s",$this->lock_connection_id,$lockname);
+            	$log=sprintf(" Normalize lock id %s aquired for %s ",$this->lock_connection_id,$lockname);
             	syslog(LOG_NOTICE, $log);
-                print "$log\n";
+                //print "$log\n";
                 return 1;
             }
 
