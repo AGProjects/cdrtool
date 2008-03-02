@@ -134,7 +134,7 @@ class SoapEngine {
     var $reseller      = 0;
     var $login_type     = 'reseller';
 	var $allowedPorts  = array();
-    var $timeout       = 10;
+    var $timeout       = 5;
     var $exception     = array();
 	var $extraFormElements = array();
 
@@ -415,6 +415,10 @@ class SoapEngine {
             	$this->customer_properties=$this->soapEngines[$this->soapEngine]['customer_properties'];
             }
 
+            if (strlen($this->soapEngines[$this->soapEngine]['timeout'])) {
+            	$this->timeout=intval($this->soapEngines[$this->soapEngine]['timeout']);
+            }
+
 	        if (strlen($this->login_credentials['record_generator'])) {
             	$this->record_generator=$this->login_credentials['record_generator'];
             } else if (strlen($this->soapEngines[$this->soapEngine]['record_generator'])) {
@@ -461,45 +465,14 @@ class SoapEngine {
             if (!class_exists($this->soap_class)) return ;
 
             $this->soapclient = new $this->soap_class($this->SOAPurl);
-	        $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
 
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
-			//dprint_r($this->login_credentials);
-
-			if (strlen($this->soapEngines[$this->soapEngine]['depends'])) {
-				$this->soapRemote=$this->soapEngines[$this->soapEngine]['depends'];
-
-                if (strlen($this->soapRemote) && in_array($this->soapRemote,array_keys($this->soapEngines))) {
-                    $this->soapEngineRemote  = $this->soapEngines[$this->soapRemote];
-                    $this->impersonateRemote = intval($this->soapEngines[$this->soapRemote]['impersonate']);
-    
-                    $this->SOAPloginRemote = array(
-                                           "username"    => $this->soapEngines[$this->soapRemote]['username'],
-                                           "password"    => $this->soapEngines[$this->soapRemote]['password'],
-                                           "admin"       => true,
-                                           "impersonate" => $this->impersonateRemote
-                                       );
-    
-                    dprint_r($this->SOAPloginRemote);
-                    $this->SOAPurlRemote=$this->soapEngines[$this->soapRemote]['url'];
-    
-                    if ($this->adminonly)  {
-                        //printf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
-                    }
-                    $this->SoapAuthRemote = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
-    
-                    // Instantiate the SOAP client dependency
-                    $this->soapclientRemote = new $this->soap_class($this->SOAPurlRemote);
-    
-                    $this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-                    $this->soapclientRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-                }
-            }
+            // set the timeout
+            $this->soapclient->_options['timeout'] = $this->timeout;
 
 	    	if ($this->customer_engine) {
-
                 $this->SOAPloginCustomers = array(
                                        "username"    => $this->soapEngines[$this->customer_engine]['username'],
                                        "password"    => $this->soapEngines[$this->customer_engine]['password'],
@@ -514,6 +487,12 @@ class SoapEngine {
 
         	    $this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
             	$this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+                if (strlen($this->soapEngines[$this->customer_engine]['timeout'])) {
+                	$this->soapclientCustomers->_options['timeout'] = intval($this->soapEngines[$this->customer_engine]['timeout']);
+                } else {
+                	$this->soapclientCustomers->_options['timeout'] = $this->timeout;
+                }
             }
 
     	} else {
@@ -534,7 +513,6 @@ class SoapEngine {
     }
 
     function execute($function,$html=true) {
-        $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        $this->timeout);
 
         /*
         $function=array('commit'   => array('name'       => 'addAccount',
@@ -562,111 +540,26 @@ class SoapEngine {
             return false;
         }
 
-        if (is_object($this->soapclientRemote)) {
-          	$this->soapclientRemote->setOpt('curl', CURLOPT_TIMEOUT, $this->timeout);
+        $this->soapclient->addHeader($this->SoapAuth);
+        $result = call_user_func_array(array(&$this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
+        if (PEAR::isError($result)) {
+            $this->error_msg   = $result->getMessage();
+            $this->error_fault = $result->getFault();
+            $this->error_code  = $result->getCode();
 
-            $this->soapclientRemote->addHeader($this->SoapAuthRemote);
+            $this->exception   = $this->error_fault->detail->exception;
 
-            $resultRemote = call_user_func_array(array($this->soapclientRemote,$function['commit']['name']),$function['commit']['parameters']);
-
-            if (PEAR::isError($resultRemote)) {
-                $this->error_msg   = $resultRemote->getMessage();
-                $this->error_fault = $resultRemote->getFault();
-                $this->error_code  = $resultRemote->getCode();
-
-                $this->exception   = $this->error_fault->detail->exception;
-
-            	if ($html) {
-                	printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurlRemote,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
-                } else {
-                	printf ("Error from %s: %s (%s): %s\n",$this->SOAPurlRemote,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
-                }
-
-                return false;
+            if ($html) {
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
             } else {
-            	if ($html) {
-            		printf ("<p><font color=green>%s at %s </font>\n",$function['commit']['logs']['success'],$this->SOAPurlRemote);
-                } else {
-            		printf ("%s at %s\n",$function['commit']['logs']['success'],$this->SOAPurlRemote);
-                }
-
-                $this->soapclient->addHeader($this->SoapAuth);
-            	$result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
-
-                if (PEAR::isError($result)) {
-                    $this->error_msg   = $result->getMessage();
-                    $this->error_fault = $result->getFault();
-                    $this->error_code  = $result->getCode();
-
-                    $this->exception   = $this->error_fault->detail->exception;
-
-	            	if ($html) {
-    	                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
-                    } else {
-    	                printf ("Error from %s: %s (%s): %s\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
-                    }
-					if ($function['rollback']['name']) {
-
-            			$this->soapclientRemote->addHeader($this->SoapAuthRemote);
-                        $this->counterRemote++;
-
-            			$resultRemote = call_user_func_array(array($this->soapclientRemote,$function['rollback']['name']),$function['rollback']['parameters']);
-
-                        if (PEAR::isError($result)) {
-                            $this->error_msg=$result->getMessage();
-                            $this->error_fault=$result->getFault();
-                            $this->error_code=$result->getCode();
-
-	            			if ($html) {
-                            	printf ("<p><font color=red>Error roll back at %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
-                            } else {
-                            	printf ("Error roll back at %s: %s (%s): %s\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
-                            }
-
-                        } else {
-	            			if ($html) {
-            					printf ("<p><font color=green>Rolled back action at %s </font>\n",$this->SOAPurlRemote);
-                            } else {
-            					printf ("Rolled back action at %s\n",$this->SOAPurlRemote);
-                            }
-                        }
-                    }
-
-                    return false;
-                } else {
-                    if ($function['commit']['logs']['success']) {
-	            		if ($html) {
-                    		printf ("<p><font color=green>%s at %s </font>\n",$function['commit']['logs']['success'],$this->SOAPurl);
-                        } else {
-                    		printf ("%s at %s\n",$function['commit']['logs']['success'],$this->SOAPurl);
-                        }
-                    }
-                }
+                printf ("Error from %s: %s (%s): %s\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
             }
-
         } else {
-
-	     	$this->soapclient->addHeader($this->SoapAuth);
-            $result = call_user_func_array(array(&$this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
-            if (PEAR::isError($result)) {
-                $this->error_msg   = $result->getMessage();
-                $this->error_fault = $result->getFault();
-                $this->error_code  = $result->getCode();
-
-                $this->exception   = $this->error_fault->detail->exception;
-
-	            if ($html) {
-                	printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
+            if ($function['commit']['logs']['success']) {
+                if ($html) {
+                    printf ("<p><font color=green>%s </font>\n",$function['commit']['logs']['success']);
                 } else {
-                	printf ("Error from %s: %s (%s): %s\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
-                }
-            } else {
-            	if ($function['commit']['logs']['success']) {
-		            if ($html) {
-                		printf ("<p><font color=green>%s </font>\n",$function['commit']['logs']['success']);
-                    } else {
-                		printf ("%s\n",$function['commit']['logs']['success']);
-                    }
+                    printf ("%s\n",$function['commit']['logs']['success']);
                 }
             }
         }
@@ -693,6 +586,7 @@ class Records {
 
     function Records(&$SoapEngine) {
     	$this->SoapEngine         = &$SoapEngine;
+
         $this->version            = &$this->SoapEngine->version;
         $this->login_credentials   = &$this->SoapEngine->login_credentials;
 
@@ -737,6 +631,7 @@ class Records {
 
 		$this->support_email   = $this->SoapEngine->support_email;
         $this->support_web     = $this->SoapEngine->support_web;
+
     }
 
 
@@ -1001,10 +896,6 @@ class Records {
 
     function executeActions() {
 		$this->showSeachForm();
-
-        $this->SoapEngine->timeout = 60;
-
-        $this->SoapEngine->soapclient->setOpt('curl', CURLOPT_TIMEOUT,$this->SoapEngine->timeout);
 
 		$this->getRecordKeys();
 
@@ -7524,6 +7415,13 @@ class Customers extends Records {
                         $this->SoapAuthCustomerRemote  = array('auth', $this->SOAPloginCustomerRemote , 'urn:AGProjects:NGNPro', 0, '');
     
                         $this->SoapEngineCustomerRemote = new $this->SoapEngine->soap_class($this->SOAPurlCustomerRemote);
+
+                        if (strlen($this->soapEngines[$customer_engine_remote]['timeout'])) {
+                            $this->SoapEngineCustomerRemote->_options['timeout'] = intval($this->soapEngines[$customer_engine_remote]['timeout']);
+                        } else {
+                            $this->SoapEngineCustomerRemote->_options['timeout'] = $this->soapTimeout;
+                        }
+
                         $this->SoapEngineCustomerRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
                         $this->SoapEngineCustomerRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
                     }
@@ -9000,7 +8898,6 @@ class Presence {
 
         $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-        $this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT, $this->SoapEngine->timeout);
 
         $allowed_activities=array('open',
                                   'idle',
@@ -9046,7 +8943,6 @@ class Presence {
 
         $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-        $this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT, $this->SoapEngine->timeout);
 
         $result = $this->PresencePort->getPresenceInformation(array("username" =>$SIPaccount['username'],"domain"   =>$SIPaccount['domain']),$SIPaccount['password']);
     

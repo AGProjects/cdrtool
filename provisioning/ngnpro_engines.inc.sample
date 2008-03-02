@@ -28,7 +28,8 @@ $soapEngines=array(
                                          'support_web'         => 'https://web.example.com',
                                          'enable_thor'         => false,
                                          'pstn_access'         => false,
-                                         'welcome_message'     => '<h1>NGNPro provisionig client</h1>' 
+                                         'welcome_message'     => '<h1>NGNPro provisionig client</h1>',
+                                         'timeout'             => 5
                                          ),
                            'vm' => array('name'=> 'Voicemail server',
                                          'username'=> 'admin',

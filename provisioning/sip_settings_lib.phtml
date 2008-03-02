@@ -12,7 +12,8 @@
 
 class SipSettings {
 
-    var $login_type                 = 'subscriber';
+    var $soapTimeout               = 5;
+    var $login_type                = 'subscriber';
     var $soapClassSipPort          = 'WebService_NGNPro_SipPort';
     var $soapClassEnumPort         = 'WebService_NGNPro_EnumPort';
     var $soapClassRatingPort       = 'WebService_NGNPro_RatingPort';
@@ -406,6 +407,10 @@ class SipSettings {
         	$this->sip_accounts_lite=$this->soapEngines[$this->sip_engine]['sip_accounts_lite'];
         }
 
+        if (strlen($this->soapEngines[$this->sip_engine]['timeout'])) {
+            $this->soapTimeout=intval($this->soapEngines[$this->sip_engine]['timeout']);
+        }
+
         if ($this->loginCredentials['templates_path']) {
         	$this->templates_path   = $this->loginCredentials['templates_path'];
         } else if ($this->soapEngines[$this->sip_engine]['templates_path']) {
@@ -415,7 +420,9 @@ class SipSettings {
         // Instantiate the SOAP clients
         // sip
         $this->SipPort       = new $this->soapClassSipPort($this->SOAPurl);
-        $this->SipPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+
+        $this->SipPort->_options['timeout'] = $this->soapTimeout;
+
         $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
@@ -434,7 +441,13 @@ class SipSettings {
 
         $this->SoapAuthVoicemail = array('auth', $this->SOAPloginVoicemail , 'urn:AGProjects:NGNPro', 0, '');
         $this->VoicemailPort = new $this->soapClassVoicemailPort($this->SOAPurlVoicemail);
-        $this->VoicemailPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+
+        if (strlen($this->soapEngines[$this->voicemail_engine]['timeout'])) {
+        	$this->VoicemailPort->_options['timeout'] = intval($this->soapEngines[$this->voicemail_engine]['timeout']);
+        } else {
+        	$this->VoicemailPort->_options['timeout'] = $this->soapTimeout;
+        }
+
         $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->VoicemailPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
@@ -453,7 +466,13 @@ class SipSettings {
 
         $this->SoapAuthEnum = array('auth', $this->SOAPloginEnum , 'urn:AGProjects:NGNPro', 0, '');
         $this->EnumPort = new $this->soapClassEnumPort($this->SOAPurlEnum);
-        $this->EnumPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+
+        if (strlen($this->soapEngines[$this->enum_engine]['timeout'])) {
+        	$this->EnumPort->_options['timeout'] = intval($this->soapEngines[$this->enum_engine]['timeout']);
+        } else {
+        	$this->EnumPort->_options['timeout'] = $this->soapTimeout;
+        }
+
         $this->EnumPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->EnumPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
@@ -472,7 +491,13 @@ class SipSettings {
 
         $this->SoapAuthRating = array('auth', $this->SOAPloginRating , 'urn:AGProjects:NGNPro', 0, '');
         $this->RatingPort = new $this->soapClassRatingPort($this->SOAPurlRating);
-        $this->RatingPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+
+        if (strlen($this->soapEngines[$this->rating_engine]['timeout'])) {
+        	$this->RatingPort->_options['timeout'] = intval($this->soapEngines[$this->rating_engine]['timeout']);
+        } else {
+        	$this->RatingPort->_options['timeout'] = $this->soapTimeout;
+        }
+
         $this->RatingPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->RatingPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
@@ -490,7 +515,13 @@ class SipSettings {
 
         $this->SoapAuthCustomer = array('auth', $this->SOAPloginCustomer , 'urn:AGProjects:NGNPro', 0, '');
         $this->CustomerPort  = new $this->soapClassCustomerPort($this->SOAPurlCustomer);
-        $this->CustomerPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+
+        if (strlen($this->soapEngines[$this->customer_engine]['timeout'])) {
+        	$this->CustomerPort->_options['timeout'] = intval($this->soapEngines[$this->customer_engine]['timeout']);
+        } else {
+        	$this->CustomerPort->_options['timeout'] = $this->soapTimeout;
+        }
+
         $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
@@ -502,7 +533,13 @@ class SipSettings {
 		if ($this->presence_engine) {
         	$this->SOAPurlPresence = $this->soapEngines[$this->presence_engine]['url'];
         	$this->PresencePort    = new $this->soapClassPresencePort($this->SOAPurlPresence);
-        	$this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+
+            if (strlen($this->soapEngines[$this->presence_engine]['timeout'])) {
+                $this->PresencePort->_options['timeout'] = intval($this->soapEngines[$this->presence_engine]['timeout']);
+            } else {
+                $this->PresencePort->_options['timeout'] = $this->soapTimeout;
+            }
+
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         	$this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
             if ($this->showSoapConnectionInfo)  {
