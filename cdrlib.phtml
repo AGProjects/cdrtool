@@ -836,7 +836,7 @@ class CDRS {
 
         $b=time();
 
-        if (!$where) $where=" (1=1) and AcctStopTime < '2008-03-03' ";
+        if (!$where) $where=" (1=1) ";
         if (!$table) $table=$this->table;
 
         if ($this->skipNormalize) {
