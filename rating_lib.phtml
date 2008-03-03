@@ -1,4 +1,5 @@
 <?
+#apd_set_pprof_trace();
 /*
     Copyright (c) 2007 AG Projects
     http://ag-projects.com
@@ -17,6 +18,7 @@ class Rate {
 	var $ENUMtld                = '';
 	var $ENUMdiscount           = 0;     // how much percentage to substract from the final price
 	var $price                  = 0;
+    var $spans                  = 0;     // number of spans we looped through
 
     function Rate(&$parent) {
         $this->CDRS = &$parent->CDRS;
@@ -56,13 +58,11 @@ class Rate {
 
     function lookupRateFromNetwork(&$RateDictionary,&$fp) {
     	$countEndofLines=0;
-        //dprint_r($RateDictionary);
         $cmd="ShowPrice";
         foreach (array_keys(&$RateDictionary) as $key) {
             $cmd .=" ".$key."=".$RateDictionary[$key]." ";
         }
 
-        dprint("command: $cmd");
 
         $this->price	   = "0";
         $this->pricePrint  = "";
@@ -82,7 +82,6 @@ class Rate {
                 }
 
                 if (preg_match("/^\n/",$line) || preg_match("/^END/",$line)) {
-                    dprint("Found \\n or END");
                     break;
                 }
 
@@ -101,7 +100,6 @@ class Rate {
     }
 
     function calculate(&$dictionary) {
-        dprint("<b>Rate->calculate()</b>");
 
         /////////////////////////////////////////////////////
         // required fields passed from a CDR structure
@@ -154,7 +152,7 @@ class Rate {
         if (!$this->duration) $this->duration = 0;
 		if (!$this->traffic)  $this->traffic  = 0;
 
-		if (!strlen($this->applicationType)) $this->applicationType='audio';
+		if (!$this->applicationType) $this->applicationType='audio';
 
         $trafficRate            = 0;
         $durationRate           = 0;
@@ -162,11 +160,9 @@ class Rate {
         $foundRates=array();
 
         if (!$this->DestinationId) {
-            dprint("Could not find destination id for $this->cNumber");
         }
 
 		if (!$this->lookupProfiles()) {
-            dprint("Could not find profiles");
             return false;
         }
 
@@ -180,12 +176,6 @@ class Rate {
 
         $this->startTimeBilling   = Date("Y-m-d H:i:s",$this->timestampBilling);
 
-        dprint("Billing timezone = $this->billingTimezone ");
-        dprint("Billing start time: $this->startTimeBilling");
-        dprint("BillingPartyId: $this->BillingPartyId");
-        dprint("Billing domain: $this->domain");
-        dprint("Billing gateway: $this->gateway");
-        dprint("Billing ENUMtld: $this->ENUMtld");
 
         $this->trafficKB=number_format($this->traffic/1024,0,"","");
 
@@ -205,7 +195,6 @@ class Rate {
         }
 
         if ($this->duration && $this->DestinationId) {
-            dprint("Rate $this->applicationType session having $this->duration seconds to $this->cNumber DestinationId=$this->DestinationId ($this->destinationName)");
             unset($IntervalsForPricing);
 
             $this->rateInfo .= 
@@ -240,7 +229,6 @@ class Rate {
 
             while ($durationRatedTotal < $this->duration) {
 
-                dprint("Getting rate $i");
 
                 if ($i == "0") {
                     $dayofweek       = date("w",$this->timestampBilling);
@@ -313,14 +301,14 @@ class Rate {
 
             if ($span>1) $this->rateInfo .= "--\n";
 
-            dprint("price=price+connectCostSpan/priceDenominator*payConnect+
+            /*
                             durationRate*durationForRating/durationPeriodRated/priceDenominator+
                             trafficRate/priceDenominator/trafficSizeRated*(inputTraffic+outputTraffic)/8");
 
-            dprint("price=$this->price+$connectCostSpan/$this->priceDenominator*$payConnect+
                             $durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator+
                             $trafficRate/$this->priceDenominator/$this->trafficSizeRated*($this->inputTraffic+$this->outputTraffic)/8");
 
+            */
             $spanPrice   =  $durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator+
                             $trafficRate/$this->priceDenominator/$this->trafficSizeRated*($this->inputTraffic+$this->outputTraffic)/8;
 
@@ -374,7 +362,6 @@ class Rate {
 			$this->rateSyslog .= " Price=".sprintf("%.4f",$spanPrice);
 	       	syslog(LOG_NOTICE, $this->rateSyslog);
 
-            dprint ($this->price);
             $j++;
         }
 
@@ -397,9 +384,6 @@ class Rate {
         } else if ($thisRate[profile]) {
             if ($j) {
                 if ($this->DestinationId && !strlen($durationRate)) {
-                    if (!$this->CDRS->brokenRates[$this->DestinationId]) {
-                        dprint ("<font color=red>Warning: Found destination $this->DestinationId ($this->destinationName) with no Rate</font>\n");
-                    }
                     $this->CDRS->brokenRates[$this->DestinationId]++;
                 }
             }
@@ -410,7 +394,6 @@ class Rate {
     }
 
     function lookupProfiles() {
-        dprint("<b>Rate->lookupProfiles()</b>");
         unset($this->allProfiles);
 
         /*
@@ -441,7 +424,6 @@ class Rate {
         );
 
         //syslog(LOG_NOTICE, $query);
-        dprint($query);
 
         if (!$this->CDRS->cdrtool->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
@@ -451,7 +433,6 @@ class Rate {
         }
 
         $log=sprintf("Found %d rows",$this->CDRS->cdrtool->num_rows());
-        dprint($log);
 
         if ($this->CDRS->cdrtool->num_rows()) {
         	$this->CDRS->cdrtool->next_record();
@@ -494,7 +475,6 @@ class Rate {
     }
 
     function lookupRate($dayofyear,$dayofweek,$hourofday,$durationRatedAlready) {
-        dprint("<b>lookupRate(DayOfYear=$dayofyear,DayOfWeek=$dayofweek,HourOfDay=$hourofday,durationRatedAlready=$durationRatedAlready)</b>");
 
         /*
         // Required information from CDR structure
@@ -556,9 +536,7 @@ class Rate {
             }
         }
 
-        dprint("Found profile=$this->profileName for $this->PeriodOfProfile day=$dayofweek hour=$hourofday");
 
-        if ($this->profileNameAlt) dprint ("Alternative profile=$this->profileNameAlt");
 
         // get rate for the time of the day
         $timestampNextProfile	= $this->timestampBilling + $durationRatedAlready;
@@ -589,35 +567,28 @@ class Rate {
             }
 
             if ($this->rateName) {
-                dprint("Found rate=$this->rateName for interval=$this->timeInterval in profile=$this->profileName");
 
                 $found_history=false;
 
                 //get historical rating if exists
             	if (is_array($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType])) {
-                    dprint('Found historical rates for this destination');
-	            	dprint_r(($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType]));
                     $h=0;
                     foreach (($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType]) as $_idx) {
                         $h++;
-                        dprint("Checking rate history id $h");
                         if ($_idx['startDate'] <= $this->timestamp) {
 
                             if ($_idx['endDate'] > $this->timestamp) {
                                 // found historical rate
-                    			dprint("Found historical rate $h");
                                 $found_history=true;
 			                	$this->rateValues=$_idx;
                                 break;
                             } else {
                                 $_log=sprintf("Interval missmatch %s < %s",$_idx['endDate'],$this->timestamp);
-                                dprint($_log);
 
                                 continue;
                             }
                         } else {
                         	$_log=sprintf("Interval missmatch %s > %s",$_idx['startDate'],$this->timestamp);
-                            dprint($_log);
                             continue;
                         }
 
@@ -630,12 +601,9 @@ class Rate {
                 }
 
             } else {
-                dprint("No rates for destination=$this->DestinationId. Trying alternative profile=$this->profileNameAlt");
-                dprint_r($profileValues);
             }
 
             if (!$this->rateValues && is_array($profileValuesAlt)) {
-                dprint("No rates for destination=$this->DestinationId in rate=$this->rateName. Trying alternative profile=$this->profileNameAlt");
     
                 if ($hourofday          < $profileValuesAlt['hour1'] ) {
                     $this->rateName     = $profileValuesAlt['rate_name1'];
@@ -660,35 +628,28 @@ class Rate {
                 }
 
                 if ($this->rateName) {
-	                dprint("Found rate=$this->rateName for interval=$this->timeInterval in alternative profile=$this->profileNameAlt");
 
                     $found_history=false;
     
                     //get historical rating if exists
                     if (is_array($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType])) {
-                        dprint('Found historical rates for this destination');
-                        dprint_r(($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType]));
                         $h=0;
                         foreach (($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType]) as $_idx) {
                             $h++;
-                            dprint("Checking rate history id $h");
                             if ($_idx['startDate'] <= $this->timestamp) {
     
                                 if ($_idx['endDate'] > $this->timestamp) {
                                     // found historical rate
-                                    dprint("Found historical rate $h");
                                     $found_history=true;
                                     $this->rateValues=$_idx;
                                     break;
                                 } else {
                                     $_log=sprintf("Interval missmatch %s < %s",$_idx['endDate'],$this->timestamp);
-                                    dprint($_log);
     
                                     continue;
                                 }
                             } else {
                                 $_log=sprintf("Interval missmatch %s > %s",$_idx['startDate'],$this->timestamp);
-                                dprint($_log);
                                 continue;
                             }
                         }
@@ -699,7 +660,6 @@ class Rate {
                     }
 
                 } else {
-                    dprint("No rates for destination $this->DestinationId in alternative profile=$this->profileNameAlt.");
                 }
             }
         }
@@ -708,7 +668,6 @@ class Rate {
         	$this->rateNotFound=true;
             $log=sprintf("Error: Cannot find rates for callid=%s, billing party=%s, customer %s, gateway=%s, destination=%s, profile=%s, app=%s",
             $this->callId,$this->BillingPartyId,$this->CustomerProfile,$this->gateway,$this->DestinationId,$this->profileName,$this->applicationType);
-            dprint($log);
             /*
             $subject=$this->CDRS->CDRTool['provider']['service']." - CDRTool rating problem";
             mail($this->toEmail, $subject, $log, $this->extraHeaders);
@@ -730,10 +689,8 @@ class Rate {
             if ($DST != $DSTNext) {
             	if ($DSTNext==0) {
             		$timestampNextProfile=$timestampNextProfile+3600;
-                	dprint("DST change: adding one hour");
             	} else if ($DSTNext==1) {
             		$timestampNextProfile=$timestampNextProfile-3600;
-                	dprint("DST change: substracting one hour");
                 }
             }
         }
@@ -748,7 +705,6 @@ class Rate {
 
         $npdt=Date("Y-m-d H:i", $nextProfileTimestamp);
 
-        dprint("Next profile datetime: $npdt");
 
         $timeTillNextProfile=$nextProfileTimestamp-$this->timestampBilling;
 
@@ -758,13 +714,10 @@ class Rate {
         	syslog(LOG_NOTICE, "Error: Negative period till next billing profile for call id $this->callId");
         }
 
-        dprint("Time till next profile: $timeTillNextProfile seconds");
         if ($durationToRate > $timeTillNextProfile) {
             $diff=$durationToRate-$timeTillNextProfile;
-            dprint("Call of $durationToRate seconds will extend $diff seconds into next profile $this->nextProfile ");
             $this->durationRated=$timeTillNextProfile;
         } else {
-            dprint("Call of $durationToRate seconds fits within curent profile");
             $this->durationRated=$durationToRate;
         }
 
@@ -785,7 +738,7 @@ class Rate {
 
     function MaxSessionTime(&$dictionary) {
         // Used for prepaid application
-        dprint("<b>Rate->MaxSessionTime()</b>");
+        $this->MaxSessionTimeSpans=0;
 
         $trafficRate            = 0;
         $durationRate           = 0;
@@ -805,10 +758,9 @@ class Rate {
         $this->applicationType   = $dictionary['Application'];
         $Balance      			 = $dictionary['Balance'];
 
-		if (!strlen($this->applicationType)) $this->applicationType='audio';
+		if (!$this->applicationType) $this->applicationType='audio';
 
         if (!$this->DestinationId) {
-            dprint("Could not find any destination id found for $this->cNumber");
             return false;
         }
 
@@ -823,16 +775,13 @@ class Rate {
         $this->timestampBilling   = mktime($Btime[0], $Btime[1], $Btime[2], $Bdate[1], $Bdate[2], $Bdate[0]);
         $this->startTimeBilling   = Date("Y-m-d H:i:s",$this->timestampBilling);
 
-        dprint("Billing timezone = $this->billingTimezone ");
-        dprint("Billing start time: $this->startTimeBilling");
-        dprint("Get rate of PSTN call to $this->cNumber DestId = $this->DestinationId, Balance = $Balance");
 
         $i=0;
         $durationRatedTotal=0;
 
         while ($Balance > 0 ) {
             $span++;
-
+            $this->MaxSessionTimeSpans++;
             //syslog(LOG_NOTICE,"Getting rate $i");
 
             if ($i == "0") {
@@ -852,7 +801,6 @@ class Rate {
                 break;
             }
 
-            dprint_r($foundRate);
 
             $thisRate=$foundRate;
 
@@ -927,7 +875,6 @@ class Rate {
     }
 
     function lookupRateValues($rateName,$DestinationId,$applicationType='audio') {
-        dprint("<b>lookupRateValues()</b>");
         // lookup rate from MySQL
         $query=sprintf("select durationRate, trafficRate, connectCost from billing_rates
         where name = '%s' and destination = '%s' and application = '%s'",
@@ -936,7 +883,6 @@ class Rate {
         addslashes($applicationType)
         );
         //syslog(LOG_NOTICE, $query);
-        dprint($query);
 
         if (!$this->CDRS->cdrtool->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
@@ -946,7 +892,6 @@ class Rate {
         }
 
         $log=sprintf("Found %d rows",$this->CDRS->cdrtool->num_rows());
-        dprint($log);
 
         if ($this->CDRS->cdrtool->num_rows()) {
         	$this->CDRS->cdrtool->next_record();
@@ -1287,7 +1232,6 @@ class RatingTables {
     }
 
     function ImportRates($file) {
-        dprint("ImportRates($file)");
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
         $i=0;
@@ -1313,7 +1257,7 @@ class RatingTables {
             $application     = trim($p[7]);
             $connectCost     = trim($p[8]);
 
-			if (!strlen($application)) $application='audio';
+			if (!$application) $application='audio';
 
             if ($ops=="1") {
 
@@ -1349,7 +1293,6 @@ class RatingTables {
                 addslashes($application),
                 addslashes($connectCost)
                 );
-                dprint($query);
                 if (!$this->cdrtool->query($query)) {
                     printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     return false;
@@ -1375,7 +1318,6 @@ class RatingTables {
                 addslashes($destination),
                 addslashes($application)
                 );
-                dprint($query);
                 if (!$this->cdrtool->query($query)) {
                     printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     return false;
@@ -1401,7 +1343,6 @@ class RatingTables {
                 addslashes($application)
                 );
 
-                dprint($query);
                 if (!$this->cdrtool->query($query)) {
                     printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     return false;
@@ -1431,7 +1372,6 @@ class RatingTables {
 
                     );
 
-                    dprint($query);
                     if (!$this->cdrtool->query($query)) {
                         printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                         return false;
@@ -1474,7 +1414,6 @@ class RatingTables {
                     addslashes($application),
                     addslashes($connectCost)
                     );
-                    dprint($query);
 
                     if (!$this->cdrtool->query($query)) {
                         printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
@@ -1505,7 +1444,6 @@ class RatingTables {
     }
 
     function ImportRatesHistory($file) {
-        dprint("ImportRatesHistory($file)");
 
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
@@ -1576,7 +1514,6 @@ class RatingTables {
                 addslashes($startDate),
                 addslashes($endDate)
                 );
-                //dprint($query);
                 if (!$this->cdrtool->query($query)) {
                     printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     return false;
@@ -1663,7 +1600,6 @@ class RatingTables {
                     addslashes($endDate)
                     );
 
-                    dprint($query);
                     if (!$this->cdrtool->query($query)) {
                         printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                         return false;
@@ -1712,7 +1648,6 @@ class RatingTables {
                     addslashes($startDate),
                     addslashes($endDate)
                     );
-                    dprint($query);
 
                     if (!$this->cdrtool->query($query)) {
                         printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
@@ -1730,7 +1665,6 @@ class RatingTables {
             $j++;
 
             if ($j=="10000") {
-                dprint("Loaded another $j rates history");
                 flush();
                 $j=0;
             }
@@ -1752,7 +1686,6 @@ class RatingTables {
     }
 
     function ImportCustomers($file) {
-        dprint("ImportCustomers($file)");
 
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
@@ -1894,7 +1827,6 @@ class RatingTables {
                     addslashes($subscriber)
                     );
 
-                    dprint($query);
                     if (!$this->cdrtool->query($query)) {
                         printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                         return false;
@@ -1970,7 +1902,6 @@ class RatingTables {
     }
 
     function ImportDestinations($file) {
-        dprint("ImportDestinations($file)");
 
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
@@ -2016,7 +1947,6 @@ class RatingTables {
                 addslashes($dest_id),
                 addslashes($dest_name)
                 );
-                dprint($query);
                 if (!$this->cdrtool->query($query)) {
                     printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     return false;
@@ -2108,7 +2038,6 @@ class RatingTables {
                     addslashes($dest_id),
                     addslashes($dest_name)
                     );
-                    dprint($query);
                     if (!$this->cdrtool->query($query)) {
                         printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                         return false;
@@ -2139,7 +2068,6 @@ class RatingTables {
     }
 
     function ImportProfiles($file) {
-        dprint("ImportProfiles($file)");
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
         $this->mustReload=true;
@@ -2217,7 +2145,6 @@ class RatingTables {
                 addslashes($rate4),
                 addslashes($hour4)
                 );
-                dprint($query);
                 if (!$this->cdrtool->query($query)) {
                     printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     return false;
@@ -2240,7 +2167,6 @@ class RatingTables {
                 addslashes($domain),
                 addslashes($subscriber)
                 );
-                dprint($query);
                 if (!$this->cdrtool->query($query)) {
                     printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     return false;
@@ -2262,7 +2188,6 @@ class RatingTables {
                 addslashes($subscriber)
                 );
 
-                dprint($query);
                 if (!$this->cdrtool->query($query)) {
                     printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     return false;
@@ -2295,7 +2220,6 @@ class RatingTables {
                     addslashes($domain),
                     addslashes($subscriber)
                     );
-                	dprint($query);
                     if (!$this->cdrtool->query($query)) {
                         printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                         return false;
@@ -2346,7 +2270,6 @@ class RatingTables {
                     addslashes($rate4),
                     addslashes($hour4)
                     );
-                    dprint($query);
                     if (!$this->cdrtool->query($query)) {
                         printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                         return false;
@@ -2406,7 +2329,7 @@ class RatingTables {
             if ($this->cdrtool->Record['enum_tld']) {
                 $i++;
                 $_app=$this->cdrtool->Record['application'];
-                if (!strlen($_app)) $_app='audio';
+                if (!$_app) $_app='audio';
 
                 $_ENUMtlds[$this->cdrtool->Record['enum_tld']]=
                 array(
@@ -2418,7 +2341,6 @@ class RatingTables {
 
 		$this->ENUMtlds = $_ENUMtlds;
         $this->ENUMtldsCount = $i;
-        dprint("Loaded $i ENUM tlds");
         return $i;
     }
 
@@ -2440,7 +2362,7 @@ class RatingTables {
             if ($this->cdrtool->Record['name'] && $this->cdrtool->Record['destination']) {
                 $i++;
                 $_app=$this->cdrtool->Record['application'];
-                if (!strlen($_app)) $_app='audio';
+                if (!$_app) $_app='audio';
 
                 $_rates[$this->cdrtool->Record['name']][$this->cdrtool->Record['destination']][$_app][$this->cdrtool->Record['id']]=
                 array(
@@ -2455,8 +2377,6 @@ class RatingTables {
 
 		$this->ratesHistory=$_rates;
         $this->ratesHistoryCount=$i;
-        dprint("Loaded $i rates history");
-        //dprint_r($this->ratesHistory);
 
         return $i;
 
@@ -2488,7 +2408,6 @@ class RatingTables {
         }
 
         $this->profiles=$_profiles;
-        dprint("Loaded $i profiles");
         return $i;
 
     }
@@ -2509,7 +2428,6 @@ class RatingTables {
         }
 
         $this->holidays=$_holidays;
-        dprint("Loaded $i holidays");
         return $i;
     }
 
@@ -2581,7 +2499,6 @@ class RatingTables {
 
     function hasFileBeenImported($filename,$watermark) {
         $query=sprintf("select * from log where url = '%s'\n",$watermark);
-        dprint($query);
         if ($this->cdrtool->query($query)) {
             if ($this->cdrtool->num_rows()) {
                 $this->cdrtool->next_record();
@@ -2607,7 +2524,6 @@ class RatingTables {
         $log=sprintf ("Imported file %s, %d records have been affected\n",$filename,$results);
     	syslog(LOG_NOTICE, $log);
 
-        dprint($query);
         if (!$this->cdrtool->query($query)) {
             printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
             return false;
@@ -2667,7 +2583,6 @@ class SERQuota {
         $query="select * from settings
         where var_module = 'notifications'";
 
-        dprint($query);
 
         if ($this->db->query($query) && $this->db->num_rows()) {
 
@@ -2681,7 +2596,6 @@ class SERQuota {
             }
         }
 
- 		dprint_r($this->notificationAddresses);
 
         if ($DATASOURCES[$this->cdr_source]['soapEngineId']) {
             require_once("provisioning/ngnpro_soap_library.phtml");
@@ -2722,7 +2636,6 @@ class SERQuota {
             if ($this->enableThor) {
                 $query=sprintf("select * from sip_accounts");
         
-                dprint($query);
         
                 if (!$this->AccountsDB->query($query)) {
                     $log=sprintf("Error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -2753,7 +2666,6 @@ class SERQuota {
             } else {
                 $query=sprintf("select * from subscriber");
         
-                dprint($query);
         
                 if (!$this->AccountsDB->query($query)) {
                     $log=sprintf("Error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -2783,7 +2695,6 @@ class SERQuota {
         
                 $query = sprintf("select * from grp where grp = '%s'",$this->quotaGroup);
         
-                dprint($query);
         
                 if (!$this->AccountsDB->query($query)) {
                     $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -2819,7 +2730,7 @@ class SERQuota {
 		unset($mc_value);
 
         foreach (array_keys($this->Accounts) as $account) {
-            if (!strlen($account)) continue;
+            if (!$account) continue;
             $mc_value.= sprintf("%s:quota=%s;email=%s;first_name=%s;last_name=%s;block_by_quota=%d\n",
             $account,
             $this->Accounts[$account]['quota'],
@@ -2914,7 +2825,6 @@ class SERQuota {
 		if ($this->enableThor) {
             $query=sprintf("select * from sip_accounts");
     
-            dprint($query);
     
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf("Error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -2978,7 +2888,6 @@ class SERQuota {
     	        	$query.= "and CONCAT(username,'@',domain) in (".$usage_keys.")";
         		}
 
-                dprint($query);
         
                 if (!$this->AccountsDB->query($query)) {
                     $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -3001,7 +2910,6 @@ class SERQuota {
         $query=sprintf("select * from memcache where `key` like '%s%s'",
         $this->CDRS->mc_key_mu_prefix,"%");
 
-        dprint($query);
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
@@ -3058,7 +2966,6 @@ class SERQuota {
         addslashes($this->BillingPartyIdField)
         );
 
-        dprint($query);
 
         if (!$this->CDRdb->query($query)) {
             if ($this->CDRdb->Errno != 1146) {
@@ -3090,7 +2997,6 @@ class SERQuota {
     }
 
     function initMonthlyUsageFromCache () {
-        dprint("initMonthlyUsageFromCache");
 
         if (!$this->AccountsDBClass) {
             print("Info: No database defined for SIP accounts.\n");
@@ -3107,7 +3013,6 @@ class SERQuota {
             	$query="select * from subscriber";
             }
 
-    	    dprint($query);
 
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -3126,7 +3031,6 @@ class SERQuota {
     }
 
     function checkQuota($notify) {
-        dprint("checkQuota($notify)");
         global $UserQuota;
 
         $this->cacheMonthlyUsage();
@@ -3174,7 +3078,6 @@ class SERQuota {
                     addslashes($log)
                     );
             
-                    dprint($log_query);
 
                     if (!$this->db->query($log_query)) {
                         $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
@@ -3242,10 +3145,8 @@ class SERQuota {
 
         }
 
-        dprint("Notify accounts");
 
         if ($notify && is_array($toNotify) && count($toNotify) >0) {
-            dprint_r($toNotify);
 
             // send notification to accounts
             foreach($toNotify as $rcpt) {
@@ -3285,7 +3186,6 @@ class SERQuota {
     }
 
     function notifyAccount($account) {
-        dprint("notifyAccount($account)");
         global $DATASOURCES;
 
         list($username,$domain)=explode("@",$account);
@@ -3296,7 +3196,7 @@ class SERQuota {
 
         $providerName=$this->notificationAddresses[$domain]['providerName'];
 
-        if (!strlen($providerName))  $providerName="your SIP service provider";
+        if (!$providerName)  $providerName="your SIP service provider";
 
         $body=sprintf("Dear __NAME__,\n\n".
         "Your SIP account %s has been temporarily blocked\n".
@@ -3310,15 +3210,15 @@ class SERQuota {
         $bccEmail  = $this->CDRTool[provider][bccEmail];
         $seen_bcc[$bccEmail]++;
 
-        if (strlen($this->notificationAddresses[$domain]['fromEmail'])) {
+        if ($this->notificationAddresses[$domain]['fromEmail']) {
             $fromEmail=$this->notificationAddresses[$domain]['fromEmail'];
         }
 
-        if (strlen($this->notificationAddresses[$domain]['quotaBody'])) {
+        if ($this->notificationAddresses[$domain]['quotaBody']) {
             $body=$this->notificationAddresses[$domain]['quotaBody'];
         }
 
-        if (strlen($this->notificationAddresses[$domain]['quotaSubject'])) {
+        if ($this->notificationAddresses[$domain]['quotaSubject']) {
             $subject=$this->notificationAddresses[$domain]['quotaSubject'];
         }
 
@@ -3326,7 +3226,7 @@ class SERQuota {
         $body=preg_replace("/__NAME__/",$fullname,$body);
         $body=preg_replace("/__ACCOUNT__/",$account,$body);
 
-        if (!strlen($subject)) {
+        if (!$subject) {
             $subject=sprintf("Monthly quota exceeded for SIP account %s",$account);
         } else {
             $subject=preg_replace("/__ACCOUNT__/",$account,$subject);
@@ -3335,7 +3235,6 @@ class SERQuota {
 		$toEmail=$this->Accounts[$account]['email'];
 
         if (!$toEmail || !$fromEmail) {
-            dprint("missing From or Rcpt");
             return false;
         }
 
@@ -3378,7 +3277,6 @@ class SERQuota {
             addslashes($this->quotaGroup)
             );
     
-            dprint($query);
     
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -3396,7 +3294,6 @@ class SERQuota {
             addslashes($this->quotaGroup)
             );
     
-            dprint($query);
     
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -3497,7 +3394,6 @@ class SERQuota {
             }
         } else {
             $query=sprintf("delete from memcache where `key`= '%s'",$this->mc_key_init);
-            dprint($query);
             if (!$this->db->query($query)) {
                 $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                 print $log;
@@ -3507,7 +3403,6 @@ class SERQuota {
 
             $query=sprintf("insert into memcache (`key`,`value`) values ('%s','1')",$this->mc_key_init);
 
-            dprint($query);
             if ($this->db->query($query) && $this->db->affected_rows()) {
                 return true;
             } else {
@@ -3524,7 +3419,6 @@ class SERQuota {
         }
 
         $query=sprintf("delete from memcache where `key`= '%s'",$this->mc_key_init);
-        dprint($query);
         if (!$this->db->query($query)) return false;
 
         return true;
@@ -3568,7 +3462,6 @@ class SERQuota {
             }
 		} else {
 		    $query=sprintf("select * from memcache where `key` = '%s'",$this->mc_key_init);
-            dprint($query);
 
             if (!$this->db->query($query)) {
                 $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
@@ -3579,7 +3472,6 @@ class SERQuota {
 
             if (!$this->db->num_rows()) {
 			    $query=sprintf("select * from memcache where `key` = 'reset_quota_for'");
-    	        dprint($query);
 
             	if (!$this->db->query($query)) {
                 	$log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
@@ -3613,7 +3505,6 @@ class SERQuota {
 
                 if ($this->saveQuotaInitFlag()) {
 				    $query=sprintf("delete from memcache where `key` = 'reset_quota_for'");
-        		    dprint($query);
 
             		$this->db->query($query);
 
@@ -3650,7 +3541,6 @@ class SERQuota {
                 } else {
                     $query="select * from subscriber";
                 }
-                dprint($query);
                 if (!$this->AccountsDB->query($query)) {
                     $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
                     print $log;
@@ -3685,7 +3575,6 @@ class SERQuota {
         	$query=sprintf("delete from memcache where `key` like '%s%s'",$this->CDRS->mc_key_mu_prefix,"%");
         }
 
-        dprint($query);
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->Accountsdb->Errno);
@@ -3725,11 +3614,17 @@ class RatingEngine {
     // While so one may perform multiple calls in parallel using the same
     // prepaid balance it also means that a negative balance can be reached
     var $prepaid_lock = 1;
+    var $method = '';
+    var $log_runtime = false;
 
     function RatingEngine (&$CDRS) {
       	global $RatingEngine;
 		if ($RatingEngine['prepaid_lock'] == false || $RatingEngine['prepaid_lock'] == 0) {
             $this->prepaid_lock=0;
+        }
+
+        if ($RatingEngine['log_runtime']) {
+            $this->log_runtime=true;
         }
 
         $this->CDRS		= &$CDRS;
@@ -3756,7 +3651,6 @@ class RatingEngine {
 
         if ($account) $query.= sprintf(" where account = '%s' ",addslashes($account));
 
-        dprint($query);
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
             print $log;
@@ -3855,7 +3749,7 @@ class RatingEngine {
     function getBalanceHistory($account,$limit=50) {
 
         list($username,$domain)=explode("@",$account);
-        if (!strlen($username) || !strlen($domain)) return 0;
+        if (!$username || !$domain) return 0;
         $query=sprintf("select * from prepaid_history where username = '%s' and domain = '%s' order by id desc",
         addslashes($username),
         addslashes($domain)
@@ -3863,7 +3757,6 @@ class RatingEngine {
 
         if ($limit) $query.= sprintf (" limit %d",$limit);
 
-        dprint($query);
     
         if (!$this->db->query($query)) {
             $log=sprintf ("getBalanceHistory error: %s (%s)",$this->db->Error,$this->db->Errno);
@@ -3890,8 +3783,10 @@ class RatingEngine {
 
     function DebitBalance($account,$balance) {
 
- 		if (preg_match("/^(.*):(.*)$/",$account,$m)) {
-        	$account=$m[2];
+		$els=explode(":",$account);
+
+        if (count($els) == 2) {
+        	$account=$els[1];
         }
 
         if (!$account) {
@@ -3950,10 +3845,10 @@ class RatingEngine {
             return 0;
         }
 
-        $account=trim($account);
+		$els=explode(":",$account);
 
-		if (preg_match("/^(.*):(.*)$/",$account,$m)) {
-        	$account=$m[2];
+        if (count($els) == 2) {
+        	$account=$els[1];
         }
 
         if (!$account) {
@@ -4046,8 +3941,10 @@ class RatingEngine {
 
     function DeleteBalance($account) {
 
-		if (preg_match("/^(.*):(.*)$/",$account,$m)) {
-        	$account=$m[2];
+		$els=explode(":",$account);
+
+        if (count($els) == 2) {
+        	$account=$els[1];
         }
 
         if (!$account) {
@@ -4076,8 +3973,11 @@ class RatingEngine {
     function DeleteBalanceHistory($account) {
 
         $account=trim($account);
-		if (preg_match("/^(.*):(.*)$/",$account,$m)) {
-        	$account=$m[2];
+
+        $els=explode(":",$account);
+
+        if (count($els) == 2) {
+        	$account=$els[1];
         }
 
         if (!$account) {
@@ -4130,10 +4030,33 @@ class RatingEngine {
         return $help;
     }
 
+    function logRuntime() {
+		if (!$this->log_runtime) return;
+
+        $t=0;
+        $log='';
+        foreach (array_keys($this->runtime) as $_key) {
+        	$stamp=$this->runtime[$_key];
+
+            if ($prev_stamp) {
+                $_exec_time=$stamp-$prev_stamp;
+            	$log .= sprintf("%s=%1.7f ",$_key,$_exec_time);
+            }
+
+            $prev_stamp=$stamp;
+
+            $t++;
+        }
+    
+        syslog(LOG_NOTICE, $log);
+
+    }
+
     function processNetworkInput($tinput) {
 
         // Read key=value pairs from input
         // Strip any unnecessary spaces
+		$this->runtime=array();
 
         $tinput=preg_replace("/=\s{1,}/","= ",$tinput);
         $tinput=preg_replace("/\s{1,}=/","= ",$tinput);
@@ -4141,7 +4064,8 @@ class RatingEngine {
 
         $_els=explode(" ",trim($tinput));
 
-        dprint_r($_els);
+        $this->runtime['start']=microtime_float();
+
         syslog(LOG_NOTICE, $tinput);
 
         if (!$_els[0]) return 0;
@@ -4158,12 +4082,12 @@ class RatingEngine {
             $_key   = strtolower(trim($_dict[0]));
             $_value = strtolower(trim($_dict[1]));
 
-            if (strlen($_key) && $seenField[$_key]) {
+            if ($_key && $seenField[$_key]) {
                 $log=sprintf ("Error: '$_key' attribute is present more than once in $tinput");
                 syslog(LOG_NOTICE, $log);
                 return 0;
             } else {
-                if (strlen($_key)) {
+                if ($_key) {
             		$NetFields[$_key]=$_value;
                 	$seenField[$_key]++;
                 }
@@ -4172,32 +4096,24 @@ class RatingEngine {
 
         $NetFields['action']=strtolower($_els[0]);
 
-        /*
-        foreach(array_keys($NetFields) as $_field) {
-            $log.=sprintf("Field=%s Value=%s ",$_field,$NetFields[$_field]);
-        }
-
-        syslog(LOG_NOTICE, $log);
-        */
+		$this->method = $NetFields['action'];
 
         // begin processing
         if ($NetFields['action']=="maxsessiontime") {
 
             if (!$NetFields['from']) {
-                dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             if (!$NetFields['to']) {
-                dprint("Missing To parameter.");
                 $log=sprintf ("Error: Missing To parameter");
                     syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
-            if (!strlen($NetFields['duration'])) {
+            if (!$NetFields['duration']) {
                 $NetFields['duration']=12*3600; // 12 hours
             }
 
@@ -4281,6 +4197,8 @@ class RatingEngine {
 
             }
 
+	        $this->runtime['update_statistics']=microtime_float();
+
             $CDRStructure=array (
                               $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
                               $this->CDRS->CDRFields['aNumber']  	   => $NetFields['from'],
@@ -4291,51 +4209,65 @@ class RatingEngine {
                               $this->CDRS->CDRFields['timestamp']      => time()
                               );
 
-            dprint_r($CDRStructure);
 
-            $CDR = new $this->CDRS->CDR_class($this->CDRS, $CDRStructure);
+            $CDR = new $this->CDRS->CDR_class(&$this->CDRS, &$CDRStructure);
             $CDR->normalize();
+
+	        $this->runtime['normalize_cdr']=microtime_float();
 
             $Balance=$this->balance[$CDR->BillingPartyId];
             $c=count($this->balance);
 
-            if (!strlen($Balance)) {
+            if (!$Balance) {
+            	$this->logRuntime();
                 return "none";
             }
 
-            $query=sprintf("select * from %s
-            where account = '%s'",
-            addslashes($this->table),
-            addslashes($CDR->BillingPartyId)
-            );
-
-            if (!$this->db->query($query)) {
-                $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
-                syslog(LOG_NOTICE,$log);
-                return "none";
-            }
-
-            if ($this->db->num_rows()) {
-                $this->db->next_record();
-                if ($this->db->f('call_lock') == "1") {
-                    $_cip=$this->db->f('call_in_progress');
-                    $log = sprintf ("Account locked, call in progres since $_cip");
-                    syslog(LOG_NOTICE, $log);
-                    return "locked";
+			if ($this->prepaid_lock) {
+                $query=sprintf("select * from %s
+                where account = '%s'",
+                addslashes($this->table),
+                addslashes($CDR->BillingPartyId)
+                );
+    
+                if (!$this->db->query($query)) {
+                    $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    syslog(LOG_NOTICE,$log);
+                	$this->logRuntime();
+                    return "none";
                 }
-            } else {
-               	$log = sprintf ("Prepaid $CDR->BillingPartyId does not exist");
+    
+                if ($this->db->num_rows()) {
+                    $this->db->next_record();
+                    if ($this->db->f('call_lock') == "1") {
+                        $_cip=$this->db->f('call_in_progress');
+                        $log = sprintf ("Account locked, call in progres since $_cip");
+                        syslog(LOG_NOTICE, $log);
+                		$this->logRuntime();
+
+                        return "locked";
+                    }
+                }
+            }
+
+	        $this->runtime['check_lock']=microtime_float();
+
+            if (!strlen($this->balance[$CDR->BillingPartyId])) {
+                $log = sprintf ("Prepaid $CDR->BillingPartyId does not exist");
                 syslog(LOG_NOTICE, $log);
+                $this->logRuntime();
                 return "none";
             }
 
             if (!preg_match("/^0/",$CDR->RemoteAddressNormalized)) {
                	$log = sprintf ("Call to %s, no limit imposed",$CDR->RemoteAddressNormalized);
                 syslog(LOG_NOTICE, $log);
+                $this->logRuntime();
                 return "none";
             } else {
             	if (!$CDR->DestinationId) {
             		$log = sprintf ("Error: cannot figure out the destination id for $CDR->RemoteAddress");
+                	$this->logRuntime();
                 	syslog(LOG_NOTICE, $log);
                 	return "0";
             	}
@@ -4357,7 +4289,11 @@ class RatingEngine {
                                       );
                 
                 $Rate    = new Rate(&$CDR);
+	        	$this->runtime['instantiate_rate']=microtime_float();
+
                 $maxduration = round($Rate->MaxSessionTime($RateDictionary));
+
+                $this->runtime['calculate_maxduration']=microtime_float();
 
                 if ($maxduration<0) {
                		$log = sprintf ("Error: maxduration is negative ($maxduration)");
@@ -4377,12 +4313,13 @@ class RatingEngine {
                 	return 0;
                 }
 
-                $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Balance=%s MaxSessionTime=%s",
+                $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Balance=%s MaxSessionTime=%s Spans=%d",
                 $NetFields['callid'],
                 $CDR->BillingPartyId,
                 $CDR->DestinationId,
                 $RateDictionary['Balance'],
-                $maxduration
+                $maxduration,
+                $Rate->MaxSessionTimeSpans
                 );
 
                 syslog(LOG_NOTICE, $log);
@@ -4403,7 +4340,6 @@ class RatingEngine {
                     addslashes($maxduration),
                     addslashes($CDR->BillingPartyId));
 
-                    dprint($query);
 
                     if (!$this->db->query($query)) {
                         $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
@@ -4417,29 +4353,31 @@ class RatingEngine {
                     }
                 }
 
+                $this->runtime['update_prepaid']=microtime_float();
+
+                $this->logRuntime();
                 return $maxduration;
 
             } else {
+
+                $this->logRuntime();
                 return 0;
             }
         } else if ($NetFields['action'] == "debitbalance") {
 
             if (!$NetFields['from']) {
-                dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
                 return "Failed";
             }
 
             if (!$NetFields['to']) {
-                dprint("Missing To parameter.");
                 $log=sprintf ("Error: Missing To parameter");
                     syslog(LOG_NOTICE, $log);
                 return "Failed";
             }
 
             if (!strlen($NetFields['duration'])) {
-                dprint("Missing Duration parameter.");
                 $log=sprintf ("Error: Missing Duration parameter");
                     syslog(LOG_NOTICE, $log);
                 return "Failed";
@@ -4454,11 +4392,12 @@ class RatingEngine {
                               $this->CDRS->CDRFields['timestamp']      => time(),
                               );
 
-            dprint_r($CDRStructure);
 
             // Init CDR
             $CDR = new $this->CDRS->CDR_class($this->CDRS, $CDRStructure);
             $CDR->normalize();
+
+	        $this->runtime['normalize_cdr']=microtime_float();
 
 			if (!is_array($this->balance) || !array_key_exists($CDR->BillingPartyId,$this->balance)) {
                 /*
@@ -4482,9 +4421,15 @@ class RatingEngine {
             
             $Rate = new Rate(&$CDR);
 
+            $this->runtime['instantiate_rate']=microtime_float();
+
             $Rate->calculate($RateDictionary);
 
+            $this->runtime['calculate_rate']=microtime_float();
+
             $result = $this->DebitBalance($CDR->BillingPartyId,$Rate->price);
+
+            $this->runtime['debit_balance']=microtime_float();
 
 			if ($CDR->duration) {
             	$oldBalance=$this->balance[$CDR->BillingPartyId];
@@ -4505,7 +4450,7 @@ class RatingEngine {
                 $RateReturn="Ok";
                 if (strlen($Rate->price)) {
                     $RateReturn.="\n".$Rate->price;
-                    if (strlen($Rate->rateInfo)) {
+                    if ($Rate->rateInfo) {
                         $RateReturn.="\n".trim($Rate->rateInfo);
                     }
                 }
@@ -4519,14 +4464,12 @@ class RatingEngine {
         } else if ($NetFields['action'] == "addbalance") {
 
         	if (!$NetFields['from']) {
-                dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             if (!is_numeric($NetFields['value'])) {
-                dprint("Missing Value parameter.");
                 $log=sprintf ("Error: Missing Value parameter, it must be numeric");
                     syslog(LOG_NOTICE, $log);
                 return 0;
@@ -4553,7 +4496,6 @@ class RatingEngine {
         } else if ($NetFields['action'] == "deletebalance") {
 
         	if (!$NetFields['from']) {
-                dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
                 return 0;
@@ -4564,7 +4506,6 @@ class RatingEngine {
         } else if ($NetFields['action'] == "deletebalancehistory") {
 
         	if (!$NetFields['from']) {
-                dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
                 return 0;
@@ -4575,21 +4516,18 @@ class RatingEngine {
         } else if ($NetFields['action'] == "showprice") {
 
             if (!$NetFields['from']) {
-                dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             if (!$NetFields['to']) {
-                dprint("Missing To parameter.");
                 $log=sprintf ("Error: Missing To parameter");
                     syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             if (!strlen($NetFields['duration'])) {
-                dprint("Missing Duration parameter.");
                 $log=sprintf ("Error: Missing Duration parameter");
                     syslog(LOG_NOTICE, $log);
                 return 0;
@@ -4623,6 +4561,8 @@ class RatingEngine {
             $CDR = new $this->CDRS->CDR_class($this->CDRS, $CDRStructure);
             $CDR->normalize();
 
+	        $this->runtime['normalize_cdr']=microtime_float();
+
             // Build Rate dictionary containing normalized CDR fields
             $RateDictionary=array(
                                   'callId'          => $CDR->callId,
@@ -4643,23 +4583,21 @@ class RatingEngine {
 
             $Rate = new Rate(&$CDR);
             $Rate->calculate($RateDictionary);
+	        $this->runtime['calculate_rate']=microtime_float();
 
             if (strlen($Rate->price)) {
             	$RateReturn=$Rate->price;
-                if (strlen($Rate->rateInfo)) {
+                if ($Rate->rateInfo) {
                 	$RateReturn.="\n".trim($Rate->rateInfo);
                 }
             } else {
             	$RateReturn="0";
             }
 
-            //if ($Rate->price) syslog(LOG_NOTICE, "Price=$Rate->price");
-
             return $RateReturn;
 
         } else if ($NetFields['action'] == "getbalance") {
             if (!$NetFields['from']) {
-                dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
                 return 0;
@@ -4674,7 +4612,6 @@ class RatingEngine {
 
         } else if ($NetFields['action'] == "getbalancehistory") {
             if (!$NetFields['from']) {
-                dprint("Missing From parameter.");
                 $log=sprintf ("Error: Missing From parameter");
                     syslog(LOG_NOTICE, $log);
                 return 0;
@@ -4726,7 +4663,6 @@ class RatingEngine {
 
 
         } else {
-            dprint("Invalid request. ");
             $log=sprintf ("Error: Invalid request");
                 syslog(LOG_NOTICE, $log);
             return 0;
@@ -4751,7 +4687,7 @@ function reloadPrepaidAccounts($account='') {
         $fp = fsockopen ($RatingEngine['socketIP'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
         $account=trim($account);
         $cmd="ReloadPrepaidAccounts";
-        if (strlen($account)) $cmd .= sprintf(" Account=%s",$account);
+        if ($account) $cmd .= sprintf(" Account=%s",$account);
         $cmd.="\n";
         fputs($fp,$cmd);
         fclose($fp);

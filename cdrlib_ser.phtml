@@ -134,7 +134,6 @@ class CDRS_ser_radius extends CDRS {
                 $i++;
             }
         }
-        dprint("Loaded $i disconnection codes");
     }
 
     function showTableHeader($begin_datetime,$end_datetime) {
@@ -308,7 +307,6 @@ class CDRS_ser_radius extends CDRS {
                                 ));
 
         if ($begin_datetime) {
-            dprint("begin_datetime=$begin_datetime");
             preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$begin_datetime", $parts);
             $begin_year	=date(Y,$begin_datetime);
             $begin_month=date(m,$begin_datetime);
@@ -324,7 +322,6 @@ class CDRS_ser_radius extends CDRS {
         }
         
         if ($end_datetime) {
-            dprint("end_datetime=$end_datetime");
             preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$end_datetime", $parts);
             $end_year	=date(Y,$end_datetime);
             $end_month 	=date(m,$end_datetime);
@@ -1431,7 +1428,6 @@ class CDRS_ser_radius extends CDRS {
             from $cdr_table where ".$where;
         }
 
-        dprint($query);
 
         if ($this->CDRdb->query($query)) {
              $this->CDRdb->next_record();
@@ -1476,17 +1472,13 @@ class CDRS_ser_radius extends CDRS {
                 addslashes($call_id)
                 );
 
-                dprint($query);
                 $this->CDRdb->query($query);
                 if ($this->CDRdb->affected_rows()) {
-                    dprint("Unnormalized call $call_id");
                 } else {
-                    dprint("Failed to Unnormalized call $call_id");
                 }
             }
 
             if ($UnNormalizedCalls=$this->getUnNormalized($where,$cdr_table)) {
-                dprint("Normalize calls");
                 $this->NormalizeCDRS($where,$cdr_table);
                 if (!$this->export && $this->status['normalized'] ) {
                     printf ("Found %d CDRs for normalization. ",$this->status['normalized']);
@@ -1572,7 +1564,6 @@ class CDRS_ser_radius extends CDRS {
                 limit $i,$this->maxrowsperpage
                 ";
 
-                dprint($query);
                 $this->CDRdb->query($query);
 
                 $this->showTableHeaderStatistics($begin_datetime,$end_datetime);
@@ -1783,7 +1774,6 @@ class CDRS_ser_radius extends CDRS {
                 " order by $order_by $order_type ".
                 " limit $i,$this->maxrowsperpage";
 
-                dprint($query);
                 $this->CDRdb->query($query);
 
                 if ($this->CDRTool['filter']['aNumber']) {
@@ -1834,10 +1824,8 @@ class CDRS_ser_radius extends CDRS {
 
     function LoadDomains() {
 
-		dprint("LoadDomains()");
 
         if (!$this->AccountsDBClass) {
-            dprint("Info: No database defined for SER accounts");
             return false;
         }
 
@@ -1850,7 +1838,6 @@ class CDRS_ser_radius extends CDRS {
         if ($this->mc && $mc_value = $this->mc->get($this->mc_key_domains)) {
             $this->localDomains=explode(" ",$mc_value);
             $log=sprintf("Loaded %d domains from memcache\n",count($this->localDomains));
-            dprint($log);
             syslog(LOG_NOTICE,$log);
         } else {
         	$mc_value="";
@@ -1877,7 +1864,6 @@ class CDRS_ser_radius extends CDRS {
 
             if ($this->mc && $this->mc->set($this->mc_key_domains,$mc_value,0,3600)) {
                 $log=sprintf("Saved %d domains in memcache key %s\n",count($this->localDomains),$this->mc_key_domains);
-                dprint($log);
                 syslog(LOG_NOTICE,$log);
             }
         }
@@ -2088,7 +2074,6 @@ class CDRS_ser_radius extends CDRS {
             if ($query) {
             	$results[$file][packetTypes][$packetType]++;
             	$AcctSessionId=$radiusParsed["Acct-Session-Id"];
-            	dprint ("$packetType Radius packet $AcctSessionId\n");
                 $this->CDRdb->Halt_On_Error="no";
                 if ($this->CDRdb->query($query)) {
                     if ($packetType=="Start" || $packetType=="Failed" ) {
@@ -2185,7 +2170,6 @@ class CDR_ser_radius extends CDR {
 
     function CDR_ser_radius(&$parent, $CDRfields) {
 
-        dprint("<hr>Init CDR");
 
         $this->CDRS = &$parent;
 
@@ -2193,16 +2177,18 @@ class CDR_ser_radius extends CDR {
 
         foreach (array_keys($this->CDRS->CDRFields) as $field) {
         	$key=$this->CDRS->CDRFields[$field];
+            	$this->$field = $CDRfields[$key];
+		/*
             if ($field=="rate") {
             	$this->$field = $CDRfields[$key];
             } else {
             	$this->$field = quoted_printable_decode($CDRfields[$key]);
             }
+               */
         }
 
 	    $this->SourceIPPrint      = $this->SourceIP;
 
-        dprint("<b>Application</b>");
 
 		$_method=strtolower($this->SipMethod);
 
@@ -2234,9 +2220,7 @@ class CDR_ser_radius extends CDR {
 
         $this->applicationTypeNormalized=$this->applicationType;
 
-		dprint("Application type: $this->applicationType");
 
-        dprint("<b>A number</b>");
         $NormalizedNumber        = $this->CDRS->NormalizeNumber($this->aNumber,"source");
 	    $this->aNumberPrint      = $NormalizedNumber[NumberPrint];
         $this->aNumberNormalized = $NormalizedNumber[Normalized];
@@ -2285,7 +2269,6 @@ class CDR_ser_radius extends CDR {
         // it is chosen by the subscriber but the Proxy rewrites it into a different
         // final destination (the Canonical URI)
 
-        dprint("<b>Canonical URI: $this->CanonicalURI</b>");
         // Canonical URI is the final logical SIP destination after all
         //   lookups like aliases, usrloc , call forwarding, ENUM
         //   mappings or PSTN gateways but before the DNS lookup
@@ -2303,13 +2286,10 @@ class CDR_ser_radius extends CDR {
         $this->CanonicalURIPrint            = $NormalizedNumber['NumberPrint'];
         $this->CanonicalURIDelimiter        = $NormalizedNumber['delimiter'];
 
-        dprint("<b>Destination Id</b>");
         // Destination Id is used for rating purposes
 		$this->DestinationId                = $NormalizedNumber['DestinationId'];
         $this->destinationName              = $NormalizedNumber['destinationName'];
-        dprint ("id = $this->DestinationId, name=$this->destinationName");
 
-        dprint("<b>Dialed URI: $this->cNumber</b>");
 		$NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->cNumber,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
         $this->cNumberNormalized            = $NormalizedNumber['Normalized'];
         $this->cNumberUsername              = $NormalizedNumber['username'];
@@ -2319,7 +2299,6 @@ class CDR_ser_radius extends CDR {
 
         // Next hop is real destination after all lookups including DNS
 
-        dprint("<b>Next hop: $this->RemoteAddress</b>");
         $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->RemoteAddress,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
         $this->RemoteAddressPrint           = $NormalizedNumber['NumberPrint'];
         $this->RemoteAddressNormalized      = $NormalizedNumber['Normalized'];
@@ -2993,1238 +2972,6 @@ class CDR_ser_radius extends CDR {
      }
 }
 
-class CDRS_ser_acc extends CDRS  {
-    var $table              = "acc";
-    var $CDR_class          = "CDR_ser_acc";
-
-    var $callIdField        = "sip_callid";
-    var $usernameField      = "username";
-    var $domainField        = "domain";
-    var $timestampField     = "unix_timestamp";
-    var $startTimeField     = "time";
-    var $cNumberField       = "sip_to";
-    var $aNumberField       = "sip_from";
-    var $disconnectField    = "sip_status";
-    var $SipMethodField     = "sip_method";
-    var $i_uriField         = "i_uri";
-    var $o_uriField         = "o_uri";
-    var $i_uri              = "i_uri";
-    var $o_uri              = "o_uri";
-
-    var $FormElements=array(
-        "begin_hour","begin_min","begin_month","begin_day","begin_year","begin_datetime",
-        "end_hour","end_min","end_month","end_day","end_year","end_datetime",
-        "call_id","fromTag","toTag",
-        "a_number","a_number_comp","UserName","UserName_comp","BillingId",
-        "c_number","c_number_comp","DestinationId","ExcludeDestinations",
-        "Realm","SipMethod","SipStatus","SipStatusClass","MissedFrom_comp","MissedFrom",
-        "SipMethod","SipStatus","SipStatusClass",
-        "duration","action","UserNameS",
-        "order_by","order_type","group_by",
-        "cdr_source","trace"
-        );
-
-
-	var $CDRFields=array();
-
-    function LoadDisconnectCodes() {
-        $query="select * from sip_status order by code";
-        dprint("$query");
-        $this->disconnectCodesElements[]=array("label"=>"Any Status","value"=>"");
-        $this->disconnectCodesClassElements[]=array("label"=>"Any Status Class","value"=>"");
-
-        $this->cdrtool->query($query);
-        while($this->cdrtool->next_record()) {
-            $key         = $this->cdrtool->f('code');
-            $value       = $this->cdrtool->f('description');
-            $value_print = $this->cdrtool->f('description')." (".$this->cdrtool->f('code').")";
-
-            $this->disconnectCodesElements[]=array("label"=>$value_print,"value"=>$key);
-            $this->disconnectCodesDescription[$key]=$value;
-
-            $class=substr($key,0,1);
-            $class_text=substr($key,0,1)."XX (".$this->cdrtool->f('code_type').")";
-            if (!$seen[$class]) {
-                $this->disconnectCodesClassElements[]=array("label"=>$class_text,"value"=>substr($key,0,1));
-                $this->disconnectCodesClassDescription[substr($key,0,1)]=$class_text;
-                $seen[$class]++;
-            }
-            $i++;
-        }
-        dprint("Loaded $i disconnection codes");
-    }
-
-    function showTableHeader($begin_datetime,$end_datetime) {
-        if (!$this->export) {
-            if (!$this->missed_calls || $this->trace) {
-               print  "
-               <table border=1 cellspacing=2 width=100% align=center>
-               <tr>
-               <td>
-               <table border=0 cellspacing=2 width=100%>
-               <tr bgcolor=lightgrey>
-                   <td></td>
-                   <td><b>Date and time</b></td>
-                   <td><b>Username</b></td>
-                   <td><b>Source</b></td>
-                   <td colspan=2><b>Destination</b></td>
-                   <td><b>Method</b></td>
-                   <td align=right><b>Status</b></td>
-               </tr>
-               ";
-            } else {
-                print  "
-                <table border=1 cellspacing=2 width=100% align=center>
-                <tr>
-                <td>
-                <table border=0 cellspacing=2 width=100%>
-                <tr bgcolor=lightgrey>
-                    <td></td>
-                    <td><b>Date and time</b></td>
-                    <td><b>Call for</b></td>
-                    <td colspan=2><b>Missed call from</b></td>
-                    <td><b>Called address</b></td>
-                    <td align=right><b>Status</b></td>
-                </tr>
-                ";
-            }
-        } else {
-            if (!$this->missed_calls || $this->trace) {
-                print "id,startTime,callId,aNumber,cNumber,DestinationId,destinationName,i_uri,o_uri,method,status\n";
-            } else {
-                print "id,Date Time,MissedCallFrom,DialedNumber,Status\n";
-            }
-        }
-    }
-
-    function initForm() {
-        global $perm;
-
-        // form els added below must have global vars
-        foreach ($this->FormElements as $_el) {
-            global ${$_el};
-            ${$_el} = $_REQUEST[$_el];
-        }
-
-        $action         = "search";
-        
-        if ($this->CDRTool['filter']['domain']) {
-            $Realm  = $this->CDRTool['filter']['domain'];
-        }
-        
-        if ($this->CDRTool['filter']['aNumber']) {
-            if ($this->table=="acc") {
-                $a_number=$this->CDRTool['filter']['aNumber'];
-            }
-            if ($this->missed_calls) {
-            	$UserName=trim($this->CDRTool['filter']['aNumber']);
-            }
-        }
-
-        if (!$maxrowsperpage) {
-            $maxrowsperpage=50;
-        }
-
-        $this->f = new form;
-        
-        if (isset($this->CDRTool['dataSourcesAllowed'])) {
-            while (list($k,$v)=each($this->CDRTool['dataSourcesAllowed'])) {
-                $cdr_source_els[]=array("label"=>$this->DATASOURCES[$v]['name'],"value"=>$v);
-            }
-        }
-        
-        if (!$cdr_source) {
-            $cdr_source=$cdr_source_els[0]['value'];
-        }
-
-        $this->f->add_element(array("name"=>"cdr_source",
-                                    "type"=>"select",
-                                    "options"=>$cdr_source_els,
-                                    "size"=>"1",
-                                    "extrahtml"=>"onChange=\"document.datasource.submit.disabled = true; location.href = 'callsearch.phtml?cdr_source=' + this.options[this.selectedIndex].value\"",
-                                    "value"=>"$cdr_source"
-                              )
-                       );
-        
-        if ($begin_datetime) {
-            dprint("begin_datetime=$begin_datetime");
-            preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$begin_datetime", $parts);
-            $begin_year	=date(Y,$begin_datetime);
-            $begin_month=date(m,$begin_datetime);
-            $begin_day 	=date(d,$begin_datetime);
-            $begin_hour	=date(H,$begin_datetime);
-            $begin_min 	=date(i,$begin_datetime);
-        } else {
-            $begin_day      = $_REQUEST["begin_day"];
-            $begin_month    = $_REQUEST["begin_month"];
-            $begin_year     = $_REQUEST["begin_year"];
-            $begin_hour     = $_REQUEST["begin_hour"];
-            $begin_min      = $_REQUEST["begin_min"];
-        }
-        
-        if ($end_datetime) {
-            dprint("end_datetime=$end_datetime");
-            preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$end_datetime", $parts);
-            $end_year	=date(Y,$end_datetime);
-            $end_month 	=date(m,$end_datetime);
-            $end_day 	=date(d,$end_datetime);
-            $end_hour	=date(H,$end_datetime);
-            $end_min 	=date(i,$end_datetime);
-        }  else {
-            $end_day        = $_REQUEST["end_day"];
-            $end_month      = $_REQUEST["end_month"];
-            $end_year       = $_REQUEST["end_year"];
-            $end_hour       = $_REQUEST["end_hour"];
-            $end_min        = $_REQUEST["end_min"];
-        }
-        
-        $default_year	=Date("Y");
-        $default_month	=Date("m");
-        $default_day	=Date("d");
-        $default_hour	=Date(H,time());
-        
-        if ($default_hour > 1) {
-            $default_hour=$default_hour-1;
-        }
-        
-        $default_hour=preg_replace("/^(\d)$/","0$1",$default_hour);
-        $default_min	=Date("i");
-        
-        if ($default_min > 10) {
-            $default_min=$default_min-10;
-            $default_min=preg_replace("/^(\d)$/","0$1",$default_min);
-        }
-
-        if (!$begin_hour)  $begin_hour  = $default_hour;
-        if (!$begin_min)   $begin_min   = $default_min;
-        if (!$begin_day)   $begin_day   = $default_day;
-        if (!$begin_month) $begin_month = $default_month;
-        if (!$begin_year)  $begin_year  = $default_year;
-
-        if (!$end_hour)  $end_hour  = 23;
-        if (!$end_min)   $end_min   = 55;
-        if (!$end_day)   $end_day   = $default_day;
-        if (!$end_month) $end_month = $default_month;
-        if (!$end_year)  $end_year  = $default_year;
-
-        $m=0;
-        while ($m<24) {
-            if ($m<10) { $v="0".$m; } else { $v=$m; }
-            $hours_els[]=array("label"=>$v,"value"=>$v);
-            $m++;
-        }
-
-        $this->f->add_element(array(
-                    "name"=>"begin_hour",
-                    "type"=>"select",
-                    "options"=>$hours_els,
-                    "size"=>"1"
-                    ));
-        $this->f->add_element(array(	"name"=>"end_hour",
-                    "type"=>"select",
-                    "options"=>$hours_els,
-                    "size"=>"1",
-                    "value"=>"23"
-                    ));
-        $m=0;
-        while ($m<60) {
-            if ($m<10) { $v="0".$m; } else { $v=$m; }
-            $min_els[]=array("label"=>$v,"value"=>$v);
-            $m++;
-        }
-
-        $this->f->add_element(array(	"name"=>"begin_min",
-                    "type"=>"select",
-                    "options"=>$min_els,
-                    "size"=>"1"
-                    ));
-        $this->f->add_element(array(
-                    "name"=>"end_min",
-                    "type"=>"select",
-                    "options"=>$min_els,
-                    "size"=>"1"
-                    ));
-
-        $m=0;
-        while ($m<32) {
-            if ($m<10) { $v="0".$m; } else { $v=$m; }
-            $days_els[]=array("label"=>$v,"value"=>$v);
-            $m++;
-        }
-
-        $this->f->add_element(array(	"name"=>"begin_day",
-                                "type"=>"select",
-                                "options"=>$days_els,
-                                "size"=>"1"
-        
-                    ));
-        $this->f->add_element(array(	"name"=>"end_day",
-                                "type"=>"select",
-                                "options"=>$days_els,
-                                "size"=>"1"
-        
-                    ));
-
-        $m=0;
-        while ($m<13) {
-            if ($m<10) { $v="0".$m; } else { $v=$m; }
-            $month_els[]=array("label"=>$v,"value"=>$v);
-            $m++;
-        }
-        
-        $this->f->add_element(array(	"name"=>"begin_month",
-                                "type"=>"select",
-                                "options"=>$month_els,
-                                "size"=>"1"
-                    ));
-        
-        $this->f->add_element(array(	"name"=>"end_month",
-                                "type"=>"select",
-                                "options"=>$month_els,
-                                "size"=>"1"
-                    ));
-        
-        $thisYear=date("Y",time());
-        $y=$thisYear;
-        while ($y>$thisYear-6) {
-            $year_els[]=array("label"=>$y,"value"=>$y);
-            $y--;
-        }
-        $this->f->add_element(array(	"name"=>"begin_year",
-                                "type"=>"select",
-                                "options"=>$year_els,
-                                "size"=>"1"
-        
-                    ));
-        $this->f->add_element(array(	"name"=>"end_year",
-                                "type"=>"select",
-                                "options"=>$year_els,
-                                "size"=>"1"
-                    ));
-
-        $this->f->add_element(array(	"name"=>"call_id",
-                                "type"=>"text",
-                                "size"=>"50",
-                                "maxlength"=>"100"
-                    ));
-        
-        $this->f->add_element(array(	"name"=>"a_number",
-                                "type"=>"text",
-                                "size"=>"25",
-                                "maxlength"=>"25"
-                    ));
-        $this->f->add_element(array(	"name"=>"UserName",
-                                "type"=>"text",
-                                "size"=>"25",
-                                "maxlength"=>"25"
-                    ));
-        $this->f->add_element(array(	"name"=>"c_number",
-                                "type"=>"text",
-                                "size"=>"25",
-                                "maxlength"=>"25"
-                    ));
-        
-        if (!$CDRTool['filter']['aNumber']) {
-            $durations_els = array(
-                array("label"=>"All calls","value"=>""),
-                array("label"=>"0 seconds call","value"=>"zero"),
-                array("label"=>"non 0 seconds","value"=>"nonzero"),
-                array("label"=>"non 0 seconds with 0 price","value"=>"zeroprice"),
-                array("label"=>"less than 5 seconds","value"=>"< 5"),
-                array("label"=>"more than 5 seconds","value"=>"> 5"),
-                array("label"=>"less than 60 seconds","value"=>"< 60"),
-                array("label"=>"greater than 1 hour","value"=>"> 3600"),
-                array("label"=>"greater than 5 hours","value"=>"> 18000")
-                );
-        } else {
-            $durations_els = array(
-                array("label"=>"Succesfull calls","value"=>"nonzero")
-                );
-        }
-        
-        $this->f->add_element(array(	"name"=>"duration",
-                                "type"=>"select",
-                                "options"=>$durations_els,
-                                "value"=>"All",
-                                "size"=>"1"
-                    ));
-        
-        $comp_ops_els = array(
-                array("label"=>"Begins with","value"=>"begin"),
-                array("label"=>"Contains","value"=>"contain"),
-                array("label"=>"Is empty","value"=>"empty"),
-                array("label"=>"Equal","value"=>"equal")
-                );
-
-        $this->f->add_element(array(	"name"=>"a_number_comp",
-                                "type"=>"select",
-                                "options"=>$comp_ops_els,
-                                "value"=>"begin",
-                                "size"=>"1"
-                    ));
-        $this->f->add_element(array(	"name"=>"c_number_comp",
-                                "type"=>"select",
-                                "options"=>$comp_ops_els,
-                                "value"=>"begin",
-                                "size"=>"1"
-                    ));
-        $this->f->add_element(array(	"name"=>"UserName_comp",
-                                "type"=>"select",
-                                "options"=>$comp_ops_els,
-                                "value"=>"begin",
-                                "size"=>"1"
-                    ));
-        $this->f->add_element(array(	"name"=>"Realm",
-                                "type"=>"text",
-                                "size"=>"25",
-                                "maxlength"=>"25"
-                    ));
-        
-        $this->f->add_element(array("type"=>"submit",
-                              "name"=>"submit",
-                              "value"=>"Search"
-                    ));
-        
-        $max_els=array(
-                array("label"=>"5","value"=>"5"),
-                        array("label"=>"10","value"=>"10"),
-                        array("label"=>"25","value"=>"25"),
-                        array("label"=>"50","value"=>"50"),
-                        array("label"=>"100","value"=>"100"),
-                        array("label"=>"500","value"=>"500")
-                );
-        
-        
-        $this->f->add_element(array(	"name"=>"maxrowsperpage",
-                                "type"=>"select",
-                                "options"=>$max_els,
-                                "size"=>"1",
-                                "value"=>"25"
-                    ));
-        
-        $order_type_els=array(
-                        array("label"=>"Descending","value"=>"DESC"),
-                        array("label"=>"Ascending","value"=>"ASC")
-                        );
-        
-        $this->f->add_element(array(	"name"=>"order_type",
-                                "type"=>"select",
-                                "options"=>$order_type_els,
-                                "size"=>"1"
-                    ));
-        
-        $this->f->add_element(array("type"=>"hidden",
-                              "name"=>"action",
-                              "value"=>$action,
-                ));
-
-
-        if (!$this->missed_calls) {
-            $order_by_els=array(array("label"=>"Date","value"=>"timestamp"),
-                                array("label"=>"SIP Status","value"=>"sip_status"),
-                                array("label"=>"SIP Method","value"=>"sip_method"),
-                                array("label"=>"From","value"=>"from_uri"),
-                                array("label"=>"To","value"=>"to_uri")
-                                );
-        } else {
-            $order_by_els=array(array("label"=>"Date","value"=>"timestamp"),
-                                array("label"=>"From","value"=>"from_uri")
-                                );
-
-            $this->f->add_element(array(	"name"=>"MissedFrom",
-                                    "type"=>"text",
-                                    "size"=>"25",
-                                    "maxlength"=>"25",
-                                    "value"=>"$MissedFrom"
-                        ));
-            $comp_ops_els = array(
-                    array("label"=>"Contains","value"=>"contain")
-                    );
-
-            $this->f->add_element(array(	"name"=>"MissedFrom_comp",
-                                    "type"=>"select",
-                                    "options"=>$comp_ops_els,
-                                    "value"=>$MissedFrom_comp,
-                                    "size"=>"1"
-                        ));
-            
-        }
-
-        $this->f->add_element(array(	"name"=>"order_by",
-                                "type"=>"select",
-                                "options"=>$order_by_els,
-                                "value"=>$order_by,
-                                "size"=>"1"
-                                ));
-        // ser acc elements
-        $SipMethod_els=array(
-                    array("label"=>"Any Method","value"=>""),
-                    array("label"=>"INVITE","value"=>"INVITE"),
-                    array("label"=>"CANCEL","value"=>"CANCEL"),
-                    array("label"=>"SUBSCRIBE","value"=>"SUBSCRIBE"),
-                    array("label"=>"NOTIFY","value"=>"NOTIFY"),
-                    array("label"=>"PUBLISH","value"=>"PUBLISH"),
-                    array("label"=>"ACK","value"=>"ACK"),
-                    array("label"=>"BYE","value"=>"BYE"),
-                    array("label"=>"REGISTER","value"=>"REGISTER")
-        );
-        $this->f->add_element(array(	"name"=>"SipMethod",
-                                "type"=>"select",
-                                "options"=>$SipMethod_els,
-                                "value"=>$SipMethod,
-                                "size"=>"1"
-                    ));
-        
-        $this->f->add_element(array(  "name"=>"SipStatus",
-                                "type"=>"select",
-                                "options"=>$this->disconnectCodesElements,
-                                "size"=>"1",
-                                "value"=>$SipStatus,
-                                ));
-        $this->f->add_element(array(  "name"=>"SipStatusClass",
-                                "type"=>"select",
-                                "options"=>$this->disconnectCodesClassElements,
-                                "size"=>"1"
-                                ));
-        
-        $this->f->add_element(array(	"name"=>"call_id",
-                                "type"=>"text",
-                                "size"=>"50",
-                                "maxlength"=>"50",
-                                "value"=>$call_id,
-                    ));
-
-
-        $this->f->load_defaults();
-
-        // Start displaying form
-
-    }
-    
-    function searchForm() {
-        $this->initForm();
-        $this->f->start("","POST","","","datasource");
-
-        print "
-        <table cellpadding=5 CELLSPACING=0 border=6 width=100% align=center>
-        ";
-
-        $this->showDataSources($this->f);
-        $this->showDateTimeElements ($this->f);
-
-        // freeze some form els
-        if ($this->CDRTool['filter']['aNumber']) {
-            if ($this->table=="acc") {
-                $ff[]="a_number";
-                $ff[]="a_number_comp";
-            }
-            $ff[]="UserName";
-            $ff[]="UserName_comp";
-            $ff[]="Realm";
-        }
-
-        if ($this->CDRTool['filter']['domain']) {
-            $Realm=$this->CDRTool['filter']['domain'];
-            $ff[]="Realm";
-        }
-
-        if (count($ff)) {
-            $this->f->freeze($ff);
-        }
-
-        if (!$this->CDRTool['filter']['aNumber']) {
-            print "
-            <tr> 
-                <td align=left>
-                <b>SIP Username</b>
-                </td>
-                <td valign=top>
-                ";
-                $this->f->show_element("UserName_comp","");
-                $this->f->show_element("UserName","");
-                print "@";
-                $this->f->show_element("Realm","");
-                print "
-                </td>
-            </tr>
-            <tr>
-            </tr>
-            ";
-        } else {
-            print "
-            <tr> 
-                <td align=left>
-                <b>SIP Username</b>
-                </td>
-                <td valign=top>
-                ";
-                $this->f->show_element("UserName","");
-                print "
-                </td>
-            </tr>
-            <tr>
-            </tr>
-            ";
-
-        }
-
-        if (!$this->missed_calls) {
-            print "
-            <tr> 
-                <td align=left>
-                <b>SIP Method</b>
-                </td>
-                <td valign=top>
-                ";
-                $this->f->show_element("SipMethod","");
-                print " SIP Status ";
-                $this->f->show_element("SipStatus","");
-                print " ";
-                $this->f->show_element("SipStatusClass","");
-                print "
-                </td>
-            </tr>
-            <tr>
-            </tr>
-            ";
-            print "
-            <tr> 
-                <td align=left>
-                <b>SIP Call-Id</b>
-                </td>
-                <td valign=top>
-                ";
-                $this->f->show_element("call_id","");
-                print "
-                </td>
-            </tr>
-            <tr>
-            </tr>
-            ";
-        }
-
-
-        if (!$this->missed_calls) {
-            print "
-            <tr> 
-                <td align=left>
-                <b>
-                SIP From
-                </b>
-                </td>
-                <td valign=top>
-                ";
-                $this->f->show_element("a_number_comp","");
-                $this->f->show_element("a_number","");
-                print "
-                </td>
-            </tr>
-            <tr>
-            </tr>
-            ";
-
-            print "
-            <tr> 
-                <td align=left>
-                <b>
-                SIP To
-                </b>
-                </td>
-                <td valign=top>   ";
-                $this->f->show_element("c_number_comp","");
-                $this->f->show_element("c_number","");
-                print "
-                </td>
-            </tr>
-            <tr>
-            </tr>
-            ";
-        } else {
-            print "
-            <tr> 
-                <td align=left>
-                <b>
-                Missed call from
-                </b>
-                </td>
-                <td valign=top>
-                ";
-                $this->f->show_element("MissedFrom_comp","");
-                $this->f->show_element("MissedFrom","");
-                print "
-                </td>
-            </tr>
-            <tr>
-            </tr>
-            ";
-
-            if (!$this->CDRTool["usernameFilterMissedCalls"]) {
-                print "
-                <tr> 
-                    <td align=left>
-                    <b>
-                    SIP To
-                    </b>
-                    </td>
-                    <td valign=top>   ";
-                    $this->f->show_element("c_number_comp","");
-                    $this->f->show_element("c_number","");
-                    print "
-                    </td>
-                </tr>
-                <tr>
-                </tr>
-                ";
-            }
-        }
-
-        print "
-        <tr> 
-            <td align=left>
-            <b>Order by</b>
-            </td>
-            <td valign=top>
-            ";
-            $this->f->show_element("order_by","");
-            $this->f->show_element("order_type","");
-            print " Max results per page ";
-            $this->f->show_element("maxrowsperpage","");
-            print "
-            </td>
-        </tr>
-        </table>
-        <p>
-        <center>
-        ";
-
-        $this->f->show_element("submit","");
-
-        $this->f->finish();
-
-        print "</center>";
-
-    }
-
-    function searchFormSubscriber() {
-        $this->searchForm();
-    }
-
-    function loadRates() {
-    }
-
-    function show() {
-        global $perm;
-
-        foreach ($this->FormElements as $_el) {
-            ${$_el} = $_REQUEST[$_el];
-        }
-
-        if (!$this->export) {
-            if (!$begin_datetime) {
-                $begin_datetime="$begin_year-$begin_month-$begin_day $begin_hour:$begin_min";
-                $begin_datetime_timestamp=mktime($begin_hour, $begin_min, 0, $begin_month,$begin_day,$begin_year);
-            } else {
-                $begin_datetime_timestamp=$begin_datetime;
-                $begin_datetime=Date("Y-m-d H:i",$begin_datetime);
-            }
-
-            $begin_datetime_url=urlencode($begin_datetime_timestamp);
-
-            if (!$end_datetime) {
-                $end_datetime_timestamp=mktime($end_hour, $end_min, 0, $end_month,$end_day,$end_year);
-                $end_datetime="$end_year-$end_month-$end_day $end_hour:$end_min";
-            } else {
-                $end_datetime_timestamp=$end_datetime;
-                $end_datetime=Date("Y-m-d H:i",$end_datetime);
-            }
-            $end_datetime_url=urlencode($end_datetime_timestamp);
-        } else {
-            $begin_datetime=Date("Y-m-d H:i",$begin_datetime);
-            $end_datetime=Date("Y-m-d H:i",$end_datetime);
-        }
-
-        if (!$order_by) {
-            $order_by="timestamp";
-            $order_type="DESC";
-        }
-
-        $this->url="?cdr_source=$this->cdr_source";
-
-        if ($this->trace) {
-            if ($call_id) {
-                $order_by="timestamp";
-                $order_type="ASC";
-            }
-        }
-
-        $this->url.="&order_by=$order_by&order_type=$order_type";
-        $this->url.="&begin_datetime=$begin_datetime_url";
-        $this->url.="&end_datetime=$end_datetime_url";
-
-        if ($this->CDRTool['filter']['aNumber']) {
-            $this->url   = $this->url."&UserNameS=".urlencode($this->CDRTool['filter']['aNumber']);
-            $UserNameS    = explode(" ",$this->CDRTool['filter']['aNumber']);
-        } else if ($UserNameS) {
-            $this->url   = $this->url."&UserNameS=".urlencode($UserNameS);
-            $UserNameS    = explode(" ",$UserNameS);
-        }
-
-        $where = " (1=1) ";
-
-        if (!$call_id) {
-            $where .=  " and time >= '$begin_datetime' and time <= '$end_datetime' ";
-        }
-
-        if (!$this->missed_calls) {
-            if ($this->CDRTool['filter']['aNumber']) {
-                // force user to see only this a_number
-                $a_number=$this->CDRTool['filter']['aNumber'];
-                $a_number_comp="begin";
-                $UserName="";
-                $UserName_comp="";
-
-                $where .= "
-                and (" ;
-                $rr=0;
-                foreach ($UserNameS as $_el) {
-                    $_el=trim($_el);
-                    if (strlen($_el)) {
-                        if ($rr) $where .= " or ";
-                        $where .= " from_uri like 'sip:$_el%'";
-                        $rr++;
-                    }
-                }
-                $where .= ") ";
-            } else if ($UserNameS)  {
-                $where .= "
-                and from_uri in (" ;
-                $rr=0;
-                foreach ($UserNameS as $_el) {
-                    $_el=trim($_el);
-                    if (strlen($_el)) {
-                        if ($rr) $where .= ", ";
-                        $where .= " 'sip:$_el'";
-                        $rr++;
-                    }
-                }
-                $where .= ") ";
-
-            } else {
-                if ($a_number_comp != "empty") {
-                    if ($a_number) {
-                        $a_number_encoded=urlencode($a_number);
-                        $this->url.="&a_number=$a_number_encoded";
-                        if ($a_number_comp=="begin") {
-                                $where .= " and (from_uri like 'sip:$a_number%'";
-                        } elseif ($a_number_comp=="contain") {
-                                $where .= " and (from_uri like 'sip:%$a_number%'";
-                        } elseif ($a_number_comp=="equal") {
-                                $where .= " and (from_uri = 'sip:$a_number'";
-                        }
-                        if ($this->CDRTool['filter']['aNumber']) {
-                            $where .= " or to_uri like 'sip:$a_number%') ";
-                        } else {
-                            $where .= ")";
-                        }
-                        $this->url.="&a_number_comp=$a_number_comp";
-        
-                    }
-                } else {
-                    $where .= " and from_uri = ''";
-                }
-            }
-
-        } else {
-            if ($this->CDRTool['filter']['aNumber']) {
-                // force user to see only this a_number
-                $UserName="";
-                $UserName_comp="";
-            } else if ($MissedFrom) {
-                $MissedFrom_encoded=urlencode($MissedFrom);
-                $this->url.="&MissedFrom=$MissedFrom_encoded";
-                if ($MissedFrom_comp=="contain") {
-                    $where .= " and $this->aNumberField like '%$MissedFrom%'";
-                }
-                $this->url.="&MissedFrom_comp=$MissedFrom_comp";
-            }
-        }
-        
-        if (strlen($c_number)) {
-            # Trim content of dest_form - allow only digits
-            if ($c_number_comp=="begin") {
-                $where .= " and to_uri like '%$c_number%'";
-            } elseif ($c_number_comp=="equal") {
-                $where .= " and to_uri = '%$c_number'";
-            } elseif ($c_number_comp=="contain") {
-                $where .= " and $this->cNumberField like '%$c_number%'";
-            } else {
-                $where .= " and to_uri like '%$c_number%'";
-            }
-            $c_number_encoded=urlencode($c_number);
-            $this->url.="&c_number=$c_number_encoded&c_number_comp=$c_number_comp";
-        }
-        
-        if ($SipMethod) {
-            $where .= " and $this->SipMethodField ='$SipMethod'";
-            $this->url.="&SipMethod=$SipMethod";
-        }
-
-        if ($fromTag) {
-            $fromTag_enc = urlencode($fromTag);
-            $where       = "$where"." and fromtag ='$fromTag'";
-            $this->url   = "$this->url"."&fromTag=$fromTag_enc";
-        }
-        if ($toTag) {
-            $toTag_enc = urlencode($toTag);
-            $where       = "$where"." and totag ='$toTag'";
-            $this->url   = "$this->url"."&toTag=$toTag_enc";
-        }
-        
-        if ($UserName_comp != "empty") {
-        	$UserName=trim($UserName);
-            if ($UserName) {
-                $UserName=urldecode($UserName);
-                if (!$UserName_comp) {
-                    $UserName_comp="begin";
-                }
-                $UserName_encoded=urlencode($UserName);
-                if ($UserName_comp=="begin") {
-                    $where .= " and $this->usernameField like '$UserName%'";
-                } elseif ($UserName_comp=="contain") {
-                    $where .= " and $this->usernameField like '%$UserName%'";
-                } elseif ($UserName_comp=="equal") {
-                    $where .= " and $this->usernameField = '$UserName'";
-                }
-                $this->url.="&UserName=$UserName_encoded&UserName_comp=$UserName_comp";
-            }
-
-        } else {
-            $where .= " and $this->usernameField = ''";
-            $this->url.="&UserName_comp=$UserName_comp";
-        }
-
-        $Realm=trim($Realm);
-
-        if (!$this->missed_calls) {
-            if ($this->CDRTool['filter']['domain']) {
-                $domainFilter=$this->CDRTool['filter']['domain'];
-                $where .= "
-                and ($this->aNumberField like '%@$domainFilter%' or
-                $this->cNumberField like '%@$domainFilter%') ";
-            } else if ($Realm) {
-                $Realm=urldecode($Realm);
-                $where .= " and ($this->aNumberField like '%@$Realm%' or $this->cNumberField like '%@$Realm%') ";
-                $Realm_encoded=urlencode($Realm);
-                $this->url.="&Realm=$Realm_encoded";
-            }
-
-        } else {
-
-            if ($this->CDRTool['filter']['aNumber']) {
-                $where .= " and ";
-                $rr=0;
-                foreach ($UserNameS as $_el) {
-                    $_el=trim($_el);
-                    if (strlen($_el)) {
-                        $a=explode("@",$_el);
-                        if ($rr) $where .= " or ";
-                        $where .= " ($this->domainField = '$a[1]' and $this->usernameField = '$a[0]') ";
-                        $rr++;
-                    }
-                }
-  	      	} else if ($UserNameS)  {
-                $where .= "
-                and " ;
-                $rr=0;
-                foreach ($UserNameS as $_el) {
-                    $_el=trim($_el);
-                    if (strlen($_el)) {
-                        $a=explode("@",$_el);
-                        if ($rr) $where .= " or ";
-                        $where .= " ($this->domainField = '$a[1]' and $this->usernameField = '$a[0]') ";
-                        $rr++;
-                    }
-                }
-    
-            } else if ($this->CDRTool['filter']['domain']) {
-                $domainFilter=$this->CDRTool['filter']['domain'];
-                $where .= "
-                and $this->domainField = '$domainFilter' ";
-            } else if ($Realm) {
-                $Realm=urldecode($Realm);
-                $where .= " and ($this->aNumberField like '%@$Realm%' or $this->cNumberField like '%@$Realm%') ";
-                $Realm_encoded=urlencode($Realm);
-                $this->url.="&Realm=$Realm_encoded";
-            }
-        }
-
-        if ($SipStatus) {
-            $where .= " and $this->disconnectField ='$SipStatus'";
-            $this->url.="&SipStatus=$SipStatus";
-        }
-
-        if ($SipStatusClass) {
-            $where .= " and $this->disconnectField like '$SipStatusClass%'";
-            $this->url.="&SipStatusClass=$SipStatusClass";
-        }
-
-        if ($call_id) {
-            $where .= " and $this->callIdField ='$call_id'";
-            $this->url.="&call_id=$call_id";
-        }
-        
-        $this->url		=$this->url."&maxrowsperpage=$this->maxrowsperpage";
-        $this->url_edit	    = $this->scriptFile.$this->url."&action=edit";
-        $this->url_run	    = $this->scriptFile.$this->url."&action=search";
-        $this->url_export	= $_SERVER["PHP_SELF"].$this->url."&action=search&export=1";
-
-        $query = "select count(*) as records
-        from $this->table where ".$where;
-        
-        dprint("$query");
-
-        if ($this->CDRdb->query($query)) {
-            $this->CDRdb->next_record();
-            $rows = $this->CDRdb->f('records');
-        } else {
-            $rows = 0;
-        }
-
-        $this->rows=$rows;
-
-        if ($this->CDRTool['filter']['aNumber']) {
-            $this->showResultsMenuSubscriber();
-        } else {
-            $this->showResultsMenu();
-        }
-        
-        if (!$this->next) {
-            $i=0;
-            $this->next=0;
-        } else {
-            $i=$this->next;
-        }
-        
-        $j=0;
-        $z=0;
-        
-        if  ($rows>0) {
-
-            if ($rows > $this->maxrowsperpage) {
-                $maxrows=$this->maxrowsperpage+$this->next;
-                if  ($maxrows > $rows)  {
-                    $maxrows=$rows;
-                    $prev_rows=$maxrows;
-                }
-            } else {
-                $maxrows=$rows;
-            }
-        
-            $query = "select *,unix_timestamp(time) as unix_timestamp ".
-                     "from $this->table where ".
-                     "$where ".
-                     "order  by $order_by $order_type ".
-                     "limit $i,$this->maxrowsperpage";
-        
-            dprint("$query");
-        
-            $this->CDRdb->query($query);
-        
-            $this->showTableHeader($begin_datetime,$end_datetime);
-
-            while  ($i<$maxrows)  {
-
-                global $found;
-                $found=$i+1;
-                $this->CDRdb->next_record();											
-
-                $CDRfields[$this->callIdField]        = $this->CDRdb->f($this->callIdField);
-                $CDRfields[$this->startTimeField]     = $this->CDRdb->f($this->startTimeField);
-                $CDRfields[$this->aNumberField]  	  = $this->CDRdb->f($this->aNumberField);
-                $CDRfields[$this->usernameField]      = $this->CDRdb->f($this->usernameField);
-                $CDRfields[$this->domainField]	      = $this->CDRdb->f($this->domainField);
-                $CDRfields[$this->cNumberField]   	  = $this->CDRdb->f($this->cNumberField);
-                $CDRfields[$this->SipMethodField]     = $this->CDRdb->f($this->SipMethodField);
-                $CDRfields[$this->timestampField]	  = $this->CDRdb->f($this->timestampField);
-                $disconnect                           = explode(" ",$this->CDRdb->f($this->disconnectField));
-                $CDRfields[$this->i_uriField]         = $this->CDRdb->f($this->i_uriField);
-                $CDRfields[$this->o_uriField]         = $this->CDRdb->f($this->o_uriField);
-                    
-                $CDRfields[$this->disconnectField]    = $disconnect[0];
-
-                $CDR = new $this->CDR_class($this,$CDRfields);
-
-                if (!$this->export) {
-                    $CDR->show();
-                } else {
-                    $CDR->export();
-                }
-
-                $i++;
-            }
-
-            if (!$this->export) {
-                print "
-                </table>
-                </td>
-                </tr>
-                </table>
-                ";
-            }
-
-            $this->showPagination($this->next,$maxrows);
-        }
-
-    }
-}
-
-class CDR_ser_acc extends CDR {
-    var $callIdField        = "sip_callid";
-    var $usernameField      = "username";
-    var $domainField        = "domain";
-    var $timestampField     = "unix_timestamp";
-    var $startTimeField     = "time";
-    var $SipMethodField     = "sip_method";
-    var $cNumberField       = "sip_to";
-    var $aNumberField       = "sip_from";
-    var $disconnectField    = "sip_status";
-    var $i_uriField         = "i_uri";
-    var $o_uriField         = "o_uri";
-
-    function CDR_ser_acc (&$parent, $CDRfields) {
-        $this->CDRS= &$parent;
-
-        $this->missed_calls    = $this->CDRS->missed_calls;
-        $this->trace           = $this->CDRS->trace;
-        $this->cdr_source      = $this->CDRS->cdr_source;
-
-        $this->callId          = $CDRfields[$this->callIdField];
-        $this->startTime       = $CDRfields[$this->startTimeField];
-        $this->username        = $CDRfields[$this->usernameField];
-        $this->domain          = $CDRfields[$this->domainField];
-        $this->aNumber         = $CDRfields[$this->aNumberField];
-        $this->cNumber         = $CDRfields[$this->cNumberField];
-        $this->disconnect      = $CDRfields[$this->disconnectField];
-        $this->SipMethod       = $CDRfields[$this->SipMethodField];
-        $this->i_uri           = $CDRfields[$this->i_uriField];
-        $this->o_uri           = $CDRfields[$this->o_uriField];
-        $this->timestamp	   = $CDRfields[$this->timestampField];
-
-        if (preg_match("/^(.*);tag/",$this->aNumber,$m)) {
-            $this->aNumber=$m[1];
-        }
-
-        if (preg_match("/^(.*);tag/",$this->cNumber,$m)) {
-            $this->cNumber=$m[1];
-        }
-
-        if (preg_match("/^(.*)\;/",$this->o_uri)) {
-            $tou=explode(";",$this->o_uri);
-            $this->o_uri=$tou[0];
-        }
-
-        if (preg_match("/^(.*)\;/",$this->i_uri)) {
-            $tou=explode(";",$this->i_uri);
-            $this->i_uri=$tou[0];
-        }
-
-        if (preg_match("/@(.*)$/",$this->callId,$m)) {
-            $this->SipProxyServer=$m[1];
-        } else {
-            $this->SipProxyServer="unknown";
-        }
-
-        $this->SipProxyServer=preg_replace("/[^0-9]/",".",$this->SipProxyServer);
-
-        if (!$this->missed_calls || $this->trace) {
-            $this->aNumberPrint="<font color=blue>".htmlentities($this->aNumber)."</font>";
-            $this->cNumberPrint="<font color=blue>".htmlentities($this->cNumber)."</font>";
-            $cNumberfromSIP=$this->o_uri;
-            $this->DestinationId = $this->CDRS->lookupDestination($cNumberfromSIP);
-            $this->destinationName=trim($this->CDRS->destinations[$this->DestinationId]);
-        } else {
-            $this->aNumberPrint=htmlentities($this->aNumber);
-            $this->cNumberPrint=htmlentities($this->cNumber);
-            if (preg_match("/(sip|sips):(.*@[a-z0-9.-]*).*$/i",$this->aNumberPrint,$m)) {
-            	$this->destinationName=" <a href=$m[1]:$m[2] style=\"text-decoration : none;\" target=_sipphone>Dial</a>";
-            }
-        }
-
-        $this->durationPrint=sec2hms($this->duration);
-
-        if ($this->SipMethod != "ACK") {
-            $this->disconnectPrint=$this->NormalizeDisconnect($this->disconnect);
-        }
-
-        $this->SipMethodPrint=$this->SipMethod;
-
-        $this->traceIn();
-        $this->traceOut();
-
-    }
-
-    function traceIn () {
-        if ($this->SipMethod) {
-            $callid_enc=urlencode($this->callId );
-            $this->SipMethodPrint="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$this->cdr_source&callid=$callid_enc&method=$this->SipMethod', 'TraceIn',
-            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=850,height=500')\">$this->SipMethod</a>";
-        }
-    }
-
-    function traceOut () {
-    }
-
-    function show() {
-        global $found;
-
-        $rr=floor($found/2);
-        $mod=$found-$rr*2;
-
-        if ($mod ==0) {
-            $inout_color="lightgrey";
-        } else {
-            $inout_color="white";
-        }
-
-        if (!$this->missed_calls || $this->trace) {
-            print "
-            <tr bgcolor=$inout_color>
-            <td>            $found</td>
-            <td>            $this->startTime
-                            <br>CallId: $this->callId
-            <td>            $this->username
-            <td>            $this->aNumberPrint <br>$this->i_uri
-            <td>            $this->cNumberPrint <br>$this->o_uri
-            <td>            $this->destinationName $this->DestinationId
-            <td align=right>$this->SipMethodPrint
-            <td align=right>$this->disconnectPrint
-            </tr>
-            ";
-        } else {
-            print "
-            <tr bgcolor=$inout_color>
-            <td>            $found</td>
-            <td>            $this->startTime
-            <td>            $this->username@$this->domain
-            <td>            $this->aNumberPrint
-            <td>            $this->destinationName
-            <td>            $this->cNumberPrint
-            <td align=right>$this->disconnectPrint
-            </tr>
-            ";
-        }
-    }
-
-    function export() {
-        global $found;
-        if (!$this->missed_calls || $this->trace) {
-            print "$found,$this->startTime,$this->callId,$this->aNumber,$this->cNumber,$this->DestinationId,$this->destinationName,$this->i_uri,$this->o_uri,$this->SipMethod,$this->disconnect\n";
-        } else {
-            print "$found,$this->startTime,$this->aNumber,$this->cNumber,$this->disconnect\n";
-        }
-    }
-}
-
 class SIP_trace {
     var $enableThor = false;
 	var $trace_array = array();
@@ -4418,7 +3165,6 @@ class SIP_trace {
             $this->table,
             $callid);
     
-            dprint($query);
     
             if (!$this->db->query($query)) {
                 printf ("<p>Error: database error %s %s",$this->db->Error,$query);
@@ -4427,7 +3173,6 @@ class SIP_trace {
     
             $this->rows = $this->db->num_rows();
     
-            dprint("Found $this->rows rows");
     
             $columns = 0;
     
@@ -4495,7 +3240,6 @@ class SIP_trace {
             }
         }
 
-        //dprint_r($this->trace_array);
 
     }
 
@@ -4534,7 +3278,6 @@ class SIP_trace {
             $key="callid-".trim($callid).trim($fromtag);
 
             $query=sprintf("select * from memcache where `key` = '%s'",addslashes($key));
-            dprint($query);
             $this->cdrtool->query($query);
 
             $basicURL = $protocolURL.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
@@ -4931,14 +3674,11 @@ class SIP_trace {
 
         if (!$public) {
         	$query=sprintf("delete from memcache where `key` = '%s'",addslashes($key));
-            dprint($query);
             $this->cdrtool->query($query);
         } else {
         	$query=sprintf("delete from memcache where `key` = '%s'",addslashes($key));
-            dprint($query);
             $this->cdrtool->query($query);
         	$query=sprintf("insert into memcache values ('%s','public')",addslashes($key));
-            dprint($query);
             $this->cdrtool->query($query);
         }
     }
@@ -4962,7 +3702,6 @@ class SIP_trace {
         $query=sprintf("select id as min, date from %s order by id ASC limit 1",
                        $this->table);
         
-        dprint($query);
 
         if ($this->db->query($query)) {
         	if ($this->db->num_rows()) {
@@ -4986,7 +3725,6 @@ class SIP_trace {
         $query=sprintf("select id as max from %s where date < '%s' order by id DESC limit 1",
         		$this->table,$beforeDate);
 
-        dprint($query);
 
         if ($this->db->query($query) && $this->db->num_rows()) {
             $this->db->next_record();
@@ -5099,7 +3837,6 @@ class SIPonline {
         group by domain
         order by domain ASC",$this->locationTable,$where);
 
-        dprint($query);
 
         $this->locationDB->query($query);
         $this->domains=$this->locationDB->num_rows();
@@ -5117,15 +3854,12 @@ class SIPonline {
         $query.="
         group by user_agent
         order by c DESC";
-        dprint($query);
 
         $this->locationDB->query($query);
         while ($this->locationDB->next_record()) {
             $this->countUA[$this->locationDB->f('user_agent')]=$this->locationDB->f('c');
         }
 
-        dprint_r($this->Registered);
-        dprint_r($this->countUA);
     }
 
     function showHeader($domain) {

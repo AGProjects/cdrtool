@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/php -e
 <?
 // CDRTool rating engine is a daemon that provides pricing information based
 // on CDRTool rating tables via the network using a TCP socket defined in
@@ -153,7 +153,7 @@ while (true) {
                     $e=microtime(true);
                     $d=$e-$b;
                     if ($d >= $log_delay) {
-                         $log=sprintf("Warning: request took %.4f seconds",$d);
+                         $log=sprintf("Warning: %s request took %.4f seconds",$RatingEngineServer->method,$d);
                          syslog(LOG_NOTICE,$log);
                	    }
                 }

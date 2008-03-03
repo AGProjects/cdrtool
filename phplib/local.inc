@@ -967,4 +967,9 @@ function RandomString($len=11) {
     return $string;
 }
 
+function microtime_float() {
+    list($usec, $sec) = explode(" ", microtime());
+    return ((float)$usec + (float)$sec);
+}
+
 ?>
