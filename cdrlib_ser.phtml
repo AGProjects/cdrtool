@@ -2147,8 +2147,6 @@ class CDRS_ser_radius extends CDRS {
 
 class CDR_ser_radius extends CDR {
 
-	var $CalleeIsLocal=0;
-    var $CallerIsLocal=0;
 	var $show_in_icon=0;
     var $show_out_icon=0;
 
@@ -2170,29 +2168,36 @@ class CDR_ser_radius extends CDR {
 
     function CDR_ser_radius(&$parent, $CDRfields) {
 
-
         $this->CDRS = &$parent;
 
-        $this->cdr_source         = $this->CDRS->cdr_source;
+        $this->cdr_source  = $this->CDRS->cdr_source;
 
         foreach (array_keys($this->CDRS->CDRFields) as $field) {
-        	$key=$this->CDRS->CDRFields[$field];
-            	$this->$field = $CDRfields[$key];
-		/*
-            if ($field=="rate") {
-            	$this->$field = $CDRfields[$key];
-            } else {
-            	$this->$field = quoted_printable_decode($CDRfields[$key]);
-            }
-               */
+            $this->$field = $CDRfields[$this->CDRS->CDRFields[$field]];
         }
 
-	    $this->SourceIPPrint      = $this->SourceIP;
+        if ($this->CanonicalURI) {
+			$this->CanonicalURI   = quoted_printable_decode($this->CanonicalURI);
+        }
 
+        if ($this->RemoteAddress) {
+        	$this->RemoteAddress  = quoted_printable_decode($this->RemoteAddress);
+        }
 
-		$_method=strtolower($this->SipMethod);
+        if ($this->BillingPartyId) {
+        	$this->BillingPartyId = quoted_printable_decode($this->BillingPartyId);
+        }
 
-        if (!$this->applicationType) {
+        if ($this->aNumber) {
+        	$this->aNumber        = quoted_printable_decode($this->aNumber);
+        }
+
+        if ($this->cNumber) {
+        	$this->cNumber        = quoted_printable_decode($this->cNumber);
+        }
+
+        if (!$this->applicationType && $this->SipMethod) {
+			$_method=strtolower($this->SipMethod);
             if ($_method=="publish"   ||
             	$_method=="subscribe" ||
                 $_method=="notify"    ){
@@ -2220,27 +2225,30 @@ class CDR_ser_radius extends CDR {
 
         $this->applicationTypeNormalized=$this->applicationType;
 
-
-        $NormalizedNumber        = $this->CDRS->NormalizeNumber($this->aNumber,"source");
-	    $this->aNumberPrint      = $NormalizedNumber[NumberPrint];
-        $this->aNumberNormalized = $NormalizedNumber[Normalized];
-        $this->aNumberDomain     = $NormalizedNumber['domain'];
-
-		if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'])
-            && in_array($this->domain,array_keys($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation']))
-        	&& strlen($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain])) {
-            $this->domainNormalized=$this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain];
-		} else if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation'])
-            && in_array($this->SourceIP,array_keys($this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation']))
-            && strlen($this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation'][$this->SourceIP])) {
-            $this->domainNormalized=$this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation'][$this->SourceIP];
-        } else {
-        	$this->domainNormalized=$this->domain;
+        if ($this->aNumber) {
+            $NormalizedNumber        = $this->CDRS->NormalizeNumber($this->aNumber,"source");
+            $this->aNumberPrint      = $NormalizedNumber[NumberPrint];
+            $this->aNumberNormalized = $NormalizedNumber[Normalized];
+            $this->aNumberDomain     = $NormalizedNumber['domain'];
         }
 
-		$this->domainNormalized=strtolower($this->domainNormalized);
+        if ($this->domain) {
+             if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'])
+                 && in_array($this->domain,array_keys($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation']))
+                 && strlen($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain])) {
+                 $this->domainNormalized=$this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain];
+             } else if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation'])
+                 && in_array($this->SourceIP,array_keys($this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation']))
+                 && strlen($this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation'][$this->SourceIP])) {
+                 $this->domainNormalized=$this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation'][$this->SourceIP];
+             } else {
+                 $this->domainNormalized=$this->domain;
+             }
+     
+             $this->domainNormalized=strtolower($this->domainNormalized);
+        }
 
-        if (!$this->BillingPartyId || $this->BillingPartyId== 'n/a') {
+        if (!$this->BillingPartyId || $this->BillingPartyId == 'n/a') {
         	$this->BillingPartyId=$this->aNumberPrint;
         }
 
@@ -2256,8 +2264,6 @@ class CDR_ser_radius extends CDR {
             $_els=explode("@",$this->BillingPartyId);
             if (count($_els)==2) $this->domain=$_els[1];
         }
-
-        $this->traffic            = 2*($this->inputTraffic+$this->outputTraffic);
 
         $_timestamp_stop=$this->timestamp+$this->duration;
 
@@ -2275,40 +2281,52 @@ class CDR_ser_radius extends CDR {
         //   Canonical URI must be saved in the SIP Proxy and added as an extra
         //   Radius attribute in the Radius START packet
 
-        if (!$this->CanonicalURI) $this->CanonicalURI=$this->RemoteAddress;
+        if (!$this->CanonicalURI) {
+        	if ($this->RemoteAddress) {
+            	$this->CanonicalURI=$this->RemoteAddress;
+            } else if ($this->cNumber) {
+            	$this->CanonicalURI=$this->cNumber;
+            }
+        }
 
-		$this->CanonicalURIPrint=$this->CanonicalURI;
+        if ($this->CanonicalURI) {
+            $this->CanonicalURIPrint=$this->CanonicalURI;
+    
+            $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->CanonicalURI,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
+            $this->CanonicalURINormalized       = $NormalizedNumber['Normalized'];
+            $this->CanonicalURIUsername         = $NormalizedNumber['username'];
+            $this->CanonicalURIDomain           = $NormalizedNumber['domain'];
+            $this->CanonicalURIPrint            = $NormalizedNumber['NumberPrint'];
+            $this->CanonicalURIDelimiter        = $NormalizedNumber['delimiter'];
 
-        $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->CanonicalURI,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
-        $this->CanonicalURINormalized       = $NormalizedNumber['Normalized'];
-        $this->CanonicalURIUsername         = $NormalizedNumber['username'];
-        $this->CanonicalURIDomain           = $NormalizedNumber['domain'];
-        $this->CanonicalURIPrint            = $NormalizedNumber['NumberPrint'];
-        $this->CanonicalURIDelimiter        = $NormalizedNumber['delimiter'];
+            // Destination Id is used for rating purposes
+            $this->DestinationId                = $NormalizedNumber['DestinationId'];
+            $this->destinationName              = $NormalizedNumber['destinationName'];
+        }
 
-        // Destination Id is used for rating purposes
-		$this->DestinationId                = $NormalizedNumber['DestinationId'];
-        $this->destinationName              = $NormalizedNumber['destinationName'];
+        if ($this->cNumber) {
+            $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->cNumber,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
+            $this->cNumberNormalized            = $NormalizedNumber['Normalized'];
+            $this->cNumberUsername              = $NormalizedNumber['username'];
+            $this->cNumberDomain                = $NormalizedNumber['domain'];
+            $this->cNumberPrint          		= $NormalizedNumber['username'].$NormalizedNumber['delimiter'].$NormalizedNumber['domain'];
+            $this->cNumberDelimiter        		= $NormalizedNumber['delimiter'];
+        }
 
-		$NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->cNumber,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
-        $this->cNumberNormalized            = $NormalizedNumber['Normalized'];
-        $this->cNumberUsername              = $NormalizedNumber['username'];
-        $this->cNumberDomain                = $NormalizedNumber['domain'];
-		$this->cNumberPrint          		= $NormalizedNumber['username'].$NormalizedNumber['delimiter'].$NormalizedNumber['domain'];
-        $this->cNumberDelimiter        		= $NormalizedNumber['delimiter'];
-
-        // Next hop is real destination after all lookups including DNS
-
-        $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->RemoteAddress,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
-        $this->RemoteAddressPrint           = $NormalizedNumber['NumberPrint'];
-        $this->RemoteAddressNormalized      = $NormalizedNumber['Normalized'];
-        $this->RemoteAddressDestinationId   = $NormalizedNumber['DestinationId'];
-        $this->RemoteAddressDestinationName = $NormalizedNumber['destinationName'];
-        $this->RemoteAddressUsername        = $NormalizedNumber['username'];
-        $this->RemoteAddressDelimiter       = $NormalizedNumber['delimiter'];
-
-        $this->remoteGateway        		= $NormalizedNumber['domain'];
-        $this->remoteUsername        		= $NormalizedNumber['username'];
+        if ($this->RemoteAddress) {
+            // Next hop is the real destination after all lookups including DNS
+            $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->RemoteAddress,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
+            $this->RemoteAddressPrint           = $NormalizedNumber['NumberPrint'];
+            $this->RemoteAddressNormalized      = $NormalizedNumber['Normalized'];
+            $this->RemoteAddressDestinationId   = $NormalizedNumber['DestinationId'];
+            $this->RemoteAddressDestinationName = $NormalizedNumber['destinationName'];
+            $this->RemoteAddressUsername        = $NormalizedNumber['username'];
+            $this->RemoteAddressDelimiter       = $NormalizedNumber['delimiter'];
+    
+            $this->remoteGateway        		= $NormalizedNumber['domain'];
+            $this->remoteUsername        		= $NormalizedNumber['username'];
+    
+		}
 
         if ($this->applicationType=="presence") {
 
@@ -2323,7 +2341,7 @@ class CDR_ser_radius extends CDR {
 		    		$this->destinationPrint = $this->cNumberUsername.$this->cNumberDelimiter.$this->cNumberDomain;
                 }
 
-                if (preg_match("/@/",$this->CanonicalURINormalized)) {
+                if (strstr($this->CanonicalURINormalized,'@')) {
             		$this->DestinationForRating = $this->CanonicalURINormalized;
                 } else {
             		$this->DestinationForRating = $this->RemoteAddressNormalized;
@@ -2335,23 +2353,19 @@ class CDR_ser_radius extends CDR {
 	        }
         }
 
-        if (preg_match("/^@(.*)$/",$this->destinationPrint,$m)) {
-        	$this->destinationPrint=$m[1];
+        if ($this->inputTraffic) {
+        	$this->inputTrafficPrint  = number_format($this->inputTraffic/1024,2);
         }
 
-        if (preg_match("/^@(.*)$/",$this->username,$m)) {
-        	$this->usernameNormalized=$m[1];
-        } else {
-        	$this->usernameNormalized=$this->username;
+        if ($this->outputTraffic) {
+        	$this->outputTrafficPrint = number_format($this->outputTraffic/1024,2);
         }
 
-        $this->usernameNormalized=strtolower($this->usernameNormalized);
+        $this->durationPrint      = sec2hms($this->duration);
 
-        $this->inputTrafficPrint         =number_format($this->inputTraffic/1024,2);
-        $this->outputTrafficPrint        =number_format($this->outputTraffic/1024,2);
-
-        $this->durationPrint=sec2hms($this->duration);
-        $this->disconnectPrint=$this->NormalizeDisconnect($this->disconnect);
+        if ($this->disconnect) {
+        	$this->disconnectPrint    = $this->NormalizeDisconnect($this->disconnect);
+        }
 
         $this->NetworkRateDictionary=array(
                                   'callId'          => $this->callId,
@@ -2359,8 +2373,10 @@ class CDR_ser_radius extends CDR {
                                   'Duration'        => $this->duration,
                                   'inputTraffic'    => $this->inputTraffic,
                                   'outputTraffic'   => $this->outputTraffic,
+                                  'DestinationId'   => $this->DestinationId,
  								  'From'            => $this->BillingPartyId,
                                   'To'              => $this->DestinationForRating,
+                                  'Domain'          => $this->domain,
                                   'Gateway'         => $this->gateway,
                                   'Application'     => $this->applicationType,
                                   'ENUMtld'         => $this->ENUMtld
@@ -2368,11 +2384,11 @@ class CDR_ser_radius extends CDR {
 
         $this->traceIn();
         $this->traceOut();
-		$this->parseAVMRTPstatistics();
 
         $this->obfuscateCallerId();
-        $this->isCalleeLocal();
-        $this->isCallerLocal();
+
+        //$this->isCalleeLocal();
+        //$this->isCallerLocal();
 
     }
 
@@ -2505,7 +2521,7 @@ class CDR_ser_radius extends CDR {
         <tr>
         	<td></td>
             <td>Method:</td>
-            <td>$this->SipMethod from <i>$this->SourceIPPrint:$this->SourcePort</i>
+            <td>$this->SipMethod from <i>$this->SourceIP:$this->SourcePort</i>
             </td>
         </tr>
 		<tr>
@@ -2621,6 +2637,8 @@ class CDR_ser_radius extends CDR {
             }
 
             if ($this->SipUserAgents) {
+				$this->SipUserAgents   = quoted_printable_decode($this->SipUserAgents);
+
                 $callerAgents=explode("+",$this->SipUserAgents);
                 $callerUA=htmlentities($callerAgents[0]);
                 $calledUA=htmlentities($callerAgents[1]);
@@ -2842,20 +2860,6 @@ class CDR_ser_radius extends CDR {
         }
     }
 
-    function parseAVMRTPstatistics () {
-        // parse AVM Fritz box QoS information
-    	if (strlen($this->RTPStatistics)) {
-            $_qos_els=explode(";",$this->RTPStatistics);
-            if (count($_qos_els)) {
-                foreach ($_qos_els as $_el) {
-                    if (list($_key,$_value) = explode("=",$_el)) {
-            	        $this->QoS[trim($_key)]=trim($_value);
-                    }
-                }
-            }
-        }
-    }
-
     function isCallerLocal() {
         if (in_array($this->aNumberDomain,$this->CDRS->localDomains)) {
         	$this->CallerIsLocal=1;
@@ -2967,7 +2971,7 @@ class CDR_ser_radius extends CDR {
             }
 
             // IP address
-            $this->SourceIPPrint='xxx.xxx.xxx.xxx';
+            $this->SourceIP='xxx.xxx.xxx.xxx';
         }
      }
 }

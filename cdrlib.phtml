@@ -82,7 +82,6 @@ class CDRS {
 
         $this->table           = $this->DATASOURCES[$this->cdr_source]['table'];
 
-
         if (!$memcache_server && $this->defaults['START_MEMCACHE']) {
             // for debian systems read the settings from /etc/default/cdrtool
             if (preg_match("/yes/i",$this->defaults['START_MEMCACHE'])) {
@@ -895,7 +894,6 @@ class CDRS {
                     $this->RatingTables = new RatingTables();
                     $this->RatingTables->LoadRatingTables();
                 }
-            } else {
             }
 
         } else {
@@ -1311,7 +1309,6 @@ class CDRS {
 		}
 
         $query=sprintf("select count(*) as c from %s\n", $destinationTable);
-
 
 		if ($this->CDRdb->query($query)) {
             $this->CDRdb->next_record();
@@ -1828,7 +1825,7 @@ class CDR {
             }
 
             if ($this->CDRS->ratingEnabled && $this->duration) {
-                $Rate = new Rate(&$this);
+                $Rate    = new Rate($this->CDRS->CDRTool['rating'], $this->cdrtool);
 
                 if ($this->CDRS->RatingEngineSocket && $this->NetworkRateDictionary) {
 

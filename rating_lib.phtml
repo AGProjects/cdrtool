@@ -20,40 +20,41 @@ class Rate {
 	var $price                  = 0;
     var $spans                  = 0;     // number of spans we looped through
 
-    function Rate(&$parent) {
-        $this->CDRS = &$parent->CDRS;
+    function Rate($settings=array(),&$db) {
 
-        if ($this->CDRS->CDRTool['rating']['priceDenominator']) {
-            $this->priceDenominator=$this->CDRS->CDRTool['rating']['priceDenominator'];
+        if (!is_object($db)) {
+        	$this->db = new DB_cdrtool;
+        } else {
+            $this->db = &$db;
         }
 
-        if ($this->CDRS->CDRTool['rating']['priceDecimalDigits']) {
-            $this->priceDecimalDigits=$this->CDRS->CDRTool['rating']['priceDecimalDigits'];
+        $this->db->Halt_On_Error="no";
+
+        if ($settings['priceDenominator']) {
+            $this->priceDenominator=$settings['priceDenominator'];
         }
 
-        if ($this->CDRS->CDRTool['rating']['minimumDurationCharged']) {
-            $this->minimumDurationCharged=$this->CDRS->CDRTool['rating']['minimumDurationCharged'];
+        if ($settings['priceDecimalDigits']) {
+            $this->priceDecimalDigits=$settings['priceDecimalDigits'];
         }
 
-        if ($this->CDRS->CDRTool['rating']['durationPeriodRated']) {
-            $this->durationPeriodRated=$this->CDRS->CDRTool['rating']['durationPeriodRated'];
+        if ($settings['minimumDurationCharged']) {
+            $this->minimumDurationCharged=$settings['minimumDurationCharged'];
         }
 
-        if ($this->CDRS->CDRTool['rating']['trafficSizeRated']) {
-            $this->trafficSizeRated=$this->CDRS->CDRTool['rating']['trafficSizeRated'];
+        if ($settings['durationPeriodRated']) {
+            $this->durationPeriodRated=$settings['durationPeriodRated'];
         }
 
-        if ($this->CDRS->CDRTool['rating']['minimumDuration']) {
+        if ($settings['trafficSizeRated']) {
+            $this->trafficSizeRated=$settings['trafficSizeRated'];
+        }
+
+        if ($settings['minimumDuration']) {
             // if call is shorter than this, it has zero cost
-            $this->minimumDuration=$this->CDRS->CDRTool['rating']['minimumDuration'];
+            $this->minimumDuration=$settings['minimumDuration'];
         }
 
-        $this->fromEmail = $this->CDRS->CDRTool['provider']['fromEmail'];
-        $this->toEmail   = $this->CDRS->CDRTool['provider']['toEmail'];
-        $this->bccEmail  = $this->CDRS->CDRTool['provider']['bccEmail'];
-
-        if ($this->fromEmail) $this->extraHeaders="From: $fromEmail\r\nBCC: $this->fromEmail";
-        if ($this->bccEmail)  $this->extraHeaders=$this->extraHeaders.",".$this->bccEmail;
     }
 
     function lookupRateFromNetwork(&$RateDictionary,&$fp) {
@@ -63,15 +64,14 @@ class Rate {
             $cmd .=" ".$key."=".$RateDictionary[$key]." ";
         }
 
-
-        $this->price	   = "0";
+        $this->price	   = 0;
         $this->pricePrint  = "";
 		$this->rateInfo    = "";
 
         if (fputs($fp,"$cmd\n") !== false) {
     
             $i=0;
-            while ($i < 200) {
+            while ($i < 100) {
                 $i++;
 
                 $line = fgets($fp,1024);
@@ -104,14 +104,13 @@ class Rate {
         /////////////////////////////////////////////////////
         // required fields passed from a CDR structure
         //
-
         // Session start time
         $this->callId            = $dictionary['callId'];
         $this->timestamp         = $dictionary['timestamp'];
 
         // Session usage, type and destination Id
         $this->duration          = $dictionary['duration'];
-        $this->traffic           = $dictionary['traffic'];
+        $this->traffic           = 2 * ($dictionary['inputTraffic'] + $dictionary['outputTraffic']);
         $this->applicationType   = $dictionary['applicationType'];
         $this->DestinationId     = $dictionary['DestinationId'];
 
@@ -123,20 +122,18 @@ class Rate {
 
 		if (!$this->gateway) $this->gateway='0.0.0.0';
 
-        // Contain all rating tables load once when
-        // normalization process starts in CDRS parent class
         $this->RatingTables      = &$dictionary['RatingTables'];
+
         //
         /////////////////////////////////////////////////////////
 
         /////////////////////////////////////////////////////////
         // informational fields from CDR structure
-        $this->destinationName   = $dictionary['destinationName'];
         $this->aNumber           = $dictionary['aNumber'];
         $this->cNumber           = $dictionary['cNumber'];
         $this->ENUMtld           = $dictionary['ENUMtld'];
 
-		if ($this->minimumDuration && $this->duration < $this->minimumDuration) {
+        if ($this->minimumDuration && $this->duration < $this->minimumDuration) {
   			//syslog(LOG_NOTICE, "Duration less than minimum $this->minimumDuration");
             $this->rateInfo .= "   Duration < $this->minimumDuration s\n";
         	return false;
@@ -160,6 +157,7 @@ class Rate {
         $foundRates=array();
 
         if (!$this->DestinationId) {
+            return false;
         }
 
 		if (!$this->lookupProfiles()) {
@@ -179,12 +177,6 @@ class Rate {
 
         $this->trafficKB=number_format($this->traffic/1024,0,"","");
 
-        if (!$this->destinationName) {
-            $this->destinationNamePrint="Internet";
-        } else {
-            $this->destinationNamePrint=$this->destinationName;
-        }
-
         if ($this->increment >= 1) {
             // increase the billed duration to the next increment
             $this->duration = $this->increment * ceil($this->duration / $this->increment);
@@ -194,14 +186,14 @@ class Rate {
         	$this->minimumDurationCharged = $this->min_duration;
         }
 
-        if ($this->duration && $this->DestinationId) {
+        if ($this->duration) {
             unset($IntervalsForPricing);
 
             $this->rateInfo .= 
     
                 "    Duration: $this->duration s\n".
                 "         App: $this->applicationType\n".
-                " Destination: $this->DestinationId ($this->destinationNamePrint)\n".
+                " Destination: $this->DestinationId\n".
                 "    Customer: $this->CustomerProfile\n";
 
             if ($this->ENUMtld && $this->ENUMtld != 'none' && $this->ENUMtld != 'n/a') {
@@ -331,18 +323,6 @@ class Rate {
 
             $this->rateSyslog .= "Span=$span Duration=$durationForRating DestId=$this->DestinationId $thisRate[customer]";
 
-            if ($this->CDRS->CSCODE) {
-                // We found a Peer Carrier so we will change BillingPartyId
-                if ($this->CDRS->CDRTool[normalize][CS_CODES][$this->CDRS->CSCODE][name]) {
-                    $CarrierName = $this->CDRS->CDRTool[normalize][CS_CODES][$this->CDRS->CSCODE][name];
-                } else {
-                    $CarrierName=$this->CDRS->CSCODE;
-                }
-
-                $this->rateInfo .= 
-            	"     Carrier: $CarrierName\n";
-            }
-
             if ($thisRate['profile']) {
                 $this->rateInfo .= 
                 "   ProfileId: $thisRate[profile] for $thisRate[day]\n".
@@ -384,7 +364,7 @@ class Rate {
         } else if ($thisRate[profile]) {
             if ($j) {
                 if ($this->DestinationId && !strlen($durationRate)) {
-                    $this->CDRS->brokenRates[$this->DestinationId]++;
+                    $this->brokenRates[$this->DestinationId]++;
                 }
             }
             $this->pricePrint="";
@@ -425,43 +405,43 @@ class Rate {
 
         //syslog(LOG_NOTICE, $query);
 
-        if (!$this->CDRS->cdrtool->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             print $log;
         	syslog(LOG_NOTICE, $log);
             return false;
         }
 
-        $log=sprintf("Found %d rows",$this->CDRS->cdrtool->num_rows());
+        $log=sprintf("Found %d rows",$this->db->num_rows());
 
-        if ($this->CDRS->cdrtool->num_rows()) {
-        	$this->CDRS->cdrtool->next_record();
+        if ($this->db->num_rows()) {
+        	$this->db->next_record();
 
-			if ($this->CDRS->cdrtool->Record['profile_name1'] && $this->CDRS->cdrtool->Record['profile_name2']) {
+			if ($this->db->Record['profile_name1'] && $this->db->Record['profile_name2']) {
 	        	$this->allProfiles = array (
-                                            "profile1"     => $this->CDRS->cdrtool->Record['profile_name1'],
-                                            "profile2"     => $this->CDRS->cdrtool->Record['profile_name2'],
-                                            "profile1_alt" => $this->CDRS->cdrtool->Record['profile_name1_alt'],
-                                            "profile2_alt" => $this->CDRS->cdrtool->Record['profile_name2_alt'],
-                                            "timezone"     => $this->CDRS->cdrtool->Record['timezone'],
-                                            "increment"    => $this->CDRS->cdrtool->Record['increment'],
-                                            "min_duration" => $this->CDRS->cdrtool->Record['min_duration'],
-                                            "country_code" => $this->CDRS->cdrtool->Record['country_code']
+                                            "profile1"     => $this->db->Record['profile_name1'],
+                                            "profile2"     => $this->db->Record['profile_name2'],
+                                            "profile1_alt" => $this->db->Record['profile_name1_alt'],
+                                            "profile2_alt" => $this->db->Record['profile_name2_alt'],
+                                            "timezone"     => $this->db->Record['timezone'],
+                                            "increment"    => $this->db->Record['increment'],
+                                            "min_duration" => $this->db->Record['min_duration'],
+                                            "country_code" => $this->db->Record['country_code']
                                         );
 
-                if ($this->CDRS->cdrtool->Record['subscriber']) {
-            		$this->CustomerProfile = sprintf("subscriber=%s",$this->CDRS->cdrtool->Record['subscriber']);
-                } else if ($this->CDRS->cdrtool->Record['domain']) {
-            		$this->CustomerProfile = sprintf("domain=%s",$this->CDRS->cdrtool->Record['domain']);
-                } else if ($this->CDRS->cdrtool->Record['gateway']) {
-            		$this->CustomerProfile = sprintf("gateway=%s",$this->CDRS->cdrtool->Record['gateway']);
+                if ($this->db->Record['subscriber']) {
+            		$this->CustomerProfile = sprintf("subscriber=%s",$this->db->Record['subscriber']);
+                } else if ($this->db->Record['domain']) {
+            		$this->CustomerProfile = sprintf("domain=%s",$this->db->Record['domain']);
+                } else if ($this->db->Record['gateway']) {
+            		$this->CustomerProfile = sprintf("gateway=%s",$this->db->Record['gateway']);
                 } else {
             		$this->CustomerProfile = "default";
                 }
 
-                $this->increment       = $this->CDRS->cdrtool->Record['increment'];
-                $this->min_duration    = $this->CDRS->cdrtool->Record['min_duration'];
-				$this->billingTimezone = $this->CDRS->cdrtool->Record['timezone'];
+                $this->increment       = $this->db->Record['increment'];
+                $this->min_duration    = $this->db->Record['min_duration'];
+				$this->billingTimezone = $this->db->Record['timezone'];
 
 				if ($this->min_duration > 1) $this->minimumDurationCharged = $this->min_duration;
 
@@ -708,12 +688,6 @@ class Rate {
 
         $timeTillNextProfile=$nextProfileTimestamp-$this->timestampBilling;
 
-        if ($timeTillNextProfile < 0) {
-            $body	= "Negative period till next billing profile for call id $this->callId\n";
-            mail($this->toEmail, "CDRTool rating problem", $body , $this->extraHeaders);
-        	syslog(LOG_NOTICE, "Error: Negative period till next billing profile for call id $this->callId");
-        }
-
         if ($durationToRate > $timeTillNextProfile) {
             $diff=$durationToRate-$timeTillNextProfile;
             $this->durationRated=$timeTillNextProfile;
@@ -775,7 +749,6 @@ class Rate {
         $this->timestampBilling   = mktime($Btime[0], $Btime[1], $Btime[2], $Bdate[1], $Bdate[2], $Bdate[0]);
         $this->startTimeBilling   = Date("Y-m-d H:i:s",$this->timestampBilling);
 
-
         $i=0;
         $durationRatedTotal=0;
 
@@ -800,7 +773,6 @@ class Rate {
                 // break here to avoid loops
                 break;
             }
-
 
             $thisRate=$foundRate;
 
@@ -882,23 +854,22 @@ class Rate {
         addslashes($DestinationId),
         addslashes($applicationType)
         );
-        //syslog(LOG_NOTICE, $query);
 
-        if (!$this->CDRS->cdrtool->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             print $log;
         	syslog(LOG_NOTICE, $log);
             return false;
         }
 
-        $log=sprintf("Found %d rows",$this->CDRS->cdrtool->num_rows());
+        $log=sprintf("Found %d rows",$this->db->num_rows());
 
-        if ($this->CDRS->cdrtool->num_rows()) {
-        	$this->CDRS->cdrtool->next_record();
+        if ($this->db->num_rows()) {
+        	$this->db->next_record();
             return array(
-                        "durationRate"    => $this->CDRS->cdrtool->Record['durationRate'],
-                        "trafficRate"     => $this->CDRS->cdrtool->Record['trafficRate'],
-                        "connectCost"     => $this->CDRS->cdrtool->Record['connectCost']
+                        "durationRate"    => $this->db->Record['durationRate'],
+                        "trafficRate"     => $this->db->Record['trafficRate'],
+                        "connectCost"     => $this->db->Record['connectCost']
                        );
         } else {
             return false;
@@ -3128,13 +3099,13 @@ class SERQuota {
         }
 
         // send notification to the provider
-        if ($this->CDRTool[provider][toEmail] && $blockedAccountsNow) {
+        if ($this->CDRTool['provider']['toEmail'] && $blockedAccountsNow) {
 
-            $from = $this->CDRTool[provider][fromEmail];
-            $to   = $this->CDRTool[provider][toEmail];
-            $bcc  = $this->CDRTool[provider][bccEmail];
+            $from = $this->CDRTool['provider']['fromEmail'];
+            $to   = $this->CDRTool['provider']['toEmail'];
+            $bcc  = $this->CDRTool['provider']['bccEmail'];
 
-            $service  = $this->CDRTool[provider][service];
+            $service  = $this->CDRTool['provider']['service'];
             if (!$service) $service = "SIP";
 
             if ($from) $extraHeaders="From: $from\r\nBCC: $from";
@@ -4008,8 +3979,8 @@ class RatingEngine {
         $help=
         "Version\n".
         "Help\n".
-        "MaxSessionTime        From=sip:123@example.com To=sip:0031650222333 Duration=7200 Lock=1\n".
-        "ShowPrice             From=sip:123@example.com To=sip:0031650222333 Duration=59\n".
+        "MaxSessionTime        From=sip:123@example.com To=sip:0031650222333@example.com Duration=7200 Lock=1\n".
+        "ShowPrice             From=sip:123@example.com To=sip:0031650222333@example.com DestinationId=31650 Duration=59\n".
         "AddBalance            From=123@example.com Value=10.00\n".
         "GetBalance            From=123@example.com\n".
         "GetBalanceHistory     From=123@example.com\n".
@@ -4201,14 +4172,11 @@ class RatingEngine {
 
             $CDRStructure=array (
                               $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
-                              $this->CDRS->CDRFields['aNumber']  	   => $NetFields['from'],
-                              $this->CDRS->CDRFields['cNumber']        => $NetFields['to'],
-                              $this->CDRS->CDRFields['RemoteAddress']  => $NetFields['to'],
+                              $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
                               $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
                               $this->CDRS->CDRFields['duration']       => $NetFields['duration'],
                               $this->CDRS->CDRFields['timestamp']      => time()
                               );
-
 
             $CDR = new $this->CDRS->CDR_class(&$this->CDRS, &$CDRStructure);
             $CDR->normalize();
@@ -4259,14 +4227,14 @@ class RatingEngine {
                 return "none";
             }
 
-            if (!preg_match("/^0/",$CDR->RemoteAddressNormalized)) {
-               	$log = sprintf ("Call to %s, no limit imposed",$CDR->RemoteAddressNormalized);
+            if (!preg_match("/^0/",$CDR->CanonicalURINormalized)) {
+               	$log = sprintf ("Call to %s, no limit imposed",$CDR->CanonicalURINormalized);
                 syslog(LOG_NOTICE, $log);
                 $this->logRuntime();
                 return "none";
             } else {
             	if (!$CDR->DestinationId) {
-            		$log = sprintf ("Error: cannot figure out the destination id for $CDR->RemoteAddress");
+            		$log = sprintf ("Error: cannot figure out the destination id for $CDR->CanonicalURI");
                 	$this->logRuntime();
                 	syslog(LOG_NOTICE, $log);
                 	return "0";
@@ -4282,13 +4250,14 @@ class RatingEngine {
                                       'Balance'         => $Balance,
                                       'timestamp'       => $CDR->timestamp,
                                       'DestinationId'   => $CDR->DestinationId,
-                                      'destinationName' => $CDR->destinationName,
                                       'domain'          => $CDR->domain,
                                       'BillingPartyId'  => $CDR->BillingPartyId,
+                                      'ENUMtld'         => $CDR->ENUMtld,
                                       'RatingTables'    => &$this->CDRS->RatingTables
                                       );
-                
-                $Rate    = new Rate(&$CDR);
+
+                $Rate    = new Rate($this->CDRS->CDRTool['rating'], $this->db);
+
 	        	$this->runtime['instantiate_rate']=microtime_float();
 
                 $maxduration = round($Rate->MaxSessionTime($RateDictionary));
@@ -4383,15 +4352,15 @@ class RatingEngine {
                 return "Failed";
             }
 
+            $timestamp=time();
+
             $CDRStructure=array (
-                              $this->CDRS->CDRFields['aNumber']  	   => $NetFields['from'],
-                              $this->CDRS->CDRFields['cNumber']        => $NetFields['to'],
-                              $this->CDRS->CDRFields['RemoteAddress']  => $NetFields['to'],
+                              $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
+                              $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
                               $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
                               $this->CDRS->CDRFields['duration']       => $NetFields['duration'],
-                              $this->CDRS->CDRFields['timestamp']      => time(),
+                              $this->CDRS->CDRFields['timestamp']      => time()
                               );
-
 
             // Init CDR
             $CDR = new $this->CDRS->CDR_class($this->CDRS, $CDRStructure);
@@ -4400,26 +4369,22 @@ class RatingEngine {
 	        $this->runtime['normalize_cdr']=microtime_float();
 
 			if (!is_array($this->balance) || !array_key_exists($CDR->BillingPartyId,$this->balance)) {
-                /*
-                $log=sprintf ("Warning: Account %s is not prepaid",$CDR->BillingPartyId);
-                syslog(LOG_NOTICE, $log);
-                */
                 return "Not Prepaid";
             }
 
             // Build Rate dictionary containing normalized CDR fields plus customer Balance
             $RateDictionary=array(
-                                  'duration'        => $CDR->duration,
+                                  'callId'          => $NetFields['callid'],
                                   'timestamp'       => $CDR->timestamp,
+                                  'duration'        => $CDR->duration,
                                   'DestinationId'   => $CDR->DestinationId,
-                                  'destinationName' => $CDR->destinationName,
                                   'domain'          => $CDR->domain,
                                   'traffic'         => $CDR->traffic,
                                   'BillingPartyId'  => $CDR->BillingPartyId,
                                   'RatingTables'    => &$this->CDRS->RatingTables
                                   );
-            
-            $Rate = new Rate(&$CDR);
+
+            $Rate    = new Rate($this->CDRS->CDRTool['rating'], $this->db);
 
             $this->runtime['instantiate_rate']=microtime_float();
 
@@ -4542,47 +4507,27 @@ class RatingEngine {
             $application="audio";
             if ($NetFields['application']) $application=$NetFields['application'];
 
-            $CDRStructure=array (
-                              $this->CDRS->CDRFields['callId']          => $NetFields['callid'],
-                              $this->CDRS->CDRFields['timestamp']       => $timestamp,
-                              $this->CDRS->CDRFields['duration']        => $NetFields['duration'],
-                              $this->CDRS->CDRFields['aNumber']  	    => $NetFields['from'],
-                              $this->CDRS->CDRFields['cNumber']         => $NetFields['to'],
-                              $this->CDRS->CDRFields['RemoteAddress']   => $NetFields['to'],
-                              $this->CDRS->CDRFields['CanonicalURI']    => $NetFields['to'],
-                              $this->CDRS->CDRFields['inputTraffic']    => $NetFields['inputTraffic'],
-                              $this->CDRS->CDRFields['outputTraffic']   => $NetFields['outputTraffic'],
-                              $this->CDRS->CDRFields['applicationType'] => $application,
-                              $this->CDRS->CDRFields['gateway']         => $NetFields['gateway'],
-                              $this->CDRS->CDRFields['ENUMtld']         => $NetFields['enumtld']
-                              );
+            $Rate    = new Rate($this->CDRS->CDRTool['rating'], $this->db);
 
-            // Init CDR
-            $CDR = new $this->CDRS->CDR_class($this->CDRS, $CDRStructure);
-            $CDR->normalize();
-
-	        $this->runtime['normalize_cdr']=microtime_float();
-
-            // Build Rate dictionary containing normalized CDR fields
             $RateDictionary=array(
-                                  'callId'          => $CDR->callId,
-                                  'timestamp'       => $CDR->timestamp,
-                                  'duration'        => $CDR->duration,
-                                  'DestinationId'   => $CDR->DestinationId,
-                                  'traffic'         => $CDR->traffic,
-                                  'BillingPartyId'  => $CDR->BillingPartyId,
-                                  'domain'          => $CDR->domain,
-                                  'gateway'         => $CDR->gateway,
+                                  'callId'          => $NetFields['callid'],
+                                  'timestamp'       => $timestamp,
+                                  'duration'        => $NetFields['duration'],
+                                  'inputTraffic'    => $NetFields['inputtraffic'],
+                                  'outputTraffic'   => $NetFields['outputtraffic'],
+                                  'DestinationId'   => $NetFields['destinationid'],
+                                  'BillingPartyId'  => $NetFields['from'],
+                                  'domain'          => $NetFields['domain'],
+                                  'gateway'         => $NetFields['gateway'],
+                                  'aNumber'         => $NetFields['from'],
+                                  'cNumber'         => $NetFields['to'],
+                                  'ENUMtld'         => $NetFields['enumtld'],
+                                  'applicationType' => $application,
                                   'RatingTables'    => &$this->CDRS->RatingTables,
-                                  'applicationType' => $CDR->applicationType,
-                                  'aNumber'         => $CDR->aNumber,
-                                  'cNumber'         => $CDR->cNumber,
-                                  'destinationName' => $CDR->destinationName,
-                                  'ENUMtld'         => $CDR->ENUMtld
                                   );
 
-            $Rate = new Rate(&$CDR);
             $Rate->calculate($RateDictionary);
+
 	        $this->runtime['calculate_rate']=microtime_float();
 
             if (strlen($Rate->price)) {
