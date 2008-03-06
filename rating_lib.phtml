@@ -1254,6 +1254,7 @@ class RatingTables {
                 addslashes($application),
                 addslashes($connectCost)
                 );
+
                 if (!$this->db->query($query)) {
                     printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
@@ -1264,6 +1265,7 @@ class RatingTables {
                 } else {
                     $failed++;
                 }
+
             } else if ($ops=="3") {
                 $query=sprintf("delete from billing_rates
                 where gateway      = '%s'
@@ -1279,6 +1281,7 @@ class RatingTables {
                 addslashes($destination),
                 addslashes($application)
                 );
+
                 if (!$this->db->query($query)) {
                     printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
