@@ -33,12 +33,21 @@ $CDRTool['provider']['sampleLoginSubscriber'] = "number@example.com";
 $CDRTool['provider']['sampleLoginDomain']     = "example.com";
 
 ###########################################
-# Where the rating engine listens for network requests:
-$RatingEngine=array("socketIP"   => "IP.address.of.the.private.interface.of.cdrtool.example.com",
-                    "socketPort" => "9024",
-                    "CDRS_class" => "ser_radius",
-                    "prepaid_lock" => true,
-                    "log_delay"   => 0.05
+# Rating engine settings
+$RatingEngine=array("socketIP"               => "IP.address.of.the.private.interface.of.cdrtool.example.com",
+                    "socketPort"             => "9024",
+                    "CDRS_class"             => "ser_radius",
+                    "prepaid_lock"           => true,
+                    "log_delay"              => 0.05,
+                    "split_rating_table"     => true,
+                    "csv_delimiter"          => ",",
+                    "priceDenominator"       => 10000, // e.g. 1 Eur = 10000 units
+                    "priceDecimalDigits"     => 4,     // how many digits to round the prices to
+                    "minimumDurationCharged" => 0,     // Only calls greater than this duration will be charged
+                    "durationPeriodRated"    => 60,    // the prices from the rating table are calculated per this period
+                    "trafficSizeRated"       => 1024,  // same as above but for data traffic
+                    "reportMissingRates"     => 0,	   // send email notifications if rates are missing from the ratingEngine
+                    "minimumDuration"        => 0      // minimum duration to rate, if call duration is shorter the price is zero
                     );
 
 ###########################################
@@ -173,9 +182,6 @@ $DATASOURCES=array(
                     "invisible"          => 1 
                     )
 );
-
-// delimiter used for import/export of rating tables 
-$CDRTool['rating']['delimiter']=",";
 
 // load CDRTool libraries 
 $CDRToolModules=array("ser","asterisk","rating");

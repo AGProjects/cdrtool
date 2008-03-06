@@ -22,6 +22,8 @@ class Rate {
 
     function Rate($settings=array(),&$db) {
 
+        $this->settings = $settings;
+
         if (!is_object($db)) {
         	$this->db = new DB_cdrtool;
         } else {
@@ -30,29 +32,29 @@ class Rate {
 
         $this->db->Halt_On_Error="no";
 
-        if ($settings['priceDenominator']) {
-            $this->priceDenominator=$settings['priceDenominator'];
+        if ($this->settings['priceDenominator']) {
+            $this->priceDenominator=$this->settings['priceDenominator'];
         }
 
-        if ($settings['priceDecimalDigits']) {
-            $this->priceDecimalDigits=$settings['priceDecimalDigits'];
+        if ($this->settings['priceDecimalDigits']) {
+            $this->priceDecimalDigits=$this->settings['priceDecimalDigits'];
         }
 
-        if ($settings['minimumDurationCharged']) {
-            $this->minimumDurationCharged=$settings['minimumDurationCharged'];
+        if ($this->settings['minimumDurationCharged']) {
+            $this->minimumDurationCharged=$this->settings['minimumDurationCharged'];
         }
 
-        if ($settings['durationPeriodRated']) {
-            $this->durationPeriodRated=$settings['durationPeriodRated'];
+        if ($this->settings['durationPeriodRated']) {
+            $this->durationPeriodRated=$this->settings['durationPeriodRated'];
         }
 
-        if ($settings['trafficSizeRated']) {
-            $this->trafficSizeRated=$settings['trafficSizeRated'];
+        if ($this->settings['trafficSizeRated']) {
+            $this->trafficSizeRated=$this->settings['trafficSizeRated'];
         }
 
-        if ($settings['minimumDuration']) {
+        if ($this->settings['minimumDuration']) {
             // if call is shorter than this, it has zero cost
-            $this->minimumDuration=$settings['minimumDuration'];
+            $this->minimumDuration=$this->settings['minimumDuration'];
         }
 
     }
@@ -269,7 +271,7 @@ class Rate {
             if ($span=="1" && $thisRate[profile]) {
                 $this->rateInfo .= 
                 " Connect fee: $connectCostPrint\n".
-                "   StartTime: $this->startTimeBilling ($this->billingTimezone)\n".
+                "   StartTime: $this->startTimeBilling\n".
                 "--\n";
                 $this->rateSyslog .= "ConnectFee=$connectCostPrint ";
             	$this->price  = $this->price+$connectCostSpan/$this->priceDenominator*$payConnect;
@@ -283,8 +285,8 @@ class Rate {
 
             if ($thisRate['profile']) {
                 $this->rateInfo .= 
-                "   ProfileId: $thisRate[profile] for $thisRate[day]\n".
-                "      RateId: $thisRate[rate] for $thisRate[interval]h\n".
+                "   ProfileId: $thisRate[profile] / $thisRate[day]\n".
+                "      RateId: $thisRate[rate] / $thisRate[interval]h\n".
                 "        Rate: $durationRatePrint / $this->durationPeriodRated s\n".
                 "       Price: $spanPricePrint\n";
                 #" TrafficRate: $trafficRatePrint / $this->trafficSizeRated KBytes\n".
@@ -805,19 +807,48 @@ class Rate {
     }
 
     function lookupRateValues($rateName,$DestinationId,$applicationType='audio') {
+
+        if ($this->settings['split_rating_table']) {
+            if ($rateName) {
+            	$table="billing_rates_".$rateName;
+            } else {
+            	$table="billing_rates_default";
+            }
+        } else {
+			$table="billing_rates";
+        }
+
         // lookup rate from MySQL
-        $query=sprintf("select durationRate, trafficRate, connectCost from billing_rates
+        $query=sprintf("select durationRate, trafficRate, connectCost from %s
         where name = '%s' and destination = '%s' and application = '%s'",
-        addslashes($rateName),
-        addslashes($DestinationId),
-        addslashes($applicationType)
+        $table,
+        $rateName,
+        $DestinationId,
+        $applicationType
         );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-            print $log;
-        	syslog(LOG_NOTICE, $log);
-            return false;
+            if ($this->db->Errno != 1146) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errnoc);
+                print $log;
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+            // try the main table
+            // lookup rate from MySQL
+            $query=sprintf("select durationRate, trafficRate, connectCost from billing_rates
+            where name = '%s' and destination = '%s' and application = '%s'",
+            $rateName,
+            $DestinationId,
+            $applicationType
+            );
+
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errnoc);
+                print $log;
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
         }
 
         $log=sprintf("Found %d rows",$this->db->num_rows());
@@ -849,13 +880,14 @@ class RatingTables {
 
     function RatingTables () {
         global $CDRTool;
+        global $RatingEngine;
 
-        $this->cdrtool = new DB_cdrtool;
+        $this->db = new DB_cdrtool;
         $this->CDRTool = $CDRTool;
-        $this->cdrtool->Halt_On_Error="no";
+        $this->db->Halt_On_Error="no";
 
-        if ($CDRTool['rating']['delimiter']) {
-            $this->delimiter=$CDRTool['rating']['delimiter'];
+        if ($RatingEngine['csv_delimiter']) {
+            $this->delimiter=$RatingEngine['csv_delimiter'];
         }
 
         $this->tables=array(
@@ -1222,12 +1254,12 @@ class RatingTables {
                 addslashes($application),
                 addslashes($connectCost)
                 );
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->affected_rows() >0) {
+                if ($this->db->affected_rows() >0) {
                     $inserted++;
                 } else {
                     $failed++;
@@ -1247,12 +1279,12 @@ class RatingTables {
                 addslashes($destination),
                 addslashes($application)
                 );
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->affected_rows() >0) {
+                if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
             } else if ($ops=="2") {
@@ -1272,12 +1304,12 @@ class RatingTables {
                 addslashes($application)
                 );
 
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->num_rows()) {
+                if ($this->db->num_rows()) {
                     $query=sprintf("update billing_rates set
                     durationRate    = '%s',
                     trafficRate     = '%s',
@@ -1301,12 +1333,12 @@ class RatingTables {
 
                     );
 
-                    if (!$this->cdrtool->query($query)) {
-                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    if (!$this->db->query($query)) {
+                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                         return false;
                     }
 
-                    if ($this->cdrtool->affected_rows() >0) {
+                    if ($this->db->affected_rows() >0) {
                         $updated++;
                     }
 
@@ -1344,11 +1376,11 @@ class RatingTables {
                     addslashes($connectCost)
                     );
 
-                    if (!$this->cdrtool->query($query)) {
-                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    if (!$this->db->query($query)) {
+                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                         return false;
                     }
-                    if ($this->cdrtool->affected_rows() >0) {
+                    if ($this->db->affected_rows() >0) {
                         $inserted++;
                     } else {
                         $failed++;
@@ -1443,12 +1475,12 @@ class RatingTables {
                 addslashes($startDate),
                 addslashes($endDate)
                 );
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->affected_rows() >0) {
+                if ($this->db->affected_rows() >0) {
                     $inserted++;
                 } else {
                     $failed++;
@@ -1470,12 +1502,12 @@ class RatingTables {
                 addslashes($startDate),
                 addslashes($endDate)
                 );
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->affected_rows() >0) {
+                if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
             } else if ($ops=="2") {
@@ -1496,13 +1528,13 @@ class RatingTables {
                 addslashes($startDate),
                 addslashes($endDate)
                 );
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
 
-                if ($this->cdrtool->num_rows()) {
+                if ($this->db->num_rows()) {
                     $query=sprintf("update billing_rates_history set
                     durationRate    = '%s',
                     trafficRate     = '%s',
@@ -1529,12 +1561,12 @@ class RatingTables {
                     addslashes($endDate)
                     );
 
-                    if (!$this->cdrtool->query($query)) {
-                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    if (!$this->db->query($query)) {
+                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                         return false;
                     }
 
-                    if ($this->cdrtool->affected_rows() >0) {
+                    if ($this->db->affected_rows() >0) {
                         $updated++;
                     }
 
@@ -1578,12 +1610,12 @@ class RatingTables {
                     addslashes($endDate)
                     );
 
-                    if (!$this->cdrtool->query($query)) {
-                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    if (!$this->db->query($query)) {
+                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                         return false;
                     }
 
-                    if ($this->cdrtool->affected_rows() >0) {
+                    if ($this->db->affected_rows() >0) {
                         $inserted++;
                     } else {
                         $failed++;
@@ -1686,12 +1718,12 @@ class RatingTables {
 
                 );
 
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->affected_rows() >0) {
+                if ($this->db->affected_rows() >0) {
                     $inserted++;
                 } else {
                     $failed++;
@@ -1706,12 +1738,12 @@ class RatingTables {
                 addslashes($domain),
                 addslashes($subscriber)
                 );
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->affected_rows() >0) {
+                if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
             } else if ($ops=="2") {
@@ -1725,12 +1757,12 @@ class RatingTables {
                 addslashes($subscriber)
                 );
 
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->num_rows()) {
+                if ($this->db->num_rows()) {
                     $query=sprintf("update billing_customers set
                     profile_name1     = '%s',
                     profile_name2     = '%s',
@@ -1756,12 +1788,12 @@ class RatingTables {
                     addslashes($subscriber)
                     );
 
-                    if (!$this->cdrtool->query($query)) {
-                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    if (!$this->db->query($query)) {
+                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                         return false;
                     }
 
-                    if ($this->cdrtool->affected_rows()) {
+                    if ($this->db->affected_rows()) {
                         $updated++;
                     }
 
@@ -1805,12 +1837,12 @@ class RatingTables {
                     addslashes($country_code)
                     );
 
-                    if (!$this->cdrtool->query($query)) {
-                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    if (!$this->db->query($query)) {
+                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                         return false;
                     }
 
-                    if ($this->cdrtool->affected_rows()) {
+                    if ($this->db->affected_rows()) {
                         $inserted++;
                     }
                 }
@@ -1876,12 +1908,12 @@ class RatingTables {
                 addslashes($dest_id),
                 addslashes($dest_name)
                 );
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->affected_rows() >0) {
+                if ($this->db->affected_rows() >0) {
                     $inserted++;
                 } else {
                     $failed++;
@@ -1898,12 +1930,12 @@ class RatingTables {
                 addslashes($subscriber),
                 addslashes($dest_id)
                 );
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->affected_rows() >0) {
+                if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
             } elseif ($ops=="2") {
@@ -1919,12 +1951,12 @@ class RatingTables {
                 addslashes($dest_id)
                 );
 
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->num_rows()) {
+                if ($this->db->num_rows()) {
                     $query=sprintf("update destinations set
                     dest_name      = '%s'
                     where gateway      = '%s'
@@ -1938,12 +1970,12 @@ class RatingTables {
                     addslashes($subscriber),
                     addslashes($dest_id)
                     );
-                    if (!$this->cdrtool->query($query)) {
-                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    if (!$this->db->query($query)) {
+                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                         return false;
                     }
 
-                    if ($this->cdrtool->affected_rows()) {
+                    if ($this->db->affected_rows()) {
                         $updated++;
                     }
                  } else {
@@ -1967,12 +1999,12 @@ class RatingTables {
                     addslashes($dest_id),
                     addslashes($dest_name)
                     );
-                    if (!$this->cdrtool->query($query)) {
-                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    if (!$this->db->query($query)) {
+                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                         return false;
                     }
 
-                    if ($this->cdrtool->affected_rows() >0) {
+                    if ($this->db->affected_rows() >0) {
                         $inserted++;
                     } else {
                         $failed++;
@@ -2074,12 +2106,12 @@ class RatingTables {
                 addslashes($rate4),
                 addslashes($hour4)
                 );
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->affected_rows() >0) {
+                if ($this->db->affected_rows() >0) {
                     $inserted++;
                 } else {
                     $failed++;
@@ -2096,12 +2128,12 @@ class RatingTables {
                 addslashes($domain),
                 addslashes($subscriber)
                 );
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->affected_rows() >0) {
+                if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
 
@@ -2117,12 +2149,12 @@ class RatingTables {
                 addslashes($subscriber)
                 );
 
-                if (!$this->cdrtool->query($query)) {
-                    printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->db->query($query)) {
+                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->cdrtool->num_rows()) {
+                if ($this->db->num_rows()) {
                     $query=sprintf("update billing_profiles set
                     rate_name1     = '%s',
                     rate_name2     = '%s',
@@ -2149,12 +2181,12 @@ class RatingTables {
                     addslashes($domain),
                     addslashes($subscriber)
                     );
-                    if (!$this->cdrtool->query($query)) {
-                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    if (!$this->db->query($query)) {
+                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                         return false;
                     }
 
-                    if ($this->cdrtool->affected_rows()) {
+                    if ($this->db->affected_rows()) {
                         $updated++;
                     }
                 } else {
@@ -2199,12 +2231,12 @@ class RatingTables {
                     addslashes($rate4),
                     addslashes($hour4)
                     );
-                    if (!$this->cdrtool->query($query)) {
-                        printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    if (!$this->db->query($query)) {
+                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
                         return false;
                     }
 
-                    if ($this->cdrtool->affected_rows() >0) {
+                    if ($this->db->affected_rows() >0) {
                         $inserted++;
                     } else {
                         $failed++;
@@ -2247,23 +2279,23 @@ class RatingTables {
 
     function LoadENUMtldsTable() {
         $query="select * from billing_enum_tlds";
-        if (!$this->cdrtool->query($query)) {
-            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+        if (!$this->db->query($query)) {
+            printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
             return false;
         }
 
         $i=0;
-        $rows=$this->cdrtool->num_rows();
-        while($this->cdrtool->next_record()) {
-            if ($this->cdrtool->Record['enum_tld']) {
+        $rows=$this->db->num_rows();
+        while($this->db->next_record()) {
+            if ($this->db->Record['enum_tld']) {
                 $i++;
-                $_app=$this->cdrtool->Record['application'];
+                $_app=$this->db->Record['application'];
                 if (!$_app) $_app='audio';
 
-                $_ENUMtlds[$this->cdrtool->Record['enum_tld']]=
+                $_ENUMtlds[$this->db->Record['enum_tld']]=
                 array(
-                     "discount"    => $this->cdrtool->Record['discount'],
-                     "e164_regexp" => $this->cdrtool->Record['e164_regexp']
+                     "discount"    => $this->db->Record['discount'],
+                     "e164_regexp" => $this->db->Record['e164_regexp']
                 );
             }
         }
@@ -2280,26 +2312,26 @@ class RatingTables {
         from billing_rates_history
         order by name ASC,destination ASC,startDate DESC";
 
-        if (!$this->cdrtool->query($query)) {
-            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+        if (!$this->db->query($query)) {
+            printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
             return false;
         }
 
         $i=0;
-        $rows=$this->cdrtool->num_rows();
-        while($this->cdrtool->next_record()) {
-            if ($this->cdrtool->Record['name'] && $this->cdrtool->Record['destination']) {
+        $rows=$this->db->num_rows();
+        while($this->db->next_record()) {
+            if ($this->db->Record['name'] && $this->db->Record['destination']) {
                 $i++;
-                $_app=$this->cdrtool->Record['application'];
+                $_app=$this->db->Record['application'];
                 if (!$_app) $_app='audio';
 
-                $_rates[$this->cdrtool->Record['name']][$this->cdrtool->Record['destination']][$_app][$this->cdrtool->Record['id']]=
+                $_rates[$this->db->Record['name']][$this->db->Record['destination']][$_app][$this->db->Record['id']]=
                 array(
-                     "durationRate"    => $this->cdrtool->Record['durationRate'],
-                     "trafficRate"     => $this->cdrtool->Record['trafficRate'],
-                     "connectCost"     => $this->cdrtool->Record['connectCost'],
-                     "startDate"       => $this->cdrtool->Record['startDateTimestamp'],
-                     "endDate"         => $this->cdrtool->Record['endDateTimestamp']
+                     "durationRate"    => $this->db->Record['durationRate'],
+                     "trafficRate"     => $this->db->Record['trafficRate'],
+                     "connectCost"     => $this->db->Record['connectCost'],
+                     "startDate"       => $this->db->Record['startDateTimestamp'],
+                     "endDate"         => $this->db->Record['endDateTimestamp']
                 );
             }
         }
@@ -2313,25 +2345,25 @@ class RatingTables {
 
     function LoadProfilesTable() {
         $query="select * from billing_profiles order by name";
-        if (!$this->cdrtool->query($query)) {
-            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+        if (!$this->db->query($query)) {
+            printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
             return false;
         }
 
         $i=0;
-        while($this->cdrtool->next_record()) {
+        while($this->db->next_record()) {
             $i++;
-            if ($this->cdrtool->Record['name'] && $this->cdrtool->Record['hour1'] > 0 ) {
-                $_profiles[$this->cdrtool->Record['name']]=
+            if ($this->db->Record['name'] && $this->db->Record['hour1'] > 0 ) {
+                $_profiles[$this->db->Record['name']]=
                 array(
-                     "rate_name1"  => $this->cdrtool->Record['rate_name1'],
-                     "hour1"       => $this->cdrtool->Record['hour1'],
-                     "rate_name2"  => $this->cdrtool->Record['rate_name2'],
-                     "hour2"       => $this->cdrtool->Record['hour2'],
-                     "rate_name3"  => $this->cdrtool->Record['rate_name3'],
-                     "hour3"       => $this->cdrtool->Record['hour3'],
-                     "rate_name4"  => $this->cdrtool->Record['rate_name4'],
-                     "hour4"       => $this->cdrtool->Record['hour4'],
+                     "rate_name1"  => $this->db->Record['rate_name1'],
+                     "hour1"       => $this->db->Record['hour1'],
+                     "rate_name2"  => $this->db->Record['rate_name2'],
+                     "hour2"       => $this->db->Record['hour2'],
+                     "rate_name3"  => $this->db->Record['rate_name3'],
+                     "hour3"       => $this->db->Record['hour3'],
+                     "rate_name4"  => $this->db->Record['rate_name4'],
+                     "hour4"       => $this->db->Record['hour4'],
                 );
             }
         }
@@ -2343,16 +2375,16 @@ class RatingTables {
 
     function LoadHolidaysTable() {
         $query="select * from billing_holidays order by day";
-        if (!$this->cdrtool->query($query)) {
-            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+        if (!$this->db->query($query)) {
+            printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
             return false;
         }
 
         $i=0;
-        while($this->cdrtool->next_record()) {
-            if ($this->cdrtool->Record['day']) {
+        while($this->db->next_record()) {
+            if ($this->db->Record['day']) {
                 $i++;
-                $_holidays[$this->cdrtool->Record['day']]++;
+                $_holidays[$this->db->Record['day']]++;
             }
         }
 
@@ -2428,10 +2460,10 @@ class RatingTables {
 
     function hasFileBeenImported($filename,$watermark) {
         $query=sprintf("select * from log where url = '%s'\n",$watermark);
-        if ($this->cdrtool->query($query)) {
-            if ($this->cdrtool->num_rows()) {
-                $this->cdrtool->next_record();
-                $log=sprintf ("File %s has already been imported at %s.\n",$filename,$this->cdrtool->f('date'));
+        if ($this->db->query($query)) {
+            if ($this->db->num_rows()) {
+                $this->db->next_record();
+                $log=sprintf ("File %s has already been imported at %s.\n",$filename,$this->db->f('date'));
     			syslog(LOG_NOTICE, $log);
                 print $log;
                 return true;
@@ -2439,7 +2471,7 @@ class RatingTables {
                 return false;
             }
         } else {
-            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+            printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
             return false;
         }
     }
@@ -2453,8 +2485,8 @@ class RatingTables {
         $log=sprintf ("Imported file %s, %d records have been affected\n",$filename,$results);
     	syslog(LOG_NOTICE, $log);
 
-        if (!$this->cdrtool->query($query)) {
-            printf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+        if (!$this->db->query($query)) {
+            printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
             return false;
         }
     }
@@ -2467,6 +2499,66 @@ class RatingTables {
             flush();
             $this->importIndex=0;
         }
+    }
+
+    function splitRatingTable() {
+        $query="select distinct(name) from billing_rates order by name ASC";
+
+        if (!$this->db->query($query)) {
+            printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            return false;
+        }
+
+        while ($this->db->next_record()) {
+            $rate_names[]=$this->db->f('name');
+        }
+
+        foreach ($rate_names as $name) {
+            if (!$name) $name='default';
+
+            $table="billing_rates_".$name;
+            $query=sprintf("drop table if exists %s",$table);
+
+            if (!$this->db->query($query)) {
+                printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                return false;
+            }
+
+            if (!$this->db->query($query)) {
+                printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                return false;
+            }
+
+            $query=sprintf("create table %s select * from billing_rates where name = '%s'\n",$table,$name);
+
+            if (!$this->db->query($query)) {
+                printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                return false;
+            } else {
+                $query=sprintf("alter table %s add index rate_idx (name)",$table);
+            	if (!$this->db->query($query)) {
+                	printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    return false;
+                } else {
+                	printf ("Added rate_idx index to table %s\n",$table);
+                }
+
+                $query=sprintf("alter table %s add index destination_idx (destination)",$table);
+            	if (!$this->db->query($query)) {
+                	printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    return false;
+                } else {
+                	printf ("Added destination_idx index to table %s\n",$table);
+                }
+                $query=sprintf("select count(*) as c from %s",$table);
+                $this->db->query($query);
+                $this->db->next_record();
+                $records=$this->db->f('c');
+                printf ("Created table %s with %s records\n",$table,$records);
+            }
+
+        }
+
     }
 }
 
@@ -3547,12 +3639,14 @@ class RatingEngine {
     var $log_runtime = false;
 
     function RatingEngine (&$CDRS) {
-      	global $RatingEngine;
-		if ($RatingEngine['prepaid_lock'] == false || $RatingEngine['prepaid_lock'] == 0) {
+      	global $RatingEngine;   // set in global.inc
+        $this->settings = $RatingEngine;
+
+		if ($this->settings['prepaid_lock'] == false || $this->settings['prepaid_lock'] == 0) {
             $this->prepaid_lock=0;
         }
 
-        if ($RatingEngine['log_runtime']) {
+        if ($this->settings['log_runtime']) {
             $this->log_runtime=true;
         }
 
@@ -4211,7 +4305,7 @@ class RatingEngine {
                                       'RatingTables'    => &$this->CDRS->RatingTables
                                       );
 
-                $Rate    = new Rate($this->CDRS->CDRTool['rating'], $this->db);
+                $Rate    = new Rate($this->settings, $this->db);
 
 	        	$this->runtime['instantiate_rate']=microtime_float();
 
@@ -4338,7 +4432,7 @@ class RatingEngine {
                                   'RatingTables'    => &$this->CDRS->RatingTables
                                   );
 
-            $Rate    = new Rate($this->CDRS->CDRTool['rating'], $this->db);
+            $Rate    = new Rate($this->settings, $this->db);
 
             $this->runtime['instantiate_rate']=microtime_float();
 
@@ -4461,7 +4555,7 @@ class RatingEngine {
             $application="audio";
             if ($NetFields['application']) $application=$NetFields['application'];
 
-            $Rate    = new Rate($this->CDRS->CDRTool['rating'], $this->db);
+            $Rate    = new Rate($this->settings, $this->db);
 
             $RateDictionary=array(
                                   'callId'          => $NetFields['callid'],
