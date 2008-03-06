@@ -792,12 +792,8 @@ class CDRS {
 
     function getUnNormalized($where="",$table) {
 
-        if (!$this->db_class) {
-            return 0;
-        }
-
         if ($this->skipNormalize) {
-            return 0;
+            return 1;
         }
 
         if (!$where) $where=" (1=1) ";
@@ -808,7 +804,7 @@ class CDRS {
         if ($ReNormalize) $this->unNormalize($where,$table);
 
         if (!$this->normalizedField) {
-            return 0;
+            return 1;
         }
 
 		$this->buildWhereForUnnormalizedSessions();
@@ -830,10 +826,6 @@ class CDRS {
     }
 
     function NormalizeCDRS($where="",$table) {
-
-		if (!$this->db_class) {
-            return 0;
-        }
 
         $b=time();
 
@@ -870,7 +862,7 @@ class CDRS {
         $this->CDRdb->query($query);
         $this->status['cdr_to_normalize']=$this->CDRdb->num_rows();
 
-        if ($this->status['cdr_to_normalize']>0) {
+        if ($this->status['cdr_to_normalize'] > 0) {
 
         	if ($this->ratingEnabled) {
                 // The rating table will be used in each instance of
@@ -885,16 +877,12 @@ class CDRS {
                         print "<p>";
                         print "<font color=red>Cannot connect to rating engine $target: $errstr ($errno). </font>";
                         syslog(LOG_NOTICE, "Error: Cannot connect to rating engine $errstr ($errno)");
-
-                        // continue loading of rating tables
-                        $this->RatingTables = new RatingTables();
-                        $this->RatingTables->LoadRatingTables();
                     }
-                } else {
-                    // network rating engine not available, load all rates in memory
-                    $this->RatingTables = new RatingTables();
-                    $this->RatingTables->LoadRatingTables();
                 }
+
+                // Load rating tables
+                $this->RatingTables = new RatingTables();
+                $this->RatingTables->LoadRatingTables();
             }
 
         } else {
@@ -905,12 +893,9 @@ class CDRS {
 
         while ($this->CDRdb->next_record()) {
 
+
 			$Structure=$this->_readCDRNormalizationFieldsFromDB();
             $found++;
-
-			if (count($Structure) < 6 ) {
-                continue;
-            }
 
             $CDR = new $this->CDR_class(&$this, &$Structure);
 
@@ -936,13 +921,13 @@ class CDRS {
         }
 
         if ($this->ratingEnabled && count($this->brokenRates) >0 ) {
-            if ($this->CDRTool[rating][reportMissingRates]) {
+            if ($this->CDRTool['rating']['reportMissingRates']) {
                 if (count($this->brokenRates)) {
                     foreach (array_keys($this->brokenRates) as $dest) {
                         $missingRatesBodytext=$missingRatesBodytext."\nDestination id $dest (".$this->brokenRates[$dest]." calls)";
                     }
-                    $to=$this->CDRTool['provider'][toEmail];
-                    $from=$this->CDRTool['provider'][fromEmail];
+                    $to=$this->CDRTool['provider']['toEmail'];
+                    $from=$this->CDRTool['provider']['fromEmail'];
      
                     mail($to, "Missing CDRTool rates",$missingRatesBodytext, "From: $from");
                 }
@@ -1723,7 +1708,7 @@ class CDR {
 
     function normalize($save="",$table) {
 
-        if (!$table) $table=&$this->CDRS->table;
+        if (!$table) $table = $this->CDRS->table;
 
         if ($this->CDRS->CSCODE && $CarrierInfo = $this->CDRS->CDRTool['normalize'][CS_CODES][$this->CDRS->CSCODE]) {
             // We found a carrier so we set the BillingId
@@ -1731,6 +1716,10 @@ class CDR {
         }
 
         if ($save) {
+            if (!$this->id) {
+                return 0;
+            }
+
             $query  ="";
             $query1 ="";
             $query2 ="";
@@ -1790,20 +1779,6 @@ class CDR {
                 $this->cNumber=$this->cNumberNormalized;
             }
 
-            if ($this->CDRS->CustomerNameField && $this->CustomerName) {
-                $Field=$this->CDRS->CustomerNameField;
-                if ($updatedFields) $query .= ", ";
-                $updatedFields++;
-                $query.=" $Field = '".addslashes($this->CustomerName)."' ";
-            }
-
-            if ($this->CDRS->CustomerIdField && $this->CustomerId) {
-                $Field=$this->CDRS->CustomerIdField;
-                if ($updatedFields) $query .= ", ";
-                $updatedFields++;
-                $query.=" $Field = '".addslashes($this->CustomerId)."' ";
-            }
-
             if ($this->CDRS->BillingIdField && $this->BillingId) {
                 $Field=$this->CDRS->BillingIdField;
                 if ($updatedFields) $query .= ", ";
@@ -1827,14 +1802,18 @@ class CDR {
 
             if ($this->CDRS->ratingEnabled && $this->duration) {
 
+                /*
+                # since we changed the lookup of the rating entries directly to mysql query
+                # it seems that is faster not to go over the network
+
                 if ($this->CDRS->RatingEngineSocket && $this->NetworkRateDictionary) {
 
                     // get pricing from network rating engine
 					$this->lookupRateFromNetwork(&$this->NetworkRateDictionary,&$this->CDRS->RatingEngineSocket);
 
                 } else {
+                    $Rate    = new Rate($this->CDRS->rating_settings, $this->cdrtool);
 
-                	$Rate    = new Rate($this->CDRS->rating_settings, $this->cdrtool);
                     $RateDictionary=array(
                                           'callId'          => $this->callId,
                                           'timestamp'       => $this->timestamp,
@@ -1849,17 +1828,41 @@ class CDR {
                                           'applicationType' => $this->applicationType,
                                           'aNumber'         => $this->aNumber,
                                           'cNumber'         => $this->cNumber,
-                                          'destinationName' => $this->destinationName,
                                           'ENUMtld'         => $this->ENUMtld
                                           );
 
                     $Rate->calculate(&$RateDictionary);
-
+    
                     $this->pricePrint = $Rate->pricePrint;
                     $this->price      = $Rate->price;
                     $this->rateInfo   = $Rate->rateInfo;
-
                 }
+                */
+
+  		        $Rate    = new Rate($this->CDRS->rating_settings, $this->cdrtool);
+
+                $RateDictionary=array(
+                                      'callId'          => $this->callId,
+                                      'timestamp'       => $this->timestamp,
+                                      'duration'        => $this->duration,
+                                      'DestinationId'   => $this->DestinationId,
+                                      'inputTraffic'    => $this->inputTraffic,
+                                      'outputTraffic'   => $this->outputTraffic,
+                                      'BillingPartyId'  => $this->BillingPartyId,
+                                      'domain'          => $this->domain,
+                                      'gateway'         => $this->gateway,
+                                      'RatingTables'    => &$this->CDRS->RatingTables,
+                                      'applicationType' => $this->applicationType,
+                                      'aNumber'         => $this->aNumber,
+                                      'cNumber'         => $this->cNumber,
+                                      'ENUMtld'         => $this->ENUMtld
+                                      );
+
+                $Rate->calculate(&$RateDictionary);
+
+                $this->pricePrint = $Rate->pricePrint;
+                $this->price      = $Rate->price;
+                $this->rateInfo   = $Rate->rateInfo;
 
                 if ($this->CDRS->priceField) {
 
@@ -1875,10 +1878,6 @@ class CDR {
                         $query.=" $Field = '".$this->rateInfo."' ";
                 	}
                 }
-            }
-
-            if (!$this->id) {
-                return 0;
             }
 
             $query1 = sprintf("update %s set %s where %s = '%s'",$table,$query,$this->idField,$this->id);
