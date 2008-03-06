@@ -57,48 +57,6 @@ class Rate {
 
     }
 
-    function lookupRateFromNetwork(&$RateDictionary,&$fp) {
-    	$countEndofLines=0;
-        $cmd="ShowPrice";
-        foreach (array_keys(&$RateDictionary) as $key) {
-            $cmd .=" ".$key."=".$RateDictionary[$key]." ";
-        }
-
-        $this->price	   = 0;
-        $this->pricePrint  = "";
-		$this->rateInfo    = "";
-
-        if (fputs($fp,"$cmd\n") !== false) {
-    
-            $i=0;
-            while ($i < 100) {
-                $i++;
-
-                $line = fgets($fp,1024);
-
-                if (!$line) {
-                    syslog(LOG_NOTICE, "Error: lookupRateFromNetwork(): connection to network socket died");
-                    break;
-                }
-
-                if (preg_match("/^\n/",$line) || preg_match("/^END/",$line)) {
-                    break;
-                }
-
-                if ($i == 1) {
-                	$this->price = trim($line);
-                	$this->pricePrint = number_format($this->price,4);
-                    continue;
-                }
-    
-                $this->rateInfo.=$line;
-
-            }
-
-        }
-
-    }
-
     function calculate(&$dictionary) {
 
         /////////////////////////////////////////////////////
@@ -4029,8 +3987,6 @@ class RatingEngine {
         // Strip any unnecessary spaces
 		$this->runtime=array();
 
-        $tinput=preg_replace("/=\s{1,}/","= ",$tinput);
-        $tinput=preg_replace("/\s{1,}=/","= ",$tinput);
         $tinput=preg_replace("/\s+/"," ",$tinput);
 
         $_els=explode(" ",trim($tinput));
@@ -4192,14 +4148,13 @@ class RatingEngine {
             }
 
 			if ($this->prepaid_lock) {
-                $query=sprintf("select * from %s
-                where account = '%s'",
+                $query=sprintf("select * from %s where account = '%s'",
                 addslashes($this->table),
                 addslashes($CDR->BillingPartyId)
                 );
     
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     syslog(LOG_NOTICE,$log);
                 	$this->logRuntime();
                     return "none";
@@ -4309,9 +4264,8 @@ class RatingEngine {
                     addslashes($maxduration),
                     addslashes($CDR->BillingPartyId));
 
-
                     if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                        $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                         syslog(LOG_NOTICE,$log);
                         return 0;
                     }

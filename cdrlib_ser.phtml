@@ -2598,6 +2598,8 @@ class CDR_ser_radius extends CDR {
 
 
         if ($this->SipCodec || is_array($this->QoS)) {
+			$this->SipCodec   = quoted_printable_decode($this->SipCodec);
+
             $CallInfoVerbose.= "
         	<table border=0 cellpadding=0 cellspacing=0>
 

@@ -1825,15 +1825,15 @@ class CDR {
             }
 
             if ($this->CDRS->ratingEnabled && $this->duration) {
-                $Rate    = new Rate($this->CDRS->CDRTool['rating'], $this->cdrtool);
 
                 if ($this->CDRS->RatingEngineSocket && $this->NetworkRateDictionary) {
 
                     // get pricing from network rating engine
-					$Rate->lookupRateFromNetwork(&$this->NetworkRateDictionary,&$this->CDRS->RatingEngineSocket);
+					$this->lookupRateFromNetwork(&$this->NetworkRateDictionary,&$this->CDRS->RatingEngineSocket);
 
                 } else {
 
+                	$Rate    = new Rate($this->CDRS->CDRTool['rating'], $this->cdrtool);
                     $RateDictionary=array(
                                           'callId'          => $this->callId,
                                           'timestamp'       => $this->timestamp,
@@ -1854,19 +1854,20 @@ class CDR {
 
                     $Rate->calculate(&$RateDictionary);
 
+                    $this->pricePrint = $Rate->pricePrint;
+                    $this->price      = $Rate->price;
+                    $this->rateInfo   = $Rate->rateInfo;
+
                 }
 
                 if ($this->CDRS->priceField) {
-                    if (!$Rate->price) $Rate->pricePrint="";
 
-                	$this->pricePrint = $Rate->pricePrint;
                     $Field=$this->CDRS->priceField;
                     if ($updatedFields) $query .= ", ";
                     $updatedFields++;
                     $query.=" $Field = '".$this->pricePrint."' ";
     
                     if ($this->CDRS->rateField ) {
-                        $this->rateInfo   = $Rate->rateInfo;
                         $Field=$this->CDRS->rateField;
                         if ($updatedFields) $query .= ", ";
                         $updatedFields++;
@@ -2000,6 +2001,48 @@ class CDR {
     	}
     }
 
+    function lookupRateFromNetwork(&$RateDictionary,&$fp) {
+    	$this->rateInfo='';
+        $this->pricePrint='';
+        $this->price='';
+
+    	$countEndofLines=0;
+        $cmd="ShowPrice";
+        foreach (array_keys(&$RateDictionary) as $key) {
+            $cmd .=" ".$key."=".$RateDictionary[$key]." ";
+        }
+
+        $this->price	   = 0;
+        $this->pricePrint  = "";
+		$this->rateInfo    = "";
+
+        if (fputs($fp,"$cmd\n") !== false) {
+    
+            $i=0;
+            while ($i < 100) {
+                $i++;
+
+                $line = fgets($fp,1024);
+
+                if (!$line) {
+                    syslog(LOG_NOTICE, "Error: lookupRateFromNetwork(): connection to network socket died");
+                    break;
+                }
+
+                if (preg_match("/^\n/",$line) || preg_match("/^END/",$line)) {
+                    break;
+                }
+
+                if ($i == 1) {
+                	$this->price = trim($line);
+                	$this->pricePrint = number_format($this->price,4);
+                    continue;
+                }
+    
+                $this->rateInfo.=$line;
+            }
+        }
+    }
 }
 
 function getLocalTime($timezone,$timestamp) {
