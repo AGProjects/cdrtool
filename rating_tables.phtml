@@ -72,8 +72,8 @@ $db1->Halt_On_Error ="no";
 $skipReloadForTables=array('billing_rates','prepaid_cards','billing_customers');
 
 // delimiter for exporting records
-if ($CDRTool['rating']['delimiter']) {
-    $delimiter=$CDRTool['rating']['delimiter'];
+if ($RatingEngine['csv_delimiter']) {
+    $delimiter=$RatingEngine['csv_delimiter'];
 } else {
 	$delimiter=",";
 }

@@ -1259,7 +1259,7 @@ class RatingTables {
                 }
 
                 if ($this->db->affected_rows()) {
-                    if ($this->settings['split_rating_table']) {
+                    if ($this->settings['split_rating_table_csv']) {
                         if ($name) {
                         	$_table='billing_rates_'.$name;
                         } else {
@@ -1292,6 +1292,7 @@ class RatingTables {
                             '%s',
                             '%s'
                             )",
+                            addslashes($_table),
                             addslashes($gateway),
                             addslashes($domain),
                             addslashes($subscriber),
@@ -1337,7 +1338,7 @@ class RatingTables {
                 }
 
                 if ($this->db->affected_rows()) {
-                    if ($this->settings['split_rating_table']) {
+                    if ($this->settings['split_rating_table_csv']) {
                         if ($name) {
                         	$_table='billing_rates_'.$name;
                         } else {
@@ -1419,7 +1420,7 @@ class RatingTables {
                     }
 
                     if ($this->db->affected_rows()) {
-                        if ($this->settings['split_rating_table']) {
+                        if ($this->settings['split_rating_table_csv']) {
                             if ($name) {
                                 $_table = 'billing_rates_'.$name;
                             } else {
@@ -1494,7 +1495,7 @@ class RatingTables {
                         return false;
                     }
                     if ($this->db->affected_rows()) {
-                        if ($this->settings['split_rating_table']) {
+                        if ($this->settings['split_rating_table_csv']) {
                             if ($name) {
                                 $_table='billing_rates_'.$name;
                             } else {
@@ -1527,6 +1528,7 @@ class RatingTables {
                                '%s',
                                '%s'
                                )",
+                               addslashes($_table),
                                addslashes($gateway),
                                addslashes($domain),
                                addslashes($subscriber),
@@ -1537,7 +1539,7 @@ class RatingTables {
                                addslashes($application),
                                addslashes($connectCost)
                                );
-               
+
                                if (!$this->db->query($query)) {
                                    printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                                    return false;
@@ -2684,6 +2686,7 @@ class RatingTables {
                 printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             }
 
+            printf ("Created table %s\n",$table);
             return true;
         } else {
             return false;
