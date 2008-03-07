@@ -84,9 +84,6 @@ class Rate {
 
         $this->RatingTables      = &$dictionary['RatingTables'];
 
-        //
-        /////////////////////////////////////////////////////////
-
         /////////////////////////////////////////////////////////
         // informational fields from CDR structure
         $this->aNumber           = $dictionary['aNumber'];
@@ -3782,7 +3779,6 @@ class RatingEngine {
         );
 
         if ($limit) $query.= sprintf (" limit %d",$limit);
-
     
         if (!$this->db->query($query)) {
             $log=sprintf ("getBalanceHistory error: %s (%s)",$this->db->Error,$this->db->Errno);
@@ -3790,20 +3786,16 @@ class RatingEngine {
             return 0;
         }
 
-        unset($line);
-        $line .= sprintf("%s\n",$this->db->num_rows());
-
         while ($this->db->next_record()) {
-            $line .= sprintf
-            ("Action='%s'\tSource='%s'\tValue='%s'\tDate='%s'\tBalance='%s'\n",
-            $this->db->f('action'),
-            $this->db->f('number'),
-            $this->db->f('value'),
-            $this->db->f('date'),
-            $this->db->f('balance')
-            );
+            $history[]=array('account' =>$account,
+                             'action'  =>$this->db->f('action'),
+                             'number'  =>$this->db->f('number'),
+                             'value'   =>$this->db->f('value'),
+                             'balance' =>$this->db->f('balance')
+                            );
         }
 
+        $line=json_encode($history);
         return $line;
     }
 
@@ -4030,6 +4022,54 @@ class RatingEngine {
         return 1;
     }
 
+    function GetEntityProfiles($entity) {
+
+        if (!$entity) {
+            syslog(LOG_NOTICE, "GetEntityProfiles");
+            return 0;
+        }
+
+        $query=sprintf("select * from billing_customers where
+        subscriber = '%s' or domain = '%s' or gateway = '%s'",
+        addslashes($entity),
+        addslashes($entity),
+        addslashes($entity)
+        );
+
+        if (!$this->db->query($query)) {
+            $log=sprintf ("GetEntityProfiles error: %s (%s)",$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE, $log);
+            return 0;
+        }
+
+        if ($this->db->num_rows() ==1 ) {
+        	$this->db->next_record();
+            $entity = array('entity'            => $entity,
+                            'profileWeekday'    => $this->db->f('profile_name1'),
+                            'profileWeekdayAlt' => $this->db->f('profile_name1_alt'),
+                            'profileWeekend'    => $this->db->f('profile_name2'),
+                            'profileWeekendAlt' => $this->db->f('profile_name2_alt'),
+                            'timezone'          => $this->db->f('timezone'),
+                            'increment'         => $this->db->f('increment'),
+                            'minDuration'       => $this->db->f('min_duration'),
+                            'countryCode'       => $this->db->f('country_code')
+                            );
+        }
+
+        $line=json_encode($entity);
+        return $line;
+
+    }
+
+    function SetEntityProfiles($entity,$profiles) {
+
+        if (!$entity) {
+            syslog(LOG_NOTICE, "SetEntityProfiles");
+            return 0;
+        }
+
+    }
+
     function showHelp() {
         $help=
         "Version\n".
@@ -4044,6 +4084,7 @@ class RatingEngine {
         "DebitBalance          From=sip:123@example.com To=sip:0031650222333@example.com Duration=59\n".
         "ShowPrepaidAccounts   Filter=123@example.com\n".
         "ReloadPrepaidAccounts Account=abc@example.com\n".
+        "GetEntityProfiles     Entity=abc@example.com\n".
         "ReloadRatingTables\n".
         "ReloadSipAccountsWithQuota\n".
         "ReloadDomains\n".
@@ -4615,6 +4656,15 @@ class RatingEngine {
 
             $history=$this->getBalanceHistory($NetFields['from']);
             return trim($history);
+        } else if ($NetFields['action'] == "getentityprofiles") {
+            if (!$NetFields['entity']) {
+                $log=sprintf ("Error: Missing Entity parameter");
+                    syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+
+            $entity=$this->GetEntityProfiles($NetFields['entity']);
+            return trim($entity);
 
         } else if ($NetFields['action'] == "showprepaidaccounts") {
             return trim($this->showPrepaidAccounts($NetFields['filter']));
