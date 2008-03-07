@@ -879,12 +879,14 @@ class RatingTables {
         global $CDRTool;
         global $RatingEngine;
 
+		$this->settings=$RatingEngine;
+
         $this->db = new DB_cdrtool;
         $this->CDRTool = $CDRTool;
         $this->db->Halt_On_Error="no";
 
-        if ($RatingEngine['csv_delimiter']) {
-            $this->delimiter=$RatingEngine['csv_delimiter'];
+        if ($this->settings['csv_delimiter']) {
+            $this->delimiter=$this->settings['csv_delimiter'];
         }
 
         $this->tables=array(
@@ -1208,10 +1210,9 @@ class RatingTables {
             $gateway         = trim($p[1]);
             $domain          = trim($p[2]);
             $subscriber      = trim($p[3]);
-            $profile         = trim($p[4]);
+            $name            = trim($p[4]);
             $destination     = trim($p[5]);
             $durationRate    = trim($p[6]);
-            //$trafficRate     = trim($p[7]);
             $application     = trim($p[7]);
             $connectCost     = trim($p[8]);
 
@@ -1244,7 +1245,7 @@ class RatingTables {
                 addslashes($gateway),
                 addslashes($domain),
                 addslashes($subscriber),
-                addslashes($profile),
+                addslashes($name),
                 addslashes($destination),
                 addslashes($durationRate),
                 addslashes($trafficRate),
@@ -1257,7 +1258,58 @@ class RatingTables {
                     return false;
                 }
 
-                if ($this->db->affected_rows() >0) {
+                if ($this->db->affected_rows()) {
+                    if ($this->settings['split_rating_table']) {
+                        if ($name) {
+                        	$_table='billing_rates_'.$name;
+                        } else {
+                        	$_table='billing_rates_default';
+                        }
+
+                        if (!$this->createRatingTable($name)) {
+
+                            $query=sprintf("insert into %s
+                            (
+                            id,
+                            gateway,
+                            domain,
+                            subscriber,
+                            name,
+                            destination,
+                            durationRate,
+                            trafficRate,
+                            application,
+                            connectCost
+                            ) values (
+                            LAST_INSERT_ID(),
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s'
+                            )",
+                            addslashes($gateway),
+                            addslashes($domain),
+                            addslashes($subscriber),
+                            addslashes($name),
+                            addslashes($destination),
+                            addslashes($durationRate),
+                            addslashes($trafficRate),
+                            addslashes($application),
+                            addslashes($connectCost)
+                            );
+            
+                            if (!$this->db->query($query)) {
+                                printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                                return false;
+                            }
+                        }
+                    }
+
                     $inserted++;
                 } else {
                     $failed++;
@@ -1274,17 +1326,45 @@ class RatingTables {
                 addslashes($gateway),
                 addslashes($domain),
                 addslashes($subscriber),
-                addslashes($profile),
+                addslashes($name),
                 addslashes($destination),
                 addslashes($application)
                 );
 
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
-                if ($this->db->affected_rows() >0) {
+                if ($this->db->affected_rows()) {
+                    if ($this->settings['split_rating_table']) {
+                        if ($name) {
+                        	$_table='billing_rates_'.$name;
+                        } else {
+                        	$_table='billing_rates_default';
+                        }
+
+                        $query=sprintf("delete from %s
+                        where gateway      = '%s'
+                        and domain         = '%s'
+                        and subscriber     = '%s'
+                        and name           = '%s'
+                        and destination    = '%s'
+                        and application    = '%s'",
+                        addslashes($_table),
+                        addslashes($gateway),
+                        addslashes($domain),
+                        addslashes($subscriber),
+                        addslashes($name),
+                        addslashes($destination),
+                        addslashes($application)
+                        );
+
+                        if (!$this->db->query($query)) {
+                            printf ("Database error for %s: %s (%s)",$query, $this->db->Error,$this->db->Errno);
+                        }
+                    }
+
                     $deleted++;
                 }
             } else if ($ops=="2") {
@@ -1296,7 +1376,7 @@ class RatingTables {
                 and subscriber   = '%s'
                 and application  = '%s'
                 ",
-                addslashes($profile),
+                addslashes($name),
                 addslashes($destination),
                 addslashes($gateway),
                 addslashes($domain),
@@ -1305,7 +1385,7 @@ class RatingTables {
                 );
 
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     return false;
                 }
 
@@ -1324,7 +1404,7 @@ class RatingTables {
                     addslashes($durationRate),
                     addslashes($trafficRate),
                     addslashes($connectCost),
-                    addslashes($profile),
+                    addslashes($name),
                     addslashes($destination),
                     addslashes($gateway),
                     addslashes($domain),
@@ -1334,11 +1414,44 @@ class RatingTables {
                     );
 
                     if (!$this->db->query($query)) {
-                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                        printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                         return false;
                     }
 
-                    if ($this->db->affected_rows() >0) {
+                    if ($this->db->affected_rows()) {
+                        if ($this->settings['split_rating_table']) {
+                            if ($name) {
+                                $_table = 'billing_rates_'.$name;
+                            } else {
+                                $_table = 'billing_rates_default';
+                            }
+                            $query=sprintf("update %s set
+                            durationRate    = '%s',
+                            trafficRate     = '%s',
+                            connectCost     = '%s'
+                            where name      = '%s'
+                            and destination = '%s'
+                            and gateway     = '%s'
+                            and domain      = '%s'
+                            and subscriber  = '%s'
+                            and application = '%s'
+                            ",
+                            addslashes($_table),
+                            addslashes($durationRate),
+                            addslashes($trafficRate),
+                            addslashes($connectCost),
+                            addslashes($name),
+                            addslashes($destination),
+                            addslashes($gateway),
+                            addslashes($domain),
+                            addslashes($subscriber),
+                            addslashes($application)
+                            );
+        
+                            if (!$this->db->query($query)) {
+                                printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                            }
+                        }
                         $updated++;
                     }
 
@@ -1368,7 +1481,7 @@ class RatingTables {
                     addslashes($gateway),
                     addslashes($domain),
                     addslashes($subscriber),
-                    addslashes($profile),
+                    addslashes($name),
                     addslashes($destination),
                     addslashes($durationRate),
                     addslashes($trafficRate),
@@ -1377,10 +1490,61 @@ class RatingTables {
                     );
 
                     if (!$this->db->query($query)) {
-                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                        printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                         return false;
                     }
-                    if ($this->db->affected_rows() >0) {
+                    if ($this->db->affected_rows()) {
+                        if ($this->settings['split_rating_table']) {
+                            if ($name) {
+                                $_table='billing_rates_'.$name;
+                            } else {
+                                $_table='billing_rates_default';
+                            }
+
+                            if (!$this->createRatingTable($name)) {
+
+                               $query=sprintf("insert into %s
+                               (
+                               id,
+                               gateway,
+                               domain,
+                               subscriber,
+                               name,
+                               destination,
+                               durationRate,
+                               trafficRate,
+                               application,
+                               connectCost
+                               ) values (
+                               LAST_INSERT_ID(),
+                               '%s',
+                               '%s',
+                               '%s',
+                               '%s',
+                               '%s',
+                               '%s',
+                               '%s',
+                               '%s',
+                               '%s'
+                               )",
+                               addslashes($gateway),
+                               addslashes($domain),
+                               addslashes($subscriber),
+                               addslashes($name),
+                               addslashes($destination),
+                               addslashes($durationRate),
+                               addslashes($trafficRate),
+                               addslashes($application),
+                               addslashes($connectCost)
+                               );
+               
+                               if (!$this->db->query($query)) {
+                                   printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                   return false;
+                               }
+                            }
+                        }
+
                         $inserted++;
                     } else {
                         $failed++;
@@ -1426,7 +1590,7 @@ class RatingTables {
             $gateway         = trim($p[1]);
             $domain          = trim($p[2]);
             $subscriber      = trim($p[3]);
-            $profile         = trim($p[4]);
+            $name         = trim($p[4]);
             $destination     = trim($p[5]);
             $durationRate    = trim($p[6]);
             $trafficRate     = trim($p[7]);
@@ -1466,7 +1630,7 @@ class RatingTables {
                 addslashes($gateway),
                 addslashes($domain),
                 addslashes($subscriber),
-                addslashes($profile),
+                addslashes($name),
                 addslashes($destination),
                 addslashes($durationRate),
                 addslashes($trafficRate),
@@ -1497,7 +1661,7 @@ class RatingTables {
                 addslashes($gateway),
                 addslashes($domain),
                 addslashes($subscriber),
-                addslashes($profile),
+                addslashes($name),
                 addslashes($destination),
                 addslashes($startDate),
                 addslashes($endDate)
@@ -1520,7 +1684,7 @@ class RatingTables {
                 and startDate    = '%s'
                 and endDate      = '%s'
                 ",
-                addslashes($profile),
+                addslashes($name),
                 addslashes($destination),
                 addslashes($gateway),
                 addslashes($domain),
@@ -1552,7 +1716,7 @@ class RatingTables {
                     addslashes($trafficRate),
                     addslashes($application),
                     addslashes($connectCost),
-                    addslashes($profile),
+                    addslashes($name),
                     addslashes($destination),
                     addslashes($gateway),
                     addslashes($domain),
@@ -1600,7 +1764,7 @@ class RatingTables {
                     addslashes($gateway),
                     addslashes($domain),
                     addslashes($subscriber),
-                    addslashes($profile),
+                    addslashes($name),
                     addslashes($destination),
                     addslashes($durationRate),
                     addslashes($trafficRate),
@@ -2393,9 +2557,8 @@ class RatingTables {
     }
 
     function checkRatingEngineConnection () {
-    	global $RatingEngine;
-      	if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] &&
-        	$fp = fsockopen ($RatingEngine['socketIP'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
+      	if ($this->settings['socketIP'] && $this->settings['socketPort'] &&
+        	$fp = fsockopen ($this->settings['socketIP'], $this->settings['socketPort'], $errno, $errstr, 2)) {
           	fclose($fp);
           	return true;
       	}
@@ -2498,6 +2661,32 @@ class RatingTables {
             printf ("Loaded %d records from %s\n",$this->importIndex,$filename);
             flush();
             $this->importIndex=0;
+        }
+    }
+
+    function createRatingTable($name) {
+    	if ($name) {
+            $table='billing_rates_'.$name;
+        } else {
+            $table='billing_rates_default';
+        }
+
+    	$query=sprintf("create table %s select * from billing_rates where name = '%s'\n",$table,$name);
+
+        if ($this->db->query($query)) {
+            $query=sprintf("alter table %s add index rate_idx (name)",$table);
+            if (!$this->db->query($query)) {
+                printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            }
+    
+            $query=sprintf("alter table %s add index destination_idx (destination)",$table);
+            if (!$this->db->query($query)) {
+                printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            }
+
+            return true;
+        } else {
+            return false;
         }
     }
 

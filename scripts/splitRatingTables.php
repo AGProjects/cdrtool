@@ -6,4 +6,5 @@ include($path."/../rating_lib.phtml");
 
 $RatingTables = new RatingTables();
 $RatingTables->splitRatingTable();
+
 ?>
