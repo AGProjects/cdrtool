@@ -410,6 +410,7 @@ if ($action =="update" && $table) {
                 from billing_rates ",
                 $toRate);
             }
+
             $j=0;
             while ($j < $cc ) {
     
@@ -435,7 +436,6 @@ if ($action =="update" && $table) {
                         $update_all_where .= " and $Fname $like $quotes".$likewhat."$quotes";
                         $t++;
                     }
-                
                 }
             
                 $j++;	
