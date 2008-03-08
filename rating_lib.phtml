@@ -814,7 +814,6 @@ class Rate {
             $query=sprintf("select durationRate, trafficRate, connectCost from %s
             where destination = '%s' and application = '%s'",
             $table,
-            $rateName,
             $DestinationId,
             $applicationType
             );
