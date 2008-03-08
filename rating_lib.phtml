@@ -5901,8 +5901,10 @@ class RatingEngine {
             }
 
             if (!preg_match("/^0/",$CDR->CanonicalURINormalized)) {
-               	$log = sprintf ("Call to %s, no limit imposed",$CDR->CanonicalURINormalized);
+               	/*
+                $log = sprintf ("Call to %s, no limit imposed",$CDR->CanonicalURINormalized);
                 syslog(LOG_NOTICE, $log);
+                */
                 $this->logRuntime();
                 return "none";
             } else {

@@ -1,6 +1,6 @@
 cdrtool (6.3.0) unstable; urgency=low
 
-  * Boost the speed of the rating engine with 100% to 1000% depending on
+  * Boost the speed of the rating engine from 100% to 1000% depending on
     the complexity of the rating tables
   * Fixed set of delimiter from global.inc setting when exporting csv files
   * Added GetEntityProfiles command to rating engine
@@ -14,7 +14,7 @@ cdrtool (6.3.0) unstable; urgency=low
   * Adjust some column lengths
     Must apply setup/mysql/alter_tables.mysql
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 07 Mar 2008 20:48:16 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 08 Mar 2008 15:56:12 +0100
 
 cdrtool (6.2.3) unstable; urgency=low
 
