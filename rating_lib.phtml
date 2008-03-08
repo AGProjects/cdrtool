@@ -24,11 +24,7 @@ class Rate {
 
         $this->settings = $settings;
 
-        if (!is_object($db)) {
-        	$this->db = new DB_cdrtool;
-        } else {
-            $this->db = &$db;
-        }
+        $this->db = &$db;
 
         $this->db->Halt_On_Error="no";
 
