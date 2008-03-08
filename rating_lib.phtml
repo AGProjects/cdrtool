@@ -811,18 +811,27 @@ class Rate {
             } else {
             	$table="billing_rates_default";
             }
+            $query=sprintf("select durationRate, trafficRate, connectCost from %s
+            where destination = '%s' and application = '%s'",
+            $table,
+            $rateName,
+            $DestinationId,
+            $applicationType
+            );
+
         } else {
 			$table="billing_rates";
+            $query=sprintf("select durationRate, trafficRate, connectCost from %s
+            where name = '%s' and destination = '%s' and application = '%s'",
+            $table,
+            $rateName,
+            $DestinationId,
+            $applicationType
+            );
+
         }
 
         // lookup rate from MySQL
-        $query=sprintf("select durationRate, trafficRate, connectCost from %s
-        where name = '%s' and destination = '%s' and application = '%s'",
-        $table,
-        $rateName,
-        $DestinationId,
-        $applicationType
-        );
 
         if (!$this->db->query($query)) {
             if ($this->db->Errno != 1146) {
