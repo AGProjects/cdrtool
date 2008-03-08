@@ -5962,7 +5962,7 @@ class RatingEngine {
 
                 syslog(LOG_NOTICE, $log);
 
-				if ($NetFields['lock'] && $maxduration > 0) {
+				if ($NetFields['lock'] && $this->prepaid_lock && $maxduration > 0) {
 
                 	// mark the account that is locked during call
                     $query=sprintf("update %s
