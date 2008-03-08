@@ -480,8 +480,11 @@ alter table cdrtool.billing_ratesNGN change column domain domain varchar(64) not
 alter table cdrtool.billing_ratesNGN change column subscriber subscriber varchar(128) not null;
 alter table cdrtool.billing_ratesNGN change column gateway gateway varchar(15) not null;
 
+alter table cdrtool.prepaid change column account account varchar(128) not null;
+
 optimize table billing_rates;
 optimize table billing_rates_history;
 optimize table billing_customers;
 optimize table billing_profiles;
+optimize table prepaid;
 

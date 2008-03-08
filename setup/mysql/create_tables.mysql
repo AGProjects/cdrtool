@@ -369,7 +369,7 @@ CREATE TABLE `normalize_lock` (
 DROP TABLE IF EXISTS `prepaid`;
 CREATE TABLE `prepaid` (
   `id` int(10) unsigned NOT NULL auto_increment,
-  `account` varchar(255) NOT NULL default '',
+  `account` varchar(128) NOT NULL default '',
   `balance` decimal(10,4) NOT NULL default '0.0000',
   `change_date` datetime NOT NULL default '0000-00-00 00:00:00',
   `call_lock` enum('0','1') default '0',
