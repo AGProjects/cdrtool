@@ -864,6 +864,8 @@ class Rate {
 }
 
 class RatingTables {
+	var $maxrowsperpage=15;
+
     var $delimiter=",";
 	var $filesToImport=array();
     var $importFilesPatterns=array('rates_history',
@@ -874,6 +876,25 @@ class RatingTables {
                                    );
 
     var $mustReload = false;
+    var $web_elements=array('table',
+                            'export',
+                            'action',
+                            'subaction',
+                            'confirmDelete',
+                            'confirmCopy',
+                            'next',
+                            'id',
+                            'search_text',
+                            'ReloadRatingTables',
+                            'account',
+                            'balance',
+                            'fromRate',
+                            'toRate');
+
+	var $skipReloadForTables = array('billing_rates',
+                                     'prepaid_cards',
+                                     'billing_customers'
+                                     );
 
     function RatingTables () {
         global $CDRTool;
@@ -881,9 +902,13 @@ class RatingTables {
 
 		$this->settings=$RatingEngine;
 
-        $this->db = new DB_cdrtool;
         $this->CDRTool = $CDRTool;
+
+        $this->db = new DB_cdrtool;
+        $this->db1 = new DB_cdrtool;
+
         $this->db->Halt_On_Error="no";
+        $this->db1->Halt_On_Error="no";
 
         if ($this->settings['csv_delimiter']) {
             $this->delimiter=$this->settings['csv_delimiter'];
@@ -1169,6 +1194,10 @@ class RatingTables {
                                                    )
                            );
 
+        if ($this->settings['split_rating_table']) {
+
+        	$this->tables['billing_rates']['fields']['name']['readonly']=1;
+        }
     }
 
     function ImportCSVFiles($dir=false) {
@@ -1259,7 +1288,7 @@ class RatingTables {
                 }
 
                 if ($this->db->affected_rows()) {
-                    if ($this->settings['split_rating_table_csv']) {
+                    if ($this->settings['split_rating_table']) {
                         if ($name) {
                         	$_table='billing_rates_'.$name;
                         } else {
@@ -1338,7 +1367,7 @@ class RatingTables {
                 }
 
                 if ($this->db->affected_rows()) {
-                    if ($this->settings['split_rating_table_csv']) {
+                    if ($this->settings['split_rating_table']) {
                         if ($name) {
                         	$_table='billing_rates_'.$name;
                         } else {
@@ -1420,7 +1449,7 @@ class RatingTables {
                     }
 
                     if ($this->db->affected_rows()) {
-                        if ($this->settings['split_rating_table_csv']) {
+                        if ($this->settings['split_rating_table']) {
                             if ($name) {
                                 $_table = 'billing_rates_'.$name;
                             } else {
@@ -1495,7 +1524,7 @@ class RatingTables {
                         return false;
                     }
                     if ($this->db->affected_rows()) {
-                        if ($this->settings['split_rating_table_csv']) {
+                        if ($this->settings['split_rating_table']) {
                             if ($name) {
                                 $_table='billing_rates_'.$name;
                             } else {
@@ -2694,6 +2723,15 @@ class RatingTables {
     }
 
     function splitRatingTable() {
+        $query="select count(*) as c from billing_rates";
+
+        if (!$this->db->query($query)) {
+            printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            return false;
+        }
+        $this->db->next_record();
+        $rows=$this->db->f('c');
+
         $query="select distinct(name) from billing_rates order by name ASC";
 
         if (!$this->db->query($query)) {
@@ -2731,26 +2769,1344 @@ class RatingTables {
             	if (!$this->db->query($query)) {
                 	printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     return false;
-                } else {
-                	printf ("Added rate_idx index to table %s\n",$table);
                 }
 
                 $query=sprintf("alter table %s add index destination_idx (destination)",$table);
             	if (!$this->db->query($query)) {
                 	printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     return false;
-                } else {
-                	printf ("Added destination_idx index to table %s\n",$table);
                 }
                 $query=sprintf("select count(*) as c from %s",$table);
                 $this->db->query($query);
                 $this->db->next_record();
                 $records=$this->db->f('c');
-                printf ("Created table %s with %s records\n",$table,$records);
+                $created_records=$created_records+$records;
+                $progress=100*$created_records/$rows;
+
+                printf ("Created table %s with %s records (%.1f %s)\n",$table,$records,$progress,'%');
             }
 
         }
 
+        return true;
+    }
+
+    function updateTable($whereDomainFilter) {
+        
+        foreach ($this->web_elements as $_el) {
+            ${$_el}= $_REQUEST[$_el];
+        }
+
+		if (!$table) return false;
+
+    	// Init table structure
+        if (!is_array($this->tables[$table]['exceptions'])) $this->tables[$table]['exceptions']=array();
+        if (!is_array($this->tables[$table]['keys']))       $this->tables[$table]['keys']=array();
+        if (!is_array($this->tables[$table]['fields']))     $this->tables[$table]['fields']=array();
+        $metadata  = $this->db->metadata($table="$table");
+        $cc        = count($metadata);
+        // end init table structure
+        
+        if ($action =="update") {
+            $affected_rows=0;
+            if ($subaction == "Update") {
+            	$update_set='';
+                $k=1;
+                while ($k < $cc ) {
+                    $Fname=$metadata[$k]["name"];
+                    $value=$_REQUEST[$Fname];
+                    //dprint("fname=$Fname, value=$value");
+                    if (!in_array($Fname,$this->tables[$table]['exceptions']) ) {
+                        if ($kkk > 0) {
+                            $comma = ",";
+                        } else {
+                            $comma = "";
+                        }
+                        if (preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
+                            $update_set .= $comma.$Fname."= ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
+                        } else {
+                            $update_set .= $comma.$Fname."='".$value."'";
+                        }
+                        $kkk++;
+                    }
+                    $k++;
+                    
+                }
+
+                $log_entity=" id = $id ";
+        
+                $where = " id = '".$id."' and $whereDomainFilter";
+
+                dprint($query);
+
+                if ($table == "billing_rates") {
+                	if ($this->settings['split_rating_table']) {
+    
+                        $rate_table_affected=array();
+                        $query_r="select distinct (name) from billing_rates where". $where;
+                        dprint($query_r);
+                        if ($this->db->query($query_r)) {
+                            while($this->db->next_record()) {
+                                $rate_tables_affected[]='billing_rates_'.$this->db->f('name');
+                            }
+                        } else {
+                            printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+                        }
+                    }
+                } else if ($table=="prepaid") {
+                    register_shutdown_function("unLockTables",$this->db);
+        
+                    if ($this->db->query("lock table prepaid write")) {
+                        $query_q=sprintf("select * from prepaid where account = '%s'",addslashes($account));
+                        dprint($query_q);
+                        if ($this->db->query($query_q) && $this->db->num_rows()) {
+                            $this->db->next_record();
+                            $old_balance=$this->db->f('balance');
+                        }
+        
+                        $this->db->query("unlock tables");
+                    }
+                }
+
+                $query = "update $table set ". $update_set . " where ". $where ;
+
+                if ($this->db->query($query)) {
+                    $affected_rows=$this->db->affected_rows();
+                    if ($affected_rows) {
+                        if ($table=="prepaid") {
+                            list($username,$domain)=explode("@",$account);
+        
+                            $value=$balance-$old_balance;
+        
+                            if (floatval($balance) != floatval($old_balance))  {
+                                $query=sprintf("insert into prepaid_history
+                                (username,domain,action,number,value,balance,date)
+                                values
+                                ('%s','%s','Set balance','Manual update by %s','%s','%s',NOW())",
+                                addslashes($username),
+                                addslashes($domain),
+                                addslashes($loginname),
+                                addslashes($value),
+                                addslashes($balance)
+                                );
+                                dprint($query);
+                                $this->db->query($query);
+        
+                                $log_query=sprintf("insert into log
+                                (date,login,ip,datasource,results,description)
+                                values
+                                (NOW(),'%s','%s','Rating tables','%d','Set prepaid balance of %s@%s to %s')",
+                                addslashes($loginname),
+                                addslashes($REMOTE_ADDR),
+                                addslashes($affected_rows),
+                                addslashes($username),
+                                addslashes($domain),
+                                addslashes($balance)
+                                );
+        
+                                dprint($log_query);
+                                $this->db->query($log_query);
+                            }
+        
+                            if (!reloadPrepaidAccounts($account)) {
+                                // we failed to reload the prepaid account in real time so we mark the database for
+                                // reload at a later time
+                                if (!$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'")){
+                                    printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+                                }
+                            }
+                        } else if ($table=='billing_rates') {
+                            if ($this->settings['split_rating_table']) {
+                                foreach ($rate_tables_affected as $extra_rate_table) {
+                					$query_u = sprintf("update %s set %s where %s ",
+                                    $extra_rate_table,
+                                    $update_set,
+                                    $where
+                                    );
+                                	dprint($query_u);
+                                	if (!$this->db->query($query_u)) {
+                                		printf ("<font color=red>Database error for %s: %s (%s)</font>",$query_u,$this->db->Error,$this->db->Errno);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!in_array($table,$this->skipReloadForTables)) {
+                            if (!$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'")){
+                                printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+                            }
+                        }
+
+                    }
+                } else {
+                    printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+                }
+        
+            } elseif ($subaction == "Update selection") {
+                $k=1;
+                $kkk=0;
+            	$update_set='';
+                while ($k < $cc ) {
+                    $Fname=$metadata[$k]["name"];
+                    $value=$_REQUEST[$Fname];
+                    if (strlen($value) && !in_array($Fname,$this->tables[$table]['exceptions'])
+                        && !in_array($Fname,$this->tables[$table]['keys'])) {
+                        if ($kkk > 0) {
+                            $comma = ",";
+                        } else {
+                            $comma="";
+                        }
+                        if ($value == "NULL") {
+                            $value="";
+                        }
+                        if (preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
+                            $update_set .= $comma.$Fname."= ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
+                        } else {
+                            $update_set .= $comma.$Fname."='".$value."'";
+                        }
+                        
+                        $kkk++;
+                    }
+                    $k++;
+                }
+        
+                $where = $whereDomainFilter;
+
+                if ($kkk) {
+                    // reconstruct where clause to apply all changes to selection
+                    // build where clause
+                    // Search build for each field
+                    $j=0;
+                    while ($j < $cc ) {
+            
+                        $Fname=$metadata[$j]["name"];
+                        $size=$metadata[$j]["len"];
+        
+                        if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+            
+                            $f_name="search_".$Fname;
+                            $value=$_REQUEST[$f_name];
+        
+                            if (preg_match("/^([<|>]+)(.*)$/",$value,$likes)) {
+                                $like=$likes[1];
+                                $likewhat=$likes[2];
+                                $quotes="";				
+                            } else {
+                                $like="like";
+                                $likewhat=$value;
+                                $quotes="'";
+                            }				
+            
+                            if (strlen($value)) {
+                                $where .= " and $Fname $like $quotes".$likewhat."$quotes";
+                                $t++;
+                            }
+                        
+                        }
+                    
+                        $j++;	
+                    }
+
+                	if ($table == 'billing_rates') {
+                    	if ($this->settings['split_rating_table']) {
+    
+                            $rate_table_affected=array();
+                            $query_r="select distinct (name) from billing_rates where". $where;
+                            dprint($query_r);
+                            if ($this->db->query($query_r)) {
+                                while($this->db->next_record()) {
+                                    $rate_tables_affected[]='billing_rates_'.$this->db->f('name');
+                                }
+                            } else {
+                                printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+                            }
+                        }
+                    }
+
+                	$query = "update $table set ". $update_set . " where ". $where ;
+
+                    if ($this->db->query($query)) {
+                        $affected_rows=$this->db->affected_rows();
+                        if ($affected_rows) {
+                            if ($table == 'billing_rates') {
+                                if ($this->settings['split_rating_table']) {
+                                    foreach ($rate_tables_affected as $extra_rate_table) {
+                                        $query_u = sprintf("update %s set %s where %s ",
+                                        $extra_rate_table,
+                                        $update_set,
+                                        $where
+                                        );
+                                        dprint($query_u);
+                                        if (!$this->db->query($query_u)) {
+                                            printf ("<font color=red>Database error for %s: %s (%s)</font>",$query_u,$this->db->Error,$this->db->Errno);
+                                        }
+                                    }
+                                }
+                            }
+
+                        	if (!in_array($table,$this->skipReloadForTables)) {
+                            	$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+                            }
+                        }
+        
+                    } else {
+                        printf ("<font color=red>Database error: %s</font>",$this->db->Error);
+                    }
+                }
+            } elseif ($subaction == "Delete selection") {
+                if ($confirmDelete) {
+                    // reconstruct where clause to apply all changes to selection
+                    // build where clause
+                    // Search build for each field
+
+                    $where = $whereDomainFilter;
+                    $j=0;
+                    while ($j < $cc ) {
+            
+                        $Fname=$metadata[$j]["name"];
+                        $size=$metadata[$j]["len"];
+            
+                        if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+            
+                            $f_name="search_".$Fname;
+                            $value=$_REQUEST[$f_name];
+            
+                            if (preg_match("/^([<|>]+)(.*)$/",$value,$likes)) {
+                                $like=$likes[1];
+                                $likewhat=$likes[2];
+                                $quotes="";				
+                            } else {
+                                $like="like";
+                                $likewhat=$value;
+                                $quotes="'";
+                            }				
+            
+                            if (strlen($value)) {
+                                $where .= " and $Fname $like $quotes".$likewhat."$quotes";
+                                $t++;
+                            }
+                        
+                        }
+                    
+                        $j++;	
+                    }
+
+                	if ($table == 'billing_rates') {
+                    	if ($this->settings['split_rating_table']) {
+    
+                            $rate_table_affected=array();
+                            $query_r="select distinct (name) from billing_rates where". $where;
+                            dprint($query_r);
+                            if ($this->db->query($query_r)) {
+                                while($this->db->next_record()) {
+                                    $rate_tables_affected[]='billing_rates_'.$this->db->f('name');
+                                }
+                            } else {
+                                printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+                            }
+                        }
+                    }
+
+                    $query="delete from $table where $where";
+
+                    dprint($query);
+        
+                    if ($this->db->query($query)) {
+        
+                        $affected_rows=$this->db->affected_rows();
+        
+                        if ($affected_rows) {
+                            if ($table == 'billing_rates') {
+                                if ($this->settings['split_rating_table']) {
+                                    foreach ($rate_tables_affected as $extra_rate_table) {
+                                        $query_u = sprintf("delete from %s where %s ",
+                                        $extra_rate_table,
+                                        $where
+                                        );
+                                        dprint($query_u);
+                                        if (!$this->db->query($query_u)) {
+                                            printf ("<font color=red>Database error for %s: %s (%s)</font>",$query_u,$this->db->Error,$this->db->Errno);
+                                        }
+                                    }
+                                }
+                            }
+
+                        	if (!in_array($table,$this->skipReloadForTables)) {
+                            	$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+                            }
+                        }
+                    } else {
+                        printf ("<font color=red>Database error: %s</font>",$this->db->Error);
+                    }
+        
+                    unset($confirmDelete);
+        
+                } else {
+                    print "<p><font color=blue>";
+                    print "Please confirm the deletion by pressing the Delete button again. ";
+                    print "</font>";
+                    print "<input type=hidden name=confirmDelete value=1>";
+                }
+            } elseif ($subaction == "Copy rate" && strlen($fromRate) && strlen($toRate)) {
+                if ($confirmCopy) {
+                    if ($toRate == 'history') {
+                        $values=sprintf("
+                        (gateway,domain,subscriber,name,destination,durationRate,
+                        trafficRate,application,connectCost,startDate,endDate)
+                        select
+                        billing_rates.gateway,
+                        billing_rates.domain,
+                        billing_rates.subscriber,
+                        '%s',
+                        billing_rates.destination,
+                        billing_rates.durationRate,
+                        billing_rates.trafficRate,
+                        billing_rates.application,
+                        billing_rates.connectCost,
+                        NOW(),
+                        NOW()
+                        from billing_rates ",
+                        $fromRate);
+        
+                    } else {
+        
+                        $values=sprintf("
+                        (gateway,domain,subscriber,name,destination,durationRate,
+                        trafficRate,application,connectCost)
+                        select
+                        billing_rates.gateway,
+                        billing_rates.domain,
+                        billing_rates.subscriber,
+                        '%s',
+                        billing_rates.destination,
+                        billing_rates.durationRate,
+                        billing_rates.trafficRate,
+                        billing_rates.application,
+                        billing_rates.connectCost
+                        from billing_rates ",
+                        $toRate);
+                    }
+
+                    $where=$whereDomainFilter;
+
+                    $j=0;
+                    while ($j < $cc ) {
+            
+                        $Fname=$metadata[$j]["name"];
+                        $size=$metadata[$j]["len"];
+            
+                        if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+            
+                            $f_name="search_".$Fname;
+                            $value=$_REQUEST[$f_name];
+            
+                            if (preg_match("/^([<|>]+)(.*)$/",$value,$likes)) {
+                                $like=$likes[1];
+                                $likewhat=$likes[2];
+                                $quotes="";				
+                            } else {
+                                $like="like";
+                                $likewhat=$value;
+                                $quotes="'";
+                            }				
+            
+                            if (strlen($value)) {
+                                $where .= " and $Fname $like $quotes".$likewhat."$quotes";
+                                $t++;
+                            }
+                        }
+                    
+                        $j++;	
+                    }
+
+                    if ($toRate == 'history') {
+                        $query="insert into billing_rates_history $values where $where";
+                    } else {
+                        $query="insert into billing_rates $values where $where";
+                    }
+
+                    dprint($query);
+                    if ($this->db->query($query)) {
+        
+                        $affected_rows=$this->db->affected_rows();
+        
+                        if ($affected_rows) {
+                        	print "$affected_rows rates copied. ";
+                            if ($table == 'billing_rates') {
+                                if ($this->settings['split_rating_table']) {
+                        			$query=sprintf("create table billing_rates_%s select * from billing_rates where %s ",
+                                    $toRate,
+                                    $where
+                                    );
+                                    if (!$this->db->query($query)) {
+                                        printf ("<font color=red>Database error for %s: %s (%s)</font>",$query,$this->db->Error,$this->db->Errno);
+                                    }
+                                }
+                            }
+
+                        	if (!in_array($table,$this->skipReloadForTables)) {
+                            	$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+                            }
+                        }
+        
+                        if ($toRate == 'history') {
+                            // Switch to history
+                            $table      = 'billing_rates_history';
+        
+                            // Init table structure
+                            $this->tables[$table]['exceptions']= $this->tables[$table]['exceptions'];
+                            $this->tables[$table]['keys']      = $this->tables[$table]['keys'];
+                            $this->tables[$table]['fields']    = $this->tables[$table]['fields'];
+                            $metadata  = $this->db->metadata($table="$table");
+                            $cc        = count($metadata);
+                            // end init table structure
+                        }
+        
+                        unset($confirmCopy);
+                    } else {
+                        printf ("<font color=red>Database error: %s</font>",$this->db->Error);
+                    }
+        
+                    $log_entity="rate=$toRate";
+        
+                } else {
+                    print "<p><font color=blue>";
+                    print "Please confirm the copy of rate $fromRate to $toRate. ";
+                    print "</font>";
+                }
+        
+            } elseif ($subaction == "Insert") {
+                //print "<h3>Insert</h3>";
+                if (is_array($insertDomainOption) && !in_array($domain,$insertDomainOption)) {
+                    print "<font color=red>
+                    Error: Invalid domain $domain
+                    </font>
+                    ";
+                } else {
+                    $query="insert into $table ( ";
+            
+                    $k=1;
+                    $kkk=0;
+                    while ($k < $cc ) {
+                        $Fname=$metadata[$k]["name"];
+                        if (!in_array($Fname,$this->tables[$table]['exceptions']) ) {
+                            if ($kkk > 0) {
+                                $comma = ",";
+                            } else {
+                                $comma="";
+                            }
+                            $query .= $comma.$Fname;
+                            $kkk++;
+                        }
+                        $k++;
+                        
+                    }
+                    $query .= ") values ( ";
+                    $k=1;
+                    $kkk=0;
+                    while ($k < $cc ) {
+                        $Fname=$metadata[$k]["name"];
+                        $value=$_REQUEST[$Fname];
+            
+                        if (!in_array($Fname,$this->tables[$table]['exceptions']) ) {
+                            if ($kkk > 0) {
+                                $comma = ",";
+                            } else {
+                                $comma="";
+                            }
+                            $query .= $comma."'".$value."'";
+                            $kkk++;
+                        }
+                        $k++;
+                        
+                    }
+                    $query .= ") ";
+            
+                    $k=1;
+                    while ($k < $cc ) {
+                        $Fname=$metadata[$k]["name"];
+                        $value=$_REQUEST[$Fname];
+                        #print "var $Fname = ${$Fname} $this->tables[$table]['keys']<br>";
+                        if (in_array($Fname,$this->tables[$table]['keys']) ) {
+                            if ($value == "") {
+                                $Fname_print_insert=substr($Fname,4);
+                                print "$Fname_print_insert = ???? <br>";
+                                $empty_insert=1;
+                            }				
+                        }
+                        $k++;
+                        
+                    }
+                    dprint($query);
+                    if (!$empty_insert) {
+                        dprint($query);
+                        if ($this->db->query($query)) {
+                            $affected_rows=$this->db->affected_rows();
+                            if ($affected_rows && !in_array($table,$this->skipReloadForTables)) {
+        
+                                $this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+                                $this->db->query("select LAST_INSERT_ID() as lid");
+                                $this->db->next_record();
+                                $log_entity=sprintf("id=%s",$this->db->f('lid'));
+                            }
+        
+                        } else {
+                            printf ("<font color=red>Database error: %s</font>",$this->db->Error);
+                        }
+                    } else {
+                        print "<font color=red>
+                        Error: The insert statement contains an empty key!
+                        </font>
+                        ";
+                    }
+                }
+            } elseif ($subaction == "Delete") {
+                if ($confirmDelete) {
+                    $query="delete from $table where id = '$id' and $whereDomainFilter";
+                    dprint($query);
+                    if ($this->db->query($query)) {
+                        $affected_rows=$this->db->affected_rows();
+                        if ($affected_rows && !in_array($table,$this->skipReloadForTables)) {
+                            $this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+                        }
+                        $log_entity=sprintf("id=%s",$id);
+        
+                    } else {
+                        printf ("<font color=red>Database error: %s</font>",$this->db->Error);
+                    }
+                    unset($confirmDelete);
+                } else {
+                    $idForDeletion=$id;
+                    print "<p><font color=blue>";
+                    print "Please confirm the deletion by pressing the Delete button again. ";
+                    print "</font>";
+                    print "<input type=hidden name=confirmDelete value=1>";
+                }
+            }
+        
+            if ($affected_rows && $table!="prepaid") {
+                $log_query=sprintf("insert into log
+                (date,login,ip,datasource,results,description)
+                values (NOW(),'%s','%s','Rating','%d','%s in table %s %s')",
+                addslashes($loginname),
+                addslashes($REMOTE_ADDR),
+                addslashes($affected_rows),
+                addslashes($subaction),
+                addslashes($table),
+                addslashes($log_entity)
+                );
+                
+                $this->db->query($log_query);
+            }
+        
+        } 
+    }
+
+
+    function showTable($whereDomainFilter) {
+
+		$PHP_SELF=$_SERVER['PHP_SELF'];
+
+        foreach ($this->web_elements as $_el) {
+            ${$_el}= $_REQUEST[$_el];
+        }
+
+		if (!$table) $table="destinations";
+
+    	// Init table structure
+        if (!is_array($this->tables[$table]['exceptions'])) $this->tables[$table]['exceptions']=array();
+        if (!is_array($this->tables[$table]['keys']))       $this->tables[$table]['keys']=array();
+        if (!is_array($this->tables[$table]['fields']))     $this->tables[$table]['fields']=array();
+        $metadata  = $this->db->metadata($table="$table");
+        $cc        = count($metadata);
+        // end init table structure
+
+        // delimiter for exporting records
+        if ($this->settings['csv_delimiter']) {
+            $delimiter=$this->settings['csv_delimiter'];
+        } else {
+            $delimiter=",";
+        }
+
+        $query="select count(*) as c from $table where $whereDomainFilter";
+        
+        $t=0;
+        $j=0;
+        while ($j < $cc ) {
+            $Fname=$metadata[$j]["name"];
+            $size=$metadata[$j]["len"];
+            if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                $f_name="search_".$Fname;
+                $value=$_REQUEST[$f_name];
+                #print "$Fname $size $t  $nrsf $f_name ${$f_name}<br>";
+                if (preg_match("/^([<|>]+)(.*)$/",$value,$likes)) {
+                    $like=$likes[1];
+                    $likewhat=$likes[2];
+                    $quotes="";				
+                } else {
+                    $like="like";
+                    $likewhat=$value;
+                    $quotes="'";
+                }				
+                if (strlen($value)) {
+                    $where=$where." and $Fname $like $quotes".$likewhat."$quotes";
+                    $t++;
+                }
+                
+            }
+        
+            $j++;	
+        }
+            
+        $query .= $where;
+        
+        dprint($query);
+        
+        $this->db->query($query);
+        $this->db->next_record();
+        $rows=$this->db->Record[0];
+        
+        if (!$export) {
+            print "
+            <table border=0 align=center>
+            <tr><td>
+            ";
+            
+            if ($rows == 0) {
+                print "No records found. ";
+            } else {
+                print "$selectie $rows records found. ";
+            }         
+            
+            if ($this->settings["socketIP"] && $this->settings["socketPort"]) {
+        
+                if ($ReloadRatingTables) {
+                    reloadRatingEngineTables();
+                } else {
+                    $this->db->query("select var_value from settings where var_name = 'reloadRating' and var_value='1'");
+                    if ($this->db->num_rows()) {
+                        print " | <a href=rating_tables.phtml?ReloadRatingTables=1&table=$table><font color=red>Reload rating tables</font></a>";
+                    }
+                }
+        
+                $engineAddress=$this->settings["socketIP"].":".$this->settings["socketPort"];
+        
+                if ($this->checkRatingEngineConnection()) {
+                    print " | <font color=green>Rating engine running at $engineAddress</font>";
+                } else {
+                    print " | <font color=red>Cannot connect to rating engine $engineAddress</font>";
+                }
+            }
+        
+            print " | <a href=doc/RATING.txt target=rating_help>Rating documentation</a>";
+        
+            print "
+            </td>
+            </tr>
+            </table>
+            ";
+        } else {
+        	$this->maxrowsperpage=10000000;
+        }
+        
+        if (!$next) {
+            $i=0;
+            $next=0;
+        } else {
+            $i=$next;
+        }
+        
+        $j=0;
+        $z=0;
+        
+        if ($rows > $this->maxrowsperpage)  {
+            $maxrows=$this->maxrowsperpage+$next;
+            if ($maxrows > $rows) {
+                $maxrows=$rows;
+                $prev_rows=$maxrows;
+            }
+        } else  {
+            $maxrows=$rows;
+        }
+        
+        if (!$order && $order_by[$table]) {
+            $order="order by ".$order_by[$table]." ASC " ;
+        }
+        
+        $query="select * from $table
+        where (1=1) $where and $whereDomainFilter
+        $order limit $i, $this->maxrowsperpage";
+
+        dprint($query);
+        
+        $this->db->query($query);
+        $num_fields=$this->db->num_fields()          ;
+        $k=0;
+        
+        if (!$export) {
+            print "
+            <table border=0 class=border align=center width=100%>
+            <tr bgcolor=lightgrey>
+            <td></td>
+            ";
+        }
+        
+        while ($k < $cc) {
+            $th=$metadata[$k]["name"];
+            if (!in_array($th,$this->tables[$table]['exceptions']) ) {
+                if ($this->tables[$table]['fields'][$th]['name']) {
+                    $th=$this->tables[$table]['fields'][$th]['name'];
+                } else {
+                    $th=ucfirst($th);
+                }
+                if (!$export) {
+                    print "<td class=border><b>$th</b></td>";
+                } else {
+                    if ($k) {
+                        printf ("%s%s",$delimiter,$th);
+                    } else {
+                        print "Ops";
+                    }
+                }
+                $t_columns++;
+            }
+            $k++;
+        }
+        
+        if ($export) {
+            print "\n";
+        }
+        
+        
+        if (!$export) {
+            
+            print "
+            <td class=border><b>Action</b></td>
+            </tr>";
+            $t_columns=$t_columns+2;
+            
+            // SEARCH FORM
+            print "
+            <tr>
+            <td class=border colspan=$t_columns>
+                Use _ to match one character and % to match any. Use > or < 
+                to find greater or smaller values.</td>	
+            </tr>
+            ";
+            
+            // Search form
+            print "
+            <form action=$PHP_SELF method=post>
+            <input type=hidden name=action value=Search>
+            <tr>
+            <td>&nbsp; </td>";
+            $j=0;
+            
+            while ($j < $cc ) {
+                $Fname=$metadata[$j]["name"];
+                $size=$metadata[$j]["len"];
+            
+                if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                    $SEARCH_NAME="search_".$Fname;
+                    $value=$_REQUEST[$SEARCH_NAME];
+                    if ($value != "") {
+                        $selection_made=1;
+                    }
+                    $maxlength=$size;
+            
+                    if ($this->tables[$table]['fields'][$Fname][size]) {
+                        $field_size=$this->tables[$table]['fields'][$Fname][size];
+                    } else {
+                        $field_size=$el_size;
+                    }
+            
+                    if (!in_array($Fname,$this->tables[$table]['keys']) ) {
+                        if ($Fname=="domain" && is_array($insertDomainOption)) {
+                            print "<td><select name=search_$Fname>";
+                            $selected_domain[$value]="selected";
+                            print "<option>";
+                            foreach ($insertDomainOption as $_option) {
+                                print "<option $selected_domain[$_option]>$_option";
+                            }
+                            print "
+                            </select>
+                            </td>";
+        
+                        } else {
+                            print "<td><input type=text size=$field_size maxlength=$maxlength name=search_$Fname value=\"$value\"></td>";
+                        }
+        
+                    } else {
+                        print "<td></td>";
+                    }
+        
+                }
+                
+                $j++;
+            }
+            
+            print "
+            <td>
+            <select name=table value=$table>
+            ";
+            $selected_table[$table]="selected";
+            foreach (array_keys($this->tables) as $tb) {
+                $sel_name=$this->tables[$tb]['name'];
+                print "<option value=$tb $selected_table[$tb]>$sel_name";
+            }
+            print "
+            </select>
+            <input type=submit name=subaction value=Search>
+            </form>
+            <form action=$PHP_SELF method=post target=export>
+            <input type=hidden name=export value=1>
+            ";
+            $j=0;
+            while ($j < $cc ) {
+                $Fname=$metadata[$j]["name"];
+                $size=$metadata[$j]["len"];
+                if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                    $SEARCH_NAME="search_".$Fname;
+                    $value=$_REQUEST[$SEARCH_NAME];
+                    print "<input type=hidden name=search_$Fname value=\"$value\">";
+                }
+            
+                $j++;	
+            }
+        
+            if ($table!=='prepaid_cards' ) {
+                print "
+                <input type=hidden name=table value=$table>
+                <input type=submit value=\"Export $table_fname[$table]\">
+                ";
+            }
+        
+            print "</td>
+            </tr>
+            </form>
+            ";
+            
+            print "
+            <tr>
+            <td colspan=$t_columns><hr noshade size=2></td>
+            </tr>
+            ";
+            
+            if ($selection_made) {
+                // Update all form
+                print "
+                <tr><td class=border colspan=$t_columns>
+                Use + or - to add/substract from curent values.
+                Use * or / to multiply/divide curent values.</td>
+                </tr>";
+            
+                $j=0;
+            
+                print "
+                <form action=$PHP_SELF method=post>
+                <input type=hidden name=action value=update>
+                <input type=hidden name=next value=$next>
+                <tr>
+                    <td>&nbsp;</td>";
+            
+                while ($j < $cc ) {
+                    $Fname=$metadata[$j]["name"];
+                    $size=$metadata[$j]["len"];
+                    if ($this->tables[$table]['fields'][$Fname][size]) {
+                        $field_size=$this->tables[$table]['fields'][$Fname][size];
+                    } else {
+                        $field_size=$el_size;
+                    }
+            
+            
+                    if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                        if (!in_array($Fname,$this->tables[$table]['keys']) ) {
+                            if ($Fname=="domain" && is_array($insertDomainOption)) {
+                                print "<td><select name=$Fname>";
+                                foreach ($insertDomainOption as $_option) {
+                                    print "<option $selected_domain[$_option]>$_option";
+                                }
+                                print "
+                                </select>
+                                </td>";
+            
+                            } else {
+                                print "<td><input type=text size=$field_size maxlength=$size name=$Fname></td>";
+                            }
+        
+                        } else {
+                            print "<td></td>";
+                        }
+                    }
+                
+                    $j++;	
+                }
+            
+                $j=0;
+                while ($j < $cc ) {
+                    $Fname=$metadata[$j]["name"];
+                    $size=$metadata[$j]["len"];
+                    if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                        $SEARCH_NAME="search_".$Fname;
+                        $value=$_REQUEST[$SEARCH_NAME];
+                        print "<input type=hidden name=search_$Fname value=\"$value\">";
+                    }
+                
+                    $j++;	
+                }
+        
+                if ($subaction=="Delete selection" && !$confirmDelete) {
+                    print "<td bgcolor=lightgrey>";
+                    print "<input type=hidden name=confirmDelete value=1>";
+                    print "<input type=submit name=subaction value=\"Delete selection\">";
+                    print " ($rows records)";
+                } else {
+        
+                    if ($table == "billing_rates" && strlen($_REQUEST['search_name'])) {
+                        if ($subaction=="Copy rate" && !$confirmCopy) {
+                        print "<td bgcolor=lightgrey>";
+                            print "<input type=hidden name=confirmCopy value=1>";
+                        } else {
+                            print "<td>";
+                            print "
+                            <input type=submit name=subaction value=\"Update selection\">
+                            <input type=submit name=subaction value=\"Delete selection\">
+                            <br>";
+                        }
+                        print "
+                        <input type=submit name=subaction value=\"Copy rate\">";
+                        printf (" id %s to",$_REQUEST['search_name']);
+        
+                        $query=sprintf("select distinct(name) as name
+                        from billing_rates where
+                        name like '%s'
+                        order by name DESC
+                        limit 1",$_REQUEST['search_name']);
+                        dprint($query);
+                        $this->db1->query($query);
+                        $this->db1->next_record();
+                        $_rateName=$this->db1->f('name');
+        
+                        if (preg_match("/^(.*)_(\d+)$/",$_rateName,$m)) {
+                            $_idx=$m[2]+1;
+                            $newRateName=$m[1]."_".$_idx;
+                        } else {
+                            $newRateName=$_rateName."_1";
+                        }
+                        printf ("<input type=hidden name=fromRate value=\"%s\">",$_REQUEST['search_name']);
+                        $selected_newtable[$toRate]='selected';
+                        printf ("<select name=toRate>
+                        <option value=\"%s\" %s>Rate id %s
+                        <option value=history %s>Rate history table
+                        </select>",
+                        $newRateName,
+                        $selected_newtable[$newRateName],
+                        $newRateName,
+                        $selected_newtable['history']
+                        );
+        
+                    } else {
+                        print "<td>";
+                        print "
+                        <input type=submit name=subaction value=\"Update selection\">
+                        <input type=submit name=subaction value=\"Delete selection\">
+                        <br>";
+        
+                    }
+        
+                }
+        
+                print "
+                    <td>
+                    <input type=hidden name=table value=$table>
+                    <input type=hidden name=search_text value=\"$search_text\">
+                    </td>
+                </tr>
+                </form>
+                ";
+            
+            } else {
+                // Insert form
+                $j=0;
+                print "
+                <form action=$PHP_SELF method=post>
+                <input type=hidden name=action value=update>
+                <input type=hidden name=next value=$next>
+                <tr>
+                <td>&nbsp; </td>
+                ";
+                
+                while ($j < $cc ) {
+                    $Fname=$metadata[$j]["name"];
+                    $size=$metadata[$j]["len"];
+            
+                    if ($this->tables[$table]['fields'][$Fname][size]) {
+                        $field_size=$this->tables[$table]['fields'][$Fname][size];
+                    } else {
+                        $field_size=$el_size;
+                    }
+            
+                    if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                        if (!in_array($Fname,$this->tables[$table]['keys']) ) {
+                            if ($Fname=="domain" && is_array($insertDomainOption)) {
+                                print "<td><select  name=$Fname>";
+                                foreach ($insertDomainOption as $_option) {
+                                    print "<option>$_option";
+                                }
+                                print "
+                                </select>
+                                </td>";
+        
+                            } else {
+                                print "<td><input type=text size=$field_size maxlength=$size name=$Fname></td>";
+                            }
+                        } else {
+                            print "<td></td>";
+                
+                        }
+                    }
+                    $j++;	
+                }
+                
+                $j=0;
+                while ($j < $cc ) {
+                    $Fname=$metadata[$j]["name"];
+                    $size=$metadata[$j]["len"];
+                    if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                        $SEARCH_NAME="search_".$Fname;
+                        $value=$_REQUEST[$SEARCH_NAME];
+                        print "<input type=hidden name=search_$Fname value=\"$value\">";
+                    }
+                
+                    $j++;	
+                }
+                
+                print "
+                    <td class=border>
+                    <input type=hidden name=table value=\"$table\">
+                    <input type=hidden name=search_text value=\"$search_text\">
+                    <input type=submit name=subaction value=Insert>
+                    </td>
+                </tr>
+                </form>
+                ";
+            }
+            print "
+            <tr>
+            <td colspan=$t_columns><hr noshade size=2></td>
+            </tr>
+            ";
+            
+        }
+        
+        while  ($i<$maxrows)  {
+            $this->db->next_record();
+            $id		= $this->db->f('id');
+            $status	= $this->db->f('status');
+            $found  = $i+1;
+        
+            if (!$export) {
+                print "
+                <form action=$PHP_SELF method=post>
+                <input type=hidden name=action value=update>
+                <input type=hidden name=next value=$next>
+                <input type=hidden name=id value=$id>
+                <tr>
+                <td>$found. </td>
+                ";
+            }
+        
+            $j=0;
+            while ($j < $this->db->num_fields()) {
+                $value=$this->db->Record[$j];
+                $Fname=$metadata[$j]["name"];
+                $size=$metadata[$j]["len"];
+        
+                if ($this->tables[$table]['fields'][$Fname][size]) {
+                    $field_size=$this->tables[$table]['fields'][$Fname][size];
+                } else {
+                    $field_size=$el_size;
+                }
+        
+                if ($this->tables[$table]['fields'][$Fname][readonly]=="1") {
+                    $extra_form_els="disabled=true";
+                } else {
+                    $extra_form_els="";
+                }
+        
+                if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                    if (!$export) {
+                        if (!in_array($Fname,$this->tables[$table]['keys'])) {
+                            if ($Fname=="domain" && is_array($insertDomainOption)) {
+                                print "<td><select name=$Fname>";
+                                $selected_domain[$value]="selected";
+                                foreach ($insertDomainOption as $_option) {
+                                    print "<option $selected_domain[$_option]>$_option";
+                                }
+                                print "
+                                </select>
+                                </td>";
+            
+                            } else {
+                                print "<td><input type=text bgcolor=grey size=$field_size maxlength=$size name=$Fname value=\"$value\" $extra_form_els></td>";
+                            }
+        
+        
+                        } else {
+                            print "<td>$value</td>";
+                        }
+                    } else {
+                        if ($j) {
+                            printf ("%s%s",$delimiter,$value);
+                        } else {
+                            print "2";
+                        }
+                    }
+                }
+        
+                $j++;	
+            }
+        
+            $j=0;
+            while ($j < $cc ) {
+                $Fname=$metadata[$j]["name"];
+                $size=$metadata[$j]["len"];
+        
+                if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                    $SEARCH_NAME="search_".$Fname;
+                    $value=$_REQUEST[$SEARCH_NAME];
+                    if (!$export) {
+                        print "<input type=hidden name=search_$Fname value=\"$value\">";
+                    }
+                }
+        
+                $j++;	
+            }
+        
+            if ($export) {
+                print "\n";
+            }
+        
+            if (!$export) {
+                if ($subaction=="Delete" && $idForDeletion == $id && !$confirmDelete) {
+                    print "<td class=border bgcolor=lightgrey>";
+                    print "<input type=hidden name=confirmDelete value=1>";
+                    print "<input type=submit name=subaction value=Delete>";
+                } else {
+                    print "
+                    <td class=border>
+                    <input type=submit name=subaction value=Update>
+                    <input type=submit name=subaction value=Delete>
+                    ";
+                    print "<input type=hidden name=confirmDelete value=1>";
+                }
+        
+                print "
+                <input type=hidden name=table value=$table>
+                <input type=hidden name=next value=$next>
+                <input type=hidden name=search_text value=\"$search_text\">
+                </td>
+                </tr>
+                </form>
+                ";
+            }
+            $i++;
+        }
+        
+        if (!$export) {
+            print "
+            </table>
+            <p>
+            ";
+            
+            print "
+            <center>
+            <table border=0>
+            <tr>
+            <td>
+            ";
+            if ($next!= 0 ) {
+                $show_next=$this->maxrowsperpage-$next;
+            
+                if  ($show_next<0)  {
+                    $mod_show_next  =  $show_next-2*$show_next;
+                }
+            
+                print "
+                <form method=post>
+                <input type=hidden name=maxrowsperpage value=$this->maxrowsperpage>
+                <input type=hidden name=next	       value=$mod_show_next>
+                <input type=hidden name=action         value=Search>
+                <input type=hidden name=table          value=$table>
+                <input type=hidden name=search_text    value=\"$search_text\">
+                ";
+            
+                $j=0;
+                while ($j < $cc ) {
+                    $Fname=$metadata[$j]["name"];
+                    $size=$metadata[$j]["len"];
+            
+                    if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                        $SEARCH_NAME="search_".$Fname;
+                        $value=$_REQUEST[$SEARCH_NAME];
+                        print "<input type=hidden name=search_$Fname value=\"$value\">
+                        ";		
+                    }
+                
+                    $j++;	
+                }
+            
+                print "	
+                <input type=submit value=\"Previous\">
+                </form>
+                ";
+            }
+            print "</td>
+            <td>
+            ";
+            
+            if  ($rows>$this->maxrowsperpage &&  $rows!=$maxrows)  {  
+                $show_next=$this->maxrowsperpage+$next;
+            
+                print "
+                <form method=post>
+                <input type=hidden name=maxrowsperpage value=$this->maxrowsperpage>
+                <input type=hidden name=next		   value=$show_next>
+                <input type=hidden name=table	       value=$table>
+                <input type=hidden name=action		   value=Search>
+                ";
+                $j=0;
+                while ($j < $cc ) {
+                    $Fname=$metadata[$j]["name"];
+                    $size=$metadata[$j]["len"];
+            
+                    if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                        $SEARCH_NAME="search_".$Fname;
+                        $value=$_REQUEST[$SEARCH_NAME];
+                        print "<input type=hidden name=search_$Fname value=\"$value\">";
+                    }
+                
+                    $j++;	
+                }
+            
+                print "
+                <input type=hidden name=search_text value=\"$search_text\">
+                <input type=submit value=\"Next\">
+                </form>
+                ";
+            }
+            
+            print "
+            </td>
+            </tr>
+            </table>";
+            
+            
+            print "
+            </body>
+            </html>
+            ";
+        }
     }
 }
 

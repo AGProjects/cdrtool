@@ -1,7 +1,7 @@
 cdrtool (6.3.0) unstable; urgency=low
 
-  * Boost the speed of the rating engine with 100% to 300% depending on
-    complexity of the rating tables
+  * Boost the speed of the rating engine with 100% to 1000% depending on
+    the complexity of the rating tables
   * Fixed set of delimiter from global.inc setting when exporting csv files
   * Added GetEntityProfiles command to rating engine
   * Return json encoded for GetPrepaidHistory

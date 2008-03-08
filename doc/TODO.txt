@@ -1,0 +1,1 @@
+- Sync changes made from Rating web page to partial rating tables
