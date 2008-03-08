@@ -1195,7 +1195,6 @@ class RatingTables {
                            );
 
         if ($this->settings['split_rating_table']) {
-
         	$this->tables['billing_rates']['fields']['name']['readonly']=1;
         }
     }
@@ -2811,26 +2810,36 @@ class RatingTables {
             $affected_rows=0;
             if ($subaction == "Update") {
             	$update_set='';
-                $k=1;
+                $k=0;
                 while ($k < $cc ) {
-                    $Fname=$metadata[$k]["name"];
-                    $value=$_REQUEST[$Fname];
-                    //dprint("fname=$Fname, value=$value");
-                    if (!in_array($Fname,$this->tables[$table]['exceptions']) ) {
-                        if ($kkk > 0) {
-                            $comma = ",";
-                        } else {
-                            $comma = "";
-                        }
-                        if (preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
-                            $update_set .= $comma.$Fname."= ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
-                        } else {
-                            $update_set .= $comma.$Fname."='".$value."'";
-                        }
-                        $kkk++;
-                    }
                     $k++;
-                    
+                    $Fname=$metadata[$k]['name'];
+					if (!$Fname) continue;
+
+                    $value=$_REQUEST[$Fname];
+
+                    if ($this->tables[$table]['fields'][$Fname]['readonly']) {
+                        continue;
+                    }
+                    if (in_array($Fname,$this->tables[$table]['exceptions'])) {
+                        continue;
+                    }
+
+					if (in_array($Fname,$this->tables[$table]['keys'])) {
+                        continue;
+                    }
+
+                    if ($kkk > 0) {
+                        $comma = ",";
+                    } else {
+                        $comma = "";
+                    }
+                    if (preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
+                        $update_set .= $comma.$Fname."= ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
+                    } else {
+                        $update_set .= $comma.$Fname."='".$value."'";
+                    }
+                    $kkk++;
                 }
 
                 $log_entity=" id = $id ";
@@ -2868,7 +2877,11 @@ class RatingTables {
                     }
                 }
 
-                $query = "update $table set ". $update_set . " where ". $where ;
+                $query = sprintf("update %s set %s where %s " ,
+                $table,
+                $update_set,
+                $where
+                );
 
                 if ($this->db->query($query)) {
                     $affected_rows=$this->db->affected_rows();
@@ -2943,31 +2956,42 @@ class RatingTables {
                 }
         
             } elseif ($subaction == "Update selection") {
-                $k=1;
+                $k=0;
                 $kkk=0;
             	$update_set='';
                 while ($k < $cc ) {
-                    $Fname=$metadata[$k]["name"];
-                    $value=$_REQUEST[$Fname];
-                    if (strlen($value) && !in_array($Fname,$this->tables[$table]['exceptions'])
-                        && !in_array($Fname,$this->tables[$table]['keys'])) {
-                        if ($kkk > 0) {
-                            $comma = ",";
-                        } else {
-                            $comma="";
-                        }
-                        if ($value == "NULL") {
-                            $value="";
-                        }
-                        if (preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
-                            $update_set .= $comma.$Fname."= ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
-                        } else {
-                            $update_set .= $comma.$Fname."='".$value."'";
-                        }
-                        
-                        $kkk++;
-                    }
                     $k++;
+                    $Fname=$metadata[$k]['name'];
+                    $value=$_REQUEST[$Fname];
+                    if (!strlen($value)) continue;
+
+                    if ($this->tables[$table]['fields'][$Fname]['readonly']) {
+                        continue;
+                    }
+
+                    if (in_array($Fname,$this->tables[$table]['exceptions'])) {
+                        continue;
+                    }
+
+					if (in_array($Fname,$this->tables[$table]['keys'])) {
+                        continue;
+                    }
+
+                    if ($kkk > 0) {
+                        $comma = ",";
+                    } else {
+                        $comma="";
+                    }
+                    if ($value == "NULL") {
+                        $value="";
+                    }
+                    if (preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
+                        $update_set .= $comma.$Fname." = ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
+                    } else {
+                        $update_set .= $comma.$Fname." = '".$value."'";
+                    }
+                    
+                    $kkk++;
                 }
         
                 $where = $whereDomainFilter;
@@ -2979,8 +3003,8 @@ class RatingTables {
                     $j=0;
                     while ($j < $cc ) {
             
-                        $Fname=$metadata[$j]["name"];
-                        $size=$metadata[$j]["len"];
+                        $Fname=$metadata[$j]['name'];
+                        $size=$metadata[$j]['len'];
         
                         if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
             
@@ -3023,7 +3047,11 @@ class RatingTables {
                         }
                     }
 
-                	$query = "update $table set ". $update_set . " where ". $where ;
+                	$query = sprintf("update %s set %s where %s " ,
+                    $table,
+                    $update_set,
+                    $where
+                    );
 
                     if ($this->db->query($query)) {
                         $affected_rows=$this->db->affected_rows();
@@ -3063,8 +3091,8 @@ class RatingTables {
                     $j=0;
                     while ($j < $cc ) {
             
-                        $Fname=$metadata[$j]["name"];
-                        $size=$metadata[$j]["len"];
+                        $Fname=$metadata[$j]['name'];
+                        $size=$metadata[$j]['len'];
             
                         if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
             
@@ -3192,8 +3220,8 @@ class RatingTables {
                     $j=0;
                     while ($j < $cc ) {
             
-                        $Fname=$metadata[$j]["name"];
-                        $size=$metadata[$j]["len"];
+                        $Fname=$metadata[$j]['name'];
+                        $size=$metadata[$j]['len'];
             
                         if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
             
@@ -3288,7 +3316,7 @@ class RatingTables {
                     $k=1;
                     $kkk=0;
                     while ($k < $cc ) {
-                        $Fname=$metadata[$k]["name"];
+                        $Fname=$metadata[$k]['name'];
                         if (!in_array($Fname,$this->tables[$table]['exceptions']) ) {
                             if ($kkk > 0) {
                                 $comma = ",";
@@ -3305,7 +3333,7 @@ class RatingTables {
                     $k=1;
                     $kkk=0;
                     while ($k < $cc ) {
-                        $Fname=$metadata[$k]["name"];
+                        $Fname=$metadata[$k]['name'];
                         $value=$_REQUEST[$Fname];
             
                         if (!in_array($Fname,$this->tables[$table]['exceptions']) ) {
@@ -3324,7 +3352,7 @@ class RatingTables {
             
                     $k=1;
                     while ($k < $cc ) {
-                        $Fname=$metadata[$k]["name"];
+                        $Fname=$metadata[$k]['name'];
                         $value=$_REQUEST[$Fname];
                         #print "var $Fname = ${$Fname} $this->tables[$table]['keys']<br>";
                         if (in_array($Fname,$this->tables[$table]['keys']) ) {
@@ -3433,8 +3461,8 @@ class RatingTables {
         $t=0;
         $j=0;
         while ($j < $cc ) {
-            $Fname=$metadata[$j]["name"];
-            $size=$metadata[$j]["len"];
+            $Fname=$metadata[$j]['name'];
+            $size=$metadata[$j]['len'];
             if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
                 $f_name="search_".$Fname;
                 $value=$_REQUEST[$f_name];
@@ -3478,7 +3506,7 @@ class RatingTables {
                 print "$selectie $rows records found. ";
             }         
             
-            if ($this->settings["socketIP"] && $this->settings["socketPort"]) {
+            if ($this->settings['socketIP'] && $this->settings['socketPort']) {
         
                 if ($ReloadRatingTables) {
                     reloadRatingEngineTables();
@@ -3489,7 +3517,7 @@ class RatingTables {
                     }
                 }
         
-                $engineAddress=$this->settings["socketIP"].":".$this->settings["socketPort"];
+                $engineAddress=$this->settings['socketIP'].":".$this->settings['socketPort'];
         
                 if ($this->checkRatingEngineConnection()) {
                     print " | <font color=green>Rating engine running at $engineAddress</font>";
@@ -3552,7 +3580,7 @@ class RatingTables {
         }
         
         while ($k < $cc) {
-            $th=$metadata[$k]["name"];
+            $th=$metadata[$k]['name'];
             if (!in_array($th,$this->tables[$table]['exceptions']) ) {
                 if ($this->tables[$table]['fields'][$th]['name']) {
                     $th=$this->tables[$table]['fields'][$th]['name'];
@@ -3603,8 +3631,8 @@ class RatingTables {
             $j=0;
             
             while ($j < $cc ) {
-                $Fname=$metadata[$j]["name"];
-                $size=$metadata[$j]["len"];
+                $Fname=$metadata[$j]['name'];
+                $size=$metadata[$j]['len'];
             
                 if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
                     $SEARCH_NAME="search_".$Fname;
@@ -3614,8 +3642,8 @@ class RatingTables {
                     }
                     $maxlength=$size;
             
-                    if ($this->tables[$table]['fields'][$Fname][size]) {
-                        $field_size=$this->tables[$table]['fields'][$Fname][size];
+                    if ($this->tables[$table]['fields'][$Fname]['size']) {
+                        $field_size=$this->tables[$table]['fields'][$Fname]['size'];
                     } else {
                         $field_size=$el_size;
                     }
@@ -3663,8 +3691,8 @@ class RatingTables {
             ";
             $j=0;
             while ($j < $cc ) {
-                $Fname=$metadata[$j]["name"];
-                $size=$metadata[$j]["len"];
+                $Fname=$metadata[$j]['name'];
+                $size=$metadata[$j]['len'];
                 if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
                     $SEARCH_NAME="search_".$Fname;
                     $value=$_REQUEST[$SEARCH_NAME];
@@ -3710,10 +3738,10 @@ class RatingTables {
                     <td>&nbsp;</td>";
             
                 while ($j < $cc ) {
-                    $Fname=$metadata[$j]["name"];
-                    $size=$metadata[$j]["len"];
-                    if ($this->tables[$table]['fields'][$Fname][size]) {
-                        $field_size=$this->tables[$table]['fields'][$Fname][size];
+                    $Fname=$metadata[$j]['name'];
+                    $size=$metadata[$j]['len'];
+                    if ($this->tables[$table]['fields'][$Fname]['size']) {
+                        $field_size=$this->tables[$table]['fields'][$Fname]['size'];
                     } else {
                         $field_size=$el_size;
                     }
@@ -3744,8 +3772,8 @@ class RatingTables {
             
                 $j=0;
                 while ($j < $cc ) {
-                    $Fname=$metadata[$j]["name"];
-                    $size=$metadata[$j]["len"];
+                    $Fname=$metadata[$j]['name'];
+                    $size=$metadata[$j]['len'];
                     if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
                         $SEARCH_NAME="search_".$Fname;
                         $value=$_REQUEST[$SEARCH_NAME];
@@ -3837,11 +3865,11 @@ class RatingTables {
                 ";
                 
                 while ($j < $cc ) {
-                    $Fname=$metadata[$j]["name"];
-                    $size=$metadata[$j]["len"];
+                    $Fname=$metadata[$j]['name'];
+                    $size=$metadata[$j]['len'];
             
-                    if ($this->tables[$table]['fields'][$Fname][size]) {
-                        $field_size=$this->tables[$table]['fields'][$Fname][size];
+                    if ($this->tables[$table]['fields'][$Fname]['size']) {
+                        $field_size=$this->tables[$table]['fields'][$Fname]['size'];
                     } else {
                         $field_size=$el_size;
                     }
@@ -3870,8 +3898,8 @@ class RatingTables {
                 
                 $j=0;
                 while ($j < $cc ) {
-                    $Fname=$metadata[$j]["name"];
-                    $size=$metadata[$j]["len"];
+                    $Fname=$metadata[$j]['name'];
+                    $size=$metadata[$j]['len'];
                     if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
                         $SEARCH_NAME="search_".$Fname;
                         $value=$_REQUEST[$SEARCH_NAME];
@@ -3919,16 +3947,16 @@ class RatingTables {
             $j=0;
             while ($j < $this->db->num_fields()) {
                 $value=$this->db->Record[$j];
-                $Fname=$metadata[$j]["name"];
-                $size=$metadata[$j]["len"];
+                $Fname=$metadata[$j]['name'];
+                $size=$metadata[$j]['len'];
         
-                if ($this->tables[$table]['fields'][$Fname][size]) {
-                    $field_size=$this->tables[$table]['fields'][$Fname][size];
+                if ($this->tables[$table]['fields'][$Fname]['size']) {
+                    $field_size=$this->tables[$table]['fields'][$Fname]['size'];
                 } else {
                     $field_size=$el_size;
                 }
         
-                if ($this->tables[$table]['fields'][$Fname][readonly]=="1") {
+                if ($this->tables[$table]['fields'][$Fname]['readonly']=="1") {
                     $extra_form_els="disabled=true";
                 } else {
                     $extra_form_els="";
@@ -3969,8 +3997,8 @@ class RatingTables {
         
             $j=0;
             while ($j < $cc ) {
-                $Fname=$metadata[$j]["name"];
-                $size=$metadata[$j]["len"];
+                $Fname=$metadata[$j]['name'];
+                $size=$metadata[$j]['len'];
         
                 if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
                     $SEARCH_NAME="search_".$Fname;
@@ -4043,8 +4071,8 @@ class RatingTables {
             
                 $j=0;
                 while ($j < $cc ) {
-                    $Fname=$metadata[$j]["name"];
-                    $size=$metadata[$j]["len"];
+                    $Fname=$metadata[$j]['name'];
+                    $size=$metadata[$j]['len'];
             
                     if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
                         $SEARCH_NAME="search_".$Fname;
@@ -4077,8 +4105,8 @@ class RatingTables {
                 ";
                 $j=0;
                 while ($j < $cc ) {
-                    $Fname=$metadata[$j]["name"];
-                    $size=$metadata[$j]["len"];
+                    $Fname=$metadata[$j]['name'];
+                    $size=$metadata[$j]['len'];
             
                     if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
                         $SEARCH_NAME="search_".$Fname;
