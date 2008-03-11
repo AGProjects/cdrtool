@@ -4917,6 +4917,7 @@ class SipSettings {
         $this->showChapter($chapter);
 
         $j=0;
+
 		foreach (array_keys($this->presenceWatchers) as $_watcher) {
             $j++;
 
@@ -4960,6 +4961,7 @@ class SipSettings {
             $selected[$display_status]='selected';
 
             foreach ($this->presenceStatuses as $_status) {
+                if ($_status== 'confirm' && !$selected[$_status]) continue;
                 printf ("<option %s value=%s>%s",$selected[$_status],$_status,ucfirst($_status));
             }
 
@@ -5098,7 +5100,6 @@ class SipSettings {
             $j++;
         }
 
-        //dprint("Set policy:");
         //dprint_r($policy);
 
         $result = $this->PresencePort->setPolicy(array("username" =>$this->username,"domain"   =>$this->domain),$this->password,$policy);
@@ -5135,6 +5136,8 @@ class SipSettings {
                 $this->watchersOnline++;
             }
         }
+        //dprint_r($this->presenceWatchers);
+
     }
 
     function getPresenceInformation() {
@@ -5191,11 +5194,11 @@ class SipSettings {
             return false;
         }
 
-        dprint_r($result);
-
 		foreach ($this->presenceStatuses as $_status) {
         	$this->presenceRules[$_status] = $result->$_status;
         }
+
+        //dprint_r($this->presenceRules);
     }
 
     function getFileTemplate($name, $type="file") {
