@@ -1,0 +1,113 @@
+#! /bin/sh
+#
+### BEGIN INIT INFO
+# Provides:          cdrtool
+# Required-Start:    $syslog $network $local_fs $time
+# Required-Stop:     $syslog $network $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start the CDRTool rating engine
+# Description:       Start the CDRTool rating engine
+### END INIT INFO
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+CDRTOOL_PATH=/var/www/CDRTool
+DAEMON=$CDRTOOL_PATH/scripts/ratingEngine.php
+MEMCACHE_DAEMON=/usr/bin/memcached
+NAME=cdrtool
+DESC=cdrtool
+RUN_ratingEngine=no
+START_MEMCACHE=no
+MEMCACHE_MEMORY=64
+MEMCACHE_PORT=11212
+MEMCACHE_IP=127.0.0.1
+MEMCACHE_PID_FILE=/var/run/memcached_cdrtool.pid
+
+test -x $DAEMON || exit 0
+
+# Include cdrtool defaults if available
+if [ -f /etc/default/cdrtool ] ; then
+	. /etc/default/cdrtool
+fi
+
+if [ "$RUN_ratingEngine" != "yes" ]; then
+    echo "CDRTool is not yet configured. Edit /etc/default/cdrtool first."
+    exit 0
+fi
+
+set -e
+
+start() {
+    echo -n "Starting CDRTool $DESC"
+    start-stop-daemon --start --background --quiet --pidfile /var/run/ratingEngine.pid \
+		--exec $DAEMON -- $DAEMON_OPTS
+    echo "."
+}
+
+stop () {
+    echo -n "Stopping CDRTool $DESC"
+    start-stop-daemon --stop --quiet --oknodo --signal 15 --pidfile /var/run/ratingEngine.pid
+    echo "."
+}
+
+startmemcache () {
+    if [ "$START_MEMCACHE" != "no" ]; then     
+        echo -n "Starting memcached with $MEMCACHE_MEMORY MB of memory on $MEMCACHE_IP:$MEMCACHE_PORT"
+        start-stop-daemon --start --background --quiet --pidfile $MEMCACHE_PID_FILE \
+        --exec $MEMCACHE_DAEMON -- -m $MEMCACHE_MEMORY -p $MEMCACHE_PORT -l $MEMCACHE_IP -u root -d -P $MEMCACHE_PID_FILE
+        echo "."
+    fi
+}
+
+stopmemcache () {
+    if [ "$START_MEMCACHE" != "no" ]; then     
+        echo -n "Stopping memcached"
+        start-stop-daemon --stop --quiet --oknodo --signal 15 --pidfile $MEMCACHE_PID_FILE
+        echo "."
+    fi     
+}
+
+reload () {
+    echo -n "Reloading CDRTool rating tables:"
+    echo
+    $CDRTOOL_PATH/scripts/reloadRatingTables.php && true
+}
+
+case "$1" in
+    start)
+        start
+        startmemcache
+        ;;
+    stop)
+        stop
+        stopmemcache
+        ;;
+    startmemcache)
+        startmemcache
+        ;;
+    stopmemcache)
+        stopmemcache
+        ;;
+    restartmemcache)
+        stopmemcache
+        startmemcache
+        ;;
+    restart)
+        stop
+        #sleep 1
+        start
+        ;;
+    force-reload)
+        reload
+        ;;
+    reload)
+        reload
+        ;;
+  *)
+	N=/etc/init.d/$NAME
+	echo "Usage: $N {start|stop|restart|reload|force-reload|startmemcache|stopmemcache|restartmemcache}" >&2
+	exit 1
+	;;
+esac
+
+exit 0

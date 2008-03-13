@@ -29,7 +29,8 @@ setup/create_users.mysql
 
 Then run the database setup script:
 
-/var/www/CDRtool/setup/mysql/setup_mysql.sh <password> <dbserver>
+cd /var/www/CDRtool/setup/mysql/
+./setup_mysql.sh <password> <dbserver>
 
 The script performs the following: 
 
@@ -61,7 +62,7 @@ DirectoryIndex index.phtml index.php index.html index.htm index.shtml index.cgi
 AddType application/x-httpd-php .php
 AddType application/x-httpd-php .phtml
 
-Make sure php module is insbale in apache configuration. For apache this is
+Make sure php module is enbaled in apache configuration. For apache this is
 done in /etc/apache/modules.conf: 
 
 LoadModule php4_module /usr/lib/apache/1.3/libphp4.so
@@ -144,11 +145,22 @@ The MSQL schema for prepaid accounts: setup/mysql/create_prepaid.mysql The
 network engine has no security features, it must run over a protected
 network.
 
+For non Debian systems you must create /etc/default/cdrtool as follows:
+
+RUN_ratingEngine=yes
+START_MEMCACHE=yes
+MEMCACHE_MEMORY=32
+MEMCACHE_IP=127.0.0.1
+MEMCACHE_PORT=11212
+
 Edit /etc/default/cdrtool and set 
 
 RUN_ratingEngine=yes
 
-Then restart the rating engine:
+For non Debian systems copy the init script from setup/init.d/cdrtool to
+/etc/init.d/cdrtool 
+
+Then start the rating engine:
 
 /etc/init.d/cdrtool restart
 
@@ -257,8 +269,8 @@ Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/freeradius
 OpenSER setup
 ------------- 
 
-Enable MySQL storage for subscribers and accounting and Radius accounting.
-For SIP Tracing you need OpenSER siptrace module. To enable quota you must
+Enable MySQL storage for subscribers and Radius accounting. For SIP tracing
+you need to configure the OpenSER siptrace module. To enable quota you must
 add an extra column in the subscriber table:
 
 alter table openser.subscriber add column quota int not null;
