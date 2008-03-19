@@ -4184,7 +4184,6 @@ class SERQuota {
         $query="select * from settings
         where var_module = 'notifications'";
 
-
         if ($this->db->query($query) && $this->db->num_rows()) {
 
             while ($this->db->next_record()) {
@@ -4196,7 +4195,6 @@ class SERQuota {
                 }
             }
         }
-
 
         if ($DATASOURCES[$this->cdr_source]['soapEngineId']) {
             require_once("provisioning/ngnpro_soap_library.phtml");
@@ -4220,9 +4218,7 @@ class SERQuota {
                 $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT, 2);
         
             }
-    
         }
-
     }
 
     function LoadAccounts() {
@@ -4236,7 +4232,6 @@ class SERQuota {
 		if (!$this->LoadAccountsfromCache()) {
             if ($this->enableThor) {
                 $query=sprintf("select * from sip_accounts");
-        
         
                 if (!$this->AccountsDB->query($query)) {
                     $log=sprintf("Error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -4266,7 +4261,6 @@ class SERQuota {
                 }
             } else {
                 $query=sprintf("select * from subscriber");
-        
         
                 if (!$this->AccountsDB->query($query)) {
                     $log=sprintf("Error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -4550,6 +4544,18 @@ class SERQuota {
             $usage_keys="and ".$this->BillingPartyIdField. " in (".$usage_keys.")";
         }
 
+		if (count($this->localDomains)) {
+            $domain_filter="and Realm in (";
+            $t=0;
+            foreach ($this->localDomains as $_domain) {
+                if (!$_domain) continue;
+                if ($t) $domain_filter .= ",";
+            	$domain_filter .= sprintf("'%s'",$_domain);
+                $t++;
+            }
+            $domain_filter .= ") ";
+        }
+
         $query=sprintf("select %s,
         count(*) as calls,
         sum(AcctSessionTime) as duration,
@@ -4559,14 +4565,15 @@ class SERQuota {
         where AcctStartTime >= '%s'
         and Normalized = '1'
         %s
+        %s
         group by %s\n",
         addslashes($this->BillingPartyIdField),
         addslashes($this->table),
         addslashes($this->startTime),
+        $domain_filter,
         $usage_keys,
         addslashes($this->BillingPartyIdField)
         );
-
 
         if (!$this->CDRdb->query($query)) {
             if ($this->CDRdb->Errno != 1146) {

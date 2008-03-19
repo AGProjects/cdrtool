@@ -736,6 +736,7 @@ class CDRS {
         if ($this->CDRdb->query($query)) {
             $c=$this->CDRdb->affected_rows();
             if ($c) {
+                syslog(LOG_NOTICE, "Reset quota counters for re-normalization");
             	if (is_object($this->mc)) $this->mc->delete($this->mc_key_init);
                 $query=sprintf("delete from memcache where `key`= '%s'",$this->mc_key_init);
             	$this->cdrtool->query($query);

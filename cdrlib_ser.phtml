@@ -1824,7 +1824,6 @@ class CDRS_ser_radius extends CDRS {
 
     function LoadDomains() {
 
-
         if (!$this->AccountsDBClass) {
             return false;
         }
@@ -1857,7 +1856,9 @@ class CDRS_ser_radius extends CDRS {
             }
     
             while($this->AccountsDB->next_record()) {
-                $mc_value.=$this->AccountsDB->f('domain')." ";
+                if ($this->AccountsDB->f('domain')) {
+                	$mc_value.=$this->AccountsDB->f('domain')." ";
+                }
             }
 
             $this->localDomains=explode(" ",trim($mc_value));
