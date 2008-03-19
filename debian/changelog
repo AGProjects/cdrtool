@@ -1,3 +1,12 @@
+cdrtool (6.3.1) unstable; urgency=low
+
+  * Filter CDRs for local domains when init quota counters
+  * A subaccount cannot change his own impersonate field
+  * Replaced _serialize function with previos pear soap version to fix empty
+    array reprezentation
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 19 Mar 2008 14:22:26 +0100
+
 cdrtool (6.3.0) unstable; urgency=low
 
   * Boost the speed of the rating engine from 100% to 1000% depending on
