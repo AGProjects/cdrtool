@@ -952,7 +952,11 @@ class CDRS {
         	    } else {
     	            $reset_quota_new=array_keys($this->usageKeysForDeletionFromCache);
                 }
-                $this->mc->set('reset_quota_for',json_encode(array_unique($reset_quota_new)));
+                $_reset_array=array_unique($reset_quota_new);
+                $log=sprintf("Next quota check will rebuild the counters for %s accounts",count($_reset_array));
+                syslog(LOG_NOTICE,$log );
+
+                $this->mc->set('reset_quota_for',json_encode($_reset_array));
             }
         }
 

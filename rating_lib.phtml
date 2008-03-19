@@ -4535,6 +4535,10 @@ class SERQuota {
 
 		$usage_keys='';
         if (count($reset_quota_for)) {
+            $log=sprintf ("Init quota counters for %d accounts\n",count($reset_quota_for));
+            print $log;
+            syslog(LOG_NOTICE, $log);
+
             $k=0;
             foreach ($reset_quota_for as $_account) {
                 if ($k) $usage_keys.= ", ";
@@ -4542,18 +4546,22 @@ class SERQuota {
                 $k++;
             }
             $usage_keys="and ".$this->BillingPartyIdField. " in (".$usage_keys.")";
-        }
-
-		if (count($this->localDomains)) {
-            $domain_filter="and Realm in (";
-            $t=0;
-            foreach ($this->localDomains as $_domain) {
-                if (!$_domain) continue;
-                if ($t) $domain_filter .= ",";
-            	$domain_filter .= sprintf("'%s'",$_domain);
-                $t++;
+        } else {
+            if (count($this->localDomains)) {
+                $domain_filter="and Realm in (";
+                $t=0;
+                foreach ($this->localDomains as $_domain) {
+                    if (!$_domain) continue;
+                    if ($t) $domain_filter .= ",";
+                    $domain_filter .= sprintf("'%s'",$_domain);
+                    $t++;
+                }
+                $domain_filter .= ") ";
             }
-            $domain_filter .= ") ";
+
+            $log=sprintf ("Init quota counters for all accounts\n");
+            print $log;
+            syslog(LOG_NOTICE, $log);
         }
 
         $query=sprintf("select %s,
