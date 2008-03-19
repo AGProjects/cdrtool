@@ -6965,7 +6965,7 @@ class Customers extends Records {
                               'reseller'    => array('type'=>'integer')
                               );
     var $Fields=array(
-                           'resellerActive' => array ('type'      => 'boolean',
+                              'resellerActive' => array ('type'      => 'boolean',
                                                       'name'      => 'Reseller active',
                                                       'adminonly' => true
                                                      ),
@@ -7886,7 +7886,7 @@ class Customers extends Records {
             } else if ($item=='impersonate') {
 
 		        if ($customer->reseller != $customer->id) {
-                	if ($this->adminonly || $this->reseller == $customer->reseller) {
+                	if ($this->adminonly || $this->reseller == $customer->id) {
                         printf ("<tr>
                         <td class=border valign=top>%s</td>",
                         $item_name
@@ -8287,6 +8287,13 @@ class Customers extends Records {
 		$customer->tel  = preg_replace("/[^\+0-9]/","",$customer->tel);
         $customer->fax  = preg_replace("/[^\+0-9]/","",$customer->fax);
         $customer->enum = preg_replace("/[^\+0-9]/","",$customer->enum);
+
+        if ($customer->reseller != $customer->id) {
+            // a subaccount cannot change his own impersonate field
+        	if ($customer->reseller != $customer->id || !$this->adminonly) {
+        		$customer->impersonate=$customer_old->impersonate;
+        	}
+        }
 
         $function=array('commit'   => array('name'       => 'updateAccount',
                                             'parameters' => array($customer),

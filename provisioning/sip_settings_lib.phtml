@@ -4998,6 +4998,7 @@ class SipSettings {
                 $selected[$_key]='selected';
 
                 foreach ($this->presenceStatuses as $_status) {
+                	if ($_status== 'confirm' && !$selected[$_status]) continue;
                     printf ("<option %s value=%s>%s",$selected[$_status],$_status,ucfirst($_status));
                 }
                 print "
