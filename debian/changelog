@@ -1,3 +1,9 @@
+cdrtool (6.3.2) unstable; urgency=low
+
+  * Log for how many account the CDRs are loaded to rebuild the quota count
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 20 Mar 2008 11:30:06 +0100
+
 cdrtool (6.3.1) unstable; urgency=low
 
   * Filter CDRs for local domains when init quota counters
