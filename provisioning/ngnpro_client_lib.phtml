@@ -1166,6 +1166,19 @@ class Records {
         return $string;
     }
 
+    function RandomNumber($len=5) {
+        $alf=array("0","1","2","3","4","5",
+                   "9","8","7","6");
+        $i=0;
+        while($i < $len) {
+            srand((double)microtime()*1000000);
+            $randval = rand(0,9);
+            $string="$string"."$alf[$randval]";
+            $i++;
+        }	      
+        return $string;
+    }
+
     function validDomain($domain) {
    		if (!preg_match ("/^[A-Za-z0-9-.]{1,}\.[A-Za-z]{2,}$/",$domain)) {
             return false;
@@ -7886,7 +7899,7 @@ class Customers extends Records {
             } else if ($item=='impersonate') {
 
 		        if ($customer->reseller != $customer->id) {
-                	if ($this->adminonly || $this->reseller == $customer->id) {
+                	if ($this->adminonly || $this->customer == $customer->reseller) {
                         printf ("<tr>
                         <td class=border valign=top>%s</td>",
                         $item_name
@@ -8290,8 +8303,10 @@ class Customers extends Records {
 
         if ($customer->reseller != $customer->id) {
             // a subaccount cannot change his own impersonate field
-        	if ($customer->reseller != $customer->id || !$this->adminonly) {
-        		$customer->impersonate=$customer_old->impersonate;
+            if (!$this->adminonly) {
+            	if ($this->customer != $customer->reseller) {
+        			$customer->impersonate=$customer_old->impersonate;
+                }
         	}
         }
 
@@ -8658,6 +8673,9 @@ class Customers extends Records {
     }
 
     function addRecord($dictionary=array(),$confirmPassword=false) {
+    	if (!$this->checkRecord($dictionary)) {
+        	return false;
+    	}
 
         foreach (array_keys($this->addFields) as $item) {
 
@@ -8669,7 +8687,7 @@ class Customers extends Records {
             }
         }
 
-        if (!strlen($customer['username'])) $customer['username'] = trim($customer['firstName']).'.'.trim($customer['lastName']);
+        if (!strlen($customer['username'])) $customer['username'] = trim($customer['firstName']).'.'.trim($customer['lastName'].$this->RandomNumber(5));
 		if (!strlen($customer['state']))    $customer['state']    = 'N/A';
         if (!strlen($customer['country']))  $customer['country']  = 'N/A';
         if (!strlen($customer['city']))     $customer['city']     = 'Unknown';
@@ -8712,11 +8730,15 @@ class Customers extends Records {
 
         if (!strlen($customer['password'])) $customer['password'] = $this->RandomPassword(6);
 
-        $customer->properties=array();
+        if (is_array($dictionary['properties'])) {
+        	$customer['properties']=$dictionary['properties'];
+        } else {
+        	$customer['properties']=array();
+        }
 
         $function=array('commit'   => array('name'       => 'addAccount',
                                             'parameters' => array($customer),
-                                            'logs'       => array('success' => sprintf('Login account %s %s has been added',$customer['firstName'],$customer['lastName']))
+                                            'logs'       => array('success' => sprintf('Account for %s %s has been added',$customer['firstName'],$customer['lastName']))
                                             )
                        );
 
@@ -8845,10 +8867,10 @@ class Customers extends Records {
         }
     }
 
-	function getProperty($customer,$name) {
+    function getProperty($customer,$name) {
         foreach ($customer->properties as $_property) {
-            if ($_property['name'] == $name && strlen($_property['value'])) {
-                return $_property['value'];
+            if ($_property->name == $name) {
+            	return $_property->value;
             }
         }
         return false;
@@ -8876,6 +8898,34 @@ class Customers extends Records {
         } else {
             if (count($result->accounts) == 1) {
                 return $result->accounts[0]->id;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    function getCustomer($username) {
+        if (!strlen($username)) return false;
+        $filter  = array('username' => $username);
+        $range   = array('start' => 0,'count' => 1);
+        $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
+        $Query=array('filter'     => $filter,'orderBy' => $orderBy,'range'   => $range);
+
+        // Insert credetials
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SoapEngine->soapclient->getCustomers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            if (count($result->accounts) == 1) {
+                return $result->accounts[0];
             } else {
                 return false;
             }
