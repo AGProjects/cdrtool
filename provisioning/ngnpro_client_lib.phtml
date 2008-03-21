@@ -6795,8 +6795,9 @@ class Routes extends Records {
     		$priority   = trim($_REQUEST['priority']);
         }
 
-		if (!strlen($prefix) || !strlen($gatewayGroup)) {
-            printf ("<p><font color=red>Error: Missing prefix or gatewayGroup. </font>");
+		//if (!strlen($prefix) || !strlen($gatewayGroup)) {
+        if (!strlen($gatewayGroup)) {
+            printf ("<p><font color=red>Error: Missing gatewayGroup. </font>");
             return false;
         }
 
@@ -6843,8 +6844,8 @@ class Routes extends Records {
     		$priority   = trim($this->filters['priority']);
         }
 
-        if (!strlen($prefix) || !strlen($gatewayGroup)) {
-            print "<p><font color=red>Error: missing route prefix or gatewayGroup. </font>";
+        if (!strlen($gatewayGroup)) {
+            print "<p><font color=red>Error: missing gatewayGroup. </font>";
             return false;
         }
 
@@ -8905,7 +8906,9 @@ class Customers extends Records {
     }
 
     function getCustomer($username) {
-        if (!strlen($username)) return false;
+        if (!strlen($username)) {
+        	return false;
+        }
         $filter  = array('username' => $username);
         $range   = array('start' => 0,'count' => 1);
         $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
