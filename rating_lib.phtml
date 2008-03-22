@@ -4178,7 +4178,8 @@ class OpenSERQuota {
 
 		$this->CDRS = &$parent;
 
-        $this->mc_key_init     = $this->cdr_source.':quotaCheckInit';
+        $this->quota_init_flag   = &$parent->quota_init_flag;
+        $this->quota_reset_flag  = &$parent->quota_reset_flag;
 
         // load e-mail addresses for quota notifications
         $query="select * from settings where var_module = 'notifications'";
@@ -4785,7 +4786,7 @@ class OpenSERQuota {
 
     function saveQuotaInitFlag() {
     	if (is_object($this->CDRS->mc)) {
-            if ($this->CDRS->mc->set($this->mc_key_init,'1',0,0)) {
+            if ($this->CDRS->mc->set($this->quota_init_flag,'1',0,0)) {
                 return true;
             } else {
                 return false;
@@ -4795,7 +4796,7 @@ class OpenSERQuota {
 
     function deleteQuotaInitFlag() {
     	if (is_object($this->CDRS->mc)) {
-            if (!$this->CDRS->mc->delete($this->mc_key_init)) {
+            if (!$this->CDRS->mc->delete($this->quota_init_flag)) {
                 return false;
             }
         }
@@ -4839,11 +4840,20 @@ class OpenSERQuota {
 
     function initMonthlyUsage() {
 
- 		if ($this->CDRS->mc->get($this->mc_key_init)) {
+ 		if ($this->CDRS->mc->get($this->quota_init_flag)) {
             return true;
         }
 
-        $reset_quota_for = json_decode($this->CDRS->mc->get('reset_quota_for'));
+        $lockName=sprintf("%s:%s",$this->CDRS->cdr_source,$this->CDRS->table);
+
+        if (!$this->CDRS->getNormalizeLock($lockName)) {
+            $log=sprintf("Error: cannot initialize now the quota becuase a normalization process in progress\n");
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
+
+        $reset_quota_for = json_decode($this->CDRS->mc->get($this->quota_reset_flag));
 
         $this->deblockAccounts($reset_quota_for);
     
@@ -4864,7 +4874,7 @@ class OpenSERQuota {
         }
     
         if ($this->saveQuotaInitFlag()) {
-            $this->CDRS->mc->delete('reset_quota_for');
+            $this->CDRS->mc->delete($this->quota_reset_flag);
             return true;
         } else {
             $log=sprintf ("Error: failed to save key quotaCheckInit in memcache");

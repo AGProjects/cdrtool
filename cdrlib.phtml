@@ -234,9 +234,9 @@ class CDRS {
         }
 
         // Init memcache key names to be unique per datasource
-        $this->mc_key_init       = $this->cdr_source.':quotaCheckInit';
+        $this->quota_init_flag   = $this->cdr_source.':quotaCheckInit';
+        $this->quota_reset_flag  = $this->cdr_source.':reset_quota_for';
         $this->mc_key_domains    = $this->cdr_source.':domains';
-        $this->mc_key_accounts   = $this->cdr_source.':accounts';
 
         $this->LoadDisconnectCodes();
         $this->LoadDestinations();
@@ -737,9 +737,9 @@ class CDRS {
             $c=$this->CDRdb->affected_rows();
             if ($c) {
                 syslog(LOG_NOTICE, "Reset quota counters for re-normalization");
-            	if (is_object($this->mc)) $this->mc->delete($this->mc_key_init);
+            	if (is_object($this->mc)) $this->mc->delete($this->quota_init_flag);
 
-                $query=sprintf("delete from memcache where `key`= '%s'",$this->mc_key_init);
+                $query=sprintf("delete from memcache where `key`= '%s'",$this->quota_init_flag);
             	$this->cdrtool->query($query);
 
             }
@@ -1644,7 +1644,7 @@ class CDRS {
     function resetQuota($accounts) {
         if (!is_object($this->mc)) return;
 
-        if ($reset_quota_for = $this->mc->get('reset_quota_for')) {
+        if ($reset_quota_for = $this->mc->get($this->quota_reset_flag)) {
             $reset_quota_new=array_merge(json_decode($reset_quota_for),$accounts);
         } else {
             $reset_quota_new=$accounts;
@@ -1654,7 +1654,7 @@ class CDRS {
         $log=sprintf("Next quota check will rebuild the counters for %s accounts",count($_reset_array));
         syslog(LOG_NOTICE,$log );
 
-        $this->mc->set('reset_quota_for',json_encode($_reset_array));
+        $this->mc->set($this->quota_reset_flag,json_encode($_reset_array));
 
         $query="delete from quota_usage where account in (";
         $t=0;
