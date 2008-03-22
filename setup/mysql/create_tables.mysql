@@ -461,13 +461,20 @@ CREATE TABLE `spam` (
   `stamp` int(10) unsigned NOT NULL default '0',
   UNIQUE KEY `spam_ip` (`ip`)
 )  DEFAULT CHARSET=latin1;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
+DROP TABLE IF EXISTS `quota_usage`;
+CREATE TABLE `quota_usage` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `datasource` varchar(50) NOT NULL,
+  `account` varchar(128) NOT NULL default '',
+  `blocked` enum('0','1') NOT NULL default '0',
+  `quota` int(11) unsigned NOT NULL,
+  `calls` int(10) unsigned NOT NULL,
+  `duration` bigint(20) unsigned NOT NULL,
+  `cost` decimal(10,4) NOT NULL,
+  `traffic` varchar(50) NOT NULL,
+  `change_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `account_idx` (`account`)
+);
+ 

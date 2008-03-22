@@ -488,3 +488,21 @@ optimize table billing_customers;
 optimize table billing_profiles;
 optimize table prepaid;
 
+6.3.3
+
+DROP TABLE IF EXISTS `quota_usage`;
+CREATE TABLE `quota_usage` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `datasource` varchar(50) NOT NULL,
+  `account` varchar(128) NOT NULL default '',
+  `blocked` enum('0','1') NOT NULL default '0',
+  `quota` int(11) unsigned NOT NULL,
+  `calls` int(10) unsigned NOT NULL,
+  `duration` bigint(20) unsigned NOT NULL,
+  `cost` decimal(10,4) NOT NULL,
+  `traffic` varchar(50) NOT NULL,
+  `change_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `account_idx` (`account`)
+) ;
+
