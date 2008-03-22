@@ -932,19 +932,14 @@ class E164 {
         // If nothing is returned by this function the session is considered an Internet destination 
 
         if (preg_match($this->regexp_international,$Number,$m)) {
-            dprint("$Number is an international number");
             return $m[1];
         } else if (preg_match($this->regexp_national,$Number,$m)) {
             // Add default country code
-            dprint("$Number is a national number");
             return $this->CountryCode.$m[1];
         } else if (strlen($this->ENUMtldRegexp)) {
             $_regexp="/^".$this->ENUMtldRegexp."\$/";
             if (preg_match($_regexp,$Number,$m)) {
-            	dprint("$Number is an ENUM number that matched $_regexp");
                 return $m[1];
-            } else {
-                dprint ("No match for $_regexp");
             }
         } 
         return false;

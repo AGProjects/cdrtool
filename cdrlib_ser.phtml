@@ -1851,7 +1851,7 @@ class CDRS_ser_radius extends CDRS {
             }
     
             if (!$this->AccountsDB->query($query)) {
-                printf ("<p>Error: database error %s %s",$this->AccountsDB->Error,$query);
+                printf ("<p>Error1: database error %s %s",$this->AccountsDB->Error,$query);
                 return false;
             }
     
@@ -2389,7 +2389,7 @@ class CDR_ser_radius extends CDR {
         $this->obfuscateCallerId();
 
         //$this->isCalleeLocal();
-        //$this->isCallerLocal();
+        $this->isCallerLocal();
 
     }
 
@@ -2864,6 +2864,7 @@ class CDR_ser_radius extends CDR {
     }
 
     function isCallerLocal() {
+        // used by quota
         if (in_array($this->aNumberDomain,$this->CDRS->localDomains)) {
         	$this->CallerIsLocal=1;
             return true;

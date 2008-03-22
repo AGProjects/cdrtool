@@ -738,8 +738,10 @@ class CDRS {
             if ($c) {
                 syslog(LOG_NOTICE, "Reset quota counters for re-normalization");
             	if (is_object($this->mc)) $this->mc->delete($this->mc_key_init);
+
                 $query=sprintf("delete from memcache where `key`= '%s'",$this->mc_key_init);
             	$this->cdrtool->query($query);
+
             }
         }
 
@@ -894,7 +896,6 @@ class CDRS {
 
         while ($this->CDRdb->next_record()) {
 
-
 			$Structure=$this->_readCDRNormalizationFieldsFromDB();
             $found++;
 
@@ -906,7 +907,7 @@ class CDRS {
                 $this->status['normalize_failures']++;
             }
 
-			if ($this->reNormalize && $CDR->pricePrint && !$this->usageKeysForDeletionFromCache[$CDR->BillingPartyId]) {
+			if ($this->reNormalize && !$this->usageKeysForDeletionFromCache[$CDR->BillingPartyId]) {
             	$this->usageKeysForDeletionFromCache[$CDR->BillingPartyId]++;
             }
 
@@ -946,18 +947,7 @@ class CDRS {
         }
 
         if (count($this->usageKeysForDeletionFromCache)) {
-        	if (is_object($this->mc)) {
-				if ($reset_quota_for = $this->mc->get('reset_quota_for')) {
-    	            $reset_quota_new=array_merge(json_decode($reset_quota_for),array_keys($this->usageKeysForDeletionFromCache));
-        	    } else {
-    	            $reset_quota_new=array_keys($this->usageKeysForDeletionFromCache);
-                }
-                $_reset_array=array_unique($reset_quota_new);
-                $log=sprintf("Next quota check will rebuild the counters for %s accounts",count($_reset_array));
-                syslog(LOG_NOTICE,$log );
-
-                $this->mc->set('reset_quota_for',json_encode($_reset_array));
-            }
+			$this->resetQuota(array_keys($this->usageKeysForDeletionFromCache));
         }
 
         return 1;
@@ -1490,76 +1480,69 @@ class CDRS {
         return 1;
     }
 
-    function getMonthlyUsageFromCache($account) {
-        // retuns array with usage information saved with cacheMonthlyUsage
-        $_usage=array();
-
-        $mc_key=sprintf("%s%s",$this->mc_key_mu_prefix,$account);
-
-        if (is_object($this->mc)) {
-            // use memcache server
-            $previousUsage = $this->mc->get($mc_key);
-
-        } else {
-        	// use MySQL server
-            $query=sprintf("select value from memcache where `key` ='%s'",$mc_key);
-            if ($this->cdrtool->query($query) && $this->cdrtool->num_rows()) {
-                $this->cdrtool->next_record();
-            	$previousUsage=$this->cdrtool->f('value');
-            }
-        }
-
-        if ($previousUsage) {
-			$_usage=$this->parseMonthlyUsage($previousUsage);
-        }
-
-        return $_usage;
-    }
-
     function cacheMonthlyUsage($accounts=array()) {
-
         $saved_keys=0;
         $failed_keys=0;
 
         foreach (array_keys($accounts) as $_key) {
 
-			if (!$accounts[$_key]['usage']['calls']) continue;
+            $query=sprintf("select id from quota_usage where datasource = '%s' and account = '%s'",$this->cdr_source,$_key);
 
-            $mc_value=sprintf("calls=%d duration=%d cost=%0.4f traffic=%0.2f",
-            $accounts[$_key]['usage']['calls'],
-            $accounts[$_key]['usage']['duration'],
-            $accounts[$_key]['usage']['cost'],
-            $accounts[$_key]['usage']['traffic']
-            );
+            if (!$this->cdrtool->query($query)){
+                $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                syslog(LOG_NOTICE, $log);
+                print($log);
+            	return false;
+            }
 
-            $mc_key=sprintf("%s%s",$this->mc_key_mu_prefix,trim($_key));
-
-        	if (is_object($this->mc)) {
-                // use memcache server
-				$mc_expire=time()+31*24*3600;  // 31 days
-
-                if ($this->mc->set($mc_key,$mc_value,0,$mc_expire)) {  // expire in 30 days
-                    $saved_keys++;
-                } else {
-                    $failed_keys++;
-                }
-
-            } else {
-                // use MySQL storage
-                $query=sprintf("delete from memcache where `key` = '%s'",$mc_key);
-                $this->cdrtool->query($query);
-
-                $query=sprintf("insert into memcache (`key`,`value`) values ('%s','%s')\n",
-                $mc_key,
-                $mc_value
+            if ($this->cdrtool->num_rows()) {
+                // sync with quota_usage table
+                $query=sprintf("update quota_usage set
+                calls = calls + %d,
+                duration  = duration + %d,
+                cost = cost + '%s',
+                traffic = traffic + '%s'
+                where account = '%s'
+                ",
+                $accounts[$_key]['usage']['calls'],
+                $accounts[$_key]['usage']['duration'],
+                $accounts[$_key]['usage']['cost'],
+                $accounts[$_key]['usage']['traffic'],
+                $_key
                 );
 
-
-                if ($this->cdrtool->query($query) && $this->cdrtool->affected_rows()) {
-                    $saved_keys++;
-                } else {
+                if (!$this->cdrtool->query($query)){
+                    $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    syslog(LOG_NOTICE, $log);
                     $failed_keys++;
-                }
+            	}
+
+                $saved_keys++;
+
+            } else {
+
+				$quota=$this->getQuota($_key);
+
+                $query=sprintf("insert into quota_usage
+                (datasource,account,quota,calls,duration,cost,traffic)
+                values ('%s','%s','%s',%d,%d,'%s','%s')
+                ",
+                $this->cdr_source,
+                $_key,
+                $quota,
+                $accounts[$_key]['usage']['calls'],
+                $accounts[$_key]['usage']['duration'],
+                $accounts[$_key]['usage']['cost'],
+                $accounts[$_key]['usage']['traffic']
+                );
+
+                if (!$this->cdrtool->query($query)){
+                    $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                    syslog(LOG_NOTICE, $log);
+                    $failed_keys++;
+            	}
+
+                $saved_keys++;
             }
         }
 
@@ -1569,28 +1552,7 @@ class CDRS {
         return 1;
     }
 
-    function parseMonthlyUsage($usage) {
-
-        if (!$usage) return ;
-
-        $_els=explode(" ",trim($usage));
-
-        $t=0;
-        while ($t < count($_els)) {
-            $_dict  = explode("=",$_els[$t]);
-            $_key   = $_dict[0];
-            $_value = $_dict[1];
-
-            if (!$_key) continue;
-
-            $_usage[$_key]=$_value;
-            $t++;
-        }
-
-        return $_usage;
-     }
-
-     function getNormalizeLock($lockname='') {
+    function getNormalizeLock($lockname='') {
 
         if (!$locker = new DB_Locker()) {
             $log=sprintf("Error: cannot init locker database. ");
@@ -1636,7 +1598,83 @@ class CDRS {
             syslog(LOG_NOTICE, "Error: failed to request mysql lock");
             return 0;
         }
-     }
+    }
+
+    function getQuota($account) {
+        if (!$account) return;
+
+        list($username,$domain) = explode("@",$account);
+
+        if ($this->enableThor) {
+            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+    
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+            	$this->AccountsDB->next_record();
+            	$_profile=json_decode(trim($this->AccountsDB->f('profile')));
+                return $_profile->quota;
+            } else {
+                return 0;
+            }
+        } else {
+            $query=sprintf("select quota from subscriber where username = '%s' and domain = '%s'",$username,$domain);
+    
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+            	$this->AccountsDB->next_record();
+                return $this->AccountsDB->f('quota');
+            } else {
+                return 0;
+            }
+
+        }
+
+    }
+
+    function resetQuota($accounts) {
+        if (!is_object($this->mc)) return;
+
+        if ($reset_quota_for = $this->mc->get('reset_quota_for')) {
+            $reset_quota_new=array_merge(json_decode($reset_quota_for),$accounts);
+        } else {
+            $reset_quota_new=$accounts;
+        }
+
+        $_reset_array=array_unique($reset_quota_new);
+        $log=sprintf("Next quota check will rebuild the counters for %s accounts",count($_reset_array));
+        syslog(LOG_NOTICE,$log );
+
+        $this->mc->set('reset_quota_for',json_encode($_reset_array));
+
+        $query="delete from quota_usage where account in (";
+        $t=0;
+        foreach ($_reset_array as $_el) {
+            if ($t) $query.=",";
+            $query.= sprintf("'%s'",$_el);
+            $t++;
+        }
+
+        $query.=")";
+
+        if (!$this->cdrtool->query($query)) {
+            $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+            syslog(LOG_NOTICE,$log);
+            print $log;
+            return 0;
+        } else {
+            return 1;
+        }
+    }
 }
 
 class CDRS_unknown extends CDRS {
@@ -1890,17 +1928,19 @@ class CDR {
             $query1 = sprintf("update %s set %s where %s = '%s'",$table,$query,$this->idField,$this->id);
 
             if ($updatedFields) {
+
                 if ($this->CDRS->CDRdb1->query($query1)) {
                     if ($this->CDRS->CDRdb1->affected_rows()) {
                         if ($table == $this->CDRS->table) {
                             // cache usage only if current month
     
                             $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
-                            $_usage[$this->BillingPartyId]['usage']=array("calls"    => 1,
-                                                                      "duration" => $this->duration,
-                                                                      "cost"     => $Rate->price,
-                                                                      "traffic"  => $_traffic
-                                                                     );
+                            $_usage=array('calls'    => 1,
+                                          'duration' => $this->duration,
+                                          'cost'     => $Rate->price,
+                                          'traffic'  => $_traffic
+                                         );
+
                             $this->cacheMonthlyUsage($_usage);
                         }
     
@@ -1915,11 +1955,11 @@ class CDR {
                                     // cache usage only if current month
             
                                     $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
-                                    $_usage[$this->BillingPartyId]['usage']=array("calls"    => 1,
-                                                                              "duration" => $this->duration,
-                                                                              "cost"     => $Rate->price,
-                                                                              "traffic"  => $_traffic
-                                                                             );
+                                    $_usage=array('calls'    => 1,
+                                                  'duration' => $this->duration,
+                                                  'cost'     => $Rate->price,
+                                                  'traffic'  => $_traffic
+                                                  );
                                     $this->cacheMonthlyUsage($_usage);
                                 }
     
@@ -1944,7 +1984,7 @@ class CDR {
             }
         } else {
             if ($this->CDRS->BillingPartyIdField && $CarrierInfo['BillingPartyId']) {
-            	$this->domain = $CarrierInfo[BillingDomain];
+            	$this->domain = $CarrierInfo['BillingDomain'];
             }
 
 			if ($this->usernameNormalized && $this->usernameNormalized!=$this->username) {
@@ -1970,25 +2010,12 @@ class CDR {
         return 1;
     }
 
-    function cacheMonthlyUsage($accounts) {
+    function cacheMonthlyUsage($usage) {
 
-        if (!is_array($accounts)) return ;
+        if (!is_array($usage)) return ;
+        if (!$this->CallerIsLocal) return;
 
-        foreach (array_keys($accounts) as $_account) {
-
-        	if ($this->CallerIsLocal) {
-
-	            $_usage = $this->CDRS->getMonthlyUsageFromCache($_account);
-
-    	    	$accounts[$_account]['usage']['calls']    =  $accounts[$_account]['usage']['calls']    + $_usage['calls'];
-        	    $accounts[$_account]['usage']['duration'] =  $accounts[$_account]['usage']['duration'] + $_usage['duration'];
-            	$accounts[$_account]['usage']['cost']     =  $accounts[$_account]['usage']['cost']     + $_usage['cost'];
-	            $accounts[$_account]['usage']['traffic']  =  $accounts[$_account]['usage']['traffic']  + $_usage['traffic'];
-
-            } else {
-                return ;
-            }
-        }
+		$accounts[$this->BillingPartyId]['usage']=$usage;
 
         $this->CDRS->cacheMonthlyUsage($accounts);
     }
