@@ -4996,7 +4996,7 @@ class RatingEngine {
 
         $e=time();
         $d=$e-$b;
-        if ($d >0 ) syslog(LOG_NOTICE, "Loaded rating tables in $d seconds");
+        if ($d > 0 ) syslog(LOG_NOTICE, "Loaded rating tables in $d seconds");
 
         $this->db->query("update settings set var_value ='' where var_name = 'reloadRating'");
         return 1;
@@ -5012,8 +5012,28 @@ class RatingEngine {
     }
 
     function reloadQuota($account) {
-    	$accounts=array($account);
-    	return $this->CDRS->resetQuota($accounts);
+        if (!$account) return false;
+
+	  	$quota   = $this->CDRS->getQuota($account);
+		$blocked = $this->CDRS->getBlockedByQuotaStatus($_key);
+
+        $query=sprintf("update quota_usage set
+        quota = '%s',
+        blocked = '%s'
+        where datasource = '%s'
+        and account = '%s'",
+        $quota,
+        $blocked,
+        $this->CDRS->cdr_source,
+        $account);
+
+        if (!$this->db->query($query)) {
+            $log=sprintf("Error: %s (%s)",$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE,$log);
+            return 0;
+        }
+
+        return 1;
     }
 
     function reloadPrepaidAccounts($account='') {

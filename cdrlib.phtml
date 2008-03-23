@@ -738,10 +738,6 @@ class CDRS {
             if ($c) {
                 syslog(LOG_NOTICE, "Reset quota counters for re-normalization");
             	if (is_object($this->mc)) $this->mc->delete($this->quota_init_flag);
-
-                $query=sprintf("delete from memcache where `key`= '%s'",$this->quota_init_flag);
-            	$this->cdrtool->query($query);
-
             }
         }
 
@@ -1522,10 +1518,11 @@ class CDRS {
             } else {
 
 				$quota=$this->getQuota($_key);
+				$blocked=$this->getBlockedByQuotaStatus($_key);
 
                 $query=sprintf("insert into quota_usage
-                (datasource,account,quota,calls,duration,cost,traffic)
-                values ('%s','%s','%s',%d,%d,'%s','%s')
+                (datasource,account,quota,calls,duration,cost,traffic,blocked)
+                values ('%s','%s','%s',%d,%d,'%s','%s','%s')
                 ",
                 $this->cdr_source,
                 $_key,
@@ -1533,7 +1530,8 @@ class CDRS {
                 $accounts[$_key]['usage']['calls'],
                 $accounts[$_key]['usage']['duration'],
                 $accounts[$_key]['usage']['cost'],
-                $accounts[$_key]['usage']['traffic']
+                $accounts[$_key]['usage']['traffic'],
+                intval($blocked)
                 );
 
                 if (!$this->cdrtool->query($query)){
@@ -1641,7 +1639,52 @@ class CDRS {
 
     }
 
-    function resetQuota($accounts) {
+    function getBlockedByQuotaStatus($account) {
+        if (!$account) return;
+
+        list($username,$domain) = explode("@",$account);
+
+        if ($this->enableThor) {
+            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+    
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+            	$this->AccountsDB->next_record();
+            	$_profile=json_decode(trim($this->AccountsDB->f('profile')));
+                if (in_array('quota',$_profile->groups)) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            } else {
+                return 0;
+            }
+        } else {
+            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",'quota');
+    
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+                return 1;
+            } else {
+                return 0;
+            }
+
+        }
+
+        return 0;
+    }
+
+    function resetQuota($accounts=array()) {
         if (!is_object($this->mc)) return;
 
         if ($reset_quota_for = $this->mc->get($this->quota_reset_flag)) {
@@ -1651,10 +1694,19 @@ class CDRS {
         }
 
         $_reset_array=array_unique($reset_quota_new);
+
+        foreach ($_reset_array as $_el) {
+            if (strlen($_el)) $_accounts[]=$_el;
+        }
+
+        $_reset_array=$_accounts;
+
         $log=sprintf("Next quota check will rebuild the counters for %s accounts",count($_reset_array));
         syslog(LOG_NOTICE,$log );
 
         $this->mc->set($this->quota_reset_flag,json_encode($_reset_array));
+
+      	$this->mc->delete($this->quota_init_flag);
 
         $query="delete from quota_usage where account in (";
         $t=0;
