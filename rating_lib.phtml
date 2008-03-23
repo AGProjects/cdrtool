@@ -897,7 +897,8 @@ class RatingTables {
 
 	var $skipReloadForTables = array('billing_rates',
                                      'prepaid_cards',
-                                     'billing_customers'
+                                     'billing_customers',
+                                     'quota_usage'
                                      );
 
     function RatingTables () {
@@ -1192,6 +1193,45 @@ class RatingTables {
                                                                                  ),
                                                                  "date_active"=>array("size"=>18,
                                                                  				 "name"=>"Activation date"
+                                                                                 )
+
+                                                                  )
+                                                   ),
+                           "quota_usage"=>array("name"=>"Quota usage",
+                                                 "keys"=>array("id"),
+                                                 "size"=>15,
+                                                 "readonly"=>1,
+                                                 "exceptions" =>array("change_date"),
+
+                                                 "fields"=>array("datasource"=>array("size"=>12,
+                                                                               "readonly"=>1
+                                                                                ),
+                                                                 "account"=>array("size"=>30,
+                                                                               "readonly"=>1
+                                                                                 ),
+                                                                 "domain"=>array("size"=>15,
+                                                                               "readonly"=>1
+                                                                                 ),
+                                                                 "blocked"=>array("size"=>2,
+                                                                               "readonly"=>1
+                                                                                 ),
+                                                                 "notified"=>array("size"=>20,
+                                                                               "readonly"=>1
+                                                                                 ),
+                                                                 "quota"=>array("size"=>5,
+                                                                               "readonly"=>1
+                                                                                 ),
+                                                                 "cost"=>array("size"=>10,
+                                                                               "readonly"=>1
+                                                                                 ),
+                                                                 "duration"=>array("size"=>10,
+                                                                               "readonly"=>1
+                                                                                 ),
+                                                                 "calls"=>array("size"=>10,
+                                                                               "readonly"=>1
+                                                                                 ),
+                                                                 "traffic"=>array("size"=>20,
+                                                                               "readonly"=>1
                                                                                  )
 
                                                                   )
@@ -3724,7 +3764,7 @@ class RatingTables {
             </tr>
             ";
             
-            if ($selection_made) {
+            if ($selection_made && !$this->tables[$table]['readonly']) {
                 // Update all form
                 print "
                 <tr><td class=border colspan=$t_columns>
@@ -3792,7 +3832,7 @@ class RatingTables {
                     print "<input type=hidden name=confirmDelete value=1>";
                     print "<input type=submit name=subaction value=\"Delete selection\">";
                     print " ($rows records)";
-                } else {
+                } else if (!$this->tables[$table]['readonly']){
         
                     if ($table == "billing_rates" && strlen($_REQUEST['search_name'])) {
                         if ($subaction=="Copy rate" && !$confirmCopy) {
@@ -3845,7 +3885,6 @@ class RatingTables {
                         <br>";
         
                     }
-        
                 }
         
                 print "
@@ -3857,7 +3896,7 @@ class RatingTables {
                 </form>
                 ";
             
-            } else {
+            } else if (!$this->tables[$table]['readonly']){
                 // Insert form
                 $j=0;
                 print "
@@ -3922,12 +3961,13 @@ class RatingTables {
                 </tr>
                 </form>
                 ";
+                print "
+                <tr>
+                <td colspan=$t_columns><hr noshade size=2></td>
+                </tr>
+                ";
+
             }
-            print "
-            <tr>
-            <td colspan=$t_columns><hr noshade size=2></td>
-            </tr>
-            ";
             
         }
         
@@ -4019,7 +4059,7 @@ class RatingTables {
                 print "\n";
             }
         
-            if (!$export) {
+            if (!$export && !$this->tables[$table]['readonly']) {
                 if ($subaction=="Delete" && $idForDeletion == $id && !$confirmDelete) {
                     print "<td class=border bgcolor=lightgrey>";
                     print "<input type=hidden name=confirmDelete value=1>";
@@ -4854,7 +4894,9 @@ class OpenSERQuota {
 
         $reset_quota_for = json_decode($this->CDRS->mc->get($this->quota_reset_flag));
 
-        $this->deblockAccounts($reset_quota_for);
+		if ($reset_quota_for) {
+        	$this->deblockAccounts($reset_quota_for);
+        }
     
         $this->deleteMonthlyUsageFromCache($reset_quota_for);
 
@@ -4883,7 +4925,7 @@ class OpenSERQuota {
     }
 
     function markBlocked($account) {
-        $query=sprintf("update quota_usage set blocked = '1' where account = '%s' and datasource = '%s'",$account,$this->CDRS->cdr_source);
+        $query=sprintf("update quota_usage set blocked = '1', notified = NOW() where account = '%s' and datasource = '%s'",$account,$this->CDRS->cdr_source);
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
             print $log;
