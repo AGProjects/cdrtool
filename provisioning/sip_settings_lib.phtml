@@ -2507,7 +2507,7 @@ class SipSettings {
             $selectedIdx = $_REQUEST[$select_name];
             $textboxURI  = $_REQUEST[$condition];
 
-            if ($textboxURI && !preg_match("/@/",$textboxURI)) {
+            if ($textboxURI && $textboxURI != "<voice-mailbox>" && !preg_match("/@/",$textboxURI)) {
                 $textboxURI=$textboxURI."@".$this->domain;
             }
 
@@ -2575,10 +2575,10 @@ class SipSettings {
             }
         }
 
-		//dprint_r($this->CallPrefDbURI);
-
         foreach(array_keys($this->CallPrefDbURI) as $key) {
             if ($this->CallPrefDbURI[$key] != $diversions[$key]) {
+                //$log=sprintf("Diversion %s changed from %s to %s",$key,htmlentities($this->CallPrefDbURI[$key]),htmlentities($diversions[$key]));
+            	dprint($log);
                 $divert_changed=1;
             }
 
@@ -2586,6 +2586,8 @@ class SipSettings {
             	if ($diversions[$key] == "<voice-mailbox>") {
                     if ($this->absolute_voicemail_uri) {
                         $diversionsSOAP[$key] = 'sip:'.$this->voicemail['Account'];
+                    } else {
+                        $diversionsSOAP[$key] = $diversions[$key];
                     }
                 } else {
                 	$diversionsSOAP[$key]='sip:'.$diversions[$key];
@@ -2601,10 +2603,6 @@ class SipSettings {
         }
 
         if ($divert_changed) {
-        	//dprint_r($diversionsSOAP);
-
-            dprint("setDiversions");
-
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->setCallDiversions($this->sipId,$diversionsSOAP);
     
@@ -2689,8 +2687,6 @@ class SipSettings {
         }
 
 		dprint_r($this->CallPrefDbURI);
-
-        dprint("setDiversions");
 
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->setCallDiversions($this->sipId,$result);
