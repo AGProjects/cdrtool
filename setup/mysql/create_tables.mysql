@@ -475,6 +475,5 @@ CREATE TABLE `quota_usage` (
   `traffic` varchar(50) NOT NULL,
   `change_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),
-  UNIQUE KEY `account_idx` (`account`)
-);
- 
+  UNIQUE KEY `account_idx` (`datasource`,`account`)
+) DEFAULT CHARSET=latin1;

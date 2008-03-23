@@ -4795,11 +4795,10 @@ class OpenSERQuota {
     }
 
     function deleteQuotaInitFlag() {
-    	if (is_object($this->CDRS->mc)) {
-            if (!$this->CDRS->mc->delete($this->quota_init_flag)) {
-                return false;
-            }
-        }
+    	if (!is_object($this->CDRS->mc)) return false;
+
+        $this->CDRS->mc->delete($this->quota_init_flag);
+        $this->CDRS->mc->delete($this->quota_reset_flag);
 
         return true;
     }
