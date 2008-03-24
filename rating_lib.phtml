@@ -4920,20 +4920,26 @@ class OpenSERQuota {
     }
 
     function saveQuotaInitFlag() {
-    	if (is_object($this->CDRS->mc)) {
-            if ($this->CDRS->mc->set($this->quota_init_flag,'1',0,0)) {
-                return true;
-            } else {
-                return false;
+        $query=sprintf("insert into memcache (`key`,`value`) values ('%s','1')",$this->quota_init_flag);
+        if (!$this->db->query($query)) {
+            if ($this->db->Errno != '1062') {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                print $log;
+                syslog(LOG_NOTICE, $log);
+            	return false;
             }
         }
+        return true;
     }
 
     function deleteQuotaInitFlag() {
-    	if (!is_object($this->CDRS->mc)) return false;
-
-        $this->CDRS->mc->delete($this->quota_init_flag);
-        $this->CDRS->mc->delete($this->quota_reset_flag);
+        $query=sprintf("delete from memcache where `key` in ('%s','%s')",$this->quota_init_flag,$this->quota_reset_flag);
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
 
         return true;
     }
@@ -4974,20 +4980,38 @@ class OpenSERQuota {
 
     function initMonthlyUsage() {
 
- 		if ($this->CDRS->mc->get($this->quota_init_flag)) {
-            return true;
-        }
+        $query=sprintf("select value from memcache where `key` = '%s'",$this->quota_init_flag);
 
-        $lockName=sprintf("%s:%s",$this->CDRS->cdr_source,$this->CDRS->table);
-
-        if (!$this->CDRS->getNormalizeLock($lockName)) {
-            $log=sprintf("Error: cannot initialize now the quota becuase a normalization process in progress\n");
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
         }
 
-        $reset_quota_for = json_decode($this->CDRS->mc->get($this->quota_reset_flag));
+ 		if ($this->db->num_rows()) return true;
+
+        $lockName=sprintf("%s:%s",$this->CDRS->cdr_source,$this->CDRS->table);
+
+        if (!$this->CDRS->getNormalizeLock($lockName)) {
+            $log=sprintf("Error: cannot initialize now the quota because a normalization process in progress\n");
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
+
+        $query=sprintf("select value from memcache where `key` = '%s'",$this->quota_reset_flag);
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
+
+ 		if ($this->db->num_rows()) {
+            $this->db->next_record();
+        	$reset_quota_for = json_decode($this->db->f('value'));
+        }
 
 		if ($reset_quota_for) {
         	$this->deblockAccounts($reset_quota_for);
@@ -5010,10 +5034,16 @@ class OpenSERQuota {
         }
     
         if ($this->saveQuotaInitFlag()) {
-            $this->CDRS->mc->delete($this->quota_reset_flag);
+            $query=sprintf("delete from memcache where `key` = '%s'",$this->quota_reset_flag);
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                print $log;
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
             return true;
         } else {
-            $log=sprintf ("Error: failed to save key quotaCheckInit in memcache");
+            $log=sprintf ("Error: failed to save key quotaCheckInit");
             syslog(LOG_NOTICE, $log);
             return false;
         }

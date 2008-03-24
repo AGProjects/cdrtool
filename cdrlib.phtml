@@ -100,10 +100,7 @@ class CDRS {
 
             if ($mc->pconnect($memcache_host,$memcache_port)) {
                 $this->mc = &$mc;
-                if ($mc_stats=$this->mc->getStats()) {
-                	$this->mc_usage=$mc_stats['bytes']/$mc_stats['limit_maxbytes']*100;
-                }
-                $log=sprintf ("Connected to memcache %s:%d, usage: %.02f/%.02f MB (%.0f%s), keys: %s\n",$memcache_host,$memcache_port,$mc_stats['bytes']/1024/1024,$mc_stats['limit_maxbytes']/1024/1024,$this->mc_usage,"%",$mc_stats['curr_items']);
+                $log=sprintf ("Connected to memcache %s:%d\n",$memcache_host,$memcache_port);
             } else {
                 $log=sprintf ("Connection to memcache %s:%d failed\n",$memcache_host,$memcache_port);
             }
@@ -1706,9 +1703,21 @@ class CDRS {
         $log=sprintf("Next quota check will rebuild the counters for %s accounts",count($_reset_array));
         syslog(LOG_NOTICE,$log );
 
-        $this->mc->set($this->quota_reset_flag,json_encode($_reset_array));
+        $query=sprintf("delete from memcache where `key` in ('%s','%s')",$this->quota_init_flag,$this->quota_reset_flag);
+        if (!$this->cdrtool->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
 
-      	$this->mc->delete($this->quota_init_flag);
+        $query=sprintf("insert into memcache (`key`,`value`) values ('%s','%s')",$this->quota_reset_flag,json_encode($_reset_array));
+        if (!$this->cdrtool->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
 
         $query="delete from quota_usage where account in (";
         $t=0;

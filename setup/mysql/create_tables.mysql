@@ -349,7 +349,7 @@ CREATE TABLE `log` (
 DROP TABLE IF EXISTS `memcache`;
 CREATE TABLE `memcache` (
   `key` varchar(255) NOT NULL default '',
-  `value` text NOT NULL,
+  `value` longblob NOT NULL,
   PRIMARY KEY  (`key`)
 )  DEFAULT CHARSET=latin1;
 
