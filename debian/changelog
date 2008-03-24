@@ -1,3 +1,18 @@
+cdrtool (6.3.3) unstable; urgency=low
+
+  * Refactor quota system to work with millions of sip accounts
+  * Fixed voicemail divert setting
+  * Separate unblock quota from init quota operation
+    Added domain and notified columns to quota_usage
+    Show quota_usage table in rating section
+  * Fixed syncronization of quota and blocked by quota
+  * Use normalized lock during init of quota to avoid race conditions
+  * Added quota_usage table
+  * Allow for empty prefixes in PSTN routes
+  * Fixes in update of impersonate field
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 24 Mar 2008 09:12:25 +0100
+
 cdrtool (6.3.2) unstable; urgency=low
 
   * Log for how many account the CDRs are loaded to rebuild the quota count
