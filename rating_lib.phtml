@@ -1326,8 +1326,9 @@ class RatingTables {
                 );
 
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
-                    return false;
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                 }
 
                 if ($this->db->affected_rows()) {
@@ -1377,7 +1378,9 @@ class RatingTables {
                             );
             
                             if (!$this->db->query($query)) {
-                                printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
                                 return false;
                             }
                         }
@@ -1405,7 +1408,9 @@ class RatingTables {
                 );
 
                 if (!$this->db->query($query)) {
-                    printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -1434,7 +1439,9 @@ class RatingTables {
                         );
 
                         if (!$this->db->query($query)) {
-                            printf ("Database error for %s: %s (%s)",$query, $this->db->Error,$this->db->Errno);
+                            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
                         }
                     }
 
@@ -1458,7 +1465,9 @@ class RatingTables {
                 );
 
                 if (!$this->db->query($query)) {
-                    printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -1487,7 +1496,9 @@ class RatingTables {
                     );
 
                     if (!$this->db->query($query)) {
-                        printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
                         return false;
                     }
 
@@ -1522,7 +1533,9 @@ class RatingTables {
                             );
         
                             if (!$this->db->query($query)) {
-                                printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
                             }
                         }
                         $updated++;
@@ -1563,7 +1576,9 @@ class RatingTables {
                     );
 
                     if (!$this->db->query($query)) {
-                        printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
                         return false;
                     }
                     if ($this->db->affected_rows()) {
@@ -1613,7 +1628,9 @@ class RatingTables {
                                );
 
                                if (!$this->db->query($query)) {
-                                   printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                   $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                   print $log;
+                                   syslog(LOG_NOTICE, $log);
                                    return false;
                                }
                             }
@@ -1714,7 +1731,9 @@ class RatingTables {
                 addslashes($endDate)
                 );
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -1741,7 +1760,9 @@ class RatingTables {
                 addslashes($endDate)
                 );
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -1767,7 +1788,9 @@ class RatingTables {
                 addslashes($endDate)
                 );
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -1800,7 +1823,9 @@ class RatingTables {
                     );
 
                     if (!$this->db->query($query)) {
-                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
                         return false;
                     }
 
@@ -1849,7 +1874,9 @@ class RatingTables {
                     );
 
                     if (!$this->db->query($query)) {
-                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
                         return false;
                     }
 
@@ -1957,7 +1984,9 @@ class RatingTables {
                 );
 
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -1977,7 +2006,9 @@ class RatingTables {
                 addslashes($subscriber)
                 );
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -1996,7 +2027,9 @@ class RatingTables {
                 );
 
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -2027,7 +2060,9 @@ class RatingTables {
                     );
 
                     if (!$this->db->query($query)) {
-                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
                         return false;
                     }
 
@@ -2076,7 +2111,9 @@ class RatingTables {
                     );
 
                     if (!$this->db->query($query)) {
-                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
                         return false;
                     }
 
@@ -2147,7 +2184,9 @@ class RatingTables {
                 addslashes($dest_name)
                 );
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -2169,7 +2208,9 @@ class RatingTables {
                 addslashes($dest_id)
                 );
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -2190,7 +2231,9 @@ class RatingTables {
                 );
 
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -2209,7 +2252,9 @@ class RatingTables {
                     addslashes($dest_id)
                     );
                     if (!$this->db->query($query)) {
-                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
                         return false;
                     }
 
@@ -2238,7 +2283,9 @@ class RatingTables {
                     addslashes($dest_name)
                     );
                     if (!$this->db->query($query)) {
-                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
                         return false;
                     }
 
@@ -2345,7 +2392,9 @@ class RatingTables {
                 addslashes($hour4)
                 );
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -2367,7 +2416,9 @@ class RatingTables {
                 addslashes($subscriber)
                 );
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -2388,7 +2439,9 @@ class RatingTables {
                 );
 
                 if (!$this->db->query($query)) {
-                    printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
@@ -2420,7 +2473,9 @@ class RatingTables {
                     addslashes($subscriber)
                     );
                     if (!$this->db->query($query)) {
-                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
                         return false;
                     }
 
@@ -2470,7 +2525,9 @@ class RatingTables {
                     addslashes($hour4)
                     );
                     if (!$this->db->query($query)) {
-                        printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
                         return false;
                     }
 
@@ -2518,7 +2575,9 @@ class RatingTables {
     function LoadENUMtldsTable() {
         $query="select * from billing_enum_tlds";
         if (!$this->db->query($query)) {
-            printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -2551,7 +2610,9 @@ class RatingTables {
         order by name ASC,destination ASC,startDate DESC";
 
         if (!$this->db->query($query)) {
-            printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -2584,7 +2645,9 @@ class RatingTables {
     function LoadProfilesTable() {
         $query="select * from billing_profiles order by name";
         if (!$this->db->query($query)) {
-            printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -2614,7 +2677,9 @@ class RatingTables {
     function LoadHolidaysTable() {
         $query="select * from billing_holidays order by day";
         if (!$this->db->query($query)) {
-            printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -2708,7 +2773,9 @@ class RatingTables {
                 return false;
             }
         } else {
-            printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return false;
         }
     }
@@ -2723,7 +2790,9 @@ class RatingTables {
     	syslog(LOG_NOTICE, $log);
 
         if (!$this->db->query($query)) {
-            printf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return false;
         }
     }
@@ -2750,12 +2819,16 @@ class RatingTables {
         if ($this->db->query($query)) {
             $query=sprintf("alter table %s add index rate_idx (name)",$table);
             if (!$this->db->query($query)) {
-                printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                print $log;
+                syslog(LOG_NOTICE, $log);
             }
     
             $query=sprintf("alter table %s add index destination_idx (destination)",$table);
             if (!$this->db->query($query)) {
-                printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                print $log;
+                syslog(LOG_NOTICE, $log);
             }
 
             printf ("Created table %s\n",$table);
@@ -2769,7 +2842,9 @@ class RatingTables {
         $query="select count(*) as c from billing_rates";
 
         if (!$this->db->query($query)) {
-            printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return false;
         }
         $this->db->next_record();
@@ -2778,7 +2853,9 @@ class RatingTables {
         $query="select distinct(name) from billing_rates order by name ASC";
 
         if (!$this->db->query($query)) {
-            printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -2793,30 +2870,40 @@ class RatingTables {
             $query=sprintf("drop table if exists %s",$table);
 
             if (!$this->db->query($query)) {
-                printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                print $log;
+                syslog(LOG_NOTICE, $log);
                 return false;
             }
 
             if (!$this->db->query($query)) {
-                printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                print $log;
+                syslog(LOG_NOTICE, $log);
                 return false;
             }
 
             $query=sprintf("create table %s select * from billing_rates where name = '%s'\n",$table,$name);
 
             if (!$this->db->query($query)) {
-                printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                print $log;
+                syslog(LOG_NOTICE, $log);
                 return false;
             } else {
                 $query=sprintf("alter table %s add index rate_idx (name)",$table);
             	if (!$this->db->query($query)) {
-                	printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
                 $query=sprintf("alter table %s add index destination_idx (destination)",$table);
             	if (!$this->db->query($query)) {
-                	printf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
                 $query=sprintf("select count(*) as c from %s",$table);
@@ -2903,7 +2990,9 @@ class RatingTables {
                                 $rate_tables_affected[]='billing_rates_'.$this->db->f('name');
                             }
                         } else {
-                            printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+                            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
                         }
                     }
                 } else if ($table=="prepaid") {
@@ -2969,7 +3058,9 @@ class RatingTables {
                                 // we failed to reload the prepaid account in real time so we mark the database for
                                 // reload at a later time
                                 if (!$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'")){
-                                    printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+                                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                    print $log;
+                                    syslog(LOG_NOTICE, $log);
                                 }
                             }
                         } else if ($table=='billing_rates') {
@@ -2982,7 +3073,9 @@ class RatingTables {
                                     );
                                 	dprint($query_u);
                                 	if (!$this->db->query($query_u)) {
-                                		printf ("<font color=red>Database error for %s: %s (%s)</font>",$query_u,$this->db->Error,$this->db->Errno);
+                                        $log=sprintf ("Database error for query %s: %s (%s)",$query_u,$this->db->Error,$this->db->Errno);
+                                        print $log;
+                                        syslog(LOG_NOTICE, $log);
                                     }
                                 }
                             }
@@ -4266,8 +4359,9 @@ class OpenSERQuota {
         $query=sprintf("select * from quota_usage where datasource = '%s' and quota > 0 and cost > 0",$this->CDRS->cdr_source);
 
         if (!$this->db->query($query)) {
-            $log=sprintf("Error: %s (%s)",$this->db->Error,$this->db->Errno);
-            syslog(LOG_NOTICE,$log);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -4505,8 +4599,9 @@ class OpenSERQuota {
         $query=sprintf("select * from quota_usage where datasource = '%s' and quota > 0 and blocked = '0' and cost > quota",$this->CDRS->cdr_source);
 
         if (!$this->db->query($query)) {
-            $log=sprintf("Error: %s (%s)",$this->db->Error,$this->db->Errno);
-            syslog(LOG_NOTICE,$log);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -4862,9 +4957,9 @@ class OpenSERQuota {
         }
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             print $log;
-            syslog(LOG_NOTICE,$log);
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -4927,9 +5022,9 @@ class OpenSERQuota {
     function markBlocked($account) {
         $query=sprintf("update quota_usage set blocked = '1', notified = NOW() where account = '%s' and datasource = '%s'",$account,$this->CDRS->cdr_source);
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             print $log;
-            syslog(LOG_NOTICE,$log);
+            syslog(LOG_NOTICE, $log);
             return 0;
         }
     }
@@ -5064,13 +5159,14 @@ class RatingEngine {
         where datasource = '%s'
         and account = '%s'",
         $quota,
-        $blocked,
+        intval($blocked),
         $this->CDRS->cdr_source,
         $account);
 
         if (!$this->db->query($query)) {
-            $log=sprintf("Error: %s (%s)",$this->db->Error,$this->db->Errno);
-            syslog(LOG_NOTICE,$log);
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return 0;
         }
 
