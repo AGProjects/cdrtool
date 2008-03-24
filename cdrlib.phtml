@@ -1639,7 +1639,7 @@ class CDRS {
     }
 
     function getBlockedByQuotaStatus($account) {
-        if (!$account) return;
+        if (!$account) return 0;
 
         list($username,$domain) = explode("@",$account);
 
@@ -1664,7 +1664,7 @@ class CDRS {
                 return 0;
             }
         } else {
-            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",'quota');
+            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = 'quota' and username = '%s' and domain = '%s'",$username,$domain);
     
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);

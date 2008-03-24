@@ -4309,6 +4309,12 @@ class OpenSERQuota {
         $this->db = new DB_cdrtool;
         $this->db->Halt_On_Error="no";
 
+        $this->db1 = new DB_cdrtool;
+        $this->db1->Halt_On_Error="no";
+
+        $this->db1 = new DB_cdrtool;
+        $this->db1->Halt_On_Error="no";
+
 		$this->CDRS = &$parent;
 
         $this->quota_init_flag   = &$parent->quota_init_flag;
@@ -4334,7 +4340,14 @@ class OpenSERQuota {
             require_once("provisioning/ngnpro_engines.inc");
 
             if (in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
-        
+
+                /*
+                $log=sprintf("Using SOAP engine %s to block accounts\n",$DATASOURCES[$this->cdr_source]['soapEngineId']);
+
+                print $log;
+                syslog(LOG_NOTICE, $log);
+                */
+
                 $this->SOAPurl  = $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['url'];
                 $this->SOAPlogin = array(
                                            "username"    => $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['username'],
@@ -4453,6 +4466,7 @@ class OpenSERQuota {
                  return false;
              }
 
+			 $blockedAccounts=array();
              while ($this->AccountsDB->next_record()) {
 
                 $i++;
@@ -4648,8 +4662,8 @@ class OpenSERQuota {
                     addslashes($log)
                     );
             
-                    if (!$this->db->query($log_query)) {
-                        $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    if (!$this->db1->query($log_query)) {
+                        $log=sprintf ("Database error: %s (%s)",$this->db1->Error,$this->db1->Errno);
                         print $log;
                         syslog(LOG_NOTICE,$log);
                     }
@@ -4827,10 +4841,14 @@ class OpenSERQuota {
             );
 
             if (!$this->AccountsDB->query($query)) {
-                $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
-                print $log;
-                syslog(LOG_NOTICE,$log);
-                return false;
+                if ($this->AccountsDB->Errno != 1062) {
+                    $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE,$log);
+                    return false;
+                } else {
+                    return true;
+                }
             } else {
 				$this->markBlocked($account);
                 return true;
@@ -4857,6 +4875,7 @@ class OpenSERQuota {
 
             $log=sprintf("Error from %s: %s (%s)",$this->SOAPurl,$error_fault->faultstring,$error_fault->faultcode);
 	        syslog(LOG_NOTICE, $log);
+            print $log;
 
             if ($error_fault->detail->exception->errorcode != "1030") {
 
@@ -5051,8 +5070,8 @@ class OpenSERQuota {
 
     function markBlocked($account) {
         $query=sprintf("update quota_usage set blocked = '1', notified = NOW() where account = '%s' and datasource = '%s'",$account,$this->CDRS->cdr_source);
-        if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+        if (!$this->db1->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db1->Error,$this->db1->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return 0;

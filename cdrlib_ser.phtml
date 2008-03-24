@@ -1473,9 +1473,6 @@ class CDRS_ser_radius extends CDRS {
                 );
 
                 $this->CDRdb->query($query);
-                if ($this->CDRdb->affected_rows()) {
-                } else {
-                }
             }
 
             if ($UnNormalizedCalls=$this->getUnNormalized($where,$cdr_table)) {
