@@ -1511,9 +1511,9 @@ class CDRS {
                     $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     syslog(LOG_NOTICE, $log);
                     $failed_keys++;
-            	}
-
-                $saved_keys++;
+            	} else {
+                	$saved_keys++;
+                }
 
             } else {
 
@@ -1540,9 +1540,9 @@ class CDRS {
                     $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     syslog(LOG_NOTICE, $log);
                     $failed_keys++;
-            	}
-
-                $saved_keys++;
+            	} else {
+                	$saved_keys++;
+                }
             }
         }
 
