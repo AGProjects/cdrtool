@@ -1,6 +1,7 @@
-cdrtool (6.3.3) unstable; urgency=low
+cdrtool (6.4.0) unstable; urgency=high
 
   * Refactor quota system to work with millions of sip accounts
+  * Removed memcache usage for quota
   * Fixed voicemail divert setting
   * Separate unblock quota from init quota operation
     Added domain and notified columns to quota_usage
@@ -11,9 +12,8 @@ cdrtool (6.3.3) unstable; urgency=low
     Must apply mysql changes from setup/mysql/alter_tables.mysql
   * Allow for empty prefixes in PSTN routes
   * Fixes in update of impersonate field
-  * Removed memcache usage for quota
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 24 Mar 2008 19:28:56 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 24 Mar 2008 19:32:57 +0100
 
 cdrtool (6.3.2) unstable; urgency=low
 
