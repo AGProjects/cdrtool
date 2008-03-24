@@ -8,10 +8,11 @@ cdrtool (6.3.3) unstable; urgency=low
   * Fixed syncronization of quota and blocked by quota
   * Use normalized lock during init of quota to avoid race conditions
   * Added quota_usage table
+    Must apply mysql changes from setup/mysql/alter_tables.mysql
   * Allow for empty prefixes in PSTN routes
   * Fixes in update of impersonate field
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 24 Mar 2008 09:12:25 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 24 Mar 2008 09:14:10 +0100
 
 cdrtool (6.3.2) unstable; urgency=low
 
