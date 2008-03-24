@@ -11,8 +11,9 @@ cdrtool (6.3.3) unstable; urgency=low
     Must apply mysql changes from setup/mysql/alter_tables.mysql
   * Allow for empty prefixes in PSTN routes
   * Fixes in update of impersonate field
+  * Removed memcache usage for quota
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 24 Mar 2008 09:14:10 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 24 Mar 2008 19:28:56 +0100
 
 cdrtool (6.3.2) unstable; urgency=low
 
