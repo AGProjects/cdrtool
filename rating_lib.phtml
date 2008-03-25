@@ -4653,7 +4653,7 @@ class OpenSERQuota {
                     $email_body = $email_body.$line;
                     print $line;
 
-					$log=sprintf("Quota exceeded for %s: %s",$account, $reason);
+					$log=sprintf("Quota exceeded for %s",$account);
 		  			syslog(LOG_NOTICE, $log);
 
                     $log_query=sprintf("insert into log

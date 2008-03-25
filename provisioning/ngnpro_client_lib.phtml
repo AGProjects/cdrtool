@@ -2225,7 +2225,13 @@ class SipAccounts extends Records {
                     }
 
                     unset($groups);
-                    if (is_array($account->groups)) foreach ($account->groups as $_grp) $groups.=$_grp.' ';
+                    if (is_array($account->groups)) foreach ($account->groups as $_grp) {
+                        if ($_grp == 'free-pstn') {
+                    		$groups.='pstn ';
+                        } else {
+                    		$groups.=$_grp.' ';
+                        }
+                    }
 
                     if ($this->version > 1) {
                         $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",

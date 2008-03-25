@@ -1,7 +1,7 @@
 <?
 
 /*
-  	Copyright (c) 2007 AG Projects
+  	Copyright (c) 2007-2008 AG Projects
   	http://ag-projects.com
     Author Adrian Georgescu
 
@@ -418,6 +418,7 @@ class SipSettings {
         }
 
         // Instantiate the SOAP clients
+
         // sip
         $this->SipPort       = new $this->soapClassSipPort($this->SOAPurl);
 
@@ -1108,14 +1109,14 @@ class SipSettings {
         $this->footerFile       = $this->getFileTemplate("footer.phtml");
         $this->cssFile          = $this->getFileTemplate("main.css");
 
-        $this->SIPACLS['blocked']   =array("Group"=>"blocked",
+        $this->availableGroups['blocked']   =array("Group"=>"blocked",
                                         "WEBName" =>sprintf(_("Account blocked")),
                                         "SubscriberMayEditIt"=>"0",
                                         "SubscriberMaySeeIt"=>0
                                         );
 
         /*
-        $this->SIPACLS['intercept']   =array("Group"=>"Intercept",
+        $this->availableGroups['intercept']   =array("Group"=>"Intercept",
                                         "WEBName" =>sprintf(_("SIP trace")),
                                         "SubscriberMayEditIt"=>"0",
                                         "SubscriberMaySeeIt"=>0
@@ -1123,18 +1124,13 @@ class SipSettings {
         */
 
         if ($this->Preferences['advanced']) {
-            $this->SIPACLS['voicemail']=array("Group"=>"voicemail",
-                                        "WEBName" =>sprintf (_("Voice mailbox")),
-                                        "SubscriberMayEditIt"=>"0",
-                                        "SubscriberMaySeeIt"=>0
-                                        );
-            $this->SIPACLS['anonymous']=array("Group"=>"anonymous",
+            $this->availableGroups['anonymous']=array("Group"=>"anonymous",
                                         "WEBName" =>sprintf (_("Privacy")),
                                         "WEBComment"=>sprintf(_("Dial %s to change or %s to check status "),$this->change_privacy_access_number, $this->check_privacy_access_number),
                                         "SubscriberMaySeeIt"=>1,
                                         "SubscriberMayEditIt"=>1
                                         );
-            $this->SIPACLS['anonymous-reject']=array("Group"=>$this->anonymous-reject,
+            $this->availableGroups['anonymous-reject']=array("Group"=>$this->anonymous-reject,
                                         "WEBName" =>sprintf (_("Reject anonymous")),
                                         "SubscriberMaySeeIt"=>1,
                                         "SubscriberMayEditIt"=>1
@@ -1142,7 +1138,7 @@ class SipSettings {
 
         }
 
-        $this->SIPACLS['prepaid'] = array("Group"            => "prepaid",
+        $this->availableGroups['prepaid'] = array("Group"            => "prepaid",
                                           "WEBName"             => sprintf (_("Prepaid")),
                                           "SubscriberMayEditIt" => "0",
                                           "SubscriberMaySeeIt"  => 0
@@ -1231,7 +1227,7 @@ class SipSettings {
         }
 
         if ($this->pstn_access) {
-            $this->SIPACLS['free-pstn']    =array("Group"=>"free-pstn",
+            $this->availableGroups['free-pstn']    =array("Group"=>"free-pstn",
                                                 "WEBName" =>   sprintf(_("Access to PSTN")),
                                                 "WEBComment"=> sprintf(_("Caller-ID")),
                                                 "SubscriberMayEditIt"=>"0",
@@ -1669,7 +1665,7 @@ class SipSettings {
         $LocalTime=getLocalTime($this->timezone,$timestamp);
         print _("Local time");
         print ": $LocalTime";
-        //dprint_r($this->SIPACLS);
+        //dprint_r($this->availableGroups);
         print "
         </td>
         </tr>
@@ -1774,13 +1770,9 @@ class SipSettings {
             printf ("<input type=hidden name=quota value='%s'>",$this->quota);
         }
 
-        foreach (array_keys($this->SIPACLS) as $key) {
+        foreach (array_keys($this->availableGroups) as $key) {
 
-            if ($this->login_type == 'subscriber' && !$this->SIPACLS[$key]['SubscriberMaySeeIt']) {
-                continue;
-            }
-
-            if ($key=="voicemail") {
+            if ($this->login_type == 'subscriber' && !$this->availableGroups[$key]['SubscriberMaySeeIt']) {
                 continue;
             }
 
@@ -1796,11 +1788,11 @@ class SipSettings {
                 continue;
             }
 
-            $elementName    = $this->SIPACLS[$key]["WEBName"];
-            $elementComment = $this->SIPACLS[$key]["WEBComment"];
+            $elementName    = $this->availableGroups[$key]["WEBName"];
+            $elementComment = $this->availableGroups[$key]["WEBComment"];
 
 			if ($this->login_type == 'subscriber') {
-                if ($this->SIPACLS[$key]["SubscriberMayEditIt"]) {
+                if ($this->availableGroups[$key]["SubscriberMayEditIt"]) {
                     $disabled_box = "";
                 } else {
             		$disabled_box   = "disabled=true";
@@ -2295,7 +2287,7 @@ class SipSettings {
             }
 
             $voicemail=1;
-            $this->SIPACLS['voicemail']=array("Group"=>"voicemail",
+            $this->availableGroups['voicemail']=array("Group"=>"voicemail",
                                         "WEBName" =>sprintf (_("Voice mailbox")),
                                         "SubscriberMayEditIt"=>"1",
                                         "SubscriberMaySeeIt"=>0
@@ -2343,13 +2335,13 @@ class SipSettings {
             }
         }
 
-        reset($this->SIPACLS);
+        reset($this->availableGroups);
 
-        foreach (array_keys($this->SIPACLS) as $key) {
+        foreach (array_keys($this->availableGroups) as $key) {
             // $val is set to 1 if web checkbox is ticked
             $val = $_REQUEST[$key];
 
-            if ($this->login_type != 'subscriber' || $this->SIPACLS[$key]['SubscriberMayEditIt']) {
+            if ($this->login_type != 'subscriber' || $this->availableGroups[$key]['SubscriberMayEditIt']) {
 
                 // toggle prepaid
                 if ($key == "prepaid") $result->prepaid=intval($val);
@@ -3367,7 +3359,7 @@ class SipSettings {
 
    		if ($this->SOAPversion <= 1) return;
 
-    print "
+    	print "
         <tr>
           <td class=border>";
             print _("Mobile number");
