@@ -615,27 +615,21 @@ class SipSettings {
                            "domain"=> $this->domain
                            );
 
-		$this->getOwnerSettings();
-
-        if ($result->reseller) {
-			$this->reseller  = $result->reseller;
-        }
-
-        if ($result->customer) {
-        	$this->customer  = $result->customer;
-        }
-
-        $this->result    = $result;
-
 		if (!$this->timeout) {
         	$this->timeoutWasNotSet=1;
         	$this->timeout=intval($this->timeoutDefault);
         }
 
+		$this->getOwnerSettings($this->owner);
+
+        $this->getDomainOwner($this->domain);
+
+        $this->getMobileNumber();
 
   		$this->xcap_root     = rtrim($this->xcap_root,'/')."@".$this->domain."/";
 
-        $this->getMobileNumber();
+        $this->result    = $result;
+
     }
 
 	function showAccount() {
@@ -718,6 +712,48 @@ class SipSettings {
         ";
     }
 
+    function getDomainOwner ($domain='') {
+        if ($this->SOAPversion < 2) return;
+
+        if (!$domain) return;
+        // Filter
+        $filter=array('domain'    => $domain);
+
+        // Range
+        $range=array('start' => 0,
+                     'count' => 1
+                     );
+
+        $orderBy = array('attribute' => 'changeDate',
+                         'direction' => 'DESC'
+                         );
+
+        // Compose query
+        $Query=array('filter'     => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+
+        dprint_r($Query);
+
+        // Call function
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->getDomains($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+        	if ($result->domains[0]) {
+            	$this->reseller  = $result->domains[0]->reseller;
+                $this->customer  = $result->domains[0]->customer;
+            }
+        }
+    }
+
     function getMobileNumber() {
         $this->mobile_number='';
 
@@ -744,15 +780,15 @@ class SipSettings {
     }
 
 
-    function getOwnerSettings() {
-        dprint("getOwnerSettings($this->owner, engine=$this->customer_engine)");
-        if (!$this->owner) {
+    function getOwnerSettings($owner='') {
+        dprint("getOwnerSettings($owner, engine=$this->customer_engine)");
+        if (!$owner) {
             return false;
         }
 
         $this->CustomerPort->addHeader($this->SoapAuthCustomer);
         //dprint_r($this->CustomerPort);
-        $result     = $this->CustomerPort->getAccount($this->owner);
+        $result     = $this->CustomerPort->getAccount($owner);
  
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
