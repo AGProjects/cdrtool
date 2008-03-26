@@ -3178,7 +3178,17 @@ class SipAliases extends Records {
 	        $owner = $_REQUEST['owner'];
         }
 
-        $username=$alias_els[0];
+		if (preg_match("/:(.*)$/",$target_els[0],$m)) {
+            $target_username=$m[1];
+        } else {
+        	$target_username=$target_els[0];
+        }
+
+		if (preg_match("/:(.*)$/",$alias_els[0],$m)) {
+            $username=$m[1];
+        } else {
+        	$username=$alias_els[0];
+        }
 
         if (strlen($alias_els[1])) {
         	$domain=$alias_els[1];
@@ -3214,8 +3224,8 @@ class SipAliases extends Records {
                      'id'     => array('username' => strtolower($username),
                                        'domain'   => strtolower($domain)
                                        ),
-                     'target' => array('username' => $target_els[0],
-                                       'domain'   => $target_els[1]
+                     'target' => array('username' => strtolower($target_username),
+                                       'domain'   => strtolower($target_els[1])
                                        ),
                      'owner'      => intval($owner)
         			);

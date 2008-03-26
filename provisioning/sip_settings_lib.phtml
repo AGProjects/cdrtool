@@ -2987,10 +2987,10 @@ class SipSettings {
         dprint("AddPrepaidBalance($prepaidCard,$prepaidId)");
         if ($this->SOAPversion > 1) {
             $card 	 = array('id'     => intval($prepaidId),
-                             'number' => intval($prepaidCard)
+                             'number' => $prepaidCard
                              );
         } else {
-            $card 	 = array('id'     => $prepaidId,
+            $card 	 = array('id'     => intval($prepaidId),
                              'number' => $prepaidCard
                              );
         }
