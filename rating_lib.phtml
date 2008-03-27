@@ -901,9 +901,11 @@ class RatingTables {
                                      'quota_usage'
                                      );
 
-    function RatingTables () {
+    function RatingTables ($readonly=false) {
         global $CDRTool;
         global $RatingEngine;
+
+        $this->readonly=$readonly;
 
 		$this->settings=$RatingEngine;
 
@@ -3582,6 +3584,10 @@ class RatingTables {
         if (!is_array($this->tables[$table]['exceptions'])) $this->tables[$table]['exceptions']=array();
         if (!is_array($this->tables[$table]['keys']))       $this->tables[$table]['keys']=array();
         if (!is_array($this->tables[$table]['fields']))     $this->tables[$table]['fields']=array();
+
+        if ($this->readonly) {
+			$this->tables[$table]['readonly']=1;
+        }
         $metadata  = $this->db->metadata($table="$table");
         $cc        = count($metadata);
         // end init table structure
@@ -4101,7 +4107,7 @@ class RatingTables {
         
                 if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
                     if (!$export) {
-                        if (!in_array($Fname,$this->tables[$table]['keys'])) {
+                        if (!in_array($Fname,$this->tables[$table]['keys']) && !$this->readonly) {
                             if ($Fname=="domain" && is_array($insertDomainOption)) {
                                 print "<td><select name=$Fname>";
                                 $selected_domain[$value]="selected";
@@ -4188,6 +4194,8 @@ class RatingTables {
             <center>
             <table border=0>
             <tr>
+            <form method=post>
+
             <td>
             ";
             if ($next!= 0 ) {
@@ -4198,7 +4206,6 @@ class RatingTables {
                 }
             
                 print "
-                <form method=post>
                 <input type=hidden name=maxrowsperpage value=$this->maxrowsperpage>
                 <input type=hidden name=next	       value=$mod_show_next>
                 <input type=hidden name=action         value=Search>
@@ -4223,10 +4230,11 @@ class RatingTables {
             
                 print "	
                 <input type=submit value=\"Previous\">
-                </form>
                 ";
             }
             print "</td>
+            </form>
+            <form method=post>
             <td>
             ";
             
@@ -4234,7 +4242,6 @@ class RatingTables {
                 $show_next=$this->maxrowsperpage+$next;
             
                 print "
-                <form method=post>
                 <input type=hidden name=maxrowsperpage value=$this->maxrowsperpage>
                 <input type=hidden name=next		   value=$show_next>
                 <input type=hidden name=table	       value=$table>
@@ -4257,11 +4264,11 @@ class RatingTables {
                 print "
                 <input type=hidden name=search_text value=\"$search_text\">
                 <input type=submit value=\"Next\">
-                </form>
                 ";
             }
             
             print "
+            </form>
             </td>
             </tr>
             </table>";

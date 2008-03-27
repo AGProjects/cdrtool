@@ -52,7 +52,12 @@ if (!$export) {
 
 $loginname=$auth->auth["uname"];
 
-$RatingTables=new RatingTables();
+if ($perm->have_perm("readonly")) {
+	$RatingTables=new RatingTables('readonly');
+} else {
+	$RatingTables=new RatingTables();
+}
+
 $tables=$RatingTables->tables;
 
 $whereDomainFilter = " (1=1) ";

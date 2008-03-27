@@ -710,6 +710,10 @@ class CDRS {
 
     function unNormalize($where="",$table) {
 
+        // do not allow renormalization for readonly accounts
+        global $perm;
+        if (is_object($perm) && $perm->have_perm('readonly')) return false;
+
         if (!$where) $where=" (1=1) ";
 
         if (!$table) $table=$this->table;

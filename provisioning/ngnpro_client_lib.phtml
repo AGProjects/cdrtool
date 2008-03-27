@@ -638,16 +638,18 @@ class Records {
     function showEngineSelection() {
     	$selected_soapEngine[$this->SoapEngine->service]=' selected';
 
-	printf("
-    <script type=\"text/JavaScript\">
-	function jumpMenu(){
-		location.href=\"%s&service=\" + document.engines.service.options[document.engines.service.selectedIndex].value;
-	}
-	</script>",
-    $this->url
-    );
+        printf("
+        <script type=\"text/JavaScript\">
+        function jumpMenu(){
+            location.href=\"%s&service=\" + document.engines.service.options[document.engines.service.selectedIndex].value;
+        }
+        </script>",
+        $this->url
+        );
 
-	printf("<select name='service' onChange=\"jumpMenu('this.form')\">\n");
+        $pstn_access=$this->getLoginProperty('pstn_access');
+
+        printf("<select name='service' onChange=\"jumpMenu('this.form')\">\n");
 
         $j=1;
         foreach (array_keys($this->SoapEngine->soapEngines) as $_engine) {
@@ -658,6 +660,9 @@ class Records {
 
                 if (in_array($_port,$this->SoapEngine->skip_ports[$_engine])) continue;
 
+				if ($this->login_credentials['login_type'] !='admin') {
+					if (!$pstn_access && (preg_match("/^pstn_/",$_port))) continue;
+                }
                 if (count($this->SoapEngine->allowedPorts[$_engine]) > 0 && !in_array($_port,$this->SoapEngine->allowedPorts[$_engine])) continue;
                 if ($_port == 'customers' && $this->SoapEngine->soapEngines[$_engine]['version'] <= 1) continue;
                 if ($this->SoapEngine->ports[$_port]['resellers_only']) {

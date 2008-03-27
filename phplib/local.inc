@@ -289,7 +289,8 @@ class CDRTool_Perm extends Perm {
             "rates"         => 32,
             "showCallerId"  => 64,
             "showPrice"     => 128,
-            "provisioning"  => 256
+            "provisioning"  => 256,
+            "readonly"      => 512
             );
 
   function perm_invalid($does_have, $must_have) {
