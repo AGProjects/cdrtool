@@ -39,16 +39,17 @@ include("header.phtml");
 require("cdrlib.phtml");
 
 
+$proxyIP     = $_REQUEST['proxyIP'];
 $callid      = $_REQUEST['callid'];
 $fromtag     = $_REQUEST['fromtag'];
-$proxyIP     = $_REQUEST['proxyIP'];
+$totag       = $_REQUEST['totag'];
 $cdr_source  = $_REQUEST['cdr_source'];
 
 if (!$authorize || in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
 
     $title=sprintf("SIP session %s",$callid);
     $sipTrace = new SIP_trace($cdr_source);
-    $sipTrace->show($callid,$fromtag,$proxyIP);
+    $sipTrace->show($proxyIP,$callid,$fromtag,$totag);
 
 } else {
     printf ("Error: Invalid datasource '%s' for user '%s'" ,$cdr_source,$auth->auth["uname"]);

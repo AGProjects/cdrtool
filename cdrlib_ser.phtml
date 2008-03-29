@@ -2467,16 +2467,17 @@ class CDR_ser_radius extends CDR {
 
         $found_print=$found;
 
-        if ($this->normalized)    $found_print.='N';
+        if ($this->normalized) $found_print.='N';
 
         $providerTimezone=$this->CDRS->CDRTool['provider']['timezone'];
 
         if ($this->CDRS->sipTraceDataSource) {
-            $accDS=$this->CDRS->sipTraceDataSource;
-            $callid_enc   = urlencode($this->callId);
-            $fromtag_enc  = urlencode($this->SipFromTag);
+            $trace_datasource = $this->CDRS->sipTraceDataSource;
+            $callid_enc       = urlencode($this->callId);
+            $fromtag_enc      = urlencode($this->SipFromTag);
+            $totag_enc        = urlencode($this->SipToTag);
 
-        	$this->callIdPrint="&nbsp;<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$accDS&callid=$callid_enc&fromtag=$fromtag_enc&proxyIP=$this->SipProxyServer', 'Trace',
+        	$this->callIdPrint="&nbsp;<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
             'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">$this->callId</a> &nbsp;";
         } else {
             $this->callIdPrint=$this->callId;
@@ -3035,7 +3036,7 @@ class SIP_trace {
 
     }
 
-    function getTraceFromThor($proxyIP,$callid,$fromtag) {
+    function getTraceFromThor($proxyIP,$callid,$fromtag,$totag) {
         // get trace using soap request
 		if (!$proxyIP || !$callid || !$fromtag) return false;
 
@@ -3049,7 +3050,7 @@ class SIP_trace {
         $this->traced_ip[$proxyIP]++;
 
         $this->soapclient->addHeader($this->SoapAuth);
-        $result     = $this->soapclient->getTrace($proxyIP,$callid,$fromtag);
+        $result     = $this->soapclient->getTrace($proxyIP,$callid,$fromtag,$totag);
 
         if (PEAR::isError($result)) {
             $error_msg   = $result->getMessage();
@@ -3152,11 +3153,11 @@ class SIP_trace {
         return false;
     }
 
-    function getTrace ($callid,$fromtag,$proxyIP) {
+    function getTrace ($proxyIP,$callid,$fromtag,$totag) {
 
 		if ($this->enableThor) {
 			$this->seen_ip=array();
-			$this->trace_array=$this->getTraceFromThor($proxyIP,$callid,$fromtag);
+			$this->trace_array=$this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag);
 
             $this->rows = count($this->trace_array);
 
@@ -3175,7 +3176,6 @@ class SIP_trace {
             }
     
             $this->rows = $this->db->num_rows();
-    
     
             $columns = 0;
     
@@ -3246,7 +3246,7 @@ class SIP_trace {
 
     }
 
-    function show($callid,$fromtag,$proxyIP) {
+    function show($proxyIP,$callid,$fromtag,$totag) {
 
         $action           = $_REQUEST['action'];
         $toggleVisibility = $_REQUEST['toggleVisibility'];
@@ -3261,7 +3261,7 @@ class SIP_trace {
             $protocolURL = "http://";
         }
 
-        $this->getTrace($callid,$fromtag,$proxyIP);
+        $this->getTrace($proxyIP,$callid,$fromtag,$totag);
 
         if (!count($this->trace_array)) {
             print "<p>
