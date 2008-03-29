@@ -658,13 +658,18 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                             'style'=>'rpc',
                             'use'=>'encoded' ));
     }
-    function &getTrace($nodeIP, $callID, $fromTag) {
-        return $this->call("getTrace", 
-                        $v = array("nodeIp"=>$nodeIP, "callId"=>$callID, "fromTag"=>$fromTag),
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+    function &getSipTrace($filter)
+    {
+        // filter is a ComplexType SipTraceFilter,
+        // refer to wsdl for more info
+        $filter = new SOAP_Value('filter', '{urn:AGProjects:NGNPro}SipTraceFilter', $filter);
+        $result = $this->call('getSipTrace',
+                              $v = array('filter' => $filter),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
 }
 class WebService_NGNPro_VoicemailPort extends SOAP_Client_Custom

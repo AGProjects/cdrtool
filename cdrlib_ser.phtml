@@ -3049,8 +3049,14 @@ class SIP_trace {
 
         $this->traced_ip[$proxyIP]++;
 
+        $filter=array('nodeIp'  => $proxyIP,
+                      'callId'  => $callid,
+                      'fromTag' => $fromtag,
+                      'toTag'   => $totag
+                      );
         $this->soapclient->addHeader($this->SoapAuth);
-        $result     = $this->soapclient->getTrace($proxyIP,$callid,$fromtag,$totag);
+
+        $result     = $this->soapclient->getSipTrace($filter);
 
         if (PEAR::isError($result)) {
             $error_msg   = $result->getMessage();
