@@ -1482,9 +1482,9 @@ class CDRS_ser_radius extends CDRS {
             if ($UnNormalizedCalls=$this->getUnNormalized($where,$cdr_table)) {
                 $this->NormalizeCDRS($where,$cdr_table);
                 if (!$this->export && $this->status['normalized'] ) {
-                    printf ("Found %d CDRs for normalization. ",$this->status['normalized']);
+                    printf ("%d CDRs normalized. ",$this->status['normalized']);
                     if ($this->status['cached_keys']['saved_keys']) {
-                        printf ("Updated quota usage for %d accounts. ",$this->status['cached_keys']['saved_keys']);
+                        printf ("Quota usage updated for %d accounts. ",$this->status['cached_keys']['saved_keys']);
                     }
                 }
             }
@@ -1757,7 +1757,7 @@ class CDRS_ser_radius extends CDRS {
         
             } else {
                 if (!$this->export && !$this->CDRTool['filter']['aNumber']) {
-                	printf ("Click on Index and Session for the full SIP trace. ");
+                	printf ("Click on Id->Session to see the full SIP trace. ");
                 }
 
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
