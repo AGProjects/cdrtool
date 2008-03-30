@@ -4660,7 +4660,7 @@ class OpenSERQuota {
                     $email_body = $email_body.$line;
                     print $line;
 
-					$log=sprintf("Quota exceeded for %s",$account);
+					$log=sprintf("Monthly quota exceeded for %s (%s > %s)",$account,$this->db->f('cost'), $this->db->f('quota'));
 		  			syslog(LOG_NOTICE, $log);
 
                     $log_query=sprintf("insert into log
@@ -4803,7 +4803,7 @@ class OpenSERQuota {
         $body=preg_replace("/__ACCOUNT__/",$account,$body);
 
         if (!$subject) {
-            $subject=sprintf("Monthly quota exceeded for SIP account %s",$account);
+            $subject=sprintf("Monthly quota exceeded for account %s",$account);
         } else {
             $subject=preg_replace("/__ACCOUNT__/",$account,$subject);
         }
