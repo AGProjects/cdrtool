@@ -1,3 +1,14 @@
+cdrtool (6.4.1) unstable; urgency=low
+
+  * Log quota value
+  * Added totag to getTrace
+  * Renamed soap function getTrace to getSipTrace
+  * Added toTag to getTrace from SIPThor
+  * Added readonly rights for login accounts to deny changes to artes or
+    re-normalization process
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 31 Mar 2008 11:26:54 +0200
+
 cdrtool (6.4.0) unstable; urgency=high
 
   * Refactor quota system to work with millions of sip accounts
