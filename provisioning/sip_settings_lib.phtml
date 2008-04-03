@@ -5527,6 +5527,7 @@ function getLocalTime($timezone,$timestamp) {
 }
 
 function getSipThorHomeNode ($account,$sip_proxy) {
+
     if (!$account || !$sip_proxy) return false;
     $socket = fsockopen($sip_proxy, 9500, $errno, $errstr, 1);
     if (!$socket) {

@@ -2977,9 +2977,10 @@ class CDR_ser_radius extends CDR {
 }
 
 class SIP_trace {
-    var $enableThor = false;
+    var $enableThor  = false;
 	var $trace_array = array();
-	var $traced_ip = array();
+	var $traced_ip   = array();
+	var $SIPProxies  = array();
 
     function SIP_trace ($cdr_source) {
         global $DATASOURCES, $auth;
@@ -3034,6 +3035,140 @@ class SIP_trace {
         	$this->SIPProxies=$DATASOURCES[$this->cdr_source]['SIPProxies'];
         }
 
+    }
+
+    function isProxy($ip,$sip_proxy) {
+        if (!$ip) return false;
+    	if (!$this->enableThor) {
+            if (!is_array($this->SIPProxies)) {
+                return false;
+            }
+    
+            if (in_array($ip,array_keys($this->SIPProxies))) {
+                return true;
+            }
+        } else if ($sip_proxy) {
+        	return $this->isThorNode($ip,$sip_proxy);
+        }
+
+        return false;
+    }
+
+    function isThorNode($ip,$sip_proxy) {
+    
+        if (!$ip || !$sip_proxy) return false;
+
+        $socket = fsockopen($sip_proxy, 9500, $errno, $errstr, 1);
+
+        if (!$socket) {
+            return false;
+        }
+        
+        $request=sprintf("is_online %s as sip_proxy",$ip);
+        
+        if (fputs($socket,"$request\r\n") !== false) {
+            $ret = trim(fgets($socket,4096));
+        	fclose($socket);
+        } else {
+        	fclose($socket);
+            return false;
+        }
+
+        if ($ret == 'Yes') {
+        	return true;
+        } else {
+        	return false;
+        }
+    }
+
+    function getTrace ($proxyIP,$callid,$fromtag,$totag) {
+
+		if ($this->enableThor) {
+			$this->seen_ip=array();
+			$this->trace_array=$this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag);
+
+            $this->rows = count($this->trace_array);
+
+        } else {
+            // get trace from SQL
+
+            $query=sprintf("select *,UNIX_TIMESTAMP(date) as timestamp
+            from %s where callid = '%s' order by id asc",
+            $this->table,
+            $callid);
+    
+    
+            if (!$this->db->query($query)) {
+                printf ("<p>Error: database error %s %s",$this->db->Error,$query);
+                return false;
+            }
+    
+            $this->rows = $this->db->num_rows();
+    
+            $columns = 0;
+    
+            while ($this->db->next_record()) {
+    
+                if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$this->db->f('toip'),$m)) {
+                    $toip      = $m[2];
+                    $transport = $m[1];
+                    $toport    = $m[3];
+                } else if (preg_match("/^(.*):(.*)$/",$this->db->f('toip'),$m)) {
+                    $toip      = $m[1];
+                    $transport = 'udp';
+                    $toport    = $m[2];
+                } else {
+                    $toip = $this->db->f('toip');
+                    $toport    = '5060';
+                }
+
+                if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$this->db->f('fromip'),$m)) {
+                    $fromip   = $m[2];
+                    $fromport = $m[3];
+                } else if (preg_match("/^(.*):(.*)$/",$this->db->f('fromip'),$m)) {
+                    $fromip   = $m[1];
+                    $fromport = $m[2];
+                } else {
+                    $fromip = $this->db->f('fromip');
+                    $fromipo = '5060';
+                }
+
+                if (!$this->seen_ip[$toip] && $this->isProxy($toip)) {
+                    $this->seen_ip[$toip]++;
+                }
+    
+                if (!$this->seen_ip[$fromip] && $this->isProxy($fromip)) {
+                    $this->seen_ip[$fromip]++;
+                }
+
+                if (!$this->column[$fromip]) {
+                    $this->column[$fromip]=$columns+1;
+                    $columns++;
+                }
+    
+                if (!$this->column[$toip]) {
+                    $this->column[$toip]=$columns+1;
+                    $columns++;
+                }
+    
+                $this->trace_array[$this->db->f('id')]=
+                            array (
+                                   'id'        => $this->db->f('id'),
+                                   'direction' => $this->db->f('direction'),
+                                   'fromip'    => $fromip,
+                                   'toip'      => $toip,
+                                   'method'    => $this->db->f('method'),
+                                   'fromport'  => $fromport,
+                                   'toport'    => $toport,
+                                   'transport' => $transport,
+                                   'date'      => $this->db->f('date'),
+                                   'status'    => $this->db->f('status'),
+                                   'timestamp' => $this->db->f('timestamp'),
+                                   'msg'       => $this->db->f('msg'),
+                                   'md5'       => md5($this->db->f('msg'))
+                                   );
+            }
+        }
     }
 
     function getTraceFromThor($proxyIP,$callid,$fromtag,$totag) {
@@ -3147,110 +3282,6 @@ class SIP_trace {
 
     }
 
-    function isProxy($ip) {
-        if (!is_array($this->SIPProxies)) {
-            return false;
-        }
-
-        if (in_array($ip,array_keys($this->SIPProxies))) {
-            return true;
-        }
-
-        return false;
-    }
-
-    function getTrace ($proxyIP,$callid,$fromtag,$totag) {
-
-		if ($this->enableThor) {
-			$this->seen_ip=array();
-			$this->trace_array=$this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag);
-
-            $this->rows = count($this->trace_array);
-
-        } else {
-            // get trace from SQL
-
-            $query=sprintf("select *,UNIX_TIMESTAMP(date) as timestamp
-            from %s where callid = '%s' order by id asc",
-            $this->table,
-            $callid);
-    
-    
-            if (!$this->db->query($query)) {
-                printf ("<p>Error: database error %s %s",$this->db->Error,$query);
-                return false;
-            }
-    
-            $this->rows = $this->db->num_rows();
-    
-            $columns = 0;
-    
-            while ($this->db->next_record()) {
-    
-                if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$this->db->f('toip'),$m)) {
-                    $toip      = $m[2];
-                    $transport = $m[1];
-                    $toport    = $m[3];
-                } else if (preg_match("/^(.*):(.*)$/",$this->db->f('toip'),$m)) {
-                    $toip      = $m[1];
-                    $transport = 'udp';
-                    $toport    = $m[2];
-                } else {
-                    $toip = $this->db->f('toip');
-                    $toport    = '5060';
-                }
-
-                if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$this->db->f('fromip'),$m)) {
-                    $fromip   = $m[2];
-                    $fromport = $m[3];
-                } else if (preg_match("/^(.*):(.*)$/",$this->db->f('fromip'),$m)) {
-                    $fromip   = $m[1];
-                    $fromport = $m[2];
-                } else {
-                    $fromip = $this->db->f('fromip');
-                    $fromipo = '5060';
-                }
-
-                if (!$this->seen_ip[$toip] && $this->isProxy($toip)) {
-                    $this->seen_ip[$toip]++;
-                }
-    
-                if (!$this->seen_ip[$fromip] && $this->isProxy($fromip)) {
-                    $this->seen_ip[$fromip]++;
-                }
-    
-
-                if (!$this->column[$fromip]) {
-                    $this->column[$fromip]=$columns+1;
-                    $columns++;
-                }
-    
-                if (!$this->column[$toip]) {
-                    $this->column[$toip]=$columns+1;
-                    $columns++;
-                }
-    
-                $this->trace_array[$this->db->f('id')]=
-                            array (
-                                   'id'        => $this->db->f('id'),
-                                   'direction' => $this->db->f('direction'),
-                                   'fromip'    => $fromip,
-                                   'toip'      => $toip,
-                                   'method'    => $this->db->f('method'),
-                                   'fromport'  => $fromport,
-                                   'toport'    => $toport,
-                                   'transport' => $transport,
-                                   'date'      => $this->db->f('date'),
-                                   'status'    => $this->db->f('status'),
-                                   'timestamp' => $this->db->f('timestamp'),
-                                   'msg'       => $this->db->f('msg'),
-                                   'md5'       => md5($this->db->f('msg'))
-                                   );
-            }
-        }
-
-
-    }
 
     function show($proxyIP,$callid,$fromtag,$totag) {
 
@@ -3332,7 +3363,7 @@ class SIP_trace {
 
                 if (is_array($this->SIPProxies)) {
                     $thisIP=explode(":",$this->trace_array[$key]['fromip']);
-                    if (in_array($thisIP[0],array_keys($this->SIPProxies))) {
+                    if ($this->isProxy($thisIP[0],$proxyIP)) {
                     	$this->trace_array[$key]['isProxy'] = 1;
                     }
                 }
@@ -3386,32 +3417,23 @@ class SIP_trace {
         ";
 
         foreach (array_keys($this->column) as $_key) {
-        	unset($isProxy);
-        	if (is_array($this->SIPProxies)) {
-            	$IPels=explode(":",$_key);
-                $justIP=$IPels[0];
+           	$IPels=explode(":",$_key);
 
-                foreach (array_keys($this->SIPProxies) as $localProxy) {
-                	if ($localProxy==$justIP) {
-                            $isProxy=sprintf("%s",$this->SIPProxies[$localProxy]);
-                            break;
-                        }
-                    }
-                }
-
-            if ($this->enableThor && in_array($justIP,array_keys($this->SIPProxies)) && $proxyIP != $justIP) {
+            print "<td align=center class=border>";
+            if ($proxyIP != $IPels[0] && $this->isProxy($IPels[0],$proxyIP)) {
                 $trace_link=sprintf("<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&proxyIP=%s', 'Trace',
-                'toolbar=0,status=1,menubar=1,scrollbars=1,resizable=1,width=1000,height=600')\">%s <font color=red>Click to trace</font></a>",
+                'toolbar=0,status=1,menubar=1,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red><b>%s (Trace) </b></font></a>",
                 urlencode($this->cdr_source),
                 urlencode($callid),
                 urlencode($fromtag),
-                $justIP,
+                $IPels[0],
                 $_key
                 );
-            	printf ("<td align=center class=border><b><font color=blue>%s</font><br>%s</b></td>",$isProxy,$trace_link);
+            	printf ("<b><font color=blue>%s</b>",$trace_link);
             } else {
-            	printf ("<td align=center class=border><b><font color=blue>%s</font><br>%s</b></td>",$isProxy,$_key);
+            	printf ("<b>%s</b>",$_key);
             }
+            print "</td>";
         }
 
         print "</tr>";
@@ -3800,6 +3822,7 @@ class SIP_trace {
 
         return true;
     }
+
 }
 
 class SIPonline {
