@@ -1,7 +1,7 @@
 <?
 include("global.inc");
 
-#$verbose=1;
+//$verbose=1;
     
 if ($_REQUEST['public']) {
     $db = new DB_CDRTool;
@@ -35,19 +35,19 @@ if ($authorize==1) {
 	unset($perm);
 }
 
-include("header.phtml");
-require("cdrlib.phtml");
-
-
 $proxyIP     = $_REQUEST['proxyIP'];
 $callid      = $_REQUEST['callid'];
 $fromtag     = $_REQUEST['fromtag'];
 $totag       = $_REQUEST['totag'];
 $cdr_source  = $_REQUEST['cdr_source'];
 
+$title=sprintf("SIP session %s",$callid);
+
+include("header.phtml");
+require("cdrlib.phtml");
+
 if (!$authorize || in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
 
-    $title=sprintf("SIP session %s",$callid);
     $sipTrace = new SIP_trace($cdr_source);
     $sipTrace->show($proxyIP,$callid,$fromtag,$totag);
 
