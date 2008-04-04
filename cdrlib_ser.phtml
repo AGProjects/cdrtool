@@ -2145,7 +2145,6 @@ class CDR_ser_radius extends CDR {
 
 	var $show_in_icon=0;
     var $show_out_icon=0;
-
     var $QoSParameters=array(
         "PS"=>"Audio packets sent",
         "OS"=>"Audio octets sent",
@@ -3130,7 +3129,8 @@ class SIP_trace {
                     $fromport = $m[2];
                 } else {
                     $fromip = $this->db->f('fromip');
-                    $fromipo = '5060';
+                	$transport = 'udp';
+                    $fromport = '5060';
                 }
 
                 if (!$this->seen_ip[$toip] && $this->isProxy($toip)) {
@@ -3143,11 +3143,13 @@ class SIP_trace {
 
                 if (!$this->column[$fromip]) {
                     $this->column[$fromip]=$columns+1;
+                	$this->column_port[$fromip]=$fromport;
                     $columns++;
                 }
     
                 if (!$this->column[$toip]) {
                     $this->column[$toip]=$columns+1;
+                	$this->column_port[$toip]=$toport;
                     $columns++;
                 }
     
@@ -3169,6 +3171,7 @@ class SIP_trace {
                                    );
             }
         }
+
     }
 
     function getTraceFromThor($proxyIP,$callid,$fromtag,$totag) {
@@ -3225,6 +3228,7 @@ class SIP_trace {
             } else {
                 $toip      = $_trace->toIp;
                 $transport = 'udp';
+                $toport    = '5060';
             }
 
             if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$_trace->fromIp,$m)) {
@@ -3247,11 +3251,13 @@ class SIP_trace {
 
             if (!$this->column[$fromip]) {
                 $this->column[$fromip] = $columns+1;
+                $this->column_port[$fromip]=$fromport;
                 $columns++;
             }
 
             if (!$this->column[$toip]) {
                 $this->column[$toip]   = $columns+1;
+                $this->column_port[$toip]=$toport;
                 $columns++;
             }
 
@@ -3422,12 +3428,13 @@ class SIP_trace {
             print "<td align=center class=border>";
             if ($proxyIP != $IPels[0] && $this->isProxy($IPels[0],$proxyIP)) {
                 $trace_link=sprintf("<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&proxyIP=%s', 'Trace',
-                'toolbar=0,status=1,menubar=1,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red><b>%s (Trace) </b></font></a>",
+                'toolbar=0,status=1,menubar=1,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red><b>%s:%s (Trace) </b></font></a>",
                 urlencode($this->cdr_source),
                 urlencode($callid),
                 urlencode($fromtag),
                 $IPels[0],
-                $_key
+                $_key,
+                $this->column_port[$_key]
                 );
             	printf ("<b><font color=blue>%s</b>",$trace_link);
             } else {
@@ -3502,6 +3509,7 @@ class SIP_trace {
 
             $j=0;
             $t=0;
+
             foreach ($_lines as $_line) {
                 if (preg_match("/^(Diversion: ).*;(.*)$/",$_line,$m)) {
                     $diversions[]=$m[1].$m[2];
@@ -3513,9 +3521,9 @@ class SIP_trace {
 
                 if (preg_match("/^m=(\w+) (\d+) /i",$_line,$m)) {
                     $t++;
-                    $media['streams'][$t]=$m[1].": ".$media['ip'].":".$m[2];
-
+                    $media['streams'][$m[2]]=$m[1];
                 }
+
                 if (preg_match("/^a=alt:1/i",$_line,$m)) {
                     $media['streams'][$t]=$media['streams'][$t]." ICE";
                 }
@@ -3524,7 +3532,6 @@ class SIP_trace {
                     $status_for_method=$m[1];
                 }
                 $j++;
-
             }
 
             $_els=explode(";",$_lines[0]);
@@ -3542,7 +3549,8 @@ class SIP_trace {
             }
 
             if (is_array($media['streams'])) {
-                foreach ($media['streams'] as $_stream) {
+                foreach (array_keys($media['streams']) as $_key) {
+                    $_stream=$media['streams'][$_key].':'.$media['ip'].':'.$_key;
                     $cell_content.="<br><b>$_stream</b>";
                 }
             }
