@@ -921,7 +921,7 @@ class CDRS {
         }
 
         if ($this->ratingEnabled && count($this->brokenRates) >0 ) {
-            if ($this->CDRTool['rating']['reportMissingRates']) {
+            if ($this->rating_settings['reportMissingRates']) {
                 if (count($this->brokenRates)) {
                     foreach (array_keys($this->brokenRates) as $dest) {
                         $missingRatesBodytext=$missingRatesBodytext."\nDestination id $dest (".$this->brokenRates[$dest]." calls)";
