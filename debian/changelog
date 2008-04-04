@@ -9,8 +9,10 @@ cdrtool (6.4.1) unstable; urgency=low
   * Added toTag to getTrace from SIPThor
   * Added readonly rights for login accounts to deny changes to rates or
     re-normalization process
+  * Move in global.inc $CDRTool['rating']['reportMissingRates'] to
+  $RatingEngine['reportMissingRates']
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 31 Mar 2008 11:26:54 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 04 Apr 2008 10:27:09 +0200
 
 cdrtool (6.4.0) unstable; urgency=high
 
