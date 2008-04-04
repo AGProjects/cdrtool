@@ -3036,7 +3036,7 @@ class SIP_trace {
 
     }
 
-    function isProxy($ip,$sip_proxy) {
+    function isProxy($ip,$sip_proxy='') {
         if (!$ip) return false;
     	if (!$this->enableThor) {
             if (!is_array($this->SIPProxies)) {
