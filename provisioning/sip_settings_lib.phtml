@@ -1034,12 +1034,6 @@ class SipSettings {
         ";
         printf (("%s &lt;sip:%s@%s&gt;"),$this->fullName,$this->username,$this->domain);
 
-        if ($this->enable_thor) {
-        	if ($this->homeNode=getSipThorHomeNode($this->account,$this->sip_proxy)) {
-        		printf (" <td>Home node <font color=green>%s</font></td>",$this->homeNode);
-            }
-        }
-
         print "
         </td>
         <td align=right valign=top>
@@ -1049,6 +1043,12 @@ class SipSettings {
             print "<a href=sip_logout.phtml>";
             print _("Logout");
             print "</a>";
+        } else {
+            if ($this->enable_thor) {
+                if ($this->homeNode=getSipThorHomeNode($this->account,$this->sip_proxy)) {
+                    printf (" Home node <font color=green>%s</font>",$this->homeNode);
+                }
+            }
         }
     
         print "
