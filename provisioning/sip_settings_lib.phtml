@@ -1036,7 +1036,7 @@ class SipSettings {
 
         if ($this->enable_thor) {
         	if ($this->homeNode=getSipThorHomeNode($this->account,$this->sip_proxy)) {
-        		printf (" on SipThor node %s ",$this->homeNode);
+        		printf (" <td>Home node <font color=green>%s</font></td>",$this->homeNode);
             }
         }
 
