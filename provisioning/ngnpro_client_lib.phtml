@@ -2352,6 +2352,7 @@ class SipAccounts extends Records {
 	        printf (" FN<input type=text size=10 name=firstname_filter value='%s'>",$this->filters['firstname']);
     	    printf (" LN<input type=text size=10 name=lastname_filter value='%s'>",$this->filters['lastname']);
             printf (" Email<input type=text size=10 name=email_filter value='%s'>",$this->filters['email']);
+            printf (" Owner<input type=text size=10 name=owner_filter value='%s'>",$this->filters['owner']);
         }
     }
 
@@ -3097,6 +3098,10 @@ class SipAliases extends Records {
         }
 
         printf (" Target<input type=text size=15 name=target_username_filter value='%s'>",trim($_REQUEST['target_username_filter']));
+
+        if ($this->version > 1) {
+        	printf (" Owner<input type=text size=10 name=owner_filter value='%s'>",$this->filters['owner']);
+        }
 
     }
 
@@ -4033,34 +4038,34 @@ class EnumRanges extends Records {
     }
 
     function getRecord($rangeid) {
-            // Filter
-	        if (!$rangeid['prefix'] || !$rangeid['tld']) {
-                print "Error in getRecord(): Missing prefix or tld";
-            	return false;
-            }
+        // Filter
+        if (!$rangeid['prefix'] || !$rangeid['tld']) {
+            print "Error in getRecord(): Missing prefix or tld";
+            return false;
+        }
 
-            $filter=array('prefix'   => $rangeid['prefix'],
-                          'tld'      => $rangeid['tld']
-                          );
+        $filter=array('prefix'   => $rangeid['prefix'],
+                      'tld'      => $rangeid['tld']
+                      );
 
-            // Range
-            $range=array('start' => 0,
-                         'count' => 1
+        // Range
+        $range=array('start' => 0,
+                     'count' => 1
+                     );
+
+        // Order
+        $orderBy = array('attribute' => 'changeDate',
+                         'direction' => 'DESC'
                          );
-    
-            // Order
-            $orderBy = array('attribute' => 'changeDate',
-                             'direction' => 'DESC'
-                             );
-    
-            // Compose query
-            $Query=array('filter'  => $filter,
-                         'orderBy' => $orderBy,
-                         'range'   => $range
-                         );
-    
-            $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
-            $result     = $this->SoapEngine->soapclient->getRanges($Query);
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $result     = $this->SoapEngine->soapclient->getRanges($Query);
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -4278,7 +4283,6 @@ class EnumMappings extends Records {
                     <td><b>Type</b></td>
                     <td><b>Map to</b></td>
                     <td><b>TTL</b></td>
-                    <td><b>Prio</b></td>
                     <td><b>Change date</b></td>
                     <td><b>Actions</b></td>
                     ";
@@ -4290,7 +4294,6 @@ class EnumMappings extends Records {
                     <td><b>Type</b></td>
                     <td><b>Map to</b></td>
                     <td><b>TTL</b></td>
-                    <td><b>Prio</b></td>
                     <td><b>Owner</b></td>
                     <td><b>Actions</b></td>
                     ";
@@ -4422,7 +4425,6 @@ class EnumMappings extends Records {
                                 <td>%s</td>
                                 <td>%s</td>
                                 <td>%s</td>
-                                <td>%s</td>
                                 <td><a href=%s>%s</a></td>
                                 </tr>",
                                 $bgcolor,
@@ -4438,7 +4440,6 @@ class EnumMappings extends Records {
                                 ucfirst($_mapping->type),
                                 $mapto,
                                 $_mapping->ttl,
-                                $_mapping->priority,
                                 $number->changeDate,
                                 $_url,
                                 $actionText
@@ -4466,7 +4467,6 @@ class EnumMappings extends Records {
                                 ucfirst($_mapping->type),
                                 $mapto,
                                 $_mapping->ttl,
-                                $_mapping->priority,
                                 $_url,
                                 $actionText
                                 );
@@ -4485,14 +4485,12 @@ class EnumMappings extends Records {
                                 <td>%s</td>
                                 <td>%s</td>
                                 <td>%s</td>
-                                <td>%s</td>
                                 <td><a href=%s>%s</a></td>
                                 </tr>",
                                 $bgcolor,
                                 ucfirst($_mapping->type),
                                 $mapto,
                                 $_mapping->ttl,
-                                $_mapping->priority,
                                 $number->changeDate,
                                 $_url,
                                 $actionText
@@ -4508,14 +4506,12 @@ class EnumMappings extends Records {
                                 <td>%s</td>
                                 <td>%s</td>
                                 <td>%s</td>
-                                <td>%s</td>
                                 <td><a href=%s>%s</a></td>
                                 </tr>",
                                 $bgcolor,
                                 ucfirst($_mapping->type),
                                 $mapto,
                                 $_mapping->ttl,
-                                $_mapping->priority,
                                 $_url,
                                 $actionText
                                 );
@@ -4721,6 +4717,10 @@ class EnumMappings extends Records {
 
         printf ("<input type=text size=20 name=mapto_filter value='%s'></nobr>",$this->filters['mapto']);
 
+        if ($this->version > 1) {
+        	printf (" Owner<input type=text size=10 name=owner_filter value='%s'>",$this->filters['owner']);
+        }
+
     }
 
     function deleteRecord($dictionary=array()) {
@@ -4889,7 +4889,6 @@ class EnumMappings extends Records {
         } else {
 	        printf ("<input type=text size=5 name=ttl value='3600'>");
         }
-        printf (" Priority<input type=text size=3 name=priority value='%s'>",$_REQUEST['priority']);
         printf (" Owner<input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
         printf (" Info<input type=text size=10 name=info value='%s'>",$_REQUEST['info']);
 
@@ -5299,7 +5298,6 @@ class EnumMappings extends Records {
         print "<td class=border>Type</td>";
         print "<td class=border>Map to</td>";
         print "<td class=border>TTL</td>";
-        print "<td class=border>Priority</td>";
         print "</tr>";
 
         foreach ($number->mappings as $_mapping) {
@@ -5323,10 +5321,9 @@ class EnumMappings extends Records {
             printf ("
             <td class=border><input name=mapping_mapto[] size=30 value='%s'></td>
             <td class=border><input name=mapping_ttl[] size=6 value='%s'></td>
-            <td class=border><input name=mapping_priority[] size=6 value='%s'></td>",
+            ",
             $_mapping->mapto,
-            $_mapping->ttl,
-            $_mapping->priority
+            $_mapping->ttl
             );
             print "</tr>";
         }
@@ -5349,7 +5346,7 @@ class EnumMappings extends Records {
         printf ("
         <td class=border><input name=mapping_mapto[] size=30></td>
         <td class=border><input name=mapping_ttl[] size=6></td>
-        <td class=border><input name=mapping_priority[] size=6></td>"
+        "
         );
 
         print "</tr>";

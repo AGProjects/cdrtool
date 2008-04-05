@@ -150,15 +150,7 @@ class CDRS_ser_radius extends CDRS {
         <tr bgcolor=lightgrey>
         <td>Id</td>
         <td><b>Start time</b></td>
-        ";
-
-        if ($this->DATASOURCES[$this->cdr_source]['enableThor']) {
-	        print "<td><b>Sip Thor node</b></td>";
-        } else {
-	        print "<td><b>Sip Proxy</b></td>";
-        }
-
-        print "
+		<td><b>Sip Proxy</b></td>
         <td><b>SIP caller</b></td>
         <td><b>In</b></td>
         <td><b>SIP destination</b></td>
