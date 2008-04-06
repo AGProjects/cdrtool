@@ -10,9 +10,13 @@ cdrtool (6.4.1) unstable; urgency=low
   * Added readonly rights for login accounts to deny changes to rates or
     re-normalization process
   * Move in global.inc $CDRTool['rating']['reportMissingRates'] to
-  $RatingEngine['reportMissingRates']
+    $RatingEngine['reportMissingRates']
+  * Removed unused library
+  * Show home node if not logged in as subscriber
+  * Removed Prio field not used by PDNS
+  * Show Owner field in search form for SIP and ENUM records
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 04 Apr 2008 10:27:09 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 06 Apr 2008 12:04:30 +0200
 
 cdrtool (6.4.0) unstable; urgency=high
 
