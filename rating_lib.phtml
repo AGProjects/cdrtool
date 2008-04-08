@@ -2924,7 +2924,11 @@ class RatingTables {
     }
 
     function updateTable($whereDomainFilter) {
-        
+
+        global $auth;
+
+        $loginname=$auth->auth["uname"];
+
         foreach ($this->web_elements as $_el) {
             ${$_el}= $_REQUEST[$_el];
         }
@@ -4344,7 +4348,7 @@ class OpenSERQuota {
 
         if ($DATASOURCES[$this->cdr_source]['soapEngineId']) {
             require_once("provisioning/ngnpro_soap_library.phtml");
-            require_once("provisioning/ngnpro_engines.inc");
+            require("provisioning/ngnpro_engines.inc");
 
             if (in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
 
@@ -4617,7 +4621,7 @@ class OpenSERQuota {
         global $UserQuota;
 		$this->initMonthlyUsage();
 
-        $query=sprintf("select * from quota_usage where datasource = '%s' and quota > 0 and blocked = '0' and cost > quota",$this->CDRS->cdr_source);
+        $query=sprintf("select * from quota_usage where datasource = '%s' and quota > 0 and cost > quota",$this->CDRS->cdr_source);
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -4735,7 +4739,6 @@ class OpenSERQuota {
         }
 
         if ($notify && is_array($toNotify) && count($toNotify) >0) {
-
             // send notification to accounts
             foreach($toNotify as $rcpt) {
                 $this->notify($rcpt);

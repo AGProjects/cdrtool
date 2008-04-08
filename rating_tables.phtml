@@ -50,8 +50,6 @@ if (!$export) {
 	$layout->showTopMenu($title);
 }
 
-$loginname=$auth->auth["uname"];
-
 if ($perm->have_perm("readonly")) {
 	$RatingTables=new RatingTables('readonly');
 } else {
