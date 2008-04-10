@@ -33,6 +33,7 @@ class SipSettings {
     var $sip_settings_page 	       = "https://cdrtool.example.com/sip_settings.phtml";
     var $xcap_root   		       = "https://cdrtool.example.com/xcap-root";
     var $pstn_access               = false;
+	var $pstn_changes_allowed      = false;
     var $sip_proxy                 = "proxy.example.com";
     var $voicemail_server          = "vm.example.com";
     var $voicemail_access_number   = "*70";
@@ -125,11 +126,12 @@ class SipSettings {
 
         $debug=sprintf("<font color=blue><p><b>Initialize class %s(%s)</b></font>",get_class($this),$account);
         dprint($debug);
-        //dprint_r($loginCredentials);
+        dprint_r($loginCredentials);
 
-		$this->loginCredentials   = &$loginCredentials;
+		$this->loginCredentials = &$loginCredentials;
+
         if ($loginCredentials['login_type']) {
-        	$this->login_type          = $loginCredentials['login_type'];
+        	$this->login_type   = $loginCredentials['login_type'];
         }
 
         if ($this->login_type == "admin") {
@@ -179,6 +181,7 @@ class SipSettings {
             <input type=hidden name=reseller value=$this->reseller>
             <input type=hidden name=sip_engine value=$this->sip_engine>
             ";
+
         } else {
 
             $this->pageURL=$this->settingsPage."?account=$this->account";
@@ -196,6 +199,10 @@ class SipSettings {
         }
 
         $this->getResellerSettings();
+        $this->getCustomerSettings();
+
+        $this->pstnChangesAllowed();
+		dprint("pstn_changes_allowed=$this->pstn_changes_allowed");
 
     	$this->tabs=array('summary'=>_('Info'),
                     	  'settings'=>_('Settings'),
@@ -244,21 +251,21 @@ class SipSettings {
 
         if ($this->Preferences['advanced']) {
             // Advanced accounts has access to call control and Phonebook
-        	$this->tabs[phonebook]=_("Contacts");
-        	$this->tabs[accept] =_("Accept");
-        	$this->tabs[reject] =_("Reject");
+        	$this->tabs['phonebook']=_("Contacts");
+        	$this->tabs['accept'] =_("Accept");
+        	$this->tabs['reject'] =_("Reject");
 
             if (in_array("free-pstn",$this->groups)) {
-        		$this->tabs[barring]=_("Barring");
+        		$this->tabs['barring']=_("Barring");
             }
         }
 
         if ($this->prepaid) {
-            $this->tabs[prepaid]=_("Prepaid");
+            $this->tabs['prepaid']=_("Prepaid");
         }
 
         if ($this->presence_engine) {
-        	$this->tabs[presence]=_("Presence");
+        	$this->tabs['presence']=_("Presence");
         }
 
 		$this->access_numbers=array("FUNC"=>$this->FUNC_access_number,
@@ -713,6 +720,8 @@ class SipSettings {
     }
 
     function getDomainOwner ($domain='') {
+        dprint("getdomainOwner(domain=$domain)");
+
         if ($this->SOAPversion < 2) return;
 
         if (!$domain) return;
@@ -734,7 +743,7 @@ class SipSettings {
                      'range'   => $range
                      );
 
-        dprint_r($Query);
+        //dprint_r($Query);
 
         // Call function
         $this->SipPort->addHeader($this->SoapAuth);
@@ -1137,6 +1146,54 @@ class SipSettings {
 
     }
 
+    function pstnChangesAllowed() {
+        dprint("pstnChangesAllowed()");
+		if ($this->login_type == 'subscriber') {
+        	$this->pstn_changes_allowed = false;
+            return;
+        } else if ($this->login_type == 'admin') {
+        	$this->pstn_changes_allowed = true;
+            return;
+        } else if ($this->login_type == 'reseller') {
+            // for a reseller we need to check if a subaccount is allowed
+			if ($this->customer == $this->reseller || $this->customerImpersonate == $this->reseller) {
+        		$this->pstn_changes_allowed = true;
+            	return;
+            } else {
+                if ($this->customerProperties['pstn_changes']) {
+        			$this->pstn_changes_allowed = true;
+            		return;
+                }
+            }
+        }
+
+        $this->pstn_changes_allowed = false;
+        return;
+    }
+
+    function getCustomerSettings () {
+        dprint("getCustomerSettings($this->customer,engine=$this->customer_engine)");
+
+        $this->CustomerPort->addHeader($this->SoapAuthCustomer);
+        $result     = $this->CustomerPort->getAccount(intval($this->customer));
+ 
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (CustomerPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        foreach ($result->properties as $_property) {
+            $this->customerProperties[$_property->name]=$_property->value;
+        }
+
+		$this->customerImpersonate=$result->impersonate;
+		//dprint_r($this->customerProperties);
+
+    }
+
     function getResellerSettings () {
         dprint("getResellerSettings($this->reseller,engine=$this->customer_engine)");
 
@@ -1150,14 +1207,6 @@ class SipSettings {
                                         "SubscriberMayEditIt"=>"0",
                                         "SubscriberMaySeeIt"=>0
                                         );
-
-        /*
-        $this->availableGroups['intercept']   =array("Group"=>"Intercept",
-                                        "WEBName" =>sprintf(_("SIP trace")),
-                                        "SubscriberMayEditIt"=>"0",
-                                        "SubscriberMaySeeIt"=>0
-                                        );
-        */
 
         if ($this->Preferences['advanced']) {
             $this->availableGroups['anonymous']=array("Group"=>"anonymous",
@@ -1174,7 +1223,7 @@ class SipSettings {
 
         }
 
-        $this->availableGroups['prepaid'] = array("Group"            => "prepaid",
+        $this->availableGroups['prepaid'] = array("Group"       => "prepaid",
                                           "WEBName"             => sprintf (_("Prepaid")),
                                           "SubscriberMayEditIt" => "0",
                                           "SubscriberMaySeeIt"  => 0
@@ -1263,11 +1312,11 @@ class SipSettings {
         }
 
         if ($this->pstn_access) {
-            $this->availableGroups['free-pstn']    =array("Group"=>"free-pstn",
+            $this->availableGroups['free-pstn'] = array("Group"=>"free-pstn",
                                                 "WEBName" =>   sprintf(_("Access to PSTN")),
                                                 "WEBComment"=> sprintf(_("Caller-ID")),
-                                                "SubscriberMayEditIt"=>"0",
-                                                "SubscriberMaySeeIt"=>1
+                                                "SubscriberMayEditIt" => "0",
+                                                "SubscriberMaySeeIt"  => 1
                                                 );
         }
     }
@@ -1754,9 +1803,10 @@ class SipSettings {
         </td>
         </tr>
         ";
+
         */
 	    
-        if ($this->login_type != 'subscriber' && in_array("free-pstn",$this->groups)) {
+        if (in_array("free-pstn",$this->groups)) {
 
             if (in_array("quota",$this->groups)) {
             	$td_class="orange";
@@ -1774,7 +1824,12 @@ class SipSettings {
             <table cellspacing=0 cellpadding=0 width=100%>
             <tr>
             <td>";
-            printf ("<input type=text size=6 maxsize=6 name=quota value='%s'> %s",$this->quota,$this->currency);
+
+            if ($this->pstn_changes_allowed) {
+            	printf ("<input type=text size=6 maxsize=6 name=quota value='%s'> %s",$this->quota,$this->currency);
+            } else {
+            	printf ("%s %s",$this->quota,$this->currency);
+            }
 
             if ($this->quota || in_array("quota",$this->groups)) {
                 $this->getCallStatistics();
@@ -1792,18 +1847,19 @@ class SipSettings {
             ";
             printf ("<input type=hidden name=used_quota value='%s'>",$this->thisMonth['price']);
 
-            print _("De-block account");
+            if ($this->pstn_changes_allowed) {
+            	print _("De-block account");
 
-            print "
-            <input type=checkbox name=quota_reset value=1>
-            </td>
+                print "
+                <input type=checkbox name=quota_reset value=1>
+                ";
+            }
+            print "</td>
             </tr>
             </table>
             </td>
             </tr>
             ";
-        } else {
-            printf ("<input type=hidden name=quota value='%s'>",$this->quota);
         }
 
         foreach (array_keys($this->availableGroups) as $key) {
@@ -1835,6 +1891,12 @@ class SipSettings {
                 }
             }
 
+            if ($key=="free-pstn" || $key=="prepaid") {
+                if (!$this->pstn_changes_allowed) {
+            		$disabled_box   = "disabled=true";
+                }
+            }
+
             if ($key=="blocked" && $checked_box[$key]) {
             	$td_class="orange";
             } else {
@@ -1848,7 +1910,7 @@ class SipSettings {
             <input type=checkbox value=1 name=$key $checked_box[$key] $disabled_box>
             ";
 
-            if ($this->login_type != 'subscriber') {
+            if ($this->pstn_changes_allowed) {
                 if ($key=="free-pstn") {
                     print "$elementComment: <input type=text size=15 maxsize=15 name=rpid value=\"$this->rpid\">";
                 } else {
@@ -2063,7 +2125,7 @@ class SipSettings {
 
     function showOwner() {
 
-		if ($this->login_type == 'admin' || $this->login_type == 'reseller') {
+		if ($this->pstn_changes_allowed) {
             print "
             <tr $bgcolor>
             <td class=border>";
@@ -2071,6 +2133,19 @@ class SipSettings {
             print "</td>
             <td class=border>
             <input type=text name=owner size=6 value=\"$this->owner\">
+            ";
+            print "
+            </td>
+            </tr>
+            ";
+        } else {
+            print "
+            <tr $bgcolor>
+            <td class=border>";
+            print _("Owner");
+            print "</td>
+            <td class=border>
+            $this->owner
             ";
             print "
             </td>
@@ -2341,7 +2416,7 @@ class SipSettings {
             }
         }
 
-        if ($this->login_type != 'subscriber') {
+        if ($this->pstn_changes_allowed) {
             if (strcmp($quota,$this->quota) != 0) {
                 if (!$quota) $quota=0;
                 $result->quota=intval($quota);
@@ -2379,10 +2454,22 @@ class SipSettings {
 
             if ($this->login_type != 'subscriber' || $this->availableGroups[$key]['SubscriberMayEditIt']) {
 
-                // toggle prepaid
-                if ($key == "prepaid") $result->prepaid=intval($val);
+                if ($key == 'prepaid' || $key=='free-pstn') {
+                    if ($this->pstn_changes_allowed) {
+                		if ($key == "prepaid") $result->prepaid=intval($val);
+                		if ($val) $newACLarray[]=trim($key);
+                    } else {
+                        if (in_array($key,$this->groups)) {
+                            $newACLarray[]=trim($key);
+                        }
+                    }
 
-                if ($val) $newACLarray[]=trim($key);
+                } else {
+                	if ($val) $newACLarray[]=trim($key);
+                }
+
+                // toggle prepaid
+
 
             } else {
                 // copy old setting if exists
@@ -3627,7 +3714,7 @@ class SipSettings {
             return false;
         }
 
-        dprint_r($result);
+        //dprint_r($result);
 
         $this->thisMonth['calls'] = $result->placed->calls;
         $this->thisMonth['price'] = $result->placed->price;
@@ -5301,7 +5388,7 @@ class SipSettings {
 
 
     function showBillingProfiles() {
-		if ($this->login_type != 'admin' && $this->login_type != 'reseller' || !in_array("free-pstn",$this->groups)) {
+		if (!$this->pstn_changes_allowed || !in_array("free-pstn",$this->groups)) {
             return true;
         }
 
@@ -5339,8 +5426,9 @@ class SipSettings {
         </tr>
         ";
     }
+
     function updateBillingProfiles() {
-		if ($this->login_type != 'admin' && $this->login_type != 'reseller') {
+		if (!$this->pstn_changes_allowed) {
             return true;
         }
 
