@@ -1728,7 +1728,8 @@ class SipSettings {
 
         while (list ($value, $name) = each($languages)) {
              print "<option value=$value $selected_lang[$value]>$name\n";
-        }				
+        }
+
         print "
         </select>
         ";
@@ -1808,7 +1809,7 @@ class SipSettings {
 
         */
 
-        if (!$this->prepaid && in_array("free-pstn",$this->groups)) {
+        if (in_array("free-pstn",$this->groups)) {
  
             if (in_array("quota",$this->groups)) {
                 $td_class="orange";
@@ -1826,11 +1827,15 @@ class SipSettings {
             <table cellspacing=0 cellpadding=0 width=100%>
             <tr>
             <td>";
- 
-            if ($this->pstn_changes_allowed) {
-                printf ("<input type=text size=6 maxsize=6 name=quota value='%s'> %s",$this->quota,$this->currency);
+
+ 			if (!$this->prepaid) {
+                if ($this->pstn_changes_allowed) {
+                    printf ("<input type=text size=6 maxsize=6 name=quota value='%s'> %s",$this->quota,$this->currency);
+                } else {
+                    printf ("%s %s",$this->quota,$this->currency);
+                }
             } else {
-                printf ("%s %s",$this->quota,$this->currency);
+                print "Postpaid only";
             }
  
             if ($this->quota || in_array("quota",$this->groups)) {
@@ -1856,6 +1861,7 @@ class SipSettings {
                 <input type=checkbox name=quota_reset value=1>
                 ";
             }
+
             print "</td>
             </tr>
             </table>
