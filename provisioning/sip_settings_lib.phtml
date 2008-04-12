@@ -121,6 +121,8 @@ class SipSettings {
     var $presenceWatchers=array();
     var $SipUaAImagesPath="status/images";
 
+	var $prepaid = 0;
+
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
     	$this->soapEngines        = $soapEngines;
 
@@ -611,7 +613,7 @@ class SipSettings {
 	        $this->timeout   = intval($result->answerTimeout);
         }
         $this->quota     = $result->quota;
-        $this->prepaid   = $result->prepaid;
+        $this->prepaid   = intval($result->prepaid);
         $this->region    = $result->region;
 
         $this->account   = $this->username."@".$this->domain;
@@ -1805,15 +1807,15 @@ class SipSettings {
         ";
 
         */
-	    
-        if (in_array("free-pstn",$this->groups)) {
 
+        if (!$this->prepaid && in_array("free-pstn",$this->groups)) {
+ 
             if (in_array("quota",$this->groups)) {
-            	$td_class="orange";
+                $td_class="orange";
             } else {
-            	$td_class="border";
+                $td_class="border";
             }
-
+ 
             print "
             <tr>
             <td class=border>";
@@ -1824,13 +1826,13 @@ class SipSettings {
             <table cellspacing=0 cellpadding=0 width=100%>
             <tr>
             <td>";
-
+ 
             if ($this->pstn_changes_allowed) {
-            	printf ("<input type=text size=6 maxsize=6 name=quota value='%s'> %s",$this->quota,$this->currency);
+                printf ("<input type=text size=6 maxsize=6 name=quota value='%s'> %s",$this->quota,$this->currency);
             } else {
-            	printf ("%s %s",$this->quota,$this->currency);
+                printf ("%s %s",$this->quota,$this->currency);
             }
-
+ 
             if ($this->quota || in_array("quota",$this->groups)) {
                 $this->getCallStatistics();
                 if ($this->thisMonth['price']) {
@@ -1840,16 +1842,16 @@ class SipSettings {
                     print _("Calls");
                 }
             }
-
+ 
             print "
             </td>
             <td align=right>
             ";
             printf ("<input type=hidden name=used_quota value='%s'>",$this->thisMonth['price']);
-
+ 
             if ($this->pstn_changes_allowed) {
-            	print _("De-block account");
-
+                print _("De-block account");
+ 
                 print "
                 <input type=checkbox name=quota_reset value=1>
                 ";
@@ -2456,7 +2458,15 @@ class SipSettings {
 
                 if ($key == 'prepaid' || $key=='free-pstn') {
                     if ($this->pstn_changes_allowed) {
-                		if ($key == "prepaid") $result->prepaid=intval($val);
+                		if ($key == "prepaid") {
+                            if(!$result->prepaid && $val && $result->quota) {
+                            	$result->quota=0;
+                                $quota=0;
+                				$this->somethingChanged=1;
+                            }
+                        	$result->prepaid=intval($val);
+                        }
+                        
                 		if ($val) $newACLarray[]=trim($key);
                     } else {
                         if (in_array($key,$this->groups)) {
