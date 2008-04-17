@@ -45,6 +45,7 @@ class SipSettings {
 
     var $change_privacy_access_number = "*67";
     var $check_privacy_access_number  = "*68";
+    var $reject_anonymous_access_number  = "*69";
     var $enable_thor               = false;
     var $sip_accounts_lite         = false;  // show basic settings by default, and advanced if property advanced is set to 1
 
@@ -204,6 +205,7 @@ class SipSettings {
         $this->getCustomerSettings();
 
         $this->pstnChangesAllowed();
+
 		dprint("pstn_changes_allowed=$this->pstn_changes_allowed");
 
     	$this->tabs=array('summary'=>_('Info'),
@@ -1157,8 +1159,14 @@ class SipSettings {
         	$this->pstn_changes_allowed = true;
             return;
         } else if ($this->login_type == 'reseller') {
+
             // for a reseller we need to check if a subaccount is allowed
-			if ($this->customer == $this->reseller || $this->customerImpersonate == $this->reseller) {
+			if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
+            	dprint("is reseller");
+        		$this->pstn_changes_allowed = true;
+            	return;
+            } else if ($this->customerImpersonate == $this->loginCredentials['reseller']) {
+            	dprint("impersonate reseller");
         		$this->pstn_changes_allowed = true;
             	return;
             } else {
@@ -1174,10 +1182,13 @@ class SipSettings {
     }
 
     function getCustomerSettings () {
-        dprint("getCustomerSettings($this->customer,engine=$this->customer_engine)");
+        if (!$this->loginCredentials['customer']) return;
+
+    	$id=$this->loginCredentials['customer'];
+        dprint("getCustomerSettings($id,engine=$this->customer_engine)");
 
         $this->CustomerPort->addHeader($this->SoapAuthCustomer);
-        $result     = $this->CustomerPort->getAccount(intval($this->customer));
+        $result     = $this->CustomerPort->getAccount(intval($this->loginCredentials['customer']));
  
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -1213,12 +1224,13 @@ class SipSettings {
         if ($this->Preferences['advanced']) {
             $this->availableGroups['anonymous']=array("Group"=>"anonymous",
                                         "WEBName" =>sprintf (_("Privacy")),
-                                        "WEBComment"=>sprintf(_("Dial %s to change or %s to check status "),$this->change_privacy_access_number, $this->check_privacy_access_number),
+                                        "WEBComment"=>sprintf(_("Dial %s to change"),$this->change_privacy_access_number),
                                         "SubscriberMaySeeIt"=>1,
                                         "SubscriberMayEditIt"=>1
                                         );
             $this->availableGroups['anonymous-reject']=array("Group"=>$this->anonymous-reject,
                                         "WEBName" =>sprintf (_("Reject anonymous")),
+                                        "WEBComment"=>sprintf(_("Dial %s to change"),$this->reject_anonymous_access_number),
                                         "SubscriberMaySeeIt"=>1,
                                         "SubscriberMayEditIt"=>1
                                         );
