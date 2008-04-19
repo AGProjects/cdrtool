@@ -587,7 +587,7 @@ class Records {
     function Records(&$SoapEngine) {
     	$this->SoapEngine         = &$SoapEngine;
 
-        $this->version            = &$this->SoapEngine->version;
+        $this->version             = &$this->SoapEngine->version;
         $this->login_credentials   = &$this->SoapEngine->login_credentials;
 
         $this->sorting['sortBy']    = trim($_REQUEST['sortBy']);
@@ -633,7 +633,6 @@ class Records {
         $this->support_web     = $this->SoapEngine->support_web;
 
     }
-
 
     function showEngineSelection() {
     	$selected_soapEngine[$this->SoapEngine->service]=' selected';
@@ -8271,46 +8270,76 @@ class Customers extends Records {
 
         $customer_old = $customer;
 
-		$properties=array();
-
-        // preserve the properties not managed by this client unchanged:
-        foreach ($customer->properties as $_property) {
-            if (!in_array($_property->name,array_keys($this->allProperties))) {
-                $properties[]=array('name'       => $_property->name,
-                                    'value'      => $_property->value,
-                                    'category'   => $_property->category,
-                                    'permission' => $_property->permission
-                                    );
-            }
-        }
-
-        $customer_old->properties=$properties;
-
         foreach (array_keys($this->allProperties) as $item) {
             $var_name   = $item.'_form';
-            $var_value  = trim($_REQUEST[$var_name]);
-            if (strlen($var_value)) {
 
-            	if ($this->allProperties[$item]['permission'] == 'admin' &&
-                    	$customer->id != $customer->reseller &&
-                    	$this->allProperties[$item]['resellerMayManageForChildAccounts']) {
+			$updated_property=array();
 
-                    $_permission='reseller';
+        	foreach (array_keys($customer->properties) as $_key) {
+                $_property=$customer->properties[$_key];
 
+                if ($_property->name == $item) {
+
+					if ($_property->permission == 'admin') {
+                        if ($this->login_credentials['login_type'] == 'admin') {
+                            $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
+                        }
+
+                    	if ($customer->id != $customer->reseller && $this->allProperties[$item]['resellerMayManageForChildAccounts']) {
+                        	$customer->properties[$_key]->permission='reseller';
+                            $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
+                        }
+
+                    } else if ($_property->permission == 'reseller') {
+                        if ($this->login_credentials['login_type'] == 'admin' || $this->login_credentials['login_type'] == 'reseller') {
+                            $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
+                        }
+                    } else {
+                        $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
+                        $customer->properties[$_key]->permission='customer';
+                    }
+
+                    $updated_property[$item]++;
+                	break;
+                }
+        	}
+
+            if (!$updated_property[$item] && strlen($_REQUEST[$var_name])) {
+                $var_value   = '';
+                $_permission = 'customer';
+
+                if ($this->allProperties[$item]['permission'] == 'admin') {
+                    if ($this->login_credentials['login_type'] == 'admin') {
+                        $var_value   =  trim($_REQUEST[$var_name]);
+                        $_permission = 'admin';
+                    }
+
+                    if ($customer->id != $customer->reseller && $this->allProperties[$item]['resellerMayManageForChildAccounts']) {
+                        $var_value   =  trim($_REQUEST[$var_name]);
+                        $_permission = 'reseller';
+                    }
+
+                } else if ($this->allProperties[$item]['permission'] == 'reseller') {
+                    if ($this->login_credentials['login_type'] == 'admin' || $this->login_credentials['login_type'] == 'reseller') {
+                        $var_value   =  trim($_REQUEST[$var_name]);
+                        $_permission = 'reseller';
+                    }
                 } else {
-                	$_permission=$this->allProperties[$item]['permission'];
+                    $var_value   =  trim($_REQUEST[$var_name]);
+                    $_permission = 'customer';
                 }
 
-                $properties[]=array('name'       => $item,
-                                    'value'      => $var_value,
-                                    'category'   => $this->allProperties[$item]['category'],
-                                    'permission' => $_permission
-                                    );
+                if (strlen($var_value)) {
+                    $customer->properties[] = array('name'       => $item,
+                                                              'value'      => $var_value,
+                                                              'category'   => $this->allProperties[$item]['category'],
+                                                              'permission' => $_permission
+                                                              );
+                }
+
             }
- 
+
         }
- 
-        $customer->properties=$properties;
 
         /*
         print "<pre>";
@@ -8372,7 +8401,7 @@ class Customers extends Records {
                 }
             }
 
-            $this->updateAfter($customer);
+            $this->updateAfter($customer,$customer_old);
             return true;
         } else {
             return false;
