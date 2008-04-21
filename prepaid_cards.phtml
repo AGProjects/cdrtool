@@ -1,0 +1,61 @@
+<?
+include("global.inc");
+
+page_open(array("sess" => "CDRTool_Session",
+                "auth" => "CDRTool_Auth",
+                "perm" => "CDRTool_Perm")
+          );
+
+$loginname=$auth->auth["uname"];
+
+$perm->check("provisioning");
+
+$title="Prepaid card generator";
+
+$action   = $_REQUEST['action'];
+$batch    = $_REQUEST['batch'];
+$confirm  = $_REQUEST['confirm'];
+
+if ($action != "export") {
+    if (is_readable("local/header.phtml")) {
+        include("local/header.phtml");
+    } else {
+        include("header.phtml");
+    }
+    $layout = new pageLayoutLocal();
+	$layout->showTopMenu($title);
+} else {
+    Header("Content-type: text/plain");
+    Header("Content-Disposition: inline; filename=$batch.txt");
+    header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
+    header("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+    header("Pragma: no-cache");
+}
+
+include("prepaid_lib.phtml");
+
+$PrepaidCards = new PrepaidCards();
+
+if ($action == "generate") {
+	$PrepaidCards->generate();
+	$PrepaidCards->showGenerateForm();
+	$PrepaidCards->showBatches();
+} elseif ($action == "delete") {
+	$PrepaidCards->showGenerateForm();
+	$PrepaidCards->deleteBatch($batch,$confirm);
+	$PrepaidCards->showBatches();
+} elseif ($action == "export") {
+	$PrepaidCards->export($batch);
+} else {
+	$PrepaidCards->showGenerateForm();
+	$PrepaidCards->showBatches();
+}
+
+if ($action != "export") {
+    print "
+    </body>
+    </html>
+    ";
+}
+page_close();
+?>

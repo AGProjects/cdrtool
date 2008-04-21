@@ -8266,9 +8266,15 @@ class Customers extends Records {
             $properties[]=$_property;
         }
 
-        $customer->properties=$properties;
+        if (is_array($properties)) {
+        	$customer->properties=$properties;
+        } else {
+        	$customer->properties=array();
+        }
 
         $customer_old = $customer;
+
+        // update properties
 
         foreach (array_keys($this->allProperties) as $item) {
             $var_name   = $item.'_form';
@@ -8279,15 +8285,15 @@ class Customers extends Records {
                 $_property=$customer->properties[$_key];
 
                 if ($_property->name == $item) {
+                	// update property
 
 					if ($_property->permission == 'admin') {
                         if ($this->login_credentials['login_type'] == 'admin') {
                             $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
-                        }
-
-                    	if ($customer->id != $customer->reseller && $this->allProperties[$item]['resellerMayManageForChildAccounts']) {
-                        	$customer->properties[$_key]->permission='reseller';
-                            $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
+                        } else if ($this->login_credentials['login_type'] == 'reseller' && $this->allProperties[$item]['resellerMayManageForChildAccounts']) {
+                            if ($customer->id != $customer->reseller) {
+                                $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
+                            }
                         }
 
                     } else if ($_property->permission == 'reseller') {
@@ -8296,45 +8302,49 @@ class Customers extends Records {
                         }
                     } else {
                         $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
-                        $customer->properties[$_key]->permission='customer';
                     }
 
                     $updated_property[$item]++;
+
                 	break;
                 }
         	}
 
             if (!$updated_property[$item] && strlen($_REQUEST[$var_name])) {
-                $var_value   = '';
-                $_permission = 'customer';
+                // add new property
+
+                unset($var_value);
+                unset($_permission);
 
                 if ($this->allProperties[$item]['permission'] == 'admin') {
+                	$_permission = 'admin';
+
                     if ($this->login_credentials['login_type'] == 'admin') {
                         $var_value   =  trim($_REQUEST[$var_name]);
-                        $_permission = 'admin';
-                    }
-
-                    if ($customer->id != $customer->reseller && $this->allProperties[$item]['resellerMayManageForChildAccounts']) {
-                        $var_value   =  trim($_REQUEST[$var_name]);
-                        $_permission = 'reseller';
+                    } else if ($this->login_credentials['login_type'] == 'reseller' && $this->allProperties[$item]['resellerMayManageForChildAccounts']) {
+                        if ($customer->id != $customer->reseller) {
+                            $var_value   =  trim($_REQUEST[$var_name]);
+                        }
                     }
 
                 } else if ($this->allProperties[$item]['permission'] == 'reseller') {
+                	$_permission = 'reseller';
+
                     if ($this->login_credentials['login_type'] == 'admin' || $this->login_credentials['login_type'] == 'reseller') {
                         $var_value   =  trim($_REQUEST[$var_name]);
-                        $_permission = 'reseller';
                     }
                 } else {
+                	$_permission = 'customer';
                     $var_value   =  trim($_REQUEST[$var_name]);
-                    $_permission = 'customer';
+
                 }
 
                 if (strlen($var_value)) {
                     $customer->properties[] = array('name'       => $item,
-                                                              'value'      => $var_value,
-                                                              'category'   => $this->allProperties[$item]['category'],
-                                                              'permission' => $_permission
-                                                              );
+                                                    'value'      => $var_value,
+                                                    'category'   => $this->allProperties[$item]['category'],
+                                                    'permission' => $_permission
+                                                     );
                 }
 
             }
@@ -8393,7 +8403,17 @@ class Customers extends Records {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
+
+                    // roll back local changes
                     printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlCustomerRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+
+                    $function=array('commit'   => array('name'       => 'updateAccount',
+                                                        'parameters' => array($customer_old),
+                                                        'logs'       => array('success' => sprintf('Customer id %s has been rolled back',$customer->id))
+                                                        )
+                                    );
+                 
+                    $this->SoapEngine->execute($function,$this->html);
 
                     return false;
                 } else {
@@ -8498,13 +8518,15 @@ class Customers extends Records {
         $customer->credit      = floatval($customer->credit);
         $customer->balance     = floatval($customer->balance);
 
-		$properties=array();
-
         foreach ($customer->properties as $_property) {
             $properties[]=$_property;
         }
 
-        $customer->properties=$properties;
+        if (is_array($properties)) {
+        	$customer->properties=$properties;
+        } else {
+        	$customer->properties=array();
+        }
 
         // change username
         $customer_new=$customer;

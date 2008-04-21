@@ -6,7 +6,7 @@
     Author Adrian Georgescu
 
   	This library provide the functions for managing properties
-  	of SIP accounts retrieved from NGN-Pro server
+  	of SIP accounts retrieved from NGNPro
 
 */
 
@@ -22,8 +22,9 @@ class SipSettings {
     var $soapClassPresencePort     = 'WebService_SoapSIMPLEProxy_PresencePort';
     var $showSoapConnectionInfo    = false;
 
-    // this variables can be overwritten per soap engine (in ngnpro_soap_engines.inc)
-    // and in reseller properties
+    // these variables can be overwritten per soap engine
+    // and subsequently by reseller properties
+    // (in ngnpro_soap_engines.inc)
 
     var $templates_path            = './templates';
     var $support_company           = "Example company";
@@ -36,18 +37,20 @@ class SipSettings {
 	var $pstn_changes_allowed      = false;
     var $sip_proxy                 = "proxy.example.com";
     var $voicemail_server          = "vm.example.com";
-    var $voicemail_access_number   = "*70";
     var $absolute_voicemail_uri    = false; // use <voice-mailbox>
+    var $enable_thor               = false;
+    var $sip_accounts_lite         = false;  // show basic settings by default, and advanced if property advanced is set to 1
+
+    // access numbers
+
+    var $voicemail_access_number   = "*70";
     var $FUNC_access_number        = "*21*";
     var $FNOL_access_number        = "*22*";
     var $FNOA_access_number        = "*23*";
     var $FBUS_access_number        = "*23*";
-
-    var $change_privacy_access_number = "*67";
-    var $check_privacy_access_number  = "*68";
+    var $change_privacy_access_number    = "*67";
+    var $check_privacy_access_number     = "*68";
     var $reject_anonymous_access_number  = "*69";
-    var $enable_thor               = false;
-    var $sip_accounts_lite         = false;  // show basic settings by default, and advanced if property advanced is set to 1
 
     // end variables
 
@@ -91,6 +94,7 @@ class SipSettings {
                                            'owner',
                                            'mobile_number'
                                            );
+
     var $presenceStatuses   = array('allow','deny','confirm');
     var $presenceActivities = array('busy'      => 'buddy_busy.jpg',
                                     'open'      => 'buddy_online.jpg',
@@ -98,8 +102,7 @@ class SipSettings {
                                     'idle'      => 'buddy_idle.jpg',
                                     'away'      => 'buddy_away.jpg'
                                     );
-    var $emergencyRegions   = array();
-	var $timeoutDefault = 35;
+
     var $timeoutEls=array(
              "5" =>"5 s",
              "10"=>"10 s",
@@ -115,12 +118,14 @@ class SipSettings {
              "60"=>"60 s"
              );
 
-	var $exportFilename = "export.txt";
-	var $presenceRules=array();
-    var $enums=array();
-    var $barringPrefixes=array();
-    var $presenceWatchers=array();
-    var $SipUaAImagesPath="status/images";
+    var $emergencyRegions    = array();
+	var $FNOA_timeoutDefault = 35;
+	var $exportFilename      = "export.txt";
+	var $presenceRules       = array();
+    var $enums               = array();
+    var $barringPrefixes     = array();
+    var $presenceWatchers    = array();
+    var $SipUaAImagesPath    = "status/images";
 
 	var $prepaid = 0;
 
@@ -628,7 +633,7 @@ class SipSettings {
 
 		if (!$this->timeout) {
         	$this->timeoutWasNotSet=1;
-        	$this->timeout=intval($this->timeoutDefault);
+        	$this->timeout=intval($this->FNOA_timeoutDefault);
         }
 
 		$this->getOwnerSettings($this->owner);
@@ -1521,7 +1526,7 @@ class SipSettings {
             <tr>
             	<td class=border>Presence mode
             	</td>
-            	<td class=border>Presence agent (RFC3903) with XCAP policy (RFC4825)
+            	<td class=border>Presence agent
             	</td>
             </tr>
             <tr>
