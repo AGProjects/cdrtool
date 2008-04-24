@@ -111,8 +111,8 @@ class PrepaidCards {
             }
     
             $query=sprintf("insert into prepaid_cards
-            (number,value,date_batch,batch)
-            values ('%s','%s',NOW(),'%s')",
+            (number,value,date_batch,batch,service)
+            values ('%s','%s',NOW(),'%s','sip')",
 
             addslashes($card),
             addslashes($value),
@@ -305,9 +305,7 @@ class PrepaidCards {
             </tr>
             ";
         }
-
         print "</table>";
-
     }
 }
 

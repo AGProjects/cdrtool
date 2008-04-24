@@ -1,11 +1,10 @@
 <?
-#apd_set_pprof_trace();
 /*
-    Copyright (c) 2007 AG Projects
+    Copyright (c) 2007-2008 AG Projects
     http://ag-projects.com
     Author Adrian Georgescu
 
-    This library contains rating classes and functions
+    This library contains classes and functions for rating functionality
 */
 
 class Rate {
@@ -1175,7 +1174,7 @@ class RatingTables {
                                                  "size"=>15,
                                                  "exceptions" =>array('service'),
                                                  "domainFilterColumn"=>"account",
-                                                 "fields"=>array("batch"=>array("size"=>30,
+                                                 "fields"=>array("batch"=>array("size"=>40,
                                                                                "name"=>"Batch name"
                                                                                 ),
                                                                  "date_batch"=>array("size"=>11,
@@ -3583,6 +3582,10 @@ class RatingTables {
         }
 
 		if (!$table) $table="destinations";
+        if ($table == 'prepaid_cards') {
+            print "<p>
+            <a href=prepaid_cards.phtml>Prepaid card generator</a>";
+        }
 
     	// Init table structure
         if (!is_array($this->tables[$table]['exceptions'])) $this->tables[$table]['exceptions']=array();
@@ -3592,6 +3595,7 @@ class RatingTables {
         if ($this->readonly) {
 			$this->tables[$table]['readonly']=1;
         }
+
         $metadata  = $this->db->metadata($table="$table");
         $cc        = count($metadata);
         // end init table structure

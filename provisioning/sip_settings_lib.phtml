@@ -73,7 +73,6 @@ class SipSettings {
                                            'quota',
                                            'language',
                                            'quota_reset',
-                                           'used_quota',
                                            'voicemail',
                                            'anonymous',
                                            'advanced',
@@ -206,12 +205,41 @@ class SipSettings {
             return false;
         }
 
+
+        $this->availableGroups['blocked']   =array("Group"=>"blocked",
+                                        "WEBName" =>sprintf(_("Account blocked")),
+                                        "SubscriberMayEditIt"=>"0",
+                                        "SubscriberMaySeeIt"=>0
+                                        );
+
+        $this->availableGroups['prepaid'] = array("Group"       => "prepaid",
+                                          "WEBName"             => sprintf (_("Prepaid")),
+                                          "SubscriberMayEditIt" => "0",
+                                          "SubscriberMaySeeIt"  => 0
+                                          );
+
+
+        if ($this->Preferences['advanced']) {
+            $this->availableGroups['anonymous']=array("Group"=>"anonymous",
+                                        "WEBName" =>sprintf (_("Privacy")),
+                                        "WEBComment"=>sprintf(_("Dial %s to change"),$this->change_privacy_access_number),
+                                        "SubscriberMaySeeIt"=>1,
+                                        "SubscriberMayEditIt"=>1
+                                        );
+            $this->availableGroups['anonymous-reject']=array("Group"=>$this->anonymous-reject,
+                                        "WEBName" =>sprintf (_("Reject anonymous")),
+                                        "WEBComment"=>sprintf(_("Dial %s to change"),$this->reject_anonymous_access_number),
+                                        "SubscriberMaySeeIt"=>1,
+                                        "SubscriberMayEditIt"=>1
+                                        );
+
+        }
+
+
         $this->getResellerSettings();
         $this->getCustomerSettings();
 
         $this->pstnChangesAllowed();
-
-		dprint("pstn_changes_allowed=$this->pstn_changes_allowed");
 
     	$this->tabs=array('summary'=>_('Info'),
                     	  'settings'=>_('Settings'),
@@ -269,10 +297,6 @@ class SipSettings {
             }
         }
 
-        if ($this->prepaid) {
-            $this->tabs['prepaid']=_("Prepaid");
-        }
-
         if ($this->presence_engine) {
         	$this->tabs['presence']=_("Presence");
         }
@@ -282,6 +306,10 @@ class SipSettings {
                                     "FBUS"=>$this->FBUS_access_number,
                                     "FNOL"=>$this->FNOL_access_number
                                     );
+        if ($this->prepaid) {
+            $this->tabs['prepaid']=_("Credit");
+        }
+
     }
 
     function initSoapClient() {
@@ -1220,34 +1248,6 @@ class SipSettings {
         $this->footerFile       = $this->getFileTemplate("footer.phtml");
         $this->cssFile          = $this->getFileTemplate("main.css");
 
-        $this->availableGroups['blocked']   =array("Group"=>"blocked",
-                                        "WEBName" =>sprintf(_("Account blocked")),
-                                        "SubscriberMayEditIt"=>"0",
-                                        "SubscriberMaySeeIt"=>0
-                                        );
-
-        if ($this->Preferences['advanced']) {
-            $this->availableGroups['anonymous']=array("Group"=>"anonymous",
-                                        "WEBName" =>sprintf (_("Privacy")),
-                                        "WEBComment"=>sprintf(_("Dial %s to change"),$this->change_privacy_access_number),
-                                        "SubscriberMaySeeIt"=>1,
-                                        "SubscriberMayEditIt"=>1
-                                        );
-            $this->availableGroups['anonymous-reject']=array("Group"=>$this->anonymous-reject,
-                                        "WEBName" =>sprintf (_("Reject anonymous")),
-                                        "WEBComment"=>sprintf(_("Dial %s to change"),$this->reject_anonymous_access_number),
-                                        "SubscriberMaySeeIt"=>1,
-                                        "SubscriberMayEditIt"=>1
-                                        );
-
-        }
-
-        $this->availableGroups['prepaid'] = array("Group"       => "prepaid",
-                                          "WEBName"             => sprintf (_("Prepaid")),
-                                          "SubscriberMayEditIt" => "0",
-                                          "SubscriberMaySeeIt"  => 0
-                                          );
-
 		if (!$this->reseller) {
             return true;
         }
@@ -1338,6 +1338,7 @@ class SipSettings {
                                                 "SubscriberMaySeeIt"  => 1
                                                 );
         }
+
     }
 
     function getDiversions() {
@@ -1691,35 +1692,57 @@ class SipSettings {
         $chapter=sprintf(_("Account settings"));
         $this->showChapter($chapter);
 
-        print "
-        <tr>
-        <td class=border>";
-        print _("First name");
-        print "
-        </td>
-        <td class=borderns>";
+        if ($this->login_type != "admin" && $this->login_type != "reseller") {
+    
+            print "
+            <tr>
+            <td class=border>";
+            print _("Full name");
+            print "
+            </td>
+            <td class=borderns>";
+    
+            print "$this->firstName $this->login_type";
+    
+            print "
+            </td>
+            </tr>
+            ";
+    
+		} else {
+    
+            print "
+            <tr>
+            <td class=border>";
+            print _("First name");
+            print "
+            </td>
+            <td class=borderns>";
+    
+            print "<input type=text size=15 name=first_name value=\"$this->firstName\">";
+    
+            print "
+            </td>
+            </tr>
+            ";
+    
+            print "
+            <tr>
+            <td class=border>";
+            print _("Last name");
+            print "
+            </td>
+            <td class=borderns>";
+    
+            print "<input type=text size=15 name=last_name value=\"$this->lastName\">";
+    
+            print "
+            </td>
+            </tr>
+            ";
+    
 
-      	print "<input type=text size=15 name=first_name value=\"$this->firstName\">";
-
-        print "
-        </td>
-        </tr>
-        ";
-
-        print "
-        <tr>
-        <td class=border>";
-        print _("Last name");
-        print "
-        </td>
-        <td class=borderns>";
-
-      	print "<input type=text size=15 name=last_name value=\"$this->lastName\">";
-
-        print "
-        </td>
-        </tr>
-        ";
+        }
 
         print "
         <tr>
@@ -1833,58 +1856,56 @@ class SipSettings {
             } else {
                 $td_class="border";
             }
- 
-            print "
-            <tr>
-            <td class=border>";
-            print _("Monthly quota");
-            print "
-            </td>
-            <td class=$td_class>
-            <table cellspacing=0 cellpadding=0 width=100%>
-            <tr>
-            <td>";
 
  			if (!$this->prepaid) {
+
+                print "
+                <tr>
+                <td class=border>";
+                print _("Monthly quota");
+                print "
+                </td>
+                <td class=$td_class>
+                <table cellspacing=0 cellpadding=0 width=100%>
+                <tr>
+                <td>";
+    
                 if ($this->pstn_changes_allowed) {
                     printf ("<input type=text size=6 maxsize=6 name=quota value='%s'> %s",$this->quota,$this->currency);
                 } else {
                     printf ("%s %s",$this->quota,$this->currency);
                 }
-            } else {
-                print "Postpaid only";
-            }
- 
-            if ($this->quota || in_array("quota",$this->groups)) {
-                $this->getCallStatistics();
-                if ($this->thisMonth['price']) {
-                    print "&nbsp;&nbsp;&nbsp;";
-                    printf (_("This month usage: %.2f %s"),$this->thisMonth['price'], $this->currency);
-                    printf (" / %d ",$this->thisMonth['calls']);
-                    print _("Calls");
+     
+                if ($this->quota || in_array("quota",$this->groups)) {
+                    $this->getCallStatistics();
+                    if ($this->thisMonth['price']) {
+                        print "&nbsp;&nbsp;&nbsp;";
+                        printf (_("This month usage: %.2f %s"),$this->thisMonth['price'], $this->currency);
+                        printf (" / %d ",$this->thisMonth['calls']);
+                        print _("Calls");
+                    }
                 }
-            }
- 
-            print "
-            </td>
-            <td align=right>
-            ";
-            printf ("<input type=hidden name=used_quota value='%s'>",$this->thisMonth['price']);
- 
-            if ($this->pstn_changes_allowed) {
-                print _("De-block account");
- 
+     
                 print "
-                <input type=checkbox name=quota_reset value=1>
+                </td>
+                <td align=right>
+                ";
+
+                if ($this->pstn_changes_allowed && in_array("quota",$this->groups)) {
+                    print _("Reset");
+     
+                    print "
+                    <input type=checkbox name=quota_reset value=1>
+                    ";
+                }
+    
+                print "</td>
+                </tr>
+                </table>
+                </td>
+                </tr>
                 ";
             }
-
-            print "</td>
-            </tr>
-            </table>
-            </td>
-            </tr>
-            ";
         }
 
         foreach (array_keys($this->availableGroups) as $key) {
@@ -2401,17 +2422,19 @@ class SipSettings {
             $this->voicemailOptionsHaveChanged=1;
         }
 
-        if ($first_name && $this->firstName != $first_name) {
-            $result->firstName = $first_name;
-            $this->firstName  = $first_name;
-            $this->somethingChanged=1;
-            $this->voicemailOptionsHaveChanged=1;
-        }
-
-        if ($last_name && $this->lastName != $last_name) {
-            $result->lastName = $last_name;
-            $this->lastName  = $last_name;
-            $this->somethingChanged=1;
+        if ($this->login_type == "admin" || $this->login_type == "reseller") {
+            if ($first_name && $this->firstName != $first_name) {
+                $result->firstName = $first_name;
+                $this->firstName  = $first_name;
+                $this->somethingChanged=1;
+                $this->voicemailOptionsHaveChanged=1;
+            }
+    
+            if ($last_name && $this->lastName != $last_name) {
+                $result->lastName = $last_name;
+                $this->lastName  = $last_name;
+                $this->somethingChanged=1;
+            }
         }
 
 		$this->properties=$result->properties;

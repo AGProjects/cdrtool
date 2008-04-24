@@ -35,7 +35,6 @@ class SIPstatistics {
         	$this->online_db = new DB_openser();
         }
 
-
         if (is_array($CDRTool['StatisticsPresentities'])) {
         	$this->StatisticsPresentities = $CDRTool['StatisticsPresentities'];
         }
@@ -50,7 +49,7 @@ class SIPstatistics {
         if (!$this->ser_db->query($query)) return 0;
         if (!$this->ser_db->num_rows()) return 0;
 
-        while ($this->ser_db->next_record()) {
+		while ($this->ser_db->next_record()) {
             $zName=$this->ser_db->f('domain');
 
             if (is_array($CDRTool['statistics']['zoneFilter']) && !in_array($zName,$CDRTool['statistics']['zoneFilter'])) continue;
@@ -85,150 +84,10 @@ class SIPstatistics {
             }
         }
 
-        //dprint_r($this->SipEnabledZones);
+        //print_r($this->SipEnabledZones);
         //dprint_r($this->statistics);
 
     }
-
-    function generateHTMLUsageIndexPage () {
-        global $CDRTool;
-		$this->getSipEnabledZones();
-
-        if (!$handle = fopen($this->index_file, 'w+')) {
-        	echo "Error opening {$this->index_file}.\n";
-            return 0;
-        }
-        
-        // printing cfg header
-
-		$title=$CDRTool['provider']['name']." SIP statistics";
-
-        fwrite($handle,"<?
-            include(\"../../global.inc\");
-            page_open(
-                 array(\"sess\" => \"CDRTool_Session\",
-                       \"auth\" => \"CDRTool_Auth\",
-                       \"perm\" => \"CDRTool_Perm\"
-                       ));
-            \$perm->check(\"statistics\");
-
-            global \$CDRTool;
-    
-            if (strlen(\$CDRTool['filter']['domain'])) {
-                \$allowedDomains=explode(' ',\$CDRTool['filter']['domain']);
-            }
-
-            ?>
-            <HTML>
-            <HEAD>
-                <TITLE>$title</TITLE>
-                <META HTTP-EQUIV='Refresh' CONTENT='300'>
-                <META HTTP-EQUIV='Cache-Control' content='no-cache'>
-                <META HTTP-EQUIV='Pragma' CONTENT='no-cache'>
-                <META HTTP-EQUIV='Expires' CONTENT='Thu, 16 Dec 2004 16:08:32 GMT'>
-            </HEAD>
-            
-            <BODY bgcolor='#ffffff' text='#000000' link='#000000' vlink='#000000' alink='#000000'>
-            
-            <DIV align='left'><font size='5' face=verdana><B>$title</B></font></DIV>
-            
-            <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=10>
-
-            <? if (\$perm->have_perm('admin')) { ?>
-
-            ");
-
-            $key="total";
-
-            $block=sprintf("
-            <TR>
-            <TD><DIV align='center'><B> Online Users for %s </B></DIV>
-            <DIV><A HREF='%s_users.html'><IMG BORDER=0 ALT='%s_users Traffic Graph' SRC='%s_users-day.png'></A>
-            <SMALL><!--#flastmod file='%s_users.html' --></SMALL></DIV>
-            </TD><TD><DIV align='center'><B> Active Sessions for %s </B></DIV>
-            <DIV><A HREF='%s_sessions.html'><IMG BORDER=0 ALT='%s_sessions Traffic Graph' SRC='%s_sessions-day.png'></A>
-            <SMALL><!--#flastmod file='%s_sessions.html' --></SMALL></DIV>
-            </TD><TD><DIV align='center'><B> IP Traffic for %s </B></DIV>
-            <DIV><A HREF='%s_traffic.html'><IMG BORDER=0 ALT='%s_traffic Traffic Graph' SRC='%s_traffic-day.png'></A>
-            <SMALL><!--#flastmod file='%s_traffic.html' --></SMALL></DIV>
-            </TD></TR>
-            <TR>
-            <? } ?>
-
-            ",
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key
-            );
-
-
-
-        	fwrite($handle,$block);
-
-    	while(list($key,$value) = each($this->SipEnabledZones)) {
-            $block=sprintf("
-
-            <? if (in_array('$key',\$allowedDomains)) { ?>
-            <TR>
-            <TD><DIV align='center'><B> Online Users for %s </B></DIV>
-            <DIV><A HREF='%s_users.html'><IMG BORDER=0 ALT='%s_users Traffic Graph' SRC='%s_users-day.png'></A>
-            <SMALL><!--#flastmod file='%s_users.html' --></SMALL></DIV>
-            </TD><TD><DIV align='center'><B> Active Sessions for %s </B></DIV>
-            <DIV><A HREF='%s_sessions.html'><IMG BORDER=0 ALT='%s_sessions Traffic Graph' SRC='%s_sessions-day.png'></A>
-            <SMALL><!--#flastmod file='%s_sessions.html' --></SMALL></DIV>
-            </TD><TD><DIV align='center'><B> IP Traffic for %s </B></DIV>
-            <DIV><A HREF='%s_traffic.html'><IMG BORDER=0 ALT='%s_traffic Traffic Graph' SRC='%s_traffic-day.png'></A>
-            <SMALL><!--#flastmod file='%s_traffic.html' --></SMALL></DIV>
-            </TD></TR>
-            <TR>
-            <? } ?>
-            ",
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key,
-            $key
-            );
-
-        	fwrite($handle,$block);
-		}
-
-      	fwrite($handle,"
-		</TABLE>
-		</BODY>
-		</HTML>
-        <?
-        page_close();
-        ?>");
-        fclose($handle);
-    }
-
 
     function generateMrtgConfigFile () {
         $this->getSipEnabledZones();
