@@ -3033,10 +3033,9 @@ class RatingTables {
                                 $query=sprintf("insert into prepaid_history
                                 (username,domain,action,number,value,balance,date)
                                 values
-                                ('%s','%s','Set balance','Manual update by %s','%s','%s',NOW())",
+                                ('%s','%s','Set balance','Manual update by administrator','%s','%s',NOW())",
                                 addslashes($username),
                                 addslashes($domain),
-                                addslashes($loginname),
                                 addslashes($value),
                                 addslashes($balance)
                                 );
@@ -3046,7 +3045,7 @@ class RatingTables {
                                 $log_query=sprintf("insert into log
                                 (date,login,ip,datasource,results,description)
                                 values
-                                (NOW(),'%s','%s','Rating tables','%d','Set prepaid balance of %s@%s to %s')",
+                                (NOW(),'%s','%s','Rating tables','%d','Prepaid balance for %s@%s set to %s')",
                                 addslashes($loginname),
                                 addslashes($REMOTE_ADDR),
                                 addslashes($affected_rows),
