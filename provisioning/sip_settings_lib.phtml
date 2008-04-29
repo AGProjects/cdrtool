@@ -5590,8 +5590,12 @@ class SipSettings {
 
 
     function showBillingProfiles() {
-		if (!$this->pstn_changes_allowed || !in_array("free-pstn",$this->groups)) {
-            return true;
+        if ($this->login_type != 'reseller' && $this->login_type != 'admin') {
+            return false;
+        }
+
+		if (!$this->pstn_changes_allowed) {
+            return false;
         }
 
 		$this->getBillingProfiles();
@@ -5630,6 +5634,10 @@ class SipSettings {
     }
 
     function updateBillingProfiles() {
+        if ($this->login_type != 'reseller' && $this->login_type != 'admin') {
+            return false;
+        }
+
 		if (!$this->pstn_changes_allowed) {
             return true;
         }
