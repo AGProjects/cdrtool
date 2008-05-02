@@ -20,7 +20,30 @@ Prepaid API
 
 CDRTool prepaid engine is used to compute session times based on user credit
 and destination rates and debit the balance when the call has ended. The
-prepaid engine is accessible over a TCP socket.
+prepaid engine is accessible over the TCP socket where the rating engine
+listens.
+
+The TCP socket location is configured in /etc/default/cdrtool. The
+connection can be tested manually using the telnet command and by typing
+help at the prompt:
+
+tstuser@host:~$ telnet 10.0.0.0.1 9024
+Trying 10.0.0.1...
+Connected to 10.0.0.1.
+Escape character is '^]'.
+Help
+MaxSessionTime        From=sip:123@example.com To=sip:0031650222333@example.com Duration=7200 Lock=1
+AddBalance            From=123@example.com Value=10.00
+GetBalance            From=123@example.com
+GetBalanceHistory     From=123@example.com
+DeleteBalance         From=123@example.com
+DeleteBalanceHistory  From=123@example.com
+DebitBalance          From=sip:123@example.com To=sip:0031650222333@example.com Duration=59
+ShowPrepaidAccounts   Filter=123@example.com
+ReloadPrepaidAccounts Account=abc@example.com
+
+In the example above only the commands related to the prepaid functionality
+are highlighted.
 
 Call control module sends commands based on the syntax described below, to
 the CDRTool prepaid engine that handles the prepaid accounts. A command is a
