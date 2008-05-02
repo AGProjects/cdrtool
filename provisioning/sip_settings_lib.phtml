@@ -1752,12 +1752,12 @@ class SipSettings {
             print "
             <tr>
             <td class=border>";
-            print _("Full name");
+            print _("Name");
             print "
             </td>
             <td class=borderns>";
     
-            print "$this->firstName $this->login_type";
+            print "$this->firstName $this->lastName";
     
             print "
             </td>
@@ -3669,7 +3669,7 @@ class SipSettings {
             if ($this->quickdial && preg_match("/^$this->quickdial/",$this->username)) {
                 $dial_suffix=strlen($this->username) - strlen($this->quickdial);
                 if ($dial_suffix > 0) {
-                	printf (_("%d digits extension"),$dial_suffix);
+                	printf (_("Prefix to auto-complete short numbers"),$dial_suffix);
                 }
             }
             print "
@@ -3695,6 +3695,7 @@ class SipSettings {
           </td>
         </tr>
         ",$this->Preferences['mobile_number']);
+
     }
 
     function showLastCalls() {
