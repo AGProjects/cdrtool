@@ -85,7 +85,7 @@ and expects in return:
 
 value\n\n
 
-where value is one of: OK (success), Failed (failure), NotPrepaid (account
+where value is one of: OK (success), Failed (failure), Not Prepaid (account
 is not prepaid - this case is not considered a failure)
 
 There are cases where we call DebitBalance with a 0 duration. This is valid
