@@ -232,16 +232,21 @@ billing_rates_history - rate_idx      (gateway,domain,subscriber,name,destinatio
 The content of the rating tables can be exported in the Rating tables page.
 
 The import script detects the type of file to import based on its filename.
+
 The filename must comply with the following naming convention:
 
-1. Must start with the name of the destination table and 
-2. End with .csv extension
+1. Must start with the name of the table without the billing_
+2. May optionally contain extra characters after the name
+3. Must end with .csv extension
 
 Examples:
 
 - rates.csv or rates20061201.cvs will be loaded into the rates table
 - profiles.csv or profiles20061201.cvs will be loaded into the profiles table
-- destinations2006.csv will be loaded in the destinations table
+- destinations200601.csv will be loaded in the destinations table
+- ratesHistory200801.csv will be loaded in the rates_history table
+
+Do not use the 'billing_' prefix in front of the file name.
 
 It is advisable to name the files in a consistent manner like tableYYYYMMDD.csv
 
