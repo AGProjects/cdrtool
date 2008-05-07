@@ -1685,11 +1685,10 @@ class RatingTables {
             $name            = trim($p[4]);
             $destination     = trim($p[5]);
             $durationRate    = trim($p[6]);
-            $trafficRate     = trim($p[7]);
-            $application     = trim($p[8]);
-            $connectCost     = trim($p[9]);
-            $startDate       = trim($p[10]);
-            $endDate         = trim($p[11]);
+            $application     = trim($p[7]);
+            $connectCost     = trim($p[8]);
+            $startDate       = trim($p[9]);
+            $endDate         = trim($p[10]);
 
             if ($ops=="1") {
 
@@ -1701,13 +1700,11 @@ class RatingTables {
                 name,
                 destination,
                 durationRate,
-                trafficRate,
                 application,
                 connectCost,
                 startDate,
                 endDate
                 ) values (
-                '%s',
                 '%s',
                 '%s',
                 '%s',
@@ -1725,12 +1722,12 @@ class RatingTables {
                 addslashes($name),
                 addslashes($destination),
                 addslashes($durationRate),
-                addslashes($trafficRate),
                 addslashes($application),
                 addslashes($connectCost),
                 addslashes($startDate),
                 addslashes($endDate)
                 );
+
                 if (!$this->db->query($query)) {
                     $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     print $log;
@@ -1760,6 +1757,7 @@ class RatingTables {
                 addslashes($startDate),
                 addslashes($endDate)
                 );
+
                 if (!$this->db->query($query)) {
                     $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     print $log;
@@ -1799,8 +1797,7 @@ class RatingTables {
                 if ($this->db->num_rows()) {
                     $query=sprintf("update billing_rates_history set
                     durationRate    = '%s',
-                    trafficRate     = '%s',
-                    application = '%s',
+                    application     = '%s',
                     connectCost     = '%s'
                     where name      = '%s'
                     and destination = '%s'
@@ -1811,7 +1808,6 @@ class RatingTables {
                     and endDate     = '%s'
                     ",
                     addslashes($durationRate),
-                    addslashes($trafficRate),
                     addslashes($application),
                     addslashes($connectCost),
                     addslashes($name),
@@ -1843,13 +1839,11 @@ class RatingTables {
                     name,
                     destination,
                     durationRate,
-                    trafficRate,
                     application,
                     connectCost,
                     startDate,
                     endDate
                     ) values (
-                    '%s',
                     '%s',
                     '%s',
                     '%s',
@@ -1867,7 +1861,6 @@ class RatingTables {
                     addslashes($name),
                     addslashes($destination),
                     addslashes($durationRate),
-                    addslashes($trafficRate),
                     addslashes($application),
                     addslashes($connectCost),
                     addslashes($startDate),
