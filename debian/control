@@ -7,7 +7,7 @@ Standards-Version: 3.7.2
 
 Package: cdrtool
 Architecture: all
-Depends: debconf (>= 0.5), apache2 | httpd,  libapache2-mod-php5 | libapache-mod-php5 | libapache2-mod-php4 | libapache-mod-php4 , php5 | php4, php5-cli | php4-cli , php5-mysql | php4-mysql, php5-curl | php4-curl,  php-pear , php-soap, mrtg, php5-memcache | php4-memcache, memcached , monit, smarty
+Depends: debconf (>= 0.5), apache2 | httpd,  libapache2-mod-php5 | libapache-mod-php5 | libapache2-mod-php4 | libapache-mod-php4 , php5 | php4, php5-cli | php4-cli , php5-mysql | php4-mysql, php5-curl | php4-curl,  php-pear, php-soap, mrtg, monit, smarty
 Suggests:
 Description:  CDR mediation and rating engine for OpenSER
  CDRTool allows real-time mediation, rating, prepaid services and web access to Call
