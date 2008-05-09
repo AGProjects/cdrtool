@@ -1,7 +1,7 @@
 DESCRIPTION
 -----------
 
-SIP prepaid functionality is achieved by:
+Prepaid functionality is achieved by:
 
 1. An external call control module (not provided by CDRTool) that maintains
 call status and terminates calls by sending BYEs to both SIP end-points. The

@@ -1,6 +1,7 @@
 cdrtool (6.5.0) unstable; urgency=low
 
   * Removed memcache
+  * Added prepaid card generator 
   * Fixed update of rating history records from cvs files
   * Fixed pattern matching for cvs files containing rates_history
   * Update filename convention for rating csv files
