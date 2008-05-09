@@ -1844,278 +1844,6 @@ class CDRS_ser_radius extends CDRS {
         return count($this->localDomains);
     }
 
-    function import($file,$timezone) {
-        // do not use this, is not up to date anymore
-        $b=time();
-        $this->radiusAttributes=array(
-            "Acct-Status-Type"           => "",
-            "User-Name"                  => "UserName",
-            "Calling-Station-Id"         => "CallingStationId",
-            "Called-Station-Id"          => "CalledStationId",
-            "Acct-Session-Id"            => "Acct-Session-Id",
-            "NAS-IP-Address"             => "NASIPAddress",
-            "Client-IP-Address"          => "ClientIPAddress",
-            "NAS-Port-Id"                => "NASPortId",
-            "Service-Type"               => "ServiceType",
-            "ENUMtld"            => "ENUMtld",
-            "Framed-IP-Address"          => "FramedIPAddress",
-            "Acct-Unique-Session-Id"     => "AcctUniqueId",
-            "Connect-Info"               => "ConnectInfo_stop",
-            "Timestamp"                  => "Timestamp",
-            "Sip-Response-Code"          => "SIPResponseCode",
-            "Sip-Method"                 => "SipMethod",
-            "Sip-Translated-Request-URI" => "SipTranslatedRequestURI",
-            "Sip-To-Tag"                 => "SipToTag",
-            "Sip-From-Tag"               => "SipFromTag",
-            "Sip-RPId"                   => "SipRPID",
-            "Source-IP"                  => "SourceIP",
-            "Source-Port"                => "SourcePort",
-            "Canonical-URI"              => "CanonicalURI"
-            );
-
-        if (!$fp=fopen("$file","r")) {
-            print "Error: cannot open file $file\n";
-            return false;
-        } else {
-            $filesize=filesize($file);
-            print "File $file (size=$filesize) succesfully opened.\n";
-        }
-
-        $success=0;
-        $failed =0;
-
-        if ($filesize > 100000) {
-            print "Import progress: ";
-            flush();
-        }
-
-        while (!feof($fp)) {
-            $record       = $this->RadiusRecordRead($fp);
-            $radiusParsed = $this->RadiusRecordParse($record);
-            $currentFilePointer=ftell($fp);
-            if ($filesize > 100000) {
-                if ($currentFilePointer> $progress*$filesize/100) {
-                    $progress++;
-                    if ($progress%10==0) {
-                        print "$progress% ";
-                        if ($progress==100) {
-                            print "\n";
-                        }
-                    }
-                    flush();
-                }
-            }
-
-            //print_r($radiusParsed);
-            $packetType   = $radiusParsed["Acct-Status-Type"];
-            $radiusTable  = $this->table;
-            unset($query);
-
-            if ($packetType=="Start") {
-                $results[$file][$packetType]++;
-                $accounting_start_query="INSERT into $this->table (
-                RadAcctId,
-                AcctSessionId,
-                AcctUniqueId,
-                UserName,
-                Realm,
-                NASIPAddress,
-                NASPortId,
-                AcctStartTime,
-                AcctStopTime,
-                AcctSessionTime,
-                AcctInputOctets,
-                AcctOutputOctets,
-                CalledStationId,
-                CallingStationId,
-                AcctTerminateCause,
-                ServiceType,
-                ENUMtld,
-                FramedIPAddress,
-                AcctStartDelay,
-                AcctStopDelay,
-                SipResponseCode,
-                SipMethod,
-                SipTranslatedRequestURI,
-                SipToTag,
-                SipFromTag,
-                SipRPID,
-                SourceIP,
-                SourcePort,
-                CanonicalURI
-                ) values (
-                NULL,
-                '%{Acct-Session-Id}',
-                '%{Acct-Unique-Session-Id}',
-                '%{SQL-User-Name}',
-                SUBSTRING_INDEX('%{SQL-User-Name}', '@',-1),
-                '%{NAS-IP-Address}',
-                '%{NAS-Port-Id}',
-                '%S',
-                '0',
-                '0',
-                '0',
-                '0',
-                '%{Called-Station-Id}',
-                '%{Calling-Station-Id}',
-                '%{Sip-Response-Code}',
-                '%{Service-Type}',
-                '%{ENUMtld}',
-                '%{Framed-IP-Address}',
-                '%{Acct-Delay-Time}',
-                '0',
-                '%{Sip-Response-Code}',
-                '%{Sip-Method}',
-                '%{Sip-Translated-Request-URI}',
-                '%{Sip-To-Tag}',
-                '%{Sip-From-Tag}',
-                '%{Sip-RPId}',
-                '%{Source-IP}',
-                '%{Source-Port}',
-                '%{Canonical-URI}'
-                )";
-
-                $query=$accounting_start_query;
-				$query=preg_replace("/%{/","",$query);
-                $query=preg_replace("/}'/","'",$query);
-
-                $Timestamp=getLocalTime($timezone,$radiusParsed[Timestamp]);
-
-                $query=preg_replace("/'%S'/","'$Timestamp'",$query);
-                $query=preg_replace("/SQL-User-Name/","User-Name",$query);
-                foreach (array_keys($this->radiusAttributes) as $attribute) {
-                	$value=$radiusParsed[$attribute];
-                    $query=preg_replace("/'$attribute'/","'$value'",$query);
-                }
-            } else if ($packetType=="Stop") {
-                $accounting_stop_query      = "UPDATE $this->table SET AcctStopTime
-                = '%S', AcctSessionTime=unix_timestamp('%S') -
-                unix_timestamp(AcctStartTime), AcctTerminateCause =
-                '%{SIP-Response-Code}', AcctStopDelay = '%{Acct-Delay-Time}',
-                ConnectInfo_stop = '%{Connect-Info}' WHERE AcctSessionId =
-                '%{Acct-Session-Id}' AND ((SipToTag = '%{Sip-To-Tag}' AND SipFromTag
-                = '%{Sip-From-Tag}') or (SipToTag = '%{Sip-From-Tag}' AND SipFromTag
-                = '%{Sip-To-Tag}')) AND NASIPAddress = '%{NAS-IP-Address}' AND
-                AcctStopTime = '0000-00-00 00:00:00'";
-
-                $query=$accounting_stop_query;
-				$query=preg_replace("/%{/","",$query);
-                $query=preg_replace("/}'/","'",$query);
-
-                $Timestamp=getLocalTime($timezone,$radiusParsed[Timestamp]);
-
-                $query=preg_replace("/'%S'/","'$Timestamp'",$query);
-                $query=preg_replace("/SQL-User-Name/","User-Name",$query);
-                $query=preg_replace("/'SIP-Response-Code'/","SIPResponseCode",$query);
-                foreach (array_keys($this->radiusAttributes) as $attribute) {
-                	$value=$radiusParsed[$attribute];
-                    $query=preg_replace("/'$attribute'/","'$value'",$query);
-                }
-
-            } else if ($packetType=="Failed") {
-            	$accounting_failed_query    = "INSERT into $this->table (RadAcctId,
-                AcctSessionId, AcctUniqueId, UserName, Realm, NASIPAddress,
-                NASPortId, AcctStartTime, AcctStopTime, AcctSessionTime,
-                AcctInputOctets, AcctOutputOctets, CalledStationId,
-                CallingStationId, AcctTerminateCause, ServiceType, ENUMtld,
-                FramedIPAddress, AcctStartDelay, AcctStopDelay,
-                SipResponseCode, SipMethod, SipTranslatedRequestURI, SipToTag, SipFromTag,
-                SipRPID, SourceIP, SourcePort, CanonicalURI)
-                values (NULL, '%{Acct-Session-Id}', '%{Acct-Unique-Session-Id}',
-                '%{SQL-User-Name}', SUBSTRING_INDEX('%{SQL-User-Name}', '@',-1),
-                '%{NAS-IP-Address}', '%{NAS-Port}', '%S', '%S', '0', '0', '0',
-                '%{Called-Station-Id}', '%{Calling-Station-Id}',
-                '%{Sip-Response-Code}', '%{Service-Type}', '%{ENUMtld}',
-                '%{Framed-IP-Address}', '%{Acct-Delay-Time}',
-                '0','%{Sip-Response-Code}', '%{Sip-Method}',
-                '%{Sip-Translated-Request-URI}', MD5(RAND()), '%{Sip-From-Tag}',
-                '%{Sip-RPId}', '%{Source-IP}', '%{Source-Port}',
-                '%{Canonical-URI}')";
-
-                $query=$accounting_failed_query;
-				$query=preg_replace("/%{/","",$query);
-                $query=preg_replace("/}'/","'",$query);
-                $Timestamp=date("Y-m-d H:i:s",$radiusParsed[Timestamp]);
-                $query=preg_replace("/'%S'/","'$Timestamp'",$query);
-                $query=preg_replace("/SQL-User-Name/","User-Name",$query);
-                foreach (array_keys($this->radiusAttributes) as $attribute) {
-                	$value=$radiusParsed[$attribute];
-                    $query=preg_replace("/'$attribute'/","'$value'",$query);
-                }
-            }
-
-            if ($query) {
-            	$results[$file][packetTypes][$packetType]++;
-            	$AcctSessionId=$radiusParsed["Acct-Session-Id"];
-                $this->CDRdb->Halt_On_Error="no";
-                if ($this->CDRdb->query($query)) {
-                    if ($packetType=="Start" || $packetType=="Failed" ) {
-                        if ($this->CDRdb->affected_rows()) {
-                            $results[$file][database][insert]++;
-                        } else {
-                            $results[$file][database][insertExists]++;
-                        }
-                    } else if ($packetType=="Stop") {
-                        if ($this->CDRdb->affected_rows()) {
-                            $results[$file][database][update]++;
-                        } else {
-                            $results[$file][database][updateExists]++;
-                        }
-
-                    }
-                } else {
-                    $results[$file][database][errorType][$packetType]++;
-                    $results[$file][database][error]++;
-                    $results[$file][database][errors][$this->CDRdb->Errno]++;
-                 	$results[$file][database][errorDict][$this->CDRdb->Errno]=$this->CDRdb->Error;
-                }
-                
-                $results[$file][database][queries]++;
-            }
-        }
-
-        $e=time();
-        $d=$e-$b;
-
-        print "Import results (script runtime $d s)\n";
-        foreach (array_keys($results[$file][packetTypes]) as $ptype) {
-        	$howmany=$results[$file][packetTypes][$ptype];
-            print "$ptype: $howmany packets ";
-            $totalPackets=$totalPackets+$howmany;
-        }
-
-        print "\nDatabase import statistics: ";
-        if ($results[$file][database][insert]) {
-            $howmany=$results[$file][database][insert];
-            print "$howmany records inserted ";
-        }
-
-        if ($results[$file][database][update]) {
-            $howmany=$results[$file][database][update];
-            print "$howmany records updated";
-        }
-
-        if ($results[$file][database][error]) {
-            $howmany=$results[$file][database][error];
-            $queries=$results[$file][database][queries];
-            print "\n$queries queries from which $howmany queries failed\n";
-        	foreach (array_keys($results[$file][database][errors]) as $error) {
-        		$howmany=$results[$file][database][errors][$error];
-                $errorDescription=$results[$file][database][errorDict][$error];
-                print "MySQL Error $error($errorDescription): $howmany errors\n";
-            }
-            print "Error were generated by the folowing RADIUS packet types:\n";
-        	foreach (array_keys($results[$file][database][errorType]) as $errorType) {
-        		$howmany=$results[$file][database][errorType][$errorType];
-                print "$errorType packet: $howmany errors\n";
-            }
-        }
-
-        if ($d) {
-        	$importSpeed=number_format($totalPackets/$d,0,"","");
-            print "Import speed: $importSpeed packets / second\n";
-        }
-    }
 }
 
 class CDR_ser_radius extends CDR {
@@ -2570,7 +2298,7 @@ class CDR_ser_radius extends CDR {
         ";
 
 
-        if ($this->SipCodec || is_array($this->QoS)) {
+        if ($this->SipCodec) {
 			$this->SipCodec   = quoted_printable_decode($this->SipCodec);
 
             $CallInfoVerbose.= "
@@ -3396,6 +3124,7 @@ class SIP_trace {
         <tr bgcolor=lightgrey>
         <td></td>
         <td align=center><b>Id</b></td>
+        <td align=center><b>Size</b></td>
         <td align=center><b>Time</b></td>
         ";
 
@@ -3547,9 +3276,12 @@ class SIP_trace {
                 $_seen_timeline[$timeline]++;
             }
 
+            $len=strlen($msg);
+
             print "
             </td>
             <td class=bbot>$status_color$i/$this->rows&nbsp;</font></td>
+            <td class=bbot>$len bytes</td>
             <td class=bbot><nobr>$status_color$date</nobr></font>
             ";
 
