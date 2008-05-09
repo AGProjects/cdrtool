@@ -53,7 +53,6 @@ while (list($k,$v) = each($DATASOURCES)) {
         //print $log;
 
         $Quota = new $SERQuota_class($CDRS);
-        $Quota->mc_key_accounts = $k.':accounts';
         $Quota->deblockAccounts();
         $d=time()-$b;
         $log=sprintf("Runtime: %d s",$d);

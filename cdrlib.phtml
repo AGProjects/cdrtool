@@ -21,7 +21,6 @@ class CDRS {
 	var $skipNormalize       = false;
 	var $reNormalize         = false;
 	var $usageKeysForDeletionFromCache = array();
-	var $mc_key_mu_prefix    = 'mu:';
 	var $localDomains        = array();
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
@@ -448,8 +447,6 @@ class CDRS {
 	       		$this->destinations_length[$key] = max(array_map(strlen, array_keys($val)));
 	        }
         }
-
-
 
 		$c=$this->destinations_count + $this->destinations_sip_count;
         return $c;
