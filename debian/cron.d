@@ -10,7 +10,7 @@
   20 3 * * * root php /var/www/CDRTool/scripts/SER/purgeSIPTrace.php >/dev/null 
 
 # Statistics
-*/5  * * * * root php env LANG=C /var/www/CDRTool/scripts/buildStatistics.php   >/dev/null
+*/5  * * * * root env LANG=C php /var/www/CDRTool/scripts/buildStatistics.php   >/dev/null
 
 # Next two jobs are only used when using a central radacct table:
 #  0  3 1 * * root php /var/www/CDRTool/scripts/SER/rotateTables.php >/dev/null 
