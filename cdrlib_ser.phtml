@@ -2752,37 +2752,10 @@ class SIP_trace {
                 return true;
             }
         } else if ($sip_proxy) {
-        	return $this->isThorNode($ip,$sip_proxy);
+        	return isThorNode($ip,$sip_proxy);
         }
 
         return false;
-    }
-
-    function isThorNode($ip,$sip_proxy) {
-    
-        if (!$ip || !$sip_proxy) return false;
-
-        $socket = fsockopen($sip_proxy, 9500, $errno, $errstr, 1);
-
-        if (!$socket) {
-            return false;
-        }
-        
-        $request=sprintf("is_online %s as sip_proxy",$ip);
-        
-        if (fputs($socket,"$request\r\n") !== false) {
-            $ret = trim(fgets($socket,4096));
-        	fclose($socket);
-        } else {
-        	fclose($socket);
-            return false;
-        }
-
-        if ($ret == 'Yes') {
-        	return true;
-        } else {
-        	return false;
-        }
     }
 
     function getTrace ($proxyIP,$callid,$fromtag,$totag) {
@@ -3542,6 +3515,141 @@ class SIP_trace {
 
 }
 
+class Media_trace {
+    var $enableThor  = false;
+
+    function Media_trace ($cdr_source) {
+        global $DATASOURCES, $auth;
+        $this->cdr_source = $cdr_source;
+
+        $this->cdrtool  = new DB_CDRTool();
+
+		if (strlen($DATASOURCES[$this->cdr_source]['enableThor'])) {
+        	$this->enableThor = $DATASOURCES[$this->cdr_source]['enableThor'];
+        }
+
+        if ($this->enableThor) {
+    		include_once('provisioning/ngnpro_engines.inc');
+
+        	if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
+            	$this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
+			    require_once("provisioning/ngnpro_soap_library.phtml");
+
+                $this->SOAPlogin = array(
+                                       "username"    => $soapEngines[$this->soapEngineId]['username'],
+                                       "password"    => $soapEngines[$this->soapEngineId]['password'],
+                                       "admin"       => true
+                                       );
+    
+                $this->SOAPurl=$soapEngines[$this->soapEngineId]['url'];
+        
+                $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+    
+                // Instantiate the SOAP client
+                $this->soapclient = new WebService_NGNPro_SipPort($this->SOAPurl);
+    
+                $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
+                $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+                $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+    
+        	} else {
+                print "Error: soapEngineID not defined in datasource $this->cdr_source";
+                return false;
+            }
+
+        } else {
+            $this->table             = $DATASOURCES[$this->cdr_source]['table'];
+            $db_class                = $DATASOURCES[$this->cdr_source]['db_class'];
+            $this->purgeRecordsAfter = $DATASOURCES[$this->cdr_source]['purgeRecordsAfter'];
+            $this->db                = new $db_class;
+        }
+
+    }
+
+    function getTrace ($proxyIP,$callid,$fromtag,$totag) {
+
+		if ($this->enableThor) {
+			$this->seen_ip=array();
+			$this->trace=$this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag);
+
+        } else {
+
+            // get trace from SQL
+
+            $query=sprintf("select * from %s where call_id = '%s' and from_tag = '%s' order by id asc",
+            $this->table,
+            $callid,
+            $fromtag
+            );
+    
+            if (!$this->db->query($query)) {
+                printf ("<p>Error: database error %s %s",$this->db->Error,$query);
+                return false;
+            }
+    
+            if ($this->db->num_rows()) {
+            	$this->db->next_record();
+                $this->trace=$this->db->f('info');
+            }
+        }
+
+    }
+
+    function getTraceFromThor($proxyIP,$callid,$fromtag,$totag) {
+        // get trace using soap request
+		if (!$proxyIP || !$callid || !$fromtag) return false;
+
+        if (!is_object($this->soapclient)) {
+            print "Error: soap client is not defined.";
+            return false;
+        }
+
+        $filter=array('nodeIp'  => $proxyIP,
+                      'callId'  => $callid,
+                      'fromTag' => $fromtag,
+                      'toTag'   => $totag
+                      );
+
+        $this->soapclient->addHeader($this->SoapAuth);
+
+        $result     = $this->soapclient->getMediaTrace($filter);
+
+        if (PEAR::isError($result)) {
+            $error_msg   = $result->getMessage();
+            $error_fault = $result->getFault();
+            $error_code  = $result->getCode();
+
+            printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->faultstring,$error_fault->faultcode);
+            return false;
+        }
+
+        return $result;
+    }
+
+    function show($proxyIP,$callid,$fromtag,$totag) {
+
+        if ($_SERVER['HTTPS'] == "on") {
+            $protocolURL = "https://";
+        } else {
+            $protocolURL = "http://";
+        }
+
+        $this->getTrace($proxyIP,$callid,$fromtag,$totag);
+
+        print "
+        <h1>CDRTool Media Proxy trace</h1>
+        <h2>Media session $callid</h2>
+        ";
+
+        /*
+        print "<pre>";
+        print_r($this->trace);
+        print "</pre>";
+        */
+
+    }
+}
+
 class SIPonline {
 
     function SIPonline ($datasource='ser_radius',$table='location') {
@@ -3807,4 +3915,33 @@ function getImageForUserAgent($agent) {
     }
     return "unknown.png";
 }
+
+function isThorNode($ip,$sip_proxy) {
+
+    if (!$ip || !$sip_proxy) return false;
+
+    $socket = fsockopen($sip_proxy, 9500, $errno, $errstr, 1);
+
+    if (!$socket) {
+        return false;
+    }
+    
+    $request=sprintf("is_online %s as sip_proxy",$ip);
+    
+    if (fputs($socket,"$request\r\n") !== false) {
+        $ret = trim(fgets($socket,4096));
+        fclose($socket);
+    } else {
+        fclose($socket);
+        return false;
+    }
+
+    if ($ret == 'Yes') {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
 ?>

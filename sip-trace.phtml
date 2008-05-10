@@ -1,8 +1,6 @@
 <?
 include("global.inc");
 
-$verbose=1;
-
 if ($_REQUEST['public']) {
     $db = new DB_CDRTool;
     $key="callid-".trim($_REQUEST['callid']).trim($_REQUEST['fromtag']);

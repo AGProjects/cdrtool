@@ -1,0 +1,30 @@
+<?
+include("global.inc");
+
+page_open(array(
+      "sess" => "CDRTool_Session",
+      "auth" => "CDRTool_Auth",
+      "perm" => "CDRTool_Perm")
+      );
+
+$proxyIP     = $_REQUEST['proxyIP'];
+$callid      = $_REQUEST['callid'];
+$fromtag     = $_REQUEST['fromtag'];
+$totag       = $_REQUEST['totag'];
+$cdr_source  = $_REQUEST['cdr_source'];
+
+$title=sprintf("Media session %s",$callid);
+
+include("header.phtml");
+require("cdrlib.phtml");
+
+$mediaTrace = new Media_trace($cdr_source);
+$mediaTrace->show($proxyIP,$callid,$fromtag,$totag);
+
+print "
+</body>
+</html>
+";
+
+page_close();
+?>
