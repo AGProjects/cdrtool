@@ -2181,7 +2181,7 @@ class CDR_ser_radius extends CDR {
             $fromtag_enc      = urlencode($this->SipFromTag);
             $totag_enc        = urlencode($this->SipToTag);
 
-        	$this->callIdPrint="&nbsp;<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
+        	$this->callIdPrint="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
             'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">$this->callId</a> &nbsp;";
         } else {
             $this->callIdPrint=$this->callId;
@@ -2201,6 +2201,11 @@ class CDR_ser_radius extends CDR {
         	<td width=10></td>
             <td>Session: </td>
             <td>$this->callIdPrint</td>
+        </tr>
+        <tr>
+        	<td width=10></td>
+            <td>From/to tags: </td>
+            <td>$this->SipFromTag/$this->SipToTag</td>
         </tr>
         <tr>
             <td></td>
@@ -2232,7 +2237,7 @@ class CDR_ser_radius extends CDR {
         </tr>
 		<tr>
             <td></td>
-        	<td>Dialed URI:</td>
+        	<td>To (dialed URI):</td>
             <td>$this->cNumberPrint</td>
         </tr>
         ";
@@ -2265,7 +2270,7 @@ class CDR_ser_radius extends CDR {
             ";
         }
 
-        if ($this->ENUMtld) {
+        if ($this->ENUMtld && $this->ENUMtld != 'none' && $this->ENUMtld != 'N/A') {
             $CallInfoVerbose.= "
             <tr>
                 <td></td>
