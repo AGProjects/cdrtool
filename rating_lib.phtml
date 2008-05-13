@@ -5113,7 +5113,7 @@ class RatingEngine {
 
         $this->CDRS		= &$CDRS;
 		$this->db       = new DB_CDRTool;
-        $this->table    = "prepaid";
+        $this->prepaid_table    = "prepaid";
 
         $this->sessionCounter		    = 0;
         $this->beginStatisticsTime      = time();
@@ -5131,7 +5131,7 @@ class RatingEngine {
 
     function loadPrepaidAccounts($account='') {
 
-        $query=sprintf("select * from %s",$this->table);
+        $query=sprintf("select * from %s",$this->prepaid_table);
 
         if ($account) $query.= sprintf(" where account = '%s' ",addslashes($account));
 
@@ -5308,7 +5308,7 @@ class RatingEngine {
             call_lock            = '0',
             maxsessiontime       = '0'
             where account        = '%s'",
-            $this->table,
+            $this->prepaid_table,
             $balance,
             $balance,
             addslashes($account)
@@ -5317,7 +5317,7 @@ class RatingEngine {
             if ($this->db->query($query)) {
 
                 $query=sprintf("select balance from %s where account = '%s'",
-                $this->table,
+                $this->prepaid_table,
                 addslashes($account)
                 );
 
@@ -5362,7 +5362,7 @@ class RatingEngine {
             set balance   = balance + '%s',
             change_date   = NOW()
             where account = '%s'",
-            $this->table,
+            $this->prepaid_table,
             $balance,
             addslashes($account)
             );
@@ -5401,7 +5401,7 @@ class RatingEngine {
             $query=sprintf("insert into %s
             (balance, account, change_date)
             values ('%s','%s',NOW())",
-            $this->table,
+            $this->prepaid_table,
             $balance,
             addslashes($account)
             );
@@ -5452,7 +5452,7 @@ class RatingEngine {
         }
 
         $query=sprintf("delete from %s where account = '%s'",
-        $this->table,addslashes($account)
+        $this->prepaid_table,addslashes($account)
         );
 
         if (!$this->db->query($query)) {
@@ -5648,14 +5648,14 @@ class RatingEngine {
 
             if (!$NetFields['from']) {
                 $log=sprintf ("Error: Missing From parameter");
-                    syslog(LOG_NOTICE, $log);
-                return 0;
+                syslog(LOG_NOTICE, $log);
+                return "error";
             }
 
             if (!$NetFields['to']) {
                 $log=sprintf ("Error: Missing To parameter");
-                    syslog(LOG_NOTICE, $log);
-                return 0;
+                syslog(LOG_NOTICE, $log);
+                return "error";
             }
 
             if (!$NetFields['duration']) {
@@ -5767,7 +5767,7 @@ class RatingEngine {
 
 			if ($this->prepaid_lock) {
                 $query=sprintf("select * from %s where account = '%s'",
-                addslashes($this->table),
+                addslashes($this->prepaid_table),
                 addslashes($CDR->BillingPartyId)
                 );
     
@@ -5775,7 +5775,7 @@ class RatingEngine {
                     $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     syslog(LOG_NOTICE,$log);
                 	$this->logRuntime();
-                    return "none";
+                    return "error";
                 }
     
                 if ($this->db->num_rows()) {
@@ -5812,117 +5812,112 @@ class RatingEngine {
             		$log = sprintf ("Error: cannot figure out the destination id for $CDR->CanonicalURI");
                 	$this->logRuntime();
                 	syslog(LOG_NOTICE, $log);
-                	return "0";
+                	return "error";
             	}
             }
 
-            if ($Balance) {
-                $maxduration=0;
-                // Build Rate dictionary containing normalized CDR fields plus customer Balance
-                $RateDictionary=array(
-                                      'duration'        => $CDR->duration,
-                                      'callId'          => $CDR->callId,
-                                      'Balance'         => $Balance,
-                                      'timestamp'       => $CDR->timestamp,
-                                      'DestinationId'   => $CDR->DestinationId,
-                                      'domain'          => $CDR->domain,
-                                      'BillingPartyId'  => $CDR->BillingPartyId,
-                                      'ENUMtld'         => $CDR->ENUMtld,
-                                      'RatingTables'    => &$this->CDRS->RatingTables
-                                      );
+            $maxduration=0;
+            // Build Rate dictionary containing normalized CDR fields plus customer Balance
+            $RateDictionary=array(
+                                  'duration'        => $CDR->duration,
+                                  'callId'          => $CDR->callId,
+                                  'Balance'         => $Balance,
+                                  'timestamp'       => $CDR->timestamp,
+                                  'DestinationId'   => $CDR->DestinationId,
+                                  'domain'          => $CDR->domain,
+                                  'BillingPartyId'  => $CDR->BillingPartyId,
+                                  'ENUMtld'         => $CDR->ENUMtld,
+                                  'RatingTables'    => &$this->CDRS->RatingTables
+                                  );
 
-                $Rate    = new Rate($this->settings, $this->db);
+            $Rate    = new Rate($this->settings, $this->db);
 
-	        	$this->runtime['instantiate_rate']=microtime_float();
+            $this->runtime['instantiate_rate']=microtime_float();
 
-                $maxduration = round($Rate->MaxSessionTime($RateDictionary));
+            $maxduration = round($Rate->MaxSessionTime($RateDictionary));
 
-                $this->runtime['calculate_maxduration']=microtime_float();
+            $this->runtime['calculate_maxduration']=microtime_float();
 
-                if ($maxduration<0) {
-               		$log = sprintf ("Error: maxduration is negative ($maxduration)");
-                	syslog(LOG_NOTICE, $log);
-                	return 0;
-                }
-
-                if (!$Rate->billingTimezone) {
-               		$log = sprintf ("Error: cannot figure out the billing timezone");
-                	syslog(LOG_NOTICE, $log);
-                	return 0;
-                }
-
-                if (!$Rate->startTimeBilling) {
-               		$log = sprintf ("Error: cannot figure out the billing start time");
-                	syslog(LOG_NOTICE, $log);
-                	return 0;
-                }
-
-                $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Balance=%s MaxSessionTime=%s Spans=%d",
-                $NetFields['callid'],
-                $CDR->BillingPartyId,
-                $CDR->DestinationId,
-                $RateDictionary['Balance'],
-                $maxduration,
-                $Rate->MaxSessionTimeSpans
-                );
-
+            if ($maxduration < 0) {
+                $log = sprintf ("Error: maxduration is negative ($maxduration)");
                 syslog(LOG_NOTICE, $log);
+                return "error";
+            }
 
-				if ($NetFields['lock'] && $this->prepaid_lock && $maxduration > 0) {
+            if (!$Rate->billingTimezone) {
+                $log = sprintf ("Error: cannot figure out the billing timezone");
+                syslog(LOG_NOTICE, $log);
+                return "error";
+            }
 
-                	// mark the account that is locked during call
-                    $query=sprintf("update %s
-                    set
-                    call_in_progress = NOW(),
-                    call_lock      = '%s',
-                    destination    = '%s',
-                    maxsessiontime = '%s'
-                    where account  = '%s'",
-                    addslashes($this->table),
-                    addslashes($this->prepaid_lock),
-                    addslashes($CDR->destinationPrint),
-                    addslashes($maxduration),
-                    addslashes($CDR->BillingPartyId));
+            if (!$Rate->startTimeBilling) {
+                $log = sprintf ("Error: cannot figure out the billing start time");
+                syslog(LOG_NOTICE, $log);
+                return "error";
+            }
 
-                    if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                        syslog(LOG_NOTICE,$log);
-                        return 0;
-                    }
+            $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Balance=%s MaxSessionTime=%s Spans=%d",
+            $NetFields['callid'],
+            $CDR->BillingPartyId,
+            $CDR->DestinationId,
+            $RateDictionary['Balance'],
+            $maxduration,
+            $Rate->MaxSessionTimeSpans
+            );
 
-                    if (!$this->db->affected_rows()) {
-                        $log=sprintf ("$CDR->BillingPartyId is already locked");
-                        syslog(LOG_NOTICE, $log);
-                    }
+            syslog(LOG_NOTICE, $log);
+
+            if ($NetFields['lock'] && $this->prepaid_lock && $maxduration > 0) {
+
+                // mark the account that is locked during call
+                $query=sprintf("update %s
+                set
+                call_in_progress = NOW(),
+                call_lock      = '%s',
+                destination    = '%s',
+                maxsessiontime = '%s'
+                where account  = '%s'",
+                addslashes($this->prepaid_table),
+                addslashes($this->prepaid_lock),
+                addslashes($CDR->destinationPrint),
+                addslashes($maxduration),
+                addslashes($CDR->BillingPartyId));
+
+                if (!$this->db->query($query)) {
+                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    syslog(LOG_NOTICE,$log);
+                    return "error";
                 }
 
-                $this->runtime['update_prepaid']=microtime_float();
-
-                $this->logRuntime();
-                return $maxduration;
-
-            } else {
-
-                $this->logRuntime();
-                return 0;
+                if (!$this->db->affected_rows()) {
+                    $log=sprintf ("$CDR->BillingPartyId is already locked");
+                    syslog(LOG_NOTICE, $log);
+                }
             }
+
+            $this->runtime['update_prepaid']=microtime_float();
+
+            $this->logRuntime();
+
+            return $maxduration;
+
         } else if ($NetFields['action'] == "debitbalance") {
 
             if (!$NetFields['from']) {
                 $log=sprintf ("Error: Missing From parameter");
-                    syslog(LOG_NOTICE, $log);
+                syslog(LOG_NOTICE, $log);
                 return "Failed";
             }
 
             if (!$NetFields['to']) {
                 $log=sprintf ("Error: Missing To parameter");
-                    syslog(LOG_NOTICE, $log);
+                syslog(LOG_NOTICE, $log);
                 return "Failed";
             }
 
             if (!strlen($NetFields['duration'])) {
                 $log=sprintf ("Error: Missing Duration parameter");
-                    syslog(LOG_NOTICE, $log);
+                syslog(LOG_NOTICE, $log);
                 return "Failed";
             }
 
