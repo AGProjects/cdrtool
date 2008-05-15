@@ -221,7 +221,6 @@ $DATASOURCES=array(
                     "UserQuotaClass"     => "SERQuota",
                     "UserQuotaNotify"    => "0",	// send e-mail notifications when quota is exceeded
                     "soapEngineId"       => '',
-                    "EnableNetworkRating"=> "1",
                     "domainTranslation"  => array(
                                                   "gw02.domain.com"      => "pstn.domain.com" // translate Realm
                                                   ),

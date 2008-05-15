@@ -9,7 +9,6 @@ class CDRS {
     var $CDR_class           = 'CDR';
     var $intAccessCode       = '00';
     var $natAccessCode       = '0';
-    var $RatingEngineSocket  = false;
     var $maxrowsperpage      = 15;
     var $status              = array();
     var $normalizedField     = 'Normalized';
@@ -886,21 +885,6 @@ class CDRS {
         if ($this->status['cdr_to_normalize'] > 0) {
 
         	if ($this->ratingEnabled) {
-                // The rating table will be used in each instance of
-                // CDR structure but we load the rating related data once
-				if ($this->DATASOURCES[$this->cdr_source]['EnableNetworkRating'] && $this->rating_settings['socketIP'] && $this->rating_settings['socketPort'] ) {
-
-        			$fp = fsockopen ($this->rating_settings['socketIP'], $this->rating_settings['socketPort'], $errno, $errstr, 2);
-                    if ($fp) {
-                        $this->RatingEngineSocket = $fp;
-                    } else {
-                    	$target=$this->rating_settings['socketIP'].":".$this->rating_settings['socketPort'];
-                        print "<p>";
-                        print "<font color=red>Cannot connect to rating engine $target: $errstr ($errno). </font>";
-                        syslog(LOG_NOTICE, "Error: Cannot connect to rating engine $errstr ($errno)");
-                    }
-                }
-
                 // Load rating tables
                 $this->RatingTables = new RatingTables();
                 $this->RatingTables->LoadRatingTables();
@@ -959,9 +943,6 @@ class CDRS {
             $log=sprintf("Normalization done in %d s, memory usage: %0.2f MB",$d,memory_get_usage()/1024/1024);
             syslog(LOG_NOTICE,$log );
     
-            if ($this->RatingEngineSocket) {
-                fclose($this->RatingEngineSocket);
-            }
         }
 
         if (count($this->usageKeysForDeletionFromCache)) {
@@ -1925,45 +1906,6 @@ class CDR {
             }
 
             if ($this->CDRS->ratingEnabled && $this->duration) {
-
-                /*
-                # since we changed the lookup of the rating entries directly to mysql query
-                # it seems that is faster not to go over the network
-
-                if ($this->CDRS->RatingEngineSocket && $this->NetworkRateDictionary) {
-
-                    // get pricing from network rating engine
-					$this->lookupRateFromNetwork(&$this->NetworkRateDictionary,&$this->CDRS->RatingEngineSocket);
-
-                } else {
-                    $Rate    = new Rate($this->CDRS->rating_settings, $this->cdrtool);
-
-                    $RateDictionary=array(
-                                          'callId'          => $this->callId,
-                                          'timestamp'       => $this->timestamp,
-                                          'duration'        => $this->duration,
-                                          'DestinationId'   => $this->DestinationId,
-                                          'inputTraffic'    => $this->inputTraffic,
-                                          'outputTraffic'   => $this->outputTraffic,
-                                          'BillingPartyId'  => $this->BillingPartyId,
-                                          'domain'          => $this->domain,
-                                          'gateway'         => $this->gateway,
-                                          'RatingTables'    => &$this->CDRS->RatingTables,
-                                          'applicationType' => $this->applicationType,
-                                          'aNumber'         => $this->aNumber,
-                                          'cNumber'         => $this->cNumber,
-                                          'ENUMtld'         => $this->ENUMtld
-                                          );
-
-                    $Rate->calculate(&$RateDictionary);
-    
-                    $this->pricePrint = $Rate->pricePrint;
-                    $this->price      = $Rate->price;
-                    $this->rateInfo   = $Rate->rateInfo;
-                }
-                */
-
-				//print_r($this->CDRS->cdrtool);
 
   		        $Rate    = new Rate($this->CDRS->rating_settings, $this->CDRS->cdrtool);
 

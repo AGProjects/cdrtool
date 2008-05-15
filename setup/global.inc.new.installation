@@ -153,7 +153,6 @@ $DATASOURCES=array(
                     "normalizedField"    => "Normalized",
                     "UserQuotaClass"     => "SERQuota",
                     "UserQuotaNotify"    => "1",
-                    "EnableNetworkRating"=> "1",
                     "purgeCDRsAfter"     => 120, // how many days to keep the CDRs
                     "SIPProxies"         =>array("11.123.28.150"=>"node01",  // friendly names in sip trace table
                                                  "13.49.725.105"=>"node02",

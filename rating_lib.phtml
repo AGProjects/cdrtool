@@ -468,8 +468,6 @@ class Rate {
             }
         }
 
-
-
         // get rate for the time of the day
         $timestampNextProfile	= $this->timestampBilling + $durationRatedAlready;
         $profileValues			= $this->RatingTables->profiles[$this->profileName];
@@ -894,12 +892,7 @@ class RatingTables {
                             'fromRate',
                             'toRate');
 
-	var $skipReloadForTables = array('billing_rates',
-                                     'prepaid_cards',
-                                     'billing_customers',
-                                     'quota_usage',
-                                     'prepaid'
-                                     );
+	var $requireReload  = array('destinations');
 
     function RatingTables ($readonly=false) {
         global $CDRTool;
@@ -3070,7 +3063,7 @@ class RatingTables {
                             }
                         }
 
-                        if (!in_array($table,$this->skipReloadForTables)) {
+                        if (in_array($table,$this->requireReload)) {
                             if (!$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'")){
                                 printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
                             }
@@ -3198,7 +3191,7 @@ class RatingTables {
                                 }
                             }
 
-                        	if (!in_array($table,$this->skipReloadForTables)) {
+	                        if (in_array($table,$this->requireReload)) {
                             	$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
                             }
                         }
@@ -3285,7 +3278,7 @@ class RatingTables {
                                 }
                             }
 
-                        	if (!in_array($table,$this->skipReloadForTables)) {
+	                        if (in_array($table,$this->requireReload)) {
                             	$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
                             }
                         }
@@ -3398,7 +3391,7 @@ class RatingTables {
                                 }
                             }
 
-                        	if (!in_array($table,$this->skipReloadForTables)) {
+	                        if (in_array($table,$this->requireReload)) {
                             	$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
                             }
                         }
@@ -3496,8 +3489,8 @@ class RatingTables {
                         dprint($query);
                         if ($this->db->query($query)) {
                             $affected_rows=$this->db->affected_rows();
-                            if ($affected_rows && !in_array($table,$this->skipReloadForTables)) {
-        
+                            if ($affected_rows && in_array($table,$this->requireReload)) {
+
                                 $this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
                                 $this->db->query("select LAST_INSERT_ID() as lid");
                                 $this->db->next_record();
@@ -3520,7 +3513,8 @@ class RatingTables {
                     dprint($query);
                     if ($this->db->query($query)) {
                         $affected_rows=$this->db->affected_rows();
-                        if ($affected_rows && !in_array($table,$this->skipReloadForTables)) {
+                        if ($affected_rows && in_array($table,$this->requireReload)) {
+                        
                             $this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
                         }
                         $log_entity=sprintf("id=%s",$id);
@@ -5121,18 +5115,6 @@ class RatingEngine {
     }
 
     function reloadRatingTables () {
-        $b=time();
-
-        $i=$this->CDRS->LoadDestinations();
-        syslog(LOG_NOTICE, "Loaded $i destinations");
-
-        $i=$this->CDRS->LoadENUMtlds();
-        syslog(LOG_NOTICE, "Loaded $i ENUMtlds");
-
-        $this->CDRS->RatingTables->LoadRatingTables();
-
-        $e=time();
-        $d=$e-$b;
 
         $query="delete from memcache where `key` in ('destinations','destinations_sip','ENUMtlds')";
 
