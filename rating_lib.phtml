@@ -3052,15 +3052,6 @@ class RatingTables {
                                 $this->db->query($log_query);
                             }
         
-                            if (!reloadPrepaidAccounts($account)) {
-                                // we failed to reload the prepaid account in real time so we mark the database for
-                                // reload at a later time
-                                if (!$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'")){
-                                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                                    print $log;
-                                    syslog(LOG_NOTICE, $log);
-                                }
-                            }
                         } else if ($table=='billing_rates') {
                             if ($this->settings['split_rating_table']) {
                                 foreach ($rate_tables_affected as $extra_rate_table) {
@@ -5129,46 +5120,6 @@ class RatingEngine {
 
     }
 
-    function loadPrepaidAccounts($account='') {
-
-        $query=sprintf("select * from %s",$this->prepaid_table);
-
-        if ($account) $query.= sprintf(" where account = '%s' ",addslashes($account));
-
-        if (!$this->db->query($query)) {
-            $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
-            print $log;
-            syslog(LOG_NOTICE,$log);
-            return 0;
-        }
-
-        if ($account) {
-        	if ($this->db->num_rows()) {
-        		$this->db->next_record();
-            	$this->balance[$this->db->f('account')] = $this->db->f('balance');
-        		$log=sprintf("Loaded prepaid account %s with balance %s",$this->db->f('account'),$this->db->f('balance'));
-      			syslog(LOG_NOTICE, $log);
-                return 1;
-            } else {
-        		$log=sprintf("Error: Prepaid account %s does not exist",$account);
-      			syslog(LOG_NOTICE, $log);
-                return 0;
-            }
-        } else {
-        	while($this->db->next_record()) {
-            	$_balance[$this->db->f('account')] = $this->db->f('balance');
-            }
-            if (is_array($_balance)) {
-            	$this->balance=$_balance;
-            } else {
-        		$this->balance=array();
-            }
-        	$log=sprintf("Loaded %d prepaid accounts",count($this->balance));
-      		syslog(LOG_NOTICE, $log);
-            return 1;
-        }
-    }
-
     function reloadRatingTables () {
         $b=time();
 
@@ -5179,7 +5130,6 @@ class RatingEngine {
         syslog(LOG_NOTICE, "Loaded $i ENUMtlds");
 
         $this->CDRS->RatingTables->LoadRatingTables();
-        $this->loadPrepaidAccounts();
 
         $e=time();
         $d=$e-$b;
@@ -5233,23 +5183,6 @@ class RatingEngine {
         return 1;
     }
 
-    function reloadPrepaidAccounts($account='') {
-        return $this->loadPrepaidAccounts($account);
-    }
-
-    function showPrepaidAccounts($filter) {
-        foreach (array_keys($this->balance) as $key) {
-            if (strlen($filter)) {
-                if (preg_match("/$filter/",$key)) {
-            		$accounts=$accounts.sprintf("Account=%-35s Balance=%8.4f",$key,$this->balance[$key])."\n";
-                }
-            } else {
-            	$accounts=$accounts.sprintf("Account=%-35s Balance=%8.4f",$key,$this->balance[$key])."\n";
-            }
-        }
-        return $accounts;
-    }
-
     function getBalanceHistory($account,$limit=50) {
 
         list($username,$domain)=explode("@",$account);
@@ -5298,42 +5231,46 @@ class RatingEngine {
             return 0;
         }
 
-        if ($this->balance[$account]) {
+        $query=sprintf("select * from %s where account = '%s'",
+        addslashes($this->prepaid_table),
+        addslashes($account)
+        );
 
-            $query=sprintf("update %s
-            set balance          = balance - '%s',
-            change_date          = NOW(),
-            last_call_price      = '%s',
-            call_in_progress     = '0000-00-00 00:00:00',
-            call_lock            = '0',
-            maxsessiontime       = '0'
-            where account        = '%s'",
-            $this->prepaid_table,
-            $balance,
-            $balance,
-            addslashes($account)
-            );
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE,$log);
+            $this->logRuntime();
+            return 0;
+        }
 
-            if ($this->db->query($query)) {
+        if (!$this->db->num_rows()) {
+            $log=sprintf ("DebitBalance() error: account $account does not exist");
+            syslog(LOG_NOTICE, $log);
+            $this->logRuntime();
+            return 0;
+        }
 
-                $query=sprintf("select balance from %s where account = '%s'",
-                $this->prepaid_table,
-                addslashes($account)
-                );
+        $query=sprintf("update %s
+        set balance          = balance - '%s',
+        change_date          = NOW(),
+        last_call_price      = '%s',
+        call_in_progress     = '0000-00-00 00:00:00',
+        call_lock            = '0',
+        maxsessiontime       = '0'
+        where account        = '%s'",
+        $this->prepaid_table,
+        $balance,
+        $balance,
+        addslashes($account)
+        );
 
-        		$this->db->query($query);
-                $this->db->next_record();
-                $this->balance[$account]=$this->db->f('balance');
-                return 1;
-            } else {
-                $log=sprintf ("DebitBalance() error: %s (%s)",$this->db->Error,$this->db->Errno);
-                syslog(LOG_NOTICE, $log);
-        		return 0;
-            }
+        if ($this->db->query($query)) {
 
+            return 1;
         } else {
-            syslog(LOG_NOTICE, "DebitBalance() error: Account $account does not exist");
-            return "none";
+            $log=sprintf ("DebitBalance() error: %s (%s)",$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE, $log);
+            return 0;
         }
     }
 
@@ -5357,7 +5294,21 @@ class RatingEngine {
 
   	    list($prepaidUser,$prepaidDomain)=explode("@",$account);
 
-        if (strlen($this->balance[$account])) {
+        $query=sprintf("select * from %s where account = '%s'",
+        addslashes($this->prepaid_table),
+        addslashes($account)
+        );
+
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE,$log);
+            $this->logRuntime();
+            return 0;
+        }
+
+        if ($this->db->num_rows()) {
+            $this->db->next_record();
+        	$current_balance = $this->db->f('balance');
             $query=sprintf("update %s
             set balance   = balance + '%s',
             change_date   = NOW()
@@ -5370,7 +5321,8 @@ class RatingEngine {
             $this->db->query($query);
 
             if ($this->db->affected_rows()) {
-            	$this->balance[$account]=$this->balance[$account]+$balance;
+                $new_balance = $current_balance + $balance;
+
                 $log=sprintf ("Prepaid account $account credited with $balance");
                 syslog(LOG_NOTICE, $log);
 
@@ -5382,7 +5334,7 @@ class RatingEngine {
                 addslashes($prepaidUser),
                 addslashes($prepaidDomain),
                 $balance,
-                $this->balance[$account]
+                $new_balance
                 );
 
                 if (!$this->db->query($query)) {
@@ -5392,15 +5344,13 @@ class RatingEngine {
 
                 return 1;
             } else {
-                $log=sprintf ("CreditBalance() error: failed to debit balance: %s (%s)",$this->db->Error,$this->db->Errno);
+                $log=sprintf ("CreditBalance() error: failed to credit balance: %s (%s)",$this->db->Error,$this->db->Errno);
                 syslog(LOG_NOTICE, $log);
         		return 0;
             }
 
         } else {
-            $query=sprintf("insert into %s
-            (balance, account, change_date)
-            values ('%s','%s',NOW())",
+            $query=sprintf("insert into %s (balance, account, change_date) values ('%s','%s',NOW())",
             $this->prepaid_table,
             $balance,
             addslashes($account)
@@ -5409,7 +5359,7 @@ class RatingEngine {
             $this->db->query($query);
 
             if ($this->db->affected_rows()) {
-            	$this->balance[$account]=$this->balance[$account]+$balance;
+
                 $log=sprintf ("Added prepaid account $account with balance=$balance");
                 syslog(LOG_NOTICE, $log);
 
@@ -5436,6 +5386,7 @@ class RatingEngine {
                 return 0;
             }
         }
+
     }
 
     function DeleteBalance($account) {
@@ -5460,8 +5411,6 @@ class RatingEngine {
             syslog(LOG_NOTICE, $log);
             return 0;
         }
-
-        unset($this->balance[$account]);
 
         $log=sprintf ("Prepaid account %s has been deleted",$account);
         syslog(LOG_NOTICE, $log);
@@ -5563,8 +5512,6 @@ class RatingEngine {
         "DeleteBalance         From=123@example.com\n".
         "DeleteBalanceHistory  From=123@example.com\n".
         "DebitBalance          From=sip:123@example.com To=sip:0031650222333@example.com Duration=59\n".
-        "ShowPrepaidAccounts   Filter=123@example.com\n".
-        "ReloadPrepaidAccounts Account=abc@example.com\n".
         "ReloadQuota           Account=abc@example.com\n".
         "GetEntityProfiles     Entity=abc@example.com\n".
         "ReloadRatingTables\n".
@@ -5757,48 +5704,44 @@ class RatingEngine {
 
 	        $this->runtime['normalize_cdr']=microtime_float();
 
-            $Balance=$this->balance[$CDR->BillingPartyId];
-            $c=count($this->balance);
+            $query=sprintf("select * from %s where account = '%s'",
+            addslashes($this->prepaid_table),
+            addslashes($CDR->BillingPartyId)
+            );
 
-            if (!$Balance) {
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                syslog(LOG_NOTICE,$log);
+                $this->logRuntime();
+                return "error";
+            }
+
+            if (!$this->db->num_rows()) {
+                $log=sprintf ("No rows found");
+                syslog(LOG_NOTICE,$log);
             	$this->logRuntime();
                 return "none";
             }
 
-			if ($this->prepaid_lock) {
-                $query=sprintf("select * from %s where account = '%s'",
-                addslashes($this->prepaid_table),
-                addslashes($CDR->BillingPartyId)
-                );
-    
-                if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                    syslog(LOG_NOTICE,$log);
-                	$this->logRuntime();
-                    return "error";
-                }
-    
-                if ($this->db->num_rows()) {
-                    $this->db->next_record();
-                    if ($this->db->f('call_lock') == "1") {
-                        $_cip=$this->db->f('call_in_progress');
-                        $log = sprintf ("Account locked, call in progres since $_cip");
-                        syslog(LOG_NOTICE, $log);
-                		$this->logRuntime();
+            $this->db->next_record();
 
-                        return "locked";
-                    }
-                }
+            $Balance = $this->db->f('balance');
+
+            if (!$Balance) {
+                $log=sprintf ("No balance found");
+                syslog(LOG_NOTICE,$log);
+            	$this->logRuntime();
+                return "none";
+            }
+
+			if ($this->prepaid_lock && $this->db->f('call_lock') == "1") {
+                $log = sprintf ("Account locked, call in progres since %s",$this->db->f('call_in_progress'));
+                syslog(LOG_NOTICE, $log);
+                $this->logRuntime();
+                return "locked";
             }
 
 	        $this->runtime['check_lock']=microtime_float();
-
-            if (!strlen($this->balance[$CDR->BillingPartyId])) {
-                $log = sprintf ("Prepaid $CDR->BillingPartyId does not exist");
-                syslog(LOG_NOTICE, $log);
-                $this->logRuntime();
-                return "none";
-            }
 
             if (!preg_match("/^0/",$CDR->CanonicalURINormalized)) {
                	/*
@@ -5937,10 +5880,6 @@ class RatingEngine {
 
 	        $this->runtime['normalize_cdr']=microtime_float();
 
-			if (!is_array($this->balance) || !array_key_exists($CDR->BillingPartyId,$this->balance)) {
-                return "Not Prepaid";
-            }
-
             // Build Rate dictionary containing normalized CDR fields plus customer Balance
             $RateDictionary=array(
                                   'callId'          => $NetFields['callid'],
@@ -5966,15 +5905,13 @@ class RatingEngine {
             $this->runtime['debit_balance']=microtime_float();
 
 			if ($CDR->duration) {
-            	$oldBalance=$this->balance[$CDR->BillingPartyId];
 
-                $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Duration=%s Price=%s Balance=%s",
+                $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Duration=%s Price=%s",
                 $NetFields['callid'],
                 $CDR->BillingPartyId,
                 $CDR->DestinationId,
                 $CDR->duration,
-                $Rate->price,
-                $this->balance[$CDR->BillingPartyId]
+                $Rate->price
                 );
 
                 syslog(LOG_NOTICE, $log);
@@ -5992,7 +5929,7 @@ class RatingEngine {
 				return $RateReturn;
 
             } else {
-                return "Failed";
+                return "error";
             }
 
         } else if ($NetFields['action'] == "addbalance") {
@@ -6009,23 +5946,8 @@ class RatingEngine {
                 return 0;
             }
 
-            $log=sprintf ("Account         : %s",$NetFields['from']);
-                syslog(LOG_NOTICE, $log);
-            $log=sprintf ("Balance         : %s",$this->balance[$NetFields['from']]);
-                syslog(LOG_NOTICE, $log);
+            return $this->CreditBalance($NetFields['from'],$NetFields['value']);
 
-            $result = $this->CreditBalance($NetFields['from'],$NetFields['value']);
-
-            if (intval($NetFields['value']) != 0) {
-            	$log=sprintf ("New Balance     : %s",$this->balance[$NetFields['from']]);
-                syslog(LOG_NOTICE, $log);
-            }
-
-            if ($result) {
-                return $result;
-            } else {
-                return 0;
-            }
 
         } else if ($NetFields['action'] == "deletebalance") {
 
@@ -6113,16 +6035,28 @@ class RatingEngine {
         } else if ($NetFields['action'] == "getbalance") {
             if (!$NetFields['from']) {
                 $log=sprintf ("Error: Missing From parameter");
-                    syslog(LOG_NOTICE, $log);
+                syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
-			if (!$this->balance[$NetFields['from']]) {
-                $balance=sprintf("%0.4f",0);
-            } else {
-            	$balance=number_format($this->balance[$NetFields['from']],4,".","");
+            $query=sprintf("select * from %s where account = '%s'",
+            addslashes($this->prepaid_table),
+            addslashes($NetFields['from'])
+            );
+    
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                syslog(LOG_NOTICE,$log);
+                $this->logRuntime();
+                return 0;
             }
-            return $balance;
+    
+            if ($this->db->num_rows()) {
+                $this->db->next_record();
+            	return number_format($this->db->f('balance'),4,".","");
+            } else {
+                return sprintf("%0.4f",0);
+            }
 
         } else if ($NetFields['action'] == "getbalancehistory") {
             if (!$NetFields['from']) {
@@ -6143,8 +6077,6 @@ class RatingEngine {
             $entity=$this->GetEntityProfiles($NetFields['entity']);
             return trim($entity);
 
-        } else if ($NetFields['action'] == "showprepaidaccounts") {
-            return trim($this->showPrepaidAccounts($NetFields['filter']));
         } else if ($NetFields['action'] == "showprofiles") {
             return trim($this->CDRS->RatingTables->showProfiles());
         } else if ($NetFields['action'] == "showenumtlds") {
@@ -6174,14 +6106,11 @@ class RatingEngine {
                                       'type'=>$NetFields['type']);
             }
             return $this->reloadCustomers($_customerFilter);
-        } else if ($NetFields['action'] == "reloadprepaidaccounts") {
-            return $this->reloadPrepaidAccounts($NetFields['account']);
         } else if ($NetFields['action'] == "showmemory") {
-            $return = sprintf ("%s destinations\n%s profiles\n%s holidays\n%s prepaid accounts\n%s sessions\n%s sessions last minute\n%s sessions last hour\n%s sessions last day",
+            $return = sprintf ("%s destinations\n%s profiles\n%s holidays\n%s sessions\n%s sessions last minute\n%s sessions last hour\n%s sessions last day",
             $this->CDRS->destinationsCount,
             count($this->CDRS->RatingTables->profiles),
             count($this->CDRS->RatingTables->holidays),
-            count($this->balance),
             count($this->sessionCounter),
             count($this->lastMinuteSessionCounter),
             count($this->lastHourSessionCounter),
@@ -6204,21 +6133,6 @@ function reloadRatingEngineTables () {
     if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] &&
         $fp = fsockopen ($RatingEngine['socketIP'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
         fputs($fp, "ReloadRatingTables\n");
-        fclose($fp);
-        return true;
-    }
-    return false;
-}
-
-function reloadPrepaidAccounts($account='') {
-    global $RatingEngine;
-    if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] &&
-        $fp = fsockopen ($RatingEngine['socketIP'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
-        $account=trim($account);
-        $cmd="ReloadPrepaidAccounts";
-        if ($account) $cmd .= sprintf(" Account=%s",$account);
-        $cmd.="\n";
-        fputs($fp,$cmd);
         fclose($fp);
         return true;
     }

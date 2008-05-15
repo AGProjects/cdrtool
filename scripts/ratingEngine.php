@@ -97,7 +97,6 @@ $CDRS->RatingTables->LoadRatingTables();
 
 // Init RatingEngine engine
 $RatingEngineServer = new RatingEngine($CDRS);
-$RatingEngineServer->loadPrepaidAccounts();
 
 $d=time()-$b;
 
