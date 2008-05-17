@@ -542,6 +542,7 @@ class SoapEngine {
 
         $this->soapclient->addHeader($this->SoapAuth);
         $result = call_user_func_array(array(&$this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
+
         if (PEAR::isError($result)) {
             $this->error_msg   = $result->getMessage();
             $this->error_fault = $result->getFault();
@@ -8402,7 +8403,7 @@ class Customers extends Records {
 
 				$this->SoapEngineCustomerRemote->addHeader($this->SoapAuthCustomerRemote);
         		$result     = $this->SoapEngineCustomerRemote->updateAccount($customer);
-        		
+
                 if (PEAR::isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();

@@ -5699,8 +5699,6 @@ class RatingEngine {
             }
 
             if (!$this->db->num_rows()) {
-                $log=sprintf ("No rows found");
-                syslog(LOG_NOTICE,$log);
             	$this->logRuntime();
                 return "none";
             }
