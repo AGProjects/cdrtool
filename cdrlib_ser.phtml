@@ -2181,8 +2181,8 @@ class CDR_ser_radius extends CDR {
             $fromtag_enc      = urlencode($this->SipFromTag);
             $totag_enc        = urlencode($this->SipToTag);
 
-        	$this->callIdPrint="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
-            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">$this->callId</a> &nbsp;";
+        	$this->traceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
+            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">Click here to see the SIP trace for this call</a> &nbsp;";
         } else {
             $this->callIdPrint=$this->callId;
         }
@@ -2196,11 +2196,29 @@ class CDR_ser_radius extends CDR {
             <td colspan=3><b>Signalling information</b></td>
         </tr>
         ";
+
+        $CallInfoVerbose.= sprintf("
+        <tr>
+        	<td width=10></td>
+            <td colspan=2><a href=%s&call_id=%s>Click here to show only this call id</a></td>
+        </tr>
+        ",
+        $this->CDRS->url_run,
+        urlencode($this->callId)
+        );
+
+        $CallInfoVerbose.= sprintf("
+        <tr>
+        	<td width=10></td>
+            <td colspan=2>%s</td>
+        </tr>
+        ", $this->traceLink);
+
         $CallInfoVerbose.= "
         <tr>
         	<td width=10></td>
-            <td>Session: </td>
-            <td>$this->callIdPrint</td>
+            <td>Call id: </td>
+            <td>$this->callId</td>
         </tr>
         <tr>
         	<td width=10></td>
@@ -2234,6 +2252,11 @@ class CDR_ser_radius extends CDR {
             <td></td>
         	<td>From:</td>
             <td>$this->aNumberPrint</td>
+        </tr>
+		<tr>
+            <td></td>
+        	<td>Domain:</td>
+            <td>$this->domain</td>
         </tr>
 		<tr>
             <td></td>

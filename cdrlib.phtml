@@ -1815,7 +1815,7 @@ class CDR {
 
         if (!$table) $table = $this->CDRS->table;
 
-        if ($this->CDRS->CSCODE && $CarrierInfo = $this->CDRS->CDRTool['normalize'][CS_CODES][$this->CDRS->CSCODE]) {
+        if ($this->CDRS->CSCODE && $CarrierInfo = $this->CDRS->CDRTool['normalize']['CS_CODES'][$this->CDRS->CSCODE]) {
             // We found a carrier so we set the BillingId
             $this->BillingId          = $CarrierInfo[BillingPartyId];
         }
@@ -1828,7 +1828,7 @@ class CDR {
             $query  ="";
             $query1 ="";
             $query2 ="";
-            
+
             if ($this->CDRS->normalizedField) {
                 $Field=$this->CDRS->normalizedField;
                 if ($updatedFields) $query .= ", ";
