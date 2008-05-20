@@ -1198,7 +1198,7 @@ class RatingTables {
                                                  "readonly"=>1,
                                                  "exceptions" =>array("change_date","traffic"),
 
-                                                 "fields"=>array("datasource"=>array("size"=>12,
+                                                 "fields"=>array("datasource"=>array("size"=>15,
                                                                                "readonly"=>1
                                                                                 ),
                                                                  "account"=>array("size"=>30,
@@ -2969,14 +2969,11 @@ class RatingTables {
         
                 $where = " id = '".$id."' and $whereDomainFilter";
 
-                dprint($query);
-
                 if ($table == "billing_rates") {
                 	if ($this->settings['split_rating_table']) {
     
                         $rate_table_affected=array();
                         $query_r="select distinct (name) from billing_rates where". $where;
-                        dprint($query_r);
                         if ($this->db->query($query_r)) {
                             while($this->db->next_record()) {
                                 $rate_tables_affected[]='billing_rates_'.$this->db->f('name');
@@ -2992,7 +2989,6 @@ class RatingTables {
         
                     if ($this->db->query("lock table prepaid write")) {
                         $query_q=sprintf("select * from prepaid where account = '%s'",addslashes($account));
-                        dprint($query_q);
                         if ($this->db->query($query_q) && $this->db->num_rows()) {
                             $this->db->next_record();
                             $old_balance=$this->db->f('balance');
@@ -3026,7 +3022,6 @@ class RatingTables {
                                 addslashes($value),
                                 addslashes($balance)
                                 );
-                                dprint($query);
                                 $this->db->query($query);
         
                                 $log_query=sprintf("insert into log
@@ -3041,7 +3036,6 @@ class RatingTables {
                                 addslashes($balance)
                                 );
         
-                                dprint($log_query);
                                 $this->db->query($log_query);
                             }
         
@@ -3053,7 +3047,6 @@ class RatingTables {
                                     $update_set,
                                     $where
                                     );
-                                	dprint($query_u);
                                 	if (!$this->db->query($query_u)) {
                                         $log=sprintf ("Database error for query %s: %s (%s)",$query_u,$this->db->Error,$this->db->Errno);
                                         print $log;
@@ -3155,7 +3148,6 @@ class RatingTables {
     
                             $rate_table_affected=array();
                             $query_r="select distinct (name) from billing_rates where". $where;
-                            dprint($query_r);
                             if ($this->db->query($query_r)) {
                                 while($this->db->next_record()) {
                                     $rate_tables_affected[]='billing_rates_'.$this->db->f('name');
@@ -3183,7 +3175,6 @@ class RatingTables {
                                         $update_set,
                                         $where
                                         );
-                                        dprint($query_u);
                                         if (!$this->db->query($query_u)) {
                                             printf ("<font color=red>Database error for %s: %s (%s)</font>",$query_u,$this->db->Error,$this->db->Errno);
                                         }
@@ -3243,7 +3234,6 @@ class RatingTables {
     
                             $rate_table_affected=array();
                             $query_r="select distinct (name) from billing_rates where". $where;
-                            dprint($query_r);
                             if ($this->db->query($query_r)) {
                                 while($this->db->next_record()) {
                                     $rate_tables_affected[]='billing_rates_'.$this->db->f('name');
@@ -3256,8 +3246,6 @@ class RatingTables {
 
                     $query="delete from $table where $where";
 
-                    dprint($query);
-        
                     if ($this->db->query($query)) {
         
                         $affected_rows=$this->db->affected_rows();
@@ -3270,7 +3258,6 @@ class RatingTables {
                                         $extra_rate_table,
                                         $where
                                         );
-                                        dprint($query_u);
                                         if (!$this->db->query($query_u)) {
                                             printf ("<font color=red>Database error for %s: %s (%s)</font>",$query_u,$this->db->Error,$this->db->Errno);
                                         }
@@ -3372,7 +3359,6 @@ class RatingTables {
                         $query="insert into billing_rates $values where $where";
                     }
 
-                    dprint($query);
                     if ($this->db->query($query)) {
         
                         $affected_rows=$this->db->affected_rows();
@@ -3484,9 +3470,7 @@ class RatingTables {
                         $k++;
                         
                     }
-                    dprint($query);
                     if (!$empty_insert) {
-                        dprint($query);
                         if ($this->db->query($query)) {
                             $affected_rows=$this->db->affected_rows();
                             if ($affected_rows && in_array($table,$this->requireReload)) {
@@ -3510,7 +3494,6 @@ class RatingTables {
             } elseif ($subaction == "Delete") {
                 if ($confirmDelete) {
                     $query="delete from $table where id = '$id' and $whereDomainFilter";
-                    dprint($query);
                     if ($this->db->query($query)) {
                         $affected_rows=$this->db->affected_rows();
                         if ($affected_rows && in_array($table,$this->requireReload)) {
@@ -3617,8 +3600,6 @@ class RatingTables {
             
         $query .= $where;
         
-        dprint($query);
-        
         $this->db->query($query);
         $this->db->next_record();
         $rows=$this->db->Record[0];
@@ -3694,8 +3675,6 @@ class RatingTables {
         where (1=1) $where and $whereDomainFilter
         $order limit $i, $this->maxrowsperpage";
 
-        dprint($query);
-        
         $this->db->query($query);
         $num_fields=$this->db->num_fields()          ;
         $k=0;
@@ -3939,7 +3918,7 @@ class RatingTables {
                         name like '%s'
                         order by name DESC
                         limit 1",$_REQUEST['search_name']);
-                        dprint($query);
+
                         $this->db1->query($query);
                         $this->db1->next_record();
                         $_rateName=$this->db1->f('name');

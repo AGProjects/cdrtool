@@ -1954,19 +1954,20 @@ class CDR {
 
                 if ($this->CDRS->CDRdb1->query($query1)) {
                     if ($this->CDRS->CDRdb1->affected_rows()) {
-                        if ($table == $this->CDRS->table) {
-                            // cache usage only if current month
+        				if ($this->CallerIsLocal) {
+                        	if ($table == $this->CDRS->table) {
+                                // cache usage only if current month
+        
+                                $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
+                                $_usage=array('calls'    => 1,
+                                              'duration' => $this->duration,
+                                              'cost'     => $Rate->price,
+                                              'traffic'  => $_traffic
+                                             );
     
-                            $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
-                            $_usage=array('calls'    => 1,
-                                          'duration' => $this->duration,
-                                          'cost'     => $Rate->price,
-                                          'traffic'  => $_traffic
-                                         );
-
-                            $this->cacheMonthlyUsage($_usage);
+                                $this->cacheMonthlyUsage($_usage);
+                            }
                         }
-    
 
                     } else {
                         if (preg_match("/^(\w+)(\d{4})(\d{2})$/",$table,$m)) {
@@ -1974,18 +1975,21 @@ class CDR {
                             $query2 = sprintf("update %s set %s where %s = '%s'",$previousTable,$query,$this->idField,$this->id);
 
                             if ($this->CDRS->CDRdb1->query($query2)) {
-                                if ($previousTable == $this->CDRS->table) {
-                                    // cache usage only if current month
-            
-                                    $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
-                                    $_usage=array('calls'    => 1,
-                                                  'duration' => $this->duration,
-                                                  'cost'     => $Rate->price,
-                                                  'traffic'  => $_traffic
-                                                  );
-                                    $this->cacheMonthlyUsage($_usage);
+                    			if ($this->CDRS->CDRdb1->affected_rows()) {
+        							if ($this->CallerIsLocal) {
+                                        if ($previousTable == $this->CDRS->table) {
+                                            // cache usage only if current month
+                    
+                                            $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
+                                            $_usage=array('calls'    => 1,
+                                                          'duration' => $this->duration,
+                                                          'cost'     => $Rate->price,
+                                                          'traffic'  => $_traffic
+                                                          );
+                                            $this->cacheMonthlyUsage($_usage);
+                                        }
+                                    }
                                 }
-    
                             } else {
                                 $log=sprintf ("Database error: %s (%s)",$this->CDRS->CDRdb1->Error,$this->CDRS->CDRdb1->Errno);
                                 syslog(LOG_NOTICE, $log);
@@ -2036,10 +2040,8 @@ class CDR {
     function cacheMonthlyUsage($usage) {
 
         if (!is_array($usage)) return ;
-        if (!$this->CallerIsLocal) return;
 
 		$accounts[$this->BillingPartyId]['usage']=$usage;
-
         $this->CDRS->cacheMonthlyUsage($accounts);
     }
 
