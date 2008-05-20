@@ -1749,7 +1749,7 @@ class CDRS_ser_radius extends CDRS {
         
             } else {
                 if (!$this->export && !$this->CDRTool['filter']['aNumber']) {
-                	printf ("Click on Id->Session to see the full SIP trace. ");
+                	printf ("For more information about each call click on its Id column. ");
                 }
 
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
@@ -2409,15 +2409,18 @@ class CDR_ser_radius extends CDR {
         </td>
         <td width=30></td>
         <td valign=top>
-                <table border=0 cellpadding=0 cellspacing=0>
+        ";
+
+		if ($perm->have_perm("showPrice") && $this->normalized) {
+        	$CallInfoVerbose.= "
+        	<table border=0 cellpadding=0 cellspacing=0>
     
                 <tr>
                     <td colspan=3><b>Rating information</b></td>
     
                 </tr>
-        ";
+            ";
 
-		if ($perm->have_perm("showPrice")) {
             if ($this->price > 0 || $this->rate) {
                 $CallInfoVerbose.= "
                 <tr>
@@ -2425,25 +2428,22 @@ class CDR_ser_radius extends CDR {
                 <td colspan=2>$this->ratePrint</td>
                 </tr>
                 ";
-            } else if ($this->normalized){
+
+            } else {
                 $CallInfoVerbose.= "
                 <tr>
                 <td></td>
                 <td colspan=2>Free call</td>
                 </tr>
                 ";
-            } else {
-                $CallInfoVerbose.= "
-                <tr>
-                <td></td>
-                <td colspan=2><font color=red>Session in progress</font></td>
-                </tr>
-                ";
             }
+
+            $CallInfoVerbose.= "
+            </table>
+            ";
         }
 
         $CallInfoVerbose.=  "
-                </table>
         </td>
         </tr>
         </table>";
