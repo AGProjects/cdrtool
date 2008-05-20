@@ -1,37 +1,12 @@
 <?
 include("global.inc");
 
-if ($_REQUEST['public']) {
-    $db = new DB_CDRTool;
-    $key="callid-".trim($_REQUEST['callid']).trim($_REQUEST['fromtag']);
-    $query=sprintf("select * from memcache where `key` = '%s'",addslashes($key));
-    sleep(1);
-    dprint($query);
-    if ($db->query($query)) {
-	    if ($db->num_rows()) {
-    	    $authorize=0;
-    	} else {
-        	$authorize=1;
-	    }
-    } else {
-		$authorize=1;
-    }
-} else {
-	$authorize=1;
-}
+page_open(array(
+      "sess" => "CDRTool_Session",
+      "auth" => "CDRTool_Auth",
+      "perm" => "CDRTool_Perm")
+      );
 
-if ($authorize==1) {
-	page_open(array(
-          "sess" => "CDRTool_Session",
-          "auth" => "CDRTool_Auth",
-          "perm" => "CDRTool_Perm")
-          );
-
-} else {
-	unset($auth);
-	unset($sess);
-	unset($perm);
-}
 
 $proxyIP     = $_REQUEST['proxyIP'];
 $callid      = $_REQUEST['callid'];
@@ -44,20 +19,12 @@ $title=sprintf("SIP session %s",$callid);
 include("header.phtml");
 require("cdrlib.phtml");
 
-if (!$authorize || in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
-
-    $sipTrace = new SIP_trace($cdr_source);
-    $sipTrace->show($proxyIP,$callid,$fromtag,$totag);
-
-} else {
-    printf ("Error: Invalid datasource '%s' for user '%s'" ,$cdr_source,$auth->auth["uname"]);
-}
+$mediaTrace = new Media_trace($cdr_source);
+$mediaTrace->show($proxyIP,$callid,$fromtag,$totag);
 
 print "
 </body>
 </html>
 ";
-if ($authorize=1) {
-	page_close();
-}
+page_close();
 ?>

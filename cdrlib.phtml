@@ -167,6 +167,10 @@ class CDRS {
             $this->sipTraceDataSource=$this->DATASOURCES[$this->cdr_source]['sipTraceDataSource'];
         }
 
+        if ($this->DATASOURCES[$this->cdr_source]['mediaTraceDataSource']) {
+            $this->mediaTraceDataSource=$this->DATASOURCES[$this->cdr_source]['mediaTraceDataSource'];
+        }
+
         if ($this->DATASOURCES[$this->cdr_source]['domain_table']) {
             $this->domain_table = $this->DATASOURCES[$this->cdr_source]['domain_table'];
         }

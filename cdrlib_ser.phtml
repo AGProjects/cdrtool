@@ -91,7 +91,7 @@ class CDRS_ser_radius extends CDRS {
     var $FormElements=array(
         "begin_hour","begin_min","begin_month","begin_day","begin_year","begin_datetime",
         "end_hour","end_min","end_month","end_day","end_year","end_datetime",
-        "call_id",
+        "call_id","sip_proxy",
         "a_number","a_number_comp","UserName","UserName_comp","BillingId",
         "c_number","c_number_comp","DestinationId","ExcludeDestinations",
         "NASPortId","Realm","Realms","UserNameS",
@@ -692,6 +692,12 @@ class CDRS_ser_radius extends CDRS {
                                     "maxlength"=>"255",
                                     "value"=>$gateway
                                     ));
+        $this->f->add_element(array("name"=>"sip_proxy",
+                                    "type"=>"text",
+                                    "size"=>"25",
+                                    "maxlength"=>"255",
+                                    "value"=>$sip_proxy
+                                    ));
         $this->f->add_element(array("name"=>"DestinationId",
                                     "type"=>"text",
                                     "size"=>"10"
@@ -748,6 +754,10 @@ class CDRS_ser_radius extends CDRS {
             $this->f->show_element("call_id","");
             print " / ";
             $this->f->show_element("gateway","");
+            print "
+            Sip Proxy ";
+
+            $this->f->show_element("sip_proxy","");
             print "
             </td>
         </tr>
@@ -1276,6 +1286,13 @@ class CDRS_ser_radius extends CDRS {
             $where .= " and $this->callIdField = '".addslashes($call_id)."'";
             $call_id_encoded=urlencode($call_id);
             $this->url.="&call_id=$call_id_encoded";
+        }
+
+        if ($sip_proxy) {
+            $sip_proxy=urldecode($sip_proxy);
+            $where .= " and $this->SipProxyServerField = '".addslashes($sip_proxy)."'";
+            $sip_proxy_encoded=urlencode($sip_proxy);
+            $this->url.="&sip_proxy=$sip_proxy_encoded";
         }
 
         if ($SipCodec) {
@@ -2335,6 +2352,23 @@ class CDR_ser_radius extends CDR {
             <tr>
         		<td colspan=3><b>Media information</b></td>
             </tr>
+            ";
+            if ($this->CDRS->mediaTraceDataSource) {
+                $media_trace_datasource = $this->CDRS->mediaTraceDataSource;
+
+                $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media-trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
+                'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">Click here to see the media information for this call</a> &nbsp;";
+
+                $CallInfoVerbose.= sprintf("
+                <tr>
+                    <td width=10></td>
+                    <td colspan=2>%s</td>
+                </tr>
+                ", $this->mediaTraceLink);
+
+            }
+
+            $CallInfoVerbose.= "
             <tr>
             	<td></td>
         		<td>Application: </td>
@@ -3546,9 +3580,11 @@ class SIP_trace {
 
 class Media_trace {
     var $enableThor  = false;
+    var $table = 'media_sessions';
 
     function Media_trace ($cdr_source) {
-        global $DATASOURCES, $auth;
+        global $DATASOURCES;
+
         $this->cdr_source = $cdr_source;
 
         $this->cdrtool  = new DB_CDRTool();
@@ -3587,9 +3623,11 @@ class Media_trace {
             }
 
         } else {
-            $this->table             = $DATASOURCES[$this->cdr_source]['table'];
+            if ($DATASOURCES[$this->cdr_source]['table']) {
+            	$this->table             = $DATASOURCES[$this->cdr_source]['table'];
+            }
+
             $db_class                = $DATASOURCES[$this->cdr_source]['db_class'];
-            $this->purgeRecordsAfter = $DATASOURCES[$this->cdr_source]['purgeRecordsAfter'];
             $this->db                = new $db_class;
         }
 
@@ -3598,19 +3636,19 @@ class Media_trace {
     function getTrace ($proxyIP,$callid,$fromtag,$totag) {
 
 		if ($this->enableThor) {
-			$this->seen_ip=array();
-			$this->trace=$this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag);
+			$this->info=json_decode($this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag));
 
         } else {
 
             // get trace from SQL
 
-            $query=sprintf("select * from %s where call_id = '%s' and from_tag = '%s' order by id asc",
+            $query=sprintf("select info from %s where call_id = '%s' and from_tag = '%s' and to_tag= '%s'",
             $this->table,
-            $callid,
-            $fromtag
+            addslashes($callid),
+            addslashes($fromtag),
+            addslashes($totag)
             );
-    
+
             if (!$this->db->query($query)) {
                 printf ("<p>Error: database error %s %s",$this->db->Error,$query);
                 return false;
@@ -3618,7 +3656,7 @@ class Media_trace {
     
             if ($this->db->num_rows()) {
             	$this->db->next_record();
-                $this->trace=$this->db->f('info');
+                $this->info=json_decode($this->db->f('info'));
             }
         }
 
@@ -3666,15 +3704,12 @@ class Media_trace {
         $this->getTrace($proxyIP,$callid,$fromtag,$totag);
 
         print "
-        <h1>CDRTool Media Proxy trace</h1>
+        <h1>CDRTool Media information</h1>
         <h2>Media session $callid</h2>
         ";
-
-        /*
         print "<pre>";
-        print_r($this->trace);
+        print_r($this->info);
         print "</pre>";
-        */
 
     }
 }
