@@ -1,3 +1,2 @@
 - Sync changes made from Rating web page to partial rating tables
 - Mail broken rates moved to Rate class
-- Quota usage must store only local accounts
