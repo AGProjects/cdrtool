@@ -46,7 +46,6 @@ print "
 
 if ($perm->have_perm(admin)) {
 	$query="select * from auth_user where perms like '%admin%'";
-    dprint($query);
     $db->query($query);
     while ($db->next_record()) {
     	$Collegues[$db->f('email')] =$db->f('name');
@@ -71,7 +70,6 @@ if ($current_log ) {
     		$query.=sprintf(" and login = '%s' ",addslashes($auth->auth["uname"]));
 		}
 
-        dprint($query);
         $db->query($query);
 
     } else if ($task == "mailLog" && $recipient) {
@@ -81,7 +79,6 @@ if ($current_log ) {
     		$query.=sprintf(" and login = '%s' ",addslashes($auth->auth["uname"]));
 		}
 
-        dprint($query);
         $db->query($query);
         $db->next_record();
         $rerun         	=$db->f('rerun');
@@ -124,8 +121,6 @@ if ($search_text) {
 
 $query = "select count(*) as records from log where ". $where;
 
-dprint($query);
-
 if ($db->query($query)) {
     $db->next_record();
     $rows = $db->f('records');
@@ -156,8 +151,6 @@ if  ($rows>0)  {
     $query = "select * from log where ".
     $where. " order by id desc limit $i,$maxrowsperpage";
 
-    dprint($query);
-    
     $db->query($query);
 
     print "<br>

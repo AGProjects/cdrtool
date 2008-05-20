@@ -1,2 +1,4 @@
 - Sync changes made from Rating web page to partial rating tables
 - Mail broken rates moved to Rate class
+- Add search by sip proxy
+- Save relay IP in radius
