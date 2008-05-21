@@ -2069,7 +2069,11 @@ class SipSettings {
                        );
                    }
                 } else {
-                    printf ("Blocked");
+                   	if (in_array($key,$this->groups)) {
+                   		printf ("Blocked");
+                    } else {
+                   		printf ("Active");
+                    }
                 }
 
             } else if ($key=="free-pstn") {
@@ -3792,16 +3796,16 @@ class SipSettings {
             foreach (array_keys($this->calls_placed) as $call) {
                 $j++;
 
-				if ($this->calls_placed[$call][to] == "sip:".$this->voicemail['Account'] ) {
+				if ($this->calls_placed[$call]['to'] == "sip:".$this->voicemail['Account'] ) {
                     continue;
                 }
 
-                $uri         = $this->calls_placed[$call][to];
-                $price       = $this->calls_placed[$call][price];
-                $status      = $this->calls_placed[$call][status];
-                $duration 	 = normalizeTime($this->calls_placed[$call][duration]);
+                $uri         = $this->calls_placed[$call]['to'];
+                $price       = $this->calls_placed[$call]['price'];
+                $status      = $this->calls_placed[$call]['status'];
+                $duration 	 = normalizeTime($this->calls_placed[$call]['duration']);
                 $dialURI     = $this->PhoneDialURL($uri) ;
-				$htmlDate    = $this->colorizeDate($this->calls_placed[$call][date]);
+				$htmlDate    = $this->colorizeDate($this->calls_placed[$call]['date']);
 				$htmlURI     = $this->htmlURI($uri);
 				$urlURI	     = urlencode($this->normalizeURI($uri));
 

@@ -2199,9 +2199,9 @@ class CDR_ser_radius extends CDR {
             $totag_enc        = urlencode($this->SipToTag);
 
         	$this->traceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
-            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">Click here to see the SIP trace for this call</a> &nbsp;";
+            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red>Click here to see the SIP trace for this call</font></a> &nbsp;";
         } else {
-            $this->callIdPrint=$this->callId;
+            $this->traceLink=$this->callId;
         }
 
         $CallInfoVerbose="
@@ -2217,13 +2217,20 @@ class CDR_ser_radius extends CDR {
         $CallInfoVerbose.= sprintf("
         <tr>
         	<td width=10></td>
-            <td colspan=2><a href=%s&call_id=%s>Click here to show only this call id</a></td>
+            <td colspan=2><a href=%s&call_id=%s><font color=orange>Click here to show only this call id</font></a></td>
         </tr>
         ",
         $this->CDRS->url_run,
         urlencode($this->callId)
         );
 
+        $CallInfoVerbose.= "
+        <tr>
+        	<td width=10></td>
+            <td>Call id: </td>
+            <td>$this->callId</td>
+        </tr>
+        ";
         $CallInfoVerbose.= sprintf("
         <tr>
         	<td width=10></td>
@@ -2232,11 +2239,6 @@ class CDR_ser_radius extends CDR {
         ", $this->traceLink);
 
         $CallInfoVerbose.= "
-        <tr>
-        	<td width=10></td>
-            <td>Call id: </td>
-            <td>$this->callId</td>
-        </tr>
         <tr>
         	<td width=10></td>
             <td>From/to tags: </td>
@@ -3702,6 +3704,11 @@ class Media_trace {
         }
 
         $this->getTrace($proxyIP,$callid,$fromtag,$totag);
+
+        if (!is_object($this->info)) {
+            print "<p>No information available.";
+            return false;
+        }
 
         print "
         <h1>CDRTool Media information</h1>
