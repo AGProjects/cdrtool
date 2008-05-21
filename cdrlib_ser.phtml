@@ -3709,6 +3709,10 @@ class Media_trace {
         ";
 
         foreach (array_values($this->info->streams) as $_val) {
+            $_diff=$_val->end_time-$_val->timeout_wait;
+            $seen_stamp[$_val->start_time]++;
+            $seen_stamp[$_val->end_time]++;
+            $seen_stamp[$_diff]++;
             $media_types[]=$_val->media_type;
         }
 
@@ -3722,6 +3726,7 @@ class Media_trace {
 
         print "<table border=0>";
         print "<th></th>";
+
         foreach (array_values($media_types) as $_type) {
             printf ("<th>%s</th>",ucfirst($_type));
         }
@@ -3745,7 +3750,43 @@ class Media_trace {
         print_r($this->info);
         print "</pre>";
         */
+
+        print "<h3>Stream succession</h3>";
+
+        $w=500;
+		$stamps=array_keys($seen_stamp);
+        sort($stamps);
+
+        print "<table border=0 width=$w>";
+
+        foreach (array_values($this->info->streams) as $_val) {
+
+            $w_col1=intval($_val->start_time*$w/$this->info->duration);
+            $w_col2=intval(($_val->end_time-$_val->start_time-$_val->timeout_wait)*$w/$this->info->duration);
+            $w_col3=intval(($this->info->duration-$_val->end_time+$_val->timeout_wait)*$w/$this->info->duration);
+
+            print "<tr><td width=50>$_val->media_type</td>";
+
+            $t2=$_val->end_time-$_val->timeout_wait;
+            $t3=$this->info->duration;
+
+            print "<td>
+            <table width=100%><tr>";
+            print "<td width=$w_col1 bgcolor=white></td>";
+            print "<td width=$w_col2 bgcolor=blue align=right><font color=white>$t2</font></td>";
+            if ($_val->timeout_wait) {
+            	print "<td width=$w_col3 bgcolor=red align=right><font color=white>$t3</font></td>";
+            } else {
+            	print "<td width=$w_col3 bgcolor=white align=right></td>";
+            }
+
+            print "</table>";
+            print "</td></tr>";
+
+        }
+        print "</table>";
     }
+
 }
 
 class SIPonline {
