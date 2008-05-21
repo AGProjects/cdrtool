@@ -3719,7 +3719,9 @@ class Media_trace {
         print "<h3>Media information</h3>";
 
         print "<table border=0>";
-        printf ("<tr><td>Duration</td><td>%s</td></tr>",$this->info->duration);
+        printf ("<tr><td class=border>Call duration</td><td class=border>%s</td></tr>",$this->info->duration);
+        list($relay_ip,$relay_port)=explode(":",$this->info->streams[0]->caller_local);
+        printf ("<tr><td class=border>Media relay</td><td class=border>%s</td></tr>",$relay_ip);
         print "</table>";
 
         print "<h3>Media streams</h3>";
@@ -3734,7 +3736,7 @@ class Media_trace {
         print "</tr>";
 
         foreach ($this->info->streams[0]  as $_val => $_value) {
-            printf ("<tr><td>%s</td>",ucfirst(preg_replace("/_/"," ",$_val)));
+            printf ("<tr><td class=border>%s</td>",ucfirst(preg_replace("/_/"," ",$_val)));
             $j=0;
             while ($j < count($media_types)) {
             	printf ("<td class=border>%s</td>",$this->info->streams[$j]->$_val);
@@ -3745,6 +3747,7 @@ class Media_trace {
         }
 
         print "</table>";
+
         /*
         print "<pre>";
         print_r($this->info);
@@ -3754,10 +3757,13 @@ class Media_trace {
         print "<h3>Stream succession</h3>";
 
         $w=500;
-		$stamps=array_keys($seen_stamp);
+        $w1=30;
+        $stamps=array_keys($seen_stamp);
         sort($stamps);
 
-        print "<table border=0 width=$w>";
+        $w2=$w+$w1;
+
+        print "<table border=0 width=$w2>";
 
         foreach (array_values($this->info->streams) as $_val) {
 
@@ -3765,7 +3771,7 @@ class Media_trace {
             $w_col2=intval(($_val->end_time-$_val->start_time-$_val->timeout_wait)*$w/$this->info->duration);
             $w_col3=intval(($this->info->duration-$_val->end_time+$_val->timeout_wait)*$w/$this->info->duration);
 
-            print "<tr><td width=50>$_val->media_type</td>";
+            print "<tr><td width=$w1 class=border>$_val->media_type</td>";
 
             $t2=$_val->end_time-$_val->timeout_wait;
             $t3=$this->info->duration;
@@ -3773,7 +3779,7 @@ class Media_trace {
             print "<td>
             <table width=100%><tr>";
             print "<td width=$w_col1 bgcolor=white></td>";
-            print "<td width=$w_col2 bgcolor=blue align=right><font color=white>$t2</font></td>";
+            print "<td width=$w_col2 bgcolor=green align=right><font color=white>$t2</font></td>";
             if ($_val->timeout_wait) {
             	print "<td width=$w_col3 bgcolor=red align=right><font color=white>$t3</font></td>";
             } else {
@@ -3785,6 +3791,15 @@ class Media_trace {
 
         }
         print "</table>";
+
+        print "<h4>Legend</h4>";
+        print "<table border=0>
+        <tr><td bgcolor=green width=50>&nbsp;</td><td>Session data</td></tr>
+        <tr><td bgcolor=red width=50>&nbsp;</td><td>Timeout period</td></tr>
+        </table>
+        ";
+
+
     }
 
 }
