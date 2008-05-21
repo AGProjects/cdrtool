@@ -3707,10 +3707,44 @@ class Media_trace {
         <h1>CDRTool Media information</h1>
         <h2>Media session $callid</h2>
         ";
+
+        foreach (array_values($this->info->streams) as $_val) {
+            $media_types[]=$_val->media_type;
+        }
+
+        print "<h3>Media information</h3>";
+
+        print "<table border=0>";
+        printf ("<tr><td>Duration</td><td>%s</td></tr>",$this->info->duration);
+        print "</table>";
+
+        print "<h3>Media streams</h3>";
+
+        print "<table border=0>";
+        print "<th></th>";
+        foreach (array_values($media_types) as $_type) {
+            printf ("<th>%s</th>",ucfirst($_type));
+        }
+
+        print "</tr>";
+
+        foreach ($this->info->streams[0]  as $_val => $_value) {
+            printf ("<tr><td>%s</td>",ucfirst(preg_replace("/_/"," ",$_val)));
+            $j=0;
+            while ($j < count($media_types)) {
+            	printf ("<td class=border>%s</td>",$this->info->streams[$j]->$_val);
+                $j++;
+            }
+
+            printf ("</tr>\n");
+        }
+
+        print "</table>";
+        /*
         print "<pre>";
         print_r($this->info);
         print "</pre>";
-
+        */
     }
 }
 
