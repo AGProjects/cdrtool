@@ -1459,8 +1459,6 @@ class SipSettings {
                                      );
             }
         }
-
-        dprint_r($this->locations);
     }
 
     function getVoicemailForwarding () {
@@ -5046,7 +5044,7 @@ class SipSettings {
 
         $tpl = $this->getEmailTemplate($this->reseller, $this->Preferences['language']);
 
-        if (in_array("free-pstn",$this->groups)) $this->allowPSTN=1;
+        if (in_array("free-pstn",$this->groups)) $this->allowPSTN=1; // used by smarty
 
 		define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
 		include_once(SMARTY_DIR . 'Smarty.class.php');

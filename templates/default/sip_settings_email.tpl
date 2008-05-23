@@ -20,8 +20,7 @@ How to use your SIP account:
    or download X-lite, a free software phone for
    Windows, MacOSX or Linux from:
    
-   http://www.counterpath.com/xlitedownload.html
-
+   http://www.counterpath.com/x-lite.html
 
 2. Setup your SIP device as follows:
 
@@ -46,7 +45,7 @@ Your voicemail is delivered by e-mail to {$client->email}
 You may call to PSTN
 {/if}
 
-To access your account settings go to {$client->SIPsettingsURL}
+To access your account settings go to {$client->sip_settings_page}
 
 Your login details:
 
@@ -62,10 +61,11 @@ How to use your SIP account:
 {if $client->voicemailMailbox}
    - To access your voicemail messages or mailbox settings dial {$client->voicemailAccessNumber}
 {/if}
-{if $client->SupportCDRsite}
-   - To access your Call Detail Records go to: {$client->SupportCDRsite}
+{if $client->cdrtool_address}
+   - To access your Call Detail Records go to: {$client->cdrtool_address}
 {/if}
 
-{if $client->SupportWEBsite}
-For more information visit {$client->SupportWEBsite}
+{if $client->support_web}
+For more information visit {$client->support_web}
 {/if}
+
