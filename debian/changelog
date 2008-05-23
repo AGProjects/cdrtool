@@ -27,8 +27,9 @@ cdrtool (6.5.0) unstable; urgency=low
   * Do not require reload after update of prepaid table
   * display to and from tags, hide enum tld if none
   * Removed unused functions and show in trace the msg size
+  * Toggle prepaid without using groups
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 23 May 2008 09:28:41 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 23 May 2008 10:06:51 +0200
 
 cdrtool (6.4.1) unstable; urgency=low
 

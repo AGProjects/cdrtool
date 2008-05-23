@@ -224,12 +224,6 @@ class SipSettings {
                                         "SubscriberMaySeeIt"=>1
                                         );
 
-        $this->availableGroups['prepaid'] = array("Group"       => "prepaid",
-                                          "WEBName"             => sprintf (_("Prepaid")),
-                                          "SubscriberMayEditIt" => 0,
-                                          "SubscriberMaySeeIt"  => 0
-                                          );
-
         $this->getResellerSettings();
         $this->getCustomerSettings();
 
@@ -1976,6 +1970,18 @@ class SipSettings {
             }
         }
 
+        if ($this->prepaid) $checked_box_prepaid="checked";
+        if (!$this->prepaid_changes_allowed) $disabled_box_prepaid   = "disabled=true";
+
+        print "
+        <tr $bgcolor>
+        <td class=border valign=top>Prepaid</td>
+        <td class=$td_class>
+        <input type=checkbox value=1 name=prepaid $checked_box_prepaid $disabled_box_prepaid>
+        </td>
+        </tr>
+        ";
+
         foreach (array_keys($this->availableGroups) as $key) {
 
 			unset($disabled_box);
@@ -2000,10 +2006,6 @@ class SipSettings {
             }
 
             if ($key=="free-pstn" && !$this->pstn_changes_allowed) {
-            	$disabled_box   = "disabled=true";
-            }
-
-            if ($key=="prepaid" && !$this->prepaid_changes_allowed) {
             	$disabled_box   = "disabled=true";
             }
 
@@ -2602,6 +2604,21 @@ class SipSettings {
             }
         }
 
+        if ($this->prepaid_changes_allowed) {
+            if(!$result->prepaid && $_REQUEST['prepaid']){
+            	if ($result->quota) {
+                    $result->quota=0;
+                    $quota=0;
+                    $this->somethingChanged=1;
+                }
+                $this->somethingChanged=1;
+            } else if ($result->prepaid && !$_REQUEST['prepaid']) {
+                $this->somethingChanged=1;
+            }
+
+            $result->prepaid=intval($_REQUEST['prepaid']);
+        }
+
         reset($this->availableGroups);
 
         foreach (array_keys($this->availableGroups) as $key) {
@@ -2612,22 +2629,6 @@ class SipSettings {
 
                 if ($key == 'free-pstn') {
                     if ($this->pstn_changes_allowed) {
-                		if ($val) $newACLarray[]=trim($key);
-                    } else {
-                        if (in_array($key,$this->groups)) {
-                            $newACLarray[]=trim($key);
-                        }
-                    }
-
-                } elseif ($key == 'prepaid') {
-                    if ($this->prepaid_changes_allowed) {
-                        if(!$result->prepaid && $val && $result->quota) {
-                            $result->quota=0;
-                            $quota=0;
-                            $this->somethingChanged=1;
-                        }
-                        $result->prepaid=intval($val);
-                        
                 		if ($val) $newACLarray[]=trim($key);
                     } else {
                         if (in_array($key,$this->groups)) {
