@@ -5907,10 +5907,6 @@ class RatingEngine {
 
             return $this->CreditBalance($NetFields['from'],$NetFields['value']);
 
-        } else if ($NetFields['action'] == "reloadprepaidaccounts") {
-
-            return 1;
-
         } else if ($NetFields['action'] == "deletebalance") {
 
         	if (!$NetFields['from']) {
