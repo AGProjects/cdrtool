@@ -1,8 +1,8 @@
 cdrtool (6.5.0) unstable; urgency=low
 
-  * Added page to show media info from mediproxy 2.0
-  * Removed memcache
+  * Added web page to show media info from mediproxy 2.0
   * Added prepaid card generator 
+  * Removed memcache
   * Fixed update of rating history records from cvs files
   * Fixed pattern matching for cvs files containing rates_history
   * Update filename convention for rating csv files
@@ -20,7 +20,6 @@ cdrtool (6.5.0) unstable; urgency=low
   * Added logic to change PSTN settings only if allowed by customer properties
   * Display previously blocked users in quota notification
   * Fixed sip trace hop to other node by passing totag
-  * Removed EnableNetworkRating from global.inc
   * Only destination table requires reload after changing data in rating tables
   * Do not cache prepaid balance, use mysql instead
   * Return error when maxsessiontime command of rating engine encounters one
@@ -28,6 +27,8 @@ cdrtool (6.5.0) unstable; urgency=low
   * display to and from tags, hide enum tld if none
   * Removed unused functions and show in trace the msg size
   * Toggle prepaid without using groups
+  * Removed EnableNetworkRating setting from global.inc
+  * No mysql schema changes
 
  -- Adrian Georgescu <ag@ag-projects.com>  Fri, 23 May 2008 10:06:51 +0200
 
