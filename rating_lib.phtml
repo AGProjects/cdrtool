@@ -5466,13 +5466,13 @@ class RatingEngine {
         "Version\n".
         "Help\n".
         "MaxSessionTime        From=sip:123@example.com To=sip:0031650222333@example.com Duration=7200 Lock=1\n".
-        "ShowPrice             From=sip:123@example.com To=sip:0031650222333@example.com DestinationId=31650 Duration=59\n".
+        "ShowPrice             From=sip:123@example.com To=sip:0031650222333@example.com Duration=59\n".
+        "DebitBalance          From=sip:123@example.com To=sip:0031650222333@example.com Duration=59\n".
         "AddBalance            From=123@example.com Value=10.00\n".
         "GetBalance            From=123@example.com\n".
         "GetBalanceHistory     From=123@example.com\n".
         "DeleteBalance         From=123@example.com\n".
         "DeleteBalanceHistory  From=123@example.com\n".
-        "DebitBalance          From=sip:123@example.com To=sip:0031650222333@example.com Duration=59\n".
         "ReloadQuota           Account=abc@example.com\n".
         "GetEntityProfiles     Entity=abc@example.com\n".
         "ReloadRatingTables\n".
@@ -5954,25 +5954,31 @@ class RatingEngine {
             }
 
             $application="audio";
+
             if ($NetFields['application']) $application=$NetFields['application'];
+
+            $CDRStructure=array (
+                              $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
+                              $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
+                              $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
+                              $this->CDRS->CDRFields['duration']       => $NetFields['duration'],
+                              $this->CDRS->CDRFields['timestamp']      => time()
+                              );
+
+            $CDR = new $this->CDRS->CDR_class(&$this->CDRS, &$CDRStructure);
+            $CDR->normalize();
 
             $Rate    = new Rate($this->settings, $this->db);
 
             $RateDictionary=array(
-                                  'callId'          => $NetFields['callid'],
-                                  'timestamp'       => $timestamp,
-                                  'duration'        => $NetFields['duration'],
-                                  'inputTraffic'    => $NetFields['inputtraffic'],
-                                  'outputTraffic'   => $NetFields['outputtraffic'],
-                                  'DestinationId'   => $NetFields['destinationid'],
-                                  'BillingPartyId'  => $NetFields['from'],
-                                  'domain'          => $NetFields['domain'],
-                                  'gateway'         => $NetFields['gateway'],
-                                  'aNumber'         => $NetFields['from'],
-                                  'cNumber'         => $NetFields['to'],
-                                  'ENUMtld'         => $NetFields['enumtld'],
-                                  'applicationType' => $application,
-                                  'RatingTables'    => &$this->CDRS->RatingTables,
+                                  'duration'        => $CDR->duration,
+                                  'callId'          => $CDR->callId,
+                                  'timestamp'       => $CDR->timestamp,
+                                  'DestinationId'   => $CDR->DestinationId,
+                                  'domain'          => $CDR->domain,
+                                  'BillingPartyId'  => $CDR->BillingPartyId,
+                                  'ENUMtld'         => $CDR->ENUMtld,
+                                  'RatingTables'    => &$this->CDRS->RatingTables
                                   );
 
             $Rate->calculate($RateDictionary);
