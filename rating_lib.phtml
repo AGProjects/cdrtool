@@ -5953,10 +5953,6 @@ class RatingEngine {
             	$timestamp=time();
             }
 
-            $application="audio";
-
-            if ($NetFields['application']) $application=$NetFields['application'];
-
             $CDRStructure=array (
                               $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
                               $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],

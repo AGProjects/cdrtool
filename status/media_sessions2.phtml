@@ -1,0 +1,41 @@
+<?
+include("../global.inc");
+page_open(
+    array("sess" => "CDRTool_Session",
+          "auth" => "CDRTool_Auth",
+          "perm" => "CDRTool_Perm"
+          ));
+
+$perm->check("statistics");
+global $CDRTool;
+if (strlen($CDRTool['filter']['domain'])) $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
+
+##########################
+# Generic code starts here
+##########################
+
+set_time_limit (60);
+$errorReporting = (E_ALL & ~E_NOTICE);
+$errorReporting = 1; 	// comment this out to enable PHP warnings
+error_reporting($errorReporting);
+
+if (is_readable("config/media_dispatcher.php")) {
+    include("config/media_dispatcher.php");
+} else {
+    print "Please copy config/media_dispatcher.php.sample to config/media_dispatcher.php and set up your own dispatcher\n";
+    exit;
+}
+
+require("media_sessions_lib.phtml");
+
+$filters=array('user'=>$_REQUEST['user']);
+
+$MediaSessions = new MediaSessions($dispatcher,$filters,$allowedDomains);
+$MediaSessions->show();
+
+##########################
+# Generic code ends here
+##########################
+
+page_close();
+?>
