@@ -280,11 +280,20 @@ $DATASOURCES=array(
                                                 ),
                      "invisible"          => 1 // hide this datasource in call search page / datasource selection 
                     ),
+                    
+"media_trace_thor"   =>array(
+                    "name"               => "Media trace",
+                    "db_class"           => "DB_media_trace",
+                    "enableThor"         => false,
+                    "invisible"          => 1 
+                    ),
+
 "sip_trace_thor"   =>array(
                     "name"               => "SIP trace Thor",
                     "enableThor"         => true,
                     "soapEngineId"       => "thor",   
-                    "invisible"          => 1 
+                    "invisible"          => 1, 
+                    "mediaTraceDataSource" => "media_trace_thor"
                     )
                     
 );

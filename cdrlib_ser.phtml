@@ -2748,6 +2748,7 @@ class SIP_trace {
 	var $trace_array = array();
 	var $traced_ip   = array();
 	var $SIPProxies  = array();
+    var $mediaTraceDataSource  = false;
 
     function SIP_trace ($cdr_source) {
         global $DATASOURCES, $auth;
@@ -2755,9 +2756,12 @@ class SIP_trace {
 
         $this->cdrtool  = new DB_CDRTool();
 
-
 		if (strlen($DATASOURCES[$this->cdr_source]['enableThor'])) {
         	$this->enableThor = $DATASOURCES[$this->cdr_source]['enableThor'];
+        }
+
+		if (strlen($DATASOURCES[$this->cdr_source]['mediaTraceDataSource'])) {
+        	$this->mediaTraceDataSource = $DATASOURCES[$this->cdr_source]['mediaTraceDataSource'];
         }
 
         if ($this->enableThor) {
@@ -3094,11 +3098,23 @@ class SIP_trace {
             print "<td align=left width=50%>";
         }
 
+        if ($this->mediaTraceDataSource) {
+            $this->mediaTraceLink=sprintf("<p><a href=\"javascript:void(null);\" onClick=\"return window.open('media-trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&totag=%s&proxyIP=%s', 'mediatrace',
+            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here for the media trace</a>",
+            $this->mediaTraceDataSource,
+            urlencode($callid),
+            urlencode($fromtag),
+            urlencode($totag),
+            $proxyIP
+            );
+        }
 
         print "</td>
         </form>
         <td align=right width=50%>
         Click on each trace entry to see the full message.
+        $this->mediaTraceLink
+
         </td>
         </tr>
         </table>
