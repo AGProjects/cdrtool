@@ -7,20 +7,25 @@ page_open(array(
       "perm" => "CDRTool_Perm")
       );
 
-
-$proxyIP     = $_REQUEST['proxyIP'];
-$callid      = $_REQUEST['callid'];
-$fromtag     = $_REQUEST['fromtag'];
-$totag       = $_REQUEST['totag'];
+$title=sprintf("SIP session %s",$callid);
+include("header.phtml");
 $cdr_source  = $_REQUEST['cdr_source'];
 
-$title=sprintf("SIP session %s",$callid);
+if (in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
 
-include("header.phtml");
-require("cdrlib.phtml");
+    $proxyIP     = $_REQUEST['proxyIP'];
+    $callid      = $_REQUEST['callid'];
+    $fromtag     = $_REQUEST['fromtag'];
+    $totag       = $_REQUEST['totag'];
+    
+    require("cdrlib.phtml");
+    
+    $mediaTrace = new Media_trace($cdr_source);
+    $mediaTrace->show($proxyIP,$callid,$fromtag,$totag);
 
-$mediaTrace = new Media_trace($cdr_source);
-$mediaTrace->show($proxyIP,$callid,$fromtag,$totag);
+} else {
+    printf ("Error: Invalid datasource '%s' for user '%s'" ,$cdr_source,$auth->auth["uname"]);
+}
 
 print "
 </body>
