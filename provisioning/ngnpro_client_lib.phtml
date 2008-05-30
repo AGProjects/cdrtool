@@ -5205,10 +5205,13 @@ class EnumMappings extends Records {
     function getRecordKeys() {
 
         // Filter
-        $filter=array('number' => $this->filters['number'],
-                      'tld'    => $this->filters['tld'],
-                      'type'   => $this->filters['type'],
-                      'mapto'  => $this->filters['mapto']
+        $filter=array('number'   => $this->filters['number'],
+        			  'tld'      => $this->filters['tld'],
+                      'type'     => $this->filters['type'],
+                      'mapto'    => $this->filters['mapto'],
+                      'owner'    => intval($this->filters['owner']),
+                      'customer' => intval($this->filters['customer']),
+                      'reseller' => intval($this->filters['reseller'])
                       );
         // Range
         $range=array('start' => 0,
