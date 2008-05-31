@@ -97,6 +97,7 @@ class MediaSessions {
     }
 
     function showSearch() {
+        if (!count($this->sessions)) return;
         printf ("<form method=post action=%s>
         <input type=text name=user value='%s'>
         <input type=submit value='Search callers'>
@@ -167,11 +168,6 @@ class MediaSessions {
     }
 
     function showFooter() {
-        print "<a href=http://www.ag-projects.com><img src=images/PoweredbyAGProjects.gif border=0></a>";
-    	print "
-        </body>
-        </html>
-        ";
     }
 
     function show() {
@@ -192,6 +188,7 @@ class MediaSessions {
     }
 
     function showRelays() {
+        if (!count($this->sessions)) return;
 
         print "
         <table border=0 class=border cellpadding=2 cellspacing=0>
@@ -275,6 +272,7 @@ class MediaSessions {
     }
 
     function showSessions () {
+        if (!count($this->sessions)) return;
         print "
         <table border=0 cellpadding=2 cellspacing=0 class=border>
          <tr valign=bottom bgcolor=black>

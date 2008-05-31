@@ -28,7 +28,7 @@ if ($_REQUEST['datasource']) {
 foreach ($datasources as $datasource) {
     if (in_array($datasource,$CDRTool['dataSourcesAllowed'])) {
         if ($DATASOURCES[$datasource]['mediaDispatcher']) {
-	    	printf ("<h1>%s</h1>",$DATASOURCES[$datasource]['name']);
+	    	printf ("<h1>%s (MediaProxy 2.x)</h1>",$DATASOURCES[$datasource]['name']);
 
            	$filters=array('user'=>$_REQUEST['user']);
            
@@ -37,12 +37,19 @@ foreach ($datasources as $datasource) {
         }
 
         if ($DATASOURCES[$datasource]['mediaServers']){
-	    	printf ("<h1>%s</h1>",$DATASOURCES[$datasource]['name']);
+	    	printf ("<h1>%s (MediaProxy 1.x)</h1>",$DATASOURCES[$datasource]['name']);
            	$MediaSessions = new MediaSessions1($DATASOURCES[$datasource]['mediaServers'],$allowedDomains);
            	$MediaSessions->show();
         }
     }
 }
 
+print "<a href=http://www.ag-projects.com><img src=images/PoweredbyAGProjects.gif border=0></a>";
+print "
+</body>
+</html>
+";
+
 page_close();
+
 ?>
