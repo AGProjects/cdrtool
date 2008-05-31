@@ -1,0 +1,40 @@
+<?
+include("./global.inc");
+
+page_open(array("sess" => "SIP_Subscriber_Session",
+                    "auth" => "SIP_Subscriber_Auth")
+             );
+
+
+$loginname=$auth->auth["uname"] ;
+
+$auth->logout();
+$sess->delete();
+
+$title="Logout";
+include("header_sip.phtml");
+
+print "<h2>";
+print _("Login");
+print "</h2>";
+print "<p>";
+
+print _("You have been logged in as ");
+print "
+<b>$loginname</b>
+<p class=s>
+";
+print _("You have been logged out");
+print "
+<br>
+<br>
+<p>
+<a href=sip_settings.phtml>Login again</a>
+";
+
+page_close();
+print "
+</body>
+</html>
+";
+?>

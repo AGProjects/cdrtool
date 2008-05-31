@@ -1,0 +1,49 @@
+<?
+include("global.inc");
+
+page_open(
+    array("sess" => "CDRTool_Session",
+          "auth" => "CDRTool_Auth",
+          "perm" => "CDRTool_Perm"
+          ));
+
+$perm->check("statistics");
+
+$title="SIP registrar - online subscribers";
+include("header.phtml");
+
+require("cdrlib.phtml");
+
+$layout = new pageLayoutLocal();
+$layout->showTopMenu($title);
+
+if ($_REQUEST['datasource']) {
+	$datasources=array($_REQUEST['datasource']);
+} else {
+    $datasources=array_keys($DATASOURCES);
+}
+
+foreach ($datasources as $datasource) {
+
+    if (in_array($datasource,$CDRTool['dataSourcesAllowed'])) {
+        if ($DATASOURCES[$datasource]['enableThor'] && $DATASOURCES[$datasource]['thorStatusNode']) {
+	    	printf ("<h1>%s</h1>",$DATASOURCES[$datasource]['name']);
+
+            printf ("
+            <p>
+            <img src=status/images/thorNetworkImage.php?node=%s>
+            ",
+            $DATASOURCES[$datasource]['thorStatusNode']);
+
+        } else if ($DATASOURCES[$datasource]['db_class_siponline']){
+	    	printf ("<h1>%s</h1>",$DATASOURCES[$datasource]['name']);
+
+			$online= new SIPonline($datasource,$DATASOURCES[$datasource]['db_class_siponline']);
+			$online->showAll();
+        }
+    }
+}
+
+page_close();
+
+?>

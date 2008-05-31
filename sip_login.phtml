@@ -1,0 +1,123 @@
+<?
+$title="Login";
+include("header_sip.phtml");
+
+?>
+
+<script language="javascript" src="md5.js"></script>
+<script language="javascript">
+
+  function doChallengeResponse() {
+    str = document.login.username.value + ":" +
+          MD5(document.login.password.value) + ":" +
+          document.login.challenge.value;
+
+    document.login.response.value = MD5(str);
+    document.login.password.value = "";
+    document.login.submit();
+  }
+
+</script>
+<?
+
+print "<h2>";
+print _("Login");
+print "</h2>";
+print "<p>";
+print _("Use your own SIP account credentials. ");
+print _("Example");
+
+if ($example_domain) {
+	print ": account@$example_domain";
+} else {
+	print ": account@example.com";
+}
+
+?>
+<form action="<?php print $this->url() ?>" method=post name=login>
+
+<table border=0 cellpadding=3>
+ <tr valign=middle align=left>
+<?
+print "<td>";
+  print _("Username");
+  print ":</td>";
+?>
+  <td><input type="text" name="username"  
+	value="<?php if (isset($this->auth["uname"])) print $this->auth["uname"] ?>" 
+	size=35 maxlength=50>
+<?
+print "
+ </td>
+ </tr>
+ <tr>
+  <td>";
+  print _("Password");
+  print ":</td>";
+?>
+
+ <td><input type="password" name="password" size=35 maxlength=50></td>
+  <input type="hidden" name="step" value=<?print $step?>>
+ </tr>
+
+
+<? $sess->hidden_session(); ?>
+
+ <tr>
+
+  <td colspan=2>
+	<br>
+	<input onClick="doChallengeResponse(); return false;" type="submit" name="submitbtn" value="Login now">
+<?
+?>
+
+</td>
+
+ </tr>
+</table>
+
+ <?php global $username, $login_msg;
+print "<p class=s>";
+
+ if ( isset($username) ):
+	print "<p>";
+
+
+?>
+
+ <!-- failed login code -->
+
+
+ <p>
+<?  
+if ($username) {
+	print "
+   	<font color=red>
+	";
+    print _("Either your username or your password are invalid");
+
+	print "<br>
+    </font>
+    <p>$login_msg";
+
+}
+?>
+
+ <?php endif ?>
+
+<!-- Set up the form with the challenge value and an empty reply value -->
+<input type="hidden" name="challenge" value="<?php print $challenge ?>">
+<input type="hidden" name="response"  value="">
+</form>
+</body>
+<script language="JavaScript">
+  // Activate the appropriate input form field.
+  if (document.login.username.value == '') {
+    document.login.username.focus();
+  } else {
+    document.login.password.focus();
+  }
+
+</script>
+
+</html>

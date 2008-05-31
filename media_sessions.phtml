@@ -1,0 +1,48 @@
+<?
+include("global.inc");
+page_open(
+    array("sess" => "CDRTool_Session",
+          "auth" => "CDRTool_Auth",
+          "perm" => "CDRTool_Perm"
+          ));
+
+$perm->check("statistics");
+
+$title="Media sessions";
+include("header.phtml");
+
+global $CDRTool;
+if (strlen($CDRTool['filter']['domain'])) $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
+
+require("media_sessions_lib.phtml");
+
+$layout = new pageLayoutLocal();
+$layout->showTopMenu($title);
+
+if ($_REQUEST['datasource']) {
+	$datasources=array($_REQUEST['datasource']);
+} else {
+    $datasources=array_keys($DATASOURCES);
+}
+
+foreach ($datasources as $datasource) {
+    if (in_array($datasource,$CDRTool['dataSourcesAllowed'])) {
+        if ($DATASOURCES[$datasource]['mediaDispatcher']) {
+	    	printf ("<h1>%s</h1>",$DATASOURCES[$datasource]['name']);
+
+           	$filters=array('user'=>$_REQUEST['user']);
+           
+           	$MediaSessions = new MediaSessions($DATASOURCES[$datasource]['mediaDispatcher'],$allowedDomains,$filters);
+           	$MediaSessions->show();
+        }
+
+        if ($DATASOURCES[$datasource]['mediaServers']){
+	    	printf ("<h1>%s</h1>",$DATASOURCES[$datasource]['name']);
+           	$MediaSessions = new MediaSessions1($DATASOURCES[$datasource]['mediaServers'],$allowedDomains);
+           	$MediaSessions->show();
+        }
+    }
+}
+
+page_close();
+?>

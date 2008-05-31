@@ -227,7 +227,12 @@ $DATASOURCES=array(
                     "SourceIPRealmTranslation"  => array(
                                                   "10.0.0.1"      => "gateway.example.com" // translate Realm for sessions originating from IP address 10.0.0.1
                                                   ),
-                    "purgeCDRsAfter"    => 120 // how many days to keep old CDRs
+                    "purgeCDRsAfter"     => 120 // how many days to keep old CDRs
+                    "mediaDispatcher"    => "10.0.0.1",
+                    "mediaServers"       => array(
+                                                  "10.0.0.2",
+                                                  "10.0.0.3"
+                                                  )
                     ),
 "cisco"     =>array("name"               => "Cisco gateway",
                     "class"              => "CDRS_cisco",
