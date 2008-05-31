@@ -1,6 +1,6 @@
-<?php
+<?
 
-// array with mappings between User Agents and images
+// Mappings between User Agents and images
 $userAgentImages = array("Asterisk"       => "asterisk.png",
                          "AVM FRITZ"      => "avm-fritzbox-wlan.png",
                          "Cisco ATA"      => "cisco-ata.png",
