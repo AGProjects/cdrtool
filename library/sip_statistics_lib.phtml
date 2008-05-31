@@ -17,14 +17,16 @@ class SIPstatistics {
     function SIPstatistics () {
         global $CDRTool;
 
-    	$this->mrtgcfg_file    = $CDRTool['Path']."/status/usage/sip_statistics.mrtg";
-        $this->harvest_file    = "/tmp/CDRTool-sip-statistics.txt";
-        $this->mrtgcfg_dir     = $CDRTool['Path']."/status/usage";
-        $this->index_file      = $CDRTool['Path']."/status/usage/index.phtml";
+		$this->path=$CDRTool['Path'];
 
-        $this->harvest_script  = $CDRTool['Path']."/scripts/harvestStatistics.php";
-        $this->generateMrtgDataScript     = $CDRTool['Path']."/scripts/generateMrtgData.php";
-        $this->generateMrtgConfigScript   = $CDRTool['Path']."/scripts/generateMrtgConfig.php";
+    	$this->mrtgcfg_file    = $this->path."/status/usage/sip_statistics.mrtg";
+        $this->harvest_file    = "/tmp/CDRTool-sip-statistics.txt";
+        $this->mrtgcfg_dir     = $this->path."/status/usage";
+        $this->index_file      = $this->path."/status/usage/index.phtml";
+
+        $this->harvest_script  = $this->path."/scripts/harvestStatistics.php";
+        $this->generateMrtgDataScript     = $this->path."/scripts/generateMrtgData.php";
+        $this->generateMrtgConfigScript   = $this->path."/scripts/generateMrtgConfig.php";
 
         $this->db        = new DB_cdrtool();
         $this->ser_db    = new DB_openser();
@@ -502,8 +504,8 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
 
 	  	unset($soapEngines);
 
-		require_once("library/ngnpro_soap_library.phtml");
-        require("ngnpro_engines.inc");
+		require_once($this->path."/library/ngnpro_soap_library.phtml");
+        require($this->path."/ngnpro_engines.inc");
 
         //$soapEngines
         if (!array_key_exists($soapEngine,$soapEngines)) {

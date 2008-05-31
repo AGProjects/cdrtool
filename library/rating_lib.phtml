@@ -4262,6 +4262,8 @@ class OpenSERQuota {
         $this->CDRTool         = &$parent->CDRTool;
         $this->cdr_source      = &$parent->cdr_source;
 
+		$this->path=$this->CDRTool['Path'];
+
         if (!class_exists($this->AccountsDBClass)) {
             print("Info: No database defined for SIP accounts $this->cdr_source.\n");
         	return false;
@@ -4308,8 +4310,8 @@ class OpenSERQuota {
         }
 
         if ($DATASOURCES[$this->cdr_source]['soapEngineId']) {
-            require_once("library/ngnpro_soap_library.phtml");
-            require("ngnpro_engines.inc");
+            require_once($this->path."/library/ngnpro_soap_library.phtml");
+            require($this->path."/ngnpro_engines.inc");
 
             if (in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
 
