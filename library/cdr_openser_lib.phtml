@@ -2218,7 +2218,7 @@ class CDR_ser_radius extends CDR {
             $fromtag_enc      = urlencode($this->SipFromTag);
             $totag_enc        = urlencode($this->SipToTag);
 
-            $this->traceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
+            $this->traceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
             'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red>Click here to see the SIP trace for this call</font></a> &nbsp;";
 
             $CallInfoVerbose.= "
@@ -2357,7 +2357,7 @@ class CDR_ser_radius extends CDR {
             if ($this->CDRS->mediaTraceDataSource) {
                 $media_trace_datasource = $this->CDRS->mediaTraceDataSource;
 
-                $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media-trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
+                $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
                 'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here to see the media information for this call</a> &nbsp;";
 
                 $CallInfoVerbose.= sprintf("
@@ -3099,7 +3099,7 @@ class SIP_trace {
         }
 
         if ($this->mediaTraceDataSource) {
-            $this->mediaTraceLink=sprintf("<p><a href=\"javascript:void(null);\" onClick=\"return window.open('media-trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&totag=%s&proxyIP=%s', 'mediatrace',
+            $this->mediaTraceLink=sprintf("<p><a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&totag=%s&proxyIP=%s', 'mediatrace',
             'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here for the media trace</a>",
             $this->mediaTraceDataSource,
             urlencode($callid),
@@ -3185,7 +3185,7 @@ class SIP_trace {
 
             print "<td align=center class=border>";
             if ($proxyIP != $IPels[0] && $this->isProxy($IPels[0],$proxyIP)) {
-                $trace_link=sprintf("<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&totag=%s&proxyIP=%s', 'Trace',
+                $trace_link=sprintf("<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&totag=%s&proxyIP=%s', 'Trace',
                 'toolbar=0,status=1,menubar=1,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red><b>%s:%s (Trace) </b></font></a>",
                 urlencode($this->cdr_source),
                 urlencode($callid),
