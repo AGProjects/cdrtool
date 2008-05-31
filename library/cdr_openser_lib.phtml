@@ -2765,11 +2765,11 @@ class SIP_trace {
         }
 
         if ($this->enableThor) {
-    		include_once('provisioning/ngnpro_engines.inc');
+    		include_once('ngnpro_engines.inc');
 
         	if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
             	$this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
-			    require_once("provisioning/ngnpro_soap_library.phtml");
+			    require_once("library/ngnpro_soap_library.phtml");
 
                 $this->SOAPlogin = array(
                                        "username"    => $soapEngines[$this->soapEngineId]['username'],
@@ -3611,11 +3611,11 @@ class Media_trace {
         }
 
         if ($this->enableThor) {
-    		include_once('provisioning/ngnpro_engines.inc');
+    		include_once('ngnpro_engines.inc');
 
         	if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
             	$this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
-			    require_once("provisioning/ngnpro_soap_library.phtml");
+			    require_once("library/ngnpro_soap_library.phtml");
 
                 $this->SOAPlogin = array(
                                        "username"    => $soapEngines[$this->soapEngineId]['username'],

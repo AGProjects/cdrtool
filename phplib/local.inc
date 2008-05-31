@@ -361,8 +361,8 @@ class SIP_Subscriber_Auth extends Auth {
 		global $domainFilters, $resellerFilters, $soapEngines ;
 
         require_once('SOAP/Client.php');
-		require_once("provisioning/ngnpro_soap_library.phtml");
-		require_once("provisioning/ngnpro_engines.inc");
+		require_once("library/ngnpro_soap_library.phtml");
+		require_once("ngnpro_engines.inc");
 
         $SIP['account']    = $username;
 
