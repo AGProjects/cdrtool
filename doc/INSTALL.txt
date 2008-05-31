@@ -426,9 +426,10 @@ class DB_siponline extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
-Define all media proxy servers in:
- 
-/var/www/CDRTool/status/config/media_servers.php
+Define all media proxy servers as follows:
+
+For MediaProxy 1.x: mediaServers variable of each data source 
+For MediaProxy 2.x: mediaDispatcher variable of each data source 
 
 The script that gathers the usage information and builds the graphical
 statistics is /var/www/CDRTool/scripts/buildStatistics.php
