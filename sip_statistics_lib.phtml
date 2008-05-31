@@ -1,6 +1,6 @@
 <?
 /*
-    Copyright (c) 2007 AG Projects
+    Copyright (c) 2007-2008 AG Projects
     http://ag-projects.com
     Author Adrian Georgescu
 
@@ -209,10 +209,22 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         	return 0;
         }
 
-        $path = dirname(realpath($_SERVER['PHP_SELF']));
-        include($path."/../status/config/media_servers.php");
+        global $DATASOURCES;
 
-        $this->mediaServers=$servers;
+        $_mediaServers     = array();
+        $_mediaDispatchers = array();
+
+        foreach (array_keys($DATASOURCES) as $ds) {
+        	if (is_array($DATASOURCES[$ds]['mediaServers'])) {
+                $_mediaServers=array_merge($_mediaServers,$DATASOURCES[$ds]['mediaServers']);
+            }
+        	if (strlen($DATASOURCES[$ds]['mediaDispatcher'])) {
+                $_mediaDispatchers[]=$DATASOURCES[$ds]['mediaDispatcher'];
+            }
+        }
+
+        $this->mediaServers     = array_unique($_mediaServers);
+        $this->mediaDispatchers = array_unique($_mediaDispatchers);
 
         fwrite($handle,"domains\t\t\tonline_users\tsessions\tcaller\tcalled\n\n");
 

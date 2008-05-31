@@ -731,7 +731,7 @@ class pageLayout {
 
         
         if ($perm->have_perm("statistics")) {
-            print " | <a href=sip_online.phtml>Registrar</a>";
+            print " | <a href=sip_registrar.phtml>Registrar</a>";
             print " | <a href=media_sessions.phtml>Sessions</a>";
             print " | <a href=status/usage/index.phtml target=usage>Usage</a>";
         }
