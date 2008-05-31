@@ -1,0 +1,9 @@
+<?
+// List with MediaProxy 1.x servers to display sessions for.
+// Servers are specified in the form "IP:Port" (port can be missing)
+
+// If port is missing it is considered to be 25060
+
+$servers = array("10.0.0.1", "10.0.0.3:25060");
+
+?>
