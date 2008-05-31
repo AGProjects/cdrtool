@@ -5,18 +5,18 @@ class CDRS_ser_radius extends CDRS {
     var $subscriber_table      = "subscriber";
     var $ENUMtld               = '';
 
-    var $CDRFields=array('id'   	       => 'RadAcctId',
+    var $CDRFields=array('id'              => 'RadAcctId',
                          'callId'          => 'AcctSessionId',
                          'duration'        => 'AcctSessionTime',
                          'startTime'       => 'AcctStartTime',
                          'stopTime'        => 'AcctStopTime',
                          'inputTraffic'    => 'AcctInputOctets',
                          'outputTraffic'   => 'AcctOutputOctets',
-                         'aNumber'  	   => 'CallingStationId',
+                         'aNumber'         => 'CallingStationId',
                          'username'        => 'UserName',
-                         'domain'	       => 'Realm',
-                         'cNumber'   	   => 'CalledStationId',
-                         'timestamp'	   => 'timestamp',
+                         'domain'           => 'Realm',
+                         'cNumber'          => 'CalledStationId',
+                         'timestamp'       => 'timestamp',
                          'SipMethod'       => 'SipMethod',
                          'disconnect'      => 'SipResponseCode',
                          'SipFromTag'      => 'SipFromTag',
@@ -42,22 +42,22 @@ class CDRS_ser_radius extends CDRS {
                          'ENUMtld'         => 'ENUMtld'
                          );
 
-    var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
+    var $CDRNormalizationFields=array('id'               => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
                                       'username'        => 'UserName',
-                                      'domain'	        => 'Realm',
+                                      'domain'            => 'Realm',
                                       'gateway'         => 'SourceIP',
                                       'duration'        => 'AcctSessionTime',
                                       'startTime'       => 'AcctStartTime',
                                       'stopTime'        => 'AcctStopTime',
                                       'inputTraffic'    => 'AcctInputOctets',
                                       'outputTraffic'   => 'AcctOutputOctets',
-                                      'aNumber'  	    => 'CallingStationId',
-                                      'cNumber'   	    => 'CalledStationId',
-                                      'timestamp'	    => 'timestamp',
+                                      'aNumber'          => 'CallingStationId',
+                                      'cNumber'           => 'CalledStationId',
+                                      'timestamp'        => 'timestamp',
                                       'RemoteAddress'   => 'SipTranslatedRequestURI',
                                       'CanonicalURI'    => 'CanonicalURI',
-			                          'SipMethod'       => 'SipMethod',
+                                      'SipMethod'       => 'SipMethod',
                                       'applicationType' => 'SipApplicationType',
                                       'BillingPartyId'  => 'UserName',
                                       'price'           => 'Price',
@@ -103,7 +103,7 @@ class CDRS_ser_radius extends CDRS {
         "unnormalize","MediaTimeout","cdr_table"
         );
 
-	var $createTableFile="/setup/radius/OpenSER/radacct.mysql";
+    var $createTableFile="/setup/radius/OpenSER/radacct.mysql";
 
     function LoadDisconnectCodes() {
 
@@ -150,7 +150,7 @@ class CDRS_ser_radius extends CDRS {
         <tr bgcolor=lightgrey>
         <td>Id</td>
         <td><b>Start time</b></td>
-		<td><b>Sip Proxy</b></td>
+        <td><b>Sip Proxy</b></td>
         <td><b>SIP caller</b></td>
         <td><b>In</b></td>
         <td><b>SIP destination</b></td>
@@ -166,7 +166,7 @@ class CDRS_ser_radius extends CDRS {
     }
 
     function showExportHeader() {
-    	print "id,StartTime,StopTime,BillingParty,BillingDomain,PSTNCallerId,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,Application\n";
+        print "id,StartTime,StopTime,BillingParty,BillingDomain,PSTNCallerId,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,Application\n";
     }
 
     function showTableHeaderSubscriber($begin_datetime,$end_datetime) {
@@ -213,7 +213,7 @@ class CDRS_ser_radius extends CDRS {
             <table border=0 cellspacing=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td></td>
-                <td>			<b>Calls</b></td>
+                <td>            <b>Calls</b></td>
                 <td align=right><b>Seconds</b></td>
                 <td align=right><b>Minutes</b></td>
                 <td align=right><b>Hours</b></td>
@@ -222,9 +222,9 @@ class CDRS_ser_radius extends CDRS {
                 <td align=right><b>TrafficOut(MB)</b></td>
                 <td align=center colspan=2><b>Success</b></td>
                 <td align=center colspan=2><b>Failure</b></td>
-                <td>			<b>$group_byPrint</b></td>
-                <td>			<b>Description</b></td>
-                <td>			<b>Action</b></td>
+                <td>            <b>$group_byPrint</b></td>
+                <td>            <b>Description</b></td>
+                <td>            <b>Action</b></td>
             </tr>
             ";
         } else {
@@ -264,8 +264,8 @@ class CDRS_ser_radius extends CDRS {
 
         if (isset($this->CDRTool['dataSourcesAllowed'])) {
             while (list($k,$v)=each($this->CDRTool['dataSourcesAllowed'])) {
-            	if ($this->DATASOURCES[$v]['invisible']) continue;
-            	$cdr_source_els[]=array("label"=>$this->DATASOURCES[$v]['name'],"value"=>$v);
+                if ($this->DATASOURCES[$v]['invisible']) continue;
+                $cdr_source_els[]=array("label"=>$this->DATASOURCES[$v]['name'],"value"=>$v);
             }
         }
         
@@ -282,12 +282,12 @@ class CDRS_ser_radius extends CDRS {
                               )
                        );
 
-		$cdr_table_els=array();
+        $cdr_table_els=array();
         foreach ($this->tables as $_table) {
-        	if (preg_match("/^.*(\d{6})$/",$_table,$m)) {
-            	$cdr_table_els[]=array("label"=>$m[1],"value"=>$_table);
+            if (preg_match("/^.*(\d{6})$/",$_table,$m)) {
+                $cdr_table_els[]=array("label"=>$m[1],"value"=>$_table);
             } else {
-            	$cdr_table_els[]=array("label"=>$_table,"value"=>$_table);
+                $cdr_table_els[]=array("label"=>$_table,"value"=>$_table);
             }
         }
     
@@ -300,11 +300,11 @@ class CDRS_ser_radius extends CDRS {
 
         if ($begin_datetime) {
             preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$begin_datetime", $parts);
-            $begin_year	=date(Y,$begin_datetime);
+            $begin_year    =date(Y,$begin_datetime);
             $begin_month=date(m,$begin_datetime);
-            $begin_day 	=date(d,$begin_datetime);
-            $begin_hour	=date(H,$begin_datetime);
-            $begin_min 	=date(i,$begin_datetime);
+            $begin_day     =date(d,$begin_datetime);
+            $begin_hour    =date(H,$begin_datetime);
+            $begin_min     =date(i,$begin_datetime);
         } else {
             $begin_day      = $_REQUEST["begin_day"];
             $begin_month    = $_REQUEST["begin_month"];
@@ -315,11 +315,11 @@ class CDRS_ser_radius extends CDRS {
         
         if ($end_datetime) {
             preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$end_datetime", $parts);
-            $end_year	=date(Y,$end_datetime);
-            $end_month 	=date(m,$end_datetime);
-            $end_day 	=date(d,$end_datetime);
-            $end_hour	=date(H,$end_datetime);
-            $end_min 	=date(i,$end_datetime);
+            $end_year    =date(Y,$end_datetime);
+            $end_month     =date(m,$end_datetime);
+            $end_day     =date(d,$end_datetime);
+            $end_hour    =date(H,$end_datetime);
+            $end_min     =date(i,$end_datetime);
         }  else {
             $end_day        = $_REQUEST["end_day"];
             $end_month      = $_REQUEST["end_month"];
@@ -328,17 +328,17 @@ class CDRS_ser_radius extends CDRS {
             $end_min        = $_REQUEST["end_min"];
         }
         
-        $default_year	=Date("Y");
-        $default_month	=Date("m");
-        $default_day	=Date("d");
-        $default_hour	=Date(H,time());
+        $default_year    =Date("Y");
+        $default_month    =Date("m");
+        $default_day    =Date("d");
+        $default_hour    =Date(H,time());
         
         if ($default_hour > 1) {
             $default_hour=$default_hour-1;
         }
         
         $default_hour=preg_replace("/^(\d)$/","0$1",$default_hour);
-        $default_min	=Date("i");
+        $default_min    =Date("i");
         
         if ($default_min > 10) {
             $default_min=$default_min-10;
@@ -369,7 +369,7 @@ class CDRS_ser_radius extends CDRS {
                     "options"=>$hours_els,
                     "size"=>"1"
                     ));
-        $this->f->add_element(array(	"name"=>"end_hour",
+        $this->f->add_element(array(    "name"=>"end_hour",
                     "type"=>"select",
                     "options"=>$hours_els,
                     "size"=>"1",
@@ -381,7 +381,7 @@ class CDRS_ser_radius extends CDRS {
             $min_els[]=array("label"=>$v,"value"=>$v);
             $m++;
         }
-        $this->f->add_element(array(	"name"=>"begin_min",
+        $this->f->add_element(array(    "name"=>"begin_min",
                     "type"=>"select",
                     "options"=>$min_els,
                     "size"=>"1"
@@ -398,13 +398,13 @@ class CDRS_ser_radius extends CDRS {
             $days_els[]=array("label"=>$v,"value"=>$v);
             $m++;
         }
-        $this->f->add_element(array(	"name"=>"begin_day",
+        $this->f->add_element(array(    "name"=>"begin_day",
                                 "type"=>"select",
                                 "options"=>$days_els,
                                 "size"=>"1"
         
                     ));
-        $this->f->add_element(array(	"name"=>"end_day",
+        $this->f->add_element(array(    "name"=>"end_day",
                                 "type"=>"select",
                                 "options"=>$days_els,
                                 "size"=>"1"
@@ -418,12 +418,12 @@ class CDRS_ser_radius extends CDRS {
             $m++;
         }
         
-        $this->f->add_element(array(	"name"=>"begin_month",
+        $this->f->add_element(array(    "name"=>"begin_month",
                                 "type"=>"select",
                                 "options"=>$month_els,
                                 "size"=>"1"
                     ));
-        $this->f->add_element(array(	"name"=>"end_month",
+        $this->f->add_element(array(    "name"=>"end_month",
                                 "type"=>"select",
                                 "options"=>$month_els,
                                 "size"=>"1"
@@ -434,18 +434,18 @@ class CDRS_ser_radius extends CDRS {
             $year_els[]=array("label"=>$y,"value"=>$y);
             $y--;
         }
-        $this->f->add_element(array(	"name"=>"begin_year",
+        $this->f->add_element(array(    "name"=>"begin_year",
                                 "type"=>"select",
                                 "options"=>$year_els,
                                 "size"=>"1"
         
                     ));
-        $this->f->add_element(array(	"name"=>"end_year",
+        $this->f->add_element(array(    "name"=>"end_year",
                                 "type"=>"select",
                                 "options"=>$year_els,
                                 "size"=>"1"
                     ));
-        $this->f->add_element(array(	"name"=>"call_id",
+        $this->f->add_element(array(    "name"=>"call_id",
                                 "type"=>"text",
                                 "size"=>"50",
                                 "maxlength"=>"100"
@@ -460,13 +460,13 @@ class CDRS_ser_radius extends CDRS {
                     $UserNameS_els[]=array("label"=>$_el,"value"=>$_el);
                 }
     
-                $this->f->add_element(array(	"name"=>"UserName",
+                $this->f->add_element(array(    "name"=>"UserName",
                                         "type"=>"select",
                                         "options"=>$UserNameS_els,
                                         "size"=>"1"
                             ));
             } else {
-                $this->f->add_element(array(	"name"=>"UserName",
+                $this->f->add_element(array(    "name"=>"UserName",
                                         "type"=>"text",
                                         "size"=>"25",
                                         "maxlength"=>"255"
@@ -474,26 +474,26 @@ class CDRS_ser_radius extends CDRS {
 
             }
 
- 		} else {
+         } else {
 
-            $this->f->add_element(array(	"name"=>"UserName",
+            $this->f->add_element(array(    "name"=>"UserName",
                                     "type"=>"text",
                                     "size"=>"25",
                                     "maxlength"=>"255"
                         ));
         }
 
-        $this->f->add_element(array(	"name"=>"a_number",
+        $this->f->add_element(array(    "name"=>"a_number",
                                 "type"=>"text",
                                 "size"=>"25",
                                 "maxlength"=>"255"
                     ));
-        $this->f->add_element(array(	"name"=>"BillingId",
+        $this->f->add_element(array(    "name"=>"BillingId",
                                 "type"=>"text",
                                 "size"=>"25",
                                 "maxlength"=>"255"
                     ));
-        $this->f->add_element(array(	"name"=>"c_number",
+        $this->f->add_element(array(    "name"=>"c_number",
                                 "type"=>"text",
                                 "size"=>"25",
                                 "maxlength"=>"255"
@@ -538,19 +538,19 @@ class CDRS_ser_radius extends CDRS {
                            'CallingStationId'     => 'SIP Caller Party',
                            'DestinationId'        => 'SIP Destination Id',
                            'SipApplicationType'   => 'Application',
-		                       ' '                => '-------------',
-        	               'hour'                 => 'Hour of day',
-            	           'DAYOFWEEK'            => 'Day of Week',
-                	       'DAYOFMONTH'           => 'Day of Month',
-                    	   'DAYOFYEAR'            => 'Day of Year',
-	                       'BYMONTH'              => 'Month',
-    	                   'BYYEAR'               => 'Year'
+                               ' '                => '-------------',
+                           'hour'                 => 'Hour of day',
+                           'DAYOFWEEK'            => 'Day of Week',
+                           'DAYOFMONTH'           => 'Day of Month',
+                           'DAYOFYEAR'            => 'Day of Year',
+                           'BYMONTH'              => 'Month',
+                           'BYYEAR'               => 'Year'
 
                            );
 
         }
         
-        $this->f->add_element(array(	"name"=>"duration",
+        $this->f->add_element(array(    "name"=>"duration",
                                 "type"=>"select",
                                 "options"=>$durations_els,
                                 "value"=>"All",
@@ -562,30 +562,30 @@ class CDRS_ser_radius extends CDRS {
                 array("label"=>"Is empty","value"=>"empty"),
                 array("label"=>"Equal","value"=>"equal")
                 );
-        $this->f->add_element(array(	"name"=>"a_number_comp",
+        $this->f->add_element(array(    "name"=>"a_number_comp",
                                 "type"=>"select",
                                 "options"=>$comp_ops_els,
                                 "value"=>"begin",
                                 "size"=>"1"
                     ));
-        $this->f->add_element(array(	"name"=>"c_number_comp",
+        $this->f->add_element(array(    "name"=>"c_number_comp",
                                 "type"=>"select",
                                 "options"=>$comp_ops_els,
                                 "value"=>"begin",
                                 "size"=>"1"
                     ));
-        $this->f->add_element(array(	"name"=>"UserName_comp",
+        $this->f->add_element(array(    "name"=>"UserName_comp",
                                 "type"=>"select",
                                 "options"=>$comp_ops_els,
                                 "value"=>"begin",
                                 "size"=>"1"
                     ));
-        $this->f->add_element(array(	"name"=>"Realm",
+        $this->f->add_element(array(    "name"=>"Realm",
                                 "type"=>"text",
                                 "size"=>"25",
                                 "maxlength"=>"25"
                     ));
-        $this->f->add_element(array(	"name"=>"MediaTimeout",
+        $this->f->add_element(array(    "name"=>"MediaTimeout",
                                 "type"=>"checkbox",
                                 "value"=>"1"
                     ));
@@ -602,7 +602,7 @@ class CDRS_ser_radius extends CDRS {
                         array("label"=>"100","value"=>"100"),
                         array("label"=>"500","value"=>"500")
                 );
-        $this->f->add_element(array(	"name"=>"maxrowsperpage",
+        $this->f->add_element(array(    "name"=>"maxrowsperpage",
                                 "type"=>"select",
                                 "options"=>$max_els,
                                 "size"=>"1",
@@ -612,7 +612,7 @@ class CDRS_ser_radius extends CDRS {
                         array("label"=>"Descending","value"=>"DESC"),
                         array("label"=>"Ascending","value"=>"ASC")
                         );
-        $this->f->add_element(array(	"name"=>"order_type",
+        $this->f->add_element(array(    "name"=>"order_type",
                                 "type"=>"select",
                                 "options"=>$order_type_els,
                                 "size"=>"1"
@@ -702,7 +702,7 @@ class CDRS_ser_radius extends CDRS {
                                     "type"=>"text",
                                     "size"=>"10"
                                 ));
-        $this->f->add_element(array(	"name"=>"ExcludeDestinations",
+        $this->f->add_element(array(    "name"=>"ExcludeDestinations",
                                 "type"=>"text",
                                 "size"=>"20",
                                 "maxlength"=>"255"
@@ -876,9 +876,9 @@ class CDRS_ser_radius extends CDRS {
             print "</nobr>&nbsp";
 
             if (!$perm->have_perm('readonly')) {
-            	print ";&nbsp;&nbsp; <nobr>ReNormalize";
-            	print "<input type=checkbox name=ReNormalize value=1>
-            	</nobr>";
+                print ";&nbsp;&nbsp; <nobr>ReNormalize";
+                print "<input type=checkbox name=ReNormalize value=1>
+                </nobr>";
             }
 
             print "
@@ -916,7 +916,7 @@ class CDRS_ser_radius extends CDRS {
         if ($this->CDRTool['filter']['aNumber']) {
             $UserNameS    = explode(" ",$this->CDRTool['filter']['aNumber']);
             if (count($UserNameS) == 1) {
-            	$ff[]="UserName";
+                $ff[]="UserName";
             }
         }
 
@@ -1074,7 +1074,7 @@ class CDRS_ser_radius extends CDRS {
             $order_by=$this->idField;
         }
 
-		if (!$cdr_table) $cdr_table=$this->table;
+        if (!$cdr_table) $cdr_table=$this->table;
 
         $this->url="?cdr_source=$this->cdr_source&cdr_table=$cdr_table";
 
@@ -1110,36 +1110,36 @@ class CDRS_ser_radius extends CDRS {
         if ($MONTHYEAR) {
             $where .=  " and $this->startTimeField like '$MONTHYEAR%' ";
             $MONTHYEAR_url=urlencode($MONTHYEAR);
-        	$this->url.="&MONTHYEAR=$MONTHYEAR_url";
+            $this->url.="&MONTHYEAR=$MONTHYEAR_url";
         }
 
         if ($this->CDRTool['filter']['aNumber']) {
             $UserName_comp="equal";
             // force user to see only CDRS with his a_numbers
- 			$where .= "
+             $where .= "
             and $this->usernameField in (" ;
             $rr=0;
             foreach ($UserNameS as $_el) {
-            	$_el=trim($_el);
+                $_el=trim($_el);
                 if (strlen($_el)) {
-	                if ($rr) $where .= ", ";
-    	            $where .= " '$_el'";
-        	        $rr++;
+                    if ($rr) $where .= ", ";
+                    $where .= " '$_el'";
+                    $rr++;
                 }
             }
             $where .= ") ";
 
         } else if ($UserNameS)  {
             $UserName_comp="equal";
- 			$where .= "
+             $where .= "
             and $this->usernameField in (" ;
             $rr=0;
             foreach ($UserNameS as $_el) {
-            	$_el=trim($_el);
+                $_el=trim($_el);
                 if (strlen($_el)) {
-	                if ($rr) $where .= ", ";
-    	            $where .= " '$_el' ";
-        	        $rr++;
+                    if ($rr) $where .= ", ";
+                    $where .= " '$_el' ";
+                    $rr++;
                 }
             }
             $where .= ") ";
@@ -1147,7 +1147,7 @@ class CDRS_ser_radius extends CDRS {
         }
 
         if ($UserName_comp != "empty") {
-        	$UserName=trim($UserName);
+            $UserName=trim($UserName);
             if ($UserName) {
                 $UserName_encoded=urlencode($UserName);
                 if ($UserName_comp=="begin") {
@@ -1205,7 +1205,7 @@ class CDRS_ser_radius extends CDRS {
             $rr=0;
             foreach ($Realms as $realm) {
                 if ($rr) {
-                	$where .= " or ";
+                    $where .= " or ";
                 }
                 $where .= " $this->domainField like '".addslashes($realm)."%' ";
 
@@ -1224,7 +1224,7 @@ class CDRS_ser_radius extends CDRS {
             $rr=0;
             foreach ($Realms as $realm) {
                 if ($rr) {
-                	$where .= " or ";
+                    $where .= " or ";
                 }
                 $where .= " $this->domainField like '".addslashes($realm)."%' ";
 
@@ -1233,7 +1233,7 @@ class CDRS_ser_radius extends CDRS {
             $where .= " ) ";
         }
 
-		$BillingId=trim($BillingId);
+        $BillingId=trim($BillingId);
         if (preg_match("/^\d+$/",$BillingId) && $this->BillingIdField) {
             $where .= " and $this->BillingIdField = '".addslashes($BillingId)."'";
             $BillingId_encoded=urlencode($BillingId);
@@ -1261,13 +1261,13 @@ class CDRS_ser_radius extends CDRS {
             $ExcludeDestArray=explode(" ",trim($ExcludeDestinations));
 
             foreach ($ExcludeDestArray as $exclDst) {
-            	if (preg_match("/^0+(\d+)$/",$exclDst,$m)) {
-                	$exclDest_id=$m[1];
+                if (preg_match("/^0+(\d+)$/",$exclDst,$m)) {
+                    $exclDest_id=$m[1];
                 } else {
                     $exclDest_id=$exclDst;
                 }
 
-            	$where .= " and ".
+                $where .= " and ".
                 $this->CanonicalURIField.
                 " not like '".
                 addslashes(trim($exclDst)).
@@ -1299,20 +1299,20 @@ class CDRS_ser_radius extends CDRS {
             $SipCodec_enc=urlencode($SipCodec);
 
             $this->url.="&SipCodec=$SipCodec_enc";
-        	if ($SipCodec != "empty") {
+            if ($SipCodec != "empty") {
                 $where .= " and $this->SipCodecField = '".addslashes($SipCodec)."'";
-        	} else {
-            	$where .= " and $this->SipCodecField = ''";
+            } else {
+                $where .= " and $this->SipCodecField = ''";
             }
         }
 
         if ($SipRPID) {
             $SipRPID_enc=urlencode($SipRPID);
             $this->url.="&SipRPID=$SipRPID_enc";
-        	if ($SipRPID != "empty") {
+            if ($SipRPID != "empty") {
                 $where .= " and $this->SipRPIDField = '".addslashes($SipRPID)."'";
-        	} else {
-            	$where .= " and $this->SipRPIDField = ''";
+            } else {
+                $where .= " and $this->SipRPIDField = ''";
             }
         }
 
@@ -1365,7 +1365,7 @@ class CDRS_ser_radius extends CDRS {
             if (preg_match("/\d+/",$duration) ) {
                 $where .= " and ($this->durationField > 0 and $this->durationField $duration) ";
             } elseif (preg_match("/onehour/",$duration) ) {
-            	$where .= " and ($this->durationField < 3610 and $this->durationField > 3530) ";
+                $where .= " and ($this->durationField < 3610 and $this->durationField > 3530) ";
             } elseif ($duration == "zero") {
                 $where .= " and $this->durationField = 0";
             } elseif ($duration == "zeroprice" && $this->priceField) {
@@ -1393,9 +1393,9 @@ class CDRS_ser_radius extends CDRS {
             $this->url.="&group_by=$group_by";
         }
 
-        $this->url_edit	    = $this->scriptFile.$this->url."&action=edit";
-        $this->url_run	    = $this->scriptFile.$this->url."&action=search";
-        $this->url_export	= $_SERVER["PHP_SELF"].$this->url."&action=search&export=1";
+        $this->url_edit        = $this->scriptFile.$this->url."&action=edit";
+        $this->url_run        = $this->scriptFile.$this->url."&action=search";
+        $this->url_export    = $_SERVER["PHP_SELF"].$this->url."&action=search&export=1";
 
         if ($duration == "unnormalized") {
             $where .=  " and $this->normalizedField = '0' ";
@@ -1450,7 +1450,7 @@ class CDRS_ser_radius extends CDRS {
                 $rows = $this->CDRdb->f('records');
              }
         } else {
-        	printf ("%s",$this->CDRdb->Error);
+            printf ("%s",$this->CDRdb->Error);
             $rows = 0;
         }
 
@@ -1471,7 +1471,7 @@ class CDRS_ser_radius extends CDRS {
         $j=0;
         $z=0;
 
-		if (!$this->export) print "<p>";
+        if (!$this->export) print "<p>";
         
         if ($rows>0)  {
             
@@ -1530,7 +1530,7 @@ class CDRS_ser_radius extends CDRS {
                     }
                 }
 
-				$this->SipMethodField=$this->CDRFields['SipMethod'];
+                $this->SipMethodField=$this->CDRFields['SipMethod'];
                 $query= "
                 select sum($this->durationField) as $this->durationField,
                 SEC_TO_TIME(sum($this->durationField)) as hours,
@@ -1538,7 +1538,7 @@ class CDRS_ser_radius extends CDRS {
                 $this->SipMethodField,
                 2*sum($this->inputTrafficField)/1024/1024 as $this->inputTrafficField,
                 2*sum($this->outputTrafficField)/1024/1024 as $this->outputTrafficField,
-        		SUM($this->durationField = '0') as zero,
+                SUM($this->durationField = '0') as zero,
                 SUM($this->durationField > '0') as nonzero,
                 ";
 
@@ -1577,12 +1577,12 @@ class CDRS_ser_radius extends CDRS {
                     $found=$i+1;
                     $this->CDRdb->next_record();
 
-                    $calls		     	= $this->CDRdb->f('calls');
-                    $seconds    	   	= $this->CDRdb->f($this->durationField);
-                    $seconds_print 	   	= number_format($this->CDRdb->f($this->durationField),0);
-                    $minutes	   	    = number_format($this->CDRdb->f($this->durationField)/60,0,"","");
-                    $minutes_print	   	= number_format($this->CDRdb->f($this->durationField)/60,0);
-                    $hours      	    = $this->CDRdb->f('hours');
+                    $calls                 = $this->CDRdb->f('calls');
+                    $seconds               = $this->CDRdb->f($this->durationField);
+                    $seconds_print            = number_format($this->CDRdb->f($this->durationField),0);
+                    $minutes               = number_format($this->CDRdb->f($this->durationField)/60,0,"","");
+                    $minutes_print           = number_format($this->CDRdb->f($this->durationField)/60,0);
+                    $hours              = $this->CDRdb->f('hours');
 
                     $AcctInputOctets    = number_format($this->CDRdb->f($this->inputTrafficField),2,".","");
                     $AcctOutputOctets   = number_format($this->CDRdb->f($this->outputTrafficField),2,".","");
@@ -1590,19 +1590,19 @@ class CDRS_ser_radius extends CDRS {
                     $NetRateOut         = $this->CDRdb->f('netrate_out');
                     $SipMethod          = $this->CDRdb->f($this->callTypeField);
                     $AcctTerminateCause = $this->CDRdb->f($this->disconnectField);
-                    $mygroup		    = $this->CDRdb->f('mygroup');
+                    $mygroup            = $this->CDRdb->f('mygroup');
 
-                    $zero		        = $this->CDRdb->f('zero');
-                    $nonzero	        = $this->CDRdb->f('nonzero');
-                    $success		    = number_format($nonzero/$calls*100,2,".","");
-                    $failure		    = number_format($zero/$calls*100,2,".","");
+                    $zero                = $this->CDRdb->f('zero');
+                    $nonzero            = $this->CDRdb->f('nonzero');
+                    $success            = number_format($nonzero/$calls*100,2,".","");
+                    $failure            = number_format($zero/$calls*100,2,".","");
 
                     $NetworkRateIn      = number_format($NetRateIn,2);
                     $NetworkRateOut     = number_format($NetRateOut,2);
                     $NetworkRate        = max($NetworkRateIn,$NetworkRateOut);
 
                     if ($this->priceField) {
-                        $price      	= $this->CDRdb->f($this->priceField);
+                        $price          = $this->CDRdb->f($this->priceField);
                     }
 
                     $rr=floor($found/2);
@@ -1620,7 +1620,7 @@ class CDRS_ser_radius extends CDRS {
                         if ($this->CDRTool['filter']['domain'] && $this->destinations[$this->CDRTool['filter']['domain']]) {
                             $description=$this->destinations[$this->CDRTool['filter']['domain']][$mygroup];
                         } else {
-                        	$description=$this->destinations["default"][$mygroup];
+                            $description=$this->destinations["default"][$mygroup];
                         }
 
                         $mygroup_print=$mygroup;
@@ -1696,7 +1696,7 @@ class CDRS_ser_radius extends CDRS {
                     }
 
                     if (!$traceValue) {
-                    	$traceValue="empty";
+                        $traceValue="empty";
                     }
 
                     $traceValue_enc=urlencode($traceValue);
@@ -1711,7 +1711,7 @@ class CDRS_ser_radius extends CDRS {
                         <td align=right>$hours</td>
                         ";
                         if ($perm->have_perm("showPrice")) {
-                        	$pricePrint=number_format($price,4,".","");
+                            $pricePrint=number_format($price,4,".","");
                         } else {
                             $pricePrint='x.xxx';
                         }
@@ -1725,7 +1725,7 @@ class CDRS_ser_radius extends CDRS {
                         <td align=right>($zero calls)</td>
                         <td>$mygroup_print</td>
                         <td>$description</td>
-			            <td>";
+                        <td>";
                         printf("<a href=%s&%s=%s&%s_comp=begin target=_new>Display calls</a></td>",$url_calls,$traceField,$traceValue_enc,$traceField);
                         print "
                         </tr>
@@ -1766,7 +1766,7 @@ class CDRS_ser_radius extends CDRS {
         
             } else {
                 if (!$this->export && !$this->CDRTool['filter']['aNumber']) {
-                	printf ("For more information about each call click on its Id column. ");
+                    printf ("For more information about each call click on its Id column. ");
                 }
 
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
@@ -1783,28 +1783,28 @@ class CDRS_ser_radius extends CDRS {
                 if ($this->CDRTool['filter']['aNumber']) {
                     $this->showTableHeaderSubscriber($begin_datetime,$end_datetime);
                 } else {
-                	if (!$this->export) {
-                    	$this->showTableHeader($begin_datetime,$end_datetime);
+                    if (!$this->export) {
+                        $this->showTableHeader($begin_datetime,$end_datetime);
                     } else {
-                    	$this->showExportHeader();
+                        $this->showExportHeader();
                     }
                 }
 
                 while ($i<$maxrows)  {
                     global $found;
                     $found=$i+1;
-                    $this->CDRdb->next_record();											
+                    $this->CDRdb->next_record();                                            
 
-					$Structure=$this->_readCDRFieldsFromDB();
+                    $Structure=$this->_readCDRFieldsFromDB();
                     $CDR = new $this->CDR_class($this, $Structure);
 
                     if ($this->CDRTool['filter']['aNumber']) {
                         $CDR->showSubscriber();
                     } else {
-                 		if (!$this->export) {
-                        	$CDR->show();
+                         if (!$this->export) {
+                            $CDR->show();
                         } else {
-                        	$CDR->export();
+                            $CDR->export();
                         }
                     }
 
@@ -1833,9 +1833,9 @@ class CDRS_ser_radius extends CDRS {
         }
 
         if (strlen($this->DATASOURCES[$this->cdr_source]['enableThor'])) {
-	    	$this->domain_table          = "sip_domains";
+            $this->domain_table          = "sip_domains";
         } else {
-	    	$this->domain_table          = "domain";
+            $this->domain_table          = "domain";
         }
 
         $query=sprintf("select domain from %s",$this->domain_table);
@@ -1865,7 +1865,7 @@ class CDRS_ser_radius extends CDRS {
 
 class CDR_ser_radius extends CDR {
 
-	var $show_in_icon=0;
+    var $show_in_icon=0;
     var $show_out_icon=0;
     var $QoSParameters=array(
         "PS"=>"Audio packets sent",
@@ -1894,50 +1894,50 @@ class CDR_ser_radius extends CDR {
         }
 
         if ($this->CanonicalURI) {
-			$this->CanonicalURI   = quoted_printable_decode($this->CanonicalURI);
+            $this->CanonicalURI   = quoted_printable_decode($this->CanonicalURI);
         }
 
         if ($this->RemoteAddress) {
-        	$this->RemoteAddress  = quoted_printable_decode($this->RemoteAddress);
+            $this->RemoteAddress  = quoted_printable_decode($this->RemoteAddress);
         }
 
         if ($this->BillingPartyId) {
-        	$this->BillingPartyId = quoted_printable_decode($this->BillingPartyId);
+            $this->BillingPartyId = quoted_printable_decode($this->BillingPartyId);
         }
 
         if ($this->aNumber) {
-        	$this->aNumber        = quoted_printable_decode($this->aNumber);
+            $this->aNumber        = quoted_printable_decode($this->aNumber);
         }
 
         if ($this->cNumber) {
-        	$this->cNumber        = quoted_printable_decode($this->cNumber);
+            $this->cNumber        = quoted_printable_decode($this->cNumber);
         }
 
         if (!$this->applicationType && $this->SipMethod) {
-			$_method=strtolower($this->SipMethod);
+            $_method=strtolower($this->SipMethod);
             if ($_method=="publish"   ||
-            	$_method=="subscribe" ||
+                $_method=="subscribe" ||
                 $_method=="notify"    ){
-        		$this->applicationType="presence";
+                $this->applicationType="presence";
             } else if ($_method=="message") {
-        		$this->applicationType="message";
+                $this->applicationType="message";
             } else {
-        		$this->applicationType="audio";
+                $this->applicationType="audio";
             }
         }
 
-		$this->applicationType=strtolower($this->applicationType);
+        $this->applicationType=strtolower($this->applicationType);
 
         if (strstr($this->applicationType,'video')) {
             // we rate calls containing video same as audio
             // is not possible to determine that a session is
             // video from start to end as SIP allows streams to
             // be added and substracted on the fly
-        	$this->applicationType='audio';
+            $this->applicationType='audio';
         }
 
         if (!in_array($this->applicationType,$this->supportedApplicationTypes)) {
-			$this->applicationType = $this->defaultApplicationType;
+            $this->applicationType = $this->defaultApplicationType;
         }
 
         $this->applicationTypeNormalized=$this->applicationType;
@@ -1966,16 +1966,16 @@ class CDR_ser_radius extends CDR {
         }
 
         if (!$this->BillingPartyId || $this->BillingPartyId == 'n/a') {
-        	$this->BillingPartyId=$this->aNumberPrint;
+            $this->BillingPartyId=$this->aNumberPrint;
         }
 
-		$this->BillingPartyId=strtolower($this->BillingPartyId);
+        $this->BillingPartyId=strtolower($this->BillingPartyId);
 
-		$this->BillingPartyIdPrint=$this->BillingPartyId;
+        $this->BillingPartyIdPrint=$this->BillingPartyId;
 
-		$this->RemoteAddressPrint=$this->RemoteAddress;
+        $this->RemoteAddressPrint=$this->RemoteAddress;
 
-		$this->SipRPIDPrint=$this->SipRPID;
+        $this->SipRPIDPrint=$this->SipRPID;
 
         if (!$this->domain) {
             $_els=explode("@",$this->BillingPartyId);
@@ -1999,10 +1999,10 @@ class CDR_ser_radius extends CDR {
         //   Radius attribute in the Radius START packet
 
         if (!$this->CanonicalURI) {
-        	if ($this->RemoteAddress) {
-            	$this->CanonicalURI=$this->RemoteAddress;
+            if ($this->RemoteAddress) {
+                $this->CanonicalURI=$this->RemoteAddress;
             } else if ($this->cNumber) {
-            	$this->CanonicalURI=$this->cNumber;
+                $this->CanonicalURI=$this->cNumber;
             }
         }
 
@@ -2026,8 +2026,8 @@ class CDR_ser_radius extends CDR {
             $this->cNumberNormalized            = $NormalizedNumber['Normalized'];
             $this->cNumberUsername              = $NormalizedNumber['username'];
             $this->cNumberDomain                = $NormalizedNumber['domain'];
-            $this->cNumberPrint          		= $NormalizedNumber['username'].$NormalizedNumber['delimiter'].$NormalizedNumber['domain'];
-            $this->cNumberDelimiter        		= $NormalizedNumber['delimiter'];
+            $this->cNumberPrint                  = $NormalizedNumber['username'].$NormalizedNumber['delimiter'].$NormalizedNumber['domain'];
+            $this->cNumberDelimiter                = $NormalizedNumber['delimiter'];
         }
 
         if ($this->RemoteAddress) {
@@ -2040,10 +2040,10 @@ class CDR_ser_radius extends CDR {
             $this->RemoteAddressUsername        = $NormalizedNumber['username'];
             $this->RemoteAddressDelimiter       = $NormalizedNumber['delimiter'];
     
-            $this->remoteGateway        		= $NormalizedNumber['domain'];
-            $this->remoteUsername        		= $NormalizedNumber['username'];
+            $this->remoteGateway                = $NormalizedNumber['domain'];
+            $this->remoteUsername                = $NormalizedNumber['username'];
     
-		}
+        }
 
         if ($this->applicationType=="presence") {
 
@@ -2051,37 +2051,37 @@ class CDR_ser_radius extends CDR {
             $this->DestinationForRating = $this->cNumberNormalized;
 
         } else {
-	        if (!$this->DestinationId) {
-            	if ($this->CanonicalURIDomain) {
-		    		$this->destinationPrint = $this->CanonicalURIUsername.$this->CanonicalURIDelimiter.$this->CanonicalURIDomain;
+            if (!$this->DestinationId) {
+                if ($this->CanonicalURIDomain) {
+                    $this->destinationPrint = $this->CanonicalURIUsername.$this->CanonicalURIDelimiter.$this->CanonicalURIDomain;
                 } else {
-		    		$this->destinationPrint = $this->cNumberUsername.$this->cNumberDelimiter.$this->cNumberDomain;
+                    $this->destinationPrint = $this->cNumberUsername.$this->cNumberDelimiter.$this->cNumberDomain;
                 }
 
                 if (strstr($this->CanonicalURINormalized,'@')) {
-            		$this->DestinationForRating = $this->CanonicalURINormalized;
+                    $this->DestinationForRating = $this->CanonicalURINormalized;
                 } else {
-            		$this->DestinationForRating = $this->RemoteAddressNormalized;
+                    $this->DestinationForRating = $this->RemoteAddressNormalized;
                 }
 
-        	} else {
-            	$this->DestinationForRating = $this->CanonicalURINormalized;
-	    		$this->destinationPrint = $this->CanonicalURIPrint;
-	        }
+            } else {
+                $this->DestinationForRating = $this->CanonicalURINormalized;
+                $this->destinationPrint = $this->CanonicalURIPrint;
+            }
         }
 
         if ($this->inputTraffic) {
-        	$this->inputTrafficPrint  = number_format($this->inputTraffic/1024,2);
+            $this->inputTrafficPrint  = number_format($this->inputTraffic/1024,2);
         }
 
         if ($this->outputTraffic) {
-        	$this->outputTrafficPrint = number_format($this->outputTraffic/1024,2);
+            $this->outputTrafficPrint = number_format($this->outputTraffic/1024,2);
         }
 
         $this->durationPrint      = sec2hms($this->duration);
 
         if ($this->disconnect) {
-        	$this->disconnectPrint    = $this->NormalizeDisconnect($this->disconnect);
+            $this->disconnectPrint    = $this->NormalizeDisconnect($this->disconnect);
         }
 
         $this->NetworkRateDictionary=array(
@@ -2091,7 +2091,7 @@ class CDR_ser_radius extends CDR {
                                   'inputTraffic'    => $this->inputTraffic,
                                   'outputTraffic'   => $this->outputTraffic,
                                   'DestinationId'   => $this->DestinationId,
- 								  'From'            => $this->BillingPartyId,
+                                   'From'            => $this->BillingPartyId,
                                   'To'              => $this->DestinationForRating,
                                   'Domain'          => $this->domain,
                                   'Gateway'         => $this->gateway,
@@ -2110,21 +2110,21 @@ class CDR_ser_radius extends CDR {
     }
 
     function traceIn () {
-		$datasource=$this->CDRS->traceInURL[$this->SourceIP];
+        $datasource=$this->CDRS->traceInURL[$this->SourceIP];
         global $DATASOURCES;
 
-    	if (!$datasource || !$DATASOURCES[$datasource]) {
+        if (!$datasource || !$DATASOURCES[$datasource]) {
             return;
         }
 
         $tplus     = $this->timestamp+$this->duration+300;
         $tmin      = $this->timestamp-300;
-		$c_number  = $this->remoteUsername;
+        $c_number  = $this->remoteUsername;
         $cdr_table = Date('Ym',time($this->timestamp));
 
         $this->traceIn=
                         "<a href=callsearch.phtml".
-        				"?cdr_source=$datasource".
+                        "?cdr_source=$datasource".
                         "&cdr_table=$cdr_table".
                         "&trace=1".
                         "&action=search".
@@ -2138,21 +2138,21 @@ class CDR_ser_radius extends CDR {
     }
 
     function traceOut () {
-    	$datasource=$this->CDRS->traceOutURL[$this->remoteGateway];
+        $datasource=$this->CDRS->traceOutURL[$this->remoteGateway];
         global $DATASOURCES;
 
-    	if (!$datasource || !$DATASOURCES[$datasource]) {
+        if (!$datasource || !$DATASOURCES[$datasource]) {
             return;
         }
 
         $tplus     = $this->timestamp+$this->duration+300;
         $tmin      = $this->timestamp-300;
-		$c_number  = preg_replace("/^(0+)/","",$this->remoteUsername);
+        $c_number  = preg_replace("/^(0+)/","",$this->remoteUsername);
         $cdr_table = Date('Ym',time($this->timestamp));
 
         $this->traceOut=
                         "<a href=callsearch.phtml".
-        				"?cdr_source=$datasource".
+                        "?cdr_source=$datasource".
                         "&cdr_table=$cdr_table".
                         "&trace=1".
                         "&action=search".
@@ -2167,7 +2167,7 @@ class CDR_ser_radius extends CDR {
 
     function show() {
         global $found;
-		global $perm;
+        global $perm;
 
         $rr=floor($found/2);
         $mod=$found-$rr*2;
@@ -2204,7 +2204,7 @@ class CDR_ser_radius extends CDR {
 
         $CallInfoVerbose.= sprintf("
         <tr>
-        	<td width=10></td>
+            <td width=10></td>
             <td colspan=2><a href=%s&call_id=%s><font color=orange>Click here to show only this call id</font></a></td>
         </tr>
         ",
@@ -2218,7 +2218,7 @@ class CDR_ser_radius extends CDR {
             $fromtag_enc      = urlencode($this->SipFromTag);
             $totag_enc        = urlencode($this->SipToTag);
 
-        	$this->traceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
+            $this->traceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip-trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
             'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red>Click here to see the SIP trace for this call</font></a> &nbsp;";
 
             $CallInfoVerbose.= "
@@ -2232,24 +2232,24 @@ class CDR_ser_radius extends CDR {
 
         $CallInfoVerbose.= sprintf("
         <tr>
-        	<td width=10></td>
+            <td width=10></td>
             <td colspan=2>%s</td>
         </tr>
         ", $this->traceLink);
 
         $CallInfoVerbose.= "
         <tr>
-        	<td width=10></td>
+            <td width=10></td>
             <td>From/to tags: </td>
             <td>$this->SipFromTag/$this->SipToTag</td>
         </tr>
         <tr>
             <td></td>
-        	<td>Start time: </td>
+            <td>Start time: </td>
             <td>$this->startTime $providerTimezone</td>
         </tr>
         ";
-		if ($this->normalized) {
+        if ($this->normalized) {
             $CallInfoVerbose.= "
             <tr>
                 <td></td>
@@ -2261,24 +2261,24 @@ class CDR_ser_radius extends CDR {
 
         $CallInfoVerbose.= "
         <tr>
-        	<td></td>
+            <td></td>
             <td>Method:</td>
             <td>$this->SipMethod from <i>$this->SourceIP:$this->SourcePort</i>
             </td>
         </tr>
-		<tr>
+        <tr>
             <td></td>
-        	<td>From:</td>
+            <td>From:</td>
             <td>$this->aNumberPrint</td>
         </tr>
-		<tr>
+        <tr>
             <td></td>
-        	<td>Domain:</td>
+            <td>Domain:</td>
             <td>$this->domain</td>
         </tr>
-		<tr>
+        <tr>
             <td></td>
-        	<td>To (dialed URI):</td>
+            <td>To (dialed URI):</td>
             <td>$this->cNumberPrint</td>
         </tr>
         ";
@@ -2287,16 +2287,16 @@ class CDR_ser_radius extends CDR {
         $CallInfoVerbose.= sprintf("
         <tr>
             <td></td>
-        	<td>Canonical URI:   </td>
+            <td>Canonical URI:   </td>
             <td>%s</td>
         </tr>
         ",htmlentities($this->CanonicalURI));
         }
 
-		$CallInfoVerbose.= sprintf("
+        $CallInfoVerbose.= sprintf("
         <tr>
             <td></td>
-        	<td>Next hop URI:</td>
+            <td>Next hop URI:</td>
             <td>%s</td>
         </tr>
         ",htmlentities($this->RemoteAddress));
@@ -2322,10 +2322,10 @@ class CDR_ser_radius extends CDR {
         }
 
         if ($this->SipRPID && $this->SipRPID!='n/a') {
-        	$CallInfoVerbose .= "
-        	<tr>
+            $CallInfoVerbose .= "
+            <tr>
             <td></td>
-        	<td>Caller ID:  </td>
+            <td>Caller ID:  </td>
             <td>$this->SipRPIDPrint</td>
             </tr>
             ";
@@ -2334,7 +2334,7 @@ class CDR_ser_radius extends CDR {
         $CallInfoVerbose.= "
         <tr>
             <td></td>
-        	<td>Billing Party:</td>
+            <td>Billing Party:</td>
             <td><font color=brown>$this->BillingPartyIdPrint</font></td>
         </tr>
         </table>
@@ -2345,13 +2345,13 @@ class CDR_ser_radius extends CDR {
 
 
         if ($this->SipCodec) {
-			$this->SipCodec   = quoted_printable_decode($this->SipCodec);
+            $this->SipCodec   = quoted_printable_decode($this->SipCodec);
 
             $CallInfoVerbose.= "
-        	<table border=0 cellpadding=0 cellspacing=0>
+            <table border=0 cellpadding=0 cellspacing=0>
 
             <tr>
-        		<td colspan=3><b>Media information</b></td>
+                <td colspan=3><b>Media information</b></td>
             </tr>
             ";
             if ($this->CDRS->mediaTraceDataSource) {
@@ -2371,39 +2371,39 @@ class CDR_ser_radius extends CDR {
 
             $CallInfoVerbose.= "
             <tr>
-            	<td></td>
-        		<td>Application: </td>
-            	<td>$this->applicationType</td>
+                <td></td>
+                <td>Application: </td>
+                <td>$this->applicationType</td>
             </tr>
             <tr>
-            	<td></td>
-        		<td>Codecs: </td>
-            	<td>$this->SipCodec</td>
+                <td></td>
+                <td>Codecs: </td>
+                <td>$this->SipCodec</td>
             </tr>
             <tr>
-            	<td></td>
-        		<td>Caller RTP: </td>
-            	<td>$this->inputTrafficPrint KB</td>
+                <td></td>
+                <td>Caller RTP: </td>
+                <td>$this->inputTrafficPrint KB</td>
             </tr>
             <tr>
-            	<td></td>
-        		<td>Called RTP: </td>
-            	<td>$this->outputTrafficPrint KB</td>
+                <td></td>
+                <td>Called RTP: </td>
+                <td>$this->outputTrafficPrint KB</td>
             </tr>
             ";
 
-			if ($this->MediaTimeout) {
-    		    $CallInfoVerbose.= "
-        		<tr>
-            	<td></td>
-        		<td>Media info:</td>
-            	<td><font color=red>$this->MediaTimeout</font></td>
-        		</tr>
-        		";
+            if ($this->MediaTimeout) {
+                $CallInfoVerbose.= "
+                <tr>
+                <td></td>
+                <td>Media info:</td>
+                <td><font color=red>$this->MediaTimeout</font></td>
+                </tr>
+                ";
             }
 
             if ($this->SipUserAgents) {
-				$this->SipUserAgents   = quoted_printable_decode($this->SipUserAgents);
+                $this->SipUserAgents   = quoted_printable_decode($this->SipUserAgents);
 
                 $callerAgents=explode("+",$this->SipUserAgents);
                 $callerUA=htmlentities($callerAgents[0]);
@@ -2411,33 +2411,33 @@ class CDR_ser_radius extends CDR {
 
                 $CallInfoVerbose.= "
                 <tr>
-            		<td></td>
-        			<td>Caller SIP UA: </td>
-            		<td>$callerUA</td>
+                    <td></td>
+                    <td>Caller SIP UA: </td>
+                    <td>$callerUA</td>
                 </tr>
                 <tr>
-            		<td></td>
-        			<td>Called SIP UA: </td>
-            		<td>$calledUA</td>
+                    <td></td>
+                    <td>Called SIP UA: </td>
+                    <td>$calledUA</td>
                 </tr>
                 ";
             }
 
             if (is_array($this->QoS)) {
                 foreach (array_keys($this->QoS) as $_key) {
-                	if ($this->QoSParameters[$_key]) {
+                    if ($this->QoSParameters[$_key]) {
                         $_desc=$this->QoSParameters[$_key];
                     } else {
                         $_desc=$_key;
                     }
-                	$CallInfoVerbose.=
-                	sprintf ("<tr><td></td><td>%s</td><td>%s</td></tr>\n",
+                    $CallInfoVerbose.=
+                    sprintf ("<tr><td></td><td>%s</td><td>%s</td></tr>\n",
                     $_desc,$this->QoS[$_key]);
                 }
             }
 
             $CallInfoVerbose.= "
-        	</table>";
+            </table>";
         }
 
         $CallInfoVerbose.=  "
@@ -2446,9 +2446,9 @@ class CDR_ser_radius extends CDR {
         <td valign=top>
         ";
 
-		if ($perm->have_perm("showPrice") && $this->normalized) {
-        	$CallInfoVerbose.= "
-        	<table border=0 cellpadding=0 cellspacing=0>
+        if ($perm->have_perm("showPrice") && $this->normalized) {
+            $CallInfoVerbose.= "
+            <table border=0 cellpadding=0 cellspacing=0>
     
                 <tr>
                     <td colspan=3><b>Rating information</b></td>
@@ -2494,9 +2494,9 @@ class CDR_ser_radius extends CDR {
 
         if ($this->DestinationId) {
             if ($this->DestinationId != $this->CanonicalURI) {
-            	print " ($this->destinationName $this->DestinationId)";
+                print " ($this->destinationName $this->DestinationId)";
             } else {
-            	print " ($this->destinationName)";
+                print " ($this->destinationName)";
             }
         }
 
@@ -2527,20 +2527,20 @@ class CDR_ser_radius extends CDR {
             ";
         }
 
-		$SIPclass=substr($this->disconnect,0,1);
+        $SIPclass=substr($this->disconnect,0,1);
 
         if ($SIPclass=="6") {
-        	$status_color="<font color=red>";
+            $status_color="<font color=red>";
         } else if ($SIPclass=="5" ) {
-        	$status_color="<font color=red>";
+            $status_color="<font color=red>";
         } else if ($SIPclass=="4" ) {
-        	$status_color="<font color=blue>";
+            $status_color="<font color=blue>";
         } else if ($SIPclass=="3" ) {
-        	$status_color="<font color=green>";
+            $status_color="<font color=green>";
         } else if ($SIPclass=="2" ) {
-        	$status_color="<font color=green>";
+            $status_color="<font color=green>";
         } else  {
-        	$status_color="<font color=black>";
+            $status_color="<font color=black>";
         }
 
         print "
@@ -2613,7 +2613,7 @@ class CDR_ser_radius extends CDR {
             <td valign=top><nobr>$this->destinationPrint $this->destinationName</td>
             <td valign=top align=right>$this->durationPrint</td>
             ";
-        	if ($this->CDRS->rating) print "<td valign=top align=right>$this->price</td>";
+            if ($this->CDRS->rating) print "<td valign=top align=right>$this->price</td>";
             print "
             </tr>
             ";
@@ -2629,17 +2629,17 @@ class CDR_ser_radius extends CDR {
     function isCallerLocal() {
         // used by quota
         if (in_array($this->aNumberDomain,$this->CDRS->localDomains)) {
-        	$this->CallerIsLocal=1;
+            $this->CallerIsLocal=1;
             return true;
         }
         return false;
     }
 
     function isCalleeLocal() {
-    	if ($this->CanonicalURIUsername == $this->RemoteAddressUsername &&
+        if ($this->CanonicalURIUsername == $this->RemoteAddressUsername &&
             in_array($this->CanonicalURIDomain,$this->CDRS->localDomains) &&
-        	!preg_match("/^0/",$this->CanonicalURIUsername)) {
-			$this->CalleeIsLocal=1;
+            !preg_match("/^0/",$this->CanonicalURIUsername)) {
+            $this->CalleeIsLocal=1;
         }
     }
 
@@ -2657,9 +2657,9 @@ class CDR_ser_radius extends CDR {
             }
 
             if (count($caller_els)== 2) {
-            	$this->aNumberPrint=$_user.'@'.$caller_els[1];
+                $this->aNumberPrint=$_user.'@'.$caller_els[1];
             } else {
-            	$this->aNumberPrint=$_user;
+                $this->aNumberPrint=$_user;
             }
 
             //Billing party
@@ -2683,9 +2683,9 @@ class CDR_ser_radius extends CDR {
             }
     
             if (count($caller_els)== 2) {
-            	$this->destinationPrint=$_user.'@'.$caller_els[1];
+                $this->destinationPrint=$_user.'@'.$caller_els[1];
             } else {
-            	$this->destinationPrint=$_user;
+                $this->destinationPrint=$_user;
             }
 
             $caller_els=explode("@",$this->cNumberPrint);
@@ -2697,9 +2697,9 @@ class CDR_ser_radius extends CDR {
             }
     
             if (count($caller_els)== 2) {
-            	$this->cNumberPrint=$_user.'@'.$caller_els[1];
+                $this->cNumberPrint=$_user.'@'.$caller_els[1];
             } else {
-            	$this->cNumberPrint=$_user;
+                $this->cNumberPrint=$_user;
             }
 
             $caller_els=explode("@",$this->RemoteAddressPrint);
@@ -2711,9 +2711,9 @@ class CDR_ser_radius extends CDR {
             }
     
             if (count($caller_els)== 2) {
-            	$this->RemoteAddressPrint=$_user.'@'.$caller_els[1];
+                $this->RemoteAddressPrint=$_user.'@'.$caller_els[1];
             } else {
-            	$this->RemoteAddressPrint=$_user;
+                $this->RemoteAddressPrint=$_user;
             }
 
             // Canonical URI
@@ -2726,9 +2726,9 @@ class CDR_ser_radius extends CDR {
             }
 
             if (count($caller_els)== 2) {
-            	$this->CanonicalURIPrint=$_user.'@'.$caller_els[1];
+                $this->CanonicalURIPrint=$_user.'@'.$caller_els[1];
             } else {
-            	$this->CanonicalURIPrint=$_user;
+                $this->CanonicalURIPrint=$_user;
             }
 
             if (is_numeric($this->SipRPIDPrint) && strlen($this->SipRPIDPrint) > 3) {
@@ -2745,9 +2745,9 @@ class CDR_ser_radius extends CDR {
 
 class SIP_trace {
     var $enableThor  = false;
-	var $trace_array = array();
-	var $traced_ip   = array();
-	var $SIPProxies  = array();
+    var $trace_array = array();
+    var $traced_ip   = array();
+    var $SIPProxies  = array();
     var $mediaTraceDataSource  = false;
 
     function SIP_trace ($cdr_source) {
@@ -2756,20 +2756,20 @@ class SIP_trace {
 
         $this->cdrtool  = new DB_CDRTool();
 
-		if (strlen($DATASOURCES[$this->cdr_source]['enableThor'])) {
-        	$this->enableThor = $DATASOURCES[$this->cdr_source]['enableThor'];
+        if (strlen($DATASOURCES[$this->cdr_source]['enableThor'])) {
+            $this->enableThor = $DATASOURCES[$this->cdr_source]['enableThor'];
         }
 
-		if (strlen($DATASOURCES[$this->cdr_source]['mediaTraceDataSource'])) {
-        	$this->mediaTraceDataSource = $DATASOURCES[$this->cdr_source]['mediaTraceDataSource'];
+        if (strlen($DATASOURCES[$this->cdr_source]['mediaTraceDataSource'])) {
+            $this->mediaTraceDataSource = $DATASOURCES[$this->cdr_source]['mediaTraceDataSource'];
         }
 
         if ($this->enableThor) {
-    		include_once('ngnpro_engines.inc');
+            include_once('ngnpro_engines.inc');
 
-        	if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
-            	$this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
-			    require_once("library/ngnpro_soap_library.phtml");
+            if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
+                $this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
+                require_once("library/ngnpro_soap_library.phtml");
 
                 $this->SOAPlogin = array(
                                        "username"    => $soapEngines[$this->soapEngineId]['username'],
@@ -2788,7 +2788,7 @@ class SIP_trace {
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
     
-        	} else {
+            } else {
                 print "Error: soapEngineID not defined in datasource $this->cdr_source";
                 return false;
             }
@@ -2803,14 +2803,14 @@ class SIP_trace {
         if (is_object($auth)) $this->isAuthorized=1;
 
         if (is_array($DATASOURCES[$this->cdr_source]['SIPProxies'])) {
-        	$this->SIPProxies=$DATASOURCES[$this->cdr_source]['SIPProxies'];
+            $this->SIPProxies=$DATASOURCES[$this->cdr_source]['SIPProxies'];
         }
 
     }
 
     function isProxy($ip,$sip_proxy='') {
         if (!$ip) return false;
-    	if (!$this->enableThor) {
+        if (!$this->enableThor) {
             if (!is_array($this->SIPProxies)) {
                 return false;
             }
@@ -2819,7 +2819,7 @@ class SIP_trace {
                 return true;
             }
         } else if ($sip_proxy) {
-        	return isThorNode($ip,$sip_proxy);
+            return isThorNode($ip,$sip_proxy);
         }
 
         return false;
@@ -2827,9 +2827,9 @@ class SIP_trace {
 
     function getTrace ($proxyIP,$callid,$fromtag,$totag) {
 
-		if ($this->enableThor) {
-			$this->seen_ip=array();
-			$this->trace_array=$this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag);
+        if ($this->enableThor) {
+            $this->seen_ip=array();
+            $this->trace_array=$this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag);
 
             $this->rows = count($this->trace_array);
 
@@ -2874,7 +2874,7 @@ class SIP_trace {
                     $fromport = $m[2];
                 } else {
                     $fromip = $this->db->f('fromip');
-                	$transport = 'udp';
+                    $transport = 'udp';
                     $fromport = '5060';
                 }
 
@@ -2888,13 +2888,13 @@ class SIP_trace {
 
                 if (!$this->column[$fromip]) {
                     $this->column[$fromip]=$columns+1;
-                	$this->column_port[$fromip]=$fromport;
+                    $this->column_port[$fromip]=$fromport;
                     $columns++;
                 }
     
                 if (!$this->column[$toip]) {
                     $this->column[$toip]=$columns+1;
-                	$this->column_port[$toip]=$toport;
+                    $this->column_port[$toip]=$toport;
                     $columns++;
                 }
     
@@ -2921,7 +2921,7 @@ class SIP_trace {
 
     function getTraceFromThor($proxyIP,$callid,$fromtag,$totag) {
         // get trace using soap request
-		if (!$proxyIP || !$callid || !$fromtag) return false;
+        if (!$proxyIP || !$callid || !$fromtag) return false;
 
         if (!is_object($this->soapclient)) {
             print "Error: soap client is not defined.";
@@ -2987,11 +2987,11 @@ class SIP_trace {
             }
 
             if (!$this->seen_ip[$toip] && $this->isProxy($toip)) {
-            	$this->seen_ip[$toip]++;
+                $this->seen_ip[$toip]++;
             }
 
             if (!$this->seen_ip[$fromip] && $this->isProxy($fromip)) {
-            	$this->seen_ip[$fromip]++;
+                $this->seen_ip[$fromip]++;
             }
 
             if (!$this->column[$fromip]) {
@@ -3009,7 +3009,7 @@ class SIP_trace {
             preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/",$_trace->date,$m);
             $timestamp = mktime($m[4],$m[5],$m[6],$m[2],$m[3],$m[1]);
 
-			$idx=$proxyIP.'_'.$_trace->id;
+            $idx=$proxyIP.'_'.$_trace->id;
 
             $trace_array[$idx]=
                         array (
@@ -3040,7 +3040,7 @@ class SIP_trace {
         $toggleVisibility = $_REQUEST['toggleVisibility'];
 
         if ($action=='toggleVisibility') {
-			$this->togglePublicVisibility($callid,$fromtag,$toggleVisibility);
+            $this->togglePublicVisibility($callid,$fromtag,$toggleVisibility);
         }
 
         if ($_SERVER['HTTPS'] == "on") {
@@ -3055,7 +3055,7 @@ class SIP_trace {
             print "<p>
             SIP trace for session id $callid is not available.";
             return;
-		}
+        }
 
         print "
         <h1>CDRTool trace</h1>
@@ -3127,37 +3127,37 @@ class SIP_trace {
                 if (is_array($this->SIPProxies)) {
                     $thisIP=explode(":",$this->trace_array[$key]['fromip']);
                     if ($this->isProxy($thisIP[0],$proxyIP)) {
-                    	$this->trace_array[$key]['isProxy'] = 1;
+                        $this->trace_array[$key]['isProxy'] = 1;
                     }
                 }
 
                 if ($this->trace_array[$key]['fromip'] == $this->trace_array[$key]['toip']) {
-                	$this->trace_array[$key]['arrow_align'] = "left";
-                	$arrow_direction="loop";
-				} else if ($this->column[$this->trace_array[$key]['fromip']] < $this->column[$this->trace_array[$key]['toip']]) {
-                	$arrow_direction="right";
-                	$this->trace_array[$key]['arrow_align'] = "right";
+                    $this->trace_array[$key]['arrow_align'] = "left";
+                    $arrow_direction="loop";
+                } else if ($this->column[$this->trace_array[$key]['fromip']] < $this->column[$this->trace_array[$key]['toip']]) {
+                    $arrow_direction="right";
+                    $this->trace_array[$key]['arrow_align'] = "right";
                 } else {
-                	$arrow_direction="left";
-                	$this->trace_array[$key]['arrow_align'] = "left";
+                    $arrow_direction="left";
+                    $this->trace_array[$key]['arrow_align'] = "left";
                 }
-				$this->trace_array[$key]['msg_possition']   = $this->column[$this->trace_array[$key]['toip']];
+                $this->trace_array[$key]['msg_possition']   = $this->column[$this->trace_array[$key]['toip']];
                 $this->trace_array[$key]['arrow_possition'] = $this->column[$this->trace_array[$key]['fromip']];
                 $this->trace_array[$key]['arrow_direction'] = $arrow_direction;
 
             } else {
                 if ($this->trace_array[$key]['fromip'] == $this->trace_array[$key]['toip']) {
-                	$this->trace_array[$key]['arrow_align'] = "left";
-                	$arrow_direction="loop";
-				} else if ($this->column[$this->trace_array[$key]['fromip']] < $this->column[$this->trace_array[$key]['toip']]) {
-                	$this->trace_array[$key]['arrow_align'] = "left";
-                	$arrow_direction="right";
+                    $this->trace_array[$key]['arrow_align'] = "left";
+                    $arrow_direction="loop";
+                } else if ($this->column[$this->trace_array[$key]['fromip']] < $this->column[$this->trace_array[$key]['toip']]) {
+                    $this->trace_array[$key]['arrow_align'] = "left";
+                    $arrow_direction="right";
                 } else {
-                	$this->trace_array[$key]['arrow_align'] = "right";
-                	$arrow_direction="left";
+                    $this->trace_array[$key]['arrow_align'] = "right";
+                    $arrow_direction="left";
                 }
 
-				$this->trace_array[$key]['msg_possition']   = $this->column[$this->trace_array[$key]['fromip']];
+                $this->trace_array[$key]['msg_possition']   = $this->column[$this->trace_array[$key]['fromip']];
                 $this->trace_array[$key]['arrow_possition'] = $this->column[$this->trace_array[$key]['toip']];
                 $this->trace_array[$key]['arrow_direction'] = $arrow_direction;
             }
@@ -3181,7 +3181,7 @@ class SIP_trace {
         ";
 
         foreach (array_keys($this->column) as $_key) {
-           	$IPels=explode(":",$_key);
+               $IPels=explode(":",$_key);
 
             print "<td align=center class=border>";
             if ($proxyIP != $IPels[0] && $this->isProxy($IPels[0],$proxyIP)) {
@@ -3195,9 +3195,9 @@ class SIP_trace {
                 $_key,
                 $this->column_port[$_key]
                 );
-            	printf ("<b><font color=blue>%s</b>",$trace_link);
+                printf ("<b><font color=blue>%s</b>",$trace_link);
             } else {
-            	printf ("<b>%s</b>",$_key);
+                printf ("<b>%s</b>",$_key);
             }
             print "</td>";
         }
@@ -3364,7 +3364,7 @@ class SIP_trace {
                 }
 
                 if ($arrow_possition==$column_current) {
-                	print "<td class=bbot align=$arrow_align>";
+                    print "<td class=bbot align=$arrow_align>";
 
                     if ($arrow_direction == 'left') {
                         print "<img src=images/$arrow border=0>";
@@ -3379,25 +3379,25 @@ class SIP_trace {
                     print "<br>";
                     if ($transport == 'tls') print "<img src=images/lock15.gif border=0> ";
                     if ($direction == 'in') {
-                    	printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['fromport']);
+                        printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['fromport']);
                     } else {
-                    	printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['toport']);
+                        printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['toport']);
                     }
 
                 } else {
-                	print "<td class=bbot>";
+                    print "<td class=bbot>";
                 }
 
                 if ($msg_possition == $column_current) {
                     print $cell_content;
                     print "<br>";
                     if ($direction == 'in') {
-                    	printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['toport']);
+                        printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['toport']);
                     } else {
-                    	printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['fromport']);
+                        printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['fromport']);
                     }
                 } else {
-                	print "&nbsp;";
+                    print "&nbsp;";
                 }
 
                 print "
@@ -3474,28 +3474,28 @@ class SIP_trace {
         $key="callid-".trim($callid).trim($fromtag);
 
         if (!$public) {
-        	$query=sprintf("delete from memcache where `key` = '%s'",addslashes($key));
+            $query=sprintf("delete from memcache where `key` = '%s'",addslashes($key));
             $this->cdrtool->query($query);
         } else {
-        	$query=sprintf("delete from memcache where `key` = '%s'",addslashes($key));
+            $query=sprintf("delete from memcache where `key` = '%s'",addslashes($key));
             $this->cdrtool->query($query);
-        	$query=sprintf("insert into memcache values ('%s','public')",addslashes($key));
+            $query=sprintf("insert into memcache values ('%s','public')",addslashes($key));
             $this->cdrtool->query($query);
         }
     }
 
     function purgeRecords($days='') {
 
-		if ($this->enableThor) {
+        if ($this->enableThor) {
             return true;
         }
 
         $b=time();
 
         if ($days) {
-        	$this->purgeRecordsAfter=$days;
+            $this->purgeRecordsAfter=$days;
         } else if (!$this->purgeRecordsAfter) {
-        	$this->purgeRecordsAfter=15;
+            $this->purgeRecordsAfter=15;
         }
 
         $beforeDate=Date("Y-m-d", time()-$this->purgeRecordsAfter*3600*24);
@@ -3505,7 +3505,7 @@ class SIP_trace {
         
 
         if ($this->db->query($query)) {
-        	if ($this->db->num_rows()) {
+            if ($this->db->num_rows()) {
                 $this->db->next_record();
                 $min=$this->db->f('min');
                 $begindate=$this->db->f('date');
@@ -3517,23 +3517,23 @@ class SIP_trace {
             }
 
         } else {
-        	$log=sprintf("Error: %s (%s)\n",$this->db->Error,$query);
+            $log=sprintf("Error: %s (%s)\n",$this->db->Error,$query);
             print $log;
             syslog(LOG_NOTICE,$log);
             return false;
         }
 
         $query=sprintf("select id as max from %s where date < '%s' order by id DESC limit 1",
-        		$this->table,$beforeDate);
+                $this->table,$beforeDate);
 
 
         if ($this->db->query($query) && $this->db->num_rows()) {
             $this->db->next_record();
             $max=$this->db->f('max');
         } else {
-        	$log=sprintf("No records found in %s before %s, records start after %s\n",
+            $log=sprintf("No records found in %s before %s, records start after %s\n",
             $this->table,$beforeDate,$begindate);
-        	syslog(LOG_NOTICE,$log);
+            syslog(LOG_NOTICE,$log);
             print $log;
             return false;
         }
@@ -3562,8 +3562,8 @@ class SIP_trace {
             if ($this->db->query($query)) {
                 $deleted=$deleted+$this->db->affected_rows();
             } else {
-        		$log=sprintf("Error: %s (%s)",$this->db->Error,$this->db->Errno);
-        		syslog(LOG_NOTICE,$log);
+                $log=sprintf("Error: %s (%s)",$this->db->Error,$this->db->Errno);
+                syslog(LOG_NOTICE,$log);
                 return false;
             }
 
@@ -3580,8 +3580,8 @@ class SIP_trace {
 
         print "\n";
 
-        $e	=time();
-        $d	=$e-$b;
+        $e    =time();
+        $d    =$e-$b;
         $rps=0;
 
         if ($deleted && $d) $rps=$deleted/$d;
@@ -3606,16 +3606,16 @@ class Media_trace {
 
         $this->cdrtool  = new DB_CDRTool();
 
-		if (strlen($DATASOURCES[$this->cdr_source]['enableThor'])) {
-        	$this->enableThor = $DATASOURCES[$this->cdr_source]['enableThor'];
+        if (strlen($DATASOURCES[$this->cdr_source]['enableThor'])) {
+            $this->enableThor = $DATASOURCES[$this->cdr_source]['enableThor'];
         }
 
         if ($this->enableThor) {
-    		include_once('ngnpro_engines.inc');
+            include_once('ngnpro_engines.inc');
 
-        	if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
-            	$this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
-			    require_once("library/ngnpro_soap_library.phtml");
+            if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
+                $this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
+                require_once("library/ngnpro_soap_library.phtml");
 
                 $this->SOAPlogin = array(
                                        "username"    => $soapEngines[$this->soapEngineId]['username'],
@@ -3634,14 +3634,14 @@ class Media_trace {
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
     
-        	} else {
+            } else {
                 print "Error: soapEngineID not defined in datasource $this->cdr_source";
                 return false;
             }
 
         } else {
             if ($DATASOURCES[$this->cdr_source]['table']) {
-            	$this->table             = $DATASOURCES[$this->cdr_source]['table'];
+                $this->table             = $DATASOURCES[$this->cdr_source]['table'];
             }
 
             $db_class                = $DATASOURCES[$this->cdr_source]['db_class'];
@@ -3652,8 +3652,8 @@ class Media_trace {
 
     function getTrace ($proxyIP,$callid,$fromtag,$totag) {
 
-		if ($this->enableThor) {
-			$this->info=json_decode($this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag));
+        if ($this->enableThor) {
+            $this->info=json_decode($this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag));
 
         } else {
 
@@ -3672,7 +3672,7 @@ class Media_trace {
             }
     
             if ($this->db->num_rows()) {
-            	$this->db->next_record();
+                $this->db->next_record();
                 $this->info=json_decode($this->db->f('info'));
             }
         }
@@ -3681,7 +3681,7 @@ class Media_trace {
 
     function getTraceFromThor($proxyIP,$callid,$fromtag,$totag) {
         // get trace using soap request
-		if (!$proxyIP || !$callid || !$fromtag) return false;
+        if (!$proxyIP || !$callid || !$fromtag) return false;
 
         if (!is_object($this->soapclient)) {
             print "Error: soap client is not defined.";
@@ -3761,7 +3761,7 @@ class Media_trace {
             printf ("<tr><td class=border>%s</td>",ucfirst(preg_replace("/_/"," ",$_val)));
             $j=0;
             while ($j < count($media_types)) {
-            	printf ("<td class=border>%s</td>",$this->info->streams[$j]->$_val);
+                printf ("<td class=border>%s</td>",$this->info->streams[$j]->$_val);
                 $j++;
             }
 
@@ -3803,9 +3803,9 @@ class Media_trace {
             print "<td width=$w_col1 bgcolor=white></td>";
             print "<td width=$w_col2 bgcolor=green align=right><font color=white>$t2</font></td>";
             if ($_val->timeout_wait) {
-            	print "<td width=$w_col3 bgcolor=red align=right><font color=white>$t3</font></td>";
+                print "<td width=$w_col3 bgcolor=red align=right><font color=white>$t3</font></td>";
             } else {
-            	print "<td width=$w_col3 bgcolor=white align=right></td>";
+                print "<td width=$w_col3 bgcolor=white align=right></td>";
             }
 
             print "</table>";

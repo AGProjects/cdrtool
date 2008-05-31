@@ -7,7 +7,7 @@ class MediaSessions {
 
     */
 
-	var $dispatcher_port = 25061;
+    var $dispatcher_port = 25061;
     var $sessions        = array();
     var $relays          = array();
     var $timeout         = 3;
@@ -16,9 +16,9 @@ class MediaSessions {
 
         if (!strlen($dispatcher)) return false;
 
-		global $userAgentImages;
+        global $userAgentImages;
         require_once("phone_images.php");
-		$this->userAgentImages = $userAgentImages;
+        $this->userAgentImages = $userAgentImages;
 
         $this->filters = $filters;
         $this->allowedDomains  = $allowedDomains;
@@ -52,18 +52,18 @@ class MediaSessions {
    
                    $this->relays[] = json_decode($line);
                }
-			}
+            }
 
             fputs($fp, "sessions\r\n");
 
             while (!feof($fp)) {
-            	$line = fgets($fp);
+                $line = fgets($fp);
 
                 if (preg_match("/^\r\n/",$line)) {
                     break;
                 }
 
-				$line=json_decode($line);
+                $line=json_decode($line);
 
                 if (count($this->allowedDomains)) {
                     list($user1,$domain1)=explode("@",$line->from_uri);
@@ -74,20 +74,20 @@ class MediaSessions {
                 }
 
                 if (strlen($this->filters['user'])) {
-                	$user=$this->filters['user'];
+                    $user=$this->filters['user'];
                     if (preg_match("/$user/",$line->from_uri) ||
                         preg_match("/$user/",$line->to_uri)
                         ) {
-                		$this->sessions[] = $line;
+                        $this->sessions[] = $line;
                     }
 
                 } else {
-                	$this->sessions[] = $line;
+                    $this->sessions[] = $line;
                 }
 
             }
 
-        	fclose($fp);
+            fclose($fp);
             return true;
 
         } else {
@@ -172,19 +172,19 @@ class MediaSessions {
 
     function show() {
 
-		$this->showHeader();
+        $this->showHeader();
 
         print "<h3>Media sessions</h3>";
 
-		$this->showSearch();
+        $this->showSearch();
 
         if (!count($this->allowedDomains)) {
-	        $this->showRelays();
+            $this->showRelays();
         }
 
         $this->showSessions();
 
-		$this->showFooter();
+        $this->showFooter();
     }
 
     function showRelays() {
@@ -214,13 +214,13 @@ class MediaSessions {
 
         foreach ($this->relays as $relay) {
 
-			unset($media_types);
+            unset($media_types);
 
             foreach ($relay->stream_count as $key => $value) {
                 $media_types++;
             }
 
-			if ($media_types > 1) {
+            if ($media_types > 1) {
                 $streams = "<table border=0>";
     
                 foreach ($relay->stream_count as $key => $value) {
@@ -230,12 +230,12 @@ class MediaSessions {
                 $streams .= "</table>";
             } else {
                 foreach ($relay->stream_count as $key => $value) {
-                	$streams=sprintf("%s %s",$key,$value);
+                    $streams=sprintf("%s %s",$key,$value);
                 }
             }
 
-        	printf ("
-          	<tr class=border align=right>
+            printf ("
+              <tr class=border align=right>
                 <td class=border>%d</td>
                 <td class=bordertb width=10px></td>
                 <td class=bordertb>%s</td>
@@ -442,9 +442,9 @@ class MediaSessions1 {
     function MediaSessions1 ($servers=array(),$allowedDomains=array()) {
         $this->servers = $servers;
         $this->allowedDomains  = $allowedDomains;
-		global $userAgentImages;
+        global $userAgentImages;
         require_once("phone_images.php");
-		$this->userAgentImages = $userAgentImages;
+        $this->userAgentImages = $userAgentImages;
     }
 
     function isDomainAllowed($from,$to) {
@@ -775,7 +775,7 @@ class MediaSessions1 {
     }
 
     function showHeader() {
-	    print "
+        print "
         <html>
         <head>
          <title>Media Sessions</title>
@@ -833,7 +833,7 @@ class MediaSessions1 {
         
         <h2>Media Sessions</h2>
 
-    	";
+        ";
     }
 
     function show() {
