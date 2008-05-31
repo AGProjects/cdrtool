@@ -21,7 +21,6 @@ if (!is_array($_PHPLIB)) {
 }
 
 require($_PHPLIB["libdir"] . "db_mysql.inc");  /* Change this to match your database. */
-require($_PHPLIB["libdir"] . "db_sybase.inc"); /* Change this to match your database. */
 require($_PHPLIB["libdir"] . "ct_sql.inc");    /* Change this to match your data storage container */
 require($_PHPLIB["libdir"] . "session.inc");   /* Required for everything below.      */
 require($_PHPLIB["libdir"] . "auth.inc");      /* Disable this, if you are not using authentication. */
@@ -30,7 +29,4 @@ require($_PHPLIB["libdir"] . "user.inc");      /* Disable this, if you are not u
 require($_PHPLIB["libdir"] . "oohforms.inc");
 require($_PHPLIB["libdir"] . "local.inc");     /* Required, contains your local configuration. */
 require($_PHPLIB["libdir"] . "page.inc");      /* Required, contains the page management functions. */
-
-require("SOAP/Client.php");
-
 ?>
