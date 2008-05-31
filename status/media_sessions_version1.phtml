@@ -1,0 +1,466 @@
+<?
+include("../global.inc");
+
+page_open(
+    array("sess" => "CDRTool_Session",
+          "auth" => "CDRTool_Auth",
+          "perm" => "CDRTool_Perm"
+          ));
+
+$perm->check("statistics");
+
+// Image height in pixels (30, 35 or 40)
+$imageHeight = "30";
+
+// include external config files
+if (is_readable("config/media_servers.php")) {
+    include("config/media_servers.php");
+} else {
+    print "Please copy config/media_servers.php.sample to config/media_servers.php and add your own servers in there.\n";
+    exit;
+}
+
+include("config/phone_images.php");
+
+$errorReporting = (E_ALL & ~(E_NOTICE | E_WARNING));
+error_reporting($errorReporting);
+
+// functions
+
+function isDomainAllowed($from,$to,$allowedDomains=array(),$rId) {
+    global $perm;
+
+    $els=explode("@",$from);
+    $fromDomain=$els[1];
+    $els=explode("@",$to);
+    $toDomain=$els[1];
+
+    global $CDRTool;
+    
+    if (strlen($CDRTool['filter']['domain'])) {
+        $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
+
+        if (in_array($fromDomain,$allowedDomains) || in_array($toDomain,$allowedDomains)) {
+            return 1;
+        } else {
+            return 0;
+        }
+    } else if ($perm->have_perm('admin')) {
+        return 1;
+    }
+	return 0;
+}
+
+function normalizeBytes($bytes) {
+    $mb = $bytes/1024/1024.0;
+    $kb = $bytes/1024.0;
+    if ($mb >= 0.95) {
+        return sprintf("%.2fM", $mb);
+    } else if ($kb >= 1) {
+        return sprintf("%.2fk", $kb);
+    } else {
+        return sprintf("%d", $bytes);
+    }
+}
+
+function normalizeTime($period) {
+    $sec = $period % 60;
+    $min = floor($period/60);
+    $h   = floor($min/60);
+    $min = $min % 60;
+
+    if ($h >= 1) {
+        return sprintf('%dh%02d\'%02d"', $h, $min, $sec);
+    } else {
+        return sprintf('%d\'%02d"', $min, $sec);
+    }
+}
+
+function normalizeTraffic($traffic) {
+    // input is in bytes/second
+    $traffic = $traffic * 8;
+    $mb = $traffic/1024/1024.0;
+    $kb = $traffic/1024.0;
+    if ($mb >= 0.95) {
+        return sprintf("%.2fMbps", $mb);
+    } else if ($kb >= 1) {
+        return sprintf("%.2fkbps",$kb);
+    } else {
+        return sprintf("%dbps",$traffic);
+    }
+}
+
+function getImageForUserAgent($agent) {
+    global $userAgentImages;
+
+    foreach ($userAgentImages as $agentRegexp => $image) {
+        if (preg_match("/$agentRegexp/i", $agent)) {
+            return $image;
+        }
+    }
+
+    return "unknown.png";
+}
+
+function getRTPSessions($ip, $port, $allowedDomains) {
+    if ($fp = fsockopen ($ip, $port, $errno, $errstr, "3") ) {
+        fputs($fp, "status\n");
+        $proxy      = array('status' => 'Ok');
+        $crtSession = 'None';
+        while (!feof($fp)) {
+            $line = fgets($fp, 2048);
+            $elements = explode(" ", $line);
+            if ($elements[0] == 'version' && count($elements)==2) {
+                $proxy['version'] = $elements[1];
+            } else if ($elements[0] == 'proxy' && count($elements)==3) {
+                $proxy['sessionCount'] = $elements[1];
+                $traffic = explode("/", $elements[2]);
+                $proxy['traffic'] = array('caller'  => $traffic[0],
+                                          'called'  => $traffic[1],
+                                          'relayed' => $traffic[2]);
+                $proxy['sessions'] = array();
+            } else if ($elements[0]=='session' && count($elements)==7) {
+                if (isDomainAllowed($elements[2],$elements[3],$allowedDomains)) {
+                    $crtSession = $elements[1];
+                    $info = array('from' => $elements[2],
+                                  'to'   => $elements[3],
+                                  'fromAgent' => quoted_printable_decode($elements[4]),
+                                  'toAgent'   => quoted_printable_decode($elements[5]),
+                                  'duration'  => $elements[6],
+                                  'streams'   => array());
+                    $proxy['sessions'][$crtSession] = $info;
+                    $allowed_session=1;
+                } else {
+                    unset($allowed_session);
+                }
+            } else if ($elements[0] == 'stream' && count($elements)==9) {
+                if (!$allowed_session) continue;
+                $stream = array('caller'   => $elements[1],
+                                'called'   => $elements[2],
+                                'via'      => $elements[3],
+                                'bytes'    => explode("/", $elements[4]),
+                                'status'   => $elements[5],
+                                'codec'    => $elements[6],
+                                'type'     => $elements[7],
+                                'idletime' => $elements[8]);
+                $proxy['sessions'][$crtSession]['streams'][] = $stream;
+            } else {
+                //print "Invalid line: '$line'<br>\n";
+            }
+        }
+        fclose($fp);
+        print_r($allowed_sessions);
+
+        if (!isset($proxy['version'])) {
+            if ($fp = fsockopen ($ip, $port, $errno, $errstr, "2") ) {
+                fputs($fp, "version\n");
+                $line = fgets($fp, 2048);
+                $version = trim($line);
+                if (!$version)
+                    $version = 'unknown';
+                $proxy['version'] = $version;
+                fclose($fp);
+            }
+        }
+
+        return $proxy;
+     } else {
+        return array('status' => "<font color=red>$errstr</font>");
+     }
+}
+
+function haveSessions($servers, $sessions) {
+    foreach ($servers as $server) {
+        if ($sessions[$server]['sessionCount'] > 0) {
+            return True;
+        }
+    }
+
+    return False;
+}
+
+function showSummary($servers, $sessions) {
+    // IE seems to ignore border on <tr> elements
+    // that's why we used bordertb on <th> and <td>
+    print "
+    <table border=0 class=border cellpadding=2 cellspacing=0>
+      <tr bgcolor=#c0c0c0 class=border align=right>
+        <th class=bordertb width=10px></th>
+        <th class=bordertb width=10px></th>
+        <th class=bordertb>Server</th>
+        <th class=bordertb width=10px></th>
+        <th class=bordertb>Version</th>
+        <th class=bordertb width=10px></th>
+        <th class=bordertb>Caller traffic</th>
+        <th class=bordertb width=10px></th>
+        <th class=bordertb>Called traffic</th>
+        <th class=bordertb width=10px></th>
+        <th class=bordertb>Relayed traffic</th>
+        <th class=bordertb width=10px></th>
+        <th class=bordertb>Sessions</th>
+        <th class=bordertb width=10px></th>
+        <th class=bordertb>Status</th>
+      </tr>";
+
+    $i = 1;
+    foreach ($servers as $server) {
+        list($ip, $port) = explode(":", $server);
+        $sessionInfo = $sessions[$server];
+        $status = $sessionInfo['status'];
+        if ($status=='Ok')
+            $version = $sessionInfo['version'];
+        else
+            $version = "&nbsp;";
+        if ($status!='Ok' || $sessionInfo['sessionCount'] == 0) {
+            $caller  = "&nbsp;";
+            $called  = "&nbsp;";
+            $relayed = "&nbsp;";
+            $sessionCount = "&nbsp;";
+        } else {
+            $caller  = normalizeTraffic($sessionInfo['traffic']['caller']);
+            $called  = normalizeTraffic($sessionInfo['traffic']['called']);
+            $relayed = normalizeTraffic($sessionInfo['traffic']['relayed']);
+            $sessionCount = $sessionInfo['sessionCount'];
+        }
+        print "
+      <tr class=border align=right>
+        <td class=border>$i</td>
+        <td class=bordertb width=10px></td>
+        <td class=bordertb>$ip</td>
+        <td class=bordertb width=10px></td>
+        <td class=bordertb>$version</td>
+        <td class=bordertb width=10px></td>
+        <td class=bordertb>$caller</td>
+        <td class=bordertb width=10px></td>
+        <td class=bordertb>$called</td>
+        <td class=bordertb width=10px></td>
+        <td class=bordertb>$relayed</td>
+        <td class=bordertb width=10px></td>
+        <td class=bordertb>$sessionCount</td>
+        <td class=bordertb width=10px></td>
+        <td class=bordertb><nobr>$status</nobr></td>
+      </tr>";
+        $i++;
+    }
+    
+    print "
+    </table>
+    <br />
+    ";
+}
+
+function showSessions($servers, $sessions) {
+    global $imageHeight;
+
+    if (haveSessions($servers, $sessions)) {
+        print "
+    <table border=0 cellpadding=2 cellspacing=0 class=border>
+     <tr valign=bottom bgcolor=black>
+      <th rowspan=2>&nbsp;</th>
+      <th rowspan=2><font color=white>Call</font></th>
+      <th rowspan=2 colspan=2><font color=white>Phones</font></th>
+      <th colspan=10 bgcolor=#393939><font color=white>Media Streams</font></th>
+     </tr>
+     <tr valign=bottom bgcolor=#afafaf>
+      <th class=border><nobr>Caller address</nobr></th>
+      <th class=border><nobr>Called address</nobr></th>
+      <th class=border>Via address</th>
+      <th class=border>Status</th>
+      <th class=border>Codec</th>
+      <th class=border>Type</th>
+      <th class=border>Duration</th>
+      <th class=border>Bytes<br>Caller</th>
+      <th class=border>Bytes<br>Called</th>
+      <th class=border>Bytes<br>Relayed</th>
+     </tr>";
+
+        $i = 1;
+        foreach ($servers as $server) {
+            $serverSessions = $sessions[$server]['sessions'];
+            foreach ($serverSessions as $id => $sessionInfo) {
+                $sc = count($sessionInfo['streams']);
+                $from = $sessionInfo['from'];
+                $to   = $sessionInfo['to'];
+                $fromAgent = $sessionInfo['fromAgent'];
+                $toAgent = $sessionInfo['toAgent'];
+                $fromImage = getImageForUserAgent($fromAgent);
+                $toImage = getImageForUserAgent($toAgent);
+                print "
+     <tr valign=top class=border>
+      <td class=border rowspan=$sc>$i</td>
+      <td class=border rowspan=$sc>
+        <nobr><b>From:</b> $from</nobr><br>
+        <nobr><b>To:</b> $to</nobr><br>
+      </td>
+      <td class=border rowspan=$sc align=center>
+        <img src=\"images/$imageHeight/$fromImage\"
+             alt=\"$fromAgent\"
+             title=\"$fromAgent\"
+             ONMOUSEOVER='window.status=\"$fromAgent\";'
+             ONMOUSEOUT='window.status=\"\";'
+             border=0
+        />
+      </td>
+      <td class=border rowspan=$sc align=center>
+        <img src=\"images/$imageHeight/$toImage\"
+             alt=\"$toAgent\"
+             title=\"$toAgent\"
+             ONMOUSEOVER='window.status=\"$toAgent\";'
+             ONMOUSEOUT='window.status=\"\";'
+             border=0
+        />
+      </td>";
+                $duration = normalizeTime($sessionInfo['duration']);
+                foreach ($sessionInfo['streams'] as $streamInfo) {
+                    $status   = $streamInfo['status'];
+                    if ($status=="idle" || $status=='hold') {
+                        $idletime = normalizeTime($streamInfo['idletime']);
+                        $status = sprintf("%s %s", $status, $idletime);
+                    }
+                    $caller = $streamInfo['caller'];
+                    $called = $streamInfo['called'];
+                    $via    = $streamInfo['via'];
+                    $codec  = $streamInfo['codec'];
+                    $type   = $streamInfo['type'];
+                    if ($caller == '?.?.?.?:?') {
+                        $caller = '&#150;';  // a dash
+                        $align1 = 'center';
+                    } else {
+                        $align1 = 'left';
+                    }
+                    if ($called == '?.?.?.?:?') {
+                        $called = '&#150;';  // a dash
+                        $align2 = 'center';
+                    } else {
+                        $align2 = 'left';
+                    }
+                    if ($codec == 'Unknown')
+                        $codec = '&#150;';   // a dash
+                    if ($type == 'Unknown')
+                        $type = '&#150;';    // a dash
+                    $bytes_in1 = normalizeBytes($streamInfo['bytes'][0]);
+                    $bytes_in2 = normalizeBytes($streamInfo['bytes'][1]);
+                    $bytes_rel = normalizeBytes($streamInfo['bytes'][2]);
+                    print "
+      <td class=border align=$align1>$caller</td>
+      <td class=border align=$align2>$called</td>
+      <td class=border align=left>$via</td>
+      <td class=border align=center><nobr>$status</nobr></td>
+      <td class=border align=center>$codec</td>
+      <td class=border align=center>$type</td>
+      <td class=border align=right>$duration</td>
+      <td class=border align=right>$bytes_in1</td>
+      <td class=border align=right>$bytes_in2</td>
+      <td class=border align=right>$bytes_rel</td>
+     </tr>";
+                }
+                $i++;
+            }
+        }
+        print "
+     </table>
+     <br />";
+    }
+
+}
+
+// main page from here
+
+?>
+<html>
+<head>
+ <title>Media Sessions</title>
+</head>
+
+<body marginwidth=20 leftmargin=20 link=#000066 vlink=#006666 bgcolor=white>
+<style type="text/css">
+<!--
+
+.border {
+    border: 1px solid #999999;
+    border-collapse: collapse;
+}
+
+.bordertb {
+    border-top: 1px solid #999999;
+    border-bottom: 1px solid #999999;
+    border-collapse: collapse;
+}
+
+body {
+    font-family: Verdana, Sans, Arial, Helvetica, sans-serif;
+    font-size: 10pt;
+    color: gray;
+}
+
+p {
+    font-family: Verdana, Sans, Arial, Helvetica, sans-serif;
+    font-size: 8pt;
+    color: gray;
+}
+
+pre {
+    font-family: Lucida Console, Courier;
+    font-size: 10pt;
+    color: black;
+}
+
+td {
+    font-family: Verdana, Sans, Arial, Helvetica, sans-serif;
+    font-size: 8pt;
+    vertical-align: top;
+    color: #444444;
+}
+
+th {
+    font-family: Verdana, Sans, Arial, Helvetica, sans-serif;
+    font-size: 8pt;
+    vertical-align: bottom;
+    color: black;
+}
+
+-->
+</style>
+
+<h2>Media Sessions</h2>
+
+<?
+
+$sessions = array();
+
+foreach ($servers as $server) {
+    list($ip, $port) = explode(":", $server);
+    if (!$port)
+        $port = "25060";
+    $sessions[$server] = getRTPSessions($ip, $port,$allowedDomains);
+}
+
+showSessions($servers, $sessions);
+
+if ($perm->have_perm('admin')) {
+	showSummary($servers, $sessions);
+}
+
+$REMOTE_ADDR        = $_SERVER['REMOTE_ADDR'];
+$db =new DB_CDRTool;
+$loginname=$auth->auth["uname"];
+
+$log_query=sprintf("insert into log
+(date,login,ip,datasource,description)
+values (NOW(),'%s','%s','Media sessions','View media sessions')",
+addslashes($loginname),
+addslashes($REMOTE_ADDR)
+);
+
+dprint($log_query);
+$db->query($log_query);
+
+print "
+</body>
+</html>
+";
+
+page_close();
+?>
+
+
