@@ -3,9 +3,13 @@ cdrtool (6.5.1) unstable; urgency=low
   * Added library for displaying media sessions for MediaProxy  2.0
   * Added link from sip trace page to media trace page
   * Fixed update of Enum number selections
-  * Fixed showprice rating engine command
+  * Fixed ShowPrice rating engine command
+  * Moved setting $servers from status/config/media_servers.php to global.inc
+    in each data source  as 'mediaServers' 
+  * Added new setting in global.inc called 'mediaDispatcher' to point to the 
+    media dispatcher of MediaProxy 2, used to display media sessions
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 31 May 2008 11:59:43 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 31 May 2008 14:18:20 +0200
 
 cdrtool (6.5.0) unstable; urgency=low
 
