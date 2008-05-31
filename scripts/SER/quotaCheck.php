@@ -15,7 +15,7 @@ set_time_limit(0);
 
 $path=dirname(realpath($_SERVER['PHP_SELF']));
 include($path."/../../global.inc");
-include($path."/../../cdrlib.phtml");
+include($path."/../../library/cdr_lib.phtml");
 
 define_syslog_variables();
 openlog("CDRTool quota", LOG_PID, LOG_LOCAL0);

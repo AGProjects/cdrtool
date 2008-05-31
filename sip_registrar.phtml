@@ -12,8 +12,6 @@ $perm->check("statistics");
 $title="SIP registrar - online subscribers";
 include("header.phtml");
 
-require("cdrlib.phtml");
-
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
 
@@ -36,6 +34,8 @@ foreach ($datasources as $datasource) {
             $DATASOURCES[$datasource]['thorStatusNode']);
 
         } else if ($DATASOURCES[$datasource]['db_class_siponline']){
+			require_once("library/cdr_lib.phtml");
+
 	    	printf ("<h1>%s</h1>",$DATASOURCES[$datasource]['name']);
 
 			$online= new SIPonline($datasource,$DATASOURCES[$datasource]['db_class_siponline']);

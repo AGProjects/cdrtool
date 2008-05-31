@@ -2,7 +2,7 @@
 <?
 $path=dirname(realpath($_SERVER['PHP_SELF']));
 include($path."/../../global.inc");
-include($path."/../../cdrlib.phtml");
+include($path."/../../library/cdr_lib.phtml");
 
 if (!count($argv) || count($argv) != 2) {
     printf ("Syntax: %s treshhold\n",$_SERVER['PHP_SELF']);

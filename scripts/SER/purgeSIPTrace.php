@@ -6,7 +6,7 @@ openlog("CDRTool trace", LOG_PID, LOG_LOCAL0);
 
 $path=dirname(realpath($_SERVER['PHP_SELF']));
 include($path."/../../global.inc");
-include($path."/../../cdrlib.phtml");
+include($path."/../../library/cdr_lib.phtml");
 
 $SipTrace = new SIP_trace("sip_trace");
 

@@ -18,7 +18,7 @@ if (in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
     $fromtag     = $_REQUEST['fromtag'];
     $totag       = $_REQUEST['totag'];
     
-    require("cdrlib.phtml");
+    require("library/cdr_lib.phtml");
     
     $mediaTrace = new Media_trace($cdr_source);
     $mediaTrace->show($proxyIP,$callid,$fromtag,$totag);

@@ -187,7 +187,7 @@ class PageLayoutLocal extends PageLayout {
 }
 
 # To customize E164 normalization
-class E164_custom extends E164 {      // defined in cdrlib.phtml
+class E164_custom extends E164 {      // defined in library/cdr_lib.phtml
 }
 # $CDRTool['normalize']['E164Class']           = "E164_custom";
 

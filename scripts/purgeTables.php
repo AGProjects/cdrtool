@@ -9,7 +9,7 @@ openlog("CDRTool purge", LOG_PID, LOG_LOCAL0);
 
 $path=dirname(realpath($_SERVER['PHP_SELF']));
 include($path."/../global.inc");
-include($path."/../cdrlib.phtml");
+include($path."/../library/cdr_lib.phtml");
 
 while (list($k,$v) = each($DATASOURCES)) {
     if (strlen($v['purgeCDRsAfter'])) {

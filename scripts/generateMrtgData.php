@@ -2,7 +2,7 @@
 <?
 $path=dirname(realpath($_SERVER['PHP_SELF']));
 include($path."/../global.inc");
-include($path."/../sip_statistics_lib.phtml");
+include($path."/../library/sip_statistics_lib.phtml");
 
 if (count($argv)!= 3 ) {
     printf ("Usage: $PHP_SELF domain dataType\n");

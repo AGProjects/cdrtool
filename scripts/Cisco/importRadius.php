@@ -9,7 +9,7 @@
 
 $path=dirname(realpath($_SERVER['PHP_SELF']));
 include($path."/../../global.inc");
-include($path."/../../cdrlib.phtml");
+include($path."/../../library/cdr_lib.phtml");
 
 $cdr_source = "cisco";
 $CDR_class  = $DATASOURCES[$cdr_source]["class"];

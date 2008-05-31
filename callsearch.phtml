@@ -46,7 +46,7 @@ $cdr_source     = $_REQUEST["cdr_source"];
 $trace          = $_REQUEST["trace"];
 $action         = $_REQUEST["action"];
 
-include("cdrlib.phtml");
+include("library/cdr_lib.phtml");
 
 if (isset($CDRTool[dataSourcesAllowed])) {
     while (list($k,$v)=each($CDRTool[dataSourcesAllowed])) {

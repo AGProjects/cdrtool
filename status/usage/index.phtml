@@ -12,7 +12,7 @@ $perm->check("statistics");
 $title='Platform usage';
 include("../../header.phtml");
 
-include($path."../../sip_statistics_lib.phtml");
+include($path."../../library/sip_statistics_lib.phtml");
 
 $SIPstatistics=new SIPstatistics ();
 $SIPstatistics->getSipEnabledZones();
