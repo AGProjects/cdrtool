@@ -1,3 +1,12 @@
+cdrtool (6.5.1) unstable; urgency=low
+
+  * Added library for displaying media sessions for MediaProxy  2.0
+  * Added link from sip trace page to media trace page
+  * Fixed update of Enum number selections
+  * Fixed showprice rating engine command
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 31 May 2008 11:59:43 +0200
+
 cdrtool (6.5.0) unstable; urgency=low
 
   * Added web page to show media info from mediproxy 2.0
