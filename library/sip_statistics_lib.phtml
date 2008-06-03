@@ -407,7 +407,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
 
     	system($this->generateMrtgConfigScript);
         system($this->harvest_script);
-        system("mrtg $this->mrtgcfg_file");
+        system("env LANG=C mrtg $this->mrtgcfg_file");
 
     }
 
