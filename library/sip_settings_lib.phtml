@@ -673,7 +673,7 @@ class SipSettings {
         $this->name      = $this->firstName." ".$this->lastName;
 
         $this->sipId=array("username" => $this->username,
-                           "domain"=> $this->domain
+                           "domain" => $this->domain
                            );
 
         if (!$this->timeout) {
@@ -988,8 +988,8 @@ class SipSettings {
                 continue ;
             }
 
-            $_aliasObject=array("id"=>array("username"=>$_alias_username,
-                                            "domain"=>$_alias_domain),
+            $_aliasObject=array("id"=>array("username"=>strtolower($_alias_username),
+                                            "domain"=>strtolower($_alias_domain),
                                 "owner"=>intval($this->owner),
                                 "target"=>$this->sipId);
 
@@ -1016,7 +1016,7 @@ class SipSettings {
             if (count($els) ==1 ) {
                 $_alias_username=$_alias;
                 $_alias_domain=$this->domain;
-            } else if (count($els) ==2) {
+            } else if (count($els) == 2) {
                 $_alias_username=$els[0];
                 $_alias_domain=$els[1];
             } else {

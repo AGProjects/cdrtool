@@ -2636,7 +2636,7 @@ class SipAccounts extends Records {
                      'lastName'   => $lastName,
                      'password'   => $password,
                      'timezone'   => $timezone,
-                     'email'      => $email,
+                     'email'      => strtolower($email),
                      'owner'      => $owner,
                      'groups'     => $groups,
                      'prepaid'    => $prepaid,
