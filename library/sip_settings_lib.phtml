@@ -1428,6 +1428,9 @@ class SipSettings {
 
     function getDeviceLocations() {
         dprint("getDeviceLocations()");
+        require($this->SipUAImagesFile);
+        $this->userAgentImages = $userAgentImages;
+
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getSipDeviceLocations(array($this->sipId));
 
@@ -5709,8 +5712,6 @@ class SipSettings {
     }
 
     function getImageForUserAgent($agent) {
-        require_once($this->SipUAImagesFile);
-        $this->userAgentImages = $userAgentImages;
 
         // array with mappings between User Agents and images
         foreach ($this->userAgentImages as $agentRegexp => $image) {
