@@ -118,6 +118,7 @@ class SipSettings {
              "60"=>"60 s"
              );
 
+    var $prepaid             = 0;
     var $emergencyRegions    = array();
     var $FNOA_timeoutDefault = 35;
     var $exportFilename      = "export.txt";
@@ -125,10 +126,8 @@ class SipSettings {
     var $enums               = array();
     var $barringPrefixes     = array();
     var $presenceWatchers    = array();
-    var $SipUAImagesPath    = "images";
+    var $SipUAImagesPath     = "images";
     var $SipUAImagesFile     = "phones_images.php";
-
-    var $prepaid = 0;
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
         $this->soapEngines        = $soapEngines;
@@ -687,7 +686,7 @@ class SipSettings {
 
         $this->getMobileNumber();
 
-          $this->xcap_root     = rtrim($this->xcap_root,'/')."@".$this->domain."/";
+        $this->xcap_root     = rtrim($this->xcap_root,'/')."@".$this->domain."/";
 
         $this->result    = $result;
 

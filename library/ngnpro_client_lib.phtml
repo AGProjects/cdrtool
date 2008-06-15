@@ -9908,7 +9908,8 @@ class SipAccountsActions extends Actions {
                        'addbalance'     => 'Add to prepaid balance value:',
                        'changeowner'    => 'Change owner to:',
                        'changefirstname'=> 'Change first name to:',
-                       'changelastname' => 'Change last name to:'
+                       'changelastname' => 'Change last name to:',
+                       'changepassword' => 'Change password to:'
                        );
 
     function SipAccountsActions(&$SoapEngine) {
@@ -10350,6 +10351,35 @@ class SipAccountsActions extends Actions {
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
                                                         'logs'       => array('success' => sprintf('SIP account %s@%s last name has been set to %s ',$key['username'],$key['domain'],$result->lastName)
+                                                                              )
+                                                       )
+            
+                                    );
+                    $this->SoapEngine->execute($function,$this->html);
+
+                }
+            } else if ($action=='changepassword') {
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $result     = $this->SoapEngine->soapclient->getAccount($account);
+
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    break;
+                } else {
+
+                    if (!is_array($result->properties))   $result->properties=array();
+                    if (!is_array($result->groups))       $result->groups=array();
+                    $result->password=trim($sub_action_parameter);
+
+                    $result->quota         = intval($result->quota);
+                    $result->answerTimeout = intval($result->answerTimeout);
+
+                    $function=array('commit'   => array('name'       => 'updateAccount',
+                                                        'parameters' => array($result),
+                                                        'logs'       => array('success' => sprintf('Password for SIP account %s@%s has been changed',$key['username'],$key['domain'])
                                                                               )
                                                        )
             
