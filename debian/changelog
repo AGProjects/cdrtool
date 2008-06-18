@@ -1,21 +1,23 @@
 cdrtool (6.5.1) unstable; urgency=low
 
   * Fixed ShowPrice rating engine command
-  * Added web links from sip trace page to media trace page
+  * Gateway attribute is now mandatory for MaxSessionTime and DebitBalance commands
+  * Support prepaid calls to work with increment and min_duration settings 
+  * Added links between sip trace and media trace pages
   * Fixed update of Enum number selections
   * Moved setting $servers from status/config/media_servers.php to global.inc
     in each data source  as 'mediaServers' 
   * Added new setting in global.inc called 'mediaDispatcher' to point to the 
     media dispatcher of MediaProxy 2, used to display media sessions
   * Explain  the meaning of split_rating_table in the documentation
-  * Default for split_rating_table is false
+  * Default for split_rating_table is false (global.inc)
   * Added change password for sip accounts selection
-  * Lowercase email and sip usernames
+  * Lowercase email addresses and sip usernames
   * Update cron job, moved env LANG=C into php script
   * Moved all library files under library/
   * No mysql or global.inc changes
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 18 Jun 2008 02:28:20 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 18 Jun 2008 21:19:36 +0200
 
 cdrtool (6.5.0) unstable; urgency=low
 
