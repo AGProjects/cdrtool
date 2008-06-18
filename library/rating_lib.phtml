@@ -75,8 +75,6 @@ class Rate {
         $this->domain            = $dictionary['domain'];
         $this->gateway           = $dictionary['gateway'];
 
-        if (!$this->gateway) $this->gateway='0.0.0.0';
-
         $this->RatingTables      = &$dictionary['RatingTables'];
 
         /////////////////////////////////////////////////////////
@@ -452,28 +450,29 @@ class Rate {
         // get work-day or weekend profile
         if ($this->RatingTables->holidays[$dayofyear]) {
 
-            $this->profileName            = $this->allProfiles[profile2];
-            $this->profileNameAlt        = $this->allProfiles[profile2_alt];
-            $this->PeriodOfProfile        = "weekend";
+            $this->profileName           = $this->allProfiles['profile2'];
+            $this->profileNameAlt        = $this->allProfiles['profile2_alt'];
+            $this->PeriodOfProfile       = "weekend";
 
         } else {
             if ($dayofweek >=1 && $dayofweek <=5 ) {
-                $this->profileName        = $this->allProfiles[profile1];
-                $this->profileNameAlt    = $this->allProfiles[profile1_alt];
-                $this->PeriodOfProfile    = "weekday";
+                $this->profileName       = $this->allProfiles['profile1'];
+                $this->profileNameAlt    = $this->allProfiles['profile1_alt'];
+                $this->PeriodOfProfile   = "weekday";
             } else {
-                $this->profileName        = $this->allProfiles[profile2];
-                $this->profileNameAlt    = $this->allProfiles[profile2_alt];
-                $this->PeriodOfProfile    = "weekend";
+                $this->profileName       = $this->allProfiles['profile2'];
+                $this->profileNameAlt    = $this->allProfiles['profile2_alt'];
+                $this->PeriodOfProfile   = "weekend";
             }
         }
 
         // get rate for the time of the day
         $timestampNextProfile    = $this->timestampBilling + $durationRatedAlready;
-        $profileValues            = $this->RatingTables->profiles[$this->profileName];
-        $profileValuesAlt        = $this->RatingTables->profiles[$this->profileNameAlt];
+        $profileValues           = $this->RatingTables->profiles[$this->profileName];
 
         if (is_array($profileValues)) {
+            $this->profileNameLog = $this->profileName;
+
             if ($hourofday          < $profileValues['hour1'] ) {
                 $this->rateName     = $profileValues['rate_name1'];
                 $this->timeInterval = "0-".$profileValues['hour1'];
@@ -530,66 +529,67 @@ class Rate {
                     $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->applicationType);
                 }
 
-            } else {
             }
 
-            if (!$this->rateValues && is_array($profileValuesAlt)) {
-    
-                if ($hourofday          < $profileValuesAlt['hour1'] ) {
-                    $this->rateName     = $profileValuesAlt['rate_name1'];
-                    $this->timeInterval = "0-".$profileValuesAlt['hour1'];
-                    $foundProfile       = $profileValuesAlt['hour1'];
-                    $this->nextProfile  = $profileValuesAlt['hour1'];
-                } else if ($hourofday   < $profileValuesAlt['hour2']) {
-                    $this->rateName     = $profileValuesAlt['rate_name2'];
-                    $this->timeInterval = $profileValuesAlt['hour1']."-".$profileValuesAlt['hour2'];
-                    $foundProfile       = $profileValuesAlt['hour2'];
-                    $this->nextProfile  = $profileValuesAlt['hour2'];
-                } else if ($hourofday   < $profileValuesAlt['hour3']) {
-                    $this->rateName     = $profileValuesAlt['rate_name3'];
-                    $this->timeInterval = $profileValuesAlt['hour2']."-".$profileValuesAlt['hour3'];
-                    $foundProfile       = $profileValuesAlt['hour3'];
-                    $this->nextProfile  = $profileValuesAlt['hour3'];
-                } else if ($hourofday   < $profileValuesAlt['hour4']) {
-                    $this->rateName     = $profileValuesAlt['rate_name4'];
-                    $this->timeInterval = $profileValuesAlt['hour3']."-".$profileValuesAlt['hour4'];
-                    $foundProfile       = $profileValuesAlt['hour4'];
-                    $this->nextProfile  = 0;
-                }
+        }
 
-                if ($this->rateName) {
+        $profileValuesAlt        = $this->RatingTables->profiles[$this->profileNameAlt];
 
-                    $found_history=false;
-    
-                    //get historical rating if exists
-                    if (is_array($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType])) {
-                        $h=0;
-                        foreach (($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType]) as $_idx) {
-                            $h++;
-                            if ($_idx['startDate'] <= $this->timestamp) {
-    
-                                if ($_idx['endDate'] > $this->timestamp) {
-                                    // found historical rate
-                                    $found_history=true;
-                                    $this->rateValues=$_idx;
-                                    break;
-                                } else {
-                                    $_log=sprintf("Interval missmatch %s < %s",$_idx['endDate'],$this->timestamp);
-    
-                                    continue;
-                                }
+        if (!$this->rateValues && is_array($profileValuesAlt)) {
+            $this->profileNameLog = $this->profileNameAlt;
+
+            if ($hourofday          < $profileValuesAlt['hour1'] ) {
+                $this->rateName     = $profileValuesAlt['rate_name1'];
+                $this->timeInterval = "0-".$profileValuesAlt['hour1'];
+                $foundProfile       = $profileValuesAlt['hour1'];
+                $this->nextProfile  = $profileValuesAlt['hour1'];
+            } else if ($hourofday   < $profileValuesAlt['hour2']) {
+                $this->rateName     = $profileValuesAlt['rate_name2'];
+                $this->timeInterval = $profileValuesAlt['hour1']."-".$profileValuesAlt['hour2'];
+                $foundProfile       = $profileValuesAlt['hour2'];
+                $this->nextProfile  = $profileValuesAlt['hour2'];
+            } else if ($hourofday   < $profileValuesAlt['hour3']) {
+                $this->rateName     = $profileValuesAlt['rate_name3'];
+                $this->timeInterval = $profileValuesAlt['hour2']."-".$profileValuesAlt['hour3'];
+                $foundProfile       = $profileValuesAlt['hour3'];
+                $this->nextProfile  = $profileValuesAlt['hour3'];
+            } else if ($hourofday   < $profileValuesAlt['hour4']) {
+                $this->rateName     = $profileValuesAlt['rate_name4'];
+                $this->timeInterval = $profileValuesAlt['hour3']."-".$profileValuesAlt['hour4'];
+                $foundProfile       = $profileValuesAlt['hour4'];
+                $this->nextProfile  = 0;
+            }
+
+            if ($this->rateName) {
+
+                $found_history=false;
+
+                //get historical rating if exists
+                if (is_array($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType])) {
+                    $h=0;
+                    foreach (($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->applicationType]) as $_idx) {
+                        $h++;
+                        if ($_idx['startDate'] <= $this->timestamp) {
+
+                            if ($_idx['endDate'] > $this->timestamp) {
+                                // found historical rate
+                                $found_history=true;
+                                $this->rateValues=$_idx;
+                                break;
                             } else {
-                                $_log=sprintf("Interval missmatch %s > %s",$_idx['startDate'],$this->timestamp);
+                                $_log=sprintf("Interval missmatch %s < %s",$_idx['endDate'],$this->timestamp);
+
                                 continue;
                             }
+                        } else {
+                            $_log=sprintf("Interval missmatch %s > %s",$_idx['startDate'],$this->timestamp);
+                            continue;
                         }
                     }
-    
-                    if (!$found_history) {
-                        $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->applicationType);
-                    }
+                }
 
-                } else {
+                if (!$found_history) {
+                    $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->applicationType);
                 }
             }
         }
@@ -648,7 +648,7 @@ class Rate {
         $rate=array(
                     "customer"      =>$this->CustomerProfile,
                     "application"   =>$this->applicationType,
-                    "profile"       =>$this->profileName,
+                    "profile"       =>$this->profileNameLog,
                     "day"           =>$this->PeriodOfProfile,
                     "destinationId" =>$this->DestinationId,
                     "duration"      =>$this->durationRated,
@@ -678,9 +678,10 @@ class Rate {
         $this->duration          = $dictionary['duration'];
         $this->aNumber           = $dictionary['aNumber'];
         $this->cNumber           = $dictionary['cNumber'];
+        $this->gateway           = $dictionary['gateway'];
         $this->RatingTables      = &$dictionary['RatingTables'];
         $this->applicationType   = $dictionary['Application'];
-        $Balance                   = $dictionary['Balance'];
+        $Balance                 = $dictionary['Balance'];
 
         if (!$this->applicationType) $this->applicationType='audio';
 
@@ -5568,6 +5569,12 @@ class RatingEngine {
                 return "error";
             }
 
+            if (!$NetFields['gateway']) {
+                $log=sprintf ("Error: Missing gateway parameter");
+                syslog(LOG_NOTICE, $log);
+                return "error";
+            }
+
             if (!$NetFields['duration']) {
                 $NetFields['duration']=12*3600; // 12 hours
             }
@@ -5658,6 +5665,7 @@ class RatingEngine {
                               $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
                               $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
                               $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
+                              $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
                               $this->CDRS->CDRFields['duration']       => $NetFields['duration'],
                               $this->CDRS->CDRFields['timestamp']      => time()
                               );
@@ -5729,6 +5737,7 @@ class RatingEngine {
                                   'timestamp'       => $CDR->timestamp,
                                   'DestinationId'   => $CDR->DestinationId,
                                   'domain'          => $CDR->domain,
+                                  'gateway'         => $CDR->gateway,
                                   'BillingPartyId'  => $CDR->BillingPartyId,
                                   'ENUMtld'         => $CDR->ENUMtld,
                                   'RatingTables'    => &$this->CDRS->RatingTables
@@ -5746,6 +5755,12 @@ class RatingEngine {
                 $log = sprintf ("Error: maxduration is negative ($maxduration)");
                 syslog(LOG_NOTICE, $log);
                 return "error";
+            }
+
+            if ($Rate->minimumDurationCharged && $maxduration < $Rate->minimumDurationCharged) {
+                $log = sprintf ("Notice: maxduration of %s is less then minimumDurationCharged (%s)",$maxduration,$Rate->minimumDurationCharged);
+                syslog(LOG_NOTICE, $log);
+                return 0;
             }
 
             if (!$Rate->billingTimezone) {
@@ -5825,12 +5840,19 @@ class RatingEngine {
                 return "Failed";
             }
 
+            if (!$NetFields['gateway']) {
+                $log=sprintf ("Error: Missing gateway parameter");
+                syslog(LOG_NOTICE, $log);
+                return "error";
+            }
+
             $timestamp=time();
 
             $CDRStructure=array (
                               $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
                               $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
                               $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
+                              $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
                               $this->CDRS->CDRFields['duration']       => $NetFields['duration'],
                               $this->CDRS->CDRFields['timestamp']      => time()
                               );
@@ -5848,6 +5870,7 @@ class RatingEngine {
                                   'duration'        => $CDR->duration,
                                   'DestinationId'   => $CDR->DestinationId,
                                   'domain'          => $CDR->domain,
+                                  'gateway'         => $CDR->gateway,
                                   'traffic'         => $CDR->traffic,
                                   'BillingPartyId'  => $CDR->BillingPartyId,
                                   'RatingTables'    => &$this->CDRS->RatingTables
