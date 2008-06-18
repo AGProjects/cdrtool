@@ -51,7 +51,7 @@ $RatingEngine=array("socketIP"               => "IP.address.of.the.private.inter
                     "CDRS_class"             => "ser_radius",
                     "prepaid_lock"           => true,
                     "log_delay"              => 0.05,
-                    "split_rating_table"     => true,
+                    "split_rating_table"     => false, // when true individual rating tables are automatically created for each rate id 
                     "csv_delimiter"          => ",",
                     "priceDenominator"       => 10000, // e.g. 1 Eur = 10000 units
                     "priceDecimalDigits"     => 4,     // how many digits to round the prices to
