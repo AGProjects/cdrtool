@@ -48,7 +48,7 @@ database (radacct.UserName for radius data sources) in the following order:
 
 1. SIP account user@domain 
 2. SIP domain of the SIP account
-3. Source IP of the session
+3. Source IP of the SIP session
 4. Default (when none of the above matches)
 
 The longest match is done against entries present in the billing_customers
@@ -58,9 +58,8 @@ the type of session and day of the week.
 The billing_customers table field that matches the Source IP is gateway. Do
 not use hostnames for this field.
 
-"gateway" or "trusted peer" terms are used interchangebly in this
-document. They bott relate to the source IP address that generated the
-SIP session.
+"gateway" or "trusted peer" terms are used interchangebly in this document.
+They both relate to the source IP address that generated the SIP session.
 
 
 Determination of the destination
@@ -142,7 +141,7 @@ the destination ID and billing party found in previous steps.
    settings are global per CDRTool installation but some can be overwritten
    with per customer values in the billing_customers table.
 
-   $PRICING=array( 
+   $RatingEngine=array( 
            "priceDenominator"        => 10000, // Rates units (global setting)
            "priceDecimalDigits"      => 4,     // Decimal information (global setting)
            "minimumDurationCharged"  => 0,     // Rate a minimum of X seconds (per customer)
@@ -246,12 +245,12 @@ Examples:
 - destinations200601.csv will be loaded in the destinations table
 - ratesHistory200801.csv will be loaded in the rates_history table
 
-Do not use the 'billing_' prefix in front of the file name.
+Do not use 'billing_' prefix in front of the file name.
 
 It is advisable to name the files in a consistent manner like tableYYYYMMDD.csv
 
 The results of the import operation is logged in the database and can be
-viewed in the Log section of the web interface and syslog.
+viewed in the Log section of the web interface and the syslog.
 
 
 Rating tables
@@ -312,14 +311,6 @@ billing_rates
 | application     |
 | connectCost     |
 +-----------------+
-
-Note:
-
-When $RatingEngine['split_rating_table'] is true, after changing the rates
-in the web interface or by importing them, you must run the script
-scripts/splitRatingTables.php to split the central billing_rates table into
-individual tables for each rate id. You do not need this feature if you have
-less than 100K rates in your system.
 
 billing_rates_history
 +-----------------+
@@ -412,6 +403,14 @@ files. The CSV format has the same structure as the import file, is
 fairly easy to modify an exported batch file into an external
 application and load it back into CDRTool.
 
+Note
+
+When $RatingEngine['split_rating_table'] is true, after changing the rates
+in the web interface or by importing them, you must run the script
+scripts/splitRatingTables.php to split the central billing_rates table into
+individual tables for each rate id. You do not need this feature if you have
+less than 100K rates in your system.
+
 
 ENUM TLD discounts
 ------------------
@@ -451,34 +450,22 @@ To apply discounts based on ENUM certain conditions must be met.
    section.
 
 
-Network rating engine
----------------------
-
-The network rating engine is daemon that listens for commands on a TCP
-socket and returns responses by using a line protocol. It is used to cache
-in memory the content of the rating tables stored in the MySQL database. The
-CDR normalization process uses transparently this engine to achieve high
-speed during the rating phase of the normalization process. It is not
-necessary to directly interact with the network rating engine.
-
-
 Reloading rating tables
 -----------------------
 
-From cdrtool version 3.2  the rating tables are no longer loaded from
-database into memory during each normalization. The network rating engine is
-contacted for rating all calls. The rating engine is a daemon, which loads
-all rating tables and remains active in the server memory. Reload of rating
-tables is possible without stopping the daemon by connecting to it and
-issuing the reload command. The init.d script can also be used for reloading
-the rating engine with the current values from the rating database.
+The rating engine is a daemon sued for prepaid and other services, which
+loads all rating tables and remains active in the server memory. Reload of
+rating tables is possible without stopping the daemon by connecting to it
+and issuing the reload command. The init.d script can also be used for
+reloading the rating engine with the current values from the rating
+database.
 
 There are 3 ways of reloading the rating tables:
 
 a. Each change executed in the WEB interface for rate management may update
-the rating tables. If there is a change made to the database the link
-'Reload rating tables' appears in red color on web page. Click on the link to
-execute the reload.
+the rating tables. If there is a change made to the database that requires a
+reload the link 'Reload rating tables' appears in red color on web page.
+Click on the link to execute the reload.
 
 b. Telnet to the IP address and port number specified for the Rating engine
 in global.inc. Type help to see the list of commands available. Locate the
@@ -584,14 +571,14 @@ CDRTool in the prepaid table the balance by using + or -.
 Known limitations
 -----------------
 
-The rating engine does not calculate rates based on the outbound carriers or
-outbound gateways, the rates are based per calling party and not per called
-party.
+The rating engine does not calculate prcies based on the outbound carriers
+or outbound gateways, the rates are based per calling party and not per
+called party.
 
-Price discounts (except those on ENUM tld) must be applied outside CDRTool,
-in the billing system that prints the actual invoices. CDRTool has no
-possibility to rate only calls after X minutes per month for subscriber Y,
-all calls are rated uniformly.
+Price discounts (except those based on ENUM tld) must be applied outside
+CDRTool, in the billing system that prints the actual invoices. CDRTool has
+no possibility to rate only calls after X minutes per month for subscriber
+Y, all calls are rated uniformly.
 
 
 Performance
