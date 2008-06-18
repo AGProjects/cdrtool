@@ -2036,31 +2036,46 @@ class SipSettings {
                 }
 
                 if ($this->login_type == 'admin' || $this->login_type == 'reseller') {
-                   printf ("
-                   <select name=%s>
-                   <option value=''>Active
-                   <option value='customer' %s> Blocked by customer
-                   <option value='reseller' %s> Blocked by reseller
-                   </select>
-                   ",
-                   $key,
-                   $selected_blocked_by['customer'],
-                   $selected_blocked_by['reseller']
-                   );
+
+                    if ($this->customer != $this->reseller || $selected_blocked_by['customer']) {
+                        printf ("
+                        <select name=%s>
+                        <option value=''>Active
+                        <option value='customer' %s> Blocked by customer (%d)
+                        <option value='reseller' %s> Blocked by reseller (%d)
+                        </select>
+                        ",
+                        $key,
+                        $selected_blocked_by['customer'],
+                        $this->customer,
+                        $selected_blocked_by['reseller'],
+                        $this->reseller
+                        );
+                    } else {
+                        printf ("
+                        <select name=%s>
+                        <option value=''>Active
+                        <option value='reseller' %s> Blocked by reseller (%d)
+                        </select>
+                        ",
+                        $key,
+                        $selected_blocked_by['reseller'],
+                        $this->reseller
+                        );
+                    }
 
                 } else if ($this->login_type == 'customer' ) {
 
-                   if (in_array($key,$this->groups)) {
+                    if (in_array($key,$this->groups)) {
                        if ($this->Preferences['blocked_by'] != 'reseller') {
                            printf ("
                            <select name=%s>
                            <option value=''>Active
-                           <option value='customer'%s> Blocked
+                           <option value='customer' %s> Blocked
                            </select>
                            ",
                            $key,
-                           $selected_blocked_by['customer'],
-                           $selected_blocked_by['reseller']
+                           $selected_blocked_by['customer']
                            );
                        } else {
                            printf ("Blocked by reseller");
