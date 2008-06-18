@@ -313,6 +313,14 @@ billing_rates
 | connectCost     |
 +-----------------+
 
+Note:
+
+When $RatingEngine['split_rating_table'] is true, after changing the rates
+in the web interface or by importing them, you must run the script
+scripts/splitRatingTables.php to split the central billing_rates table into
+individual tables for each rate id. You do not need this feature if you have
+less than 100K rates in your system.
+
 billing_rates_history
 +-----------------+
 | Field           |
@@ -584,6 +592,7 @@ Price discounts (except those on ENUM tld) must be applied outside CDRTool,
 in the billing system that prints the actual invoices. CDRTool has no
 possibility to rate only calls after X minutes per month for subscriber Y,
 all calls are rated uniformly.
+
 
 Performance
 -----------
