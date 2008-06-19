@@ -2171,17 +2171,12 @@ function validDay($month,$day,$year) {
     return $day;
 }
 
-$ratingLibFile=$CDRTool['Path']."/library/rating_lib.phtml";
-if (is_readable($ratingLibFile)) {
-	require_once($ratingLibFile);
-}
+require_once("rating_lib.phtml");
 
 // include CDRTool modules defined in global.inc
 foreach ($CDRToolModules as $module) {
-    $module_filename=$CDRTool['Path']."/library/cdr_".$module."_lib.phtml";
-    if (is_readable($module_filename)) include($module_filename);
-    $module_filename=$CDRTool['Path']."/local/cdr_".$module."_lib.phtml";
-    if (is_readable($module_filename)) include($module_filename);
+    $module_filename="cdr_".$module."_lib.phtml";
+    include($module_filename);
 }
 
 function unLockNormalization ($dbid,$lockname) {

@@ -42,8 +42,8 @@ $path=dirname(realpath($_SERVER['PHP_SELF']));
 $version_file=$path."/../version";
 $version=trim(file_get_contents($version_file));
 
-include($path."/../global.inc");
-include($path."/../library/cdr_lib.phtml");
+require($path."/../global.inc");
+require("cdr_lib.phtml");
 
 if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] && $RatingEngine['CDRS_class']) {
     // make sure you protect access to this socket by external means

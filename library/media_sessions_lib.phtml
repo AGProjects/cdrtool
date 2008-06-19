@@ -17,7 +17,7 @@ class MediaSessions {
         if (!strlen($dispatcher)) return false;
 
         global $userAgentImages;
-        require_once("library/phone_images.php");
+        require_once("phone_images.php");
         $this->userAgentImages = $userAgentImages;
 
         $this->filters = $filters;
@@ -443,7 +443,7 @@ class MediaSessions1 {
         $this->servers = $servers;
         $this->allowedDomains  = $allowedDomains;
         global $userAgentImages;
-        require_once("library/phone_images.php");
+        require_once("phone_images.php");
         $this->userAgentImages = $userAgentImages;
     }
 

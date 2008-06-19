@@ -42,7 +42,7 @@ $cdr_source  = $_REQUEST['cdr_source'];
 $title=sprintf("SIP session %s",$callid);
 
 include("header.phtml");
-require("library/cdr_lib.phtml");
+require("cdr_lib.phtml");
 
 if (!$authorize || in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
 

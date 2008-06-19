@@ -1,8 +1,8 @@
 #!/usr/bin/php
 <?
 $path=dirname(realpath($_SERVER['PHP_SELF']));
-include($path."/../global.inc");
-include($path."/../library/rating_lib.phtml");
+require($path."/../global.inc");
+require("rating_lib.phtml");
 
 set_time_limit(0);
 

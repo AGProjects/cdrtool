@@ -19,7 +19,7 @@ if (is_readable("local/header.phtml")) {
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
 
-require("library/mysql_replication_lib.phtml");
+require("mysql_replication_lib.phtml");
 
 $ReplicationOverview = new ReplicationOverview($replicated_databases);
 $ReplicationOverview->showOverview();

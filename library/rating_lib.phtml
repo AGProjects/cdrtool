@@ -4311,8 +4311,8 @@ class OpenSERQuota {
         }
 
         if ($DATASOURCES[$this->cdr_source]['soapEngineId']) {
-            require_once($this->path."/library/ngnpro_soap_library.phtml");
-            require($this->path."/ngnpro_engines.inc");
+            require_once("ngnpro_soap_library.phtml");
+            require("ngnpro_engines.inc");
 
             if (in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
 
