@@ -503,7 +503,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
 
 	  	unset($soapEngines);
     	require("/etc/cdrtool/ngnpro_engines.inc");
-		require_once("ngnpro_soap_library.phtml");
+		require_once("ngnpro_soap_library.php");
 
         //$soapEngines
         if (!array_key_exists($soapEngine,$soapEngines)) {

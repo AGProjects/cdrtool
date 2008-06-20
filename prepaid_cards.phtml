@@ -6,6 +6,8 @@ page_open(array("sess" => "CDRTool_Session",
                 "perm" => "CDRTool_Perm")
           );
 
+require("prepaid.php");
+
 $loginname=$auth->auth["uname"];
 
 $perm->check("provisioning");
@@ -31,8 +33,6 @@ if ($action != "export") {
     header("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
     header("Pragma: no-cache");
 }
-
-include("prepaid_lib.phtml");
 
 $PrepaidCards = new PrepaidCards();
 

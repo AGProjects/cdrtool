@@ -332,7 +332,7 @@ class SipSettings {
         dprint("initSoapClient()");
 
         require_once('SOAP/Client.php');
-        require_once("ngnpro_soap_library.phtml");
+        require_once("ngnpro_soap_library.php");
 
         // Sip, Voicemail and Customer ports share same login
         $this->SOAPurl=$this->soapEngines[$this->sip_engine]['url'];

@@ -25,8 +25,8 @@ if ($_REQUEST['reseller']) {
     $login_type  = "subscriber";
 }
 
-require_once("/etc/cdrtool/ngnpro_engines.inc");
-require_once('sip_settings_lib.phtml');
+require("/etc/cdrtool/ngnpro_engines.inc");
+require('sip_settings.php');
 
 $action  = $_REQUEST['action'];
 $export  = $_REQUEST['export'];

@@ -362,7 +362,7 @@ class SIP_Subscriber_Auth extends Auth {
 
         require_once('SOAP/Client.php');
       	require("/etc/cdrtool/ngnpro_engines.inc");
-	require_once("ngnpro_soap_library.phtml");
+	require_once("ngnpro_soap_library.php");
 
         $SIP['account']    = $username;
 

@@ -4312,7 +4312,7 @@ class OpenSERQuota {
 
         if ($DATASOURCES[$this->cdr_source]['soapEngineId']) {
             require("/etc/cdrtool/ngnpro_engines.inc");
-            require_once("ngnpro_soap_library.phtml");
+            require_once("ngnpro_soap_library.php");
 
             if (in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
 

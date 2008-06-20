@@ -9,10 +9,11 @@ page_open(
 
 $perm->check("statistics");
 
+require("sip_statistics.php");
+
 $title='Platform usage';
 include("../../header.phtml");
 
-include($path."../../library/sip_statistics_lib.phtml");
 
 $SIPstatistics=new SIPstatistics ();
 $SIPstatistics->getSipEnabledZones();

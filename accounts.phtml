@@ -7,6 +7,8 @@ page_open(array("sess" => "CDRTool_Session",
           );
 
 $title           = "Login accounts";
+require("login_accounts.php");
+
 if (is_readable("/etc/cdrtool/local/header.phtml")) {
     include("/etc/cdrtool/local/header.phtml");
 } else {
@@ -47,8 +49,6 @@ $check           = $_REQUEST['check'];
 $mailsettings    = $_REQUEST['mailsettings'];
 
 $db        		 = new DB_CDRTool;
-
-include("accounts_lib.phtml");
 
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);

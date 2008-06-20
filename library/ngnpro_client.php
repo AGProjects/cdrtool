@@ -43,7 +43,7 @@
                                            );
 
     
-    require_once("ngnpro_soap_library.phtml");
+    require_once("ngnpro_soap_library.php");
     require_once("ngnpro_client_lib.phtml");
     require("/etc/cdrtool/ngnpro_engines.inc");
 

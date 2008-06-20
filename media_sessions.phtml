@@ -9,13 +9,13 @@ page_open(
 
 $perm->check("statistics");
 
+require("media_sessions.php");
+
 $title="Media sessions";
 include("header.phtml");
 
 global $CDRTool;
 if (strlen($CDRTool['filter']['domain'])) $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
-
-require("media_sessions_lib.phtml");
 
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);

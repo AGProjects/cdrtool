@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?
 require("/etc/cdrtool/global.inc");
-require("rating_lib.phtml");
+require("rating.php");
 
 if (!reloadRatingEngineTables()) {
 	die("Error: Cannot connect to network Rating Engine $errstr ($errno). \n");

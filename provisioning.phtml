@@ -70,8 +70,8 @@ if ($CDRTool['impersonate']) {
     exit;
 }
 
-require_once("ngnpro_soap_library.phtml");
-require_once("ngnpro_client_lib.phtml");
+require_once("ngnpro_soap_library.php");
+require_once("ngnpro_client.php");
 
 if (file_exists("/etc/cdrtool/ngnpro_engines.inc")) {
     require("/etc/cdrtool/ngnpro_engines.inc");
