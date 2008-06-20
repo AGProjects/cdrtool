@@ -1,5 +1,5 @@
 <?php
-include("../global.inc");
+include("/etc/cdrtool/global.inc");
 page_open(
     array("sess" => "CDRTool_Session",
           "auth" => "CDRTool_Auth",

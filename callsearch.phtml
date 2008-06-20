@@ -1,5 +1,5 @@
 <?
-include("global.inc");
+include("/etc/cdrtool/global.inc");
 set_time_limit(1800);
 
 page_open(
@@ -13,8 +13,8 @@ $SERVER_NAME = $_SERVER['SERVER_NAME'];
 
 if (!$export) {
     $title="Call search on $SERVER_NAME";
-    if (is_readable("local/header.phtml")) {
-        include("local/header.phtml");
+    if (is_readable("/etc/cdrtool/local/header.phtml")) {
+        include("/etc/cdrtool/local/header.phtml");
     } else {
         include("header.phtml");
     }

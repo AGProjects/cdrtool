@@ -6,7 +6,7 @@ ini_set('max_execution_time','120');
 $lib_dirs=ini_get('include_path').":".
           $_PHPLIB['libdir'].":".
           $CDRTool['Path']."/library:".
-          $CDRTool['Path']."/local";
+          "/etc/cdrtool/local";
 
 ini_set('include_path', $lib_dirs);
 

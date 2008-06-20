@@ -1,5 +1,7 @@
 cdrtool (6.5.1) unstable; urgency=low
 
+  * Added web page to show media info from MediaProxy 2.0
+  * Added prepaid card generator
   * Fixed ShowPrice rating engine command
   * Gateway attribute is now mandatory for MaxSessionTime and DebitBalance commands
   * Support prepaid calls to work with increment and min_duration settings 
@@ -16,13 +18,15 @@ cdrtool (6.5.1) unstable; urgency=low
   * Update cron job, moved env LANG=C into php script
   * Moved all library files under library/
   * No mysql or global.inc changes
+  * Added /etc/cdrtool config directory, you must move global.inc 
+    and ngnpro_engines.inc to /etc/cdrtool/
+  * Moved local to /etc/cdrtool/local
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 18 Jun 2008 21:19:36 +0200
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 20 Jun 2008 23:32:55 +0200
 
 cdrtool (6.5.0) unstable; urgency=low
 
-  * Added web page to show media info from MediaProxy 2.0
-  * Added prepaid card generator
   * Completely removed memcache
   * Fixed update of rating history records from cvs files
   * Fixed pattern matching for cvs files containing rates_history

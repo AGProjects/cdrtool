@@ -108,8 +108,7 @@ software.
 Create a configuration file
 ---------------------------
 
-cd /var/www/CDRTool
-cp setup/global.inc.new.installation global.inc 
+cp /var/www/CDRTool/setup/global.inc.new.installation /etc/global.inc 
 
 Edit global.inc and setup your variables to match your system.
 

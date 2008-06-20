@@ -74,8 +74,8 @@ class CDRTool_Auth extends Auth {
 
 	if ($spam_login_tries < $max_login_attempts) {
         $title="Login";
-        if (is_readable("$CDRTool[Path]/local/header.phtml")) {
-            include("$CDRTool[Path]/local/header.phtml");
+        if (is_readable("/etc/cdrtool/local/header.phtml")) {
+            include("/etc/cdrtool/local/header.phtml");
         } else {
             include("$CDRTool[Path]/header.phtml");
         }
@@ -358,11 +358,11 @@ class SIP_Subscriber_Auth extends Auth {
         $domain= $a[1];
         if (count($a) !=2 ) return false;
 
-		global $domainFilters, $resellerFilters, $soapEngines ;
+	global $domainFilters, $resellerFilters, $soapEngines ;
 
         require_once('SOAP/Client.php');
-		require_once("library/ngnpro_soap_library.phtml");
-		require_once("ngnpro_engines.inc");
+      	require("/etc/cdrtool/ngnpro_engines.inc");
+	require_once("ngnpro_soap_library.phtml");
 
         $SIP['account']    = $username;
 
@@ -685,12 +685,12 @@ class pageLayout {
         <tr>
         ";
 
-        if (is_readable("local/images/logo.gif")) {
-        	print "<td valign=middle><img src=\"local/images/logo.gif\"></td>";
-        } else if (is_readable("local/images/logo.jpg")) {
-        	print "<td valign=middle><img src=\"local/images/logo.jpg\"></td>";
-        } else if (is_readable("local/images/logo.png")) {
-        	print "<td valign=middle><img src=\"local/images/logo.png\"></td>";
+        if (is_readable("/etc/cdrtool/local/images/logo.gif")) {
+        	print "<td valign=middle><img src=\"/etc/cdrtool/local/images/logo.gif\"></td>";
+        } else if (is_readable("/etc/cdrtool/local/images/logo.jpg")) {
+        	print "<td valign=middle><img src=\"/etc/cdrtool/local/images/logo.jpg\"></td>";
+        } else if (is_readable("/etc/cdrtool/local/images/logo.png")) {
+        	print "<td valign=middle><img src=\"/etc/cdrtool/local/images/logo.png\"></td>";
         } else {
             $this->hasAGProjectslogo=1;
 	    $logo=$CDRTool['tld']."/images/CDRTool.gif";

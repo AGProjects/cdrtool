@@ -2,8 +2,7 @@
 <?
 set_time_limit(0);
 
-$path=dirname(realpath($_SERVER['PHP_SELF']));
-require($path."/../global.inc");
+require("/etc/cdrtool/global.inc");
 require("cdr_lib.phtml");
 
 define_syslog_variables();

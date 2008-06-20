@@ -10,7 +10,7 @@
     on a remote NGN-Pro server
 */
 
-include("./global.inc");
+require("/etc/cdrtool/global.inc");
 set_time_limit(600);
 
 page_open(
@@ -21,8 +21,8 @@ page_open(
 
 $title="SIP and ENUM provisioning";
 
-if (is_readable("local/header.phtml")) {
-    include("local/header.phtml");
+if (is_readable("/etc/cdrtool/local/header.phtml")) {
+    include("/etc/cdrtool/local/header.phtml");
 } else {
     include("header.phtml");
 }
@@ -73,11 +73,11 @@ if ($CDRTool['impersonate']) {
 require_once("ngnpro_soap_library.phtml");
 require_once("ngnpro_client_lib.phtml");
 
-if (file_exists("ngnpro_engines.inc")) {
-	include("ngnpro_engines.inc");
+if (file_exists("/etc/cdrtool/ngnpro_engines.inc")) {
+    require("/etc/cdrtool/ngnpro_engines.inc");
 } else {
     page_close();
-    printf ("Error: you must copy setup/ngnpro_engines.inc.sample to ngnpro_engines.inc and edit it before trying again");
+    printf ("Error: you must copy setup/ngnpro_engines.inc.sample to /etc/cdrtool/ngnpro_engines.inc and edit it before trying again");
     exit;
 }
 

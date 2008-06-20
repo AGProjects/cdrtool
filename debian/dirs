@@ -1,4 +1,9 @@
 usr/share/doc/cdrtool
 usr/share/cdrtool
 etc/apache2/conf.d
-etc/apache/conf.d
+etc/cdrtool
+etc/cdrtool/local
+etc/cdrtool/local/images
+var/spool/cdrtool
+var/www/CDRTool
+var/www/CDRTool/templates_c

@@ -465,7 +465,6 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
             print "\n";
         }
 
-
         if (count($left)) {
         	printf ("%d IPs left: ",count($left));
             foreach ($left as $var) print "$var ";
@@ -503,9 +502,8 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
     function publishPresence ($soapEngine,$SIPaccount,$note,$activity) {
 
 	  	unset($soapEngines);
-
+    	require("/etc/cdrtool/ngnpro_engines.inc");
 		require_once("ngnpro_soap_library.phtml");
-        require("ngnpro_engines.inc");
 
         //$soapEngines
         if (!array_key_exists($soapEngine,$soapEngines)) {

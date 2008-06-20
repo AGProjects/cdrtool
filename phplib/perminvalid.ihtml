@@ -1,5 +1,5 @@
 <?
-include ("../global.inc");
+require("/etc/cdrtool/global.inc");
 include ("../header.phtml");
 ?>
 

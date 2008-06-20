@@ -8,8 +8,9 @@
 # Example: importRadius.php /tmp/detail-20040221 Europe/Amsterdam
 
 $path=dirname(realpath($_SERVER['PHP_SELF']));
-include($path."/../../global.inc");
-include($path."/../../library/cdr_lib.phtml");
+
+require("/etc/cdrtool/global.inc");
+require("cdr_lib.phtml");
 
 $cdr_source = "cisco";
 $CDR_class  = $DATASOURCES[$cdr_source]["class"];

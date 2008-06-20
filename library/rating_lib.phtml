@@ -1241,7 +1241,7 @@ class RatingTables {
 
     function ImportCSVFiles($dir=false) {
         $results=0;
-        if (!$dir) $dir=$this->CDRTool['Path']."/csv";
+        if (!$dir) $dir="/var/spool/cdrtool";
 
         $this->scanFilesForImport($dir);
 
@@ -2722,7 +2722,7 @@ class RatingTables {
     }
 
     function scanFilesForImport($dir) {
-        if (!$dir) $dir=$this->CDRTool['Path']."/csv";
+        if (!$dir) $dir="/var/spool/cdrtool";
 
         if ($handle = opendir($dir)) {
             while (false !== ($filename = readdir($handle))) {
@@ -4270,7 +4270,7 @@ class OpenSERQuota {
             return false;
         }
 
-           $this->AccountsDB       = new $this->AccountsDBClass;
+        $this->AccountsDB       = new $this->AccountsDBClass;
         $this->enableThor       = $parent->enableThor;
 
         $parent->LoadDomains();
@@ -4311,8 +4311,8 @@ class OpenSERQuota {
         }
 
         if ($DATASOURCES[$this->cdr_source]['soapEngineId']) {
+            require("/etc/cdrtool/ngnpro_engines.inc");
             require_once("ngnpro_soap_library.phtml");
-            require("ngnpro_engines.inc");
 
             if (in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
 
@@ -5067,7 +5067,7 @@ class RatingEngine {
     var $log_runtime = false;
 
     function RatingEngine (&$CDRS) {
-          global $RatingEngine;   // set in global.inc
+    	global $RatingEngine;   // set in global.inc
         $this->settings = $RatingEngine;
 
         if ($this->settings['prepaid_lock'] == false || $this->settings['prepaid_lock'] == 0) {

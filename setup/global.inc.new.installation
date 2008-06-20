@@ -2,7 +2,7 @@
 
 #
 # 1. Change all hostnames and passwords according to the installation
-# 2. Copy this file to /var/www/CDRTool/global.inc
+# 2. Copy this file to /etc/cdrtool/global.inc
 #
 ini_set('memory_limit','256M');
 
@@ -13,7 +13,6 @@ $CDRTool['tld']    = "/CDRTool";
 $CDRTool['Path']   = "/var/www/CDRTool";
 $_PHPLIB['libdir'] = $CDRTool['Path']. "/phplib/";
 include($_PHPLIB["libdir"] . "prepend.php3");
-$global_local    = $CDRTool['Path']."/global.inc.local";
 
 ###########################################
 # PHP Error reporting

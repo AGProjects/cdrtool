@@ -1,5 +1,5 @@
 <?
-include("global.inc");
+require("/etc/cdrtool/global.inc");
 
 if ($DATASOURCES) {
     page_open(array(
@@ -23,8 +23,8 @@ if ($DATASOURCES) {
         }
     }
 
-	if (is_readable("local/header.phtml")) {
-		include_once("local/header.phtml");
+	if (is_readable("/etc/cdrtool/local/header.phtml")) {
+		include_once("/etc/cdrtool/local/header.phtml");
 	} else {
 		include_once("header.phtml");
 	}
@@ -59,7 +59,7 @@ class SETUP {
         Once the database is available, create the cdrtool configuration
         file by copying the sample configuration file:
         <p>
-        cp setup/global.inc.new.installation global.inc
+        cp setup/global.inc.new.installation /etc/cdrtool/global.inc
         <p>
         Then edit the configuration file global.inc to reflect your platform setup.
         This is the content of the current sample configuration file:

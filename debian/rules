@@ -27,11 +27,6 @@ install: build
 	dh_testroot
 	dh_clean -k
 	dh_installdirs
-	mkdir -p debian/cdrtool/var/www/CDRTool
-	mkdir -p debian/cdrtool/var/www/CDRTool/local
-	mkdir -p debian/cdrtool/var/www/CDRTool/local/images
-	mkdir -p debian/cdrtool/var/www/CDRTool/csv
-	mkdir -p debian/cdrtool/var/www/CDRTool/templates_c
 	cp -a doc debian/cdrtool/usr/share/doc/cdrtool
 	cp -a debian/copyright debian/cdrtool/usr/share/doc/cdrtool/
 	cp -a setup/global.inc.in  debian/cdrtool/usr/share/doc/cdrtool/

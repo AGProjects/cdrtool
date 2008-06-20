@@ -1,5 +1,6 @@
 <?
-include("./global.inc");
+require("/etc/cdrtool/global.inc");
+
 page_open(
             array("sess" => "CDRTool_Session",
                   "auth" => "CDRTool_Auth",
@@ -23,8 +24,8 @@ $table_fname=array(
 
 if (!$export) {
     $title="Rating tables";
-    if (is_readable("local/header.phtml")) {
-        include("local/header.phtml");
+    if (is_readable("/etc/cdrtool/local/header.phtml")) {
+        include("/etc/cdrtool/local/header.phtml");
     } else {
         include("header.phtml");
     }

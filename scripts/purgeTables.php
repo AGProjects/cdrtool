@@ -7,8 +7,7 @@
 define_syslog_variables();
 openlog("CDRTool purge", LOG_PID, LOG_LOCAL0);
 
-$path=dirname(realpath($_SERVER['PHP_SELF']));
-require($path."/../global.inc");
+require("/etc/cdrtool/global.inc");
 require("cdr_lib.phtml");
 
 while (list($k,$v) = each($DATASOURCES)) {

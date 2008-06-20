@@ -2765,7 +2765,7 @@ class SIP_trace {
         }
 
         if ($this->enableThor) {
-            include_once('ngnpro_engines.inc');
+	    	require("/etc/cdrtool/ngnpro_engines.inc");
 
             if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
                 $this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
@@ -3611,7 +3611,7 @@ class Media_trace {
         }
 
         if ($this->enableThor) {
-            include_once('ngnpro_engines.inc');
+	    	require("/etc/cdrtool/ngnpro_engines.inc");
 
             if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
                 $this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
@@ -3653,7 +3653,7 @@ class Media_trace {
     function getTrace ($proxyIP,$callid,$fromtag,$totag) {
 
         if ($this->enableThor) {
-            $this->info=json_decode($this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag));
+            $this->info = json_decode($this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag));
 
         } else {
 
@@ -3673,7 +3673,7 @@ class Media_trace {
     
             if ($this->db->num_rows()) {
                 $this->db->next_record();
-                $this->info=json_decode($this->db->f('info'));
+                $this->info = json_decode($this->db->f('info'));
             }
         }
 
@@ -3709,7 +3709,7 @@ class Media_trace {
             return false;
         }
 
-        return $result;
+        $this->info = json_decode($result);
     }
 
     function show($proxyIP,$callid,$fromtag,$totag) {

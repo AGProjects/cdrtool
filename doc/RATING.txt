@@ -202,7 +202,7 @@ Importing and exporting of rating files
 
 There are different data files needed for rating CDRs. The data files are
 imported into corresponding MySQL tables. The files must be uploaded to
-/var/www/CDRTool/csv directory.  To load the files into the database run
+/var/spool/cdrtool directory.  To load the files into the database run
 the following command:
 
 /var/www/CDRTool/scripts/importRatingTables.php
