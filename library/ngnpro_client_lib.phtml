@@ -53,7 +53,7 @@
     // How to create a SIP record //
     ////////////////////////////////
     
-    $sip_engine           = 'sip_accounts@engine';
+    $sip_engine          = 'sip_accounts@engine';
     $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$login_credentials);
     $_sip_class          = $this->SipSoapEngine->records_class;
     $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
@@ -74,7 +74,7 @@
     // How to create a SIP domain //
     ////////////////////////////////
     
-    $sip_engine           = 'sip_accounts@engine';
+    $sip_engine          = 'sip_accounts@engine';
     $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$login_credentials);
     $_sip_class          = $this->SipSoapEngine->records_class;
     $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
@@ -90,7 +90,7 @@
     // How to create a SIP alias //
     ///////////////////////////////
     
-    $sip_engine           = 'sip_aliases@engine';
+    $sip_engine          = 'sip_aliases@engine';
     $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$login_credentials);
     $_sip_class          = $this->SipSoapEngine->records_class;
     $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
@@ -108,7 +108,7 @@
     // How to create an ENUM mapping //
     ///////////////////////////////////
     
-    $enum_engine           = 'enum_numbers@engine';
+    $enum_engine          = 'enum_numbers@engine';
     $this->EnumSoapEngine = new SoapEngine($enum_engine,$soapEngines,$login_credentials);
     $_enum_class          = $this->EnumSoapEngine->records_class;
     $this->enumRecords    = new $_enum_class(&$this->EnumSoapEngine);

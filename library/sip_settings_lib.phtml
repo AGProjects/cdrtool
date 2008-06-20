@@ -31,8 +31,8 @@ class SipSettings {
     var $cdrtool_address           = "https://cdrtool.example.com/CDRTool";
     var $support_web               = "https://www.example.com/help";
     var $support_email             = "Support <support@example.com>";
-    var $sip_settings_page            = "https://cdrtool.example.com/sip_settings.phtml";
-    var $xcap_root                  = "https://cdrtool.example.com/xcap-root";
+    var $sip_settings_page         = "https://cdrtool.example.com/sip_settings.phtml";
+    var $xcap_root                 = "https://cdrtool.example.com/xcap-root";
     var $pstn_access               = false;
     var $pstn_changes_allowed      = false;
     var $prepaid_changes_allowed   = false;
@@ -44,14 +44,14 @@ class SipSettings {
 
     // access numbers
 
-    var $voicemail_access_number   = "*70";
-    var $FUNC_access_number        = "*21*";
-    var $FNOL_access_number        = "*22*";
-    var $FNOA_access_number        = "*23*";
-    var $FBUS_access_number        = "*23*";
-    var $change_privacy_access_number    = "*67";
-    var $check_privacy_access_number     = "*68";
-    var $reject_anonymous_access_number  = "*69";
+    var $voicemail_access_number        = "*70";
+    var $FUNC_access_number             = "*21*";
+    var $FNOL_access_number             = "*22*";
+    var $FNOA_access_number             = "*23*";
+    var $FBUS_access_number             = "*23*";
+    var $change_privacy_access_number   = "*67";
+    var $check_privacy_access_number    = "*68";
+    var $reject_anonymous_access_number = "*69";
 
     // end variables
 
@@ -217,7 +217,7 @@ class SipSettings {
             return false;
         }
 
-        $this->availableGroups['blocked']   =array("Group"=>"blocked",
+        $this->availableGroups['blocked']  = array("Group"=>"blocked",
                                         "WEBName" =>sprintf(_("Status")),
                                         "SubscriberMayEditIt"=>0,
                                         "SubscriberMaySeeIt"=>1

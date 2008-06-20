@@ -155,9 +155,10 @@ $DATASOURCES=array(
                     "UserQuotaNotify"    => "1",
                     "mediaDispatcher"    => "10.0.0.1",
                     "purgeCDRsAfter"     => 120, // how many days to keep the CDRs
-                    "SIPProxies"         =>array("11.123.28.150"=>"node01",  // friendly names in sip trace table
-                                                 "13.49.725.105"=>"node02",
-                                                )
+                    "SIPProxies"         => array("10.0.0.1" => "node01",  // friendly names in sip trace table
+                                                  "10.0.0.2" => "node02",
+                                                ),
+                    "mediaDispatcher"    => "10.0.0.1"  // where to get the active media sessions from MediaProxy 2.0
                     ),
 "asterisk_vm"  =>array("name"            => "Voicemail server",
                     "class"              => "CDRS_asterisk",

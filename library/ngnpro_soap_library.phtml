@@ -669,6 +669,19 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                                     'use' => 'encoded'));
         return $result;
     }
+    function &getMediaTrace($filter)
+    {
+        // filter is a ComplexType MediaTraceFilter,
+        // refer to wsdl for more info
+        $filter = new SOAP_Value('filter', '{urn:AGProjects:NGNPro}SipTraceFilter', $filter);
+        $result = $this->call('getMediaTrace',
+                              $v = array('filter' => $filter),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
 }
 class WebService_NGNPro_VoicemailPort extends SOAP_Client_Custom
 {

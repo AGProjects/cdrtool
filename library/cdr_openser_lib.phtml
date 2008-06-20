@@ -3698,6 +3698,8 @@ class Media_trace {
 
         $result     = $this->soapclient->getMediaTrace($filter);
 
+		//print_r($result);
+
         if (PEAR::isError($result)) {
             $error_msg   = $result->getMessage();
             $error_fault = $result->getFault();
