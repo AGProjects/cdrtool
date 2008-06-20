@@ -49,7 +49,7 @@ package, the dependencies will be resolved during installation.
 
 Example for Debian systems and php4:
 
-Enable php-mysql module in /etc/php/*/php.ini:
+Enable php-mysql module in /etc/php5/*/php.ini:
 
 extension=mysql.so
 
@@ -108,7 +108,7 @@ software.
 Create a configuration file
 ---------------------------
 
-cp /var/www/CDRTool/setup/global.inc.new.installation /etc/global.inc 
+cp /var/www/CDRTool/setup/global.inc.new.installation /etc/cdrtool/global.inc 
 
 Edit global.inc and setup your variables to match your system.
 
