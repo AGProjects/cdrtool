@@ -47,7 +47,7 @@ $cdr_source     = $_REQUEST["cdr_source"];
 $trace          = $_REQUEST["trace"];
 $action         = $_REQUEST["action"];
 
-include("cdr_generic.php");
+require("cdr_generic.php");
 
 if (isset($CDRTool[dataSourcesAllowed])) {
     while (list($k,$v)=each($CDRTool[dataSourcesAllowed])) {
