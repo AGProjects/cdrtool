@@ -109,6 +109,14 @@ class DB_openser extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
+class DB_mediaproxy extends DB_Sql {
+  var $Host     = "sipdb";
+  var $Database = "mediaproxy";
+  var $User     = "mediaproxy";
+  var $Password = "PASSWORD";
+  var $Halt_On_Error ="no";
+}
+
 $replicated_databases=array('cluster1'=>array(
                                               "db1"=>array('ip'      =>'10.0.0.131',
                                                                'slave_of'=>'db-log2',
@@ -181,10 +189,17 @@ $DATASOURCES=array(
                     "purgeRecordsAfter"  => "7",
                     "invisible"          => 1 
                     )
+"media_trace"   =>array(
+                    "name"               => "Media trace",
+                    "db_class"           => "DB_mediaproxy",
+                    "enableThor"         => false,
+                    "invisible"          => 1 
+                    )
+
 );
 
 // load CDRTool libraries 
-$CDRToolModules=array("ser","asterisk","rating");
+$CDRToolModules=array("openser","asterisk");
 
 if ($_SERVER['REMOTE_ADDR']=="10.0.0.1") {
     //$verbose=1;

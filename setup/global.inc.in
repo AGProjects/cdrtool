@@ -135,10 +135,10 @@ class DB_openser extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
-class DB_cisco extends DB_Sql {
+class DB_mediaproxy extends DB_Sql {
   var $Host     = "sipdb";
-  var $Database = "radius";
-  var $User     = "radius";
+  var $Database = "mediaproxy";       
+  var $User     = "mediaproxy";
   var $Password = "PASSWORD";
   var $Halt_On_Error ="no";
 }
@@ -226,7 +226,7 @@ $DATASOURCES=array(
                     "SourceIPRealmTranslation"  => array(
                                                   "10.0.0.1"      => "gateway.example.com" // translate Realm for sessions originating from IP address 10.0.0.1
                                                   ),
-                    "purgeCDRsAfter"     => 120 // how many days to keep old CDRs
+                    "purgeCDRsAfter"     => 120, // how many days to keep old CDRs
                     "mediaDispatcher"    => "10.0.0.1",  // where to get the active media sessions from MediaProxy 2.0
                     "mediaServers"       => array(
                                                   "10.0.0.2",
@@ -282,28 +282,33 @@ $DATASOURCES=array(
                     "SIPProxies"        => array("10.0.0.1"=>"SIP Proxy 1",
                                                  "10.0.0.2"=>"SIP Proxy 2"
                                                 ),
-                     "invisible"          => 1 // hide this datasource in call search page / datasource selection 
+                     "invisible"          => 1, // hide this datasource in call search page / datasource selection 
+                    "mediaTraceDataSource" => "media_trace"
                     ),
                     
-"media_trace_thor"   =>array(
-                    "name"               => "Media trace",
-                    "db_class"           => "DB_media_trace",
-                    "enableThor"         => false,
-                    "invisible"          => 1 
-                    ),
-
 "sip_trace_thor"   =>array(
                     "name"               => "SIP trace Thor",
                     "enableThor"         => true,
-                    "soapEngineId"       => "thor",   
+                    "soapEngineId"       => "sipthor",   
                     "invisible"          => 1, 
                     "mediaTraceDataSource" => "media_trace_thor"
+                    ),
+"media_trace"   =>array(
+                    "name"               => "Media trace",
+                    "db_class"           => "DB_mediaproxy",
+                    "enableThor"         => false,
+                    "invisible"          => 1 
+                    ),
+"media_trace_thor"  =>array(
+                    "name"               => "Media trace Thor",
+                    "enableThor"         => true,
+                    "soapEngineId"       => "sipthor",
+                    "invisible"          => 1 
                     )
-                    
 );
 
 // load other CDRTool libraries
-$CDRToolModules=array("ser","cisco","asterisk","custom","rating");
+$CDRToolModules=array("openser","asterisk");
 
 $tz=$CDRTool['provider']['timezone'];
 putenv("TZ=$tz");

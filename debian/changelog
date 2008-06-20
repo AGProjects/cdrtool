@@ -1,29 +1,29 @@
 cdrtool (6.5.1) unstable; urgency=low
 
-  * Added web page to show media info from MediaProxy 2.0
+  * Added support for MediaProxy 2.0
   * Added prepaid card generator
-  * Fixed ShowPrice rating engine command
-  * Gateway attribute is now mandatory for MaxSessionTime and DebitBalance commands
   * Support prepaid calls to work with increment and min_duration settings 
   * Added links between sip trace and media trace pages
+  * Fixed ShowPrice rating engine command
+  * Added /etc/cdrtool config directory
+    Move global.inc and ngnpro_engines.inc to /etc/cdrtool/
+    Move CDRTool/local to /etc/cdrtool/local
+  * Moved all library files under library/
+  * Document split_rating_table
+  * Changed csv import directory to /var/spool/cdrtool
+  * Gateway attribute is now mandatory for MaxSessionTime and DebitBalance commands
   * Fixed update of Enum number selections
   * Moved setting $servers from status/config/media_servers.php to global.inc
     in each data source  as 'mediaServers' 
   * Added new setting in global.inc called 'mediaDispatcher' to point to the 
     media dispatcher of MediaProxy 2, used to display media sessions
-  * Explain  the meaning of split_rating_table in the documentation
   * Default for split_rating_table is false (global.inc)
   * Added change password for sip accounts selection
-  * Lowercase email addresses and sip usernames
+  * Lowercase the email addresses and sip usernames
   * Update cron job, moved env LANG=C into php script
-  * Moved all library files under library/
   * No mysql or global.inc changes
-  * Added /etc/cdrtool config directory, you must move global.inc 
-    and ngnpro_engines.inc to /etc/cdrtool/
-  * Moved local to /etc/cdrtool/local
 
-
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 20 Jun 2008 23:32:55 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 21 Jun 2008 00:28:07 +0200
 
 cdrtool (6.5.0) unstable; urgency=low
 
