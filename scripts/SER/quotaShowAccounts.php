@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?
 require("/etc/cdrtool/global.inc");
-require("cdr_lib.phtml");
+require("cdr_generic.php");
 
 if (!count($argv) || count($argv) != 2) {
     printf ("Syntax: %s treshhold\n",$_SERVER['PHP_SELF']);

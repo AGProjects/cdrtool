@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ ! -f library/cdr_lib.phtml ]; then
+if [ ! -f library/cdr_generic.php ]; then
     echo "Run this program inside the CDRTool directory"
     exit 1
 fi

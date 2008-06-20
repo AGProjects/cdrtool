@@ -10,7 +10,7 @@
 $path=dirname(realpath($_SERVER['PHP_SELF']));
 
 require("/etc/cdrtool/global.inc");
-require("cdr_lib.phtml");
+require("cdr_generic.php");
 
 $cdr_source = "cisco";
 $CDR_class  = $DATASOURCES[$cdr_source]["class"];

@@ -43,7 +43,7 @@ $version_file=$path."/../version";
 $version=trim(file_get_contents($version_file));
 
 require("/etc/cdrtool/global.inc");
-require("cdr_lib.phtml");
+require("cdr_generic.php");
 
 if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] && $RatingEngine['CDRS_class']) {
     // make sure you protect access to this socket by external means

@@ -2175,7 +2175,7 @@ require_once("rating.php");
 
 // include CDRTool modules defined in global.inc
 foreach ($CDRToolModules as $module) {
-    $module_filename="cdr_".$module."_lib.phtml";
+    $module_filename="cdr_".$module.".php";
     include($module_filename);
 }
 

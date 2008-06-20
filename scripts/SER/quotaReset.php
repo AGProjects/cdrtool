@@ -7,7 +7,7 @@ define_syslog_variables();
 openlog("CDRTool quota", LOG_PID, LOG_LOCAL0);
 
 require("/etc/cdrtool/global.inc");
-require("cdr_lib.phtml");
+require("cdr_generic.php");
 
 while (list($k,$v) = each($DATASOURCES)) {
     if (strlen($v["UserQuotaClass"])) {
