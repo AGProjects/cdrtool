@@ -4,6 +4,7 @@ set_time_limit(0);
 
 require("/etc/cdrtool/global.inc");
 require("cdr_generic.php");
+require("rating.php");
 
 define_syslog_variables();
 openlog("CDRTool normalization", LOG_PID, LOG_LOCAL0);
