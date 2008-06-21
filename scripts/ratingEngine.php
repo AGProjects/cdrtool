@@ -61,7 +61,7 @@ if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] && $RatingEngine['C
 syslog(LOG_NOTICE,"Starting rating engine ...");
 $b=time();
 
-require_once(dirname(realpath($_SERVER['PHP_SELF'])). '/daemon.php');
+require("daemon.php");
 $d = new Daemon('ratingEngine','/var/run/ratingEngine.pid');
 $d->start();
 

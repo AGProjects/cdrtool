@@ -258,7 +258,7 @@ class Rate {
             $spanPricePrint = number_format($spanPrice,$this->priceDecimalDigits);
 
             $this->rateSyslog="";
-            if ($span=="1" && $thisRate[profile]) {
+            if ($span=="1" && $thisRate['profile']) {
                 $this->rateInfo .= 
                 " Connect fee: $connectCostPrint\n".
                 "   StartTime: $this->startTimeBilling\n".
