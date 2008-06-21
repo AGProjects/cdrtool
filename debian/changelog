@@ -9,8 +9,8 @@ cdrtool (6.5.1) unstable; urgency=low
     Move global.inc and ngnpro_engines.inc to /etc/cdrtool/
     Move CDRTool/local to /etc/cdrtool/local
   * Moved all library files under library/
-  * Document split_rating_table
   * Changed csv import directory to /var/spool/cdrtool
+  * Document split_rating_table
   * Gateway attribute is now mandatory for MaxSessionTime and DebitBalance commands
   * Fixed update of Enum number selections
   * Moved setting $servers from status/config/media_servers.php to global.inc
@@ -23,7 +23,7 @@ cdrtool (6.5.1) unstable; urgency=low
   * Update cron job, moved env LANG=C into php script
   * No mysql or global.inc changes
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 21 Jun 2008 00:28:07 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 21 Jun 2008 14:15:06 +0200
 
 cdrtool (6.5.0) unstable; urgency=low
 
