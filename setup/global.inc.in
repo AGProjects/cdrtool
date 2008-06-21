@@ -5,9 +5,6 @@
 # 2. Copy this file to /etc/cdrtool/global.inc
 #
 
-ini_set('max_execution_time','120');
-ini_set('memory_limit','256M');
-
 ###########################################
 # System and web paths
 

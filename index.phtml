@@ -1,5 +1,9 @@
 <?
-require("/etc/cdrtool/global.inc");
+$errorReporting = (E_ALL & ~E_NOTICE);
+$errorReporting = 1;    // comment this out to enable PHP warnings
+error_reporting($errorReporting);
+
+include("/etc/cdrtool/global.inc");
 
 if ($DATASOURCES) {
     page_open(array(

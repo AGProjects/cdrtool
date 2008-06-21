@@ -5078,7 +5078,7 @@ class RatingEngine {
             $this->log_runtime=true;
         }
 
-        $this->CDRS        = &$CDRS;
+        $this->CDRS     = &$CDRS;
         $this->db       = new DB_CDRTool;
         $this->prepaid_table    = "prepaid";
 
@@ -5468,9 +5468,9 @@ class RatingEngine {
         $help=
         "Version\n".
         "Help\n".
-        "MaxSessionTime        From=sip:123@example.com To=sip:0031650222333@example.com Duration=7200 Lock=1\n".
-        "ShowPrice             From=sip:123@example.com To=sip:0031650222333@example.com Duration=59\n".
-        "DebitBalance          From=sip:123@example.com To=sip:0031650222333@example.com Duration=59\n".
+        "MaxSessionTime        From=sip:123@example.com To=sip:0031650222333@example.com Duration=7200 Gateway=10.0.0.1 Lock=1\n".
+        "ShowPrice             From=sip:123@example.com To=sip:0031650222333@example.com Gateway=10.0.0.1 Duration=59\n".
+        "DebitBalance          From=sip:123@example.com To=sip:0031650222333@example.com Gateway=10.0.0.1 Duration=59\n".
         "AddBalance            From=123@example.com Value=10.00\n".
         "GetBalance            From=123@example.com\n".
         "GetBalanceHistory     From=123@example.com\n".

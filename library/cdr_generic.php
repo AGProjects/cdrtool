@@ -2171,8 +2171,6 @@ function validDay($month,$day,$year) {
     return $day;
 }
 
-require_once("rating.php");
-
 // include CDRTool modules defined in global.inc
 foreach ($CDRToolModules as $module) {
     $module_filename="cdr_".$module.".php";
