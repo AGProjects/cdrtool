@@ -35,7 +35,8 @@ cdrtool (6.5.0) unstable; urgency=low
   * Improved Web comments in sip settings page
   * Anonymise prepaid balance update log
   * Hide billing profiles for non-resellers
-  * Many fixes in the way various sip settings can be changed when logged in as subscriber customer or reseller
+  * Many fixes in the way various sip settings can be changed when logged in
+    as subscriber customer or reseller
   * Added service sip to prepaid generator
   * Fixed customer properties update
   * Fixed update of sip properties
