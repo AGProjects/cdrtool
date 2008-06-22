@@ -2,8 +2,11 @@ cdrtool (6.5.1) unstable; urgency=low
 
   * Added support for MediaProxy 2.0
   * Added prepaid card generator
-  * Added IP access list to the ratingEngine
-  * Make ratingEngine non blocking 
+  * Added IP access list to the ratingEngine $RatingEngine['allow']
+  * Added new setting in global.inc called 'mediaDispatcher' to point to the 
+    media dispatcher of MediaProxy 2, used to display media sessions
+  * Rewrite ratingEngine daemon to be non blocking 
+  * Removed support for php4
   * Support prepaid calls to work with increment and min_duration settings 
   * Added links between sip trace and media trace pages
   * Fixed ShowPrice rating engine command
@@ -17,15 +20,13 @@ cdrtool (6.5.1) unstable; urgency=low
   * Fixed update of Enum number selections
   * Moved setting $servers from status/config/media_servers.php to global.inc
     in each data source  as 'mediaServers' 
-  * Added new setting in global.inc called 'mediaDispatcher' to point to the 
-    media dispatcher of MediaProxy 2, used to display media sessions
   * Default for split_rating_table is false (global.inc)
   * Added change password for sip accounts selection
   * Lowercase the email addresses and sip usernames
   * Update cron job, moved env LANG=C into php script
-  * No mysql or global.inc changes
+  * No mysql changes
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 22 Jun 2008 13:12:37 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 22 Jun 2008 13:42:23 +0200
 
 cdrtool (6.5.0) unstable; urgency=low
 
