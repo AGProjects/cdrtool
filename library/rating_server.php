@@ -251,7 +251,7 @@ class socketServerClient extends socketClient {
 	public function __construct($socket,$parentServer)
 	{
         $this->socket         = $socket;
-        $this->parentServer   = $parentServer;
+        $this->parentServer   = &$parentServer;
 
 		if (!is_resource($this->socket)) {
 			throw new socketException("Invalid socket or resource");
@@ -598,7 +598,7 @@ class ratingEngineClient extends socketServerClient {
         } else if (strtolower($tinput) == 'showclients') {
         	$output='';
             foreach ($this->parentServer->connected_clients as $_client) {
-                $output .= sprintf ("Client %s: requests: %d\n",$_client,$this->parentServer->requests[$_client]);
+                $output .= sprintf ("%d requests from %s\n",$this->parentServer->requests[$_client],$_client);
             }
             $output .= "\n\n";
 			$this->write($output);
