@@ -1,2 +1,2 @@
-# To enable rating engine first configure /var/www/CDRTool/global.inc
+# To enable rating engine first configure /etc/cdrtool/global.inc
 RUN_ratingEngine=no
