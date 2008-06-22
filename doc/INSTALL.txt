@@ -143,18 +143,12 @@ datasource in global.inc:
 $RatingEngine=array("socketIP"   =>  "IP.address.of.the.private.interface.of.cdrtool.example.com",
                      "socketPort" => "9024",
                      "CDRS_class" => "ser_radius",
-                     "allow"      => array('10..0.0')
+                     "allow"      => array('10.0.0')
                    );
 
-The MSQL schema for prepaid accounts: setup/mysql/create_prepaid.mysql The
-network engine has no security features, it must run over a protected
-network.
+The MSQL schema for prepaid accounts: setup/mysql/create_prepaid.mysql 
 
 For non Debian systems you must create /etc/default/cdrtool as follows:
-
-RUN_ratingEngine=yes
-
-Edit /etc/default/cdrtool and set 
 
 RUN_ratingEngine=yes
 
