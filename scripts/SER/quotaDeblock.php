@@ -18,7 +18,7 @@ require("cdr_generic.php");
 require("rating.php");
 
 define_syslog_variables();
-openlog("CDRTool quota", LOG_PID, LOG_LOCAL0);
+openlog("cdrtool quota", LOG_PID, LOG_LOCAL0);
 
 $b=time();
 

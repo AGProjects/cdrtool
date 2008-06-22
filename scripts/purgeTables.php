@@ -5,7 +5,7 @@
 # the MySQL stored procedures has been introduced in version 5.0
 
 define_syslog_variables();
-openlog("CDRTool purge", LOG_PID, LOG_LOCAL0);
+openlog("cdrtool purge", LOG_PID, LOG_LOCAL0);
 
 require("/etc/cdrtool/global.inc");
 require("cdr_generic.php");

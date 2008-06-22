@@ -2,7 +2,7 @@
 <?
 
 define_syslog_variables();
-openlog("CDRTool trace", LOG_PID, LOG_LOCAL0);
+openlog("cdrtool", LOG_PID, LOG_LOCAL0);
 
 require("/etc/cdrtool/global.inc");
 require("cdr_generic.php");

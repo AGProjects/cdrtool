@@ -39,7 +39,7 @@ if (!$export) {
 $perm->check("callsearch");
 
 define_syslog_variables();
-openlog("CDRTool", LOG_PID, LOG_LOCAL0);
+openlog("cdrtool", LOG_PID, LOG_LOCAL0);
 
 require("cdr_generic.php");
 require("rating.php");

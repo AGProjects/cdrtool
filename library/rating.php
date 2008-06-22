@@ -5468,6 +5468,7 @@ class RatingEngine {
         $help=
         "Version\n".
         "Help\n".
+        "ShowClients\n".
         "MaxSessionTime        From=sip:123@example.com To=sip:0031650222333@example.com Duration=7200 Gateway=10.0.0.1 Lock=1\n".
         "ShowPrice             From=sip:123@example.com To=sip:0031650222333@example.com Gateway=10.0.0.1 Duration=59\n".
         "DebitBalance          From=sip:123@example.com To=sip:0031650222333@example.com Gateway=10.0.0.1 Duration=59\n".
@@ -5586,7 +5587,7 @@ class RatingEngine {
 
             $_now=time();
             $_runtime  = time() - $this->beginStatisticsTime;
-              $_intervalMinute = $_now  - $this->lastMinuteStatisticsTime;
+            $_intervalMinute = $_now  - $this->lastMinuteStatisticsTime;
 
             if ( $_now > $this->lastMinuteStatisticsTime + 60 && $_intervalMinute > 0) {
 

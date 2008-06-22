@@ -1,4 +1,5 @@
 <?
+
 declare(ticks = 1);
 
 function signalHandler($sig)
@@ -217,13 +218,18 @@ class socketServer extends socket {
 		parent::__construct($bind_address, $bind_port, $domain, $type, $protocol);
 		$this->client_class = $client_class;
 		$this->listen();
-        $log=sprintf("Listening on %s:%s",$bind_address, $bind_port);
+        if (!$bind_address) {
+        	$bind_address_print='0.0.0.0';
+        } else {
+        	$bind_address_print=$bind_address;
+        }
+        $log=sprintf("Listening on %s:%s",$bind_address_print, $bind_port);
         syslog(LOG_NOTICE,$log);
 	}
 
 	public function accept()
 	{
-		$client = new $this->client_class(parent::accept());
+		$client = new $this->client_class(parent::accept(),&$this);
 		if (!is_subclass_of($client, 'socketServerClient')) {
 			throw new socketException("Invalid serverClient class specified! Has to be a subclass of socketServerClient");
 		}
@@ -242,9 +248,11 @@ class socketServerClient extends socketClient {
 	public $local_addr;
 	public $local_port;
 
-	public function __construct($socket)
+	public function __construct($socket,$parentServer)
 	{
         $this->socket         = $socket;
+        $this->parentServer   = $parentServer;
+
 		if (!is_resource($this->socket)) {
 			throw new socketException("Invalid socket or resource");
 		} elseif (!socket_getsockname($this->socket, $this->local_addr, $this->local_port)) {
@@ -555,12 +563,16 @@ class socket {
 }
 
 class ratingEngineServer extends socketServer {
+	var $requests=array();
+    var $connected_clients=array();
 }
 
 class ratingEngineClient extends socketServerClient {
 
 	private function handle_request($request)
 	{
+    	$this->parentServer->requests[$this->remote_address]++;
+
         $b = microtime(true);
         $output  = $this->ratingEngine->processNetworkInput($request);
         $output .= "\n\n";
@@ -583,6 +595,15 @@ class ratingEngineClient extends socketServerClient {
         if ($tinput == 'exit' || $tinput =='quit') {
             $this->on_disconnect();
             $this->close();
+        } else if (strtolower($tinput) == 'showclients') {
+        	$output='';
+            foreach ($this->parentServer->connected_clients as $_client) {
+                $output .= sprintf ("Client %s: requests: %d\n",$_client,$this->parentServer->requests[$_client]);
+            }
+            $output .= "\n\n";
+			$this->write($output);
+			$this->read_buffer  = '';
+
         } elseif ($tinput) {
 			$this->write($this->handle_request($tinput));
 			$this->read_buffer  = '';
@@ -599,21 +620,34 @@ class ratingEngineClient extends socketServerClient {
                         $allow_connection=true;
                         break;
                     }
-                    if (!$allow_connection) {
-                        $log=sprintf("Client %s disallowed by server configuration",$this->remote_address);
-                        syslog(LOG_NOTICE,$log);
-                        $this->close();
-                        return true;
-                    }
                 }
+                if (!$allow_connection) {
+                    $log=sprintf("Client %s disallowed by server configuration",$this->remote_address);
+                    syslog(LOG_NOTICE,$log);
+                    $this->close();
+                    return true;
+                }
+
             }
         }
+
+        $this->parentServer->connected_clients[]=$this->remote_address;
+        $this->parentServer->connected_clients=array_unique($this->parentServer->connected_clients);
 
     	$log=sprintf("Client connection from %s:%s",$this->remote_address,$this->remote_port);
         syslog(LOG_NOTICE,$log);
 	}
 
 	public function on_disconnect() {
+
+		$new_clients=array();
+        foreach ($this->connected_clients as $_client) {
+            if ($this->remote_address == $_client) continue;
+            $new_clients[]=$_client;
+        }
+
+        $this->parentServer->connected_clients=array_unique($new_clients);
+
     	$log=sprintf("Client disconnection from %s:%s",$this->remote_address,$this->remote_port);
         syslog(LOG_NOTICE,$log);
 	}

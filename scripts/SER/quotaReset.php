@@ -4,7 +4,7 @@
 # this script must be run once at the beginning of the calendar month
 
 define_syslog_variables();
-openlog("CDRTool quota", LOG_PID, LOG_LOCAL0);
+openlog("cdrtool quota", LOG_PID, LOG_LOCAL0);
 
 require("/etc/cdrtool/global.inc");
 require("cdr_generic.php");
