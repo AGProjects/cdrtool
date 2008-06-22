@@ -188,7 +188,7 @@ $DATASOURCES=array(
                     "enableThor"         => false,
                     "purgeRecordsAfter"  => "7",
                     "invisible"          => 1 
-                    )
+                    ),
 "media_trace"   =>array(
                     "name"               => "Media trace",
                     "db_class"           => "DB_mediaproxy",
