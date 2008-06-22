@@ -11,11 +11,10 @@ openlog("CDRTool rating", LOG_PID, LOG_LOCAL0);
 require('/etc/cdrtool/global.inc');
 require('cdr_generic.php');
 require('rating.php');
-require('daemon.php');
-require('ratingServer.php');
+require('rating_server.php');
 
 if (!strlen($RatingEngine['socketIP']) || !$RatingEngine['socketPort'] || !$RatingEngine['CDRS_class']) {
-    die('Please define RatingEngine[socketIP], RatingEngine[socketPort] and RatingEngine[CDRS_class] in global.inc\n');
+    die('Please define RatingEngine[socketIP], RatingEngine[socketPort] and RatingEngine[CDRS_class] in /etc/cdrtool/global.inc\n');
 }
 
 // Init CDRS
