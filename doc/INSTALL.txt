@@ -1,3 +1,4 @@
+
 CDRTool installation
 --------------------
 
@@ -15,6 +16,9 @@ Installing from the debian package:
 dpkg -i cdrtool*.deb
 
 The files will be installed under /var/www/CDRTool directory.
+
+You must create /etc/cdrtool config directory unless you have installed the
+debian package.
 
 
 Create CDRTool database
@@ -108,7 +112,7 @@ software.
 Create a configuration file
 ---------------------------
 
-cp /var/www/CDRTool/setup/global.inc.new.installation /etc/cdrtool/global.inc 
+cp /var/www/CDRTool/setup/global.inc.simple.sample /etc/cdrtool/global.inc 
 
 Edit global.inc and setup your variables to match your system.
 
@@ -138,7 +142,9 @@ datasource in global.inc:
 
 $RatingEngine=array("socketIP"   =>  "IP.address.of.the.private.interface.of.cdrtool.example.com",
                      "socketPort" => "9024",
-                     "CDRS_class" => "ser_radius");
+                     "CDRS_class" => "ser_radius",
+                     "allow"      => array('10..0.0')
+                   );
 
 The MSQL schema for prepaid accounts: setup/mysql/create_prepaid.mysql The
 network engine has no security features, it must run over a protected
@@ -147,10 +153,6 @@ network.
 For non Debian systems you must create /etc/default/cdrtool as follows:
 
 RUN_ratingEngine=yes
-START_MEMCACHE=yes
-MEMCACHE_MEMORY=32
-MEMCACHE_IP=127.0.0.1
-MEMCACHE_PORT=11212
 
 Edit /etc/default/cdrtool and set 
 

@@ -591,18 +591,20 @@ class ratingEngineClient extends socketServerClient {
 
 	public function on_connect() {
 
-        if (is_array($this->ratingEngineSettings['allow'])) {
-        	$allow_connection=false;
-            foreach ($this->ratingEngineSettings['allow'] as $_allow) {
-                if (preg_match("/^$_allow/",$this->remote_address)) {
-                    $allow_connection=true;
-                    break;
-                }
-                if (!$allow_connection) {
-                    $log=sprintf("Client %s disallowed by server configuration",$this->remote_address);
-                    syslog(LOG_NOTICE,$log);
-            		$this->close();
-                    return true;
+		if ($this->remote_address != '127.0.0.1') {
+            if (is_array($this->ratingEngineSettings['allow'])) {
+                $allow_connection=false;
+                foreach ($this->ratingEngineSettings['allow'] as $_allow) {
+                    if (preg_match("/^$_allow/",$this->remote_address)) {
+                        $allow_connection=true;
+                        break;
+                    }
+                    if (!$allow_connection) {
+                        $log=sprintf("Client %s disallowed by server configuration",$this->remote_address);
+                        syslog(LOG_NOTICE,$log);
+                        $this->close();
+                        return true;
+                    }
                 }
             }
         }

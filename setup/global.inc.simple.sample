@@ -160,7 +160,6 @@ $DATASOURCES=array(
                     "normalizedField"    => "Normalized",
                     "UserQuotaClass"     => "SERQuota",
                     "UserQuotaNotify"    => "1",
-                    "mediaDispatcher"    => "10.0.0.1",
                     "purgeCDRsAfter"     => 120, // how many days to keep the CDRs
                     "SIPProxies"         => array("10.0.0.1" => "node01",  // friendly names in sip trace table
                                                   "10.0.0.2" => "node02",
@@ -186,6 +185,7 @@ $DATASOURCES=array(
                     "name"               => "SIP trace",
                     "db_class"           => "DB_openser",
                     "table"              => "sip_trace",
+                    "enableThor"         => false,
                     "purgeRecordsAfter"  => "7",
                     "invisible"          => 1 
                     )
