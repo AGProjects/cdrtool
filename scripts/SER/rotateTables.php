@@ -16,6 +16,7 @@ openlog("CDRTool autorotate", LOG_PID, LOG_LOCAL0);
 
 require("/etc/cdrtool/global.inc");
 require("cdr_generic.php");
+require("rating.php");
 
 $cdr_source     = "ser_radius";
 $CDR_class      = $DATASOURCES[$cdr_source]["class"];

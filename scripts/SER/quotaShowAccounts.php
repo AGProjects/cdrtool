@@ -2,6 +2,7 @@
 <?
 require("/etc/cdrtool/global.inc");
 require("cdr_generic.php");
+require("rating.php");
 
 if (!count($argv) || count($argv) != 2) {
     printf ("Syntax: %s treshhold\n",$_SERVER['PHP_SELF']);
