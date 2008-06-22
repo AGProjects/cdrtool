@@ -63,14 +63,14 @@ class SETUP {
         Once the database is available, create the cdrtool configuration
         file by copying the sample configuration file:
         <p>
-        cp setup/global.inc.new.installation /etc/cdrtool/global.inc
+        cp setup/global.inc.simple.sample /etc/cdrtool/global.inc
         <p>
         Then edit the configuration file global.inc to reflect your platform setup.
         This is the content of the current sample configuration file:
         ";
 
         print "<pre>";
-        $fp=fopen("setup/global.inc.new.installation",r);
+        $fp=fopen("setup/global.inc.simple.sample",r);
         while ($buffer = fgets($fp,1024)) {
             if (!preg_match("/(<\?)|(\?>)/",$buffer)) {
                 print "$buffer";

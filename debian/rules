@@ -27,8 +27,8 @@ install: build
 	dh_testroot
 	dh_clean -k
 	dh_installdirs
-	cp -a doc debian/cdrtool/usr/share/doc/cdrtool
-	cp -a setup/*sample debian/cdrtool/etc/cdrtool
+	cp -a doc debian/cdrtool/usr/share/doc/cdrtool/
+	cp -a setup/*sample debian/cdrtool/etc/cdrtool/
 	cp -a debian/copyright debian/cdrtool/usr/share/doc/cdrtool/
 	cp -a setup/csv debian/cdrtool/usr/share/doc/cdrtool/rating-sample-files
 	cp -a images debian/cdrtool/var/www/CDRTool/
