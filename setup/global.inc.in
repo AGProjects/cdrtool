@@ -55,12 +55,9 @@ $RatingEngine=array("socketIP"               => "IP.address.of.the.private.inter
                     "durationPeriodRated"    => 60,    // the prices from the rating table are calculated per this period
                     "trafficSizeRated"       => 1024,  // same as above but for data traffic
                     "reportMissingRates"     => 0,     // send email notifications if rates are missing from the ratingEngine
-                    "minimumDuration"        => 0      // minimum duration to rate, if call duration is shorter the price is zero
+                    "minimumDuration"        => 0,      // minimum duration to rate, if call duration is shorter the price is zero
+                    "allow"                  => array ('10.','192.168.0.1','127.0.0.1') // list with clients allowed to connect
                     );
-
-// Overwrite value from /etc/default/cdrtool
-// this setting is necessary only for non-Debian systems
-// $memcache_server  = "127.0.0.1:11212";
 
 ###########################################
 # Normalize engine settings

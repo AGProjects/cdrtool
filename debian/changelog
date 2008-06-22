@@ -2,6 +2,8 @@ cdrtool (6.5.1) unstable; urgency=low
 
   * Added support for MediaProxy 2.0
   * Added prepaid card generator
+  * Added IP access list to the ratingEngine
+  * Make ratingEngine non blocking 
   * Support prepaid calls to work with increment and min_duration settings 
   * Added links between sip trace and media trace pages
   * Fixed ShowPrice rating engine command
@@ -23,7 +25,7 @@ cdrtool (6.5.1) unstable; urgency=low
   * Update cron job, moved env LANG=C into php script
   * No mysql or global.inc changes
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 21 Jun 2008 14:15:06 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 22 Jun 2008 13:12:37 +0200
 
 cdrtool (6.5.0) unstable; urgency=low
 

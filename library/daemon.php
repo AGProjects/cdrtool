@@ -26,12 +26,6 @@ class Daemon {
     var $path;
 
     function Daemon($name='<daemon>', $pidFile=false, $useSyslog=true) {
-        /*
-        error_reporting(0);
-        set_time_limit(0);
-        ob_implicit_flush();
-        */
-
         $this->name = $name;
         $this->pid  = $pidFile;
         $this->syslog = $useSyslog;
@@ -101,6 +95,11 @@ class Daemon {
 
         if ($pidfile) {
             $pf = fopen($pidfile, 'w');
+            if ($pf===false) {
+                print "Unable to write pidfile $pidfile\n";
+                exit(-1);
+            }
+
             fwrite($pf, sprintf("%d\n", posix_getpid()));
             fclose($pf);
             register_shutdown_function(array(&$this, "removePid"));
