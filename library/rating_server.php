@@ -4,53 +4,40 @@ declare(ticks = 1);
 
 function signalHandler($sig)
 {
-    print "Program received signal $sig.";
-    switch ($sig) {
-    case SIGTERM:
-    case SIGKILL:
-        // handle shutdown tasks
-        print " Exiting\n";
-        exit(0);
-    case SIGUSR1:
-        break;
-    default:
-        // handle all other signals
+   	$log=sprintf("Received signal %s",$sig);
+	syslog(LOG_NOTICE,$log);
+
+   	switch ($sig) {
+    	case SIGTERM:
+   	   	 	syslog(LOG_NOTICE,"Exiting ...");
+        	exit(0);
+    	case SIGKILL:
+   	   	 	syslog(LOG_NOTICE,"Exiting ...");
+        	exit(0);
+    	case SIGUSR1:
+       		break;
+    	default:
+        	// handle all other signals
     }
 }
 
 class Daemon {
-    var $name;
-    var $pid;
-    var $syslog;
-    var $path;
 
-    function Daemon($name='<daemon>', $pidFile=false, $useSyslog=true) {
-        $this->name = $name;
-        $this->pid  = $pidFile;
-        $this->syslog = $useSyslog;
-        $this->path = dirname(realpath($_SERVER['PHP_SELF']));
-        if ($pidFile!==false && $pidFile[0]!='/') {
-            if ($pidFile[0]=='.' && $pidFile[1]=='/') {
-                $this->pid = $this->path . '/' . substr($pidFile, 2);
-            } else {
-                $this->pid = $this->path . '/' . $pidFile;
-            }
-        }
+    function Daemon($pidFile=false) {
+        $this->pidFile  = $pidFile;
     }
 
     function start() {
-        // check pidfile
-        $pidfile = $this->pid;
-        if ($pidfile!==false && file_exists($pidfile)) {
-            $pf = fopen($pidfile, 'r');
+        if ($this->pidFile!==false && file_exists($this->pidFile)) {
+            $pf = fopen($this->pidFile, 'r');
             if (!$pf) {
-                print "Unable to read pidfile $pidfile\n";
+                print "Unable to read pidfile $this->pidFile\n";
                 exit(-1);
             }
             $c = fgets($pf);
             fclose($pf);
             if ($c===false) {
-                print "Unable to read pidfile $pidfile\n";
+                print "Unable to read pidfile $this->pidFile\n";
                 exit(-1);
             }
             $pid = intval($c);
@@ -92,10 +79,10 @@ class Daemon {
         //fclose(STDOUT);
         //fclose(STDERR);
 
-        if ($pidfile) {
-            $pf = fopen($pidfile, 'w');
+        if ($this->pidFile) {
+            $pf = fopen($this->pidFile, 'w');
             if ($pf===false) {
-                print "Unable to write pidfile $pidfile\n";
+                print "Unable to write pidfile $this->pidFile\n";
                 exit(-1);
             }
 
@@ -108,11 +95,10 @@ class Daemon {
       	//pcntl_signal(SIGTERM, array(&$this, 'signalHandler'));
       	//pcntl_signal(SIGKILL, array(&$this, 'signalHandler'));
 
-
         // for some reason these interfere badly with socket_select()
-        //pcntl_signal(SIGTERM, "signalHandler", true);
-        //pcntl_signal(SIGKILL, "signalHandler", true);
-        //pcntl_signal(SIGUSR1, "signalHandler", true);
+        pcntl_signal(SIGTERM, "signalHandler", true);
+        pcntl_signal(SIGKILL, "signalHandler", true);
+        pcntl_signal(SIGUSR1, "signalHandler", true);
 
     }
 
@@ -606,7 +592,12 @@ class ratingEngineClient extends socketServerClient {
                 $output .= "\nClients:\n\n";
                 foreach ($this->parentServer->connected_clients as $_client) {
                     $j++;
-                    $output .= sprintf ("%d. %s\n",$j,$_client);
+                    $myself=$this->remote_address.":".$this->remote_port;
+                    if ($_client == $myself) {
+                    	$output .= sprintf ("%d. %s (myself)\n",$j,$_client);
+                    } else {
+                    	$output .= sprintf ("%d. %s\n",$j,$_client);
+                    }
                 }
             }
 

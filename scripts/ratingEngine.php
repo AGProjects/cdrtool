@@ -29,7 +29,7 @@ $CDRS->RatingTables->LoadRatingTables();
 $RatingEngineServer = new RatingEngine($CDRS);
 
 // Go to the background
-$d = new Daemon('ratingEngine','/var/run/ratingEngine.pid');
+$d = new Daemon('/var/run/ratingEngine.pid');
 $d->start();
 
 $daemon = new socketDaemon();
