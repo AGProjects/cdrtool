@@ -223,6 +223,7 @@ class socketServer extends socket {
         } else {
         	$bind_address_print=$bind_address;
         }
+        $this->startTime=time();
         $log=sprintf("Listening on %s:%s",$bind_address_print, $bind_port);
         syslog(LOG_NOTICE,$log);
 	}
@@ -597,9 +598,34 @@ class ratingEngineClient extends socketServerClient {
             $this->close();
         } else if (strtolower($tinput) == 'showclients') {
         	$output='';
-            foreach ($this->parentServer->connected_clients as $_client) {
-                $output .= sprintf ("%d requests from %s\n",$this->parentServer->requests[$_client],$_client);
+            $j=0;
+
+            $uptime=time()-$this->parentServer->startTime;
+
+            if (count($this->parentServer->connected_clients)) {
+                $output .= "\nClients:\n\n";
+                foreach ($this->parentServer->connected_clients as $_client) {
+                    $j++;
+                    $output .= sprintf ("%d. %s\n",$j,$_client);
+                }
             }
+
+            if (count($this->parentServer->requests)) {
+                $output .= "\nRequests:\n\n";
+
+                $requests=0;
+                foreach (array_keys($this->parentServer->requests) as $_client_ip) {
+                    $output .= sprintf ("%d requests from %s\n",$this->parentServer->requests[$_client_ip],$_client_ip);
+                    $requests=$requests+$this->parentServer->requests[$_client_ip];
+                }
+            }
+
+            $output .= "\nStatistics:\n\n";
+
+            $output .= sprintf ("Total requests: %d\n",$requests);
+            $output .= sprintf ("Uptime: %d seconds\n",$uptime);
+            if ($uptime) $output .= sprintf ("Load: %0.2f/s\n",$requests/$uptime);
+
             $output .= "\n\n";
 			$this->write($output);
 			$this->read_buffer  = '';
@@ -631,7 +657,9 @@ class ratingEngineClient extends socketServerClient {
             }
         }
 
-        $this->parentServer->connected_clients[]=$this->remote_address;
+        $_client=$this->remote_address.":".$this->remote_port;
+
+        $this->parentServer->connected_clients[]=$_client;
         $this->parentServer->connected_clients=array_unique($this->parentServer->connected_clients);
 
     	$log=sprintf("Client connection from %s:%s",$this->remote_address,$this->remote_port);
@@ -641,8 +669,9 @@ class ratingEngineClient extends socketServerClient {
 	public function on_disconnect() {
 
 		$new_clients=array();
-        foreach ($this->connected_clients as $_client) {
-            if ($this->remote_address == $_client) continue;
+        foreach ($this->parentServer->connected_clients as $_client) {
+            $_connected_client=$this->remote_address.":".$this->remote_port;
+            if ($_connected_client == $_client) continue;
             $new_clients[]=$_client;
         }
 

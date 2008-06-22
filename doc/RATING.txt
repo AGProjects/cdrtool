@@ -620,3 +620,30 @@ the normalization process.
 
 The rates are read directly from MySQL from version 6.1 instead of
 beeing cached as they are found based on a known index.
+
+To monitor the connections to the rating engin server telnet to
+the rating engine port and issse the ShowClients command. Example output:
+
+ShowClients
+
+Clients:
+
+1. 91.20.228.143:32837
+2. 85.1.86.71:57945
+3. 91.20.228.146:35098
+4. 91.20.228.150:34285
+5. 91.20.228.129:55090
+6. 91.20.228.164:34147
+
+Requests:
+
+12 requests from 91.20.228.129
+11 requests from 91.20.228.150
+8 requests from 85.11.86.71
+2 requests from 91.20.228.164
+
+Statistics:
+
+Total requests: 33
+Uptime: 169 seconds
+Load: 0.20/s
