@@ -1985,7 +1985,7 @@ class SipSettings {
         print "
         <tr $bgcolor>
         <td class=border valign=top>Prepaid</td>
-        <td class=$td_class>
+        <td class=border>
         <input type=checkbox value=1 name=prepaid $checked_box_prepaid $disabled_box_prepaid>
         </td>
         </tr>

@@ -8,6 +8,7 @@ cdrtool (6.5.1) unstable; urgency=low
   * Rewrite ratingEngine daemon to be non blocking 
   * Added ShowClients command to rating engine
   * Removed support for php4
+  * Fixed error about MySQL gone away (2006)
   * Support prepaid calls to work with increment and min_duration settings 
   * Added links between sip trace and media trace pages
   * Fixed ShowPrice rating engine command
@@ -26,9 +27,8 @@ cdrtool (6.5.1) unstable; urgency=low
   * Lowercase the email addresses and sip usernames
   * Update cron job, moved env LANG=C into php script
   * No mysql changes
-  * 
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 22 Jun 2008 18:41:55 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 23 Jun 2008 18:40:34 +0200
 
 cdrtool (6.5.0) unstable; urgency=low
 
