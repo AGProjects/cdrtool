@@ -130,6 +130,9 @@ class DB_Sql {
         if ($this->Query_ID) {
             $this->Query_ID = 0;
         }
+	
+        mysql_close($this->Link_ID);
+        
         $this->Link_ID = 0;
         if (!$this->connect()) {
         	return 0;

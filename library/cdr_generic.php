@@ -1502,7 +1502,7 @@ class CDRS {
                 // sync with quota_usage table
                 $query=sprintf("update quota_usage set
                 calls = calls + %d,
-                duration  = duration + %d,
+                duration = duration + %d,
                 cost = cost + '%s',
                 traffic = traffic + '%s'
                 where account = '%s'
@@ -1608,44 +1608,6 @@ class CDRS {
     }
 
     function getQuota($account) {
-        if (!$account) return;
-
-        list($username,$domain) = explode("@",$account);
-
-        if ($this->enableThor) {
-            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
-    
-            if (!$this->AccountsDB->query($query)) {
-                $log=sprintf("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
-                syslog(LOG_NOTICE,$log);
-                return 0;
-            }
-
-            if ($this->AccountsDB->num_rows()) {
-            	$this->AccountsDB->next_record();
-            	$_profile=json_decode(trim($this->AccountsDB->f('profile')));
-                return $_profile->quota;
-            } else {
-                return 0;
-            }
-        } else {
-            $query=sprintf("select quota from subscriber where username = '%s' and domain = '%s'",$username,$domain);
-    
-            if (!$this->AccountsDB->query($query)) {
-                $log=sprintf("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
-                syslog(LOG_NOTICE,$log);
-                return 0;
-            }
-
-            if ($this->AccountsDB->num_rows()) {
-            	$this->AccountsDB->next_record();
-                return $this->AccountsDB->f('quota');
-            } else {
-                return 0;
-            }
-
-        }
-
     }
 
     function getBlockedByQuotaStatus($account) {

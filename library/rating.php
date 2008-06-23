@@ -5124,7 +5124,7 @@ class RatingEngine {
     function reloadQuota($account) {
         if (!$account) return false;
 
-          $quota   = $this->CDRS->getQuota($account);
+        $quota   = $this->CDRS->getQuota($account);
         $blocked = $this->CDRS->getBlockedByQuotaStatus($_key);
 
         $query=sprintf("update quota_usage set
