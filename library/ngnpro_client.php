@@ -132,7 +132,7 @@ class SoapEngine {
     var $adminonly     = 0;
     var $customer      = 0;
     var $reseller      = 0;
-    var $login_type     = 'reseller';
+    var $login_type    = 'reseller';
     var $allowedPorts  = array();
     var $timeout       = 5;
     var $exception     = array();
@@ -141,77 +141,77 @@ class SoapEngine {
     var $ports=array(
                         'sip_accounts'   => array(
                                            'records_class' => 'SipAccounts',
-                                           'name'         => 'SIP accounts',
+                                           'name'          => 'SIP accounts',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'     => 'sip',
-                                           'description'  => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use % to match a pattern. ',
+                                           'category'      => 'sip',
+                                           'description'   => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use % to match a pattern. ',
                                            ),
                         'enum_numbers'   => array(
                                            'records_class' => 'EnumMappings',
-                                           'name'         => 'Phone numbers',
+                                           'name'          => 'Phone numbers',
                                            'soap_class'    => 'WebService_NGNPro_EnumPort',
-                                           'category'     => 'enum',
-                                           'description'  => 'Manage phone numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use % to match a pattern. '
+                                           'category'      => 'enum',
+                                           'description'   => 'Manage phone numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use % to match a pattern. '
                                            ),
                         'customers'      => array(
                                            'records_class' => 'Customers',
-                                           'name'         => 'Login accounts',
+                                           'name'          => 'Login accounts',
                                            'soap_class'    => 'WebService_NGNPro_CustomerPort',
-                                           'category'     => 'general',
-                                           'description'  => 'Manage login accounts, customer information  and properties. Customer id can be assigned to entities like SIP domains and ENUM ranges. Use % to match a pattern. '
+                                           'category'      => 'general',
+                                           'description'   => 'Manage login accounts, customer information  and properties. Customer id can be assigned to entities like SIP domains and ENUM ranges. Use % to match a pattern. '
                                            ),
                         'sip_domains'    => array(
                                            'records_class' => 'Domains',
-                                           'name'         => 'SIP domains',
+                                           'name'          => 'SIP domains',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'     => 'sip',
-                                           'description'  => 'Manage SIP domains (e.g example.com) served by the SIP Proxy. Use % to match a pattern. '
+                                           'category'      => 'sip',
+                                           'description'   => 'Manage SIP domains (e.g example.com) served by the SIP Proxy. Use % to match a pattern. '
                                            ),
                         'sip_aliases'    => array(
                                            'records_class' => 'SipAliases',
-                                           'name'         => 'SIP aliases',
+                                           'name'          => 'SIP aliases',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'     => 'sip',
-                                           'description'  => 'Manage aliases for SIP destinations (e.g. user1@example1.com alias to user2@example2.com). Use % to match a pattern. '
+                                           'category'      => 'sip',
+                                           'description'   => 'Manage aliases for SIP destinations (e.g. user1@example1.com alias to user2@example2.com). Use % to match a pattern. '
                                            ),
                         'trusted_peers'  => array(
                                            'records_class' => 'TrustedPeers',
-                                           'name'         => 'Trusted peers',
+                                           'name'          => 'Trusted peers',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'     => 'sip',
-                                           'description'  => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. ',
-                                           'resellers_only' => true
+                                           'category'      => 'sip',
+                                           'description'   => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. ',
+                                           'resellers_only'=> true
                                            ),
                         'enum_ranges'    => array(
                                            'records_class' => 'EnumRanges',
-                                           'name'         => 'Number ranges',
+                                           'name'          => 'Number ranges',
                                            'soap_class'    => 'WebService_NGNPro_EnumPort',
-                                           'category'     => 'enum',
-                                           'description'  => 'Manage phone number ranges that hold individual phone numbers. Use % to match a pattern. '
+                                           'category'      => 'enum',
+                                           'description'   => 'Manage phone number ranges that hold individual phone numbers. Use % to match a pattern. '
                                            ),
                         'pstn_gateway_groups' => array(
                                            'records_class' => 'GatewayGroups',
-                                           'name'         => 'PSTN groups',
+                                           'name'          => 'PSTN groups',
                                            'soap_class'    => 'WebService_NGNPro_NetworkPort',
-                                           'category'     => 'pstn',
-                                           'description'  => 'Manage groups of gateways used to call to the PSTN. You must add individual gateways to each group. ',
-                                           'resellers_only' => true
+                                           'category'      => 'pstn',
+                                           'description'   => 'Manage groups of gateways used to call to the PSTN. You must add individual gateways to each group. ',
+                                           'resellers_only'=> true
                                            ),
                         'pstn_gateways'  => array(
                                            'records_class' => 'Gateways',
-                                           'name'         => 'PSTN gateways',
+                                           'name'          => 'PSTN gateways',
                                            'soap_class'    => 'WebService_NGNPro_NetworkPort',
-                                           'category'     => 'pstn',
-                                           'description'  => 'Manage gateways used to call to the PSTN. Set the IP address and IP protocol. ',
-                                           'resellers_only' => true
+                                           'category'      => 'pstn',
+                                           'description'   => 'Manage gateways used to call to the PSTN. Set the IP address and IP protocol. ',
+                                           'resellers_only'=> true
                                            ),
                         'pstn_routes'    => array(
                                            'records_class' => 'Routes',
-                                           'name'         => 'PSTN routes',
+                                           'name'          => 'PSTN routes',
                                            'soap_class'    => 'WebService_NGNPro_NetworkPort',
-                                           'category'     => 'pstn',
-                                           'description'  => 'Assign gateways groups to PSTN prefixes. Use % to match a pattern. ',
-                                           'resellers_only' => true
+                                           'category'      => 'pstn',
+                                           'description'   => 'Assign gateways groups to PSTN prefixes. Use % to match a pattern. ',
+                                           'resellers_only'=> true
                                            )
                         );
 
@@ -257,10 +257,10 @@ class SoapEngine {
         /*
             service is port@engine where:
 
-             - port is an available NGNPro service
+            - port is an available NGNPro service
             - engine is a connection to an NGNPro server
 
-             soapEngines is an array of NGNPro connections and
+            - soapEngines is an array of NGNPro connections and
             settings belonging to them:
 
             $soapEngines=array(
@@ -586,7 +586,8 @@ class Records {
     var $filters            = array();
 
     function Records(&$SoapEngine) {
-        $this->SoapEngine         = &$SoapEngine;
+
+        $this->SoapEngine          = &$SoapEngine;
 
         $this->version             = &$this->SoapEngine->version;
         $this->login_credentials   = &$this->SoapEngine->login_credentials;

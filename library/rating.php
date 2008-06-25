@@ -4316,14 +4316,11 @@ class OpenSERQuota {
 
             if (in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
 
-                /*
-                $log=sprintf("Using SOAP engine %s to block accounts\n",$DATASOURCES[$this->cdr_source]['soapEngineId']);
-
-                print $log;
-                syslog(LOG_NOTICE, $log);
-                */
 
                 $this->SOAPurl  = $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['url'];
+                $log=sprintf("Using SOAP engine %s to block accounts at %s\n",$DATASOURCES[$this->cdr_source]['soapEngineId'],$this->SOAPurl);
+                syslog(LOG_NOTICE, $log);
+
                 $this->SOAPlogin = array(
                                            "username"    => $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['username'],
                                            "password"    => $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['password'],
@@ -4939,8 +4936,6 @@ class OpenSERQuota {
 
     function deleteMonthlyUsageFromCache ($reset_quota_for=array()) {
 
-        $deleted_keys=0;
-
         $query=sprintf("delete from quota_usage where datasource = '%s' ",$this->CDRS->cdr_source);
 
         if (count($reset_quota_for)) {
@@ -4961,8 +4956,9 @@ class OpenSERQuota {
             syslog(LOG_NOTICE, $log);
             return false;
         }
+        
 
-        if ($deleted_keys) {
+        if ($this->db->affected_rows()) {
             $log=sprintf("Deleted %d keys from cache\n",$this->db->affected_rows());
             print $log;
             syslog(LOG_NOTICE, $log);
@@ -4982,7 +4978,7 @@ class OpenSERQuota {
             return false;
         }
 
-         if ($this->db->num_rows()) return true;
+        if ($this->db->num_rows()) return true;
 
         $lockName=sprintf("%s:%s",$this->CDRS->cdr_source,$this->CDRS->table);
 
@@ -5062,6 +5058,7 @@ class RatingEngine {
     // to disable lock when doing prepaid calls
     // While so one may perform multiple calls in parallel using the same
     // prepaid balance it also means that a negative balance can be reached
+
     var $prepaid_lock = 1;
     var $method = '';
     var $log_runtime = false;
@@ -5078,11 +5075,11 @@ class RatingEngine {
             $this->log_runtime=true;
         }
 
-        $this->CDRS     = &$CDRS;
-        $this->db       = new DB_CDRTool;
-        $this->prepaid_table    = "prepaid";
+        $this->CDRS          = &$CDRS;
+        $this->db            = new DB_CDRTool;
+        $this->prepaid_table = "prepaid";
 
-        $this->sessionCounter            = 0;
+        $this->sessionCounter           = 0;
         $this->beginStatisticsTime      = time();
 
         $this->lastMinuteSessionCounter = 0;
@@ -5256,7 +5253,7 @@ class RatingEngine {
             return 0;
         }
 
-          list($prepaidUser,$prepaidDomain)=explode("@",$account);
+        list($prepaidUser,$prepaidDomain)=explode("@",$account);
 
         $query=sprintf("select * from %s where account = '%s'",
         addslashes($this->prepaid_table),
@@ -5714,7 +5711,7 @@ class RatingEngine {
             $this->runtime['check_lock']=microtime_float();
 
             if (!preg_match("/^0/",$CDR->CanonicalURINormalized)) {
-                   /*
+            	/*
                 $log = sprintf ("Call to %s, no limit imposed",$CDR->CanonicalURINormalized);
                 syslog(LOG_NOTICE, $log);
                 */
@@ -5921,13 +5918,13 @@ class RatingEngine {
 
             if (!$NetFields['from']) {
                 $log=sprintf ("Error: Missing From parameter");
-                    syslog(LOG_NOTICE, $log);
+                syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             if (!is_numeric($NetFields['value'])) {
                 $log=sprintf ("Error: Missing Value parameter, it must be numeric");
-                    syslog(LOG_NOTICE, $log);
+                syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
@@ -5937,7 +5934,7 @@ class RatingEngine {
 
             if (!$NetFields['from']) {
                 $log=sprintf ("Error: Missing From parameter");
-                    syslog(LOG_NOTICE, $log);
+                syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
@@ -5947,7 +5944,7 @@ class RatingEngine {
 
             if (!$NetFields['from']) {
                 $log=sprintf ("Error: Missing From parameter");
-                    syslog(LOG_NOTICE, $log);
+                syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
@@ -5963,13 +5960,13 @@ class RatingEngine {
 
             if (!$NetFields['to']) {
                 $log=sprintf ("Error: Missing To parameter");
-                    syslog(LOG_NOTICE, $log);
+                syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             if (!strlen($NetFields['duration'])) {
                 $log=sprintf ("Error: Missing Duration parameter");
-                    syslog(LOG_NOTICE, $log);
+                syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
