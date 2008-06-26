@@ -4,9 +4,6 @@
 # This script has not been tested anymore since the auto-rotation performed by
 # the MySQL stored procedures has been introduced in version 5.0
 
-define_syslog_variables();
-openlog("cdrtool purge", LOG_PID, LOG_LOCAL0);
-
 require("/etc/cdrtool/global.inc");
 require("cdr_generic.php");
 

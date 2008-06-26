@@ -125,18 +125,19 @@ class DB_Sql {
     */
 
     if ($this->Errno==2006 || $this->Errno==2013) {
-        if ($this->Debug)
-            printf("Debug: mysql connection lost. reconnecting\n");
-        if ($this->Query_ID) {
-            $this->Query_ID = 0;
-        }
+    	syslog(LOG_NOTICE, "Error: mysql connection lost with code $this->Errno");
 	
+        if ($this->Query_ID) $this->free();
+        
         mysql_close($this->Link_ID);
         
         $this->Link_ID = 0;
+        
         if (!$this->connect()) {
-        	return 0;
+            syslog(LOG_NOTICE, "Error: failed to re-connect");
+            return 0;
         }
+        
         $this->Query_ID = @mysql_query($Query_String,$this->Link_ID);
         $this->Row   = 0;
         $this->Errno = mysql_errno();

@@ -1,5 +1,8 @@
 <?php
 
+define_syslog_variables();
+openlog("cdrtool", LOG_PID, LOG_LOCAL0);
+
 ini_set('register_globals','on');
 ini_set('max_execution_time','120');
 

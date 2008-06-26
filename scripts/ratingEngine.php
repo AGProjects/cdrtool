@@ -5,9 +5,6 @@ ini_set('mbstring.func_overload', '0');
 ini_set('output_handler', '');
 @ob_end_flush();
 
-define_syslog_variables();
-openlog("cdrtool rating", LOG_PID, LOG_LOCAL0);
-
 require('/etc/cdrtool/global.inc');
 require('cdr_generic.php');
 require('rating.php');

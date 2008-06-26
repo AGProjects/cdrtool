@@ -6,9 +6,6 @@ require("/etc/cdrtool/global.inc");
 require("cdr_generic.php");
 require("rating.php");
 
-define_syslog_variables();
-openlog("cdrtool normalization", LOG_PID, LOG_LOCAL0);
-
 $lockFile="/var/lock/CDRTool_normalize.lock";
 
 $f=fopen($lockFile,"w");

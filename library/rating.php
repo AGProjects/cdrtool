@@ -75,6 +75,8 @@ class Rate {
         $this->domain            = $dictionary['domain'];
         $this->gateway           = $dictionary['gateway'];
 
+        if (!$this->gateway)      $this->gateway="0.0.0.0";
+
         $this->RatingTables      = &$dictionary['RatingTables'];
 
         /////////////////////////////////////////////////////////

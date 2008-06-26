@@ -17,9 +17,6 @@ require("/etc/cdrtool/global.inc");
 require("cdr_generic.php");
 require("rating.php");
 
-define_syslog_variables();
-openlog("cdrtool quota", LOG_PID, LOG_LOCAL0);
-
 $b=time();
 
 $lockFile=sprintf("/var/lock/CDRTool_QuotaDeblock.lock",$cdr_source);
