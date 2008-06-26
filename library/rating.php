@@ -5481,8 +5481,7 @@ class RatingEngine {
         "ReloadRatingTables\n".
         "ReloadDomains\n".
         "ShowProfiles\n".
-        "ShowENUMtlds\n".
-        "ShowMemory\n"
+        "ShowENUMtlds\n"
         ;
 
         return $help;
@@ -5578,88 +5577,6 @@ class RatingEngine {
             if (!$NetFields['duration']) {
                 $NetFields['duration']=12*3600; // 12 hours
             }
-
-            $this->sessionCounter++;
-            $this->lastMinuteSessionCounter++;
-            $this->lastHourSessionCounter++;
-            $this->lastDaySessionCounter++;
-
-            $_now=time();
-            $_runtime  = time() - $this->beginStatisticsTime;
-            $_intervalMinute = $_now  - $this->lastMinuteStatisticsTime;
-
-            if ( $_now > $this->lastMinuteStatisticsTime + 60 && $_intervalMinute > 0) {
-
-                $log=sprintf("Normalization done in %d s, memory usage: %0.2f MB, memory limit: %sB",$d,memory_get_usage()/1024/1024,ini_get('memory_limit'));
-                $_cpsTotal  = $this->sessionCounter/$_runtime;
-
-                $_cpsMinute = $this->lastMinuteSessionCounter/$_intervalMinute;
-
-                $this->statistics = array (
-                                            'lastMinute' => array('calls'      => $this->lastMinuteSessionCounter,
-                                                                    'interval' => $_intervalMinute,
-                                                                    'cps'      => $_cpsMinute ),
-                                            'total'      => array('calls'      => $this->sessionCounter,
-                                                                    'interval' => $_runtime,
-                                                                    'cps'      => $_cpsTotal)
-
-                                          );
-
-                $this->lastMinuteSessionCounter=0;
-                $this->lastMinuteStatisticsTime=time();
-
-                $log=sprintf ("Load last minute: %s calls @ %s cps, memory: %0.2f MB, uptime: %0.1f hours",
-                $this->statistics['lastMinute']['calls'],
-                sprintf("%.2f",$this->statistics['lastMinute']['cps']),
-                memory_get_usage()/1024/1024,
-                $_runtime/3600
-                );
-                syslog(LOG_NOTICE, $log);
-
-                $_intervalHour = $_now  - $this->lastHourStatisticsTime;
-
-                if ( $_now > $this->lastHourStatisticsTime + 3600 && $_intervalHour > 0) {
-                    $_cpsHour     = $this->lastHourSessionCounter/$_intervalHour;
-    
-                    $this->statistics['lastHour'] = array('calls'    => $this->lastHourSessionCounter,
-                                                          'interval' => $_intervalHour,
-                                                          'cps'      => $_cpsHour );
-                    $this->lastHourSessionCounter=0;
-                    $this->lastHourStatisticsTime=time();
-    
-                    $log=sprintf ("Load last hour: %s calls @ %s cps",
-                    $this->statistics['lastHour']['calls'],
-                    sprintf("%.2f",$this->statistics['lastHour']['cps']));
-                    syslog(LOG_NOTICE, $log);
-
-                    $log=sprintf ("Load since start: %s sessions @ %s cps",
-                    $this->statistics['total']['calls'],
-                    sprintf("%.2f",$this->statistics['total']['cps']));
-                    syslog(LOG_NOTICE, $log);
-
-                }
-
-                $_intervalDay = $_now  - $this->lastDayStatisticsTime;
-
-                if ( $_now > $this->lastDayStatisticsTime + 3600*24 && $_intervalDay > 0) {
-                    $_cpsDay     = $this->lastDaySessionCounter/$_intervalDay;
-    
-                    $this->statistics['lastDay'] = array('calls'    => $this->lastDaySessionCounter,
-                                                         'interval' => $_intervalDay,
-                                                         'cps'      => $_cpsDay );
-                    $this->lastDaySessionCounter=0;
-                    $this->lastDayStatisticsTime=time();
-    
-                    $log=sprintf ("Load last day: %s calls @ %s cps",
-                    $this->statistics['lastDay']['calls'],
-                    sprintf("%.2f",$this->statistics['lastDay']['cps']));
-                    syslog(LOG_NOTICE, $log);
-
-                }
-
-            }
-
-            $this->runtime['update_statistics']=microtime_float();
 
             $CDRStructure=array (
                               $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
@@ -6091,19 +6008,6 @@ class RatingEngine {
                                       'type'=>$NetFields['type']);
             }
             return $this->reloadCustomers($_customerFilter);
-        } else if ($NetFields['action'] == "showmemory") {
-            $return = sprintf ("%s destinations\n%s profiles\n%s holidays\n%s sessions\n%s sessions last minute\n%s sessions last hour\n%s sessions last day",
-            $this->CDRS->destinationsCount,
-            count($this->CDRS->RatingTables->profiles),
-            count($this->CDRS->RatingTables->holidays),
-            count($this->sessionCounter),
-            count($this->lastMinuteSessionCounter),
-            count($this->lastHourSessionCounter),
-            count($this->lastDaySessionCounter)
-            );
-
-            return $return;
-
 
         } else {
             $log=sprintf ("Error: Invalid request");
