@@ -848,6 +848,127 @@ class WebService_NGNPro_EnumPort extends SOAP_Client_Custom
                             'use'=>'encoded' ));
     }
 }
+class WebService_NGNPro_DnsPort extends SOAP_Client_Custom
+{
+    function WebService_NGNPro_DnsPort($url)
+    {
+        $this->SOAP_Client_Custom($url, 0);
+    }
+    function &addZone($zone)
+    {
+        // zone is a ComplexType DnsZone,
+        // refer to wsdl for more info
+        $zone = new SOAP_Value('zone', '{urn:AGProjects:NGNPro}DnsZone', $zone);
+        $result = $this->call('addZone',
+                              $v = array('zone' => $zone),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Dns',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &updateZone($zone)
+    {
+        // zone is a ComplexType DnsZone,
+        // refer to wsdl for more info
+        $zone = new SOAP_Value('zone', '{urn:AGProjects:NGNPro}DnsZone', $zone);
+        $result = $this->call('updateZone',
+                              $v = array('zone' => $zone),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Dns',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &deleteZone($zone)
+    {
+        $result = $this->call('deleteZone',
+                              $v = array('zone' => $zone),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Dns',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getZones($query)
+    {
+        // query is a ComplexType DnsZoneQuery,
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}DnsZoneQuery', $query);
+        $result = $this->call('getZones',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Dns',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &addRecord($record)
+    {
+        // record is a ComplexType DnsRecord,
+        // refer to wsdl for more info
+        $record = new SOAP_Value('record', '{urn:AGProjects:NGNPro}DnsRecord', $record);
+        $result = $this->call('addRecord',
+                              $v = array('record' => $record),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Dns',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &updateRecord($record)
+    {
+        // record is a ComplexType DnsRecord,
+        // refer to wsdl for more info
+        $record = new SOAP_Value('record', '{urn:AGProjects:NGNPro}DnsRecord', $record);
+        $result = $this->call('updateRecord',
+                              $v = array('record' => $record),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Dns',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &deleteRecord($recordId)
+    {
+        // recordId is a ComplexType DnsRecordId,
+        // refer to wsdl for more info
+        $recordId = new SOAP_Value('recordId', '{urn:AGProjects:NGNPro}DnsRecordId', $recordId);
+        $result = $this->call('deleteRecord',
+                              $v = array('recordId' => $recordId),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Dns',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getRecord($recordId)
+    {
+        // recordId is a ComplexType DnsRecordId,
+        // refer to wsdl for more info
+        $recordId = new SOAP_Value('recordId', '{urn:AGProjects:NGNPro}DnsRecordId', $recordId);
+        $result = $this->call('getRecord',
+                              $v = array('recordId' => $recordId),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Dns',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getRecords($query)
+    {
+        // query is a ComplexType DnsRecordQuery,
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}DnsRecordQuery', $query);
+        $result = $this->call('getRecords',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Dns',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+}
 class WebService_NGNPro_RatingPort extends SOAP_Client_Custom
 {
     function WebService_NGNPro_RatingPort($url)

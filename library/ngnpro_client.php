@@ -150,7 +150,7 @@ class SoapEngine {
                                            'records_class' => 'EnumMappings',
                                            'name'          => 'Phone numbers',
                                            'soap_class'    => 'WebService_NGNPro_EnumPort',
-                                           'category'      => 'enum',
+                                           'category'      => 'dns',
                                            'description'   => 'Manage phone numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use % to match a pattern. '
                                            ),
                         'customers'      => array(
@@ -186,8 +186,15 @@ class SoapEngine {
                                            'records_class' => 'EnumRanges',
                                            'name'          => 'Number ranges',
                                            'soap_class'    => 'WebService_NGNPro_EnumPort',
-                                           'category'      => 'enum',
+                                           'category'      => 'dns',
                                            'description'   => 'Manage phone number ranges that hold individual phone numbers. Use % to match a pattern. '
+                                           ),
+                        'dns_zones'    => array(
+                                           'records_class' => 'DnsZones',
+                                           'name'          => 'Dns zones',
+                                           'soap_class'    => 'WebService_NGNPro_DnsPort',
+                                           'category'      => 'dns',
+                                           'description'   => 'Manage DNS zones. Use % to match a pattern. '
                                            ),
                         'pstn_gateway_groups' => array(
                                            'records_class' => 'GatewayGroups',
@@ -5503,6 +5510,562 @@ class EnumMappings extends Records {
      
         return $this->SoapEngine->execute($function,$this->html);
 
+    }
+}
+class DnsZones extends Records {
+
+    var $FieldsAdminOnly=array(
+                              'reseller' => array('type'=>'integer',
+                                                   'help' => 'Zone owner')
+                              );
+
+    var $Fields=array(
+                              'customer'    => array('type'=>'integer',
+                                                   'help' => 'Zone owner'
+                                                      ),
+                              'serial'        => array('type'=>'integer',
+                                                     'help'=>'DNS serial number',
+                                                     'readonly' => 1
+                                                     ),
+                              'ttl'         => array('type'=>'integer',
+                                                     'help'=>'Default time to live period'
+                                                     ),
+                              'retry'         => array('type'=>'integer',
+                                                     'help'=>'Retry transfer period'
+                                                     ),
+                              'expire'         => array('type'=>'integer',
+                                                     'help'=>'Expire period'
+                                                     ),
+                              'info'        => array('type'=>'string',
+                                                     'help' =>'Zone description'
+                                                     )
+                              );
+
+    function DnsZones(&$SoapEngine) {
+        dprint("init DnsZones");
+
+        $this->filters   = array(
+                                 'name' => trim($_REQUEST['name_filter']),
+                                 'info' => trim($_REQUEST['info_filter'])
+                                 );
+
+        $this->Records(&$SoapEngine);
+
+        $this->sortElements=array('changeDate' => 'Change date',
+                                   'name'     => 'Name'
+                                 );
+        $this->Fields['nameservers'] = array('type'=>'text',
+                                             'name'=>'Name servers',
+                                             'help'=>'Authoritative name servers'
+                                             );
+
+    }
+
+    function listRecords() {
+        $this->showSeachForm();
+
+        // Filter
+        $filter=array('name'     => $this->filters['name'],
+                      'info'     => $this->filters['info'],
+                      'customer' => intval($this->filters['customer']),
+                      'reseller' => intval($this->filters['reseller'])
+                      );
+
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $result     = $this->SoapEngine->soapclient->getZones($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+            $this->rows = $result->total;
+
+            if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
+                $this->showActionsForm();
+            }
+
+            print "
+            <p>
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+                ";
+            print "
+            <tr bgcolor=lightgrey>
+            <td><b>Id</b></th>
+            <td><b>Customer</b></td>
+            <td><b>Name </b></td>
+            <td><b>Servers </b></td>
+            <td><b>Serial</b></td>
+            <td><b>TTL</b></td>
+            <td><b>Info</b></td>
+            <td><b>Change date</b></td>
+            <td><b>Actions</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+            if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    if (!$result->zones[$i]) break;
+                    $zone = $result->zones[$i];
+
+                    $index=$this->next+$i+1;
+    
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                        $bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+                    $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s",
+                    urlencode($this->SoapEngine->service),
+                    urlencode($zone->name)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                        $_REQUEST['name_filter'] == $zone->name) {
+                        $_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
+                    if ($this->adminonly) {
+                        $zone_link=sprintf('<a href=%s&service=%s&reseller_filter=%s&name_filter=%s>%s</a>',$this->url,$this->SoapEngine->service,$zone->reseller,$zone->name,$zone->name);
+                    } else {
+                        $zone_link=sprintf('<a href=%s&&service=%s&name_filter=%s>%s</a>',$this->url,$this->SoapEngine->service,$zone->name,$zone->name);
+                    }
+
+                    $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                    urlencode($this->SoapEngine->customer_engine),
+                    urlencode($zone->customer)
+                    );
+
+                    sort($zone->nameservers);
+
+					$ns_text='';
+                    foreach ($zone->nameservers as $ns) {
+                        $ns_text.= $ns." ";
+                    }
+
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td><a href=%s>%s.%s</a></td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+                    $bgcolor,
+                    $index,
+                    $_customer_url,
+                    $zone->customer,
+                    $zone->reseller,
+                    $zone_link,
+                    $ns_text,
+                    $zone->serial,
+                    $zone->ttl,
+                    $zone->info,
+                    $zone->changeDate,
+                    $_url,
+                    $actionText
+                    );
+                    printf("
+                    </tr>
+                    ");
+
+                    $i++;
+    
+                }
+    
+            }
+
+            print "</table>";
+
+            if ($this->rows == 1 && $this->version > 1) {
+                $this->showRecord($zone);
+            } else {
+                $this->showPagination($maxrows);
+            }
+
+            return true;
+        }
+    }
+
+    function deleteRecord($dictionary=array()) {
+        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
+            print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return true;
+        }
+
+        if (!strlen($this->filters['name'])) {
+            print "<p><font color=red>Error: missing Dns zone name </font>";
+            return false;
+        }
+
+        $name=array('name'=>$this->filters['name']);
+
+        $function=array('commit'   => array('name'       => 'deleteZone',
+                                            'parameters' => array($name),
+                                            'logs'       => array('success' => sprintf('Dns zone %s has been deleted',$this->filters['name'])
+                                                                  )
+                                            )
+                        );
+
+        unset($this->filters);
+        return $this->SoapEngine->execute($function,$this->html);
+    }
+
+    function showAddForm() {
+        if ($this->selectionActive) return;
+
+        print "
+        <p>
+        <table border=0 class=border width=100% bgcolor=lightblue>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+            <td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+            printf ("Name <input type=text size=25 name=name value='%s'> ",$_REQUEST['name']);
+            $this->showCustomerTextBox();
+            printf (" Info<input type=text size=25 name=info value='%s'> ",$_REQUEST['info']);
+
+            print "
+            </td>
+            <td align=right>
+            ";
+            print "
+            </td>
+            ";
+
+            $this->printHiddenFormElements();
+
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord() {
+        $name   = trim($_REQUEST['name']);
+        $info   = trim($_REQUEST['info']);
+
+        if (!strlen($name)) {
+            printf ("<p><font color=red>Error: Missing zone name. </font>");
+            return false;
+        }
+
+        if (is_numeric($prefix)) {
+            printf ("<p><font color=red>Error: Numeric zone names are not allowed. Use ENUM port instead. </font>");
+            return false;
+        }
+
+        list($customer,$reseller)=$this->customerFromLogin($dictionary);
+
+        if (!trim($_REQUEST['ttl'])) {
+            $ttl=3600;
+        } else {
+            $ttl=intval(trim($_REQUEST['ttl']));
+        }
+
+        $zone=array(
+                     'name'       => $name,
+                     'ttl'        => $ttl,
+                     'info'       => $info,
+                     'customer'   => intval($customer),
+                     'reseller'   => intval($reseller)
+                    );
+
+        $deleteZone=array('name'=>$name);
+
+        $function=array('commit'   => array('name'       => 'addZone',
+                                            'parameters' => array($zone),
+                                            'logs'       => array('success' => sprintf('DNS zone %s has been added',$name))),
+                        'rollback' => array('name'       => 'deleteZone',
+                                            'parameters' => array($deleteZone)
+                                            )
+                        );
+     
+        return $this->SoapEngine->execute($function,$this->html);
+
+    }
+
+    function showSeachFormCustom() {
+            printf (" Name<input type=text size=25 name=name_filter value='%s'>",$this->filters['name']);
+            printf (" Info<input type=text size=25 name=info_filter value='%s'>",$this->filters['info']);
+    }
+
+    function showRecord($zone) {
+
+        print "<table border=0 cellpadding=10>";
+        print "
+        <tr>
+        <td valign=top>
+        <table border=0>";
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "<input type=hidden name=action value=Update>";
+
+        print "<tr>
+        <td colspan=2><input type=submit value=Update>
+        </td></tr>";
+
+        printf ("<tr><td class=border>DNS zone</td><td class=border>%s</td></td>",$zone->name);
+
+        if ($this->adminonly) {
+
+            foreach (array_keys($this->FieldsAdminOnly) as $item) {
+                if ($item == 'nameservers') {
+                    foreach ($zone->$item as $_item) {
+                        $nameservers.=$_item."\n";
+                    }
+                    $item_value=$nameservers;
+                } else {
+                    $item_value=$zone->$item;
+                }
+
+                if ($this->FieldsAdminOnly[$item]['name']) {
+                    $item_name=$this->FieldsAdminOnly[$item]['name'];
+                } else {
+                    $item_name=ucfirst($item);
+                }
+    
+                if ($this->FieldsAdminOnly[$item]['type'] == 'text') {
+                    printf ("<tr>
+                    <td class=border valign=top>%s</td>
+                    <td class=border><textarea cols=30 name=%s_form rows=5>%s</textarea></td>
+                    <td class=border valign=top>%s</td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $item_value,
+                    $this->FieldsAdminOnly[$item]['help']
+                    );
+                } else {
+                    printf ("<tr>
+                    <td class=border valign=top>%s</td>
+                    <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                    <td class=border>%s</td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $item_value,
+                    $this->FieldsAdminOnly[$item]['help']
+                    );
+                }
+            }
+        }
+
+        foreach (array_keys($this->Fields) as $item) {
+            if ($this->Fields[$item]['name']) {
+                $item_name=$this->Fields[$item]['name'];
+            } else {
+                $item_name=ucfirst($item);
+            }
+
+            if ($item == 'nameservers') {
+                foreach ($zone->$item as $_item) {
+                    $nameservers.=$_item."\n";
+                }
+                $item_value=$nameservers;
+            } else {
+                $item_value=$zone->$item;
+            }
+
+            if ($this->Fields[$item]['type'] == 'text') {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><textarea cols=30 name=%s_form rows=5>%s</textarea></td>
+                <td class=border valign=top>%s</td>
+                </tr>",
+                $item_name,
+                $item,
+                $item_value,
+                $this->Fields[$item]['help']
+                );
+            } else if ($this->Fields[$item]['readonly']) {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border>%s</td>
+                <td class=border valign=top>%s</td>
+                </tr>",
+                $item_name,
+                $item_value,
+                $this->Fields[$item]['help']
+                );
+            } else {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                <td class=border>%s</td>
+                </tr>",
+                $item_name,
+                $item,
+                $item_value,
+                $this->Fields[$item]['help']
+                );
+            }
+        }
+
+        printf ("<input type=hidden name=tld_filter value='%s'",$zone->id->tld);
+        printf ("<input type=hidden name=prefix_filter value='%s'",$zone->id->prefix);
+        $this->printFiltersToForm();
+        $this->printHiddenFormElements();
+
+        print "</form>";
+        print "
+        </table>
+        ";
+    }
+
+    function updateRecord () {
+
+        if (!$_REQUEST['name_filter']) return;
+        //printf ("<p>Updating zone %s...",$_REQUEST['name_filter']);
+
+        $filter=array('name' => $_REQUEST['name_filter']);
+
+        if (!$zone = $this->getRecord($filter)) {
+            return false;
+        }
+
+        $zone_old=$zone;
+
+        foreach (array_keys($this->Fields) as $item) {
+            $var_name=$item.'_form';
+            //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
+            if ($this->Fields[$item]['type'] == 'integer') {
+                $zone->$item = intval($_REQUEST[$var_name]);
+            } else if ($item == 'nameservers') {
+                $_txt=trim($_REQUEST[$var_name]);
+                if (!strlen($_txt)) {
+                    unset($zone->$item);
+                } else {
+                    $_nameservers=array();
+                    $_lines=explode("\n",$_txt);
+                    foreach ($_lines as $_line) {
+                        $_ns=trim($_line);
+                        $_nameservers[]=$_ns;
+                    }
+                    $zone->$item=$_nameservers;
+                }
+            } else {
+                $zone->$item = trim($_REQUEST[$var_name]);
+            }
+        }
+
+        if ($this->adminonly) {
+            foreach (array_keys($this->FieldsAdminOnly) as $item) {
+                $var_name=$item.'_form';
+                if ($this->FieldsAdminOnly[$item]['type'] == 'integer') {
+                    $zone->$item = intval($_REQUEST[$var_name]);
+                } else {
+                    $zone->$item = trim($_REQUEST[$var_name]);
+                }
+            }
+        }
+
+        $function=array('commit'   => array('name'       => 'updateZone',
+                                            'parameters' => array($zone),
+                                            'logs'       => array('success' => sprintf('DNS zone %s has been updated',$filter['name']))),
+                        'rollback' => array('name'       => 'updateZone',
+                                            'parameters' => array($zone_old))
+                        );
+    	return $this->SoapEngine->execute($function,$this->html);
+
+    }
+
+    function getRecord($zone) {
+        // Filter
+        if (!$zone['name']) {
+            print "Error in getRecord(): Missing zone name";
+            return false;
+        }
+
+        $filter=array('name'   => $zone['name']);
+
+        // Range
+        $range=array('start' => 0,
+                     'count' => 1
+                     );
+
+        // Order
+        $orderBy = array('attribute' => 'changeDate',
+                         'direction' => 'DESC'
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $result     = $this->SoapEngine->soapclient->getZones($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            if ($result->zones[0]){
+                return $result->zones[0];
+            } else {
+                return false;
+            }
+        }
     }
 }
 
