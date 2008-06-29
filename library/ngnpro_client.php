@@ -161,7 +161,7 @@ class SoapEngine {
                                            'description'   => 'Manage login accounts, customer information  and properties. Customer id can be assigned to entities like SIP domains and ENUM ranges. Use % to match a pattern. '
                                            ),
                         'sip_domains'    => array(
-                                           'records_class' => 'Domains',
+                                           'records_class' => 'SipDomains',
                                            'name'          => 'SIP domains',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'sip',
@@ -189,6 +189,7 @@ class SoapEngine {
                                            'category'      => 'dns',
                                            'description'   => 'Manage phone number ranges that hold individual phone numbers. Use % to match a pattern. '
                                            ),
+                        /*
                         'dns_zones'    => array(
                                            'records_class' => 'DnsZones',
                                            'name'          => 'Dns zones',
@@ -196,6 +197,15 @@ class SoapEngine {
                                            'category'      => 'dns',
                                            'description'   => 'Manage DNS zones. Use % to match a pattern. '
                                            ),
+                        'dns_records'    => array(
+                                           'records_class' => 'DnsRecords',
+                                           'name'          => 'Dns records',
+                                           'soap_class'    => 'WebService_NGNPro_DnsPort',
+                                           'category'      => 'dns',
+                                           'description'   => 'Manage DNS records. Use % to match a pattern. '
+                                           ),
+                         */
+
                         'pstn_gateway_groups' => array(
                                            'records_class' => 'GatewayGroups',
                                            'name'          => 'PSTN groups',
@@ -1387,7 +1397,7 @@ class Records {
     }
 }
 
-class Domains extends Records {
+class SipDomains extends Records {
     var $FieldsAdminOnly=array(
                               'reseller' => array('type'=>'integer'),
                               );
@@ -1396,7 +1406,7 @@ class Domains extends Records {
                               'customer'    => array('type'=>'integer')
                               );
 
-    function Domains(&$SoapEngine) {
+    function SipDomains(&$SoapEngine) {
         dprint("init Domains");
 
         $this->filters   = array(
@@ -5515,28 +5525,31 @@ class EnumMappings extends Records {
 class DnsZones extends Records {
 
     var $FieldsAdminOnly=array(
-                              'reseller' => array('type'=>'integer',
+                              'reseller'      => array('type'=>'integer',
                                                    'help' => 'Zone owner')
                               );
 
     var $Fields=array(
-                              'customer'    => array('type'=>'integer',
+                              'customer'      => array('type'=>'integer',
                                                    'help' => 'Zone owner'
                                                       ),
                               'serial'        => array('type'=>'integer',
-                                                     'help'=>'DNS serial number',
+                                                     'help'=>'Serial number',
                                                      'readonly' => 1
                                                      ),
-                              'ttl'         => array('type'=>'integer',
+                              'email'         => array('type'=>'string',
+                                                     'help'=>'Administrator address'
+                                                     ),
+                              'ttl'           => array('type'=>'integer',
                                                      'help'=>'Default time to live period'
                                                      ),
                               'retry'         => array('type'=>'integer',
                                                      'help'=>'Retry transfer period'
                                                      ),
-                              'expire'         => array('type'=>'integer',
+                              'expire'        => array('type'=>'integer',
                                                      'help'=>'Expire period'
                                                      ),
-                              'info'        => array('type'=>'string',
+                              'info'          => array('type'=>'string',
                                                      'help' =>'Zone description'
                                                      )
                               );
@@ -5620,6 +5633,7 @@ class DnsZones extends Records {
             <td><b>Id</b></th>
             <td><b>Customer</b></td>
             <td><b>Name </b></td>
+            <td><b></b></td>
             <td><b>Servers </b></td>
             <td><b>Serial</b></td>
             <td><b>TTL</b></td>
@@ -5671,14 +5685,19 @@ class DnsZones extends Records {
                     }
 
                     if ($this->adminonly) {
-                        $zone_link=sprintf('<a href=%s&service=%s&reseller_filter=%s&name_filter=%s>%s</a>',$this->url,$this->SoapEngine->service,$zone->reseller,$zone->name,$zone->name);
+                        $zone_url=sprintf('<a href=%s&service=%s&reseller_filter=%s&name_filter=%s>%s</a>',$this->url,$this->SoapEngine->service,$zone->reseller,$zone->name,$zone->name);
                     } else {
-                        $zone_link=sprintf('<a href=%s&&service=%s&name_filter=%s>%s</a>',$this->url,$this->SoapEngine->service,$zone->name,$zone->name);
+                        $zone_url=sprintf('<a href=%s&&service=%s&name_filter=%s>%s</a>',$this->url,$this->SoapEngine->service,$zone->name,$zone->name);
                     }
 
-                    $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                    $customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                     urlencode($this->SoapEngine->customer_engine),
                     urlencode($zone->customer)
+                    );
+
+                    $records_url = $this->url.sprintf("&service=dns_records@%s&zone_filter=%s",
+                    urlencode($this->SoapEngine->soapEngine),
+                    urlencode($zone->name)
                     );
 
                     sort($zone->nameservers);
@@ -5693,6 +5712,7 @@ class DnsZones extends Records {
                     <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
                     <td>%s</td>
+                    <td><a href=%s>Records</a></td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -5702,10 +5722,11 @@ class DnsZones extends Records {
                     </tr>",
                     $bgcolor,
                     $index,
-                    $_customer_url,
+                    $customer_url,
                     $zone->customer,
                     $zone->reseller,
-                    $zone_link,
+                    $zone_url,
+                    $records_url,
                     $ns_text,
                     $zone->serial,
                     $zone->ttl,
@@ -5842,8 +5863,8 @@ class DnsZones extends Records {
     }
 
     function showSeachFormCustom() {
-            printf (" Name<input type=text size=25 name=name_filter value='%s'>",$this->filters['name']);
-            printf (" Info<input type=text size=25 name=info_filter value='%s'>",$this->filters['info']);
+            printf (" Name<input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
+            printf (" Info<input type=text size=20 name=info_filter value='%s'>",$this->filters['info']);
     }
 
     function showRecord($zone) {
@@ -6069,6 +6090,752 @@ class DnsZones extends Records {
     }
 }
 
+class DnsRecords extends Records {
+
+    var $default_ttl = 3600;
+    var $default_priority = 5;
+
+    var $sortElements=array('changeDate' => 'Change date',
+                            'name'     => 'Name'
+                            );
+
+    var $FieldsReadOnly=array(
+                              'customer',
+                              'reseller'
+                              );
+    var $Fields=array(
+                              'owner'    => array('type'=>'integer'),
+                              'value'    => array('type'=>'string'),
+                              'info'     => array('type'=>'string')
+                              );
+    var $recordTypes=array('A','AAAA','CNAME','MX','SRV','NS','NAPTR','MBOX','URL');
+
+    function DnsRecords(&$SoapEngine) {
+
+        dprint("init DnsRecords");
+
+        $this->filters   = array(
+                                 'zone'         => trim($_REQUEST['zone_filter']),
+                                 'name'         => trim($_REQUEST['name_filter']),
+                                 'type'         => trim($_REQUEST['type_filter']),
+                                 'value'        => trim($_REQUEST['value_filter']),
+                                 'owner'        => trim($_REQUEST['owner_filter'])
+                                );
+        $this->Records(&$SoapEngine);
+        $this->getAllowedDomains();
+    }
+
+    function listRecords() {
+        $this->showSeachForm();
+
+        $filter=array(
+                      'zone'     => $this->filters['zone'],
+                      'name'     => $this->filters['name'],
+                      'type'     => $this->filters['type'],
+                      'value'    => $this->filters['value'],
+                      'owner'    => intval($this->filters['owner']),
+                      'customer' => intval($this->filters['customer']),
+                      'reseller' => intval($this->filters['reseller'])
+                      );
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+
+        // Insert credetials
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SoapEngine->soapclient->getRecords($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+            $this->rows = $result->total;
+
+             if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
+                $this->showActionsForm();
+            }
+
+            print "
+            <p>
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                ";
+                print "
+                <td><b>Customer</b></td>
+                <td><b>Zone</b></td>
+                <td><b>Name</b></td>
+                <td><b>Type</b></td>
+                <td><b>Value</b></td>
+                <td><b>TTL</b></td>
+                <td><b>Info</b></td>
+                <td><b>Owner</b></td>
+                <td><b>Change date</b></td>
+                <td><b>Actions</b></td>
+                ";
+                print "
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+            if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    if (!$result->records[$i]) break;
+    
+                    $record = $result->records[$i];
+                    $index=$this->next+$i+1;
+
+                    //print"<pre>";
+                    //print_r($record);
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                        $bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+                    $j=1;
+
+                    $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s&zone_filter=%s",
+                    urlencode($this->SoapEngine->service),
+                    urlencode($record->id->name),
+                    urlencode($record->id->zone)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                        $_REQUEST['name_filter'] == $record->id->name &&
+                        $_REQUEST['zone_filter'] == $record->id->zone) {
+                        $_url .= "&confirm=1";
+                        $actionText = "<font color=red>Confirm</font>";
+                    } else {
+                        $actionText = "Delete";
+                    }
+
+                    $_number_url = $this->url.sprintf("&service=%s&id_filter=%s",
+                    urlencode($this->SoapEngine->service),
+                    urlencode($record->id)
+                    );
+
+                    $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                    urlencode($this->SoapEngine->customer_engine),
+                    urlencode($record->customer)
+                    );
+
+                    $_zone_url = $this->url.sprintf("&service=dns_zones@%s&name_filter=%s",
+                    urlencode($this->SoapEngine->soapEngine),
+                    urlencode($record->id->zone)
+                    );
+
+                    if ($record->owner) {
+                        $_owner_url = sprintf
+                        ("<a href=%s&service=customers@%s&customer_filter=%s>%s</a>",
+                        $this->url,
+                        urlencode($this->SoapEngine->soapEngine),
+                        urlencode($record->owner),
+                        $record->owner
+                        );
+                    } else {
+                        $_owner_url='';
+                    }          
+
+                    if (strlen($record->id->name)) {
+                        $name=$record->id->name.'.'.$record->id->zone;
+                    } else {
+                        $name=$record->id->zone;
+                    }
+                    printf("
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td><a href=%s>%s.%s</a></td>
+                    <td><a href=%s>Zone</a></td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+
+                    $bgcolor,
+                    $index,
+                    $_customer_url,
+                    $record->customer,
+                    $record->reseller,
+                    $_zone_url,
+                    $name,
+                    $record->type,
+                    $record->value,
+
+                    $record->ttl,
+                    $record->info,
+                    $_owner_url,
+                    $record->changeDate,
+                    $_url,
+                    $actionText
+                    );
+                	$i++;
+
+
+                }
+            }
+
+
+            print "</table>";
+
+            if ($this->rows == 1 ) {
+            } else {
+                $this->showPagination($maxrows);
+            }
+
+            return true;
+        }
+    }
+
+    function showSeachFormCustom() {
+
+        printf (" Name <input type=text size=20 name=name_filter value='%s'>",$_REQUEST['name_filter']);
+        printf (" Type <select name=type_filter><option>");
+
+        $selected_type[$_REQUEST['type_filter']]='selected';
+
+        foreach ($this->recordTypes as $_type) {
+            printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
+        }
+        print "</select>";
+        printf (" Value <input type=text size=20 name=value_filter value='%s'>",$_REQUEST['value_filter']);
+
+    }
+
+    function deleteRecord($dictionary=array()) {
+        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
+            print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return true;
+        }
+
+        if ($dictionary['name']) {
+            $name=$dictionary['name'];
+        } else {
+            $name=$this->filters['name'];
+        }
+
+        if ($dictionary['zone']) {
+            $zone=$dictionary['zone'];
+        } else {
+            $zone=$this->filters['zone'];
+        }
+
+        $record_id=array('name' => $name,
+                         'zone' => $zone
+                       );
+
+        $function=array('commit'   => array('name'       => 'deleteRecord',
+                                            'parameters' => array($record_id),
+                                            'logs'       => array('success' => sprintf('Dns record %s under %s has been deleted',$name,$zone)))
+                        );
+       	unset($this->filters);
+       	return $this->SoapEngine->execute($function,$this->html);
+
+    }
+
+    function showAddForm() {
+
+        print "
+        <p>
+        <table border=0 class=border width=100% bgcolor=lightblue>
+        <tr>
+        ";
+
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "
+        <td align=left>
+        ";
+
+        print "
+        <input type=submit name=action value=Add>
+        ";
+        printf (" Name");
+
+        printf (" <input type=text size=10 name=name value='%s'>",$_REQUEST['name']);
+        print "<select name=zone>";
+
+        if ($_REQUEST['zone']) {
+            $selected_zone[$_REQUEST['zone']]='selected';
+        } else if ($_zone=$this->getLoginProperty('dns_records_last_zone')) {
+            $selected_zone[$_zone]='selected';
+        }
+
+        foreach ($this->allowedDomains as $_zone) {
+            printf ("<option value='%s' %s>%s",$_zone,$selected_zone[$_zone],$_zone);
+        }
+
+        print "</select>";
+
+        print "<select name=type>
+        ";
+
+        if ($_REQUEST['type']) {
+            $selected_type[$_REQUEST['type']]='selected';
+        } else if ($_type=$this->getLoginProperty('dns_records_last_type')) {
+            $selected_type[$_type]='selected';
+        }
+
+        foreach($this->recordTypes as $_type) {
+            printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
+        }
+
+        print "
+        </select>
+        ";
+
+        printf (" <input type=text size=25 name=value value='%s'>",$_REQUEST['value']);
+        printf (" Owner<input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
+
+        print "
+        </td>
+        <td align=right>
+        ";
+        print "
+        </td>
+        ";
+
+        $this->printHiddenFormElements();
+
+        print "
+        </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function getAllowedDomains() {
+        // Filter
+        $filter=array(
+                      'customer' => intval($this->filters['customer']),
+                      'reseller' => intval($this->filters['reseller'])
+                      );
+        // Range
+        $range=array('start' => 0,
+                     'count' => 200
+                     );
+
+        // Order
+        $orderBy = array('attribute' => 'name',
+                         'direction' => 'ASC'
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $result     = $this->SoapEngine->soapclient->getZones($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            foreach($result->zones as $zone) {
+                if (in_array($zone->name,$this->allowedDomains)) continue;
+                $this->allowedDomains[]=$zone->name;
+                $seen[$zone->name]++;
+            }
+        }
+    }
+
+    function addRecord($dictionary=array()) {
+        if ($dictionary['zone']) {
+        	$zone=$dictionary['zone'];
+            $this->skipSaveProperties=true;
+        } else if ($_REQUEST['zone']) {
+            $zone=$_REQUEST['zone'];
+        }
+
+        if ($dictionary['name']) {
+            $name = $dictionary['name'];
+        } else {
+            $name = trim($_REQUEST['name']);
+        }
+
+        if (!strlen($zone)) {
+            printf ("<p><font color=red>Error: Missing zone name. </font>");
+            return false;
+        }
+
+        list($customer,$reseller)=$this->customerFromLogin($dictionary);
+
+        if ($dictionary['ttl']) {
+            $ttl = intval($dictionary['ttl']);
+        } else {
+            $ttl = intval(trim($_REQUEST['ttl']));
+        }
+
+        if (!$ttl) $ttl=3600;
+
+        if ($dictionary['priority']) {
+            $priority = intval($dictionary['priority']);
+        } else {
+            $priority = intval(trim($_REQUEST['priority']));
+        }
+
+        if ($dictionary['owner']) {
+            $owner = intval($dictionary['owner']);
+        } else {
+            $owner = intval(trim($_REQUEST['owner']));
+        }
+
+        if ($dictionary['info']) {
+            $info = $dictionary['info'];
+        } else {
+            $info = trim($_REQUEST['info']);
+        }
+
+        if ($dictionary['value']) {
+            $value = $dictionary['value'];
+        } else {
+            $value = trim($_REQUEST['value']);
+        }
+
+        if (!strlen($value)) {
+            printf ("<p><font color=red>Error: Missing record value. </font>");
+            return false;
+        }
+
+        if ($dictionary['type']) {
+            $type = $dictionary['type'];
+        } else {
+            $type = trim($_REQUEST['type']);
+        }
+
+        if (!strlen($type) || !in_array($type,$this->recordTypes)) {
+            printf ("<p><font color=red>Error: Invalid or missing record type. </font>");
+            return false;
+        }
+
+        $record=array('id'       => array('name'=>$name,
+                                          'zone'=>$zone),
+                      'value'    => $value,
+                      'ttl'      => $ttl,
+                      'type'     => $type,
+                      'owner'    => $owner,
+                      'info'     => $info
+                           );
+
+        if (!$this->skipSaveProperties=true) {
+    
+            $_p=array(
+                      array('name'       => 'dns_records_last_zone',
+                            'category'   => 'web',
+                            'value'      => $_REQUEST['zone'],
+                            'permission' => 'customer'
+                           ),
+                      array('name'       => 'dns_records_last_type',
+                            'category'   => 'web',
+                            'value'      => "$type",
+                            'permission' => 'customer'
+                           )
+                      );
+    
+            $this->setLoginProperties($_p);
+        }
+
+        $function=array('commit'   => array('name'       => 'addRecord',
+                                            'parameters' => array($record),
+                                            'logs'       => array('success' => sprintf('Dns record %s under %s has been added',$name,$zone))),
+                        'rollback' => array('name'       => 'deleteNumber',
+                                            'parameters' => array($record)
+                                            )
+                        );
+     
+        return $this->SoapEngine->execute($function,$this->html);
+    }
+
+    function getRecordKeys() {
+
+        // Filter
+        $filter=array('number'   => $this->filters['number'],
+                      'tld'      => $this->filters['tld'],
+                      'type'     => $this->filters['type'],
+                      'mapto'    => $this->filters['mapto'],
+                      'owner'    => intval($this->filters['owner']),
+                      'customer' => intval($this->filters['customer']),
+                      'reseller' => intval($this->filters['reseller'])
+                      );
+        // Range
+        $range=array('start' => 0,
+                     'count' => 1000
+                     );
+
+        // Order
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+
+        // Insert credetials
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SoapEngine->soapclient->getNumbers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            foreach ($result->numbers as $number) {
+                $this->selectionKeys[]=array('number' => $number->id->number,
+                                             'tld'    => $number->id->tld);
+            }
+            return true;
+        }
+    }
+
+    function showRecord($number) {
+
+        print "<table border=0>";
+        print "<tr>";
+        print "<td>";
+        print "<h3>Number</h3>";
+        print "</td><td>";
+        print "<h3>Mappings</h3>";
+        print "</td>";
+        print "</tr>";
+
+        print "<tr>";
+        print "<td valign=top>";
+
+        print "<table border=0>";
+
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "<input type=hidden name=action value=Update>";
+
+        printf ("<tr><td class=border>DNS name</td><td class=border>%s</td></td>",
+        $this->tel2enum($number->id->number,$number->id->tld));
+
+        foreach (array_keys($this->Fields) as $item) {
+            if ($this->Fields[$item]['name']) {
+                $item_name=$this->Fields[$item]['name'];
+            } else {
+                $item_name=ucfirst($item);
+            }
+
+            if ($this->Fields[$item]['type'] == 'text') {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                </tr>",
+                $item_name,
+                $item,
+                $number->$item
+                );
+            } else {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                </tr>",
+                $item_name,
+                $item,
+                $number->$item
+                );
+            }
+        }
+
+        printf ("<input type=hidden name=tld_filter value='%s'",$number->id->tld);
+        printf ("<input type=hidden name=number_filter value='%s'",$number->id->number);
+
+        $this->printFiltersToForm();
+        $this->printHiddenFormElements();
+
+        print "
+        </table>
+        ";
+
+        print "</td><td valign=top>";
+
+        print "<table border=0>";
+        print "<tr>";
+        print "<td></td>";
+        print "<td class=border>Type</td>";
+        print "<td class=border>Map to</td>";
+        print "<td class=border>TTL</td>";
+        print "</tr>";
+
+        foreach ($number->mappings as $_mapping) {
+            $j++;
+            unset($selected_type);
+            print "<tr>";
+            print "<td>$j</td>";
+            $selected_type[$_mapping->type]='selected';
+
+            printf ("
+            <td class=border><select name=mapping_type[]>");
+            reset($this->NAPTR_services);
+            while (list($k,$v) = each($this->NAPTR_services)) {
+                printf ("<option value='%s' %s>%s",$k,$selected_type[$k],$this->NAPTR_services[$k]['webname']);
+            }
+
+            print "
+            </select>
+            </td>";
+
+            printf ("
+            <td class=border><input name=mapping_mapto[] size=30 value='%s'></td>
+            <td class=border><input name=mapping_ttl[] size=6 value='%s'></td>
+            ",
+            $_mapping->mapto,
+            $_mapping->ttl
+            );
+            print "</tr>";
+        }
+
+        $j++;
+        print "<tr>";
+        print "<td></td>";
+
+        printf ("
+        <td class=border><select name=mapping_type[]>");
+        reset($this->NAPTR_services);
+        while (list($k,$v) = each($this->NAPTR_services)) {
+            printf ("<option value='%s'>%s",$k,$this->NAPTR_services[$k]['webname']);
+        }
+
+        print "
+        </select>
+        </td>";
+
+        printf ("
+        <td class=border><input name=mapping_mapto[] size=30></td>
+        <td class=border><input name=mapping_ttl[] size=6></td>
+        "
+        );
+
+        print "</tr>";
+
+        print "</table>";
+
+        print "</td>";
+        print "</tr>";
+
+        print "
+        <tr>
+        <td>
+        <input type=submit value=Update>
+        </td>
+        </tr>
+        ";
+        print "</form>";
+        print "</table>";
+
+    }
+
+    function getRecord($record) {
+
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $result     = $this->SoapEngine->soapclient->getRecords($filter);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            return $result;
+        }
+    }
+
+    function updateRecord () {
+        //print "<p>Updating record ...";
+
+        if (!$_REQUEST['id_filter']) return;
+
+        $record=array('number' => $_REQUEST['number_filter'],
+                      'tld'    => $_REQUEST['tld_filter']
+                     );
+
+        if (!$number = $this->getRecord($record)) {
+            return false;
+        }
+
+        $record_old=$record;
+
+        foreach (array_keys($this->Fields) as $item) {
+            $var_name=$item.'_form';
+            //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
+            if ($this->Fields[$item]['type'] == 'integer') {
+                $record->$item = intval($_REQUEST[$var_name]);
+            } else {
+                $record->$item = trim($_REQUEST[$var_name]);
+            }
+        }
+
+        //print_r($number);
+        $function=array('commit'   => array('name'       => 'updateRecord',
+                                            'parameters' => array($record),
+                                            'logs'       => array('success' => sprintf('ENUM number +%s under %s has been updated',$enumid['number'],$enumid['tld']))),
+                        'rollback' => array('name'       => 'updateRecord',
+                                            'parameters' => array($record_old))
+                        );
+     
+        return $this->SoapEngine->execute($function,$this->html);
+
+    }
+}
 class TrustedPeers extends Records {
 
     function TrustedPeers(&$SoapEngine) {
