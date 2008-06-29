@@ -32,8 +32,7 @@ cdrtool (6.5.1) unstable; urgency=low
     sudo rm -r /var/www/CDRTool/provisioning	
     sudo mv /var/www/CDRTool/local/images/* /var/www/CDRTool/images/
     sudo mv /var/www/CDRTool/local /etc/cdrtool/
-    sudo cp -a /var/www/CDRTool/local /etc/cdrtool/
-    sudo rm -r /var/www/CDRTool/local
+    sudo rm -r /etc/cdrtool/local/images
     Edit /etc/cdrtool/global.inc and replace ser with openser in the line:
     $CDRToolModules=array("ser","asterisk","rating"); 
     and remove rating from it: 
@@ -41,8 +40,10 @@ cdrtool (6.5.1) unstable; urgency=low
     Copy the value of $servers from /var/www/CDRTool/status/config/media_servers.php
     to /etc/cdrtool/global.inc $DATASOURCES['ser_radius']['mediaServers']
     sudo rm -r /var/www/CDRTool/status/config
+    Remove memcache from monit configuration
+  * 
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 29 Jun 2008 14:32:00 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 29 Jun 2008 15:16:11 +0200
 
 cdrtool (6.5.0) unstable; urgency=low
 
