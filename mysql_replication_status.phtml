@@ -24,6 +24,8 @@ require("mysql_replication.php");
 $ReplicationOverview = new ReplicationOverview($replicated_databases);
 $ReplicationOverview->showOverview();
     
+$layout->showFooter();
+
 print "
 </body>
 </html>
