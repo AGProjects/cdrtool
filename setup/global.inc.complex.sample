@@ -210,7 +210,7 @@ $DATASOURCES=array(
                                             "sipvm.example.com"=>"asterisk",
                                             "voipgw02.example.com"=>"cisco"
                     			    		),
-                    "UserQuotaClass"     => "SERQuota",
+                    "UserQuotaClass"     => "OpenSERQuota",
                     "UserQuotaNotify"    => "0",	// send e-mail notifications when quota is exceeded
                     "soapEngineId"       => '',
                     "domainTranslation"  => array(

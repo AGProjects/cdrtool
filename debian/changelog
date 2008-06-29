@@ -1,10 +1,16 @@
+cdrtool (6.5.1.2) unstable; urgency=low
+
+  * Fixed name of OpenSERQuota class in globa.inc sample files
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 29 Jun 2008 22:22:22 +0200
+
 cdrtool (6.5.1.1) unstable; urgency=low
 
   * Fixed required phone_images.php in sip settings page
   * Fixed REMOTE_ADDR variable
   * Fixed path of logo images
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 29 Jun 2008 16:09:09 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 29 Jun 2008 22:21:49 +0200
 
 cdrtool (6.5.1) unstable; urgency=low
 
@@ -45,6 +51,7 @@ cdrtool (6.5.1) unstable; urgency=low
     $CDRToolModules=array("ser","asterisk","rating"); 
     and remove rating from it: 
     $CDRToolModules=array("openser","asterisk");
+    Set "UserQuotaClass"=> "OpenSERQuota" in global.inc (it was SERQuota)
     Copy the value of $servers from /var/www/CDRTool/status/config/media_servers.php
     to /etc/cdrtool/global.inc $DATASOURCES['ser_radius']['mediaServers']
     sudo rm -r /var/www/CDRTool/status/config

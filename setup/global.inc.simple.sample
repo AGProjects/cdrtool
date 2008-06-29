@@ -158,7 +158,7 @@ $DATASOURCES=array(
                     "db_class"           => array("DB_radius2","DB_radius"),  
                     "rating"             => "1",
                     "normalizedField"    => "Normalized",
-                    "UserQuotaClass"     => "SERQuota",
+                    "UserQuotaClass"     => "OpenSERQuota",
                     "UserQuotaNotify"    => "1",
                     "purgeCDRsAfter"     => 120, // how many days to keep the CDRs
                     "SIPProxies"         => array("10.0.0.1" => "node01",  // friendly names in sip trace table
