@@ -102,25 +102,24 @@ if (!$sendotp || $username) {
 	";
 	
 	$spam= new DB_CDRTool;
-	$new_stamp=time();
 	if (!$spam_rows) {
-        	$query="insert into spam (ip,tries,stamp) 
-			values ('$REMOTE_ADDR','0','$new_stamp')
-			";
+        	$query=sprintf("insert into spam (ip,tries,stamp)
+			values ('%s','0','$new_stamp')
+			",
+            $_SERVER['REMOTE_ADDR']);
 	} else {
 		
         	$query="update spam set 
 			tries = tries +1,
-			stamp = '$new_stamp'
-			where ip =  '$REMOTE_ADDR'
-			";
+			stamp = '%s'
+			where ip =  '%s'
+			",
+            time(),
+            $_SERVER['REMOTE_ADDR']
+            );
 	}			
-	if (!$spam->query("$query")) {
-		# send mail to administrator with the error
-	} 
-} # end if sending OTP
-else {
-		print "Please fill in your One Time Password!";
+} else {
+	print "Please fill in your One Time Password!";
 }
 ?>
 

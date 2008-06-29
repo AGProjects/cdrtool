@@ -185,15 +185,16 @@ class CDRTool_Auth extends Auth {
                     otp_expire = '$expire_otp'
                     where username = '$username_sql'
                     ";
+
                     if ($this->db->query($update)) {
                         if ($otp_email) {
-                            mail("$otp_email", "OTP for CDRTool", "$random_otp valid until $expire_otp CET (GMT+1) requested from $REMOTE_ADDR", "From: support@ag-projects.com");
-                            dprint ("via email to $otp_email");
+							$body=sprintf("%s valid until %s CET (GMT+1) requested from %s",$random_otp,$expire_otp,$_SERVER['REMOTE_ADDR']);
+                            mail($otp_email, "OTP for CDRTool", $body, "From: support@ag-projects.com");
                         }
                         if ($otp_tel) {
+                        	$body=sprintf("Password is %s valid until %s CET (GMT+1) from %s",$random_otp,$expire_otp,$_SERVER['REMOTE_ADDR']);
                             $otp_tel=preg_replace("/[^0-9+]/","",$otp_tel);
-                            dprint ("via SMS to $otp_tel");
-                            otp_sms("$otp_tel", "Password is $random_otp valid until $expire_otp CET (GMT+1) from $REMOTE_ADDR","1");
+                            otp_sms($otp_tel, $body,"1");
                         }
                         print "<p>
                         Password will expire at: $expire_otp (in $interval minutes)<br>";

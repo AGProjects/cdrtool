@@ -3032,7 +3032,7 @@ class RatingTables {
                                 values
                                 (NOW(),'%s','%s','Rating tables','%d','Prepaid balance for %s@%s set to %s')",
                                 addslashes($loginname),
-                                addslashes($REMOTE_ADDR),
+                                addslashes($_SERVER['REMOTE_ADDR']),
                                 addslashes($affected_rows),
                                 addslashes($username),
                                 addslashes($domain),
@@ -3523,7 +3523,7 @@ class RatingTables {
                 (date,login,ip,datasource,results,description)
                 values (NOW(),'%s','%s','Rating','%d','%s in table %s %s')",
                 addslashes($loginname),
-                addslashes($REMOTE_ADDR),
+                addslashes($_SERVER['REMOTE_ADDR']),
                 addslashes($affected_rows),
                 addslashes($subaction),
                 addslashes($table),

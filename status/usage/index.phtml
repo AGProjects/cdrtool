@@ -95,17 +95,15 @@ foreach ($domains as $key) {
 </HTML>
 <?
 
-$REMOTE_ADDR        = $_SERVER['REMOTE_ADDR'];
-$db =new DB_CDRTool;
+$db = new DB_CDRTool;
 $loginname=$auth->auth["uname"];
 
 $log_query=sprintf("insert into log
 (date,login,ip,datasource,description)
 values (NOW(),'%s','%s','Usage','View statistics')",
 addslashes($loginname),
-addslashes($REMOTE_ADDR)
+addslashes($_SERVER['REMOTE_ADDR'])
 );
-dprint($log_query);
 $db->query($log_query);
 page_close();
 ?>
