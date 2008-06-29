@@ -685,17 +685,16 @@ class pageLayout {
         <tr>
         ";
 
-        if (is_readable("/etc/cdrtool/local/images/logo.gif")) {
-        	print "<td valign=middle><img src=\"/etc/cdrtool/local/images/logo.gif\"></td>";
-        } else if (is_readable("/etc/cdrtool/local/images/logo.jpg")) {
-        	print "<td valign=middle><img src=\"/etc/cdrtool/local/images/logo.jpg\"></td>";
-        } else if (is_readable("/etc/cdrtool/local/images/logo.png")) {
-        	print "<td valign=middle><img src=\"/etc/cdrtool/local/images/logo.png\"></td>";
+        if (is_readable($CDRTool['Path']."/images/logo.gif")) {
+        	printf ("<td valign=middle><img src=\"%s/images/logo.gif\"></td>",$CDRTool['tld']);
+        } else if (is_readable($CDRTool['Path']."/images/logo.jpg")) {
+        	printf ("<td valign=middle><img src=\"%s/images/logo.jpg\"></td>",$CDRTool['tld']);
+        } else if (is_readable($CDRTool['Path']."/images/logo.png")) {
+        	printf ("<td valign=middle><img src=\"%s/images/logo.png\"></td>",$CDRTool['tld']);
         } else {
             $this->hasAGProjectslogo=1;
-	    $logo=$CDRTool['tld']."/images/CDRTool.gif";
             print "<td>";
-            print "<a href=http://ag-projects.com target=agprojects><img src=$logo border=0></a>";
+            printf ("<a href=http://ag-projects.com target=agprojects><img src='%s/images/CDRTool.gif' border=0></a>",$CDRTool['tld']);
             print "</td>";
         }
 

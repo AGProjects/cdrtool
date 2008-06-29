@@ -13,7 +13,6 @@ cdrtool (6.5.1) unstable; urgency=low
   * Added links between sip trace and media trace pages
   * Fixed ShowPrice rating engine command
   * Added /etc/cdrtool config directory
-    Move global.inc and ngnpro_engines.inc to /etc/cdrtool/
     Move CDRTool/local to /etc/cdrtool/local
   * Moved all library files under library/
   * Changed csv import directory to /var/spool/cdrtool
@@ -27,8 +26,23 @@ cdrtool (6.5.1) unstable; urgency=low
   * Lowercase the email addresses and sip usernames
   * Update cron job, moved env LANG=C into php script
   * No mysql changes
+  * After upgrading the software to this version run these actions:
+    sudo mv /var/www/CDRTool/global.inc /etc/cdrtool/
+    sudo mv /var/www/CDRTool/provisioning/ngnpro_engines.inc /etc/cdrtool/
+    sudo rm -r /var/www/CDRTool/provisioning	
+    sudo mv /var/www/CDRTool/local/images/* /var/www/CDRTool/images/
+    sudo mv /var/www/CDRTool/local /etc/cdrtool/
+    sudo cp -a /var/www/CDRTool/local /etc/cdrtool/
+    sudo rm -r /var/www/CDRTool/local
+    Edit /etc/cdrtool/global.inc and replace ser with openser in the line:
+    $CDRToolModules=array("ser","asterisk","rating"); 
+    and remove rating from it: 
+    $CDRToolModules=array("openser","asterisk");
+    Copy the value of $servers from /var/www/CDRTool/status/config/media_servers.php
+    to /etc/cdrtool/global.inc $DATASOURCES['ser_radius']['mediaServers']
+    sudo rm -r /var/www/CDRTool/status/config
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 26 Jun 2008 22:53:30 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 29 Jun 2008 14:32:00 +0200
 
 cdrtool (6.5.0) unstable; urgency=low
 
