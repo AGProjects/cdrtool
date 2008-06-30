@@ -111,9 +111,6 @@ class DB_Sql {
       $this->free();
     }
 
-    if ($this->Debug)
-      printf("Debug: query = %s<br>\n", $Query_String);
-
     $this->Query_ID = @mysql_query($Query_String,$this->Link_ID);
     $this->Row   = 0;
     $this->Errno = mysql_errno();
@@ -139,11 +136,11 @@ class DB_Sql {
         }
     	syslog(LOG_NOTICE, "Mysql connection re-created with '$this->Link_ID'");
         
-        
         $this->Query_ID = @mysql_query($Query_String,$this->Link_ID);
         $this->Row   = 0;
         $this->Errno = mysql_errno();
         $this->Error = mysql_error();
+
     }
 
     if (!$this->Query_ID) {

@@ -4259,7 +4259,6 @@ class OpenSERQuota {
 
         global $DATASOURCES;
 
-        $this->AccountsDBClass = &$parent->AccountsDBClass;
         $this->CDRdb           = &$parent->CDRdb;
         $this->table           = &$parent->table;
         $this->CDRTool         = &$parent->CDRTool;
@@ -4267,11 +4266,11 @@ class OpenSERQuota {
 
         $this->path=$this->CDRTool['Path'];
 
+        $this->AccountsDBClass = &$parent->AccountsDBClass;
         if (!class_exists($this->AccountsDBClass)) {
             print("Info: No database defined for SIP accounts $this->cdr_source.\n");
             return false;
         }
-
         $this->AccountsDB       = new $this->AccountsDBClass;
         $this->enableThor       = $parent->enableThor;
 
@@ -5049,7 +5048,6 @@ class OpenSERQuota {
             return 0;
         }
     }
-
 }
 
 class SERQuota extends OpenSERQuota {
@@ -5081,17 +5079,15 @@ class RatingEngine {
         $this->db            = new DB_CDRTool;
         $this->prepaid_table = "prepaid";
 
-        $this->sessionCounter           = 0;
-        $this->beginStatisticsTime      = time();
+        $this->AccountsDBClass = &$this->CDRS->AccountsDBClass;
 
-        $this->lastMinuteSessionCounter = 0;
-        $this->lastMinuteStatisticsTime = time();
+        if (!class_exists($this->AccountsDBClass)) {
+            syslog(LOG_NOTICE,"Error: No database defined for SIP accounts $this->cdr_source");
+            return false;
+        }
 
-        $this->lastHourSessionCounter   = 0;
-        $this->lastHourStatisticsTime   = time();
-
-        $this->lastDaySessionCounter    = 0;
-        $this->lastDayStatisticsTime    = time();
+        $this->AccountsDB       = new $this->AccountsDBClass;
+        $this->enableThor       = $this->CDRS->enableThor;
 
     }
 
@@ -5123,8 +5119,8 @@ class RatingEngine {
     function reloadQuota($account) {
         if (!$account) return false;
 
-        $quota   = $this->CDRS->getQuota($account);
-        $blocked = $this->CDRS->getBlockedByQuotaStatus($_key);
+        $quota   = $this->getQuota($account);
+        $blocked = $this->getBlockedByQuotaStatus($account);
 
         $query=sprintf("update quota_usage set
         quota = '%s',
@@ -6015,6 +6011,91 @@ class RatingEngine {
             return 0;
         }
     }
+
+    function getQuota($account) {
+        if (!$account) return;
+
+        list($username,$domain) = explode("@",$account);
+
+        if ($this->enableThor) {
+            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+            	$this->AccountsDB->next_record();
+            	$_profile=json_decode(trim($this->AccountsDB->f('profile')));
+                return $_profile->quota;
+
+            } else {
+                return 0;
+            }
+        } else {
+            $query=sprintf("select quota from subscriber where username = '%s' and domain = '%s'",$username,$domain);
+
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+            	$this->AccountsDB->next_record();
+                return $this->AccountsDB->f('quota');
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    function getBlockedByQuotaStatus($account) {
+
+        if (!$account) return 0;
+        list($username,$domain) = explode("@",$account);
+
+        if ($this->enableThor) {
+            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+            if (!$this->AccountsDB->query($query)) {
+
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+            	$this->AccountsDB->next_record();
+
+            	$_profile=json_decode(trim($this->AccountsDB->f('profile')));
+                if (in_array('quota',$_profile->groups)) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            } else {
+                return 0;
+            }
+        } else {
+            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = 'quota' and username = '%s' and domain = '%s'",$username,$domain);
+    
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+
+        return 0;
+    }
+
 }
 
 function reloadRatingEngineTables () {

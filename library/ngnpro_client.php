@@ -5541,6 +5541,9 @@ class DnsZones extends Records {
                                                      'help'=>'Administrator address'
                                                      ),
                               'ttl'           => array('type'=>'integer',
+                                                     'help'=>'Time to leave or SOA record'
+                                                     ),
+                              'minimum'         => array('type'=>'integer',
                                                      'help'=>'Default time to live period'
                                                      ),
                               'retry'         => array('type'=>'integer',
@@ -5634,7 +5637,7 @@ class DnsZones extends Records {
             <td><b>Customer</b></td>
             <td><b>Name </b></td>
             <td><b></b></td>
-            <td><b>Servers </b></td>
+            <td><b>Name servers </b></td>
             <td><b>Serial</b></td>
             <td><b>TTL</b></td>
             <td><b>Info</b></td>
@@ -6131,7 +6134,7 @@ class DnsRecords extends Records {
         $this->showSeachForm();
 
         $filter=array(
-                      'id'       => $this->filters['id'],
+                      'id'       => intval($this->filters['id']),
                       'zone'     => $this->filters['zone'],
                       'name'     => $this->filters['name'],
                       'type'     => $this->filters['type'],
@@ -6254,7 +6257,7 @@ class DnsRecords extends Records {
 
                     $_zone_url = $this->url.sprintf("&service=dns_zones@%s&name_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
-                    urlencode($record->id->zone)
+                    urlencode($record->zone)
                     );
 
                     if ($record->owner) {
@@ -6410,7 +6413,7 @@ class DnsRecords extends Records {
 
         printf (" Name");
 
-        printf (" <input type=text size=10 name=name value='%s'>",$_REQUEST['name']);
+        printf (" <input type=text size=10 name=name value='%s'>",trim($_REQUEST['name']));
 
         if ($_REQUEST['zone']) {
             $selected_zone[$_REQUEST['zone']]='selected';
@@ -6424,8 +6427,9 @@ class DnsRecords extends Records {
         }
         print "</select>";
 
-        printf (" Value<input type=text size=25 name=value value='%s'>",$_REQUEST['value']);
-        printf (" Owner<input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
+        printf (" Value<input type=text size=35 name=value value='%s'>",trim($_REQUEST['value']));
+        printf (" Priority<input type=text size=5 name=priority value='%s'>",trim($_REQUEST['priority']));
+        printf (" Owner<input type=text size=5 name=owner value='%s'>",trim($_REQUEST['owner']));
 
         print "
         </td>

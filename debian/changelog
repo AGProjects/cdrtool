@@ -1,8 +1,9 @@
 cdrtool (6.5.1.2) unstable; urgency=low
 
   * Fixed name of OpenSERQuota class in globa.inc sample files
+  * Fixed 2006 error for ReloadQuota function
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 29 Jun 2008 22:22:22 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 30 Jun 2008 12:02:35 +0200
 
 cdrtool (6.5.1.1) unstable; urgency=low
 
