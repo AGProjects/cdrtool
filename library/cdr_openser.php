@@ -1860,6 +1860,95 @@ class CDRS_ser_radius extends CDRS {
 
         return count($this->localDomains);
     }
+
+    function getQuota($account) {
+        if (!$account) return;
+
+        list($username,$domain) = explode("@",$account);
+
+        if ($this->enableThor) {
+
+            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+    
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error for query 1 %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+            	$this->AccountsDB->next_record();
+            	$_profile=json_decode(trim($this->AccountsDB->f('profile')));
+                return $_profile->quota;
+
+            } else {
+                return 0;
+            }
+        } else {
+
+            $query=sprintf("select quota from subscriber where username = '%s' and domain = '%s'",$username,$domain);
+
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+            	$this->AccountsDB->next_record();
+                return $this->AccountsDB->f('quota');
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    function getBlockedByQuotaStatus($account) {
+
+        if (!$account) return 0;
+        list($username,$domain) = explode("@",$account);
+
+        if ($this->enableThor) {
+            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+    
+            if (!$this->AccountsDB->query($query)) {
+
+                $log=sprintf ("Database error for query2 %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+            	$this->AccountsDB->next_record();
+
+            	$_profile=json_decode(trim($this->AccountsDB->f('profile')));
+                if (in_array('quota',$_profile->groups)) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            } else {
+                return 0;
+            }
+        } else {
+            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = 'quota' and username = '%s' and domain = '%s'",$username,$domain);
+    
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+                return 1;
+            } else {
+                return 0;
+            }
+
+        }
+
+        return 0;
+    }
 }
 
 class CDR_ser_radius extends CDR {
