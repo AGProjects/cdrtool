@@ -784,7 +784,7 @@ class Records {
         print "
         </td>
         <td align=right>
-        Order";
+		";
         $this->showSortForm();
 
         $this->printHiddenFormElements('skipServiceElement');
@@ -845,8 +845,6 @@ class Records {
         }
 
         $selected_sortBy[$this->sorting['sortBy']]='selected';
-
-        //print " Sort ";
 
         print "<select name=sortBy>";
         foreach (array_keys($this->sortElements) as $key) {
@@ -3094,7 +3092,7 @@ class SipAliases extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Alias<input type=text size=15 name=alias_username_filter value='%s'>",$this->filters['alias_username']);
+        printf (" Alias<input type=text size=12 name=alias_username_filter value='%s'>",$this->filters['alias_username']);
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
@@ -3118,7 +3116,7 @@ class SipAliases extends Records {
         printf (" Target<input type=text size=15 name=target_username_filter value='%s'>",trim($_REQUEST['target_username_filter']));
 
         if ($this->version > 1) {
-            printf (" Owner<input type=text size=10 name=owner_filter value='%s'>",$this->filters['owner']);
+            printf (" Owner<input type=text size=5 name=owner_filter value='%s'>",$this->filters['owner']);
         }
 
     }
@@ -5635,12 +5633,12 @@ class DnsZones extends Records {
             <tr bgcolor=lightgrey>
             <td><b>Id</b></th>
             <td><b>Customer</b></td>
-            <td><b>Name </b></td>
+            <td><b>Zone</b></td>
+            <td><b>Info</b></td>
             <td><b></b></td>
             <td><b>Name servers </b></td>
             <td><b>Serial</b></td>
             <td><b>TTL</b></td>
-            <td><b>Info</b></td>
             <td><b>Change date</b></td>
             <td><b>Actions</b></td>
             </tr>
@@ -5715,8 +5713,8 @@ class DnsZones extends Records {
                     <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
                     <td>%s</td>
-                    <td><a href=%s>Records</a></td>
                     <td>%s</td>
+                    <td><a href=%s>Records</a></td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -5729,11 +5727,11 @@ class DnsZones extends Records {
                     $zone->customer,
                     $zone->reseller,
                     $zone_url,
+                    $zone->info,
                     $records_url,
                     $ns_text,
                     $zone->serial,
                     $zone->ttl,
-                    $zone->info,
                     $zone->changeDate,
                     $_url,
                     $actionText
@@ -6325,7 +6323,7 @@ class DnsRecords extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" Name <input type=text size=25 name=name_filter value='%s'>",$this->filters['name']);
+        printf (" Name<input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
 
         $selected_zone[$this->filters['zone']]='selected';
         print "<select name=zone_filter><option value=''>Zone";
@@ -6588,7 +6586,7 @@ class DnsRecords extends Records {
 
         // Filter
         $filter=array(
-                      'id'       => $this->filters['id'],
+                      'id'       => intval($this->filters['id']),
                       'zone'     => $this->filters['zone'],
                       'name'     => $this->filters['name'],
                       'type'     => $this->filters['type'],
@@ -12000,7 +11998,7 @@ class DnsRecordsActions extends Actions {
             if ($action=='delete') {
 
                 $function=array('commit'   => array('name'       => 'deleteRecord',
-                                                    'parameters' => array($key['id']),
+                                                    'parameters' => array(intval($key['id'])),
                                                     'logs'       => array('success' => sprintf('Dns record %s has been deleted',$key['id'])
                                                                           )
                                                    )
