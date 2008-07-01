@@ -6272,11 +6272,6 @@ class DnsRecords extends Records {
                         $_owner_url='';
                     }          
 
-                    if (strlen($record->name)) {
-                        $name=$record->name.'.'.$record->zone;
-                    } else {
-                        $name=$record->zone;
-                    }
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
@@ -6300,7 +6295,7 @@ class DnsRecords extends Records {
                     $record->reseller,
                     $record->id,
                     $_zone_url,
-                    $name,
+                    $record->name,
                     $record->type,
                     $record->value,
                     $record->ttl,
@@ -6330,23 +6325,23 @@ class DnsRecords extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" Name <input type=text size=10 name=name_filter value='%s'>",$_REQUEST['name_filter']);
+        printf (" Name <input type=text size=25 name=name_filter value='%s'>",$this->filters['name']);
 
-        $selected_zone[$_REQUEST['zone_filter']]='selected';
-        print ".<select name=zone_filter><option>";
+        $selected_zone[$this->filters['zone']]='selected';
+        print "<select name=zone_filter><option value=''>Zone";
         foreach ($this->allowedDomains as $_zone) {
             printf ("<option value='%s' %s>%s",$_zone,$selected_zone[$_zone],$_zone);
         }
         print "</select>";
 
-        $selected_type[$_REQUEST['type_filter']]='selected';
+        $selected_type[$this->filters['type']]='selected';
 
-        printf (" Type <select name=type_filter><option>");
+        printf (" <select name=type_filter><option value=''>Type");
         foreach ($this->recordTypes as $_type) {
             printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
         }
         print "</select>";
-        printf (" Value <input type=text size=20 name=value_filter value='%s'>",$_REQUEST['value_filter']);
+        printf (" Value <input type=text size=20 name=value_filter value='%s'>",$this->filters['value']);
 
     }
 
