@@ -146,13 +146,6 @@ class SoapEngine {
                                            'category'      => 'sip',
                                            'description'   => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use % to match a pattern. ',
                                            ),
-                        'enum_numbers'   => array(
-                                           'records_class' => 'EnumMappings',
-                                           'name'          => 'Phone numbers',
-                                           'soap_class'    => 'WebService_NGNPro_EnumPort',
-                                           'category'      => 'dns',
-                                           'description'   => 'Manage phone numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use % to match a pattern. '
-                                           ),
                         'customers'      => array(
                                            'records_class' => 'Customers',
                                            'name'          => 'Login accounts',
@@ -174,34 +167,40 @@ class SoapEngine {
                                            'category'      => 'sip',
                                            'description'   => 'Manage aliases for SIP destinations (e.g. user1@example1.com alias to user2@example2.com). Use % to match a pattern. '
                                            ),
-                        'trusted_peers'  => array(
-                                           'records_class' => 'TrustedPeers',
-                                           'name'          => 'Trusted peers',
-                                           'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'      => 'sip',
-                                           'description'   => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. ',
-                                           'resellers_only'=> true
+                        'enum_numbers'   => array(
+                                           'records_class' => 'EnumMappings',
+                                           'name'          => 'ENUM numbers',
+                                           'soap_class'    => 'WebService_NGNPro_EnumPort',
+                                           'category'      => 'dns',
+                                           'description'   => 'Manage phone numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use % to match a pattern. '
                                            ),
                         'enum_ranges'    => array(
                                            'records_class' => 'EnumRanges',
-                                           'name'          => 'Number ranges',
+                                           'name'          => 'ENUM ranges',
                                            'soap_class'    => 'WebService_NGNPro_EnumPort',
                                            'category'      => 'dns',
                                            'description'   => 'Manage phone number ranges that hold individual phone numbers. Use % to match a pattern. '
                                            ),
                         'dns_zones'    => array(
                                            'records_class' => 'DnsZones',
-                                           'name'          => 'Dns zones',
+                                           'name'          => 'DNS zones',
                                            'soap_class'    => 'WebService_NGNPro_DnsPort',
                                            'category'      => 'dns',
                                            'description'   => 'Manage DNS zones. Use % to match a pattern. '
                                            ),
                         'dns_records'    => array(
                                            'records_class' => 'DnsRecords',
-                                           'name'          => 'Dns records',
+                                           'name'          => 'DNS records',
                                            'soap_class'    => 'WebService_NGNPro_DnsPort',
                                            'category'      => 'dns',
                                            'description'   => 'Manage DNS records. Use % to match a pattern. '
+                                           ),
+                        'email_aliases'    => array(
+                                           'records_class' => 'EmailAliases',
+                                           'name'          => 'Email aliases',
+                                           'soap_class'    => 'WebService_NGNPro_DnsPort',
+                                           'category'      => 'dns',
+                                           'description'   => 'Manage email aliases. Use % to match a pattern. '
                                            ),
                         'pstn_gateway_groups' => array(
                                            'records_class' => 'GatewayGroups',
@@ -209,6 +208,14 @@ class SoapEngine {
                                            'soap_class'    => 'WebService_NGNPro_NetworkPort',
                                            'category'      => 'pstn',
                                            'description'   => 'Manage groups of gateways used to call to the PSTN. You must add individual gateways to each group. ',
+                                           'resellers_only'=> true
+                                           ),
+                        'trusted_peers'  => array(
+                                           'records_class' => 'TrustedPeers',
+                                           'name'          => 'Trusted peers',
+                                           'soap_class'    => 'WebService_NGNPro_SipPort',
+                                           'category'      => 'sip',
+                                           'description'   => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. ',
                                            'resellers_only'=> true
                                            ),
                         'pstn_gateways'  => array(
@@ -5520,6 +5527,7 @@ class EnumMappings extends Records {
 
     }
 }
+
 class DnsZones extends Records {
 
     var $FieldsAdminOnly=array(
@@ -5769,10 +5777,8 @@ class DnsZones extends Records {
             return false;
         }
 
-        $name=array('name'=>$this->filters['name']);
-
         $function=array('commit'   => array('name'       => 'deleteZone',
-                                            'parameters' => array($name),
+                                            'parameters' => array($this->filters['name']),
                                             'logs'       => array('success' => sprintf('Dns zone %s has been deleted',$this->filters['name'])
                                                                   )
                                             )
@@ -6093,9 +6099,8 @@ class DnsZones extends Records {
 
 class DnsRecords extends Records {
 
+	var $typeFilter  = false;
     var $default_ttl = 3600;
-    var $default_priority = 5;
-
     var $sortElements=array('changeDate' => 'Change date',
                             'name'     => 'Name'
                             );
@@ -6115,14 +6120,25 @@ class DnsRecords extends Records {
 
         dprint("init DnsRecords");
 
-        $this->filters   = array(
-                                 'id'           => trim($_REQUEST['id_filter']),
-                                 'zone'         => trim($_REQUEST['zone_filter']),
-                                 'name'         => trim($_REQUEST['name_filter']),
-                                 'type'         => trim($_REQUEST['type_filter']),
-                                 'value'        => trim($_REQUEST['value_filter']),
-                                 'owner'        => trim($_REQUEST['owner_filter'])
-                                );
+		if ($this->typeFilter) {
+            $this->filters   = array(
+                                     'id'           => trim($_REQUEST['id_filter']),
+                                     'zone'         => trim($_REQUEST['zone_filter']),
+                                     'name'         => trim($_REQUEST['name_filter']),
+                                     'type'         => $this->typeFilter,
+                                     'value'        => trim($_REQUEST['value_filter']),
+                                     'owner'        => trim($_REQUEST['owner_filter'])
+                                    );
+        } else {
+            $this->filters   = array(
+                                     'id'           => trim($_REQUEST['id_filter']),
+                                     'zone'         => trim($_REQUEST['zone_filter']),
+                                     'name'         => trim($_REQUEST['name_filter']),
+                                     'type'         => trim($_REQUEST['type_filter']),
+                                     'value'        => trim($_REQUEST['value_filter']),
+                                     'owner'        => trim($_REQUEST['owner_filter'])
+                                    );
+        }
 
         $this->Records(&$SoapEngine);
         $this->getAllowedDomains();
@@ -6131,16 +6147,29 @@ class DnsRecords extends Records {
     function listRecords() {
         $this->showSeachForm();
 
-        $filter=array(
-                      'id'       => intval($this->filters['id']),
-                      'zone'     => $this->filters['zone'],
-                      'name'     => $this->filters['name'],
-                      'type'     => $this->filters['type'],
-                      'value'    => $this->filters['value'],
-                      'owner'    => intval($this->filters['owner']),
-                      'customer' => intval($this->filters['customer']),
-                      'reseller' => intval($this->filters['reseller'])
-                      );
+        if ($this->typeFilter) {
+            $filter=array(
+                          'id'       => intval($this->filters['id']),
+                          'zone'     => $this->filters['zone'],
+                          'name'     => $this->filters['name'],
+                          'type'     => $this->typeFilter,
+                          'value'    => $this->filters['value'],
+                          'owner'    => intval($this->filters['owner']),
+                          'customer' => intval($this->filters['customer']),
+                          'reseller' => intval($this->filters['reseller'])
+                          );
+        } else {
+            $filter=array(
+                          'id'       => intval($this->filters['id']),
+                          'zone'     => $this->filters['zone'],
+                          'name'     => $this->filters['name'],
+                          'type'     => $this->filters['type'],
+                          'value'    => $this->filters['value'],
+                          'owner'    => intval($this->filters['owner']),
+                          'customer' => intval($this->filters['customer']),
+                          'reseller' => intval($this->filters['reseller'])
+                          );
+         }
         // Range
         $range=array('start' => intval($this->next),
                      'count' => intval($this->maxrowsperpage)
@@ -6192,14 +6221,12 @@ class DnsRecords extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>Customer</b></td>
-                <td><b>Id</b></td>
                 <td><b>Zone</b></td>
-                <td align=right><b>Name</b></td>
-                <td align=center><b>Type</b></td>
+                <td><b>Record id</b></td>
+                <td><b>Name</b></td>
+                <td><b>Type</b></td>
                 <td><b>Value</b></td>
                 <td><b>TTL</b></td>
-                <td><b>Priority</b></td>
-                <td><b>Owner</b></td>
                 <td><b>Change date</b></td>
                 <td><b>Actions</b></td>
             </tr>
@@ -6274,10 +6301,8 @@ class DnsRecords extends Records {
                     <tr bgcolor=%s>
                     <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
-                    <td>%s</td>
                     <td><a href=%s>Zone</a></td>
-                    <td align=right>%s</td>
-                    <td align=center>%s</td>
+                    <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -6291,14 +6316,12 @@ class DnsRecords extends Records {
                     $_customer_url,
                     $record->customer,
                     $record->reseller,
-                    $record->id,
                     $_zone_url,
+                    $record->id,
                     $record->name,
                     $record->type,
                     $record->value,
                     $record->ttl,
-                    $record->priority,
-                    $_owner_url,
                     $record->changeDate,
                     $_url,
                     $actionText
@@ -6332,15 +6355,18 @@ class DnsRecords extends Records {
         }
         print "</select>";
 
-        $selected_type[$this->filters['type']]='selected';
-
-        printf (" <select name=type_filter><option value=''>Type");
-        foreach ($this->recordTypes as $_type) {
-            printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
+        if ($this->typeFilter) {
+            printf (" Type %s <input type=hidden name=%s_filter>",$this->typeFilter,$this->typeFilter);
+        } else {
+            $selected_type[$this->filters['type']]='selected';
+    
+            printf (" <select name=type_filter><option value=''>Type");
+            foreach ($this->recordTypes as $_type) {
+                printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
+            }
+            print "</select>";
+            printf (" Value <input type=text size=20 name=value_filter value='%s'>",$this->filters['value']);
         }
-        print "</select>";
-        printf (" Value <input type=text size=20 name=value_filter value='%s'>",$this->filters['value']);
-
     }
 
     function deleteRecord($dictionary=array()) {
@@ -6387,26 +6413,30 @@ class DnsRecords extends Records {
         <input type=submit name=action value=Add>
         ";
 
-        print "Record type <select name=type>
-        ";
-
-        if ($_REQUEST['type']) {
-            $selected_type[$_REQUEST['type']]='selected';
-        } else if ($_type=$this->getLoginProperty('dns_records_last_type')) {
-            $selected_type[$_type]='selected';
+        if ($this->typeFilter) {
+            printf ("Record type %s <input type=hidden name=%s>",$this->typeFilter,$this->typeFilter);
+        } else {
+            print "Record type <select name=type>
+            ";
+    
+            if ($_REQUEST['type']) {
+                $selected_type[$_REQUEST['type']]='selected';
+            } else if ($_type=$this->getLoginProperty('dns_records_last_type')) {
+                $selected_type[$_type]='selected';
+            }
+    
+            foreach($this->recordTypes as $_type) {
+                printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
+            }
+    
+            print "
+            </select>
+            ";
         }
-
-        foreach($this->recordTypes as $_type) {
-            printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
-        }
-
-        print "
-        </select>
-        ";
 
         printf (" Name");
 
-        printf (" <input type=text size=10 name=name value='%s'>",trim($_REQUEST['name']));
+        printf (" <input type=text size=15 name=name value='%s'>",trim($_REQUEST['name']));
 
         if ($_REQUEST['zone']) {
             $selected_zone[$_REQUEST['zone']]='selected';
@@ -6421,7 +6451,6 @@ class DnsRecords extends Records {
         print "</select>";
 
         printf (" Value<input type=text size=35 name=value value='%s'>",trim($_REQUEST['value']));
-        printf (" Priority<input type=text size=5 name=priority value='%s'>",trim($_REQUEST['priority']));
         printf (" Owner<input type=text size=5 name=owner value='%s'>",trim($_REQUEST['owner']));
 
         print "
@@ -6500,7 +6529,9 @@ class DnsRecords extends Records {
             return false;
         }
 
-        if ($dictionary['type']) {
+        if ($this->typeFilter) {
+            $type = $this->typeFilter;
+        } else if ($dictionary['type']) {
             $type = $dictionary['type'];
         } else {
             $type = trim($_REQUEST['type']);
@@ -6532,12 +6563,6 @@ class DnsRecords extends Records {
 
         if (!$ttl) $ttl=3600;
 
-        if ($dictionary['priority']) {
-            $priority = intval($dictionary['priority']);
-        } else {
-            $priority = intval(trim($_REQUEST['priority']));
-        }
-
         if ($dictionary['owner']) {
             $owner = intval($dictionary['owner']);
         } else {
@@ -6549,7 +6574,6 @@ class DnsRecords extends Records {
                       'type'     => $type,
                       'value'    => trim($value),
                       'ttl'      => intval($ttl),
-                      'priority' => intval($priority),
                       'owner'    => intval($owner)
                       );
 
@@ -6849,6 +6873,11 @@ class DnsRecords extends Records {
 
     }
 }
+
+class EmailAliases extends DnsRecords {
+    var $typeFilter='MBOX';
+}
+
 class TrustedPeers extends Records {
 
     function TrustedPeers(&$SoapEngine) {
@@ -8933,12 +8962,6 @@ class Customers extends Records {
 
             $this->rows = $result->total;
 
-            if ($this->rows == 1 ) {
-                $customer = $result->accounts[0];
-                $this->showRecord($customer);
-                return true;
-            }
-
             if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
             }
@@ -8947,15 +8970,16 @@ class Customers extends Records {
             <table border=0 align=center width=100%>
             <tr><td align=left width=33%>";
 
-                $_add_url = $this->url.sprintf("&service=%s&showAddForm=1",
-                urlencode($this->SoapEngine->service)
-                );
-                printf ("<a href=%s>New login account</a> ",$_add_url);
+            $_add_url = $this->url.sprintf("&service=%s&showAddForm=1",
+            urlencode($this->SoapEngine->service)
+            );
+
+            printf ("<a href=%s>New login account</a> ",$_add_url);
 
 
             if ($this->adminonly) {
                 if ($this->adminonly && $this->filters['reseller']) {
-                       $_add_url = $this->url.sprintf("&service=%s&showAddForm=1&reseller_filter=%s",
+                	$_add_url = $this->url.sprintf("&service=%s&showAddForm=1&reseller_filter=%s",
                     urlencode($this->SoapEngine->service),
                     urlencode($this->filters['reseller'])
                     );
@@ -8968,21 +8992,26 @@ class Customers extends Records {
             <td>
             </td></tr>
             </table>
-            <p>
-            <table border=0 cellpadding=2 width=100%>
-            <tr bgcolor=lightgrey>
-                <td><b>Id</b></th>
-                <td><b>Customer</b></td>
-                <td><b>Username</b></td>
-                <td><b>Name</b></td>
-                <td><b>Organization</b></td>
-                <td><b>Country</b></td>
-                <td><b>E-mail</b></td>
-                <td><b>Phone number</b></td>
-                <td><b>Change date</b></td>
-                <td><b>Actions</b></td>
-            </tr>
             ";
+
+            if ($this->rows > 1) {
+
+                print "
+                <table border=0 cellpadding=2 width=100%>
+                <tr bgcolor=lightgrey>
+                    <td><b>Id</b></th>
+                    <td><b>Customer</b></td>
+                    <td><b>Username</b></td>
+                    <td><b>Name</b></td>
+                    <td><b>Organization</b></td>
+                    <td><b>Country</b></td>
+                    <td><b>E-mail</b></td>
+                    <td><b>Phone number</b></td>
+                    <td><b>Change date</b></td>
+                    <td><b>Actions</b></td>
+                </tr>
+                ";
+            }
 
             if (!$this->next)  $this->next=0;
 
@@ -8995,7 +9024,7 @@ class Customers extends Records {
 
             $i=0;
 
-            if ($this->rows) {
+            if ($this->rows > 1) {
                 while ($i < $maxrows)  {
 
                     if (!$result->accounts[$i]) break;
@@ -9071,6 +9100,12 @@ class Customers extends Records {
             }
 
             print "</table>";
+
+            if ($this->rows == 1 ) {
+                $customer = $result->accounts[0];
+                $this->showRecord($customer);
+            }
+
 
             $this->showPagination($maxrows);
 
@@ -11974,7 +12009,8 @@ class EnumMappingsActions extends Actions {
 
 class DnsRecordsActions extends Actions {
     var $actions=array(
-                       'delete'         => 'Delete Dns records',
+                       'changevalue'    => 'Change value:',
+                       'delete'         => 'Delete records',
                        'changettl'      => 'Change TTL to:',
                        'changeowner'    => 'Change owner to:'
                        );
@@ -11999,7 +12035,7 @@ class DnsRecordsActions extends Actions {
 
                 $function=array('commit'   => array('name'       => 'deleteRecord',
                                                     'parameters' => array(intval($key['id'])),
-                                                    'logs'       => array('success' => sprintf('Dns record %s has been deleted',$key['id'])
+                                                    'logs'       => array('success' => sprintf('Record %d has been deleted',$key['id'])
                                                                           )
                                                    )
         
@@ -12027,7 +12063,7 @@ class DnsRecordsActions extends Actions {
 
                     $function=array('commit'   => array('name'       => 'updateRecord',
                                                         'parameters' => array($record),
-                                                        'logs'       => array('success' => sprintf('TTL for Dns record %d has been set to %d',$key['id'],intval($sub_action_parameter))
+                                                        'logs'       => array('success' => sprintf('TTL for record %d has been set to %d',$key['id'],intval($sub_action_parameter))
                                                                               )
                                                        )
             
@@ -12054,7 +12090,29 @@ class DnsRecordsActions extends Actions {
 
                     $function=array('commit'   => array('name'       => 'updateRecord',
                                                         'parameters' => array($record),
-                                                        'logs'       => array('success' => sprintf('Owne for Dns record %d has been set to %d',$key['id'],intval($sub_action_parameter))
+                                                        'logs'       => array('success' => sprintf('Owner for record %d has been set to %d',$key['id'],intval($sub_action_parameter))
+                                                                              )
+                                                       )
+                                    );
+
+                    $this->SoapEngine->execute($function,$this->html);
+                }
+            } else if ($action  == 'changevalue') {
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $record     = $this->SoapEngine->soapclient->getRecord($key['id']);
+
+                if (PEAR::isError($record)) {
+                    $error_msg  = $record->getMessage();
+                    $error_fault= $record->getFault();
+                    $error_code = $record->getCode();
+                    printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    break;
+                } else {
+                	$record->value=$sub_action_parameter;
+
+                    $function=array('commit'   => array('name'       => 'updateRecord',
+                                                        'parameters' => array($record),
+                                                        'logs'       => array('success' => sprintf('Value record %d has been set to %s',$key['id'],$sub_action_parameter)
                                                                               )
                                                        )
                                     );
