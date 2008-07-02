@@ -3475,13 +3475,16 @@ class RatingTables {
                     }
                     if (!$empty_insert) {
                         if ($this->db->query($query)) {
-                            $affected_rows=$this->db->affected_rows();
-                            if ($affected_rows && in_array($table,$this->requireReload)) {
+                        	$affected_rows=$this->db->affected_rows();
+                        	if ($affected_rows) {
 
-                                $this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
                                 $this->db->query("select LAST_INSERT_ID() as lid");
                                 $this->db->next_record();
                                 $log_entity=sprintf("id=%s",$this->db->f('lid'));
+
+                                if (in_array($table,$this->requireReload)) {
+                                    $this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+                                }
                             }
         
                         } else {
@@ -3535,7 +3538,6 @@ class RatingTables {
         
         } 
     }
-
 
     function showTable($whereDomainFilter) {
 

@@ -6115,6 +6115,9 @@ class DnsRecords extends Records {
                               'info'     => array('type'=>'string')
                               );
     var $recordTypes=array('A','AAAA','CNAME','MX','SRV','NS','NAPTR','MBOX','URL');
+    var $advancedRecords=array('SRV:_sip._udp' => array('name'=>'SIP UDP')
+    						);
+
 
     function DnsRecords(&$SoapEngine) {
 
@@ -6225,6 +6228,7 @@ class DnsRecords extends Records {
                 <td><b>Record id</b></td>
                 <td><b>Name</b></td>
                 <td><b>Type</b></td>
+                <td align=right><b>Priority</b></td>
                 <td><b>Value</b></td>
                 <td><b>TTL</b></td>
                 <td><b>Change date</b></td>
@@ -6305,6 +6309,7 @@ class DnsRecords extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
+                    <td align=right>%s</td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -6320,6 +6325,7 @@ class DnsRecords extends Records {
                     $record->id,
                     $record->name,
                     $record->type,
+                    $record->priority,
                     $record->value,
                     $record->ttl,
                     $record->changeDate,
@@ -6440,6 +6446,8 @@ class DnsRecords extends Records {
 
         if ($_REQUEST['zone']) {
             $selected_zone[$_REQUEST['zone']]='selected';
+        } else if ($this->filters['zone']) {
+            $selected_zone[$this->filters['zone']]='selected';
         } else if ($_zone=$this->getLoginProperty('dns_records_last_zone')) {
             $selected_zone[$_zone]='selected';
         }
@@ -6451,7 +6459,7 @@ class DnsRecords extends Records {
         print "</select>";
 
         printf (" Value<input type=text size=35 name=value value='%s'>",trim($_REQUEST['value']));
-        printf (" Owner<input type=text size=5 name=owner value='%s'>",trim($_REQUEST['owner']));
+        printf (" Priority<input type=text size=5 name=priority value='%s'>",trim($_REQUEST['priority']));
 
         print "
         </td>
@@ -6569,11 +6577,18 @@ class DnsRecords extends Records {
             $owner = intval(trim($_REQUEST['owner']));
         }
 
+        if ($dictionary['priority']) {
+            $priority = $dictionary['priority'];
+        } else {
+            $priority = trim($_REQUEST['priority']);
+        }
+
         $record=array('name'     => trim($name),
     				  'zone'     => trim($zone),
                       'type'     => $type,
                       'value'    => trim($value),
                       'ttl'      => intval($ttl),
+                      'priority' => intval($priority),
                       'owner'    => intval($owner)
                       );
 
