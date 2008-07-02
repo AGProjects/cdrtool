@@ -2352,7 +2352,7 @@ class SipAccounts extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" User<input type=text size=15 name=username_filter value='%s'>",$this->filters['username']);
+        printf (" User<input type=text size=12 name=username_filter value='%s'>",$this->filters['username']);
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
@@ -2375,7 +2375,7 @@ class SipAccounts extends Records {
             printf (" FN<input type=text size=10 name=firstname_filter value='%s'>",$this->filters['firstname']);
             printf (" LN<input type=text size=10 name=lastname_filter value='%s'>",$this->filters['lastname']);
             printf (" Email<input type=text size=10 name=email_filter value='%s'>",$this->filters['email']);
-            printf (" Owner<input type=text size=10 name=owner_filter value='%s'>",$this->filters['owner']);
+            printf (" Owner<input type=text size=5 name=owner_filter value='%s'>",$this->filters['owner']);
         }
     }
 
@@ -12027,7 +12027,7 @@ class DnsRecordsActions extends Actions {
                        'changevalue'    => 'Change value:',
                        'delete'         => 'Delete records',
                        'changettl'      => 'Change TTL to:',
-                       'changeowner'    => 'Change owner to:'
+                       'changepriority' => 'Change Priority to:'
                        );
 
     function DnsRecordsActions(&$SoapEngine) {
@@ -12085,7 +12085,7 @@ class DnsRecordsActions extends Actions {
                                     );
                     $this->SoapEngine->execute($function,$this->html);
                 }
-            } else if ($action  == 'changeowner') {
+            } else if ($action  == 'changepriority') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                 $record     = $this->SoapEngine->soapclient->getRecord($key['id']);
 
@@ -12097,15 +12097,15 @@ class DnsRecordsActions extends Actions {
                     break;
                 } else {
                     if (is_numeric($sub_action_parameter)) {
-                        $record->owner=intval($sub_action_parameter);
+                        $record->priority=intval($sub_action_parameter);
                     } else {
-                        printf ("<font color=red>Error: Owner '%s' must be numeric</font>",$sub_action_parameter);
+                        printf ("<font color=red>Error: Priority '%s' must be numeric</font>",$sub_action_parameter);
                         continue;
                     }
 
                     $function=array('commit'   => array('name'       => 'updateRecord',
                                                         'parameters' => array($record),
-                                                        'logs'       => array('success' => sprintf('Owner for record %d has been set to %d',$key['id'],intval($sub_action_parameter))
+                                                        'logs'       => array('success' => sprintf('Priority for record %d has been set to %d',$key['id'],intval($sub_action_parameter))
                                                                               )
                                                        )
                                     );
