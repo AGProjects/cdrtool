@@ -1943,9 +1943,8 @@ class SipSettings {
                     <td align=right>
                     ";
     
-                    if ($this->pstn_changes_allowed && in_array("quota",$this->groups)) {
+                    if ($this->pstn_changes_allowed) {
                         print _("Reset");
-         
                         print "
                         <input type=checkbox name=quota_reset value=1>
                         ";
@@ -1957,6 +1956,7 @@ class SipSettings {
                     </td>
                     </tr>
                     ";
+
                 } else if ($this->quota) {
                     print "
                     <tr>

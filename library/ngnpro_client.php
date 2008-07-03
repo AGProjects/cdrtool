@@ -6107,12 +6107,14 @@ class DnsRecords extends Records {
 
     var $FieldsReadOnly=array(
                               'customer',
-                              'reseller'
+                              'reseller',
+                              'type'
+
                               );
     var $Fields=array(
-                              'owner'    => array('type'=>'integer'),
+                              'priority' => array('type'=>'integer'),
                               'value'    => array('type'=>'string'),
-                              'info'     => array('type'=>'string')
+                              'ttl'      => array('type'=>'integer')
                               );
     var $recordTypes=array('A','AAAA','CNAME','MX','SRV','NS','NAPTR','MBOX','URL');
     var $advancedRecords=array('SRV:_sip._udp' => array('name'=>'SIP UDP')
@@ -6210,7 +6212,7 @@ class DnsRecords extends Records {
 
             $this->rows = $result->total;
 
-            if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
+            if ($this->rows > 1 && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
             }
 
@@ -6289,6 +6291,11 @@ class DnsRecords extends Records {
                     urlencode($record->zone)
                     );
 
+                    $_record_url = $this->url.sprintf("&service=dns_records@%s&id_filter=%s",
+                    urlencode($this->SoapEngine->soapEngine),
+                    urlencode($record->id)
+                    );
+
                     if ($record->owner) {
                         $_owner_url = sprintf
                         ("<a href=%s&service=customers@%s&customer_filter=%s>%s</a>",
@@ -6306,7 +6313,7 @@ class DnsRecords extends Records {
                     <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
                     <td><a href=%s>Zone</a></td>
-                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
                     <td>%s</td>
                     <td>%s</td>
                     <td align=right>%s</td>
@@ -6322,6 +6329,7 @@ class DnsRecords extends Records {
                     $record->customer,
                     $record->reseller,
                     $_zone_url,
+                    $_record_url,
                     $record->id,
                     $record->name,
                     $record->type,
@@ -6332,8 +6340,8 @@ class DnsRecords extends Records {
                     $_url,
                     $actionText
                     );
-                	$i++;
 
+                	$i++;
 
                 }
             }
@@ -6342,6 +6350,7 @@ class DnsRecords extends Records {
             print "</table>";
 
             if ($this->rows == 1 ) {
+                $this->showRecord($record);
             } else {
                 $this->showPagination($maxrows);
             }
@@ -6352,6 +6361,7 @@ class DnsRecords extends Records {
 
     function showSeachFormCustom() {
 
+        printf (" Id<input type=text size=5 name=id_filter value='%s'>",$this->filters['id']);
         printf (" Name<input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
 
         $selected_zone[$this->filters['zone']]='selected';
@@ -6674,27 +6684,17 @@ class DnsRecords extends Records {
         }
     }
 
-    function showRecord($number) {
+    function showRecord($record) {
 
-        print "<table border=0>";
-        print "<tr>";
-        print "<td>";
-        print "<h3>Number</h3>";
-        print "</td><td>";
-        print "<h3>Mappings</h3>";
-        print "</td>";
-        print "</tr>";
-
-        print "<tr>";
-        print "<td valign=top>";
+        print "<h3>Record</h3>";
 
         print "<table border=0>";
 
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
 
-        printf ("<tr><td class=border>DNS name</td><td class=border>%s</td></td>",
-        $this->tel2enum($number->id->number,$number->id->tld));
+        printf ("<tr><td class=border>Name</td><td class=border>%s</td></td>",
+        $record->name);
 
         foreach (array_keys($this->Fields) as $item) {
             if ($this->Fields[$item]['name']) {
@@ -6706,99 +6706,28 @@ class DnsRecords extends Records {
             if ($this->Fields[$item]['type'] == 'text') {
                 printf ("<tr>
                 <td class=border valign=top>%s</td>
-                <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                <td class=border><textarea cols=0 name=%s_form rows=4>%s</textarea></td>
                 </tr>",
                 $item_name,
                 $item,
-                $number->$item
+                $record->$item
                 );
             } else {
                 printf ("<tr>
                 <td class=border valign=top>%s</td>
-                <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                <td class=border><input name=%s_form size=40 type=text value='%s'></td>
                 </tr>",
                 $item_name,
                 $item,
-                $number->$item
+                $record->$item
                 );
             }
         }
 
-        printf ("<input type=hidden name=tld_filter value='%s'",$number->id->tld);
-        printf ("<input type=hidden name=number_filter value='%s'",$number->id->number);
+        printf ("<input type=hidden name=id_filter value='%s'",$record->id);
 
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
-
-        print "
-        </table>
-        ";
-
-        print "</td><td valign=top>";
-
-        print "<table border=0>";
-        print "<tr>";
-        print "<td></td>";
-        print "<td class=border>Type</td>";
-        print "<td class=border>Map to</td>";
-        print "<td class=border>TTL</td>";
-        print "</tr>";
-
-        foreach ($number->mappings as $_mapping) {
-            $j++;
-            unset($selected_type);
-            print "<tr>";
-            print "<td>$j</td>";
-            $selected_type[$_mapping->type]='selected';
-
-            printf ("
-            <td class=border><select name=mapping_type[]>");
-            reset($this->NAPTR_services);
-            while (list($k,$v) = each($this->NAPTR_services)) {
-                printf ("<option value='%s' %s>%s",$k,$selected_type[$k],$this->NAPTR_services[$k]['webname']);
-            }
-
-            print "
-            </select>
-            </td>";
-
-            printf ("
-            <td class=border><input name=mapping_mapto[] size=30 value='%s'></td>
-            <td class=border><input name=mapping_ttl[] size=6 value='%s'></td>
-            ",
-            $_mapping->mapto,
-            $_mapping->ttl
-            );
-            print "</tr>";
-        }
-
-        $j++;
-        print "<tr>";
-        print "<td></td>";
-
-        printf ("
-        <td class=border><select name=mapping_type[]>");
-        reset($this->NAPTR_services);
-        while (list($k,$v) = each($this->NAPTR_services)) {
-            printf ("<option value='%s'>%s",$k,$this->NAPTR_services[$k]['webname']);
-        }
-
-        print "
-        </select>
-        </td>";
-
-        printf ("
-        <td class=border><input name=mapping_mapto[] size=30></td>
-        <td class=border><input name=mapping_ttl[] size=6></td>
-        "
-        );
-
-        print "</tr>";
-
-        print "</table>";
-
-        print "</td>";
-        print "</tr>";
 
         print "
         <tr>
@@ -6860,7 +6789,7 @@ class DnsRecords extends Records {
 
         if (!$_REQUEST['id_filter']) return;
 
-        if (!$record = $this->getRecord($_REQUEST['id_filter'])) {
+        if (!$record = $this->getRecord(intval($_REQUEST['id_filter']))) {
             return false;
         }
 
