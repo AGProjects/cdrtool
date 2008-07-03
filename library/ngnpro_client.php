@@ -6175,6 +6175,14 @@ class DnsRecords extends Records {
 
 
     											),
+                               'msrp' =>  array('name'    => 'MSRP - IM relay',
+                                                  'records' =>  array('srv'   => array('name'  => '_msrps._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '10',
+                                                                                       'value' => '0 2855 msrprelay'
+                                                                                       )
+                                                                      )
+    											),
                                'sipthor' =>  array('name'    => 'SIP - Thor network',
                                                    'records' =>
                                                                 array(
