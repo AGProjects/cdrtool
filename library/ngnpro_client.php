@@ -6174,6 +6174,98 @@ class DnsRecords extends Records {
                                                                       )
 
 
+    											),
+                               'sipthor' =>  array('name'    => 'SIP - Thor network',
+                                                   'records' =>
+                                                                array(
+                                                                      'sipserver' => array('name'  => '_sip._udp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '10',
+                                                                                       'value' => '30 5060 proxy'
+                                                                                       ),
+                                                                      'sipns1' => array('name'  => 'proxy',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns1'
+                                                                                       ),
+                                                                      'sipns2' => array('name'  => 'proxy',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns2'
+                                                                                       ),
+                                                                      'sipns3' => array('name'  => 'proxy',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns3'
+                                                                                       ),
+                                                                      'eventserver' => array('name'  => '_eventserver._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '10',
+                                                                                       'value' => '0 8000 eventserver'
+                                                                                       ),
+                                                                      'evns1' => array('name'  => 'eventserver',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns1'
+                                                                                       ),
+                                                                      'evns2' => array('name'  => 'eventserver',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns2'
+                                                                                       ),
+                                                                      'evns3' => array('name'  => 'eventserver',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns3'
+                                                                                       ),
+                                                                      'ngnproserver' => array('name'  => '_ngnpro._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '10',
+                                                                                       'value' => '0 9200 ngnpro'
+                                                                                       ),
+                                                                      'ngnns1' => array('name'  => 'ngnpro',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns1'
+                                                                                       ),
+                                                                      'ngnns2' => array('name'  => 'ngnpro',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns2'
+                                                                                       ),
+                                                                      'ngnns3' => array('name'  => 'ngnpro',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns3'
+                                                                                       ),
+                                                                      'xcapserver' => array('name'  => '_xcap._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '10',
+                                                                                       'value' => '0 443 xcap'
+                                                                                       ),
+                                                                      'xcapns1' => array('name'  => 'xcap',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns1'
+                                                                                       ),
+                                                                      'xcapns2' => array('name'  => 'xcap',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns2'
+                                                                                       ),
+                                                                      'xcapns3' => array('name'  => 'xcap',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns3'
+                                                                                       ),
+                                                                      'voicemail' => array('name'  => '_voicemail._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '10',
+                                                                                       'value' => '0 9200 voicemail'
+                                                                                       ),
+                                                                      'vmns1' => array('name'  => 'voicemail',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns1'
+                                                                                       ),
+                                                                      'vmns2' => array('name'  => 'voicemail',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns2'
+                                                                                       ),
+                                                                      'vmns3' => array('name'  => 'voicemail',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns3'
+                                                                                       )
+                                                                      )
+
+
     											)
                               );
 
@@ -6432,10 +6524,9 @@ class DnsRecords extends Records {
             printf (" Type %s <input type=hidden name=%s_filter>",$this->typeFilter,$this->typeFilter);
         } else {
             $selected_type[$this->filters['type']]='selected';
-    
             printf (" <select name=type_filter><option value=''>Type");
             foreach (array_keys($this->recordTypes) as $_type) {
-                printf ("<option value='%s' %s>%s",$selected_type[$_type],$_type);
+                printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
             }
             print "</select>";
             printf (" Value <input type=text size=20 name=value_filter value='%s'>",$this->filters['value']);
@@ -6741,7 +6832,7 @@ class DnsRecords extends Records {
                                                     )
                                 );
 
-				$this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->html);
 
 
             }
