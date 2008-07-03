@@ -2757,6 +2757,7 @@ class SipAliases extends Records {
 
 
         $this->Records(&$SoapEngine);
+
         if ($this->version > 1) {
             $this->sortElements=array(
                             'changeDate'     => 'Change date',
@@ -5864,7 +5865,7 @@ class DnsZones extends Records {
                                             'parameters' => array($deleteZone)
                                             )
                         );
-     
+
         return $this->SoapEngine->execute($function,$this->html);
 
     }
@@ -6102,7 +6103,8 @@ class DnsRecords extends Records {
 	var $typeFilter  = false;
     var $default_ttl = 3600;
     var $sortElements=array('changeDate' => 'Change date',
-                            'name'     => 'Name'
+                            'type'       => 'Type',
+                            'name'       => 'Name'
                             );
 
     var $FieldsReadOnly=array(
@@ -6116,9 +6118,51 @@ class DnsRecords extends Records {
                               'value'    => array('type'=>'string'),
                               'ttl'      => array('type'=>'integer')
                               );
-    var $recordTypes=array('A','AAAA','CNAME','MX','SRV','NS','NAPTR','MBOX','URL');
-    var $advancedRecords=array('SRV:_sip._udp' => array('name'=>'SIP UDP')
-    						);
+    var $recordTypes=array('A','AAAA','CNAME','MX','SRV','NS','NAPTR','PTR','MBOX','URL','TXT','LOC');
+
+    var $recordTypesTemplate=array(
+                               'sipudp' =>  array('name'    => 'SIP over UDP',
+                                                  'records' =>  array('srv'   => array('name'   => '_sip._udp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '30',
+                                                                                       'value'  => '10 5060 #VALUE#|10 5060 sip'
+                                                                                       ),
+                                                                      'naptr' => array('name'  => '',
+                                                                                       'type'   => 'NAPTR',
+                                                                                       'priority'=> '30',
+                                                                                       'value' => '10 30 "s" "SIP+D2U" "" _sip._udp'
+                                                                                       )
+                                                                      ),
+                                                 ),
+                               'siptcp' =>  array('name'    => 'SIP over TCP',
+                                                  'records' =>  array('srv'   => array('name'  => '_sip._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '20',
+                                                                                       'value' => '10 5060 #VALUE#|10 5060 sip'
+                                                                                       ),
+                                                                      'naptr' => array('name'    => '',
+                                                                                       'type'    => 'NAPTR',
+                                                                                       'priority'=> '20',
+                                                                                       'value' => '10 20 "s" "SIP+D2T" "" _sip._tcp'
+                                                                                       )
+                                                                      ),
+                                                  ),
+                               'siptls' =>  array('name'    => 'SIP over TLS',
+                                                  'records' =>  array('srv'   => array('name'  => '_sips._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '10',
+                                                                                       'value' => '10 5061 #VALUE#|10 5061 sip'
+                                                                                       ),
+                                                                      'naptr' => array('name'  => '',
+                                                                                       'type'   => 'NAPTR',
+                                                                                       'priority'=> '10',
+                                                                                       'value' => '10 10 "s" "SIPS+D2T" "" _sips._tcp'
+                                                                                       )
+                                                                      )
+
+
+    											)
+                              );
 
 
     function DnsRecords(&$SoapEngine) {
@@ -6219,7 +6263,7 @@ class DnsRecords extends Records {
             print "
             <p>
             <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
+            <tr><td>$this->rows records found. Click on record id to edit the values.</td></tr>
             </table>
             <p>
             <table border=0 cellpadding=2 width=100%>
@@ -6408,7 +6452,9 @@ class DnsRecords extends Records {
                                             'logs'       => array('success' => sprintf('Dns record %s has been deleted',$id)))
                         );
 
+		$zone=$this->filters['zone'];
        	unset($this->filters);
+        $this->filters['zone']=$zone;
        	return $this->SoapEngine->execute($function,$this->html);
     }
 
@@ -6443,6 +6489,10 @@ class DnsRecords extends Records {
     
             foreach($this->recordTypes as $_type) {
                 printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
+            }
+
+            foreach(array_keys($this->recordTypesTemplate) as $_type) {
+                printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$this->recordTypesTemplate[$_type]['name']);
             }
     
             print "
@@ -6542,6 +6592,8 @@ class DnsRecords extends Records {
             $zone=$_REQUEST['zone'];
         }
 
+        $this->filters['zone']=$zone;
+
         if (!strlen($zone)) {
             printf ("<p><font color=red>Error: Missing zone name. </font>");
             return false;
@@ -6555,20 +6607,10 @@ class DnsRecords extends Records {
             $type = trim($_REQUEST['type']);
         }
 
-        if (!strlen($type) || !in_array($type,$this->recordTypes)) {
-            printf ("<p><font color=red>Error: Invalid or missing record type. </font>");
-            return false;
-        }
-
         if ($dictionary['value']) {
             $value = $dictionary['value'];
         } else {
             $value = trim($_REQUEST['value']);
-        }
-
-        if (!strlen($value)) {
-            printf ("<p><font color=red>Error: Missing record value. </font>");
-            return false;
         }
 
         list($customer,$reseller)=$this->customerFromLogin($dictionary);
@@ -6593,42 +6635,110 @@ class DnsRecords extends Records {
             $priority = trim($_REQUEST['priority']);
         }
 
-        $record=array('name'     => trim($name),
-    				  'zone'     => trim($zone),
-                      'type'     => $type,
-                      'value'    => trim($value),
-                      'ttl'      => intval($ttl),
-                      'priority' => intval($priority),
-                      'owner'    => intval($owner)
-                      );
+        if (in_array($type,$this->recordTypes)) {
 
-        if (!$this->skipSaveProperties=true) {
+            if (!strlen($value)) {
+                printf ("<p><font color=red>Error: Missing record value. </font>");
+                return false;
+            }
+
+            $record=array('name'     => trim($name),
+                          'zone'     => trim($zone),
+                          'type'     => $type,
+                          'value'    => trim($value),
+                          'ttl'      => intval($ttl),
+                          'priority' => intval($priority)
+                          );
+     
+            if (!$this->skipSaveProperties=true) {
+        
+                $_p=array(
+                          array('name'       => 'dns_records_last_zone',
+                                'category'   => 'web',
+                                'value'      => $_REQUEST['zone'],
+                                'permission' => 'customer'
+                               ),
+                          array('name'       => 'dns_records_last_type',
+                                'category'   => 'web',
+                                'value'      => "$type",
+                                'permission' => 'customer'
+                               )
+                          );
+        
+                $this->setLoginProperties($_p);
+            }
+     
+            $function=array('commit'   => array('name'       => 'addRecord',
+                                                'parameters' => array($record),
+                                                'logs'       => array('success' => sprintf('Dns record %s under %s has been added',$name,$zone))),
+                            );
+         
+            return $this->SoapEngine->execute($function,$this->html);
+        } else if (in_array($type,array_keys($this->recordTypesTemplate))) {
+            foreach (array_values($this->recordTypesTemplate[$type]['records']) as $_records) {
+                $value_new='';
     
-            $_p=array(
-                      array('name'       => 'dns_records_last_zone',
-                            'category'   => 'web',
-                            'value'      => $_REQUEST['zone'],
-                            'permission' => 'customer'
-                           ),
-                      array('name'       => 'dns_records_last_type',
-                            'category'   => 'web',
-                            'value'      => "$type",
-                            'permission' => 'customer'
-                           )
-                      );
-    
-            $this->setLoginProperties($_p);
+                if (strlen($_records['value'])) {
+                    $els=explode("|",$_records['value']);
+                    foreach ($els as $el) {
+                        if (preg_match("/#VALUE#/",$el)) {
+                        	if ($value) {
+                            	$value_new=preg_replace("/#VALUE#/",$value,$el);
+                            } else {
+                                continue;
+                            }
+                        } else {
+                            $value_new=$el;
+                        }
+                        break;
+                    }
+
+                    // save value if type sip server
+                    if ($_records['name'] && preg_match("/^_sip/",$_records['name'])) {
+                        $_p=array(
+                                  array('name'       => 'dns_records_last_sip_server',
+                                        'category'   => 'web',
+                                        'value'      => $value_new,
+                                        'permission' => 'customer'
+                                       )
+                                  );
+                
+                        $this->setLoginProperties($_p);
+                    }
+
+                } else {
+        			$value_new=$this->getLoginProperty('dns_records_last_sip_server');
+                }
+
+		        if (!in_array($_records['type'],$this->recordTypes)) {
+                    continue;
+                }
+
+                $record=array('name'     => $_records['name'],
+                              'zone'     => trim($zone),
+                              'type'     => $_records['type'],
+                              'value'    => $value_new,
+                              'ttl'      => intval($_records['value']),
+                              'priority' => intval($_records['priority'])
+                              );
+
+                $function=array('commit'   => array('name'       => 'addRecord',
+                                                    'parameters' => array($record),
+                                                    'logs'       => array('success' => sprintf('Dns %s record under %s has been added',$_records['type'],$zone))
+                                                    )
+                                );
+
+				$this->SoapEngine->execute($function,$this->html);
+
+
+            }
+
+
+        } else {
+            printf ("<p><font color=red>Error: Invalid or missing record type. </font>");
+            return false;
         }
 
-        $function=array('commit'   => array('name'       => 'addRecord',
-                                            'parameters' => array($record),
-                                            'logs'       => array('success' => sprintf('Dns record %s under %s has been added',$name,$zone))),
-                        'rollback' => array('name'       => 'deleteNumber',
-                                            'parameters' => array($record)
-                                            )
-                        );
-     
-        return $this->SoapEngine->execute($function,$this->html);
     }
 
     function getRecordKeys() {
