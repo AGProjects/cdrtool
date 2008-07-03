@@ -6118,10 +6118,23 @@ class DnsRecords extends Records {
                               'value'    => array('type'=>'string'),
                               'ttl'      => array('type'=>'integer')
                               );
-    var $recordTypes=array('A','AAAA','CNAME','MX','SRV','NS','NAPTR','PTR','MBOX','URL','TXT','LOC');
+
+    var $recordTypes=array('A'     => 'IP address',
+                           'AAAA'  => 'IP v6 address',
+                           'CNAME' => 'Hostname alias',
+                           'MX'    => 'Mail server address',
+                           'SRV'   => 'Server resource',
+                           'NS'    => 'Name server address',
+                           'NAPTR' => 'Name authority',
+                           'PTR'   => 'Reverse IP address',
+                           'MBOX'  => 'Email forwarding',
+                           'URL'   => 'WEB redirect',
+                           'TXT'   => 'Text',
+                           'LOC'   => 'Geo location'
+                           );
 
     var $recordTypesTemplate=array(
-                               'sipudp' =>  array('name'    => 'SIP over UDP',
+                               'sipudp' =>  array('name'    => 'SIP - UDP transport',
                                                   'records' =>  array('srv'   => array('name'   => '_sip._udp',
                                                                                        'type'   => 'SRV',
                                                                                        'priority'=> '30',
@@ -6134,7 +6147,7 @@ class DnsRecords extends Records {
                                                                                        )
                                                                       ),
                                                  ),
-                               'siptcp' =>  array('name'    => 'SIP over TCP',
+                               'siptcp' =>  array('name'    => 'SIP - TCP transport',
                                                   'records' =>  array('srv'   => array('name'  => '_sip._tcp',
                                                                                        'type'   => 'SRV',
                                                                                        'priority'=> '20',
@@ -6147,7 +6160,7 @@ class DnsRecords extends Records {
                                                                                        )
                                                                       ),
                                                   ),
-                               'siptls' =>  array('name'    => 'SIP over TLS',
+                               'siptls' =>  array('name'    => 'SIP - TLS transport',
                                                   'records' =>  array('srv'   => array('name'  => '_sips._tcp',
                                                                                        'type'   => 'SRV',
                                                                                        'priority'=> '10',
@@ -6421,8 +6434,8 @@ class DnsRecords extends Records {
             $selected_type[$this->filters['type']]='selected';
     
             printf (" <select name=type_filter><option value=''>Type");
-            foreach ($this->recordTypes as $_type) {
-                printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
+            foreach (array_keys($this->recordTypes) as $_type) {
+                printf ("<option value='%s' %s>%s",$selected_type[$_type],$_type);
             }
             print "</select>";
             printf (" Value <input type=text size=20 name=value_filter value='%s'>",$this->filters['value']);
@@ -6487,8 +6500,8 @@ class DnsRecords extends Records {
                 $selected_type[$_type]='selected';
             }
     
-            foreach($this->recordTypes as $_type) {
-                printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
+            foreach(array_keys($this->recordTypes) as $_type) {
+                printf ("<option value='%s' %s>%s - %s",$_type,$selected_type[$_type],$_type,$this->recordTypes[$_type]);
             }
 
             foreach(array_keys($this->recordTypesTemplate) as $_type) {
@@ -6635,7 +6648,7 @@ class DnsRecords extends Records {
             $priority = trim($_REQUEST['priority']);
         }
 
-        if (in_array($type,$this->recordTypes)) {
+        if (in_array($type,array_keys($this->recordTypes))) {
 
             if (!strlen($value)) {
                 printf ("<p><font color=red>Error: Missing record value. </font>");
@@ -6710,7 +6723,7 @@ class DnsRecords extends Records {
         			$value_new=$this->getLoginProperty('dns_records_last_sip_server');
                 }
 
-		        if (!in_array($_records['type'],$this->recordTypes)) {
+		        if (!in_array($_records['type'],array_keys($this->recordTypes))) {
                     continue;
                 }
 

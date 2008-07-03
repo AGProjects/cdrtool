@@ -4319,7 +4319,6 @@ class OpenSERQuota {
 
             if (in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
 
-
                 $this->SOAPurl  = $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['url'];
                 $log=sprintf("Using SOAP engine %s to block accounts at %s\n",$DATASOURCES[$this->cdr_source]['soapEngineId'],$this->SOAPurl);
                 syslog(LOG_NOTICE, $log);
@@ -4338,7 +4337,16 @@ class OpenSERQuota {
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
                 $this->soapclient->_options['timeout'] = $this->timeout;
         
+            } else {
+            	$e=$DATASOURCES[$this->cdr_source]['soapEngineId'];
+                $log=sprintf("Error: soap engine id $e not found in /etc/cdrtool/ngnpro_engines.inc\n");
+                print $log;
+                syslog(LOG_NOTICE, $log);
+                return false;
             }
+        } else {
+            $log=sprintf("Using database queries to block accounts\n");
+            syslog(LOG_NOTICE, $log);
         }
     }
 
