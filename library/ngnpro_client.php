@@ -136,6 +136,7 @@ class SoapEngine {
     var $allowedPorts  = array();
     var $timeout       = 5;
     var $exception     = array();
+    var $result        = false;
     var $extraFormElements = array();
 
     var $ports=array(
@@ -145,13 +146,6 @@ class SoapEngine {
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'sip',
                                            'description'   => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use % to match a pattern. ',
-                                           ),
-                        'customers'      => array(
-                                           'records_class' => 'Customers',
-                                           'name'          => 'Login accounts',
-                                           'soap_class'    => 'WebService_NGNPro_CustomerPort',
-                                           'category'      => 'general',
-                                           'description'   => 'Manage login accounts, customer information  and properties. Customer id can be assigned to entities like SIP domains and ENUM ranges. Use % to match a pattern. '
                                            ),
                         'sip_domains'    => array(
                                            'records_class' => 'SipDomains',
@@ -166,6 +160,13 @@ class SoapEngine {
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'sip',
                                            'description'   => 'Manage aliases for SIP destinations (e.g. user1@example1.com alias to user2@example2.com). Use % to match a pattern. '
+                                           ),
+                        'customers'      => array(
+                                           'records_class' => 'Customers',
+                                           'name'          => 'Login accounts',
+                                           'soap_class'    => 'WebService_NGNPro_CustomerPort',
+                                           'category'      => 'general',
+                                           'description'   => 'Manage login accounts, customer information  and properties. Customer id can be assigned to entities like SIP domains and ENUM ranges. Use % to match a pattern. '
                                            ),
                         'enum_numbers'   => array(
                                            'records_class' => 'EnumMappings',
@@ -541,12 +542,6 @@ class SoapEngine {
                                             'logs'       => array('success' => 'The function was a success',
                                                                   'failure' => 'The function has failed'
                                                                   )
-                                           ),
-                        'rollback' => array('name'       => 'addAccount',
-                                            'parameters' => array($param1,$param2),
-                                            'logs'       => array('success' => 'The function was a success',
-                                                                  'failure' => 'The function has failed'
-                                                                  )
                                            )
 
                         );
@@ -576,19 +571,27 @@ class SoapEngine {
             } else {
                 printf ("Error from %s: %s (%s): %s\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
             }
+
+            return false;
+
         } else {
+        	$this->result=$result;
+
             if ($function['commit']['logs']['success']) {
                 if ($html) {
-                    printf ("<p><font color=green>%s </font>\n",$function['commit']['logs']['success']);
+                    printf ("<p><font color=green>%s </font>\n",htmlentities($function['commit']['logs']['success']));
                 } else {
                     printf ("%s\n",$function['commit']['logs']['success']);
                 }
             }
+
+            if (is_object($result) || strlen($result)) {
+        		return $result;
+            } else {
+                return true;
+            }
         }
-
-        return true;
     }
-
 }
 
 class Records {
@@ -767,7 +770,7 @@ class Records {
 
     function showSeachForm() {
 
-         printf ("<p><b>%s</b>",
+    	printf ("<p><b>%s</b>",
         $this->SoapEngine->ports[$this->SoapEngine->port]['description']);
 
         print "
@@ -1772,9 +1775,7 @@ class SipDomains extends Records {
 
         $function=array('commit'   => array('name'       => 'addDomain',
                                             'parameters' => array($domainStructure),
-                                            'logs'       => array('success' => sprintf('SIP domain %s has been added',$domain))),
-                        'rollback' => array('name'       => 'deleteDomain',
-                                            'parameters' => array($domainStructure))
+                                            'logs'       => array('success' => sprintf('SIP domain %s has been added',$domain)))
                                            );
 
         return $this->SoapEngine->execute($function,$this->html);
@@ -1999,9 +2000,7 @@ class SipDomains extends Records {
 
         $function=array('commit'   => array('name'       => 'updateDomain',
                                             'parameters' => array($domain),
-                                            'logs'       => array('success' => sprintf('Domain %s has been updated',$domain->domain))),
-                        'rollback' => array('name'       => 'updateDomain',
-                                            'parameters' => array($domain_old))
+                                            'logs'       => array('success' => sprintf('Domain %s has been updated',$domain->domain)))
                         );
 
         return $this->SoapEngine->execute($function,$this->html);
@@ -2612,7 +2611,13 @@ class SipAccounts extends Records {
             $prepaid=intval($_REQUEST['prepaid']);
         }
 
-        if (!$email) $email=strtolower($username).'@'.strtolower($domain);
+        if (!$email) {
+            if ($username=="<autoincrement>") {
+        		$email='unknown@'.strtolower($domain);
+            } else {
+        		$email=strtolower($username).'@'.strtolower($domain);
+            }
+        }
 
         if (!$this->skipSaveProperties) {
             $_p=array(
@@ -2672,12 +2677,15 @@ class SipAccounts extends Records {
                              'domain'   => $domain);
 
 
+        if ($username == '<autoincrement>') {
+			$success_log=sprintf('SIP account has been generated in domain %s',$domain);
+        } else {
+			$success_log=sprintf('SIP account %s@%s has been added',$username,$domain);
+        }
+
         $function=array('commit'   => array('name'       => 'addAccount',
                                             'parameters' => array($account),
-                                            'logs'       => array('success' => sprintf('SIP account %s@%s has been added',$username,$domain))),
-                        'rollback' => array('name'       => 'deleteAlias',
-                                            'parameters' => array($deleteAccount)
-                                            )
+                                            'logs'       => array('success' => $success_log))
                         );
 
         return $this->SoapEngine->execute($function,$this->html);
@@ -3270,10 +3278,7 @@ class SipAliases extends Records {
 
         $function=array('commit'   => array('name'       => 'addAlias',
                                             'parameters' => array($alias),
-                                            'logs'       => array('success' => sprintf('SIP alias %s@%s has been added',$username,$domain))),
-                        'rollback' => array('name'       => 'deleteAlias',
-                                            'parameters' => array($deleteAlias)
-                                            )
+                                            'logs'       => array('success' => sprintf('SIP alias %s@%s has been added',$username,$domain)))
                         );
      
         return $this->SoapEngine->execute($function,$this->html);
@@ -3796,10 +3801,7 @@ class EnumRanges extends Records {
 
         $function=array('commit'   => array('name'       => 'addRange',
                                             'parameters' => array($range),
-                                            'logs'       => array('success' => sprintf('ENUM range +%s under %s has been added',$prefix,$tld))),
-                        'rollback' => array('name'       => 'deleteRange',
-                                            'parameters' => array($deleteRange)
-                                            )
+                                            'logs'       => array('success' => sprintf('ENUM range +%s under %s has been added',$prefix,$tld)))
                         );
      
         return $this->SoapEngine->execute($function,$this->html);
@@ -4072,9 +4074,7 @@ class EnumRanges extends Records {
 
         $function=array('commit'   => array('name'       => 'updateRange',
                                             'parameters' => array($range),
-                                            'logs'       => array('success' => sprintf('ENUM range +%s under %s has been updated',$rangeid['prefix'],$rangeid['tld']))),
-                        'rollback' => array('name'       => 'updateRange',
-                                            'parameters' => array($range_old))
+                                            'logs'       => array('success' => sprintf('ENUM range +%s under %s has been updated',$rangeid['prefix'],$rangeid['tld'])))
                         );
      
         return $this->SoapEngine->execute($function,$this->html);
@@ -4824,19 +4824,13 @@ class EnumMappings extends Records {
     
                 $function=array('commit'   => array('name'       => 'updateNumber',
                                                     'parameters' => array($result_new),
-                                                    'logs'       => array('success' => sprintf('ENUM mapping %s has been deleted',$mapto))),
-                                'rollback' => array('name'       => 'updateNumber',
-                                                    'parameters' => array($result)
-                                                    )
+                                                    'logs'       => array('success' => sprintf('ENUM mapping %s has been deleted',$mapto)))
                                 );
     
             } else {
                 $function=array('commit'   => array('name'       => 'deleteNumber',
                                                     'parameters' => array($enum_id),
                                                     'logs'       => array('success' => sprintf('ENUM number +%s under %s has been deleted',$number,$tld))),
-                                'rollback' => array('name'       => 'addNumber',
-                                                    'parameters' => array($result)
-                                                    )
                                 );
             }
 
@@ -5179,10 +5173,7 @@ class EnumMappings extends Records {
 
                 $function=array('commit'   => array('name'       => 'addNumber',
                                                     'parameters' => array($enum_number),
-                                                    'logs'       => array('success' => sprintf('ENUM number +%s under %s has been added',$number,$tld))),
-                                'rollback' => array('name'       => 'deleteNumber',
-                                                    'parameters' => array($enumId)
-                                                    )
+                                                    'logs'       => array('success' => sprintf('ENUM number +%s under %s has been added',$number,$tld)))
                                 );
              
                 return $this->SoapEngine->execute($function,$this->html);
@@ -5202,8 +5193,7 @@ class EnumMappings extends Records {
 
                 if ($_mapping->mapto == $mapto) {
                     printf ("<p><font color=blue>Info: ENUM mapping %s for number %s already exists</font>",$mapto,$number);
-                    return true;
-                    break;
+                    return $result;
                 }
             }
 
@@ -5217,9 +5207,7 @@ class EnumMappings extends Records {
 
             $function=array('commit'   => array('name'       => 'updateNumber',
                                                 'parameters' => array($result_new),
-                                                'logs'       => array('success' => sprintf('ENUM number +%s under %s has been updated',$number,$tld))),
-                            'rollback' => array('name'       => 'updateNumber',
-                                                'parameters' => array($result))
+                                                'logs'       => array('success' => sprintf('ENUM number +%s under %s has been updated',$number,$tld)))
                             );
              
             return $this->SoapEngine->execute($function,$this->html);
@@ -5519,9 +5507,7 @@ class EnumMappings extends Records {
         //print_r($number);
         $function=array('commit'   => array('name'       => 'updateNumber',
                                             'parameters' => array($number),
-                                            'logs'       => array('success' => sprintf('ENUM number +%s under %s has been updated',$enumid['number'],$enumid['tld']))),
-                        'rollback' => array('name'       => 'updateNumber',
-                                            'parameters' => array($number_old))
+                                            'logs'       => array('success' => sprintf('ENUM number +%s under %s has been updated',$enumid['number'],$enumid['tld'])))
                         );
      
         return $this->SoapEngine->execute($function,$this->html);
@@ -5860,10 +5846,7 @@ class DnsZones extends Records {
 
         $function=array('commit'   => array('name'       => 'addZone',
                                             'parameters' => array($zone),
-                                            'logs'       => array('success' => sprintf('DNS zone %s has been added',$name))),
-                        'rollback' => array('name'       => 'deleteZone',
-                                            'parameters' => array($deleteZone)
-                                            )
+                                            'logs'       => array('success' => sprintf('DNS zone %s has been added',$name)))
                         );
 
         return $this->SoapEngine->execute($function,$this->html);
@@ -6046,9 +6029,7 @@ class DnsZones extends Records {
 
         $function=array('commit'   => array('name'       => 'updateZone',
                                             'parameters' => array($zone),
-                                            'logs'       => array('success' => sprintf('DNS zone %s has been updated',$filter['name']))),
-                        'rollback' => array('name'       => 'updateZone',
-                                            'parameters' => array($zone_old))
+                                            'logs'       => array('success' => sprintf('DNS zone %s has been updated',$filter['name'])))
                         );
     	return $this->SoapEngine->execute($function,$this->html);
 
@@ -7030,9 +7011,7 @@ class DnsRecords extends Records {
         //print_r($record);
         $function=array('commit'   => array('name'       => 'updateRecord',
                                             'parameters' => array($record),
-                                            'logs'       => array('success' => sprintf('Record %s has been updated',$_REQUEST['id_filter']))),
-                        'rollback' => array('name'       => 'updateRecord',
-                                            'parameters' => array($record_old))
+                                            'logs'       => array('success' => sprintf('Record %s has been updated',$_REQUEST['id_filter'])))
                         );
      
         return $this->SoapEngine->execute($function,$this->html);
@@ -7325,10 +7304,7 @@ class TrustedPeers extends Records {
 
         $function=array('commit'   => array('name'       => 'addTrustedPeer',
                                             'parameters' => array($peer),
-                                            'logs'       => array('success' => sprintf('Trusted peers %s has been added',$ipaddress))),
-                        'rollback' => array('name'       => 'deleteTrustedPeer',
-                                            'parameters' => array($peer)
-                                            )
+                                            'logs'       => array('success' => sprintf('Trusted peers %s has been added',$ipaddress)))
                         );
      
         return $this->SoapEngine->execute($function,$this->html);
@@ -7637,10 +7613,7 @@ class GatewayGroups extends Records {
 
         $function=array('commit'   => array('name'       => 'addGatewayGroup',
                                             'parameters' => array($structure),
-                                            'logs'       => array('success' => sprintf('Gateway group %s has been added',$name))),
-                        'rollback' => array('name'       => 'deleteGatewayGroup',
-                                            'parameters' => array($structure)
-                                            )
+                                            'logs'       => array('success' => sprintf('Gateway group %s has been added',$name)))
                         );
      
         return $this->SoapEngine->execute($function,$this->html);
@@ -7665,10 +7638,7 @@ class GatewayGroups extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteGatewayGroup',
                                             'parameters' => array($name),
-                                            'logs'       => array('success' => sprintf('Gateway group %s has been deleted',$name))),
-                        'rollback' => array('name'       => 'addGatewayGroup',
-                                            'parameters' => array($this->filters['group'])
-                                            )
+                                            'logs'       => array('success' => sprintf('Gateway group %s has been deleted',$name)))
                         );
      
         unset($this->filters);
@@ -8032,10 +8002,7 @@ class Gateways extends Records {
 
         $function=array('commit'   => array('name'       => 'addGateway',
                                             'parameters' => array($gateway),
-                                            'logs'       => array('success' => sprintf('Gateway grup %s has been added',$address))),
-                        'rollback' => array('name'       => 'deleteGateway',
-                                            'parameters' => array($name)
-                                            )
+                                            'logs'       => array('success' => sprintf('Gateway grup %s has been added',$address)))
                         );
      
         unset($this->filters);
@@ -8382,10 +8349,7 @@ class Routes extends Records {
 
         $function=array('commit'   => array('name'       => 'addRoutes',
                                             'parameters' => array($routes),
-                                            'logs'       => array('success' => sprintf('Route %s has been added',$prefix))),
-                        'rollback' => array('name'       => 'deleteRoutes',
-                                            'parameters' => array($routes)
-                                            )
+                                            'logs'       => array('success' => sprintf('Route %s has been added',$prefix)))
                         );
      
         unset($this->filters);
@@ -9239,7 +9203,8 @@ class Customers extends Records {
                     <td><a href=mailto:%s>%s</a></td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td>",
+                    <td><a href=%s>%s</a>
+                    ",
                     $bgcolor,
                     $index,
                     $_customer_url,
@@ -9253,7 +9218,9 @@ class Customers extends Records {
                     $customer->email,
                     $customer->email,
                     $customer->tel,
-                    $customer->changeDate
+                    $customer->changeDate,
+                    $_url,
+                    $actionText
                     );
 
                     $this->showExtraActions($customer);
@@ -9320,17 +9287,17 @@ class Customers extends Records {
                     $error_code = $result->getCode();
                     if ($error_fault->detail->exception->errorcode != 5000)  {
                         printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlCustomerRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                        return false;
                     }
                 }
             }
+
+            unset($this->filters);
+            return true;
 
         } else {
             return false;
         }
 
-        $this->filters=array();
-        return true;
     }
 
     function getRecord($id) {
@@ -9938,11 +9905,7 @@ class Customers extends Records {
 
         $function=array('commit'   => array('name'       => 'updateAccount',
                                             'parameters' => array($customer),
-                                            'logs'       => array('success' => sprintf('Customer id %s has been updated',$customer->id))
-                                            ),
-                        'rollback' => array('name'       => 'updateAccount',
-                                            'parameters' => array($customer_old)
-                                            )
+                                            'logs'       => array('success' => sprintf('Customer id %s has been updated',$customer->id)))
                         );
      
         if ($this->SoapEngine->execute($function,$this->html)) {
@@ -10093,11 +10056,7 @@ class Customers extends Records {
 
             $function=array('commit'   => array('name'       => 'addAccount',
                                                 'parameters' => array($customer_new),
-                                                'logs'       => array('success' => sprintf('Customer id %s has been copied',$customer->id))
-                                                ),
-                            'rollback' => array('name'       => 'deleteAccount',
-                                                'parameters' => array($customer_new)
-                                                )
+                                                'logs'       => array('success' => sprintf('Customer id %s has been copied',$customer->id)))
                             );
     
             if ($this->SoapEngine->execute($function,$this->html)) {
@@ -10380,7 +10339,7 @@ class Customers extends Records {
                                             )
                        );
 
-        if ($this->SoapEngine->execute($function,$this->html)) {
+        if ($result = $this->SoapEngine->execute($function,$this->html)) {
             // update remote
             if (is_object($this->SoapEngineCustomerRemote)) {
                 if ($_id = $this->getCustomerId($customer['username'])) {
@@ -10412,7 +10371,7 @@ class Customers extends Records {
 
             if ($dictionary['notify'] || $_REQUEST['notify']) $this->notify($customer);
 
-            return true;
+            return $result;
 
         } else {
             return false;
