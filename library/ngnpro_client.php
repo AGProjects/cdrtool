@@ -203,6 +203,13 @@ class SoapEngine {
                                            'category'      => 'dns',
                                            'description'   => 'Manage email aliases. Use % to match a pattern. '
                                            ),
+                        'url_redirect'    => array(
+                                           'records_class' => 'UrlRedirect',
+                                           'name'          => 'URL redirect',
+                                           'soap_class'    => 'WebService_NGNPro_DnsPort',
+                                           'category'      => 'dns',
+                                           'description'   => 'Manage URL redirections. Use % to match a pattern. '
+                                           ),
                         'pstn_gateway_groups' => array(
                                            'records_class' => 'GatewayGroups',
                                            'name'          => 'PSTN groups',
@@ -6499,7 +6506,7 @@ class DnsRecords extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" Id<input type=text size=5 name=id_filter value='%s'>",$this->filters['id']);
+        printf (" Id<input type=text size=7 name=id_filter value='%s'>",$this->filters['id']);
         printf (" Name<input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
 
         $selected_zone[$this->filters['zone']]='selected';
@@ -6639,7 +6646,7 @@ class DnsRecords extends Records {
                       );
         // Range
         $range=array('start' => 0,
-                     'count' => 200
+                     'count' => 100
                      );
 
         // Order
@@ -7021,6 +7028,10 @@ class DnsRecords extends Records {
 
 class EmailAliases extends DnsRecords {
     var $typeFilter='MBOX';
+}
+
+class UrlRedirect extends DnsRecords {
+    var $typeFilter='URL';
 }
 
 class TrustedPeers extends Records {
