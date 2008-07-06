@@ -1,34 +1,34 @@
 cdrtool (6.5.2) unstable; urgency=low
 
-  * Fixed name of OpenSERQuota class in globa.inc sample files
-  * Fixed 2006 error for ReloadQuota function
+  * Fixed name of OpenSERQuota class in global.inc sample files
+  * Fixed MySQL 2006 error for ReloadQuota function
   * Added NGNPro DNS port
   * Fixed required phone_images.php in sip settings page
   * Fixed REMOTE_ADDR variable
   * Fixed path of logo images
-  * Show db/soap method used for blocking accounts by quota
+  * Show method used for blocking accounts by quota (db/soap)
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 03 Jul 2008 22:49:39 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 06 Jul 2008 19:53:59 +0200
 
 cdrtool (6.5.1) unstable; urgency=low
 
-  * Added support for MediaProxy 2.0
-  * Added prepaid card generator
+  * Added support for MediaProxy 2.0 accounting
+  * Added prepaid card generator in Rating section
+  * Rewrite ratingEngine daemon to be non blocking 
   * Added IP access list to the ratingEngine $RatingEngine['allow']
   * Added new setting in global.inc called 'mediaDispatcher' to point to the 
     media dispatcher of MediaProxy 2, used to display media sessions
-  * Rewrite ratingEngine daemon to be non blocking 
   * Added ShowClients command to rating engine
   * Removed support for php4
-  * Fixed error about MySQL gone away (2006)
+  * Fixed error related to MySQL gone away (2006)
   * Support prepaid calls to work with increment and min_duration settings 
-  * Added links between sip trace and media trace pages
+  * Added web links between sip trace and media trace pages
   * Fixed ShowPrice rating engine command
   * Added /etc/cdrtool config directory
     Move CDRTool/local to /etc/cdrtool/local
-  * Moved all library files under library/
-  * Changed csv import directory to /var/spool/cdrtool
-  * Document split_rating_table
+  * Moved all library *_lib.phtml files to library/*.php
+  * Changed csv import directory from /var/www/CDRTool/csv to /var/spool/cdrtool
+  * Document split_rating_table feature in Rating.txt
   * Gateway attribute is now mandatory for MaxSessionTime and DebitBalance commands
   * Fixed update of Enum number selections
   * Moved setting $servers from status/config/media_servers.php to global.inc
@@ -47,7 +47,7 @@ cdrtool (6.5.1) unstable; urgency=low
     sudo rm -r /etc/cdrtool/local/images
     Edit /etc/cdrtool/global.inc and replace ser with openser in the line:
     $CDRToolModules=array("ser","asterisk","rating"); 
-    and remove rating from it: 
+    and remove rating from it, example: 
     $CDRToolModules=array("openser","asterisk");
     Set "UserQuotaClass"=> "OpenSERQuota" in global.inc (it was SERQuota)
     Copy the value of $servers from /var/www/CDRTool/status/config/media_servers.php
