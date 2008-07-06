@@ -685,7 +685,7 @@ class Records {
 
         $j=1;
         foreach (array_keys($this->SoapEngine->soapEngines) as $_engine) {
-               if ($this->SoapEngine->skip[$_engine]) continue;
+        	if ($this->SoapEngine->skip[$_engine]) continue;
             if ($j > 1) printf ("<option value=''>--------\n");
             foreach (array_keys($this->SoapEngine->ports) as $_port) {
                 $idx=$_port.'@'.$_engine;
@@ -697,19 +697,22 @@ class Records {
                 }
                 if (count($this->SoapEngine->allowedPorts[$_engine]) > 0 && !in_array($_port,$this->SoapEngine->allowedPorts[$_engine])) continue;
                 if ($_port == 'customers' && $this->SoapEngine->soapEngines[$_engine]['version'] <= 1) continue;
-                if ($this->SoapEngine->ports[$_port]['resellers_only']) {
-                    if ($this->login_credentials['login_type']=='admin' || $this->loginAccount->resellerActive ) {
-                printf ("<option value=\"%s@%s\"%s>%s@%s\n",$_port,$_engine,$selected_soapEngine[$idx],$this->SoapEngine->ports[$_port]['name'],$this->SoapEngine->soapEngines[$_engine]['name']);
-            }
+                    if ($this->SoapEngine->ports[$_port]['resellers_only']) {
+                        if ($this->login_credentials['login_type']=='admin' || $this->loginAccount->resellerActive ) {
+                        printf ("<option value=\"%s@%s\"%s>%s@%s\n",$_port,$_engine,$selected_soapEngine[$idx],$this->SoapEngine->ports[$_port]['name'],$this->SoapEngine->soapEngines[$_engine]['name']);
+                    }
                 } else {
-            printf ("<option value=\"%s@%s\"%s>%s@%s\n",$_port,$_engine,$selected_soapEngine[$idx],$this->SoapEngine->ports[$_port]['name'],$this->SoapEngine->soapEngines[$_engine]['name']);
-        }
+            		printf ("<option value=\"%s@%s\"%s>%s@%s\n",$_port,$_engine,$selected_soapEngine[$idx],$this->SoapEngine->ports[$_port]['name'],$this->SoapEngine->soapEngines[$_engine]['name']);
+        		}
             }
 
             $j++;
         }
         printf ("</select>");
 
+    }
+
+    function showCustomerSelection() {
         if ($this->version > 1) {
             print " Customer ";
     
@@ -796,20 +799,28 @@ class Records {
 
         $this->showEngineSelection();
 
-        $this->showSeachFormCustom();
-
         print "
         </td>
+
         <td align=right>
-		";
+		Order by";
         $this->showSortForm();
 
         $this->printHiddenFormElements('skipServiceElement');
 
         print "
         </td>
-        </form>
         </tr>
+        <tr>
+        <td colspan=2>
+        ";
+        $this->showCustomerSelection();
+
+        $this->showSeachFormCustom();
+        print "
+        </td>
+		</tr>
+        </form>
         </table>
         ";
 
@@ -2169,7 +2180,7 @@ class SipAccounts extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
-                <td><b>SIP account</b></td>
+                <td><b>Account</b></td>
                 <td><b>Name</b></td>
                 <td><b>Email</b></td>
                 <td><b>Caller Id</b></td>
@@ -2358,7 +2369,7 @@ class SipAccounts extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" User<input type=text size=12 name=username_filter value='%s'>",$this->filters['username']);
+        printf (" Account<input type=text size=12 name=username_filter value='%s'>",$this->filters['username']);
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
@@ -2380,8 +2391,8 @@ class SipAccounts extends Records {
         if ($this->version > 1) {
             printf (" FN<input type=text size=10 name=firstname_filter value='%s'>",$this->filters['firstname']);
             printf (" LN<input type=text size=10 name=lastname_filter value='%s'>",$this->filters['lastname']);
-            printf (" Email<input type=text size=10 name=email_filter value='%s'>",$this->filters['email']);
-            printf (" Owner<input type=text size=5 name=owner_filter value='%s'>",$this->filters['owner']);
+            printf (" Email<input type=text size=15 name=email_filter value='%s'>",$this->filters['email']);
+            printf (" Owner<input type=text size=6 name=owner_filter value='%s'>",$this->filters['owner']);
         }
     }
 
@@ -3136,10 +3147,10 @@ class SipAliases extends Records {
             printf ("<input type=text size=15 name=alias_domain_filter value='%s'>",$this->filters['alias_domain']);
         }
 
-        printf (" Target<input type=text size=15 name=target_username_filter value='%s'>",trim($_REQUEST['target_username_filter']));
+        printf (" Target<input type=text size=25 name=target_username_filter value='%s'>",trim($_REQUEST['target_username_filter']));
 
         if ($this->version > 1) {
-            printf (" Owner<input type=text size=5 name=owner_filter value='%s'>",$this->filters['owner']);
+            printf (" Owner<input type=text size=7 name=owner_filter value='%s'>",$this->filters['owner']);
         }
 
     }
@@ -6087,7 +6098,7 @@ class DnsZones extends Records {
 }
 
 class DnsRecords extends Records {
-
+	var $max_zones_selection = 100;
 	var $typeFilter  = false;
     var $default_ttl = 3600;
     var $sortElements=array('changeDate' => 'Change date',
@@ -6436,8 +6447,9 @@ class DnsRecords extends Records {
                     urlencode($record->zone)
                     );
 
-                    $_record_url = $this->url.sprintf("&service=dns_records@%s&id_filter=%s",
+                    $_record_url = $this->url.sprintf("&service=dns_records@%s&zone_filter=%s&id_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
+                    urlencode($record->zone),
                     urlencode($record->id)
                     );
 
@@ -6457,7 +6469,7 @@ class DnsRecords extends Records {
                     <tr bgcolor=%s>
                     <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
-                    <td><a href=%s>Zone</a></td>
+                    <td><a href=%s>%s</a></td>
                     <td><a href=%s>%s</a></td>
                     <td>%s</td>
                     <td>%s</td>
@@ -6474,6 +6486,7 @@ class DnsRecords extends Records {
                     $record->customer,
                     $record->reseller,
                     $_zone_url,
+                    $record->zone,
                     $_record_url,
                     $record->id,
                     $record->name,
@@ -6506,15 +6519,19 @@ class DnsRecords extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" Id<input type=text size=7 name=id_filter value='%s'>",$this->filters['id']);
+        printf (" Record Id<input type=text size=7 name=id_filter value='%s'>",$this->filters['id']);
         printf (" Name<input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
 
-        $selected_zone[$this->filters['zone']]='selected';
-        print "<select name=zone_filter><option value=''>Zone";
-        foreach ($this->allowedDomains as $_zone) {
-            printf ("<option value='%s' %s>%s",$_zone,$selected_zone[$_zone],$_zone);
+        if (count($this->allowedDomains) > 0) {
+            $selected_zone[$this->filters['zone']]='selected';
+            print "<select name=zone_filter><option value=''>Zone";
+            foreach ($this->allowedDomains as $_zone) {
+                printf ("<option value='%s' %s>%s",$_zone,$selected_zone[$_zone],$_zone);
+            }
+            print "</select>";
+        } else {
+        	printf (" Zone<input type=text size=20 name=zone_filter value='%s'>",$this->filters['zone']);
         }
-        print "</select>";
 
         if ($this->typeFilter) {
             printf (" Type %s <input type=hidden name=%s_filter>",$this->typeFilter,$this->typeFilter);
@@ -6604,19 +6621,31 @@ class DnsRecords extends Records {
 
         printf (" <input type=text size=15 name=name value='%s'>",trim($_REQUEST['name']));
 
-        if ($_REQUEST['zone']) {
-            $selected_zone[$_REQUEST['zone']]='selected';
-        } else if ($this->filters['zone']) {
-            $selected_zone[$this->filters['zone']]='selected';
-        } else if ($_zone=$this->getLoginProperty('dns_records_last_zone')) {
-            $selected_zone[$_zone]='selected';
-        }
+        if (count($this->allowedDomains) > 0) {
 
-        print ".<select name=zone>";
-        foreach ($this->allowedDomains as $_zone) {
-            printf ("<option value='%s' %s>%s",$_zone,$selected_zone[$_zone],$_zone);
+            if ($_REQUEST['zone']) {
+                $selected_zone[$_REQUEST['zone']]='selected';
+            } else if ($this->filters['zone']) {
+                $selected_zone[$this->filters['zone']]='selected';
+            } else if ($_zone=$this->getLoginProperty('dns_records_last_zone')) {
+                $selected_zone[$_zone]='selected';
+            }
+    
+            print ".<select name=zone>";
+            foreach ($this->allowedDomains as $_zone) {
+                printf ("<option value='%s' %s>%s",$_zone,$selected_zone[$_zone],$_zone);
+            }
+            print "</select>";
+        } else {
+            if ($_REQUEST['zone']) {
+                $_zone_selected=$_REQUEST['zone'];
+            } else if ($this->filters['zone']) {
+            	$_zone_selected=$this->filters['zone'];
+            } else if ($_zone=$this->getLoginProperty('dns_records_last_zone')) {
+                $_zone_selected=$_zone;
+            }
+        	printf (" Zone <input type=text size=15 name=zone value='%s'>",$_zone_selected);
         }
-        print "</select>";
 
         printf (" Value<input type=text size=35 name=value value='%s'>",trim($_REQUEST['value']));
         printf (" Priority<input type=text size=5 name=priority value='%s'>",trim($_REQUEST['priority']));
@@ -6646,7 +6675,7 @@ class DnsRecords extends Records {
                       );
         // Range
         $range=array('start' => 0,
-                     'count' => 100
+                     'count' => $this->max_zones_selection
                      );
 
         // Order
@@ -6670,6 +6699,7 @@ class DnsRecords extends Records {
             printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
+        	if ($result->total  > $this->max_zones_selection) return false;
             foreach($result->zones as $zone) {
                 if (in_array($zone->name,$this->allowedDomains)) continue;
                 $this->allowedDomains[]=$zone->name;
@@ -9020,20 +9050,27 @@ class Customers extends Records {
 
         $this->showEngineSelection();
 
-        $this->showSeachFormCustom();
-
         print "
         </td>
         <td align=right>
         ";
         $this->showSortForm();
 
-        $this->printHiddenFormElements('skipServiceElement');
-
         print "
         </td>
-        </form>
         </tr>
+        <tr>
+        <td colspan=2>";
+
+        $this->showCustomerSelection();
+
+        $this->showSeachFormCustom();
+        print "</td>
+        </tr>
+        ";
+        $this->printHiddenFormElements('skipServiceElement');
+        print "
+        </form>
         </table>
         ";
     }
@@ -9258,15 +9295,15 @@ class Customers extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" User<input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
-        printf (" Name<input type=text size=7 name=firstName_filter value='%s'>",$this->filters['firstName']);
-        printf ("<input type=text size=7 name=lastName_filter value='%s'>",$this->filters['lastName']);
-        printf (" Organization<input type=text size=10 name=organization_filter value='%s'>",$this->filters['organization']);
-        printf (" Email<input type=text size=10 name=email_filter value='%s'>",$this->filters['email']);
+        printf (" Username<input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
+        printf (" FN<input type=text size=10 name=firstName_filter value='%s'>",$this->filters['firstName']);
+        printf (" LN<input type=text size=15 name=lastName_filter value='%s'>",$this->filters['lastName']);
+        printf (" Organization<input type=text size=15 name=organization_filter value='%s'>",$this->filters['organization']);
+        printf (" Email<input type=text size=15 name=email_filter value='%s'>",$this->filters['email']);
 
         if ($this->adminonly) {
             if ($this->filters['only_resellers']) $check_only_resellers_filter='checked';
-            printf (" Res<input type=checkbox name=only_resellers_filter value=1 %s>",$check_only_resellers_filter);
+            printf (" Resellers<input type=checkbox name=only_resellers_filter value=1 %s>",$check_only_resellers_filter);
         }
     }
 
