@@ -6174,6 +6174,30 @@ class DnsRecords extends Records {
 
 
     											),
+                               'stun' =>  array('name'    => 'STUN - NAT mirror',
+                                                  'records' =>  array('srv'   => array('name'  => '_stun._udp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '0',
+                                                                                       'value' => '10 3478 #VALUE#|10 3478 stun'
+                                                                                       )
+                                                                      ),
+                                                  ),
+                               'xmpp-server' =>  array('name'    => 'XMPP - Jabber server',
+                                                  'records' =>  array('srv'   => array('name'  => '_xmpp-server._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '0',
+                                                                                       'value' => '10 5269 #VALUE#|10 5269 xmpp'
+                                                                                       )
+                                                                      ),
+                                                  ),
+                               'mediaproxy' =>  array('name'    => 'MediaProxy - RTP relay',
+                                                  'records' =>  array('srv'   => array('name'  => '_mediaproxy._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '0',
+                                                                                       'value' => '10 25060 #VALUE#|10 25060 mediaproxy'
+                                                                                       )
+                                                                      ),
+                                                  ),
                                'msrp' =>  array('name'    => 'MSRP - IM relay',
                                                   'records' =>  array('srv'   => array('name'  => '_msrps._tcp',
                                                                                        'type'   => 'SRV',
@@ -11406,10 +11430,9 @@ class Actions {
         }
         print "</select>";
 
-
         if (!$hideParameter) {
             print "
-            <input type=text size=15 name=sub_action_parameter>
+            <input type=text size=35 name=sub_action_parameter>
             ";
         }
         print "
