@@ -12533,7 +12533,7 @@ class DnsZonesActions extends Actions {
 
                     $function=array('commit'   => array('name'       => 'updateZone',
                                                         'parameters' => array($zone),
-                                                        'logs'       => array('success' => sprintf('Infor for zone %s has been set to %s',$key['name'],$sub_action_parameter)
+                                                        'logs'       => array('success' => sprintf('Info for zone %s has been set to %s',$key['name'],$sub_action_parameter)
                                                                               )
                                                        )
                                     );
