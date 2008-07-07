@@ -890,6 +890,16 @@ class WebService_NGNPro_DnsPort extends SOAP_Client_Custom
                                     'use' => 'encoded'));
         return $result;
     }
+    function &getZone($zone)
+    {
+        $result = $this->call('getZone',
+                              $v = array('zone' => $zone),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Dns',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
     function &getZones($query)
     {
         // query is a ComplexType DnsZoneQuery,

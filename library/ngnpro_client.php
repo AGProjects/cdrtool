@@ -6095,6 +6095,54 @@ class DnsZones extends Records {
             }
         }
     }
+
+    function getRecordKeys() {
+
+        // Filter
+        $filter=array('name'     => $this->filters['name'],
+                      'info'     => $this->filters['info'],
+                      'customer' => intval($this->filters['customer']),
+                      'reseller' => intval($this->filters['reseller'])
+                      );
+
+        // Range
+        $range=array('start' => 0,
+                     'count' => 200
+                     );
+
+        // Order
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+
+        // Insert credetials
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SoapEngine->soapclient->getZones($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            foreach ($result->zones as $zone) {
+                $this->selectionKeys[]=array('name' => $zone->name);
+            }
+            return true;
+        }
+    }
 }
 
 class DnsRecords extends Records {
@@ -12313,6 +12361,182 @@ class DnsRecordsActions extends Actions {
                                                        )
                                     );
 
+                    $this->SoapEngine->execute($function,$this->html);
+                }
+            }
+        }
+
+        print "</ol>";
+    }
+}
+
+class DnsZonesActions extends Actions {
+    var $actions=array(
+                       'changettl'      => 'Change TTL to:',
+                       'changeexpire'   => 'Change Expire to:',
+                       'changeminimum'  => 'Change Minimum to:',
+                       'changeretry'    => 'Change Retry to:',
+                       'changeinfo'     => 'Change Info to:',
+                       'delete'         => 'Delete zones:'
+                       );
+
+    function DnsZonesActions(&$SoapEngine) {
+        $this->Actions(&$SoapEngine);
+    }
+
+    function execute($selectionKeys,$action,$sub_action_parameter) {
+        if (!in_array($action,array_keys($this->actions))) {
+            print "<font color=red>Error: Invalid action $action</font>";
+            return false;
+        }
+
+        print "<ol>";
+        foreach($selectionKeys as $key) {
+            flush();
+            print "<li>";
+
+            if ($action=='delete') {
+
+                $function=array('commit'   => array('name'       => 'deleteZone',
+                                                    'parameters' => $key['name'],
+                                                    'logs'       => array('success' => sprintf('Zone %s has been deleted',$key['name'])
+                                                                          )
+                                                   )
+        
+                                );
+    
+                $this->SoapEngine->execute($function,$this->html);
+            } else if ($action  == 'changettl') {
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
+
+                if (PEAR::isError($zone)) {
+                    $error_msg  = $zone->getMessage();
+                    $error_fault= $zone->getFault();
+                    $error_code = $zone->getCode();
+                    printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    break;
+                } else {
+
+                    if (!is_numeric($sub_action_parameter)) {
+                        printf ("<font color=red>Error: TTL '%s' must be numeric</font>",$sub_action_parameter);
+                        continue;
+                    }
+
+                    $zone->ttl=intval($sub_action_parameter);
+
+                    $function=array('commit'   => array('name'       => 'updateZone',
+                                                        'parameters' => array($zone),
+                                                        'logs'       => array('success' => sprintf('TTL for zone %s has been set to %d',$key['name'],intval($sub_action_parameter))
+                                                                              )
+                                                       )
+            
+                                    );
+                    $this->SoapEngine->execute($function,$this->html);
+                }
+            } else if ($action  == 'changeexpire') {
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
+
+                if (PEAR::isError($zone)) {
+                    $error_msg  = $zone->getMessage();
+                    $error_fault= $zone->getFault();
+                    $error_code = $zone->getCode();
+                    printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    break;
+                } else {
+
+                    if (!is_numeric($sub_action_parameter)) {
+                        printf ("<font color=red>Error: Expire '%s' must be numeric</font>",$sub_action_parameter);
+                        continue;
+                    }
+
+                    $zone->expire=intval($sub_action_parameter);
+
+                    $function=array('commit'   => array('name'       => 'updateZone',
+                                                        'parameters' => array($zone),
+                                                        'logs'       => array('success' => sprintf('Expire for zone %s has been set to %d',$key['name'],intval($sub_action_parameter))
+                                                                              )
+                                                       )
+            
+                                    );
+                    $this->SoapEngine->execute($function,$this->html);
+                }
+            } else if ($action  == 'changeminimum') {
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
+
+                if (PEAR::isError($zone)) {
+                    $error_msg  = $zone->getMessage();
+                    $error_fault= $zone->getFault();
+                    $error_code = $zone->getCode();
+                    printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    break;
+                } else {
+
+                    if (!is_numeric($sub_action_parameter)) {
+                        printf ("<font color=red>Error: Minimum '%s' must be numeric</font>",$sub_action_parameter);
+                        continue;
+                    }
+
+                    $zone->minimum=intval($sub_action_parameter);
+
+                    $function=array('commit'   => array('name'       => 'updateZone',
+                                                        'parameters' => array($zone),
+                                                        'logs'       => array('success' => sprintf('Minimum for zone %s has been set to %d',$key['name'],intval($sub_action_parameter))
+                                                                              )
+                                                       )
+            
+                                    );
+                    $this->SoapEngine->execute($function,$this->html);
+                }
+            } else if ($action  == 'changeretry') {
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
+
+                if (PEAR::isError($zone)) {
+                    $error_msg  = $zone->getMessage();
+                    $error_fault= $zone->getFault();
+                    $error_code = $zone->getCode();
+                    printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    break;
+                } else {
+
+                    if (!is_numeric($sub_action_parameter)) {
+                        printf ("<font color=red>Error: Retry '%s' must be numeric</font>",$sub_action_parameter);
+                        continue;
+                    }
+
+                    $zone->retry=intval($sub_action_parameter);
+
+                    $function=array('commit'   => array('name'       => 'updateZone',
+                                                        'parameters' => array($zone),
+                                                        'logs'       => array('success' => sprintf('Retry for zone %s has been set to %d',$key['name'],intval($sub_action_parameter))
+                                                                              )
+                                                       )
+            
+                                    );
+                    $this->SoapEngine->execute($function,$this->html);
+                }
+            } else if ($action  == 'changeinfo') {
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
+
+                if (PEAR::isError($zone)) {
+                    $error_msg  = $zone->getMessage();
+                    $error_fault= $zone->getFault();
+                    $error_code = $zone->getCode();
+                    printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    break;
+                } else {
+                	$zone->info=$sub_action_parameter;
+
+                    $function=array('commit'   => array('name'       => 'updateZone',
+                                                        'parameters' => array($zone),
+                                                        'logs'       => array('success' => sprintf('Infor for zone %s has been set to %s',$key['name'],$sub_action_parameter)
+                                                                              )
+                                                       )
+                                    );
                     $this->SoapEngine->execute($function,$this->html);
                 }
             }
