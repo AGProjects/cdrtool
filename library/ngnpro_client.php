@@ -39,7 +39,7 @@
                                            'name'          => 'Login accounts',
                                            'soap_class'    => 'WebService_NGNPro_CustomerPort',
                                            'category'      => 'general',
-                                           'description'   => 'Manage login accounts, customer information  and properties. Customer id can be assigned to entities like SIP domains and ENUM ranges. Use % to match a pattern. '
+                                           'description'   => 'Manage login accounts, customer information  and properties. Customer id can be assigned to entities like SIP domains and ENUM ranges. Use _ or % to match one or more characters. '
                                            );
 
     
@@ -145,70 +145,70 @@ class SoapEngine {
                                            'name'          => 'SIP accounts',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'sip',
-                                           'description'   => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use % to match a pattern. ',
+                                           'description'   => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use _ or % to match one or more characters. ',
                                            ),
                         'sip_domains'    => array(
                                            'records_class' => 'SipDomains',
                                            'name'          => 'SIP domains',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'sip',
-                                           'description'   => 'Manage SIP domains (e.g example.com) served by the SIP Proxy. Use % to match a pattern. '
+                                           'description'   => 'Manage SIP domains (e.g example.com) served by the SIP Proxy. Use _ or % to match one or more characters. '
                                            ),
                         'sip_aliases'    => array(
                                            'records_class' => 'SipAliases',
                                            'name'          => 'SIP aliases',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'sip',
-                                           'description'   => 'Manage aliases for SIP destinations (e.g. user1@example1.com alias to user2@example2.com). Use % to match a pattern. '
+                                           'description'   => 'Manage aliases for SIP destinations (e.g. user1@example1.com alias to user2@example2.com). Use _ or % to match one or more characters. '
                                            ),
                         'customers'      => array(
                                            'records_class' => 'Customers',
                                            'name'          => 'Login accounts',
                                            'soap_class'    => 'WebService_NGNPro_CustomerPort',
                                            'category'      => 'general',
-                                           'description'   => 'Manage login accounts, customer information  and properties. Customer id can be assigned to entities like SIP domains and ENUM ranges. Use % to match a pattern. '
+                                           'description'   => 'Manage login accounts, customer information  and properties. Customer id can be assigned to entities like SIP domains and ENUM ranges. Use _ or % to match one or more characters. '
                                            ),
                         'enum_numbers'   => array(
                                            'records_class' => 'EnumMappings',
                                            'name'          => 'ENUM numbers',
                                            'soap_class'    => 'WebService_NGNPro_EnumPort',
                                            'category'      => 'dns',
-                                           'description'   => 'Manage phone numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use % to match a pattern. '
+                                           'description'   => 'Manage phone numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use _ or % to match one or more characters. '
                                            ),
                         'enum_ranges'    => array(
                                            'records_class' => 'EnumRanges',
                                            'name'          => 'ENUM ranges',
                                            'soap_class'    => 'WebService_NGNPro_EnumPort',
                                            'category'      => 'dns',
-                                           'description'   => 'Manage phone number ranges that hold individual phone numbers. Use % to match a pattern. '
+                                           'description'   => 'Manage phone number ranges that hold individual phone numbers. Use _ or % to match one or more characters. '
                                            ),
                         'dns_zones'    => array(
                                            'records_class' => 'DnsZones',
                                            'name'          => 'DNS zones',
                                            'soap_class'    => 'WebService_NGNPro_DnsPort',
                                            'category'      => 'dns',
-                                           'description'   => 'Manage DNS zones. Use % to match a pattern. '
+                                           'description'   => 'Manage DNS zones. Use _ or % to match one or more characters. '
                                            ),
                         'dns_records'    => array(
                                            'records_class' => 'DnsRecords',
                                            'name'          => 'DNS records',
                                            'soap_class'    => 'WebService_NGNPro_DnsPort',
                                            'category'      => 'dns',
-                                           'description'   => 'Manage DNS records. Use % to match a pattern. '
+                                           'description'   => 'Manage DNS records. Use _ or % to match one or more characters. '
                                            ),
                         'email_aliases'    => array(
                                            'records_class' => 'EmailAliases',
                                            'name'          => 'Email aliases',
                                            'soap_class'    => 'WebService_NGNPro_DnsPort',
                                            'category'      => 'dns',
-                                           'description'   => 'Manage email aliases. Use % to match a pattern. '
+                                           'description'   => 'Manage email aliases. Use _ or % to match one or more characters. '
                                            ),
                         'url_redirect'    => array(
                                            'records_class' => 'UrlRedirect',
                                            'name'          => 'URL redirect',
                                            'soap_class'    => 'WebService_NGNPro_DnsPort',
                                            'category'      => 'dns',
-                                           'description'   => 'Manage URL redirections. Use % to match a pattern. '
+                                           'description'   => 'Manage URL redirections. Use _ or % to match one or more characters. '
                                            ),
                         'pstn_gateway_groups' => array(
                                            'records_class' => 'GatewayGroups',
@@ -239,7 +239,7 @@ class SoapEngine {
                                            'name'          => 'PSTN routes',
                                            'soap_class'    => 'WebService_NGNPro_NetworkPort',
                                            'category'      => 'pstn',
-                                           'description'   => 'Assign gateways groups to PSTN prefixes. Use % to match a pattern. ',
+                                           'description'   => 'Assign gateways groups to PSTN prefixes. Use _ or % to match one or more characters. ',
                                            'resellers_only'=> true
                                            )
                         );
@@ -6614,8 +6614,9 @@ class DnsRecords extends Records {
                 printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
             }
             print "</select>";
-            printf (" Value <input type=text size=20 name=value_filter value='%s'>",$this->filters['value']);
         }
+        printf (" Value <input type=text size=20 name=value_filter value='%s'>",$this->filters['value']);
+
     }
 
     function deleteRecord($dictionary=array()) {
@@ -12094,10 +12095,10 @@ class SipAliasesActions extends Actions {
 
 class EnumMappingsActions extends Actions {
     var $actions=array(
-                       'delete'         => 'Delete ENUM mappings',
                        'changettl'      => 'Change TTL to:',
                        'changeowner'    => 'Change owner to:',
-                       'changeinfo'     => 'Change info to:'
+                       'changeinfo'     => 'Change info to:',
+                       'delete'         => 'Delete ENUM mappings'
                        );
 
     var $mapping_fields=array('id'       => 'integer',
@@ -12253,10 +12254,10 @@ class EnumMappingsActions extends Actions {
 
 class DnsRecordsActions extends Actions {
     var $actions=array(
-                       'changevalue'    => 'Change value:',
-                       'delete'         => 'Delete records',
                        'changettl'      => 'Change TTL to:',
-                       'changepriority' => 'Change Priority to:'
+                       'changepriority' => 'Change Priority to:',
+                       'changevalue'    => 'Change value:',
+                       'delete'         => 'Delete records'
                        );
 
     function DnsRecordsActions(&$SoapEngine) {
@@ -12377,7 +12378,7 @@ class DnsZonesActions extends Actions {
                        'changeminimum'  => 'Change Minimum to:',
                        'changeretry'    => 'Change Retry to:',
                        'changeinfo'     => 'Change Info to:',
-                       'delete'         => 'Delete zones:'
+                       'delete'         => 'Delete zones'
                        );
 
     function DnsZonesActions(&$SoapEngine) {
