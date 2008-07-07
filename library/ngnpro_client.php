@@ -5552,7 +5552,7 @@ class DnsZones extends Records {
                                                      'help'=>'Administrator address'
                                                      ),
                               'ttl'           => array('type'=>'integer',
-                                                     'help'=>'Time to leave or SOA record'
+                                                     'help'=>'Time to live of SOA record'
                                                      ),
                               'minimum'         => array('type'=>'integer',
                                                      'help'=>'Default time to live period'
@@ -6717,7 +6717,7 @@ class DnsRecords extends Records {
             } else if ($_zone=$this->getLoginProperty('dns_records_last_zone')) {
                 $_zone_selected=$_zone;
             }
-        	printf (" Zone <input type=text size=15 name=zone value='%s'>",$_zone_selected);
+        	printf (" Zone <input type=text size=20 name=zone value='%s'>",$_zone_selected);
         }
 
         printf (" Value<input type=text size=35 name=value value='%s'>",trim($_REQUEST['value']));
