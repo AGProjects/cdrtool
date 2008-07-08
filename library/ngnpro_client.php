@@ -1699,7 +1699,7 @@ class SipDomains extends Records {
     function showSeachFormCustom() {
 
         if ($this->version > 1) {
-            printf (" Domain<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
+            printf (" Domain<input type=text size=20 name=domain_filter value='%s'>",$this->filters['domain']);
         }
     }
 
@@ -1746,9 +1746,9 @@ class SipDomains extends Records {
             <input type=submit name=action value=Add>
             ";
 
-            printf (" Domain<input type=text size=20 name=domain>");
-
             $this->showCustomerTextBox();
+
+            printf (" Domain<input type=text size=20 name=domain>");
 
             print "
             </td>
@@ -2392,7 +2392,7 @@ class SipAccounts extends Records {
             printf (" FN<input type=text size=10 name=firstname_filter value='%s'>",$this->filters['firstname']);
             printf (" LN<input type=text size=10 name=lastname_filter value='%s'>",$this->filters['lastname']);
             printf (" Email<input type=text size=15 name=email_filter value='%s'>",$this->filters['email']);
-            printf (" Owner<input type=text size=6 name=owner_filter value='%s'>",$this->filters['owner']);
+            printf (" Owner<input type=text size=7 name=owner_filter value='%s'>",$this->filters['owner']);
         }
     }
 
@@ -2507,7 +2507,7 @@ class SipAccounts extends Records {
         printf (" Pass<input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
         printf (" Name<input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
         printf (" Email<input type=text size=15 name=email value='%s'>",$_REQUEST['email']);
-        printf ("<nobr>Owner<input type=text size=5 name=owner value='%s'></nobr> ",$_REQUEST['owner']);
+        printf ("<nobr>Owner<input type=text size=7 name=owner value='%s'></nobr> ",$_REQUEST['owner']);
         printf ("<nobr>PSTN<input type=checkbox name=pstn value=1 %s></nobr> ",$checked_pstn);
         printf ("<nobr>Quota<input type=text size=5 name=quota value='%s'></nobr> ",$_quota);
         printf ("<nobr>Prepaid<input type=checkbox name=prepaid value=1 %s></nobr> ",$checked_prepaid);
@@ -3147,7 +3147,7 @@ class SipAliases extends Records {
             printf ("<input type=text size=15 name=alias_domain_filter value='%s'>",$this->filters['alias_domain']);
         }
 
-        printf (" Target<input type=text size=25 name=target_username_filter value='%s'>",trim($_REQUEST['target_username_filter']));
+        printf (" Target<input type=text size=35 name=target_username_filter value='%s'>",trim($_REQUEST['target_username_filter']));
 
         if ($this->version > 1) {
             printf (" Owner<input type=text size=7 name=owner_filter value='%s'>",$this->filters['owner']);
@@ -3199,7 +3199,7 @@ class SipAliases extends Records {
 
             printf (" Target<input type=text size=35 name=target>");
 
-            printf (" Owner<input type=text size=5 name=owner>");
+            printf (" Owner<input type=text size=7 name=owner>");
 
             print "
             </td>
@@ -3722,6 +3722,10 @@ class EnumRanges extends Records {
             print "
             <input type=submit name=action value=Add>
             ";
+            if ($this->version > 1) {
+                $this->showCustomerTextBox();
+            }
+
             printf ("Prefix +<input type=text size=15 name=prefix value='%s'> ",$_REQUEST['prefix']);
             printf (" TLD");
 
@@ -3737,7 +3741,6 @@ class EnumRanges extends Records {
             printf ("Min Digits<input type=text size=3 name=minDigits value=11> ");
             printf ("Max Digits<input type=text size=3 name=maxDigits value=11> ");
             if ($this->version > 1) {
-                $this->showCustomerTextBox();
                 printf (" Info<input type=text size=15 name=info value='%s'> ",$_REQUEST['info']);
             }
 
@@ -4780,7 +4783,7 @@ class EnumMappings extends Records {
         printf ("<input type=text size=20 name=mapto_filter value='%s'></nobr>",$this->filters['mapto']);
 
         if ($this->version > 1) {
-            printf (" Owner<input type=text size=10 name=owner_filter value='%s'>",$this->filters['owner']);
+            printf (" Owner<input type=text size=7 name=owner_filter value='%s'>",$this->filters['owner']);
         }
 
     }
@@ -4945,7 +4948,7 @@ class EnumMappings extends Records {
         } else {
             printf ("<input type=text size=5 name=ttl value='3600'>");
         }
-        printf (" Owner<input type=text size=5 name=owner value='%s'>",$_REQUEST['owner']);
+        printf (" Owner<input type=text size=7 name=owner value='%s'>",$_REQUEST['owner']);
         printf (" Info<input type=text size=10 name=info value='%s'>",$_REQUEST['info']);
 
         print "
@@ -5809,8 +5812,9 @@ class DnsZones extends Records {
             print "
             <input type=submit name=action value=Add>
             ";
-            printf ("Name <input type=text size=25 name=name value='%s'> ",$_REQUEST['name']);
             $this->showCustomerTextBox();
+
+            printf (" Name <input type=text size=25 name=name value='%s'> ",$_REQUEST['name']);
             printf (" Info<input type=text size=25 name=info value='%s'> ",$_REQUEST['info']);
 
             print "
@@ -5872,8 +5876,8 @@ class DnsZones extends Records {
     }
 
     function showSeachFormCustom() {
-            printf (" Name<input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
-            printf (" Info<input type=text size=20 name=info_filter value='%s'>",$this->filters['info']);
+    	printf (" Name<input type=text size=25 name=name_filter value='%s'>",$this->filters['name']);
+    	printf (" Info<input type=text size=25 name=info_filter value='%s'>",$this->filters['info']);
     }
 
     function showRecord($zone) {
@@ -6156,11 +6160,11 @@ class DnsRecords extends Records {
 
     var $FieldsReadOnly=array(
                               'customer',
-                              'reseller',
-                              'type'
+                              'reseller'
 
                               );
     var $Fields=array(
+                              'type'     => array('type'=>'string'),
                               'priority' => array('type'=>'integer'),
                               'value'    => array('type'=>'string'),
                               'ttl'      => array('type'=>'integer')
@@ -6615,7 +6619,7 @@ class DnsRecords extends Records {
             }
             print "</select>";
         }
-        printf (" Value <input type=text size=20 name=value_filter value='%s'>",$this->filters['value']);
+        printf (" Value <input type=text size=35 name=value_filter value='%s'>",$this->filters['value']);
 
     }
 
@@ -6665,34 +6669,9 @@ class DnsRecords extends Records {
         <input type=submit name=action value=Add>
         ";
 
-        if ($this->typeFilter) {
-            printf ("Record type %s <input type=hidden name=%s>",$this->typeFilter,$this->typeFilter);
-        } else {
-            print "Record type <select name=type>
-            ";
-    
-            if ($_REQUEST['type']) {
-                $selected_type[$_REQUEST['type']]='selected';
-            } else if ($_type=$this->getLoginProperty('dns_records_last_type')) {
-                $selected_type[$_type]='selected';
-            }
-    
-            foreach(array_keys($this->recordTypes) as $_type) {
-                printf ("<option value='%s' %s>%s - %s",$_type,$selected_type[$_type],$_type,$this->recordTypes[$_type]);
-            }
-
-            foreach(array_keys($this->recordTypesTemplate) as $_type) {
-                printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$this->recordTypesTemplate[$_type]['name']);
-            }
-    
-            print "
-            </select>
-            ";
-        }
-
         printf (" Name");
 
-        printf (" <input type=text size=15 name=name value='%s'>",trim($_REQUEST['name']));
+        printf (" <input type=text size=20 name=name value='%s'>",trim($_REQUEST['name']));
 
         if (count($this->allowedDomains) > 0) {
 
@@ -6719,6 +6698,32 @@ class DnsRecords extends Records {
             }
         	printf (" Zone <input type=text size=20 name=zone value='%s'>",$_zone_selected);
         }
+
+        if ($this->typeFilter) {
+            printf ("Type %s <input type=hidden name=%s>",$this->typeFilter,$this->typeFilter);
+        } else {
+            print "Type <select name=type>
+            ";
+    
+            if ($_REQUEST['type']) {
+                $selected_type[$_REQUEST['type']]='selected';
+            } else if ($_type=$this->getLoginProperty('dns_records_last_type')) {
+                $selected_type[$_type]='selected';
+            }
+    
+            foreach(array_keys($this->recordTypes) as $_type) {
+                printf ("<option value='%s' %s>%s - %s",$_type,$selected_type[$_type],$_type,$this->recordTypes[$_type]);
+            }
+
+            foreach(array_keys($this->recordTypesTemplate) as $_type) {
+                printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$this->recordTypesTemplate[$_type]['name']);
+            }
+    
+            print "
+            </select>
+            ";
+        }
+
 
         printf (" Value<input type=text size=35 name=value value='%s'>",trim($_REQUEST['value']));
         printf (" Priority<input type=text size=5 name=priority value='%s'>",trim($_REQUEST['priority']));
@@ -7016,7 +7021,29 @@ class DnsRecords extends Records {
                 $item_name=ucfirst($item);
             }
 
-            if ($this->Fields[$item]['type'] == 'text') {
+            if ($item == 'type') {
+            	$selected_type[$record->$item]='selected';
+
+				$select_box=sprintf("<select name=%s_form>",$item);
+                foreach(array_keys($this->recordTypes) as $_type) {
+                    $select_box.=sprintf ("<option value='%s' %s>%s - %s",$_type,$selected_type[$_type],$_type,$this->recordTypes[$_type]);
+                }
+    
+                foreach(array_keys($this->recordTypesTemplate) as $_type) {
+                    $select_box.=sprintf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$this->recordTypesTemplate[$_type]['name']);
+                }
+
+				$select_box.="</select>";
+
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border>%s</td>
+                </tr>",
+                $item_name,
+                $select_box
+                );
+
+            } else if ($this->Fields[$item]['type'] == 'text') {
                 printf ("<tr>
                 <td class=border valign=top>%s</td>
                 <td class=border><textarea cols=0 name=%s_form rows=4>%s</textarea></td>
@@ -7359,10 +7386,10 @@ class TrustedPeers extends Records {
             print "
             <input type=submit name=action value=Add>
             ";
+            $this->showCustomerTextBox();
+
             printf (" IP address<input type=text size=20 name=ipaddress>");
             printf (" Description<input type=text size=30 name=description>");
-
-            $this->showCustomerTextBox();
 
             print "
             </td>
@@ -7446,8 +7473,8 @@ class TrustedPeers extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" IP address<input type=text size=15 name=ip_filter value='%s'>",$this->filters['ip']);
-        printf (" Description<input type=text size=15 name=description_filter value='%s'>",$this->filters['description']);
+        printf (" IP address<input type=text size=20 name=ip_filter value='%s'>",$this->filters['ip']);
+        printf (" Description<input type=text size=30 name=description_filter value='%s'>",$this->filters['description']);
 
     }
 
@@ -7674,9 +7701,9 @@ class GatewayGroups extends Records {
             <input type=submit name=action value=Add>
             ";
 
-            printf (" Name<input type=text size=20 name=name>");
-
             $this->showCustomerTextBox();
+
+            printf (" Name<input type=text size=20 name=name>");
 
             print "
             </td>
@@ -7760,7 +7787,7 @@ class GatewayGroups extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Name<input type=text size=15 name=name_filter value='%s'>",$this->filters['name']);
+        printf (" Name<input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
     }
 
 }
@@ -7784,6 +7811,7 @@ class Gateways extends Records {
     }
 
     function listRecords() {
+        $this->getGatewayGroups();
 
         $this->showSeachForm();
 
@@ -8151,7 +8179,15 @@ class Gateways extends Records {
 
     function showSeachFormCustom() {
         printf (" Name<input type=text size=15 name=name_filter value='%s'>",$this->filters['name']);
-        printf (" Group<input type=text size=15 name=group_filter value='%s'>",$this->filters['group']);
+        print "
+        <select name=group_filter>
+        <option value=''>Group";
+        $selected_group[$this->filters['group']]='selected';
+        foreach ($this->gatewayGroups as $_grp) {
+            printf ("<option value='%s' %s>%s",$_grp,$selected_group[$_grp],$_grp);
+        }
+        printf (" </select>");
+
     }
 
 }
@@ -8518,8 +8554,9 @@ class Routes extends Records {
     function showSeachFormCustom() {
 
         printf (" Prefix<input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
-        print "<select name=gatewayGroup_filter>
-            <option>";
+        print "
+        <select name=gatewayGroup_filter>
+        <option value=''>Group";
         $selected_gatewayGroups[$this->filters['gatewayGroup']]='selected';
         foreach ($this->gatewayGroups as $_grp) {
             printf ("<option value='%s' %s>%s",$_grp,$selected_gatewayGroups[$_grp],$_grp);
