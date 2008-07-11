@@ -3952,7 +3952,7 @@ class SipSettings {
     function addPhonebookEntry() {
         dprint("addPhonebookEntry()");
 
-        $uri       = trim($_REQUEST['uri']);
+        $uri       = strtolower(trim($_REQUEST['uri']));
 
         if (!strlen($uri)) return false;
 
@@ -3977,10 +3977,10 @@ class SipSettings {
     function updatePhonebookEntry() {
 
         dprint("updatePhonebookEntry()");
-        $uri       = trim($_REQUEST['uri']);
+        $uri       = strtolower(trim($_REQUEST['uri']));
         $group     = trim($_REQUEST['group']);
 
-           if ($this->SOAPversion > 1) {
+        if ($this->SOAPversion > 1) {
             $name = trim($_REQUEST['name']);
             $phonebookEntry=array('name' => $name,
                                   'uri'       => $uri,
@@ -4017,7 +4017,7 @@ class SipSettings {
     function deletePhonebookEntry() {
         dprint("deletePhonebookEntry()");
 
-        $uri = $_REQUEST['uri'];
+        $uri = strtolower($_REQUEST['uri']);
 
         dprint("deletePhonebookEntry");
         $this->SipPort->addHeader($this->SoapAuth);
