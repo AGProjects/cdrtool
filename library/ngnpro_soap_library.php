@@ -926,6 +926,19 @@ class WebService_NGNPro_DnsPort extends SOAP_Client_Custom
                                     'use' => 'encoded'));
         return $result;
     }
+    function &addFancyRecord($record)
+    {
+        // record is a ComplexType DnsRecord,
+        // refer to wsdl for more info
+        $record = new SOAP_Value('record', '{urn:AGProjects:NGNPro}DnsRecord', $record);
+        $result = $this->call('addFancyRecord',
+                              $v = array('record' => $record),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Dns',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
     function &updateRecord($record)
     {
         // record is a ComplexType DnsRecord,

@@ -6161,6 +6161,8 @@ class DnsRecords extends Records {
 	var $max_zones_selection = 50;
 	var $typeFilter  = false;
     var $default_ttl = 3600;
+    var $fancy = false;
+
     var $sortElements=array('changeDate' => 'Change date',
                             'type'       => 'Type',
                             'name'       => 'Name'
@@ -6465,20 +6467,38 @@ class DnsRecords extends Records {
             </table>
             <p>
             <table border=0 cellpadding=2 width=100%>
-            <tr bgcolor=lightgrey>
-                <td><b>Id</b></th>
-                <td><b>Customer</b></td>
-                <td><b>Zone</b></td>
-                <td><b>Record id</b></td>
-                <td><b>Name</b></td>
-                <td><b>Type</b></td>
-                <td align=right><b>Priority</b></td>
-                <td><b>Value</b></td>
-                <td><b>TTL</b></td>
-                <td><b>Change date</b></td>
-                <td><b>Actions</b></td>
-            </tr>
             ";
+            if ($this->fancy) {
+                print "
+                <tr bgcolor=lightgrey>
+                    <td><b>Id</b></th>
+                    <td><b>Customer</b></td>
+                    <td><b>Zone</b></td>
+                    <td><b>Record id</b></td>
+                    <td><b>Name</b></td>
+                    <td><b>Type</b></td>
+                    <td><b>Value</b></td>
+                    <td><b>Change date</b></td>
+                    <td><b>Actions</b></td>
+                </tr>
+                ";
+            } else {
+                print "
+                <tr bgcolor=lightgrey>
+                    <td><b>Id</b></th>
+                    <td><b>Customer</b></td>
+                    <td><b>Zone</b></td>
+                    <td><b>Record id</b></td>
+                    <td><b>Name</b></td>
+                    <td><b>Type</b></td>
+                    <td align=right><b>Priority</b></td>
+                    <td><b>Value</b></td>
+                    <td><b>TTL</b></td>
+                    <td><b>Change date</b></td>
+                    <td><b>Actions</b></td>
+                </tr>
+                ";
+            }
 
             if (!$this->next)  $this->next=0;
 
@@ -6533,7 +6553,8 @@ class DnsRecords extends Records {
                     urlencode($record->zone)
                     );
 
-                    $_record_url = $this->url.sprintf("&service=dns_records@%s&zone_filter=%s&id_filter=%s",
+                    $_record_url = $this->url.sprintf("&service=%s@%s&zone_filter=%s&id_filter=%s",
+                    urlencode($this->SoapEngine->service),
                     urlencode($this->SoapEngine->soapEngine),
                     urlencode($record->zone),
                     urlencode($record->id)
@@ -6551,40 +6572,73 @@ class DnsRecords extends Records {
                         $_owner_url='';
                     }          
 
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td><a href=%s>%s.%s</a></td>
-                    <td><a href=%s>%s</a></td>
-                    <td><a href=%s>%s</a></td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td align=right>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>",
+		            if ($this->fancy) {
 
-                    $bgcolor,
-                    $index,
-                    $_customer_url,
-                    $record->customer,
-                    $record->reseller,
-                    $_zone_url,
-                    $record->zone,
-                    $_record_url,
-                    $record->id,
-                    $record->name,
-                    $record->type,
-                    $record->priority,
-                    $record->value,
-                    $record->ttl,
-                    $record->changeDate,
-                    $_url,
-                    $actionText
-                    );
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td><a href=%s>%s.%s</a></td>
+                        <td><a href=%s>%s</a></td>
+                        <td><a href=%s>%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+    
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $record->customer,
+                        $record->reseller,
+                        $_zone_url,
+                        $record->zone,
+                        $_record_url,
+                        $record->id,
+                        $record->name,
+                        $record->type,
+                        $record->value,
+                        $record->changeDate,
+                        $_url,
+                        $actionText
+                        );
+                    } else {
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td><a href=%s>%s.%s</a></td>
+                        <td><a href=%s>%s</a></td>
+                        <td><a href=%s>%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td align=right>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+    
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $record->customer,
+                        $record->reseller,
+                        $_zone_url,
+                        $record->zone,
+                        $_record_url,
+                        $record->id,
+                        $record->name,
+                        $record->type,
+                        $record->priority,
+                        $record->value,
+                        $record->ttl,
+                        $record->changeDate,
+                        $_url,
+                        $actionText
+                        );
 
+                    }
                 	$i++;
 
                 }
@@ -6735,9 +6789,11 @@ class DnsRecords extends Records {
             ";
         }
 
-
         printf (" Value<input type=text size=35 name=value value='%s'>",trim($_REQUEST['value']));
-        printf (" Priority<input type=text size=5 name=priority value='%s'>",trim($_REQUEST['priority']));
+
+        if (!$this->fancy)  {
+        	printf (" Priority<input type=text size=5 name=priority value='%s'>",trim($_REQUEST['priority']));
+        }
 
         print "
         </td>
@@ -7118,7 +7174,10 @@ class DnsRecords extends Records {
                      );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
-        $result     = $this->SoapEngine->soapclient->getRecords($Query);
+
+        // Call function
+        print "Get $this->getRecordsFunction";
+        $result = call_user_func_array(array(&$this->SoapEngine->soapclient,$this->getRecordsFunction),array($Query));
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -7167,18 +7226,34 @@ class DnsRecords extends Records {
 }
 
 class FancyRecords extends DnsRecords {
+    var $fancy = true;
+
 	var $addRecordFunction    = 'addFancyRecord';
     var $deleteRecordFunction = 'deleteFancyRecord';
     var $updateRecordFunction = 'updateFancyRecord';
     var $getRecordsFunction   = 'getFancyRecords';
     var $getRecordFunction    = 'getFancyRecord';
+
+    var $recordTypesTemplate=array();
+
+    var $Fields=array(
+                              'type'     => array('type'=>'string'),
+                              'value'    => array('type'=>'string')
+                              );
+
+
 }
 
 class EmailAliases extends FancyRecords {
+    var $recordTypes=array('MBOX'  => 'Email alias'
+                           );
     var $typeFilter='MBOX';
 }
 
 class UrlRedirect extends FancyRecords {
+    var $recordTypes=array(
+                           'URL'   => 'URL forwarding'
+                           );
     var $typeFilter='URL';
 }
 
