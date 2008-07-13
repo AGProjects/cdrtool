@@ -163,10 +163,10 @@ class SoapEngine {
                                            ),
                         'customers'      => array(
                                            'records_class' => 'Customers',
-                                           'name'          => 'Login accounts',
+                                           'name'          => 'Customers',
                                            'soap_class'    => 'WebService_NGNPro_CustomerPort',
                                            'category'      => 'general',
-                                           'description'   => 'Manage login accounts, customer information  and properties. Customer id can be assigned to entities like SIP domains and ENUM ranges. Use _ or % to match one or more characters. '
+                                           'description'   => 'Manage customers, address information and properties. SIP domains and ENUM ranges can be assigned to customers. Use _ or % to match one or more characters. '
                                            ),
                         'enum_numbers'   => array(
                                            'records_class' => 'EnumMappings',
@@ -690,7 +690,7 @@ class Records {
             foreach (array_keys($this->SoapEngine->ports) as $_port) {
                 $idx=$_port.'@'.$_engine;
 
-                if (in_array($_port,$this->SoapEngine->skip_ports[$_engine])) continue;
+                if (is_array($this->SoapEngine->skip_ports[$_engine]) && in_array($_port,$this->SoapEngine->skip_ports[$_engine])) continue;
 
                 if ($this->login_credentials['login_type'] !='admin') {
                     if (!$pstn_access && (preg_match("/^pstn_/",$_port))) continue;
@@ -3422,7 +3422,7 @@ class EnumRanges extends Records {
             $filter=array('prefix'   => $this->filters['prefix'],
                           'tld'      => $this->filters['tld'],
                           'info'     => $this->filters['info'],
-                            'customer' => intval($this->filters['customer']),
+                          'customer' => intval($this->filters['customer']),
                           'reseller' => intval($this->filters['reseller'])
                           );
 
@@ -3486,11 +3486,12 @@ class EnumRanges extends Records {
                     <td><b>Customer</b></td>
                     <td><b>Prefix </b></td>
                     <td><b>TLD</b></td>
+                    <td><b>Name servers</b></td>
                     <td><b>Serial</b></td>
                     <td><b>TTL</b></td>
                     <td><b>Info</b></td>
-                    <td><b>Min digits</b></td>
-                    <td><b>Max digits</b></td>
+                    <td><b>Min</b></td>
+                    <td><b>Max</b></td>
                     <td><b>Size</b></td>
                     <td colspan=2><b>Used</b></td>
                     <td><b>Change date</b></td>
@@ -3591,12 +3592,18 @@ class EnumRanges extends Records {
                         urlencode($this->SoapEngine->customer_engine),
                         urlencode($range->customer)
                         );
-                        
+
+
+						$_nameservers='';
+                        foreach ($range->nameservers as $_ns) {
+                        	$_nameservers.= $_ns.' ';
+                        }
                         printf("
                         <tr bgcolor=%s>
                         <td>%s %s</td>
                         <td><a href=%s>%s.%s</a></td>
                         <td>+%s</td>
+                        <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
@@ -3617,6 +3624,7 @@ class EnumRanges extends Records {
                         $range->reseller,
                         $range_link,
                         $range->id->tld,
+                        $_nameservers,
                         $range->serial,
                         $range->ttl,
                         $range->info,
@@ -6150,7 +6158,7 @@ class DnsZones extends Records {
 }
 
 class DnsRecords extends Records {
-	var $max_zones_selection = 100;
+	var $max_zones_selection = 50;
 	var $typeFilter  = false;
     var $default_ttl = 3600;
     var $sortElements=array('changeDate' => 'Change date',
@@ -6178,11 +6186,15 @@ class DnsRecords extends Records {
                            'NS'    => 'Name server address',
                            'NAPTR' => 'Name authority',
                            'PTR'   => 'Reverse IP address',
-                           'MBOX'  => 'Email forwarding',
-                           'URL'   => 'WEB redirect',
                            'TXT'   => 'Text',
                            'LOC'   => 'Geo location'
                            );
+
+	var $addRecordFunction    = 'addRecord';
+    var $deleteRecordFunction = 'deleteRecord';
+    var $updateRecordFunction = 'updateRecord';
+    var $getRecordsFunction   = 'getRecords';
+    var $getRecordFunction    = 'getRecord';
 
     var $recordTypesTemplate=array(
                                'sipudp' =>  array('name'    => 'SIP - UDP transport',
@@ -6430,9 +6442,7 @@ class DnsRecords extends Records {
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
         // Call function
-        $result     = $this->SoapEngine->soapclient->getRecords($Query);
-
-        //$this->print_w($result);
+        $result = call_user_func_array(array(&$this->SoapEngine->soapclient,$this->getRecordsFunction),array($Query));
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -6641,7 +6651,7 @@ class DnsRecords extends Records {
             return false;
         }
 
-        $function=array('commit'   => array('name'       => 'deleteRecord',
+        $function=array('commit'   => array('name'       => $this->deleteRecordFunction,
                                             'parameters' => array($id),
                                             'logs'       => array('success' => sprintf('Dns record %s has been deleted',$id)))
                         );
@@ -6649,6 +6659,7 @@ class DnsRecords extends Records {
 		$zone=$this->filters['zone'];
        	unset($this->filters);
         $this->filters['zone']=$zone;
+
        	return $this->SoapEngine->execute($function,$this->html);
     }
 
@@ -6876,7 +6887,7 @@ class DnsRecords extends Records {
                 $this->setLoginProperties($_p);
             }
      
-            $function=array('commit'   => array('name'       => 'addRecord',
+            $function=array('commit'   => array('name'       => $this->addRecordFunction,
                                                 'parameters' => array($record),
                                                 'logs'       => array('success' => sprintf('Dns record %s under %s has been added',$name,$zone))),
                             );
@@ -6930,7 +6941,7 @@ class DnsRecords extends Records {
                               'priority' => intval($_records['priority'])
                               );
 
-                $function=array('commit'   => array('name'       => 'addRecord',
+                $function=array('commit'   => array('name'       => $this->addRecordFunction,
                                                     'parameters' => array($record),
                                                     'logs'       => array('success' => sprintf('Dns %s record under %s has been added',$_records['type'],$zone))
                                                     )
@@ -7145,8 +7156,7 @@ class DnsRecords extends Records {
             }
         }
 
-        //print_r($record);
-        $function=array('commit'   => array('name'       => 'updateRecord',
+        $function=array('commit'   => array('name'       => $this->updateRecordFunction,
                                             'parameters' => array($record),
                                             'logs'       => array('success' => sprintf('Record %s has been updated',$_REQUEST['id_filter'])))
                         );
@@ -7156,11 +7166,19 @@ class DnsRecords extends Records {
     }
 }
 
-class EmailAliases extends DnsRecords {
+class FancyRecords extends DnsRecords {
+	var $addRecordFunction    = 'addFancyRecord';
+    var $deleteRecordFunction = 'deleteFancyRecord';
+    var $updateRecordFunction = 'updateFancyRecord';
+    var $getRecordsFunction   = 'getFancyRecords';
+    var $getRecordFunction    = 'getFancyRecord';
+}
+
+class EmailAliases extends FancyRecords {
     var $typeFilter='MBOX';
 }
 
-class UrlRedirect extends DnsRecords {
+class UrlRedirect extends FancyRecords {
     var $typeFilter='URL';
 }
 
@@ -9262,7 +9280,7 @@ class Customers extends Records {
             urlencode($this->SoapEngine->service)
             );
 
-            printf ("<a href=%s>New login account</a> ",$_add_url);
+            printf ("<a href=%s>New account</a> ",$_add_url);
 
 
             if ($this->adminonly) {
@@ -9271,7 +9289,7 @@ class Customers extends Records {
                     urlencode($this->SoapEngine->service),
                     urlencode($this->filters['reseller'])
                     );
-                    printf (" | <a href=%s>New login account under reseller %s</a> ",$_add_url,$this->filters['reseller']);
+                    printf (" | <a href=%s>New customer under reseller %s</a> ",$_add_url,$this->filters['reseller']);
                 }
             }
 
@@ -10262,7 +10280,7 @@ class Customers extends Records {
 
     function showAddForm($confirmPassword=false) {
 
-        print "<h3>Register new login account</h3>";
+        print "<h3>Register new account</h3>";
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "
         <p>
@@ -10553,7 +10571,7 @@ class Customers extends Records {
 
         $body=
         sprintf("Dear %s,\n\n",$customer['firstName']).
-        sprintf("This email is for your record. You have registered a new login account on %s as follows:\n\n",$url).
+        sprintf("This email is for your record. You have registered a new account on %s as follows:\n\n",$url).
         sprintf("Username: %s\n",$customer['username']).
         sprintf("Password: %s\n",$customer['password']).
         "\n".
@@ -10562,7 +10580,7 @@ class Customers extends Records {
         "This is an automatic message, do not reply.\n";
 
         $from    = sprintf("From: %s",$this->support_email);
-        $subject = sprintf("Your login account at %s",$url);
+        $subject = sprintf("Your account at %s",$url);
 
         return mail($customer['email'], $subject, $body, $from);
     }
@@ -11473,6 +11491,7 @@ class Actions {
 
     var $actions = array();
     var $version = 1;
+    var $sub_action_parameter_size = 35;
 
     function Actions(&$SoapEngine) {
         $this->SoapEngine = $SoapEngine;
@@ -11517,9 +11536,9 @@ class Actions {
         print "</select>";
 
         if (!$hideParameter) {
-            print "
-            <input type=text size=35 name=sub_action_parameter>
-            ";
+            printf ("
+            <input type=text size=%d name=sub_action_parameter>
+            ",$this->sub_action_parameter_size);
         }
         print "
         </td>
@@ -12290,6 +12309,8 @@ class EnumMappingsActions extends Actions {
 }
 
 class DnsRecordsActions extends Actions {
+	var $sub_action_parameter_size = 50;
+
     var $actions=array(
                        'changettl'      => 'Change TTL to:',
                        'changepriority' => 'Change Priority to:',
@@ -12409,12 +12430,16 @@ class DnsRecordsActions extends Actions {
 }
 
 class DnsZonesActions extends Actions {
+	var $sub_action_parameter_size = 50;
+
     var $actions=array(
                        'changettl'      => 'Change TTL to:',
                        'changeexpire'   => 'Change Expire to:',
                        'changeminimum'  => 'Change Minimum to:',
                        'changeretry'    => 'Change Retry to:',
                        'changeinfo'     => 'Change Info to:',
+                       'addnsrecord'    => 'Add name server:',
+                       'removensrecord' => 'Remove name server:',
                        'delete'         => 'Delete zones'
                        );
 
@@ -12522,6 +12547,58 @@ class DnsZonesActions extends Actions {
                     $function=array('commit'   => array('name'       => 'updateZone',
                                                         'parameters' => array($zone),
                                                         'logs'       => array('success' => sprintf('Minimum for zone %s has been set to %d',$key['name'],intval($sub_action_parameter))
+                                                                              )
+                                                       )
+            
+                                    );
+                    $this->SoapEngine->execute($function,$this->html);
+                }
+            } else if ($action  == 'addnsrecord') {
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
+
+                if (PEAR::isError($zone)) {
+                    $error_msg  = $zone->getMessage();
+                    $error_fault= $zone->getFault();
+                    $error_code = $zone->getCode();
+                    printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    break;
+                } else {
+
+					$zone->nameservers[]=$sub_action_parameter;
+					$zone->nameservers=array_unique($zone->nameservers);
+
+                    $function=array('commit'   => array('name'       => 'updateZone',
+                                                        'parameters' => array($zone),
+                                                        'logs'       => array('success' => sprintf('Added NS record %s for zone %s',$sub_action_parameter,$key['name'])
+                                                                              )
+                                                       )
+            
+                                    );
+                    $this->SoapEngine->execute($function,$this->html);
+                }
+            } else if ($action  == 'removensrecord') {
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
+
+                if (PEAR::isError($zone)) {
+                    $error_msg  = $zone->getMessage();
+                    $error_fault= $zone->getFault();
+                    $error_code = $zone->getCode();
+                    printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    break;
+                } else {
+					$new_servers=array();
+					foreach ($zone->nameservers as $_ns) {
+                        if ($_ns == $sub_action_parameter) continue;
+                        $new_servers[]=$_ns;
+                    }
+
+					$zone->nameservers=array_unique($new_servers);
+
+                    $function=array('commit'   => array('name'       => 'updateZone',
+                                                        'parameters' => array($zone),
+                                                        'logs'       => array('success' => sprintf('NS record %s removed from zone %s',$sub_action_parameter,$key['name'])
                                                                               )
                                                        )
             
