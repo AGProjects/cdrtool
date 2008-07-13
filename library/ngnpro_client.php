@@ -2771,6 +2771,7 @@ class SipAliases extends Records {
 
         $target_filters_els=explode("@",trim($_REQUEST['target_username_filter']));
         $target_username=$target_filters_els[0];
+
         if (count($target_filters_els) > 1) {
             $target_domain=$target_filters_els[1];
         }
@@ -6192,6 +6193,8 @@ class DnsRecords extends Records {
                            'LOC'   => 'Geo location'
                            );
 
+    var $havePriority         = array('MX','SRV','NAPTR');
+
 	var $addRecordFunction    = 'addRecord';
     var $deleteRecordFunction = 'deleteRecord';
     var $updateRecordFunction = 'updateRecord';
@@ -7082,6 +7085,8 @@ class DnsRecords extends Records {
         $record->name);
 
         foreach (array_keys($this->Fields) as $item) {
+            if (is_array($this->havePriority) && $item == 'priority' && !in_array($record->type,$this->havePriority)) continue;
+
             if ($this->Fields[$item]['name']) {
                 $item_name=$this->Fields[$item]['name'];
             } else {
@@ -7176,7 +7181,6 @@ class DnsRecords extends Records {
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
         // Call function
-        print "Get $this->getRecordsFunction";
         $result = call_user_func_array(array(&$this->SoapEngine->soapclient,$this->getRecordsFunction),array($Query));
 
         if (PEAR::isError($result)) {
@@ -7245,15 +7249,12 @@ class FancyRecords extends DnsRecords {
 }
 
 class EmailAliases extends FancyRecords {
-    var $recordTypes=array('MBOX'  => 'Email alias'
-                           );
-    var $typeFilter='MBOX';
+    var $recordTypes=array('MBOXFW'  => 'Email alias');
+    var $typeFilter='MBOXFW';
 }
 
 class UrlRedirect extends FancyRecords {
-    var $recordTypes=array(
-                           'URL'   => 'URL forwarding'
-                           );
+    var $recordTypes=array('URL'   => 'URL forwarding');
     var $typeFilter='URL';
 }
 
