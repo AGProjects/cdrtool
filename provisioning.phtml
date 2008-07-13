@@ -84,9 +84,11 @@ if (file_exists("/etc/cdrtool/ngnpro_engines.inc")) {
 if ($resellerFilters[$login_credentials['reseller']]) {
 	$login_credentials['soap_filter']      = $resellerFilters[$login_credentials['reseller']]['soap_filter'];
     $login_credentials['record_generator'] = $resellerFilters[$login_credentials['reseller']]['record_generator'];
+    $login_credentials['name_servers']     = $resellerFilters[$login_credentials['reseller']]['name_servers'];
 } else if ($resellerFilters['default']) {
 	$login_credentials['soap_filter']      = $resellerFilters['default']['soap_filter'];
     $login_credentials['record_generator'] = $resellerFilters['default']['record_generator'];
+    $login_credentials['name_servers']     = $resellerFilters['default']['name_servers'];
 }
 
 $login_credentials['reseller_filters'] = $resellerFilters;

@@ -454,6 +454,12 @@ class SoapEngine {
                 $this->record_generator=$this->soapEngines[$this->soapEngine]['record_generator'];
             }
 
+            if (strlen($this->login_credentials['name_servers'])) {
+                $this->name_servers=$this->login_credentials['name_servers'];
+            } else if (strlen($this->soapEngines[$this->soapEngine]['name_servers'])) {
+                $this->name_servers=$this->soapEngines[$this->soapEngine]['name_servers'];
+            }
+
             if (strlen($login_credentials['reseller'])) {
                 $this->reseller = $login_credentials['reseller'];
             } else if ($this->adminonly && $_REQUEST['reseller_filter']){
@@ -712,6 +718,9 @@ class Records {
 
     }
 
+    function showAfterEngineSelection () {
+    }
+
     function showCustomerSelection() {
         if ($this->version > 1) {
             print " Customer ";
@@ -798,6 +807,8 @@ class Records {
         ";
 
         $this->showEngineSelection();
+
+        $this->showAfterEngineSelection();
 
         print "
         </td>
@@ -5596,6 +5607,12 @@ class DnsZones extends Records {
                                              );
 
     }
+    function showAfterEngineSelection () {
+        if ($this->SoapEngine->name_servers) {
+        //printf (" Available name servers: %s",$this->SoapEngine->name_servers);
+        }
+    }
+
 
     function listRecords() {
         $this->showSeachForm();
@@ -5650,8 +5667,6 @@ class DnsZones extends Records {
             </table>
             <p>
             <table border=0 cellpadding=2 width=100%>
-                ";
-            print "
             <tr bgcolor=lightgrey>
             <td><b>Id</b></th>
             <td><b>Customer</b></td>
@@ -5841,8 +5856,9 @@ class DnsZones extends Records {
     }
 
     function addRecord() {
-        $name   = trim($_REQUEST['name']);
-        $info   = trim($_REQUEST['info']);
+        $name         = trim($_REQUEST['name']);
+        $info         = trim($_REQUEST['info']);
+        $name_servers = trim($_REQUEST['name_servers']);
 
         if (!strlen($name)) {
             printf ("<p><font color=red>Error: Missing zone name. </font>");
@@ -5862,12 +5878,21 @@ class DnsZones extends Records {
             $ttl=intval(trim($_REQUEST['ttl']));
         }
 
+        if ($name_servers)  {
+            $ns_array=explode(" ",trim($name_servers));
+        } else if ($this->login_credentials['login_type'] != 'admin' && $this->SoapEngine->name_servers){
+            $ns_array=explode(" ",trim($this->SoapEngine->name_servers));
+        } else {
+            $ns_array=array();
+        }
+
         $zone=array(
-                     'name'       => $name,
-                     'ttl'        => $ttl,
-                     'info'       => $info,
-                     'customer'   => intval($customer),
-                     'reseller'   => intval($reseller)
+                     'name'        => $name,
+                     'ttl'         => $ttl,
+                     'info'        => $info,
+                     'customer'    => intval($customer),
+                     'reseller'    => intval($reseller),
+                     'nameservers' => $ns_array
                     );
 
         $deleteZone=array('name'=>$name);
