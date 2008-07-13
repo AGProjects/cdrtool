@@ -3487,7 +3487,6 @@ class EnumRanges extends Records {
                     <td><b>Customer</b></td>
                     <td><b>Prefix </b></td>
                     <td><b>TLD</b></td>
-                    <td><b>Name servers</b></td>
                     <td><b>Serial</b></td>
                     <td><b>TTL</b></td>
                     <td><b>Info</b></td>
@@ -3614,7 +3613,6 @@ class EnumRanges extends Records {
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
-                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
                         $bgcolor,
@@ -3625,7 +3623,6 @@ class EnumRanges extends Records {
                         $range->reseller,
                         $range_link,
                         $range->id->tld,
-                        $_nameservers,
                         $range->serial,
                         $range->ttl,
                         $range->info,
@@ -5663,7 +5660,7 @@ class DnsZones extends Records {
             <td><b></b></td>
             <td><b>Name servers </b></td>
             <td><b>Serial</b></td>
-            <td><b>TTL</b></td>
+            <td><b>Default TTL</b></td>
             <td><b>Change date</b></td>
             <td><b>Actions</b></td>
             </tr>
