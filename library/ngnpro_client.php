@@ -5948,7 +5948,7 @@ class DnsZones extends Records {
                 if ($this->FieldsAdminOnly[$item]['type'] == 'text') {
                     printf ("<tr>
                     <td class=border valign=top>%s</td>
-                    <td class=border><textarea cols=30 name=%s_form rows=5>%s</textarea></td>
+                    <td class=border><textarea cols=30 name=%s_form rows=7>%s</textarea></td>
                     <td class=border valign=top>%s</td>
                     </tr>",
                     $item_name,
@@ -5990,7 +5990,7 @@ class DnsZones extends Records {
             if ($this->Fields[$item]['type'] == 'text') {
                 printf ("<tr>
                 <td class=border valign=top>%s</td>
-                <td class=border><textarea cols=30 name=%s_form rows=5>%s</textarea></td>
+                <td class=border><textarea cols=30 name=%s_form rows=7>%s</textarea></td>
                 <td class=border valign=top>%s</td>
                 </tr>",
                 $item_name,
@@ -6234,6 +6234,10 @@ class DnsRecords extends Records {
                                                                                        'type'   => 'NAPTR',
                                                                                        'priority'=> '30',
                                                                                        'value' => '10 30 "s" "SIP+D2U" "" _sip._udp'
+                                                                                       ),
+                                                                      'cname' => array('name'  => 'sip',
+                                                                                       'type'   => 'CNAME',
+                                                                                       'value' => 'proxy.sipthor.net'
                                                                                        )
                                                                       ),
                                                  ),
@@ -6273,11 +6277,25 @@ class DnsRecords extends Records {
                                                                                        )
                                                                       ),
                                                   ),
-                               'xmpp-server' =>  array('name'    => 'XMPP - Jabber server',
-                                                  'records' =>  array('srv'   => array('name'  => '_xmpp-server._tcp',
+                               'xmpp-server' =>  array('name'    => 'XMPP server',
+                                                  'records' =>  array(
+                                                                      'srv'   => array('name'  => '_xmpp-server._tcp',
                                                                                        'type'   => 'SRV',
                                                                                        'priority'=> '0',
                                                                                        'value' => '10 5269 #VALUE#|10 5269 xmpp'
+                                                                                       ),
+                                                                      'srv1'   => array('name'  => '_jabber._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '0',
+                                                                                       'value' => '10 5269 #VALUE#|10 5269 xmpp'
+                                                                                       )
+                                                                      ),
+                                                  ),
+                               'xmpp-client' =>  array('name'    => 'XMPP client',
+                                                  'records' =>  array('srv'   => array('name'  => '_xmpp-client._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '0',
+                                                                                       'value' => '10 5222 #VALUE#|10 5222 xmpp'
                                                                                        )
                                                                       ),
                                                   ),
@@ -9378,7 +9396,7 @@ class Customers extends Records {
             urlencode($this->SoapEngine->service)
             );
 
-            printf ("<a href=%s>New account</a> ",$_add_url);
+            printf ("<a href=%s>New customer</a> ",$_add_url);
 
 
             if ($this->adminonly) {
@@ -10378,7 +10396,7 @@ class Customers extends Records {
 
     function showAddForm($confirmPassword=false) {
 
-        print "<h3>Register new account</h3>";
+        print "<h3>Register new customer</h3>";
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "
         <p>
