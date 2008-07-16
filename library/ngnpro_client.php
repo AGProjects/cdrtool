@@ -9637,6 +9637,7 @@ class Customers extends Records {
         <td align=left>";
         if ($_REQUEST['action'] != 'Delete' && $_REQUEST['action'] != 'Copy') {
             print "<input type=submit name=action value=Update>";
+        	printf (" Check this box <input type=checkbox name=notify value='1'> and press Update to send the account by e-mail");
         }
 
         print "</td>
@@ -10073,6 +10074,26 @@ class Customers extends Records {
 
         if (!$customer=$this->getRecord($this->filters['customer'])) {
             return false;
+        }
+
+		if ($_REQUEST['notify']) {
+
+            $customer_notify=array('firstName'=> $customer->firstName,
+                                   'lastName' => $customer->lastName,
+                                   'email'    => $customer->email,
+                                   'username' => $customer->username,
+                                   'password' => $customer->password
+                                   );
+
+            if ($this->notify($customer_notify)) {
+                print "<p>";
+            	printf (_("The login account details have been sent to %s"), $customer->email);
+            	return true;
+            } else {
+                print "<p>";
+            	printf (_("Error sending e-mail notification"));
+                return false;
+            }
         }
 
         if (!$this->updateBefore($customer)) {
@@ -10678,6 +10699,15 @@ class Customers extends Records {
     }
 
     function notify($customer) {
+        /*
+        must be supplied with an array:
+        $customer=array('firstName' => ''
+                        'lastName'  => '',
+                        'email'     => '',
+                        'username'  => '',
+                        'password'  => ''
+                        );
+        */
 
         if ($this->support_web) {
             $url=$this->support_web;
@@ -10694,11 +10724,18 @@ class Customers extends Records {
 
         $body=
         sprintf("Dear %s,\n\n",$customer['firstName']).
-        sprintf("This email is for your record. You have registered a new account on %s as follows:\n\n",$url).
+        sprintf("This e-mail message is for your record. You, or someone in your behalf has registered an account on %s as follows:\n\n",$url).
         sprintf("Username: %s\n",$customer['username']).
         sprintf("Password: %s\n",$customer['password']).
         "\n".
-        sprintf("You have registered this account from IP address %s\n",$_SERVER['REMOTE_ADDR']).
+
+        sprintf("The notification has been sent based on a request from IP address %s.",$_SERVER['REMOTE_ADDR']).
+        "\n".
+        "\n".
+
+        sprintf("This message was sent in clear text over the Internet and it is advisable, in order to protect your account to login and change your password received in this message. ").
+        "\n".
+
         "\n".
         "This is an automatic message, do not reply.\n";
 
