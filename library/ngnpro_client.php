@@ -9637,7 +9637,7 @@ class Customers extends Records {
         <td align=left>";
         if ($_REQUEST['action'] != 'Delete' && $_REQUEST['action'] != 'Copy') {
             print "<input type=submit name=action value=Update>";
-        	printf (" Check this box <input type=checkbox name=notify value='1'> and press Update to send the account by e-mail");
+            printf (" E-mail <input type=checkbox name=notify value='1'> account information");
         }
 
         print "</td>
@@ -9661,11 +9661,12 @@ class Customers extends Records {
             }
         }
 
-        print "</td>";
+        print "
+        </td>
+        </tr>
+        ";
 
         print "
-
-        </tr>
         <tr>
         <td valign=top>
 
@@ -10733,7 +10734,7 @@ class Customers extends Records {
         "\n".
         "\n".
 
-        sprintf("This message was sent in clear text over the Internet and it is advisable, in order to protect your account to login and change your password received in this message. ").
+        sprintf("This message was sent in clear text over the Internet and it is advisable, in order to protect your account, to login and change your password displayed in this message. ").
         "\n".
 
         "\n".
