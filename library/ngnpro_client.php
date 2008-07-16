@@ -4537,7 +4537,6 @@ class EnumMappings extends Records {
                                 <td>%s</td>
                                 <td>%s</td>
                                 <td>%s</td>
-                                <td>%s</td>
                                 <td><a href=%s>%s</a></td>
                                 </tr>",
                                 $bgcolor,
@@ -4545,10 +4544,10 @@ class EnumMappings extends Records {
                                 $number->id->number,
                                 $number->id->tld,
                                 $number->info,
-                                $number->owner,
                                 ucfirst($_mapping->type),
                                 $mapto,
                                 $_mapping->ttl,
+                                $number->owner,
                                 $_url,
                                 $actionText
                                 );
@@ -5671,9 +5670,9 @@ class DnsZones extends Records {
             <td><b>Id</b></th>
             <td><b>Customer</b></td>
             <td><b>Zone</b></td>
+            <td><b>Administrator</b></td>
             <td><b>Info</b></td>
             <td><b></b></td>
-            <td><b>Name servers </b></td>
             <td><b>Serial</b></td>
             <td><b>Default TTL</b></td>
             <td><b>Change date</b></td>
@@ -5751,8 +5750,8 @@ class DnsZones extends Records {
                     <td><a href=%s>%s.%s</a></td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td><a href=%s>Records</a></td>
                     <td>%s</td>
+                    <td><a href=%s>Records</a></td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -5764,9 +5763,9 @@ class DnsZones extends Records {
                     $zone->customer,
                     $zone->reseller,
                     $zone_url,
+                    $zone->email,
                     $zone->info,
                     $records_url,
-                    $ns_text,
                     $zone->serial,
                     $zone->ttl,
                     $zone->changeDate,
@@ -8738,6 +8737,11 @@ class Customers extends Records {
                                                                'permission' => 'admin',
                                                                'resellerMayManageForChildAccounts' => true
                                                                ),
+	                             'email_credit'        => array('name'      => 'Credit for E-mail aliases',
+                                                               'category'   => 'credit',
+                                                               'permission' => 'admin',
+                                                               'resellerMayManageForChildAccounts' => true
+                                                               ),
                                  'pstn_access'         => array('name'      => 'Access to PSTN',
                                                                'category'   => 'sip',
                                                                'permission' => 'admin',
@@ -8773,8 +8777,11 @@ class Customers extends Records {
                                                                ),
                                  'absolute_voicemail_uri'=> array('name'    => 'Use absolute voicemail uri',
                                                                'category'   => 'sip',
-                                                               'permission' => 'admin'
+                                                               'permission' => 'customer'
                                                                ),
+    		    			     'dns_admin_email'     => array('name'     => 'DNS zones administrator email',
+                                                               'category' => 'dns',
+                                                               'permission'  => 'customer'),
                                  'support_web'         => array('name'      => 'Support web site',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
