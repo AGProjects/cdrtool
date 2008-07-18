@@ -1149,7 +1149,7 @@ class Records {
                 }
                 print "</select>";
             } else {
-                printf ("<input type=text size=5 name=%s value='%s'>",$name,$this->filters['customer']);
+                printf ("<input type=text size=7 name=%s value='%s'>",$name,$this->filters['customer']);
             }
         }
     }
@@ -1168,7 +1168,7 @@ class Records {
                 }
                 print "</select>";
             } else {
-                printf ("<input type=text size=5 name=%s value='%s'>",$name,$this->filters['reseller']);
+                printf ("<input type=text size=7 name=%s value='%s'>",$name,$this->filters['reseller']);
             }
         }
     }
@@ -9430,6 +9430,7 @@ class Customers extends Records {
                 <tr bgcolor=lightgrey>
                     <td><b>Id</b></th>
                     <td><b>Customer</b></td>
+                    <td><b>Alias of</b></td>
                     <td><b>Username</b></td>
                     <td><b>Name</b></td>
                     <td><b>Organization</b></td>
@@ -9496,6 +9497,7 @@ class Customers extends Records {
                     <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
                     <td>%s</td>
+                    <td>%s</td>
                     <td>%s %s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -9509,6 +9511,7 @@ class Customers extends Records {
                     $_customer_url,
                     $customer->id,
                     $customer->reseller,
+                    $customer->impersonate,
                     $customer->username,
                     $customer->firstName,
                     $customer->lastName,
@@ -10214,6 +10217,15 @@ class Customers extends Records {
         $customer->tel  = preg_replace("/[^\+0-9]/","",$customer->tel);
         $customer->fax  = preg_replace("/[^\+0-9]/","",$customer->fax);
         $customer->enum = preg_replace("/[^\+0-9]/","",$customer->enum);
+
+        if (!strlen($_REQUEST['password_form'])) $customer->password = $this->RandomPassword(6);
+
+        if (!strlen($_REQUEST['state_form']))    $customer->state    = 'N/A';
+        if (!strlen($_REQUEST['country_form']))  $customer->country  = 'N/A';
+        if (!strlen($_REQUEST['city_form']))     $customer->city     = 'Unknown';
+        if (!strlen($_REQUEST['address_form']))  $customer->address  = 'Unknown';
+        if (!strlen($_REQUEST['postcode_form'])) $customer->postcode = 'Unknown';
+        if (!strlen($_REQUEST['tel_form']))      $customer->tel      = '+19999999999';
 
         if ($customer->reseller != $customer->id) {
             // a subaccount cannot change his own impersonate field
@@ -11193,7 +11205,7 @@ class recordGenerator extends SoapEngine {
         <td>";
         print _("Owner:");
         printf ("
-        <td align=right><input type=text size=10 name=owner value='%s'>
+        <td align=right><input type=text size=7 name=owner value='%s'>
         <td>",$_REQUEST['owner']);
         print "
         </td>

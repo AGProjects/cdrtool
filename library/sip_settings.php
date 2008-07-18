@@ -336,6 +336,7 @@ class SipSettings {
 
         // Sip, Voicemail and Customer ports share same login
         $this->SOAPurl=$this->soapEngines[$this->sip_engine]['url'];
+
         $this->SOAPversion=$this->soapEngines[$this->sip_engine]['version'];
 
         if (strlen($this->loginCredentials['soapUsername'])) {
@@ -964,10 +965,10 @@ class SipSettings {
         $deleteAliases  = array_unique(array_diff($aliases_old,$aliases_new));
 
         /*
-        dprint ("Add aliases:");
-        dprint_r($addAliases );
-        dprint ("Delete aliases:");
-        dprint_r($deleteAliases );
+        print ("Add aliases:");
+        print_r($addAliases );
+        print ("Delete aliases:");
+        print_r($deleteAliases );
         */
 
         foreach ($addAliases as $_alias) {
@@ -988,13 +989,12 @@ class SipSettings {
             }
 
             $_aliasObject=array("id"=>array("username"=>strtolower($_alias_username),
-                                            "domain"=>strtolower($_alias_domain),
+                                            "domain"=>strtolower($_alias_domain)
+                                            ),
                                 "owner"=>intval($this->owner),
-                                "target"=>$this->sipId));
-
-            //dprint_r($_aliasObject);
-
-            dprint("addAlias");
+                                "target"=>$this->sipId
+                                )
+                                ;
 
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->addAlias($_aliasObject);
@@ -2312,7 +2312,7 @@ class SipSettings {
             print _("Owner");
             print "</td>
             <td class=border>
-            <input type=text name=owner size=6 value=\"$this->owner\">
+            <input type=text name=owner size=7 value=\"$this->owner\">
             ";
             print "
             </td>

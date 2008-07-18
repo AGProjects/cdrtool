@@ -1,7 +1,7 @@
 <?
 
 /*
-	Copyright (c) 2007 AG Projects
+	Copyright (c) 2007-2008 AG Projects
   	http://ag-projects.com
   	Author Adrian Georgescu
 
