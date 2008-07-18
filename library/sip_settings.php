@@ -964,13 +964,6 @@ class SipSettings {
         $addAliases     = array_unique(array_diff($aliases_new,$aliases_old));
         $deleteAliases  = array_unique(array_diff($aliases_old,$aliases_new));
 
-        /*
-        print ("Add aliases:");
-        print_r($addAliases );
-        print ("Delete aliases:");
-        print_r($deleteAliases );
-        */
-
         foreach ($addAliases as $_alias) {
             $_alias=trim(strtolower($_alias));
 
