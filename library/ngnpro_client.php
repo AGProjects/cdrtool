@@ -3848,7 +3848,7 @@ class EnumRanges extends Records {
 
     function showSeachFormCustom() {
         if ($this->version > 1) {
-            printf (" Prefix<input type=text size=10 name=prefix_filter value='%s'>",$this->filters['prefix']);
+            printf (" Prefix<input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
             printf (" TLD");
 
             if (count($this->allowedDomains) > 0) {
@@ -3976,7 +3976,7 @@ class EnumRanges extends Records {
                 if ($this->FieldsAdminOnly[$item]['type'] == 'text') {
                     printf ("<tr>
                     <td class=border valign=top>%s</td>
-                    <td class=border><textarea cols=30 name=%s_form rows=5>%s</textarea></td>
+                    <td class=border><textarea cols=30 name=%s_form rows=7>%s</textarea></td>
                     <td class=border valign=top>%s</td>
                     </tr>",
                     $item_name,
@@ -4018,7 +4018,7 @@ class EnumRanges extends Records {
             if ($this->Fields[$item]['type'] == 'text') {
                 printf ("<tr>
                 <td class=border valign=top>%s</td>
-                <td class=border><textarea cols=30 name=%s_form rows=5>%s</textarea></td>
+                <td class=border><textarea cols=30 name=%s_form rows=7>%s</textarea></td>
                 <td class=border valign=top>%s</td>
                 </tr>",
                 $item_name,
