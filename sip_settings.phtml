@@ -1,7 +1,7 @@
 <?
 require("/etc/cdrtool/global.inc");
 
-if ($_REQUEST['reseller']) {
+if (strlen($_REQUEST['reseller'])) {
 	page_open(
             array("sess" => "CDRTool_Session",
                   "auth" => "CDRTool_Auth",
