@@ -2447,7 +2447,7 @@ class SipAccounts extends Records {
     }
 
     function showAddForm() {
-        if ($this->selectionActive) return;
+        //if ($this->selectionActive) return;
 
         if (!count($this->allowedDomains)) {
             print "<p><font color=red>You must create at least one SIP domain before adding SIP accounts</font>";
@@ -2480,6 +2480,9 @@ class SipAccounts extends Records {
         if ($_REQUEST['domain']) {
             $_domain=$_REQUEST['domain'];
             $selected_domain[$_REQUEST['domain']]='selected';
+        } else if ($this->filters['domain']) {
+            $_domain=$this->filters['domain'];
+            $selected_domain[$this->filters['domain']]='selected';
         } else if ($_domain=$this->getLoginProperty('sip_accounts_last_domain')) {
             $selected_domain[$_domain]='selected';
         }
@@ -2517,7 +2520,7 @@ class SipAccounts extends Records {
 
         printf (" Pass<input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
         printf (" Name<input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
-        printf (" Email<input type=text size=15 name=email value='%s'>",$_REQUEST['email']);
+        printf (" Email<input type=text size=20 name=email value='%s'>",$_REQUEST['email']);
         printf ("<nobr>Owner<input type=text size=7 name=owner value='%s'></nobr> ",$_REQUEST['owner']);
         printf ("<nobr>PSTN<input type=checkbox name=pstn value=1 %s></nobr> ",$checked_pstn);
         printf ("<nobr>Quota<input type=text size=5 name=quota value='%s'></nobr> ",$_quota);

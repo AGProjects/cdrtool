@@ -41,7 +41,7 @@ class SipSettings {
     var $absolute_voicemail_uri    = false; // use <voice-mailbox>
     var $enable_thor               = false;
     var $sip_accounts_lite         = false;  // show basic settings by default, and advanced if property advanced is set to 1
-
+    var $currency                  = "&euro";
     // access numbers
 
     var $voicemail_access_number        = "*70";
@@ -437,6 +437,10 @@ class SipSettings {
 
         if ($this->soapEngines[$this->sip_engine]['voicemail_server']) {
             $this->voicemail_server = $this->soapEngines[$this->sip_engine]['voicemail_server'];
+        }
+
+        if ($this->soapEngines[$this->sip_engine]['currency']) {
+            $this->currency = $this->soapEngines[$this->sip_engine]['currency'];
         }
 
         if ($this->soapEngines[$this->sip_engine]['voicemail_access_number']) {
@@ -1289,6 +1293,15 @@ class SipSettings {
         $this->cssFile          = $this->getFileTemplate("main.css");
 
         if (!$this->reseller) {
+            if ($this->pstn_access) {
+                $this->availableGroups['free-pstn'] = array("Group"=>"free-pstn",
+                                                    "WEBName" =>   sprintf(_("PSTN")),
+                                                    "WEBComment"=> sprintf(_("Caller-ID")),
+                                                    "SubscriberMayEditIt" => "0",
+                                                    "SubscriberMaySeeIt"  => 1
+                                                    );
+            }
+
             return true;
         }
 
@@ -1342,16 +1355,16 @@ class SipSettings {
             $this->cdrtool_address     = $this->resellerProperties['cdrtool_address'];
         }
 
-        if (isset($this->resellerProperties['pstn_access'])) {
-            $this->pstn_access     = $this->resellerProperties['pstn_access'];
-        }
-
         if (isset($this->resellerProperties['voicemail_server'])) {
             $this->voicemail_server     = $this->resellerProperties['voicemail_server'];
         }
 
         if (isset($this->resellerProperties['voicemail_access_number'])) {
             $this->voicemail_access_number = $this->resellerProperties['voicemail_access_number'];
+        }
+
+        if (isset($this->resellerProperties['currency'])) {
+            $this->currency = $this->resellerProperties['currency'];
         }
 
         if (isset($this->resellerProperties['FUNC_access_number'])) {
@@ -1370,6 +1383,10 @@ class SipSettings {
             $this->absolute_voicemail_uri = $this->resellerProperties['absolute_voicemail_uri'];
         }
 
+        if (isset($this->resellerProperties['pstn_access'])) {
+            $this->pstn_access     = $this->resellerProperties['pstn_access'];
+        }
+
         if ($this->pstn_access) {
             $this->availableGroups['free-pstn'] = array("Group"=>"free-pstn",
                                                 "WEBName" =>   sprintf(_("PSTN")),
@@ -1379,7 +1396,9 @@ class SipSettings {
                                                 );
         }
 
+
     }
+
 
     function getDiversions() {
         dprint("getDiversions()");
@@ -2044,7 +2063,7 @@ class SipSettings {
                         $selected_blocked_by['reseller'],
                         $this->reseller
                         );
-                    } else {
+                    } else if ($this->reseller) {
                         printf ("
                         <select name=%s>
                         <option value=''>Active
@@ -2054,6 +2073,16 @@ class SipSettings {
                         $key,
                         $selected_blocked_by['reseller'],
                         $this->reseller
+                        );
+                    } else {
+                        printf ("
+                        <select name=%s>
+                        <option value=''>Active
+                        <option value='reseller' %s> Blocked
+                        </select>
+                        ",
+                        $key,
+                        $selected_blocked_by['reseller']
                         );
                     }
 
@@ -2094,7 +2123,6 @@ class SipSettings {
                 }
 
             } else if ($key=="free-pstn") {
-
                 print "
                 <input type=checkbox value=1 name=$key $checked_box[$key] $disabled_box>
                 ";
@@ -3801,7 +3829,6 @@ class SipSettings {
                 ";
             }
         }
-
 
         if (count($this->calls_placed)) {
             $chapter=sprintf(_("Last placed calls"));

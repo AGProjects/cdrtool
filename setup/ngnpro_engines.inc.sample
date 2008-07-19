@@ -29,6 +29,7 @@ $soapEngines=array(
                                          'enable_thor'         => false,
                                          'pstn_access'         => false,
                                          'welcome_message'     => '<h1>NGNPro provisionig client</h1>',
+                                         'currency'            => '&euro',
                                          'timeout'             => 5
                                          ),
                            'vm' => array('name'=> 'Voicemail server',
@@ -54,7 +55,8 @@ $resellerFilters=array('default'  => array('soap_filter'        => 'sip'
                                           ),
                        '1745'     => array('soap_filter'        => 'sip:customers,enum_ranges,enum_numbers sip2:sip_domains,sip_accounts,sip_aliases,trusted_peers',
                                            'record_generator'  => 'rg',
-                                           'voicemail_engine'  => 'vm'
+                                           'voicemail_engine'  => 'vm',
+                                           'currency'          => '&euro'
                                            )
                        );
 ?>
