@@ -2563,7 +2563,7 @@ class SipSettings {
             ${$el} = $_REQUEST[$el];
         }
 
-          $newACLarray = array();
+        $newACLarray = array();
 
         $result      = $this->result;
 

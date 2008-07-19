@@ -1239,6 +1239,15 @@ class RatingTables {
         if ($this->settings['split_rating_table']) {
             $this->tables['billing_rates']['fields']['name']['readonly']=1;
         }
+
+		if (strlen($this->settings['socketIP'])) {
+            if ($this->settings['socketIP'] == '0.0.0.0' || $this->settings['socketIP'] == '0') {
+            	$this->settings['socketIPforClients']='127.0.0.1';
+            } else {
+            	$this->settings['socketIPforClients']=$this->settings['socketIP'];
+            }
+        }
+
     }
 
     function ImportCSVFiles($dir=false) {
@@ -2687,13 +2696,13 @@ class RatingTables {
     }
 
     function checkRatingEngineConnection () {
-          if ($this->settings['socketIP'] && $this->settings['socketPort'] &&
-            $fp = fsockopen ($this->settings['socketIP'], $this->settings['socketPort'], $errno, $errstr, 2)) {
-              fclose($fp);
-              return true;
-          }
+        if ($this->settings['socketIPforClients'] && $this->settings['socketPort'] &&
+          	$fp = fsockopen ($this->settings['socketIPforClients'], $this->settings['socketPort'], $errno, $errstr, 2)) {
+            fclose($fp);
+            return true;
+        }
         return false;
-      }
+    }
 
     function showCustomers($filter) {
         return true;
@@ -3621,7 +3630,7 @@ class RatingTables {
                 print "$selectie $rows records found. ";
             }         
             
-            if ($this->settings['socketIP'] && $this->settings['socketPort']) {
+            if ($this->settings['socketIPforClients'] && $this->settings['socketPort']) {
         
                 if ($ReloadRatingTables) {
                     reloadRatingEngineTables();
@@ -3632,8 +3641,8 @@ class RatingTables {
                     }
                 }
         
-                $engineAddress=$this->settings['socketIP'].":".$this->settings['socketPort'];
-        
+                $engineAddress=$this->settings['socketIPforClients'].":".$this->settings['socketPort'];
+
                 if ($this->checkRatingEngineConnection()) {
                     print " | <font color=green>Rating engine running at $engineAddress</font>";
                 } else {
@@ -6110,11 +6119,19 @@ class RatingEngine {
 
 function reloadRatingEngineTables () {
     global $RatingEngine;
-    if ($RatingEngine['socketIP'] && $RatingEngine['socketPort'] &&
-        $fp = fsockopen ($RatingEngine['socketIP'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
-        fputs($fp, "ReloadRatingTables\n");
-        fclose($fp);
-        return true;
+    if (strlen($RatingEngine['socketIP']) && $RatingEngine['socketPort']) {
+
+		if ($RatingEngine['socketIP']=='0.0.0.0' || $RatingEngine['socketIP'] == '0') {
+        	$RatingEngine['socketIPforClients']= '127.0.0.1';
+        } else {
+        	$RatingEngine['socketIPforClients']=$RatingEngine['socketIP'];
+        }
+
+        if ($fp = fsockopen ($RatingEngine['socketIPforClients'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
+        	fputs($fp, "ReloadRatingTables\n");
+	        fclose($fp);
+    	    return true;
+        }
     }
     return false;
 }
