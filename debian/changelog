@@ -8,8 +8,9 @@ cdrtool (6.5.3) unstable; urgency=low
   * Added currency setting per soap engine and reseller
   * Many bug fixes in dns management port
   * Detect reseller zero in sip settings page
+  * Show progress of loading quota
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 19 Jul 2008 11:53:12 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 19 Jul 2008 18:02:59 +0200
 
 cdrtool (6.5.2) unstable; urgency=low
 
