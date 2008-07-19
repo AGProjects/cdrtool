@@ -1,3 +1,15 @@
+cdrtool (6.5.3) unstable; urgency=low
+
+  * Log id of inserted record into rating tables
+  * Added DNS complex records for sip, msrp, xmpp, thor
+  * Show quota reset even if not blocked
+  * The soap server returns the object created for all add() functions
+  * Added fancy records management (email and url forwarding)
+  * Added currency setting per soap engine and reseller
+  * Many bug fixes in dns management port
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 19 Jul 2008 11:10:33 +0200
+
 cdrtool (6.5.2) unstable; urgency=low
 
   * Fixed name of OpenSERQuota class in global.inc sample files

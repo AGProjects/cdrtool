@@ -354,6 +354,8 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
                         $caller_domain_els=explode(":",$caller_domain);
                         $caller_domain=$caller_domain_els[0];
 
+                        if (!strlen($caller_domain)) $caller_domain='unknown';
+
                         $_domains[$caller_domain]['sessions'] += 1;
 
                 } else if ($elements[0] == 'stream' && count($elements)==9 && $proxy['sessions'][$crtSession]['duration'] > 0) {
