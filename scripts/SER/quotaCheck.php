@@ -52,8 +52,10 @@ while (list($k,$v) = each($DATASOURCES)) {
         $Quota = new $SERQuota_class($CDRS);
         $Quota->checkQuota($v['UserQuotaNotify']);
         $d=time()-$b;
-        $log=sprintf("Runtime: %d s",$d);
-        syslog(LOG_NOTICE,$log);
+        if ($d > 5) {
+        	$log=sprintf("Runtime: %d s",$d);
+        	syslog(LOG_NOTICE,$log);
+        }
 	}
 }
 
