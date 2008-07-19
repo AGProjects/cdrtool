@@ -4580,12 +4580,23 @@ class OpenSERQuota {
         $rows=$this->CDRdb->num_rows();
         $log=sprintf ("%d callers generated traffic in %s for data source %s\n",$rows,Date("Y-m",time()),$this->CDRS->cdr_source);
         print $log;
+        flush();
         syslog(LOG_NOTICE, $log);
 
         $j=0;
+		$progress=0;
 
         while($this->CDRdb->next_record()) {
 
+            if ($rows > 1000) {
+                if ($j > $progress*$rows/100) {
+                    $progress++;
+                    if ($progress%10 == 0) {
+                        print "$progress% ";
+                    	flush();
+                    }
+                }
+            }
             unset($accounts);
 
             $accounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['calls']    = $this->CDRdb->f('calls');

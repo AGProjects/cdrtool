@@ -922,8 +922,8 @@ class CDRS {
                     $progress++;
                     if ($progress%10==0) {
                         print "$progress% ";
+                   	 	flush();
                     }
-                    flush();
                 }
             }
         }
