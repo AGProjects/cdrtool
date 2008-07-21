@@ -46,7 +46,6 @@ class SIPstatistics {
         global $CDRTool;
 
         $query="select domain from domain";
-        dprint($query);
 
         if (!$this->ser_db->query($query)) return 0;
         if (!$this->ser_db->num_rows()) return 0;

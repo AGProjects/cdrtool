@@ -2447,7 +2447,7 @@ class SipAccounts extends Records {
     }
 
     function showAddForm() {
-        //if ($this->selectionActive) return;
+        if ($this->selectionActive) return;
 
         if (!count($this->allowedDomains)) {
             print "<p><font color=red>You must create at least one SIP domain before adding SIP accounts</font>";

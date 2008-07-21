@@ -92,7 +92,8 @@ class SipSettings {
                                            'region',
                                            'timeout',
                                            'owner',
-                                           'mobile_number'
+                                           'mobile_number',
+                                           'extra_groups'
                                            );
 
     var $presenceStatuses   = array('allow','deny','confirm');
@@ -2149,6 +2150,8 @@ class SipSettings {
             ";
         }
 
+        $this->showExtraGroups();
+
         $this->showOwner();
 
         if ($this->Preferences['advanced']) {
@@ -2726,6 +2729,16 @@ class SipSettings {
             }
         }
 
+		$foundGroupInAvailableGroups=array();
+
+        $extra_groups=explode(' ',$_REQUEST['extra_groups']);
+
+        foreach ($extra_groups as $_grp) {
+            if (!in_array($_grp,array_keys($this->availableGroups))) {
+            	$newACLarray[]=$_grp;
+            }
+        }
+
         $grantACLarray  = array_unique(array_diff($newACLarray,$this->groups));
         $revokeACLarray = array_unique(array_diff($this->groups,$newACLarray));
 
@@ -2736,7 +2749,7 @@ class SipSettings {
         dprint_r($revokeACLarray);
         */
 
-        if (count($revokeACLarray) > 0 || count($grantACLarray)) {
+        if (count($revokeACLarray) || count($grantACLarray)) {
             $result->groups=$newACLarray;
             $this->somethingChanged=1;
         }
@@ -5757,6 +5770,35 @@ class SipSettings {
         return "unknown.png";
     }
 
+    function showExtraGroups () {
+        $foundGroupInAvailableGroups=array();
+
+        foreach ($this->groups as $_grp) {
+        	foreach (array_keys($this->availableGroups) as $a_grp) {
+                if ($_grp == $a_grp) $foundGroupInAvailableGroups[]=$_grp;
+                continue;
+            }
+        }
+
+        $extraGroups = array_unique(array_diff($this->groups,$foundGroupInAvailableGroups));
+
+        foreach ($extraGroups as $_eg) {
+        	$extraGroups_text.=$_eg.' ';
+        }
+
+        print "
+        <tr>
+        <td class=border>";
+        print _("Extra groups");
+        print "
+        </td>
+        <td class=ag1>";
+        printf ("<input type=text size=30 name=extra_groups value='%s'>",trim($extraGroups_text));
+        print "
+        </td>
+        </tr>
+        ";
+    }
 }
 
 function normalizeURI($uri) {
