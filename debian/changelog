@@ -1,6 +1,7 @@
 cdrtool (6.5.3) unstable; urgency=low
 
   * Log id of inserted record into rating tables
+  * Fixed broken links between group by SIP Proxy and search calls
   * Show quota reset even if not blocked
   * The soap server returns the object created for all add() functions
   * Added DNS complex records for sip, msrp, xmpp, thor
@@ -11,7 +12,7 @@ cdrtool (6.5.3) unstable; urgency=low
   * Show progress of loading quota
   * Added management for extra groups in Sip settings
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 21 Jul 2008 14:05:33 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 21 Jul 2008 15:34:44 +0200
 
 cdrtool (6.5.2) unstable; urgency=low
 

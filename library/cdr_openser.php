@@ -14,8 +14,8 @@ class CDRS_ser_radius extends CDRS {
                          'outputTraffic'   => 'AcctOutputOctets',
                          'aNumber'         => 'CallingStationId',
                          'username'        => 'UserName',
-                         'domain'           => 'Realm',
-                         'cNumber'          => 'CalledStationId',
+                         'domain'          => 'Realm',
+                         'cNumber'         => 'CalledStationId',
                          'timestamp'       => 'timestamp',
                          'SipMethod'       => 'SipMethod',
                          'disconnect'      => 'SipResponseCode',
@@ -1633,13 +1633,17 @@ class CDRS_ser_radius extends CDRS {
                     } else if ($this->group_byOrig==$this->aNumberField) {
                         # Normalize Called Station Id
                         $N=$this->NormalizeNumber($mygroup);
-                        $mygroup_print=$N[username]."@".$N[domain];
+                        $mygroup_print=$N['username']."@".$N[domain];
                         $description="";
                         $traceField="a_number";
                         $traceValue=urlencode($mygroup);
                     } else if ($this->group_byOrig==$this->cNumberField) {
                         $traceField="c_number";
                         $traceValue=urlencode($mygroup);
+                    } else if ($this->group_byOrig==$this->SipProxyServerField) {
+                        $traceField="sip_proxy";
+                        $traceValue=urlencode($mygroup);
+                        $mygroup_print = $mygroup;
                     } else if ($this->group_byOrig==$this->SipCodecField) {
                         $traceField="SipCodec";
                         $mygroup_print = $mygroup;
