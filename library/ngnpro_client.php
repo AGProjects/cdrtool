@@ -210,20 +210,20 @@ class SoapEngine {
                                            'category'      => 'dns',
                                            'description'   => 'Manage URL redirections. Use _ or % to match one or more characters. '
                                            ),
-                        'pstn_gateway_groups' => array(
-                                           'records_class' => 'GatewayGroups',
-                                           'name'          => 'PSTN groups',
-                                           'soap_class'    => 'WebService_NGNPro_NetworkPort',
-                                           'category'      => 'pstn',
-                                           'description'   => 'Manage groups of gateways used to call to the PSTN. You must add individual gateways to each group. ',
-                                           'resellers_only'=> true
-                                           ),
                         'trusted_peers'  => array(
                                            'records_class' => 'TrustedPeers',
                                            'name'          => 'Trusted peers',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'sip',
                                            'description'   => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. ',
+                                           'resellers_only'=> true
+                                           ),
+                        'pstn_gateway_groups' => array(
+                                           'records_class' => 'GatewayGroups',
+                                           'name'          => 'PSTN groups',
+                                           'soap_class'    => 'WebService_NGNPro_NetworkPort',
+                                           'category'      => 'pstn',
+                                           'description'   => 'Manage groups of gateways used to call to the PSTN. You must add individual gateways to each group. ',
                                            'resellers_only'=> true
                                            ),
                         'pstn_gateways'  => array(
@@ -2402,7 +2402,7 @@ class SipAccounts extends Records {
         if ($this->version > 1) {
             printf (" FN<input type=text size=10 name=firstname_filter value='%s'>",$this->filters['firstname']);
             printf (" LN<input type=text size=10 name=lastname_filter value='%s'>",$this->filters['lastname']);
-            printf (" Email<input type=text size=15 name=email_filter value='%s'>",$this->filters['email']);
+            printf (" Email<input type=text size=25 name=email_filter value='%s'>",$this->filters['email']);
             printf (" Owner<input type=text size=7 name=owner_filter value='%s'>",$this->filters['owner']);
         }
     }
@@ -2542,7 +2542,7 @@ class SipAccounts extends Records {
         ";
     }
 
-    function addRecord($dictionary=array()) {
+    function addRecord($dictionary=array(),$skiphtml=false) {
         dprint_r($dictionary);
 
         if ($dictionary['account']) {
@@ -2591,7 +2591,11 @@ class SipAccounts extends Records {
                 $j++;
             }
         } else {
-            $lastName=$username;
+            if ($username=="<autoincrement>") {
+                $lastName="Unknown";
+            } else {
+            	$lastName=$username;
+            }
         }
 
         $lastName=trim($lastName);
@@ -2688,6 +2692,12 @@ class SipAccounts extends Records {
             $this->setLoginProperties($_p);
         }
 
+		if (is_array($dictionary['$properties'])) {
+        	$properties=$dictionary['$properties'];
+        } else {
+        	$properties=array();
+        }
+
         $account=array(
                      'id'     => array('username' => strtolower($username),
                                        'domain'   => strtolower($domain)
@@ -2701,7 +2711,8 @@ class SipAccounts extends Records {
                      'groups'     => $groups,
                      'prepaid'    => $prepaid,
                      'quota'      => $quota,
-                     'region'     => ''
+                     'region'     => '',
+                     'properties' => $properties
                     );
 
         //print_r($account);
@@ -2709,10 +2720,12 @@ class SipAccounts extends Records {
                              'domain'   => $domain);
 
 
-        if ($username == '<autoincrement>') {
-			$success_log=sprintf('SIP account has been generated in domain %s',$domain);
-        } else {
-			$success_log=sprintf('SIP account %s@%s has been added',$username,$domain);
+        if (!$skiphtml) {
+            if ($username == '<autoincrement>') {
+                $success_log=sprintf('SIP account has been generated in domain %s',$domain);
+            } else {
+                $success_log=sprintf('SIP account %s@%s has been added',$username,$domain);
+            }
         }
 
         $function=array('commit'   => array('name'       => 'addAccount',
@@ -6905,11 +6918,16 @@ class DnsRecords extends Records {
             $name = trim($_REQUEST['name']);
         }
 
-        if ($dictionary['zone']) {
-        	$zone=$dictionary['zone'];
-            $this->skipSaveProperties=true;
-        } else if ($_REQUEST['zone']) {
-            $zone=$_REQUEST['zone'];
+        if (preg_match("/^(.*)@(.*)$/",$name,$m)) {
+            $name=$m[1];
+            $zone=$m[2];
+        } else {
+            if ($dictionary['zone']) {
+                $zone=$dictionary['zone'];
+                $this->skipSaveProperties=true;
+            } else if ($_REQUEST['zone']) {
+                $zone=$_REQUEST['zone'];
+            }
         }
 
         $this->filters['zone']=$zone;
@@ -9556,7 +9574,7 @@ class Customers extends Records {
         printf (" FN<input type=text size=10 name=firstName_filter value='%s'>",$this->filters['firstName']);
         printf (" LN<input type=text size=15 name=lastName_filter value='%s'>",$this->filters['lastName']);
         printf (" Organization<input type=text size=15 name=organization_filter value='%s'>",$this->filters['organization']);
-        printf (" Email<input type=text size=15 name=email_filter value='%s'>",$this->filters['email']);
+        printf (" Email<input type=text size=25 name=email_filter value='%s'>",$this->filters['email']);
 
         if ($this->adminonly) {
             if ($this->filters['only_resellers']) $check_only_resellers_filter='checked';

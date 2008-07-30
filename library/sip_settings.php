@@ -104,6 +104,8 @@ class SipSettings {
                                     'away'      => 'buddy_away.jpg'
                                     );
 
+	var $disableExtraGroups=false;
+
     var $timeoutEls=array(
              "5" =>"5 s",
              "10"=>"10 s",
@@ -474,6 +476,10 @@ class SipSettings {
 
         if (strlen($this->soapEngines[$this->sip_engine]['timeout'])) {
             $this->soapTimeout=intval($this->soapEngines[$this->sip_engine]['timeout']);
+        }
+
+        if (strlen($this->soapEngines[$this->sip_engine]['disableExtraGroups'])) {
+            $this->disableExtraGroups=$this->soapEngines[$this->sip_engine]['disableExtraGroups'];
         }
 
         if ($this->loginCredentials['templates_path']) {
@@ -5771,6 +5777,8 @@ class SipSettings {
     }
 
     function showExtraGroups () {
+		if ($this->disableExtraGroups) return true;
+
         $foundGroupInAvailableGroups=array();
 
         foreach ($this->groups as $_grp) {

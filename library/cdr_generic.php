@@ -883,8 +883,17 @@ class CDRS {
         $this->status['normalized']=0;
         $this->status['normalize_failures']=0;
 
-        $this->CDRdb->query($query);
+
+        if (!$this->CDRdb->query($query)) {
+    	    $log=sprintf ("Database error: %s (%s)\n",$this->CDRdb->Error,$this->CDRdb->Errno);
+        	syslog(LOG_NOTICE,$log);
+            print $log;
+            return false;
+        }
+
         $this->status['cdr_to_normalize']=$this->CDRdb->num_rows();
+
+        //print "<p>$query";
 
         if ($this->status['cdr_to_normalize'] > 0) {
 
@@ -1193,7 +1202,7 @@ class CDRS {
             $_table=$_tables[$t]["table_name"];
             if ($_table=='radacct') $this->tables[]='radacct';
 
-            if (preg_match("/^(\w+)\d{6}$/",$_table,$m)) {
+            if (preg_match("/^(\w+)(\d{6})$/",$_table,$m)) {
                 if ($list_t >24) break;
                 $this->tables[]=$_table;
                 $list_t++;
@@ -1894,6 +1903,7 @@ class CDR {
                         }
 
                     } else {
+
                         if (preg_match("/^(\w+)(\d{4})(\d{2})$/",$table,$m)) {
                             $previousTable=$m[1].date('Ym', mktime(0, 0, 0, $m[3]-1, "01", $m[2]));
                             $query2 = sprintf("update %s set %s where %s = '%s'",$previousTable,$query,$this->idField,$this->id);
