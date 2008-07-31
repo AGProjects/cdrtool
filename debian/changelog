@@ -1,3 +1,9 @@
+cdrtool (6.5.4) unstable; urgency=low
+
+  * Renamed SER to Kamailio, you must update the crontab jobs path 
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 31 Jul 2008 15:49:10 +0200
+
 cdrtool (6.5.3) unstable; urgency=low
 
   * Log id of inserted record into rating tables
