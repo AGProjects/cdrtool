@@ -137,7 +137,7 @@ how to enable prepaid or other rating functionality. For prepaid, an
 external B2BUA is required, CDRTool provides only the rating and update
 balance functions.
 
-Set the IP and port where the rating engine listens to and the OpenSER
+Set the IP and port where the rating engine listens to and the OpenSIPs
 datasource in global.inc:
 
 $RatingEngine=array("socketIP"   =>  "IP.address.of.the.private.interface.of.cdrtool.example.com",
@@ -170,7 +170,7 @@ CRON setup
 ----------
 
 Some operations must be scheduled to run periodically by cron. Such
-operations are the scripts that block fraudulous accounts in OpenSER,
+operations are the scripts that block fraudulous accounts in OpenSIPs,
 normalize the call detail records, purge the old SIP traces.
 
 The sample cron file is in /var/www/CDRTool/setup/crontabs/ 
@@ -198,15 +198,15 @@ mysql -u root radius < /usr/share/doc/freeradius/examples/db_mysql.sql
 
 Patch radacct table for storage of CISCO VSA and rating. Apply a patch to
 the default radacct table. This will add fields necessary to store Vendor
-Specific Atributes from Cisco or OpenSER.
+Specific Atributes from Cisco or OpenSIPs.
 
-It is not possible to mix call details records from CISCO and OpenSER
+It is not possible to mix call details records from CISCO and OpenSIPs
 in the same radius table. You need to create multiple radius server
 profiles and save the CDRs into dedicated tables for each datasource.
 
-Modify the default radacct table for OpenSER by running:
+Modify the default radacct table for OpenSIPs by running:
 
-/var/www/CDRTool/setup/radius/OpenSER/radacct-patch.sh
+/var/www/CDRTool/setup/radius/OpenSIPs/radacct-patch.sh
 
 and for CISCO by running:
 
@@ -214,12 +214,12 @@ and for CISCO by running:
 
 Configure Freeradius to write data into the radacct table:
 
-cp /var/www/CDRTool/setup/radius/OpenSER/sql.conf /etc/freeradius/sql.conf  
+cp /var/www/CDRTool/setup/radius/OpenSIPs/sql.conf /etc/freeradius/sql.conf  
 
 For large volume of CDRs it is usefull automatically rotate the tables in
 which the data is written. 
 
-/var/www/CDRTool/setup/radius/OpenSER/radius_accounting.*, contain mysql
+/var/www/CDRTool/setup/radius/OpenSIPs/radius_accounting.*, contain mysql
 procedures that automatically create monthly tables in the format
 radacctYYYYMM. To use mysql procedures, your must use MySQL server version 5
 or greater and Freeradius server mysql module must be compiled to support
@@ -235,7 +235,7 @@ if (!(mysql_sock->sock = mysql_real_connect(&(mysql_sock->conn),
                                             NULL, 
                                             CLIENT_FOUND_ROWS|CLIENT_MULTI_RESULTS ))) {
 
-Also, if you use MediaProxy for accounting in combination with OpenSER you
+Also, if you use MediaProxy for accounting in combination with OpenSIPs you
 must use the MediaProxy version that supports the same mysql procedures.
  
 Edit the database connection details in sql.conf and restart Freeradius
@@ -258,14 +258,14 @@ or added if missing.
 	sql 
 	}
 
-Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/freeradius
+Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.ser to /etc/freeradius
 
 
-OpenSER setup
+OpenSIPs setup
 ------------- 
 
 Enable MySQL storage for subscribers and Radius accounting. For SIP tracing
-you need to configure the OpenSER siptrace module. To enable quota you must
+you need to configure the OpenSIPs siptrace module. To enable quota you must
 add an extra column in the subscriber table:
 
 alter table openser.subscriber add column quota int not null;
@@ -316,7 +316,7 @@ route {
        ...
 }
 
-Copy /var/www/CDRTool/setup/radius/OpenSER/dictionary.ser to /etc/openser/radius/
+Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.ser to /etc/openser/radius/
 and uncomment the line:
 
 $INCLUDE               /etc/radiusclient-ng/dictionary
@@ -326,7 +326,7 @@ Note
 
 Many of the standard Radius attributes previously logged by default in the
 accounting packets must be added manually to "radius_extra" parameter of the
-acc module when using OpenSER >= 1.2.
+acc module when using OpenSIPs >= 1.2.
 
 
 MediaProxy setup
@@ -380,7 +380,7 @@ Manual CDR uploads
 
 If MySQL is down you will miss CDRs written by RADIUS. These CDRs can be
 reload manually from radius accounting files using the supplied upload
-scripts in scripts directory (IPNX, OpenSER and CISCO import scripts available).
+scripts in scripts directory (IPNX, OpenSIPs and CISCO import scripts available).
 
 
 Q931 Release codes for Cisco
@@ -408,7 +408,7 @@ Usage statistics
 ----------------
 
 CDRTool can build  usage statistics of the number of online SIP devices from
-OpenSER, simultaneous number of media streams and relayed IP traffic by
+OpenSIPs, simultaneous number of media streams and relayed IP traffic by
 MediaProxy.
 
 Define DB_siponline as a new database class in global.inc. Example:
