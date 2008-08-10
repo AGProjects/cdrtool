@@ -6240,32 +6240,30 @@ class DnsRecords extends Records {
 
     var $recordTypesTemplate=array(
                                'sipudp' =>  array('name'    => 'SIP - UDP transport',
-                                                  'records' =>  array('srv'   => array('name'   => '_sip._udp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '30',
-                                                                                       'value'  => '10 5060 #VALUE#|10 5060 sip'
-                                                                                       ),
+                                                  'records' =>  array(
                                                                       'naptr' => array('name'  => '',
                                                                                        'type'   => 'NAPTR',
                                                                                        'priority'=> '30',
                                                                                        'value' => '10 30 "s" "SIP+D2U" "" _sip._udp'
                                                                                        ),
-                                                                      'cname' => array('name'  => 'sip',
-                                                                                       'type'   => 'CNAME',
-                                                                                       'value' => 'proxy.sipthor.net'
+                                                                      'srv'   => array('name'   => '_sip._udp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '30',
+                                                                                       'value'  => '10 5060 #VALUE#|10 5060 sip'
                                                                                        )
                                                                       ),
                                                  ),
                                'siptcp' =>  array('name'    => 'SIP - TCP transport',
-                                                  'records' =>  array('srv'   => array('name'  => '_sip._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '20',
-                                                                                       'value' => '10 5060 #VALUE#|10 5060 sip'
-                                                                                       ),
+                                                  'records' =>  array(
                                                                       'naptr' => array('name'    => '',
                                                                                        'type'    => 'NAPTR',
                                                                                        'priority'=> '20',
                                                                                        'value' => '10 20 "s" "SIP+D2T" "" _sip._tcp'
+                                                                                       ),
+                                                                      'srv'   => array('name'  => '_sip._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '20',
+                                                                                       'value' => '10 5060 #VALUE#|10 5060 sip'
                                                                                        )
                                                                       ),
                                                   ),
@@ -6918,6 +6916,8 @@ class DnsRecords extends Records {
             $name = trim($_REQUEST['name']);
         }
 
+        $name=rtrim($name,".");
+
         if (preg_match("/^(.*)@(.*)$/",$name,$m)) {
             $name=$m[1];
             $zone=$m[2];
@@ -6950,6 +6950,8 @@ class DnsRecords extends Records {
         } else {
             $value = trim($_REQUEST['value']);
         }
+
+        $value=rtrim($value,".");
 
         list($customer,$reseller)=$this->customerFromLogin($dictionary);
 
@@ -7017,6 +7019,18 @@ class DnsRecords extends Records {
                 $value_new='';
     
                 if (strlen($_records['value'])) {
+                	if (preg_match("/^_sip/",$_records['name'])) {
+                        if (!$value) {
+                            $value=$this->getLoginProperty('dns_records_last_sip_server');
+                            if (!$value)  {
+                            	$value=$this->getLoginProperty('sip_proxy');
+                            }
+                            $save_new_value=false;
+                        } else {
+                            $save_new_value=true;
+                        }
+                    }
+
                     $els=explode("|",$_records['value']);
                     foreach ($els as $el) {
                         if (preg_match("/#VALUE#/",$el)) {
@@ -7032,11 +7046,11 @@ class DnsRecords extends Records {
                     }
 
                     // save value if type sip server
-                    if ($_records['name'] && preg_match("/^_sip/",$_records['name'])) {
+                    if ($save_new_value && $_records['name'] && preg_match("/^_sip/",$_records['name'])) {
                         $_p=array(
                                   array('name'       => 'dns_records_last_sip_server',
                                         'category'   => 'web',
-                                        'value'      => $value_new,
+                                        'value'      => $value,
                                         'permission' => 'customer'
                                        )
                                   );
@@ -7044,8 +7058,6 @@ class DnsRecords extends Records {
                         $this->setLoginProperties($_p);
                     }
 
-                } else {
-        			$value_new=$this->getLoginProperty('dns_records_last_sip_server');
                 }
 
 		        if (!in_array($_records['type'],array_keys($this->recordTypes))) {

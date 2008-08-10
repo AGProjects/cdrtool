@@ -1,8 +1,9 @@
 cdrtool (6.5.4) unstable; urgency=low
 
   * Renamed SER and OpenSER to OpenSIPs
+  * Fixed save and retrieve of sip proxy server when add  DNS records for sip
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 07 Aug 2008 22:15:38 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 10 Aug 2008 15:26:44 +0200
 
 cdrtool (6.5.3) unstable; urgency=low
 
