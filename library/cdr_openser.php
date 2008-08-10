@@ -68,6 +68,7 @@ class CDRS_ser_radius extends CDRS {
     var $GROUPBY=array('UserName'             => 'SIP Billing Party',
                        'CallingStationId'     => 'SIP Caller Party',
                        'SipRPID'              => 'SIP Remote Party Id',
+                       'CanonicalURI'         => 'SIP Canonical URI',
                        'DestinationId'        => 'SIP Destination Id',
                        'NASIPAddress'         => 'SIP Proxy',
                        'SourceIP'             => 'Source IP',
