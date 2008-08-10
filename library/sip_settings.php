@@ -2683,6 +2683,24 @@ class SipSettings {
             if ($this->login_type != 'subscriber' || $this->availableGroups[$key]['SubscriberMayEditIt']) {
 
                 if ($key == 'free-pstn') {
+                	if (in_array($key,$this->groups) && !$val) {
+                    	if ($this->quota) {
+                            // we save quota for later use when pstn access is re-granted
+                            $this->somethingChanged=1;
+                            $this->setPreference('last_sip_quota',"$this->quota");
+                        }
+                    }
+
+                	if (!in_array($key,$this->groups) && $val) {
+                    	$this->setPreference('last_sip_quota',strval($this->quota));
+                    
+                        $last_sip_quota=$this->Preferences['last_sip_quota'];
+                        if ($last_sip_quota) {
+                            $result->quota=intval($last_sip_quota);
+                            $this->somethingChanged=1;
+                        }
+                    }
+
                     if ($this->pstn_changes_allowed) {
                         if ($val) $newACLarray[]=trim($key);
                     } else {
