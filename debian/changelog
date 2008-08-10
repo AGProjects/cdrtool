@@ -2,8 +2,9 @@ cdrtool (6.5.4) unstable; urgency=low
 
   * Renamed SER and OpenSER to OpenSIPs
   * Fixed save and retrieve of sip proxy server when add  DNS records for sip
+  * Fixed wrong password reset because of web browsers that cache password fields
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 10 Aug 2008 15:26:44 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 10 Aug 2008 15:37:15 +0200
 
 cdrtool (6.5.3) unstable; urgency=low
 

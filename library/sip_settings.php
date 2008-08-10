@@ -1825,7 +1825,8 @@ class SipSettings {
         </td>
         <td class=borderns>";
 
-          print "<input type=password size=15 name=sip_password value=\"$this->password\">";
+        print "<input type=text size=15 name=sip_password>";
+        printf ("\n\n<!-- \nSIP account password: %s\n -->\n\n",$this->password);
 
         print _("Language");
         print "
@@ -2770,7 +2771,7 @@ class SipSettings {
             $this->somethingChanged=1;
         }
 
-        if ($sip_password && $sip_password != $this->password) {
+        if ($sip_password) {
             $result->password=$sip_password;
             $this->somethingChanged=1;
         }
