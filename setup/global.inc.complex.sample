@@ -30,14 +30,6 @@ $CDRTool['provider']['sampleLoginSubscriber']   = "317100000@example.com";
 $CDRTool['provider']['sampleLoginDomain']       = "317100001@subdomain.example.com";
 
 ###########################################
-# SMS one time passwords 
-# You can egister an account at www.simplewire.com
-# useful to send temporary password to GSM phones
-
-$simplewire_ID 		= "471-XXX-471-XXXXX";
-$simplewire_Password 	= "DDDDD";
-
-###########################################
 # Where the rating engine listens for network requests:
 
 ###########################################

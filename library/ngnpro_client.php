@@ -656,7 +656,7 @@ class Records {
             }
         }
 
-          $this->filters['customer'] = trim($_REQUEST['customer_filter']);
+        $this->filters['customer'] = trim($_REQUEST['customer_filter']);
 
         //$this->getResellers();
 
@@ -5627,7 +5627,6 @@ class DnsZones extends Records {
         //printf (" Available name servers: %s",$this->SoapEngine->name_servers);
         }
     }
-
 
     function listRecords() {
         $this->showSeachForm();

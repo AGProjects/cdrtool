@@ -523,7 +523,7 @@ class pageLayout {
 
     function showLoginForm(&$parentAuth) {
 
-        global $simplewire_ID, $username, $otp_error, $CDRTool;
+        global $username, $otp_error, $CDRTool;
         $auth=$parentAuth;
         
         print "
@@ -613,26 +613,24 @@ class pageLayout {
          </tr>
         ";
         
-        if ($simplewire_ID) {
-            print "
-            <tr>
-            <td colspan=2>
-                <p>
-            
-            If you make use of <b>O</b>ne <b>T</b>ime <b>P</b>asswords:
+        print "
+        <tr>
+        <td colspan=2>
+            <p>
         
-            <ul class=s>
-                <li>Fill in your username
-                <li>Press the Send OTP button
-                <li>Collect the password
-                <li>Fill it in the password field
-                <li>Press the Login Now button to login
-            </ul>
-            <input type=submit name=sendotp value=\"Send OTP\">
-            </td>
-            </tr>
-            ";
-        }
+        If you make use of <b>O</b>ne <b>T</b>ime <b>P</b>asswords:
+        
+        <ul class=s>
+            <li>Fill in your username
+            <li>Press the Send OTP button
+            <li>Collect the password
+            <li>Fill it in the password field
+            <li>Press the Login Now button to login
+        </ul>
+        <input type=submit name=sendotp value=\"Send OTP\">
+        </td>
+        </tr>
+        ";
         
         print "
         </table>
