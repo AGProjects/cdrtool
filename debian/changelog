@@ -1,12 +1,11 @@
 cdrtool (6.5.4) unstable; urgency=low
 
-  * Renamed SER and OpenSER to OpenSIPs
   * Fixed save and retrieve of sip proxy server when add  DNS records for sip
   * Fixed wrong password reset because of web browsers that cache password fields
   * Preserve sip account quota value when toggling access to pstn
-  * Added group by Canonical URI in CDR search screen 
+  * Added group by Canonical URI in CDR search screen
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 10 Aug 2008 16:00:11 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 14 Aug 2008 11:37:33 +0200
 
 cdrtool (6.5.3) unstable; urgency=low
 
