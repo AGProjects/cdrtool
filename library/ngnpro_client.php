@@ -11822,7 +11822,7 @@ class SipAccountsActions extends Actions {
             if ($action=='block') {
 
                 $function=array('commit'   => array('name'       => 'addToGroup',
-                                                    'parameters' => array($account,'block'),
+                                                    'parameters' => array($account,'blocked'),
                                                     'logs'       => array('success' => sprintf('SIP account %s@%s has been blocked',$key['username'],$key['domain'])
                                                                           )
                                                    )
@@ -11834,7 +11834,7 @@ class SipAccountsActions extends Actions {
             } else if ($action=='deblock') {
 
                 $function=array('commit'   => array('name'       => 'removeFromGroup',
-                                                    'parameters' => array($account,'block'),
+                                                    'parameters' => array($account,'blocked'),
                                                     'logs'       => array('success' => sprintf('SIP account %s@%s has been de-blocked',$key['username'],$key['domain'])
                                                                           )
                                                    )
