@@ -378,7 +378,7 @@ class DB_Sql {
     $this->haltmsg($msg);
 
     if ($this->Halt_On_Error != "report")
-      die("Session halted.");
+      die("Session halted.\n");
   }
 
   function haltmsg($msg) {

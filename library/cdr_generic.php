@@ -1617,7 +1617,9 @@ class CDRS {
             }
 
         } else {
-            syslog(LOG_NOTICE, "Error: failed to request mysql lock");
+            $log=sprintf("Database error: failed to request mysql lock %s (%s)\n",$locker->Error,$locker->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return 0;
         }
     }
