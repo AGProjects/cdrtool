@@ -72,7 +72,7 @@ class DB_Sql {
     
       $this->Link_ID=mysql_pconnect($Host, $User, $Password);
       if (!$this->Link_ID) {
-        $this->halt("pconnect($Host, $User, \$Password) failed.");
+        $this->halt("pconnect as $User to $Host failed.");
         return 0;
       }
 
@@ -382,10 +382,15 @@ class DB_Sql {
   }
 
   function haltmsg($msg) {
-    printf("</td></tr></table><b>Database error:</b> %s<br>\n", $msg);
-    printf("<b>MySQL Error</b>: %s (%s)<br>\n",
-      $this->Errno,
-      $this->Error);
+    $log=sprintf("Database error: %s\n", $msg);
+    print $log;
+    syslog(LOG_NOTICE, $log);
+
+    if ($this->Errno) {
+       $log=printf("MySQL error: %s (%s)\n",$this->Errno,$this->Error);
+       print $log;
+       syslog(LOG_NOTICE, $log);
+    }
   }
 
   function table_names() {
