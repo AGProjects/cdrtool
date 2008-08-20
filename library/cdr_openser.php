@@ -1853,7 +1853,7 @@ class CDRS_ser_radius extends CDRS {
         }
 
         if (!$this->AccountsDB->query($query)) {
-            printf ("<p>Database error %s %s",$this->AccountsDB->Error,$query);
+            printf ("<p>Database error: %s (%d) %s",$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
             return false;
         }
 

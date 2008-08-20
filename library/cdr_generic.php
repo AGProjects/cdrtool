@@ -118,10 +118,14 @@ class CDRS {
 
         // check db connectivity
         if (!$this->CDRdb->query('SELECT 1')) {
+            $log=sprintf("Error: failed to connect to the primary CDR database %s\n",$this->primary_database);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+
             if ($this->secondary_database) {
 				$this->CDRdb    = new $this->secondary_database;
 		        if (!$this->CDRdb->query('SELECT 1')) {
-                    $log="Error: failed to connect to the CDR database\n";
+                    $log=sprintf("Error: failed to connect to the secondary CDR database %s\n",$this->secondary_database);
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return 0;
@@ -129,6 +133,8 @@ class CDRS {
         			$this->CDRdb1         = new $this->secondary_database;
 		            $this->db_class       = $this->secondary_database;
                 }
+            } else {
+                return 0;
             }
         } else {
         	$this->CDRdb1         = new $this->primary_database;
