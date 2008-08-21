@@ -525,6 +525,7 @@ class CDRS_ser_radius extends CDRS {
                 array("label"=>"one hour","value"=>"onehour"),
                 array("label"=>"greater than 5 hours","value"=>"> 18000"),
                 array("label"=>"Un-normalized calls","value"=>"unnormalized"),
+                array("label"=>"Un-normalized calls > 0s","value"=>"unnormalized_duration"),
                 array("label"=>"One way media","value"=>"onewaymedia")
                 );
         } else {
@@ -1401,6 +1402,10 @@ class CDRS_ser_radius extends CDRS {
 
         if ($duration == "unnormalized") {
             $where .=  " and $this->normalizedField = '0' ";
+        }
+
+        if ($duration == "unnormalized_duration") {
+            $where .=  " and $this->normalizedField = '0' and $this->durationField > 0 ";
         }
 
         if ($group_by) {
@@ -2598,7 +2603,11 @@ class CDR_ser_radius extends CDR {
         print "<td valign=top>$this->traceOut</td>";
 
         if (!$this->normalized){
-            print "<td valign=top align=left colspan=4><font color=red>in progress</a></td>";
+        	if ($this->duration > 0 ) {
+             	print "<td valign=top align=left colspan=4><font color=red>$this->duration(s) but in progress?</a></td>";
+            } else {
+            	print "<td valign=top align=left colspan=4><font color=red>in progress</a></td>";
+            }
         } else {
             print "<td valign=top align=right>$this->durationPrint</td>";
             if ($this->CDRS->rating) {
