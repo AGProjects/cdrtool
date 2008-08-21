@@ -1,3 +1,18 @@
+cdrtool (6.5.5) unstable; urgency=low
+
+  * Fixed bug that allowed for some CDRs to remain in 'in progress' state.
+    by setting ConnectInfo_stop explicitly to '' empty string. You must
+    update radius configuration with sql.conf or reload the
+    radius_accounting.proc in the radius database depending on your setup
+  * Search by un-normalized calls with duration
+  * Do not normalized calls in the web if more than 500 un-normalized calls.
+  * Fixed sample config files
+  * Better error printing when connection to databases fail
+  * Print error when cannot connect to radius primary or secondary database
+  * Fixed log of database class used for normalization
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 21 Aug 2008 10:05:55 +0200
+
 cdrtool (6.5.4) unstable; urgency=low
 
   * Fixed save and retrieve of sip proxy server when add  DNS records for sip
