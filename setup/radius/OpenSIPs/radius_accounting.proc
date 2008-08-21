@@ -393,7 +393,7 @@ BEGIN
  	@var_tbl_month = CONCAT(@var_tbl_begin, @var_yst, @var_month_formatted),
 	@v_AcctStopTime = CAST(var_AcctStopTime AS DATETIME),
 	@v_AcctStopDelay = var_AcctStopDelay,
-	@v_ConnectInfo_stop = var_ConnectInfo_stop,
+	@v_ConnectInfo_stop = '',
 	@v_RTPStatistics = var_RTPStatistics,
 	@v_AcctSessionId = var_AcctSessionId,
 	@v_SipToTag = var_SipToTag,

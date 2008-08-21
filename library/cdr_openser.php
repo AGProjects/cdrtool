@@ -4,6 +4,7 @@ class CDRS_ser_radius extends CDRS {
     var $CDR_class             = "CDR_ser_radius";
     var $subscriber_table      = "subscriber";
     var $ENUMtld               = '';
+    var $maxCDRsNormalizeWeb = 500;
 
     var $CDRFields=array('id'              => 'RadAcctId',
                          'callId'          => 'AcctSessionId',
@@ -1490,11 +1491,13 @@ class CDRS_ser_radius extends CDRS {
             }
 
             if ($UnNormalizedCalls=$this->getUnNormalized($where,$cdr_table)) {
-                $this->NormalizeCDRS($where,$cdr_table);
-                if (!$this->export && $this->status['normalized'] ) {
-                    printf ("%d CDRs normalized. ",$this->status['normalized']);
-                    if ($this->status['cached_keys']['saved_keys']) {
-                        printf ("Quota usage updated for %d accounts. ",$this->status['cached_keys']['saved_keys']);
+            	if ($UnNormalizedCalls < $this->maxCDRsNormalizeWeb) {
+                    $this->NormalizeCDRS($where,$cdr_table);
+                    if (!$this->export && $this->status['normalized'] ) {
+                        printf ("%d CDRs normalized. ",$this->status['normalized']);
+                        if ($this->status['cached_keys']['saved_keys']) {
+                            printf ("Quota usage updated for %d accounts. ",$this->status['cached_keys']['saved_keys']);
+                        }
                     }
                 }
             }
@@ -2343,16 +2346,12 @@ class CDR_ser_radius extends CDR {
             <td>Start time: </td>
             <td>$this->startTime $providerTimezone</td>
         </tr>
+        <tr>
+            <td></td>
+            <td>Stop time: </td>
+            <td>$this->stopTime</td>
+        </tr>
         ";
-        if ($this->normalized) {
-            $CallInfoVerbose.= "
-            <tr>
-                <td></td>
-                <td>Stop time: </td>
-                <td>$this->stopTime $providerTimezone</td>
-            </tr>
-            ";
-        }
 
         $CallInfoVerbose.= "
         <tr>

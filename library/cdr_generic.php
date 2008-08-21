@@ -21,6 +21,7 @@ class CDRS {
 	var $reNormalize         = false;
 	var $usageKeysForDeletionFromCache = array();
 	var $localDomains        = array();
+	var $maxCDRsNormalizeWeb = 500;
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
@@ -863,11 +864,11 @@ class CDRS {
         if (!$table) $table=$this->table;
 
         if ($this->skipNormalize) {
-            return 0;
+            return 1;
         }
 
         if (!$this->normalizedField) {
-            return 0;
+            return 1;
         }
 
         $lockName=sprintf("%s:%s",$this->cdr_source,$table);
