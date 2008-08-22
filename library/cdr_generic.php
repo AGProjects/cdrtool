@@ -813,10 +813,13 @@ class CDRS {
                                 MediaInfo = ''
                                 ConnectInfo_stop is NULL
                                 AcctStopTime != '0000-00-00 00:00:00'
-    
+
+            6. Mofified 5. for the case where the session received a broken BYE
+               that did not generate a STOP while MediaProxy generated an UPDATE
+
             */
 
-            $this->whereUnnormalized .= " and (ConnectInfo_stop is not NULL or MediaInfo is NULL or MediaInfo != '') ";
+            $this->whereUnnormalized .= " and (ConnectInfo_stop is not NULL or MediaInfo is NULL or MediaInfo != '' or (UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(AcctStopTime) > 20)) ";
         }
 
     }
