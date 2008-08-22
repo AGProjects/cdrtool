@@ -393,7 +393,6 @@ BEGIN
  	@var_tbl_month = CONCAT(@var_tbl_begin, @var_yst, @var_month_formatted),
 	@v_AcctStopTime = CAST(var_AcctStopTime AS DATETIME),
 	@v_AcctStopDelay = var_AcctStopDelay,
-	@v_ConnectInfo_stop = '',
 	@v_RTPStatistics = var_RTPStatistics,
 	@v_AcctSessionId = var_AcctSessionId,
 	@v_SipToTag = var_SipToTag,
@@ -410,7 +409,7 @@ BEGIN
 		AcctStopTime = ?,
 		AcctSessionTime = UNIX_TIMESTAMP(?) - UNIX_TIMESTAMP(AcctStartTime),
 		AcctStopDelay = ?,
- 		ConnectInfo_stop = ?,
+ 		ConnectInfo_stop = '',
 		RTPStatistics = ?,
 		Normalized = '0'
 		WHERE
@@ -419,7 +418,7 @@ BEGIN
 		AND ConnectInfo_stop IS NULL AND (MediaInfo IS NULL OR MediaInfo != 'timeout');");
 		PREPARE update_rad1 FROM @updstmt1;
 		EXECUTE update_rad1 USING @v_AcctStopTime, @v_AcctStopTime,
-			@v_AcctStopDelay, @v_ConnectInfo_stop, @v_RTPStatistics,
+			@v_AcctStopDelay, @v_RTPStatistics,
 			@v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
 			@v_SipFromTag, @v_SipToTag;
 
@@ -450,7 +449,7 @@ BEGIN
 			AcctStopTime = ?,
 			AcctSessionTime = UNIX_TIMESTAMP(?) - UNIX_TIMESTAMP(AcctStartTime),
 			AcctStopDelay = ?,
-			ConnectInfo_stop = ?,
+			ConnectInfo_stop = '',
 			RTPStatistics = ?,
 			Normalized = '0'
 			WHERE
@@ -459,7 +458,7 @@ BEGIN
 			AND ConnectInfo_stop IS NULL AND (MediaInfo IS NULL OR MediaInfo != 'timeout') ;");
 			PREPARE update_rad2 FROM @updstmt2;
 			EXECUTE update_rad2 USING @v_AcctStopTime, @v_AcctStopTime,
-				@v_AcctStopDelay, @v_ConnectInfo_stop, @v_RTPStatistics,
+				@v_AcctStopDelay, @v_RTPStatistics,
 				@v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
 				@v_SipFromTag, @v_SipToTag;
 
@@ -476,7 +475,6 @@ BEGIN
 	-- CLEAN UP
 	SET @v_AcctStopTime = null,
 	@v_AcctStopDelay = null,
-	@v_ConnectInfo_stop = null,
 	@v_RTPStatistics = null,
 	@v_AcctSessionId = null,
 	@v_SipToTag = null,
