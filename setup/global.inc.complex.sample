@@ -113,42 +113,58 @@ class DB_radius extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
+class DB_subscribers extends DB_Sql {
+  var $Host     = "sipdb";
+  var $Database = "openser";
+  var $User     = "openser";
+  var $Password = "PASSWORD";
+  var $Halt_On_Error ="yes";
+}
+
 class DB_openser extends DB_Sql {
   var $Host     = "sipdb";
-  var $Database = "ser";
-  var $User     = "ser";
+  var $Database = "openser";
+  var $User     = "openser";
   var $Password = "PASSWORD";
-  var $Halt_On_Error ="no";
+  var $Halt_On_Error ="yes";
+}
+
+class DB_siptrace extends DB_Sql {
+  var $Host     = "sipdb";
+  var $Database = "siptrace";
+  var $User     = "openser";
+  var $Password = "PASSWORD";
+  var $Halt_On_Error ="yes";
 }
 
 class DB_mediaproxy extends DB_Sql {
   var $Host     = "sipdb";
-  var $Database = "mediaproxy";       
+  var $Database = "mediaproxy";
   var $User     = "mediaproxy";
   var $Password = "PASSWORD";
-  var $Halt_On_Error ="no";
+  var $Halt_On_Error ="yes";
 }
 
 // Used by /var/www/CDRTool/scripts/replicationStatus.php
 class DB1 extends DB_Sql {
   var $Host     = "10.0.0.1";
-  var $Database = "radius";
+  var $Database = "mysql";
   var $User     = "root";
   var $Password = "PASSWORD";
-  var $Halt_On_Error ="no";
+  var $Halt_On_Error ="yes";
 }
 
 class DB2 extends DB_Sql {
   var $Host     = "10.0.0.2";
-  var $Database = "radius";
+  var $Database = "mysql";
   var $User     = "root";
   var $Password = "PASSWORD";
-  var $Halt_On_Error ="no";
+  var $Halt_On_Error ="yes";
 }
 
 $replicated_databases=array('cluster1'=>array(
                                               "db1"=>array('ip'      =>'10.0.0.131',
-                                                               'slave_of'=>'db-log2',
+                                                               'slave_of'=>'db2',
                                                                'user'    =>'process',
                                                                'password'=>'password',
                                                                'replication_user'    =>'replication',
@@ -156,13 +172,14 @@ $replicated_databases=array('cluster1'=>array(
                                                                'active_master' => true
                                                                ),
                                               "db2"=>array('ip'      =>'10.0.0.132',
-                                                               'slave_of'=>'db-log1',
+                                                               'slave_of'=>'db1',
                                                                'user'    =>'process',
                                                                'password'=>'password',
                                                                'replication_user'    =>'replication',
                                                                'replication_password'=>'password'
                            )                                    )
                  );
+                 
 
 # To allow users to login using a custom procedure. See DomainAuth from phplib/local.inc as example
 class DomainAuthLocal extends DomainAuth {
@@ -262,7 +279,7 @@ $DATASOURCES=array(
                     ),
 "sip_trace"   =>array(
                     "name"               => "SIP trace",
-                    "db_class"           => "DB_openser",
+                    "db_class"           => "DB_siptrace",
                     "table"              => "sip_trace",
                     "purgeRecordsAfter"  => "7",
                     "SIPProxies"        => array("10.0.0.1"=>"SIP Proxy 1",

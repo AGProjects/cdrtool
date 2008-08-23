@@ -75,7 +75,7 @@ class DB_Locker extends DB_Sql {
   var $Database = "cdrtool";
   var $User     = "locker";
   var $Password = "PASSWORD";
-  var $Halt_On_Error ="no";
+  var $Halt_On_Error ="yes";
 }
 
 class DB_radius extends DB_Sql {
@@ -99,6 +99,7 @@ class DB_subscribers extends DB_Sql {
   var $Database = "openser";
   var $User     = "openser";
   var $Password = "PASSWORD";
+  var $Halt_On_Error ="yes";
 }
 
 class DB_openser extends DB_Sql {
@@ -106,7 +107,15 @@ class DB_openser extends DB_Sql {
   var $Database = "openser";
   var $User     = "openser";
   var $Password = "PASSWORD";
-  var $Halt_On_Error ="no";
+  var $Halt_On_Error ="yes";
+}
+
+class DB_siptrace extends DB_Sql {
+  var $Host     = "sipdb";
+  var $Database = "siptrace";
+  var $User     = "openser";
+  var $Password = "PASSWORD";
+  var $Halt_On_Error ="yes";
 }
 
 class DB_mediaproxy extends DB_Sql {
@@ -114,7 +123,7 @@ class DB_mediaproxy extends DB_Sql {
   var $Database = "mediaproxy";
   var $User     = "mediaproxy";
   var $Password = "PASSWORD";
-  var $Halt_On_Error ="no";
+  var $Halt_On_Error ="yes";
 }
 
 $replicated_databases=array('cluster1'=>array(
@@ -185,7 +194,7 @@ $DATASOURCES=array(
                     ),
 "sip_trace"   =>array(
                     "name"               => "SIP trace",
-                    "db_class"           => "DB_openser",
+                    "db_class"           => "DB_siptrace",
                     "table"              => "sip_trace",
                     "enableThor"         => false,
                     "purgeRecordsAfter"  => "7",
