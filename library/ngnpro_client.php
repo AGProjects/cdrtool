@@ -3542,7 +3542,7 @@ class EnumRanges extends Records {
                     ";
                 }
 
-             if (!$this->next)  $this->next=0;
+            if (!$this->next)  $this->next=0;
 
             if ($this->rows > $this->maxrowsperpage)  {
                 $maxrows = $this->maxrowsperpage + $this->next;
