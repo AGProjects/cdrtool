@@ -9267,7 +9267,12 @@ class Customers extends Records {
 
         $this->showAddForm = $_REQUEST['showAddForm'];
 
-        $this->customer_properties = &$this->SoapEngine->customer_properties;
+        if (is_array($this->SoapEngine->customer_properties)) {
+        	$this->customer_properties = &$this->SoapEngine->customer_properties;
+        } else {
+        	$this->customer_properties = array();
+        }
+
         $this->allProperties=array_merge($this->propertiesItems,$this->customer_properties);
 
         if ($_REQUEST['action'] == 'Add' || $_REQUEST['action'] == 'Copy' ||

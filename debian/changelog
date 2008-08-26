@@ -1,3 +1,9 @@
+cdrtool (6.5.7) unstable; urgency=low
+
+  * Check custom properties for customer port before loading
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 26 Aug 2008 16:07:48 +0200
+
 cdrtool (6.5.6) unstable; urgency=low
 
   * Updated normalize logic for the case where the session received a broken
