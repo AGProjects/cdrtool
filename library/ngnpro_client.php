@@ -6050,7 +6050,7 @@ class DnsZones extends Records {
     function updateRecord () {
 
         if (!$_REQUEST['name_filter']) return;
-        //printf ("<p>Updating zone %s...",$_REQUEST['name_filter']);
+        //dprintf ("<p>Updating zone %s...",$_REQUEST['name_filter']);
 
         $filter=array('name' => $_REQUEST['name_filter']);
 
