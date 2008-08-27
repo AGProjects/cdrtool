@@ -59,4 +59,9 @@ $resellerFilters=array('default'  => array('soap_filter'        => 'sip'
                                            'currency'          => '&euro'
                                            )
                        );
+
+$domainFilters=array('default'      => array('sip_engine' => 'sip')
+                     );
+
+
 ?>
