@@ -126,7 +126,6 @@ class Rate {
 
         $this->startTimeBilling   = Date("Y-m-d H:i:s",$this->timestampBilling);
 
-
         $this->trafficKB=number_format($this->traffic/1024,0,"","");
 
         if ($this->increment >= 1) {
@@ -342,8 +341,8 @@ class Rate {
 
         $query=sprintf("select * from billing_customers
         where subscriber = '%s'
-        or domain = '%s'
-        or gateway = '%s'
+        or domain        = '%s'
+        or gateway       = '%s'
         or (subscriber = '' and domain = '' and gateway = '')
         order by subscriber desc, domain desc, gateway desc limit 1 ",
         addslashes($this->BillingPartyId),
@@ -361,48 +360,56 @@ class Rate {
         if ($this->db->num_rows()) {
             $this->db->next_record();
 
-            if ($this->db->Record['profile_name1'] && $this->db->Record['profile_name2']) {
-                if ($this->db->Record['subscriber']) {
-                    $this->CustomerProfile = sprintf("subscriber=%s",$this->db->Record['subscriber']);
-                } else if ($this->db->Record['domain']) {
-                    $this->CustomerProfile = sprintf("domain=%s",$this->db->Record['domain']);
-                } else if ($this->db->Record['gateway']) {
-                    $this->CustomerProfile = sprintf("gateway=%s",$this->db->Record['gateway']);
-                } else {
-                    $this->CustomerProfile = "default";
-                }
-
-                $this->billingTimezone = $this->db->Record['timezone'];
-
-                if (!$this->billingTimezone) {
-                	$log = sprintf ("Error: missing timezone for customer %s",$this->CustomerProfile);
-	            	syslog(LOG_NOTICE, $log);
-                    return false;
-                }
-
-                $this->allProfiles = array (
-                                            "profile1"     => $this->db->Record['profile_name1'],
-                                            "profile2"     => $this->db->Record['profile_name2'],
-                                            "profile1_alt" => $this->db->Record['profile_name1_alt'],
-                                            "profile2_alt" => $this->db->Record['profile_name2_alt'],
-                                            "timezone"     => $this->db->Record['timezone'],
-                                            "increment"    => $this->db->Record['increment'],
-                                            "min_duration" => $this->db->Record['min_duration'],
-                                            "country_code" => $this->db->Record['country_code']
-                                        );
-
-                $this->increment       = $this->db->Record['increment'];
-                $this->min_duration    = $this->db->Record['min_duration'];
-
-                if ($this->min_duration > 1) $this->minimumDurationCharged = $this->min_duration;
-
-                return true;
+            if ($this->db->Record['subscriber']) {
+                $this->CustomerProfile = sprintf("subscriber=%s",$this->db->Record['subscriber']);
+            } else if ($this->db->Record['domain']) {
+                $this->CustomerProfile = sprintf("domain=%s",$this->db->Record['domain']);
+            } else if ($this->db->Record['gateway']) {
+                $this->CustomerProfile = sprintf("gateway=%s",$this->db->Record['gateway']);
             } else {
-                $log=sprintf("Error: customer id %d has no profiles assigned in profiles table",$this->db->Record['id']);
+                $this->CustomerProfile = "default";
+            }
+
+            if (!$this->db->Record['profile_name1']) {
+                $log=sprintf("Error: customer %s (id=%d) has no weekday profile assigned in profiles table",$this->CustomerProfile,$this->db->Record['id']);
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
+
+            if (!$this->db->Record['profile_name2']) {
+                $log=sprintf("Error: customer %s (id=%d) has no weekend profile assigned in profiles table",$this->CustomerProfile,$this->db->Record['id']);
+                print $log;
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+
+
+            if (!$this->db->Record['timezone']) {
+                $log = sprintf ("Error: missing timezone for customer %s",$this->CustomerProfile);
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+
+            $this->billingTimezone = $this->db->Record['timezone'];
+
+            $this->allProfiles = array (
+                                        "profile1"     => $this->db->Record['profile_name1'],
+                                        "profile2"     => $this->db->Record['profile_name2'],
+                                        "profile1_alt" => $this->db->Record['profile_name1_alt'],
+                                        "profile2_alt" => $this->db->Record['profile_name2_alt'],
+                                        "timezone"     => $this->db->Record['timezone'],
+                                        "increment"    => $this->db->Record['increment'],
+                                        "min_duration" => $this->db->Record['min_duration'],
+                                        "country_code" => $this->db->Record['country_code']
+                                    );
+
+            $this->increment       = $this->db->Record['increment'];
+            $this->min_duration    = $this->db->Record['min_duration'];
+
+            if ($this->min_duration > 1) $this->minimumDurationCharged = $this->min_duration;
+
+            return true;
         } else {
             $log=sprintf("Error: no customer found in billing_customers table for billing party=%s, domain=%s, gateway=%s",$this->BillingPartyId,$this->domain,$this->gateway);
             print $log;
@@ -605,10 +612,6 @@ class Rate {
             $this->rateNotFound=true;
             $log=sprintf("Error: Cannot find rates for callid=%s, billing party=%s, customer %s, gateway=%s, destination=%s, profile=%s, app=%s",
             $this->callId,$this->BillingPartyId,$this->CustomerProfile,$this->gateway,$this->DestinationId,$this->profileName,$this->applicationType);
-            /*
-            $subject=$this->CDRS->CDRTool['provider']['service']." - CDRTool rating problem";
-            mail($this->toEmail, $subject, $log, $this->extraHeaders);
-            */
             syslog(LOG_NOTICE, $log);
             return false;
         }

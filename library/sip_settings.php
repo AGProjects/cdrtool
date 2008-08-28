@@ -5527,7 +5527,7 @@ class SipSettings {
             return false;
         }
 
-        //dprint_r($result);
+        dprint_r($result);
 
         foreach ($result as $_watcher) {
             $this->presenceWatchers[$_watcher->id]['status']=$_watcher->status;
