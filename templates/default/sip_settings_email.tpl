@@ -30,6 +30,11 @@ Domain: {$client->domain}
 Register with domain: Yes
 Outboud Proxy: {$client->sip_proxy}
 
+{if $client->xcap_root}
+Presence mode: Presence agent
+Storage policy: XCAP
+XCAP Root URL: {$client->xcap_root}
+{/if}
 
 {foreach name=enums from=$client->enums item=enum}
 ENUM number {$smarty.foreach.enums.iteration}: {$enum}

@@ -3,8 +3,10 @@ cdrtool (6.5.7) unstable; urgency=low
   * Check custom properties for customer port before loading
   * Added defaultDomain filter to sample ngnpro_engines.inc
   * Better error logging when rating tables are  incorrectly provisioned
+  * Show XCAP root in sip settings email notification
+  * Fixed duplicate ENUM number is sip settings page
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 28 Aug 2008 13:25:06 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 28 Aug 2008 14:36:45 +0200
 
 cdrtool (6.5.6) unstable; urgency=low
 

@@ -3646,6 +3646,8 @@ class SipSettings {
     function getENUMmappings () {
         dprint("getENUMmappings(engine=$this->enum_engine)");
 
+		$this->enums=array();
+
         $filter=array(
                       'type'     => 'sip',
                       'mapto'    => $this->account,
@@ -3683,7 +3685,7 @@ class SipSettings {
         foreach($result->numbers as $_number) {
             $enum='+'.$_number->id->number;
             $this->voicemailUsernameOptions[]=$enum;
-            $this->enums[]=$enum;
+            if (!in_array($enum,$this->enums)) $this->enums[]=$enum;
         }
     }
 
