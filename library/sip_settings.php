@@ -1330,7 +1330,7 @@ class SipSettings {
         $this->resellerProperties['language'] = $result->language;
         $this->resellerProperties['timezone'] = $result->timezone;
 
-        //dprint_r($this->resellerProperties);
+        dprint_r($this->resellerProperties);
 
         // overwrite settings from soap engine
         if ($this->resellerProperties['sip_proxy']) {

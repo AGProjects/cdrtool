@@ -345,17 +345,11 @@ class Rate {
         or domain = '%s'
         or gateway = '%s'
         or (subscriber = '' and domain = '' and gateway = '')
-        order by subscriber desc,
-        domain desc,
-        gateway desc
-        limit 1
-        ",
+        order by subscriber desc, domain desc, gateway desc limit 1 ",
         addslashes($this->BillingPartyId),
         addslashes($this->domain),
         addslashes($this->gateway)
         );
-
-        //syslog(LOG_NOTICE, $query);
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -364,12 +358,28 @@ class Rate {
             return false;
         }
 
-        $log=sprintf("Found %d rows",$this->db->num_rows());
-
         if ($this->db->num_rows()) {
             $this->db->next_record();
 
             if ($this->db->Record['profile_name1'] && $this->db->Record['profile_name2']) {
+                if ($this->db->Record['subscriber']) {
+                    $this->CustomerProfile = sprintf("subscriber=%s",$this->db->Record['subscriber']);
+                } else if ($this->db->Record['domain']) {
+                    $this->CustomerProfile = sprintf("domain=%s",$this->db->Record['domain']);
+                } else if ($this->db->Record['gateway']) {
+                    $this->CustomerProfile = sprintf("gateway=%s",$this->db->Record['gateway']);
+                } else {
+                    $this->CustomerProfile = "default";
+                }
+
+                $this->billingTimezone = $this->db->Record['timezone'];
+
+                if (!$this->billingTimezone) {
+                	$log = sprintf ("Error: missing timezone for customer %s",$this->CustomerProfile);
+	            	syslog(LOG_NOTICE, $log);
+                    return false;
+                }
+
                 $this->allProfiles = array (
                                             "profile1"     => $this->db->Record['profile_name1'],
                                             "profile2"     => $this->db->Record['profile_name2'],
@@ -381,27 +391,22 @@ class Rate {
                                             "country_code" => $this->db->Record['country_code']
                                         );
 
-                if ($this->db->Record['subscriber']) {
-                    $this->CustomerProfile = sprintf("subscriber=%s",$this->db->Record['subscriber']);
-                } else if ($this->db->Record['domain']) {
-                    $this->CustomerProfile = sprintf("domain=%s",$this->db->Record['domain']);
-                } else if ($this->db->Record['gateway']) {
-                    $this->CustomerProfile = sprintf("gateway=%s",$this->db->Record['gateway']);
-                } else {
-                    $this->CustomerProfile = "default";
-                }
-
                 $this->increment       = $this->db->Record['increment'];
                 $this->min_duration    = $this->db->Record['min_duration'];
-                $this->billingTimezone = $this->db->Record['timezone'];
 
                 if ($this->min_duration > 1) $this->minimumDurationCharged = $this->min_duration;
 
                 return true;
             } else {
+                $log=sprintf("Error: customer id %d has no profiles assigned in profiles table",$this->db->Record['id']);
+                print $log;
+                syslog(LOG_NOTICE, $log);
                 return false;
             }
         } else {
+            $log=sprintf("Error: no customer found in billing_customers table for billing party=%s, domain=%s, gateway=%s",$this->BillingPartyId,$this->domain,$this->gateway);
+            print $log;
+            syslog(LOG_NOTICE, $log);
             return false;
         }
     }
