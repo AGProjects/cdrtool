@@ -5150,7 +5150,6 @@ class RatingEngine {
     }
 
     function reloadDomains () {
-        if (is_object($this->CDRS->mc)) $this->CDRS->mc->delete($this->CDRS->domains_key);
         return 1;
     }
 
