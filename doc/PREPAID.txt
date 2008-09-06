@@ -150,8 +150,16 @@ Simultaneous prepaid calls
 --------------------------
 
 Since version 6.6.0 is possible to have multiple calls using the same
-prepaid account without the risk of reaching a negative balance. 
+prepaid account without the risk of reaching a negative balance and without
+having to regularly poll the database which could become major scalability
+problem.
 
+The modus operandi is based on a simple model: all prepaid calls belonging
+to the sip sip account must end in the same moment regadless of where the
+calls are connected to and their different prices. The rating engine simply
+calculates that moment based on the data available from ongoing calls,
+available balance and the new call setup request. This scheme provides a
+fair balancing policy with small performance penalty on the servers.
 
 To have this working your must set $RatingEngine['prepaid_lock'] to 0 in
 /etc/cdrtool/global.inc and update the call control software module that
@@ -181,7 +189,7 @@ in the syslog:
 
 cdrtool[13292]: MaxSessionTime From=sip:adi@umts.ro Lock=1 To=sip:00318008185@umts.ro CallId=waaivgq89aTxmPIG6JIsPhODUe0tRVf- Duration=36000 Gateway=80.101.96.20
 cdrtool[13292]: ConnectFee=0.0450 Span=1 Duration=16 DestId=31646 default Profile=442 Period=weekend Rate=442 Interval=0-24 Cost=0.1600/60 Price=0.0427
-cdrtool[13292]: Ongoing prepaid session uw1znivnqoeofyezzuiiisudukw64cm- for adi@umts.ro to sip:0031646630425@umts.ro: duration=16, price=0.0877 
+cdrtool[13292]: Ongoing prepaid session uw1znivnqoeofyezzuiiisudukw64cm- for adi@umts.ro to sip:0031646999425@umts.ro: duration=16, price=0.0877 
 cdrtool[13292]: Balance for adi@umts.ro having 1 ongoing sessions: database=9.9534, due=0.0877, real=9.8657
 cdrtool[13292]: Maximum duration for adi@umts.ro to destination 31646 having balance=9.8657 is 3700
 cdrtool[13292]: Maximum duration for adi@umts.ro to destination 31800 having balance=9.8657 is 29597
