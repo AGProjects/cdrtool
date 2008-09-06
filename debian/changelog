@@ -5,8 +5,9 @@ cdrtool (6.6.0) unstable; urgency=low
   * Apply the changes from setup/mysql/alter_tables.mysql
   * Fixed a bug that allowed fraudulos prepaid calls
   * Added interface to kill ongoing prepaid sessions in Prepaid page
+  * Added debian repository for installing cdrtool using apt-get
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 06 Sep 2008 15:57:41 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 06 Sep 2008 16:44:11 +0200
 
 cdrtool (6.5.8) unstable; urgency=low
 
