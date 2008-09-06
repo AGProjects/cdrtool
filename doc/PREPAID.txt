@@ -150,9 +150,9 @@ Simultaneous prepaid calls
 --------------------------
 
 Since version 6.6.0 is possible to have multiple calls using the same
-prepaid account without the risk of reaching a negative balance and without
-having to regularly poll the database which could become major scalability
-problem.
+prepaid account without the risk of reaching a negative balance, without
+call locking and without having to regularly poll the database which could
+become major scalability problem.
 
 The modus operandi is based on a simple model: all prepaid calls belonging
 to the sip sip account must end in the same moment regadless of where the
@@ -170,11 +170,12 @@ required the call control module to keep the time counter per sip session,
 now it needs to sync the counter for all calls belonging to the same sip
 account.
 
-Having simultaneous prepaid calls for the same account will load the rating
-engine more during call setup (it will perform internally during each call
-setup (2 x the number of parallel sip sessions per sip account) number of
-calls to ShowPrice and MaxSessionTime functions) but there is no database
-polling needed during the duration of the calls to check the balance.
+Having simultaneous prepaid calls for the same account will increase the
+load on the rating engine during call setup (it will perform internally
+during each call setup (2 x the number of parallel sip sessions per sip
+account) number of calls to ShowPrice and MaxSessionTime functions) but
+there is no locking or database polling needed during the duration of the
+calls to check the balance.
 
 The list of ongoing prepaid calls can be monitored in the Prepaid accounts
 section of the Rating pages. For each sip account that has ongoing calls a
