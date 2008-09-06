@@ -150,11 +150,14 @@ Simultaneous prepaid calls
 --------------------------
 
 Since version 6.6.0 is possible to have multiple calls using the same
-prepaid account without the risk of reaching a negative balance. To have
-this working the call control module that keeps track of maximum session
-session time must be updated to enforce call ending for all calls belonging
-to the same sip account at the same time based on the last value of
-MaxSessionTime received from the rating engine. The previous version
+prepaid account without the risk of reaching a negative balance. 
+
+
+To have this working your must set $RatingEngine['prepaid_lock'] to 0 in
+/etc/cdrtool/global.inc and update the call control software module that
+keeps track of the maximum session time to enforce call ending for all calls
+belonging to the same sip account at the same time based on the last value
+of MaxSessionTime received from the rating engine. The previous version
 required the call control module to keep the time counter per sip session,
 now it needs to sync the counter for all calls belonging to the same sip
 account.
