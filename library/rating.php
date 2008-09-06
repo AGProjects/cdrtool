@@ -1147,7 +1147,7 @@ class RatingTables {
                            "prepaid"=>array("name"=>"Prepaid accounts",
                                                  "keys"=>array("id"),
                                                  "size"=>15,
-                                                 "exceptions" =>array('active_sessions'),
+                                                 "exceptions" =>array('active_sessions','call_in_progress'),
                                                  "domainFilterColumn"=>"account",
                                                  "fields"=>array("account"=>array("size"=>35,
                                                                                "name"=>"SIP prepaid account",
@@ -6084,6 +6084,7 @@ class RatingEngine {
                 $query=sprintf("update %s
                 set
                 active_sessions = '%s',
+                call_in_progress = NOW(),
                 maxsessiontime = '%d',
                 call_lock      = '%s',
                 destination    = '%s'
@@ -6109,6 +6110,7 @@ class RatingEngine {
                 $query=sprintf("update %s
                 set
                 active_sessions = '%s',
+                call_in_progress = NOW(),
                 maxsessiontime = '%d'
                 where account  = '%s'",
                 addslashes($this->prepaid_table),
