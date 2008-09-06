@@ -5377,8 +5377,6 @@ class RatingEngine {
             $old_active_sessions = json_decode($this->db->f('active_sessions'),true);
             $destination=$old_active_sessions[$callid]['DestinationId'];
             foreach (array_keys($old_active_sessions) as $_key) {
-            	syslog(LOG_NOTICE, "$_key==$callid");
-
                 if ($_key==$callid) continue;
                 $active_sessions[$_key]=$old_active_sessions[$_key];
             }
@@ -5788,6 +5786,13 @@ class RatingEngine {
             }
 
             if (!$this->db->num_rows()) {
+                $log=sprintf ("CallId=%s BillingParty=%s MaxSessionTime=unlimited Type=postpaid",
+                $NetFields['callid'],
+                $CDR->BillingPartyId
+                );
+    
+                syslog(LOG_NOTICE, $log);
+
                 return "none";
             }
 
@@ -6067,7 +6072,7 @@ class RatingEngine {
                 return "error";
             }
 
-            $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Balance=%s MaxSessionTime=%s Spans=%d",
+            $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Balance=%s MaxSessionTime=%s Spans=%d Type=prepaid",
             $NetFields['callid'],
             $CDR->BillingPartyId,
             $CDR->DestinationId,
