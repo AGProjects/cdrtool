@@ -4,8 +4,9 @@ cdrtool (6.6.0) unstable; urgency=low
     prepaid calls section in doc/PREPAID.txt
   * Apply the changes from setup/mysql/alter_tables.mysql
   * Fixed a bug that allowed fraudulos prepaid calls
+  * Added interface to kill ongoing prepaid sessions in Prepaid page
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 06 Sep 2008 15:55:39 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 06 Sep 2008 15:57:41 +0200
 
 cdrtool (6.5.8) unstable; urgency=low
 

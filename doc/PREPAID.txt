@@ -161,9 +161,17 @@ account.
 
 Having simultaneous prepaid calls for the same account will load the rating
 engine more during call setup (it will perform internally during each call
-setup (2 x number of parallel sip sessions) number of calls to ShowPrice and
-MaxSessionTime functions) but there is no database polling needed during
-calls to check the balance. The time and balance distribution between calls
-is logged detailed in the syslog.
+setup (2 x the number of parallel sip sessions per sip account) number of
+calls to ShowPrice and MaxSessionTime functions) but there is no database
+polling needed during the duration of the calls to check the balance. The
+time and balance distribution between parallel calls is logged detailed in
+the syslog.
 
+The list of ongoing prepaid calls can be monitored in the Prepaid accounts
+section of the Rating pages. For each sip account that has ongoing calls a
+link marked Sessions apear in the left side of the record. Click on it to
+display the ongoing prepaid sessions. The 'Delete session' button allows the
+removal of the session form the rating engine. The expired sessions that
+have not been closed properly by the call control module are automatically
+purged 30 seconds after expiration.
 
