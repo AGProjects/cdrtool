@@ -2063,41 +2063,6 @@ function getLocalTime($timezone,$timestamp) {
     putenv("TZ=$timezone");
     return $startTimeLocal;
 }
-
-function sec2hms ($duration) {
-    // return seconds in HH:MM:SS format
-    $sum1=$duration;
-    $duration_print="";
-
-    $duration_hour=floor($sum1/3600);
-    
-    if ($duration_hour > 0) {
-        $sum1=$sum1-($duration_hour*3600);
-        $duration_print="$duration_hour:";
-    }
-    
-    $duration_min=floor($sum1/60);
-    
-    if ($duration_min > 0) {
-        $sum1=$sum1-($duration_min*60);
-        if ($duration_min < 10) {
-            $duration_min="0"."$duration_min";
-        }
-        $duration_print="$duration_print"."$duration_min:";
-    } else {
-        $duration_print="$duration_print"."00:";
-    }
-
-    if ($sum1< 10 ) {
-        $duration_sec="0"."$sum1";
-    } else {
-        $duration_sec=$sum1;
-    } 
-    
-    $duration_print="$duration_print"."$duration_sec";		
-    return $duration_print;
-}
-
 function validDay($month,$day,$year) {
     if (!$month || !$year) {
         return $day;

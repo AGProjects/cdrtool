@@ -1594,7 +1594,7 @@ class SipSettings {
             <tr>
                 <td class=border>Presence mode
                 </td>
-                <td class=border>Presence agent
+                <td class=border>Presence agent with XCAP policy
                 </td>
             </tr>
             <tr>

@@ -145,7 +145,25 @@ Notes
 The balance is debited correctly regardless of the moment of CDR
 normalization. Renormalization of calls do not recalculate balance.
 
-By default only one call at a time can be performed using a prepaid account.
-You may enable multiple parallel calls using the same prepaid call if you
-accept the idea that the balance might become negative. For this set in
-global.inc $RatingEngine['prepaid_lock'] to false.
+
+Simultaneous prepaid calls
+--------------------------
+
+Since version 6.6.0 is possible to have multiple calls using the same
+prepaid account without the risk of reaching a negative balance. To have
+this working the call control module that keeps track of maximum session
+session time must be updated to enforce call ending for all calls belonging
+to the same sip account at the same time based on the last value of
+MaxSessionTime received from the rating engine. The previous version
+required the call control module to keep the time counter per sip session,
+now it needs to sync the counter for all calls belonging to the same sip
+account.
+
+Having simultaneous prepaid calls for the same account will load the rating
+engine more during call setup (it will perform internally during each call
+setup (2 x number of parallel sip sessions) number of calls to ShowPrice and
+MaxSessionTime functions) but there is no database polling needed during
+calls to check the balance. The time and balance distribution between calls
+is logged detailed in the syslog.
+
+

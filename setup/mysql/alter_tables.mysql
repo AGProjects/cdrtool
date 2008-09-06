@@ -509,3 +509,9 @@ CREATE TABLE `quota_usage` (
 );
  
 alter table memcache change `value` `value` longblob not null;
+
+
+6.6.0
+
+alter table prepaid add column active_sessions text not null;
+alter table prepaid drop column call_in_progress;

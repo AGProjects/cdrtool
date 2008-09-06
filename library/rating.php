@@ -18,6 +18,7 @@ class Rate {
     var $ENUMdiscount           = 0;     // how much percentage to substract from the final price
     var $price                  = 0;
     var $spans                  = 0;     // number of spans we looped through
+	var $connectCost            = 0;
 
     function Rate($settings=array(),&$db) {
 
@@ -228,6 +229,7 @@ class Rate {
 
             if ($span=="1") {
                 $connectCostSpan=$connectCost;
+				$this->connectCost=number_format($connectCost/$this->priceDenominator,$this->priceDecimalDigits);
             } else {
                 $connectCostSpan=0;
             }
@@ -696,6 +698,8 @@ class Rate {
         if (!$this->applicationType) $this->applicationType='audio';
 
         if (!$this->DestinationId) {
+            $log=sprintf("Error: no DestinationId supplied in MaxSessionTime()");
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -754,7 +758,9 @@ class Rate {
             $connectCost     = $thisRate['values']['connectCost'];
             $durationRate    = $thisRate['values']['durationRate'];
 
-            if ($span=="1") {
+            if ($span=="1" && !$dictionary['skipConnectCost']) {
+				$this->connectCost=number_format($connectCost/$this->priceDenominator,$this->priceDecimalDigits);
+
                 $connectCostSpan=$connectCost;
                 $setupBalanceRequired=$connectCost/$this->priceDenominator;
 
@@ -901,7 +907,9 @@ class RatingTables {
                             'account',
                             'balance',
                             'fromRate',
-                            'toRate');
+                            'toRate',
+                            'sessionId'
+                            );
 
     var $requireReload  = array('destinations');
 
@@ -1139,7 +1147,7 @@ class RatingTables {
                            "prepaid"=>array("name"=>"Prepaid accounts",
                                                  "keys"=>array("id"),
                                                  "size"=>15,
-                                                 "exceptions" =>array(),
+                                                 "exceptions" =>array('active_sessions'),
                                                  "domainFilterColumn"=>"account",
                                                  "fields"=>array("account"=>array("size"=>35,
                                                                                "name"=>"SIP prepaid account",
@@ -1156,16 +1164,12 @@ class RatingTables {
                                                                                   "name"=>"Lock",
                                                                                  "readonly"=>0
                                                                                  ),
-                                                                 "call_in_progress"=>array("size"=>18,
-                                                                                  "name"=>"Call in progress",
-                                                                                 "readonly"=>1
-                                                                                 ),
                                                                  "last_call_price"=>array("size"=>10,
                                                                                   "name"=>"Last price",
                                                                                  "readonly"=>1
                                                                                  ),
                                                                  "maxsessiontime"=>array("size"=>5,
-                                                                                  "name"=>"Max",
+                                                                                  "name"=>"Maxtime",
                                                                                  "readonly"=>1
                                                                                  ),
                                                                  "destination"=>array("size"=>15,
@@ -3536,6 +3540,49 @@ class RatingTables {
                     print "</font>";
                     print "<input type=hidden name=confirmDelete value=1>";
                 }
+            } elseif ($subaction == "Delete session" && $sessionId && $table=='prepaid') {
+
+                $query=sprintf("select active_sessions from %s where id  = %d",$table,$id);
+                if (!$this->db->query($query)) {
+                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                }
+
+                if (!$this->db->num_rows()) return;
+
+                $this->db->next_record();
+
+                if (strlen($this->db->f('active_sessions'))) {
+                    // remove session
+                    $active_sessions=array();
+                    $old_active_sessions = json_decode($this->db->f('active_sessions'),true);
+
+                    if (!count($old_active_sessions)) return;
+                    foreach (array_keys($old_active_sessions) as $_key) {
+                        if ($_key==$sessionId) continue;
+                        $active_sessions[$_key]=$old_active_sessions[$_key];
+                    }
+                } else {
+                    $active_sessions=array();
+                }
+        
+                $query=sprintf("update %s
+                set active_sessions = '%s'
+                where id       = %d",
+                $table,
+                addslashes(json_encode($active_sessions)),
+                addslashes($id)
+                );
+
+                if ($this->db->query($query)) {
+                    return 1;
+                } else {
+                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    syslog(LOG_NOTICE, $log);
+                    print $log;
+                    return 0;
+                }
+
             }
         
             if ($affected_rows && $table!="prepaid") {
@@ -3693,12 +3740,17 @@ class RatingTables {
             $order="order by ".$order_by[$table]." ASC " ;
         }
         
-        $query="select * from $table
-        where (1=1) $where and $whereDomainFilter
-        $order limit $i, $this->maxrowsperpage";
+        $query=sprintf("select * from %s where (1=1) %s and %s %s limit %s, %s",
+        $table,
+        $where,
+        $whereDomainFilter,
+        $order,
+        $i,
+        $this->maxrowsperpage
+        );
 
         $this->db->query($query);
-        $num_fields=$this->db->num_fields()          ;
+        $num_fields=$this->db->num_fields();
         $k=0;
         
         if (!$export) {
@@ -3734,7 +3786,6 @@ class RatingTables {
         if ($export) {
             print "\n";
         }
-        
         
         if (!$export) {
             
@@ -4059,10 +4110,10 @@ class RatingTables {
         
         while  ($i<$maxrows)  {
             $this->db->next_record();
-            $id        = $this->db->f('id');
-            $status    = $this->db->f('status');
+            $id     = $this->db->f('id');
+            $status = $this->db->f('status');
             $found  = $i+1;
-        
+
             if (!$export) {
                 print "
                 <form action=$PHP_SELF method=post>
@@ -4070,10 +4121,70 @@ class RatingTables {
                 <input type=hidden name=next value=$next>
                 <input type=hidden name=id value=$id>
                 <tr>
-                <td>$found. </td>
                 ";
+
+                if ($table == 'prepaid') {
+                    $active_sessions = json_decode($this->db->f('active_sessions'),true);
+
+                    $account=$this->db->f('account');
+                    $maxsessiontime=$this->db->f('maxsessiontime');
+
+                    $extraInfo="
+                    <form action=$PHP_SELF method=post>
+                    <input type=hidden name=action value=update>
+                    <input type=hidden name=next value=$next>
+                    <input type=hidden name=id value=$id>
+                    <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
+                    <tr>
+                    <td valign=top>
+                    <table border=0>
+                    ";
+
+                    $t=0;
+                    foreach (array_keys($active_sessions) as $_session) {
+                        $t++;
+                        $extraInfo.=sprintf ("<tr bgcolor=lightgrey><td class=border>%d. Session id</td><td>%s</td></tr>",$t,$_session);
+                        $duration=time()-$active_sessions[$_session]['timestamp'];
+                        $active_sessions[$_session]['startTime']=Date("Y-m-d H:i",$active_sessions[$_session]['timestamp']);
+                        $active_sessions[$_session]['duration']=sec2hms($duration). " (".$duration."s)";
+                        $active_sessions[$_session]['maxsessiontime']=sec2hms($maxsessiontime). " (".$maxsessiontime."s)";;
+                        foreach (array_keys($active_sessions[$_session]) as $key) {
+                            $extraInfo.= sprintf ("<tr><td class=border><b>%s</b></td><td>%s</td></tr>",$key,$active_sessions[$_session][$key]);
+                        }
+                    	$extraInfo.= sprintf("<tr><td colspan=2><input type=submit name=subaction value='Delete session'></td></tr>");
+                    }
+
+                    $extraInfo.=sprintf("
+                    <input type=hidden name=table value='%s'>
+                    <input type=hidden name=next value='%s'>
+                    <input type=hidden name=sessionId value='%s'>
+                    <input type=hidden name=search_text value='%s'>
+                    </form>
+                    </table>
+                    </td>
+                    </tr>
+                    </table>",
+                    $table,$next,$_session,$search_text
+                    );
+
+                    if (count($active_sessions)) {
+                        printf ("
+                        <td onClick=\"return toggleVisibility('row%s')\"><a href=#>$found | %s Sessions</td>
+                        ",$found,count($active_sessions));
+                    } else {
+                        print "
+                        <td>$found. </td>
+                        ";
+                    }
+
+                } else {
+                    print "
+                    <td>$found. </td>
+                    ";
+                }
             }
-        
+
+
             $j=0;
             while ($j < $this->db->num_fields()) {
                 $value=$this->db->Record[$j];
@@ -4106,13 +4217,16 @@ class RatingTables {
                                 </td>";
             
                             } else {
-                                print "<td><input type=text bgcolor=grey size=$field_size maxlength=$size name=$Fname value=\"$value\" $extra_form_els></td>";
+                                print "<td>
+                                <input type=text bgcolor=grey size=$field_size maxlength=$size name=$Fname value=\"$value\" $extra_form_els>
+                                </td>";
                             }
         
         
                         } else {
                             print "<td>$value</td>";
                         }
+
                     } else {
                         if ($j) {
                             printf ("%s%s",$delimiter,$value);
@@ -4166,6 +4280,12 @@ class RatingTables {
                 </td>
                 </tr>
                 </form>
+
+                <tr>
+                <td></td>
+                <td colspan=$t_columns>$extraInfo</td>
+                </tr>
+
                 ";
             }
             $i++;
@@ -5093,9 +5213,7 @@ class SERQuota extends OpenSERQuota {
 
 class RatingEngine {
     // set in global.inc $RatingEngine['prepaid_lock'] = 0;
-    // to disable lock when doing prepaid calls
-    // While so one may perform multiple calls in parallel using the same
-    // prepaid balance it also means that a negative balance can be reached
+    // to enable concurent calls for prepaid accounts
 
     var $prepaid_lock = 1;
     var $method = '';
@@ -5209,7 +5327,7 @@ class RatingEngine {
         return $line;
     }
 
-    function DebitBalance($account,$balance) {
+    function DebitBalance($account,$balance,$callid) {
 
         $els=explode(":",$account);
 
@@ -5224,6 +5342,11 @@ class RatingEngine {
 
         if (!is_numeric($balance)) {
             syslog(LOG_NOTICE, "DebitBalance() error: balance must be numeric");
+            return 0;
+        }
+
+        if (!$callid) {
+            syslog(LOG_NOTICE, "DebitBalance() error: missing call id");
             return 0;
         }
 
@@ -5246,22 +5369,49 @@ class RatingEngine {
             return 0;
         }
 
+        $this->db->next_record();
+
+        if (strlen($this->db->f('active_sessions'))) {
+            // remove active session
+            $active_sessions=array();
+            $old_active_sessions = json_decode($this->db->f('active_sessions'),true);
+            $destination=$old_active_sessions[$callid]['DestinationId'];
+            foreach (array_keys($old_active_sessions) as $_key) {
+            	syslog(LOG_NOTICE, "$_key==$callid");
+
+                if ($_key==$callid) continue;
+                $active_sessions[$_key]=$old_active_sessions[$_key];
+            }
+
+        } else {
+            $active_sessions=array();
+        }
+
+		if (count($active_sessions)){
+        	$maxsessiontime="maxsessiontime";
+        } else {
+        	$maxsessiontime=0;
+        }
+
         $query=sprintf("update %s
         set balance          = balance - '%s',
         change_date          = NOW(),
         last_call_price      = '%s',
-        call_in_progress     = '0000-00-00 00:00:00',
+        active_sessions      = '%s',
+        destination          = '%s',
         call_lock            = '0',
-        maxsessiontime       = '0'
+        maxsessiontime       = %s
         where account        = '%s'",
         $this->prepaid_table,
         $balance,
         $balance,
+        addslashes(json_encode($active_sessions)),
+        $destination,
+        $maxsessiontime,
         addslashes($account)
         );
 
         if ($this->db->query($query)) {
-
             return 1;
         } else {
             $log=sprintf ("DebitBalance() error: %s (%s)",$this->db->Error,$this->db->Errno);
@@ -5638,13 +5788,21 @@ class RatingEngine {
             }
 
             if (!$this->db->num_rows()) {
-                $this->logRuntime();
                 return "none";
             }
 
             $this->db->next_record();
 
             $Balance = $this->db->f('balance');
+
+            $maxsessiontime_last = $this->db->f('maxsessiontime');
+
+            if (strlen($this->db->f('active_sessions'))) {
+            	// load active sessions
+                $active_sessions = json_decode($this->db->f('active_sessions'),true);
+            } else {
+            	$active_sessions=array();
+            }
 
             if (!$Balance) {
                 $log=sprintf ("No balance found");
@@ -5654,7 +5812,7 @@ class RatingEngine {
             }
 
             if ($this->prepaid_lock && $this->db->f('call_lock') == "1") {
-                $log = sprintf ("Account locked, call in progres since %s",$this->db->f('call_in_progress'));
+                $log = sprintf ("Account locked by another call");
                 syslog(LOG_NOTICE, $log);
                 $this->logRuntime();
                 return "locked";
@@ -5680,24 +5838,208 @@ class RatingEngine {
 
             $maxduration=0;
             // Build Rate dictionary containing normalized CDR fields plus customer Balance
-            $RateDictionary=array(
-                                  'duration'        => $CDR->duration,
-                                  'callId'          => $CDR->callId,
-                                  'Balance'         => $Balance,
-                                  'timestamp'       => $CDR->timestamp,
-                                  'DestinationId'   => $CDR->DestinationId,
-                                  'domain'          => $CDR->domain,
-                                  'gateway'         => $CDR->gateway,
-                                  'BillingPartyId'  => $CDR->BillingPartyId,
-                                  'ENUMtld'         => $CDR->ENUMtld,
-                                  'RatingTables'    => &$this->CDRS->RatingTables
-                                  );
+			if (count($active_sessions)) {
 
-            $Rate    = new Rate($this->settings, $this->db);
+				if (in_array($NetFields['callid'],array_keys($active_sessions))) {
+                    $log = sprintf ("Error: session %s is already an active session for %s expiring over %d seconds",$NetFields['callid'],$active_sessions[$NetFields['callid']]['BillingPartyId'],
+                    $active_sessions[$NetFields['callid']]['timestamp'] + $maxsessiontime_last - time());
+                    syslog(LOG_NOTICE, $log);
+                    return "error";
+                }
 
-            $this->runtime['instantiate_rate']=microtime_float();
+				$ongoing_rates=array();
+                $active_sessions_checked=array();
+                foreach (array_keys($active_sessions) as $_session) {
 
-            $maxduration = round($Rate->MaxSessionTime($RateDictionary));
+                  	if ($maxsessiontime_last) {
+                        if ($active_sessions[$_session]['timestamp'] + $maxsessiontime_last < time() +30) {
+                            // this session has passed its maxsessiontime, it could be stale
+                            // because the call control module did not call debitbalance, so we purge it
+                            $expired_since=time() - $active_sessions[$_session]['timestamp'] - $maxsessiontime_last;
+                            $log = sprintf ("Session %s for %s has expired since %d seconds and it has been removed from active_sessions",
+                            $_session,
+                            $CDR->BillingPartyId,
+                            $expired_since);
+                            syslog(LOG_NOTICE, $log);
+                            continue;
+                        }
+                    }
+
+                    $active_sessions_checked[$_session]=$active_sessions[$_session];
+
+                	$Rate_session = new Rate($this->settings, $this->db);
+
+                    $passed_time=time()-$active_sessions[$_session]['timestamp'];
+
+					$active_sessions[$_session]['passed_time']=$passed_time;
+
+                    $RateDictionary_session=array(
+                                          'duration'        => $passed_time,
+                                          'callId'          => $_session,
+                                          'timestamp'       => $active_sessions[$_session]['timestamp'],
+                                          'DestinationId'   => $active_sessions[$_session]['DestinationId'],
+                                          'domain'          => $active_sessions[$_session]['domain'],
+                                          'BillingPartyId'  => $active_sessions[$_session]['BillingPartyId'],
+                                          'ENUMtld'         => $active_sessions[$_session]['ENUMtld'],
+                                          'RatingTables'    => &$this->CDRS->RatingTables
+                                          );
+
+                	$Rate_session->calculate($RateDictionary_session);
+
+                    $log = sprintf ("Ongoing prepaid session %s for %s to %s: duration=%s, price=%s ",
+                    $_session,
+                    $CDR->BillingPartyId,
+                    $active_sessions[$_session]['Destination'],
+                    $passed_time,
+                    $Rate_session->price
+                    );
+                	syslog(LOG_NOTICE, $log);
+    
+    				$ongoing_rates[$_session] = array(
+                                                       'duration'    => $passed_time,
+                                                       'price'       => $Rate_session->price
+                                                      );
+                }
+
+                $active_sessions=$active_sessions_checked;
+
+                $remaining_balance=$Balance;
+
+				if (count($ongoing_rates)) {
+                    $due_balance=0;
+                    foreach (array_keys($ongoing_rates) as $_o) {
+                        $due_balance = $due_balance+$ongoing_rates[$_o]['price'];
+                    }
+    
+                    $remaining_balance = $remaining_balance-$due_balance;
+    
+                    $log = sprintf ("Balance for %s having %d ongoing sessions: database=%s, due=%s, real=%s",
+                    $CDR->BillingPartyId,count($ongoing_rates),sprintf("%0.4f",$Balance),sprintf("%0.4f",$due_balance),sprintf("%0.4f",$remaining_balance));
+                    syslog(LOG_NOTICE, $log);
+    
+				}
+
+				$parallel_calls=array();
+                foreach (array_keys($active_sessions) as $_session) {
+                    $RateDictionary_session=array(
+                                          'callId'          => $_session,
+                                          'timestamp'       => time(),
+                                          'Balance'         => $remaining_balance,
+                                          'DestinationId'   => $active_sessions[$_session]['DestinationId'],
+                                          'domain'          => $active_sessions[$_session]['domain'],
+                                          'BillingPartyId'  => $active_sessions[$_session]['BillingPartyId'],
+                                          'ENUMtld'         => $active_sessions[$_session]['ENUMtld'],
+                                          'RatingTables'    => &$this->CDRS->RatingTables,
+                                          'skipConnectCost' => true
+                                          );
+
+					if ($active_sessions[$_session]['duration']) {
+						$RateDictionary_session['duration'] = $active_sessions[$_session]['duration']-$active_sessions[$_session]['passed_time'];
+                    }
+
+                    $Rate = new Rate($this->settings, $this->db);
+                    $_maxduration = round($Rate->MaxSessionTime($RateDictionary_session));
+
+                    $log = sprintf ("Maximum duration for %s to destination %s having balance=%s is %s",
+                    $active_sessions[$_session]['BillingPartyId'],
+                    $active_sessions[$_session]['DestinationId'],
+                    $remaining_balance,
+                    $_maxduration);
+                    syslog(LOG_NOTICE, $log);
+
+                    if ($_maxduration > 0) {
+                    	$parallel_calls[$_session]=array('pricePerSecond' => $remaining_balance/$_maxduration);
+                    } else {
+                        $log = sprintf ("Error: _maxduration for session %s is negative",$_session);
+                        syslog(LOG_NOTICE, $log);
+                        return "error";
+                    }
+                }
+
+                // add this current call to the list of parallel calls
+                $RateDictionary=array(
+                                      'duration'        => $CDR->duration,
+                                      'callId'          => $CDR->callId,
+                                      'Balance'         => $remaining_balance,
+                                      'timestamp'       => $CDR->timestamp,
+                                      'DestinationId'   => $CDR->DestinationId,
+                                      'domain'          => $CDR->domain,
+                                      'gateway'         => $CDR->gateway,
+                                      'BillingPartyId'  => $CDR->BillingPartyId,
+                                      'ENUMtld'         => $CDR->ENUMtld,
+                                      'RatingTables'    => &$this->CDRS->RatingTables
+                                      );
+    
+                $Rate = new Rate($this->settings, $this->db);
+
+            	$_maxduration = round($Rate->MaxSessionTime($RateDictionary));
+
+                $log = sprintf ("Maximum duration for %s to destination %s having balance=%s is %s",
+                $CDR->BillingPartyId,
+                $CDR->DestinationId,
+                $remaining_balance,
+                $_maxduration);
+                syslog(LOG_NOTICE, $log);
+
+
+                if ($_maxduration > 0) {
+                    $parallel_calls[$CDR->callId]=array('pricePerSecond' => $remaining_balance/$_maxduration);
+                } else {
+                    $log = sprintf ("Error: _maxduration for current session %s is negative",$CDR->callId);
+                    syslog(LOG_NOTICE, $log);
+                    return "error";
+                }
+
+    			$parallel_calls[$CDR->callId]=array('pricePerSecond' => $remaining_balance/$_maxduration);
+
+                $sum_price_per_second=0;
+                foreach (array_keys($parallel_calls) as $_call) {
+                    $sum_price_per_second=$sum_price_per_second+$parallel_calls[$_call]['pricePerSecond'];
+                }
+
+                if ($sum_price_per_second >0 ) {
+                	$maxduration=intval($remaining_balance/$sum_price_per_second);
+                    $log = sprintf ("Maximum duration agregated for %s is (Balance=%s)/(Sum of price per second for each destination=%s)=%s s",
+                    $active_sessions[$_session]['BillingPartyId'],$remaining_balance,sprintf("%0.4f",$sum_price_per_second),$maxduration);
+                    syslog(LOG_NOTICE, $log);
+
+                } else {
+                    $log = sprintf ("Error: sum_price_per_second is negative");
+                    syslog(LOG_NOTICE, $log);
+                    return "error";
+                }
+
+            } else {
+                $RateDictionary=array(
+                                      'duration'        => $CDR->duration,
+                                      'callId'          => $CDR->callId,
+                                      'Balance'         => $Balance,
+                                      'timestamp'       => $CDR->timestamp,
+                                      'DestinationId'   => $CDR->DestinationId,
+                                      'domain'          => $CDR->domain,
+                                      'gateway'         => $CDR->gateway,
+                                      'BillingPartyId'  => $CDR->BillingPartyId,
+                                      'ENUMtld'         => $CDR->ENUMtld,
+                                      'RatingTables'    => &$this->CDRS->RatingTables
+                                      );
+    
+                $Rate = new Rate($this->settings, $this->db);
+    
+                $this->runtime['instantiate_rate']=microtime_float();
+            	$maxduration = round($Rate->MaxSessionTime($RateDictionary));
+            }
+
+            // add new active session
+			$active_sessions[$CDR->callId]= array('timestamp'       => $CDR->timestamp,
+            			                          'duration'        => $CDR->duration,
+                                                  'DestinationId'   => $CDR->DestinationId,
+                                                  'Destination'     => $NetFields['to'],
+                                      			  'BillingPartyId'  => $CDR->BillingPartyId,
+                                                  'domain'          => $CDR->domain,
+                                                  'gateway'         => $CDR->gateway,
+                                                  'ENUMtld'         => $CDR->ENUMtld,
+                                                  'connectCost'     => $Rate->connectCost
+                                                  );
 
             $this->runtime['calculate_maxduration']=microtime_float();
 
@@ -5741,15 +6083,37 @@ class RatingEngine {
                 // mark the account that is locked during call
                 $query=sprintf("update %s
                 set
-                call_in_progress = NOW(),
+                active_sessions = '%s',
+                maxsessiontime = '%d'
                 call_lock      = '%s',
-                destination    = '%s',
-                maxsessiontime = '%s'
+                destination    = '%s'
                 where account  = '%s'",
                 addslashes($this->prepaid_table),
+                addslashes(json_encode($active_sessions)),
+                $maxduration,
                 addslashes($this->prepaid_lock),
                 addslashes($CDR->destinationPrint),
-                addslashes($maxduration),
+                addslashes($CDR->BillingPartyId));
+
+                if (!$this->db->query($query)) {
+                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    syslog(LOG_NOTICE,$log);
+                    return "error";
+                }
+
+                if (!$this->db->affected_rows()) {
+                    $log=sprintf ("$CDR->BillingPartyId is already locked");
+                    syslog(LOG_NOTICE, $log);
+                }
+            } else {
+                $query=sprintf("update %s
+                set
+                active_sessions = '%s',
+                maxsessiontime = '%d'
+                where account  = '%s'",
+                addslashes($this->prepaid_table),
+                addslashes(json_encode($active_sessions)),
+                $maxduration,
                 addslashes($CDR->BillingPartyId));
 
                 if (!$this->db->query($query)) {
@@ -5834,7 +6198,7 @@ class RatingEngine {
 
             $this->runtime['calculate_rate']=microtime_float();
 
-            $result = $this->DebitBalance($CDR->BillingPartyId,$Rate->price);
+            $result = $this->DebitBalance($CDR->BillingPartyId,$Rate->price,$NetFields['callid']);
 
             $this->runtime['debit_balance']=microtime_float();
 
