@@ -163,9 +163,7 @@ Having simultaneous prepaid calls for the same account will load the rating
 engine more during call setup (it will perform internally during each call
 setup (2 x the number of parallel sip sessions per sip account) number of
 calls to ShowPrice and MaxSessionTime functions) but there is no database
-polling needed during the duration of the calls to check the balance. The
-time and balance distribution between parallel calls is logged detailed in
-the syslog.
+polling needed during the duration of the calls to check the balance.
 
 The list of ongoing prepaid calls can be monitored in the Prepaid accounts
 section of the Rating pages. For each sip account that has ongoing calls a
@@ -174,4 +172,16 @@ display the ongoing prepaid sessions. The 'Delete session' button allows the
 removal of the session form the rating engine. The expired sessions that
 have not been closed properly by the call control module are automatically
 purged 30 seconds after expiration.
+
+The time and balance distribution between parallel calls is logged detailed
+in the syslog:
+
+cdrtool[13292]: MaxSessionTime From=sip:adi@umts.ro Lock=1 To=sip:00318008185@umts.ro CallId=waaivgq89aTxmPIG6JIsPhODUe0tRVf- Duration=36000 Gateway=80.101.96.20
+cdrtool[13292]: ConnectFee=0.0450 Span=1 Duration=16 DestId=31646 default Profile=442 Period=weekend Rate=442 Interval=0-24 Cost=0.1600/60 Price=0.0427
+cdrtool[13292]: Ongoing prepaid session uw1znivnqoeofyezzuiiisudukw64cm- for adi@umts.ro to sip:0031646630425@umts.ro: duration=16, price=0.0877 
+cdrtool[13292]: Balance for adi@umts.ro having 1 ongoing sessions: database=9.9534, due=0.0877, real=9.8657
+cdrtool[13292]: Maximum duration for adi@umts.ro to destination 31646 having balance=9.8657 is 3700
+cdrtool[13292]: Maximum duration for adi@umts.ro to destination 31800 having balance=9.8657 is 29597
+cdrtool[13292]: Maximum duration agregated for adi@umts.ro is (Balance=9.8657)/(Sum of price per second for each destination=0.0030)=3288 s
+cdrtool[13292]: CallId=waaivgq89atxmpig6jisphodue0trvf- BillingParty=adi@umts.ro DestId=31800 Balance=9.8657 MaxSessionTime=3288 Spans=2
 

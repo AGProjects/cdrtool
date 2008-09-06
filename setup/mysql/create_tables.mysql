@@ -373,6 +373,7 @@ CREATE TABLE `prepaid` (
   `balance` decimal(10,4) NOT NULL default '0.0000',
   `change_date` datetime NOT NULL default '0000-00-00 00:00:00',
   `call_lock` enum('0','1') default '0',
+  `call_in_progress` datetime NOT NULL default '0000-00-00 00:00:00',
   `active_sessions` text not null',
   `last_call_price` decimal(10,4) NOT NULL default '0.0000',
   `maxsessiontime` bigint(20) unsigned NOT NULL default '0',

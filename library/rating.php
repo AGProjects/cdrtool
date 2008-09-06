@@ -6084,7 +6084,7 @@ class RatingEngine {
                 $query=sprintf("update %s
                 set
                 active_sessions = '%s',
-                maxsessiontime = '%d'
+                maxsessiontime = '%d',
                 call_lock      = '%s',
                 destination    = '%s'
                 where account  = '%s'",
