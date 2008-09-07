@@ -197,30 +197,86 @@ cdrtool[13292]: Maximum duration for adi@umts.ro to destination 31800 having bal
 cdrtool[13292]: Maximum duration agregated for adi@umts.ro is (Balance=9.8657)/(Sum of price per second for each destination=0.0030)=3288 s
 cdrtool[13292]: CallId=waaivgq89atxmpig6jisphodue0trvf- BillingParty=adi@umts.ro DestId=31800 Balance=9.8657 MaxSessionTime=3288 Spans=2
 
-Pseudo-code for call control engine
 
-on_call_setup () {
+Pseudo-code for rating engine
+-----------------------------
+
+max_session_time (session, from, to) { 
+    list(balance,active_sessions)=get_prepaid_account_from_database();
+
+    if (count(active_sessions[from]) > 0) {
+        purge_expired_sessions()
+
+        // simulate call termination for all ongoing calls
+        foreach (call in active_sessions[from]) {
+            due_balance=used_balance+show_price(call)
+        }
+
+        // calculate new virtual balance
+        balance_new=balance-due_balance
+
+        // simulate we start parallel calls from scratch at this moment
+        // including the new sessionn setup request
+        // we skip any connect cost for session already in progress
+        active_sessions_new[from]=active_sessions[from]
+        active_sessions_new[from][]=session
+        foreach (call in active_sessions_new[from]) {
+            rate = new Rate(call)
+            maxsessiontime=rate->max_session_time()
+            // calculate price per second for each session
+            price_per_second=price_per_second+balance_new/maxsessiontime
+        }
+
+        // return aggregated maxsessiontime
+        return balance/price_per_second
+
+    } else {
+        // is the first session
+        rate = new Rate(session)          
+        active_sessions[from][]=session         
+        return rate->max_session_time()
+    }
+}
+
+debit_balance(session, from, to, duration) {
+    list(balance,active_sessions)=get_prepaid_account_from_database();
+    foreach (call in active_sessions[from]) {
+        if (call == session) continue
+        new_active_sessions[] = call 
+    }  
+    // update list of active sessions 
+    active_sessions[from]=new_active_sessions
+    price=showprice(session,from,to,duration)
+    balance=balance-price
+    update_prepaid_account_to_database(balance,active_sessions);
+}
+
+
+Pseudo-code for call control engine
+-----------------------------------
+
+on_session_setup () {
     max=cdrtool_max_session_time(session, from, to)
     if (sip_connect_call() == true) { 
-        // add session to the list of active calls
-        active_calls[from][]=session
+        // add session to the list of active sessions
+        active_sessions[from][]=session
         // set maxsession time for all remaining calls of the same user
-        foreach (call in active_calls[from]) {
+        foreach (call in active_sessions[from]) {
             call.maxsessiontime = max
         }
     } 
 }
 
-on_call_disconnect () {
+on_session_disconnect () {
    sip_disconnect_call();
-   cdrtool_debit_balance(session, from, to)
+   cdrtool_debit_balance(session, from, to, duration)
    // remove session from the list of active sessions
-   foreach (call in active_calls[from]) {
+   foreach (call in active_sessions[from]) {
        if (call == session) continue
-       new_active_calls[] = call 
+       new_active_sessions[] = call 
    }  
-   // update list of active calls 
-   active_calls[from]=new_active_calls 
+   // update list of active sessions 
+   active_sessions[from]=new_active_sessions
 }
 
 
@@ -229,9 +285,9 @@ Notes
 
 1. The algorithm still suffers from the fact that on disconnect of a call
 the user has a bigger balance while the ongoing calls together will not be
-able to use it until. One way to improve the algorithm would be to return a
-new maxsessiontime with the answer for DebitBalance() and update the
-remaining active calls accordingly.
+able to use it until a new call is setup. One way to improve the algorithm
+would be to return a new maxsessiontime with the answer for DebitBalance()
+and update the remaining active calls accordingly.
 
 2. The rating engine calculates an aggregated common maxsessiontime for all
 active calls for a user. This however cannot take in consideration the
