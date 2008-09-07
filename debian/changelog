@@ -2,12 +2,13 @@ cdrtool (6.6.0) unstable; urgency=low
 
   * Allow simultaneous calls for prepaid accounts, see the Simultaneous
     prepaid calls section in doc/PREPAID.txt
+  * Added pseudo code example for call control engine
   * Apply the changes from setup/mysql/alter_tables.mysql
-  * Fixed a bug that allowed fraudulos prepaid calls
+  * Fixed a bug that could allow for fraudulos prepaid calls
   * Added interface to kill ongoing prepaid sessions in Prepaid page
   * Added debian repository for installing cdrtool using apt-get
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 06 Sep 2008 16:44:11 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 07 Sep 2008 11:21:38 +0200
 
 cdrtool (6.5.8) unstable; urgency=low
 
