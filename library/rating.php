@@ -5857,8 +5857,9 @@ class RatingEngine {
                 foreach (array_keys($active_sessions) as $_session) {
 
                   	if ($maxsessiontime_last) {
-                        if ($active_sessions[$_session]['timestamp'] + $maxsessiontime_last < time() +30) {
-                            // this session has passed its maxsessiontime, it could be stale
+                        if ($active_sessions[$_session]['timestamp'] + $maxsessiontime_last < time() + 120) {
+                            // this session has passed its maxsessiontime plus its reasonable setup time fo 2 minutes,
+                            // it could be stale
                             // because the call control module did not call debitbalance, so we purge it
                             $expired_since=time() - $active_sessions[$_session]['timestamp'] - $maxsessiontime_last;
                             $log = sprintf ("Session %s for %s has expired since %d seconds and it has been removed from active_sessions",
@@ -5911,6 +5912,7 @@ class RatingEngine {
                 $remaining_balance=$Balance;
 
 				if (count($ongoing_rates)) {
+                    // calculate de virtual balance of the user at this moment in time
                     $due_balance=0;
                     foreach (array_keys($ongoing_rates) as $_o) {
                         $due_balance = $due_balance+$ongoing_rates[$_o]['price'];
@@ -5921,10 +5923,10 @@ class RatingEngine {
                     $log = sprintf ("Balance for %s having %d ongoing sessions: database=%s, due=%s, real=%s",
                     $CDR->BillingPartyId,count($ongoing_rates),sprintf("%0.4f",$Balance),sprintf("%0.4f",$due_balance),sprintf("%0.4f",$remaining_balance));
                     syslog(LOG_NOTICE, $log);
-    
 				}
 
 				$parallel_calls=array();
+
                 foreach (array_keys($active_sessions) as $_session) {
                     $RateDictionary_session=array(
                                           'callId'          => $_session,
@@ -6004,6 +6006,7 @@ class RatingEngine {
 
                 if ($sum_price_per_second >0 ) {
                 	$maxduration=intval($remaining_balance/$sum_price_per_second);
+
                     $log = sprintf ("Maximum duration agregated for %s is (Balance=%s)/(Sum of price per second for each destination=%s)=%s s",
                     $active_sessions[$_session]['BillingPartyId'],$remaining_balance,sprintf("%0.4f",$sum_price_per_second),$maxduration);
                     syslog(LOG_NOTICE, $log);
