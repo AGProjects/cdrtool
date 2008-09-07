@@ -5378,7 +5378,7 @@ class RatingEngine {
             // remove active session
             $active_sessions=array();
             $old_active_sessions = json_decode($this->db->f('active_sessions'),true);
-            $destination=$old_active_sessions[$callid]['DestinationId'];
+            $destination=$old_active_sessions[$callid]['Destination'];
             foreach (array_keys($old_active_sessions) as $_key) {
                 if ($_key==$callid) continue;
                 $active_sessions[$_key]=$old_active_sessions[$_key];
