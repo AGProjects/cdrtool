@@ -197,3 +197,53 @@ cdrtool[13292]: Maximum duration for adi@umts.ro to destination 31800 having bal
 cdrtool[13292]: Maximum duration agregated for adi@umts.ro is (Balance=9.8657)/(Sum of price per second for each destination=0.0030)=3288 s
 cdrtool[13292]: CallId=waaivgq89atxmpig6jisphodue0trvf- BillingParty=adi@umts.ro DestId=31800 Balance=9.8657 MaxSessionTime=3288 Spans=2
 
+Pseudo-code for call control engine
+
+on_call_setup () {
+    max=cdrtool_max_session_time(session, from, to)
+    if (sip_connect_call() == true) { 
+        // add session to the list of active calls
+        active_calls[from][]=session
+        // set maxsession time for all remaining calls of the same user
+        foreach (call in active_calls[from]) {
+            call.maxsessiontime = max
+        }
+    } 
+}
+
+on_call_disconnect () {
+   sip_disconnect_call();
+   cdrtool_debit_balance(session, from, to)
+   // remove session from the list of active sessions
+   foreach (call in active_calls[from]) {
+       if (call == session) continue
+       new_active_calls[] = call 
+   }  
+   // update list of active calls 
+   active_calls[from]=new_active_calls 
+}
+
+
+Notes
+-----
+
+1. The algorithm still suffers from the fact that on disconnect of a call
+the user has a bigger balance while the ongoing calls together will not be
+able to use it until. One way to improve the algorithm would be to return a
+new maxsessiontime with the answer for DebitBalance() and update the
+remaining active calls accordingly.
+
+2. The rating engine calculates an aggregated common maxsessiontime for all
+active calls for a user. This however cannot take in consideration the
+duration of the setup time (because is unknown at that stage how long it
+would take) for the calls that have not yet been established. This can lead
+to less talk time for end-user but cannot lead to negative balance.
+
+3. It is not possible to predict when a call will end as it depends on user
+choice so when a call spans multiple profiles that have different rates it
+is possible that the aggregated prediction will not match. It is unclear if
+this can leed to a negative balance. If it does the balance lost by the
+operator in the worst case is the tariff diference between profiles for some
+calls in some corner situations.
+
+    
