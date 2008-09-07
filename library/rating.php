@@ -3571,10 +3571,12 @@ class RatingTables {
                 }
         
                 $query=sprintf("update %s
-                set active_sessions = '%s'
+                set active_sessions = '%s',
+                session_counter = %d
                 where id       = %d",
                 $table,
                 addslashes(json_encode($active_sessions)),
+                count($active_sessions),
                 addslashes($id)
                 );
 
@@ -4154,6 +4156,9 @@ class RatingTables {
                         $active_sessions[$_session]['maxSessionTime']=sec2hms($maxsessiontime). " (".$maxsessiontime."s)";;
                         foreach (array_keys($active_sessions[$_session]) as $key) {
                             $extraInfo.= sprintf ("<tr><td class=border><b>%s</b></td><td>%s</td></tr>",ucfirst($key),$active_sessions[$_session][$key]);
+                        }
+                        if ($maxsessiontime < $duration ) {
+                            $extraInfo.= sprintf ("<tr><td class=border colspan=2><font color=red><b>Session expired since %d s</b></font></td></tr>",$duration-$maxsessiontime);
                         }
                     	$extraInfo.= sprintf("<tr><td colspan=2><input type=submit name=subaction value='Delete session'></td></tr>");
                     }
@@ -5781,40 +5786,64 @@ class RatingEngine {
 
             $this->runtime['normalize_cdr']=microtime_float();
 
-            $query=sprintf("select * from %s where account = '%s'",
-            addslashes($this->prepaid_table),
-            addslashes($CDR->BillingPartyId)
-            );
-
+            $query=sprintf("select * from %s where account = '%s'",addslashes($this->prepaid_table),addslashes($CDR->BillingPartyId));
             if (!$this->db->query($query)) {
                 $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                 syslog(LOG_NOTICE,$log);
                 $this->logRuntime();
                 return "error";
             }
-
             if (!$this->db->num_rows()) {
-                $log=sprintf ("CallId=%s BillingParty=%s MaxSessionTime=unlimited Type=postpaid",
-                $NetFields['callid'],
-                $CDR->BillingPartyId
-                );
-    
+                $log=sprintf ("CallId=%s BillingParty=%s MaxSessionTime=unlimited Type=postpaid",$NetFields['callid'],$CDR->BillingPartyId);
                 syslog(LOG_NOTICE, $log);
-
                 return "none";
             }
-
             $this->db->next_record();
-
-            $Balance = $this->db->f('balance');
-
+            $Balance             = $this->db->f('balance');
             $maxsessiontime_last = $this->db->f('maxsessiontime');
+            $session_counter     = $this->db->f('session_counter');
 
             if (strlen($this->db->f('active_sessions'))) {
             	// load active sessions
                 $active_sessions = json_decode($this->db->f('active_sessions'),true);
             } else {
             	$active_sessions=array();
+            }
+
+			if (count($active_sessions)) {
+				if (in_array($NetFields['callid'],array_keys($active_sessions))) {
+                    $log = sprintf ("Error: session %s is already an active session for %s expiring over %d seconds",$NetFields['callid'],$active_sessions[$NetFields['callid']]['BillingPartyId'],
+                    $active_sessions[$NetFields['callid']]['timestamp'] + $maxsessiontime_last - time());
+                    syslog(LOG_NOTICE, $log);
+                    return "error";
+                }
+            }
+
+			if ($this->purgeExpiredPrepaidSessions($active_sessions,$maxsessiontime_last)) {
+                // reload prepaid account data because we purged old sessions which lead to debit balance
+                $query=sprintf("select * from %s where account = '%s'",addslashes($this->prepaid_table),addslashes($CDR->BillingPartyId));
+                if (!$this->db->query($query)) {
+                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    syslog(LOG_NOTICE,$log);
+                    $this->logRuntime();
+                    return "error";
+                }
+                if (!$this->db->num_rows()) {
+                    $log=sprintf ("CallId=%s BillingParty=%s MaxSessionTime=unlimited Type=postpaid",$NetFields['callid'],$CDR->BillingPartyId);
+                    syslog(LOG_NOTICE, $log);
+                    return "none";
+                }
+                $this->db->next_record();
+                $Balance             = $this->db->f('balance');
+                $maxsessiontime_last = $this->db->f('maxsessiontime');
+                $session_counter     = $this->db->f('session_counter');
+                if (strlen($this->db->f('active_sessions'))) {
+                    // load active sessions
+                    $active_sessions = json_decode($this->db->f('active_sessions'),true);
+                } else {
+                    $active_sessions=array();
+                }
+
             }
 
             if (!$Balance) {
@@ -5824,7 +5853,7 @@ class RatingEngine {
                 return "none";
             }
 
-            if ($this->prepaid_lock && $this->db->f('session_counter')) {
+            if ($this->prepaid_lock && $session_counter) {
                 $log = sprintf ("Account locked by another call");
                 syslog(LOG_NOTICE, $log);
                 $this->logRuntime();
@@ -5853,33 +5882,9 @@ class RatingEngine {
             // Build Rate dictionary containing normalized CDR fields plus customer Balance
 			if (count($active_sessions)) {
 
-				if (in_array($NetFields['callid'],array_keys($active_sessions))) {
-                    $log = sprintf ("Error: session %s is already an active session for %s expiring over %d seconds",$NetFields['callid'],$active_sessions[$NetFields['callid']]['BillingPartyId'],
-                    $active_sessions[$NetFields['callid']]['timestamp'] + $maxsessiontime_last - time());
-                    syslog(LOG_NOTICE, $log);
-                    return "error";
-                }
-
 				$ongoing_rates=array();
-                $active_sessions_checked=array();
+
                 foreach (array_keys($active_sessions) as $_session) {
-
-                  	if ($maxsessiontime_last) {
-                        if ($active_sessions[$_session]['timestamp'] + $maxsessiontime_last < time() + 120) {
-                            // this session has passed its maxsessiontime plus its reasonable setup time fo 2 minutes,
-                            // it could be stale
-                            // because the call control module did not call debitbalance, so we purge it
-                            $expired_since=time() - $active_sessions[$_session]['timestamp'] - $maxsessiontime_last;
-                            $log = sprintf ("Session %s for %s has expired since %d seconds and it has been removed from active_sessions",
-                            $_session,
-                            $CDR->BillingPartyId,
-                            $expired_since);
-                            syslog(LOG_NOTICE, $log);
-                            continue;
-                        }
-                    }
-
-                    $active_sessions_checked[$_session]=$active_sessions[$_session];
 
                 	$Rate_session = new Rate($this->settings, $this->db);
 
@@ -5915,8 +5920,6 @@ class RatingEngine {
                                                       );
                 }
 
-                $active_sessions=$active_sessions_checked;
-
                 $remaining_balance=$Balance;
 
 				if (count($ongoing_rates)) {
@@ -5950,6 +5953,7 @@ class RatingEngine {
 
 					if ($active_sessions[$_session]['duration']) {
 						$RateDictionary_session['duration'] = $active_sessions[$_session]['duration']-$active_sessions[$_session]['passed_time'];
+						$RateDictionary_session['duration'] = $active_sessions[$_session]['duration']-$active_sessions[$_session]['passed_time'];
                     }
 
                     $Rate = new Rate($this->settings, $this->db);
@@ -5965,9 +5969,9 @@ class RatingEngine {
                     if ($_maxduration > 0) {
                     	$parallel_calls[$_session]=array('pricePerSecond' => $remaining_balance/$_maxduration);
                     } else {
-                        $log = sprintf ("Error: _maxduration for session %s is negative",$_session);
+                        $log = sprintf ("Maxduration for session %s of %s will be negative",$_session,$active_sessions[$_session]['BillingPartyId']);
                         syslog(LOG_NOTICE, $log);
-                        return "error";
+                        return 0;
                     }
                 }
 
@@ -6000,9 +6004,9 @@ class RatingEngine {
                 if ($_maxduration > 0) {
                     $parallel_calls[$CDR->callId]=array('pricePerSecond' => $remaining_balance/$_maxduration);
                 } else {
-                    $log = sprintf ("Error: _maxduration for current session %s is negative",$CDR->callId);
+                    $log = sprintf ("Maxduration for session %s of %s will become negative",$CDR->callId,$CDR->BillingPartyId);
                     syslog(LOG_NOTICE, $log);
-                    return "error";
+                    return 0;
                 }
 
     			$parallel_calls[$CDR->callId]=array('pricePerSecond' => $remaining_balance/$_maxduration);
@@ -6020,7 +6024,7 @@ class RatingEngine {
                     syslog(LOG_NOTICE, $log);
 
                 } else {
-                    $log = sprintf ("Error: sum_price_per_second is negative");
+                    $log = sprintf ("Error: sum_price_per_second for %s is negative",$CDR->BillingPartyId);
                     syslog(LOG_NOTICE, $log);
                     return "error";
                 }
@@ -6097,57 +6101,59 @@ class RatingEngine {
 
             syslog(LOG_NOTICE, $log);
 
-            if ($NetFields['lock'] && $this->prepaid_lock && $maxduration > 0) {
-
-                // mark the account that is locked during call
-                $query=sprintf("update %s
-                set
-                active_sessions  = '%s',
-                call_in_progress = NOW(),
-                maxsessiontime   = '%d',
-                session_counter  = '%s',
-                destination      = '%s'
-                where account    = '%s'",
-                addslashes($this->prepaid_table),
-                addslashes(json_encode($active_sessions)),
-                $maxduration,
-                count($active_sessions),
-                addslashes($CDR->destinationPrint),
-                addslashes($CDR->BillingPartyId));
-
-                if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                    syslog(LOG_NOTICE,$log);
-                    return "error";
-                }
-
-                if (!$this->db->affected_rows()) {
-                    $log=sprintf ("$CDR->BillingPartyId is already locked");
-                    syslog(LOG_NOTICE, $log);
-                }
-            } else {
-                $query=sprintf("update %s
-                set
-                active_sessions = '%s',
-                session_counter  = '%s',
-                call_in_progress = NOW(),
-                maxsessiontime = '%d'
-                where account  = '%s'",
-                addslashes($this->prepaid_table),
-                addslashes(json_encode($active_sessions)),
-                count($active_sessions),
-                $maxduration,
-                addslashes($CDR->BillingPartyId));
-
-                if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                    syslog(LOG_NOTICE,$log);
-                    return "error";
-                }
-
-                if (!$this->db->affected_rows()) {
-                    $log=sprintf ("$CDR->BillingPartyId is already locked");
-                    syslog(LOG_NOTICE, $log);
+			if ($maxduration > 0) {
+                if ($NetFields['lock'] && $this->prepaid_lock) {
+    
+                    // mark the account that is locked during call
+                    $query=sprintf("update %s
+                    set
+                    active_sessions  = '%s',
+                    call_in_progress = NOW(),
+                    maxsessiontime   = '%d',
+                    session_counter  = '%s',
+                    destination      = '%s'
+                    where account    = '%s'",
+                    addslashes($this->prepaid_table),
+                    addslashes(json_encode($active_sessions)),
+                    $maxduration,
+                    count($active_sessions),
+                    addslashes($CDR->destinationPrint),
+                    addslashes($CDR->BillingPartyId));
+    
+                    if (!$this->db->query($query)) {
+                        $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        syslog(LOG_NOTICE,$log);
+                        return "error";
+                    }
+    
+                    if (!$this->db->affected_rows()) {
+                        $log=sprintf ("$CDR->BillingPartyId is already locked");
+                        syslog(LOG_NOTICE, $log);
+                    }
+                } else {
+                    $query=sprintf("update %s
+                    set
+                    active_sessions = '%s',
+                    session_counter  = '%s',
+                    call_in_progress = NOW(),
+                    maxsessiontime = '%d'
+                    where account  = '%s'",
+                    addslashes($this->prepaid_table),
+                    addslashes(json_encode($active_sessions)),
+                    count($active_sessions),
+                    $maxduration,
+                    addslashes($CDR->BillingPartyId));
+    
+                    if (!$this->db->query($query)) {
+                        $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        syslog(LOG_NOTICE,$log);
+                        return "error";
+                    }
+    
+                    if (!$this->db->affected_rows()) {
+                        $log=sprintf ("$CDR->BillingPartyId is already locked");
+                        syslog(LOG_NOTICE, $log);
+                    }
                 }
             }
 
@@ -6520,6 +6526,52 @@ class RatingEngine {
         return 0;
     }
 
+    function purgeExpiredPrepaidSessions($active_sessions=array(),$maxsessiontime=0) {
+        $expired=0;
+        if (count($active_sessions)) {
+            foreach (array_keys($active_sessions) as $_session) {
+                if ($maxsessiontime) {
+                	$expired_since=time() - $active_sessions[$_session]['timestamp'] - $maxsessiontime;
+                    if ($expired_since > 120) {
+                        // this session has passed its maxsessiontime plus its reasonable setup time of 2 minutes,
+                        // it could be stale
+                        // because the call control module did not call debitbalance, so we purge it
+
+                        $log = sprintf ("Session %s for %s has expired since %d seconds",
+                        $_session,
+                        $active_sessions[$_session]['BillingPartyId'],
+                        $expired_since);
+                        syslog(LOG_NOTICE, $log);
+
+                        $RateDictionary_session=array(
+                                              'callId'          => $_session,
+                                              'duration'        => $maxsessiontime,
+                                              'timestamp'       => $active_sessions[$_session]['timestamp'],
+                                              'DestinationId'   => $active_sessions[$_session]['DestinationId'],
+                                              'domain'          => $active_sessions[$_session]['domain'],
+                                              'BillingPartyId'  => $active_sessions[$_session]['BillingPartyId'],
+                                              'ENUMtld'         => $active_sessions[$_session]['ENUMtld'],
+                                              'RatingTables'    => &$this->CDRS->RatingTables
+                                              );
+    
+                        $Rate = new Rate($this->settings, $this->db);
+                        $Rate->calculate($RateDictionary_session);
+                        if ($this->DebitBalance($active_sessions[$_session]['BillingPartyId'],$Rate->price,$_session)) {
+        					$expired++;
+                            $log=sprintf("Debited %s from %s for expired session %s, duration=%s",$Rate->price,$active_sessions[$_session]['BillingPartyId'],$_session,$maxsessiontime);
+                            syslog(LOG_NOTICE, $log);
+                        } else {
+                            $log = sprintf("Error: failed to debit balance of %s for session %s",
+                            $active_sessions[$_session]['BillingPartyId'],$_session);
+                            syslog(LOG_NOTICE, $log);
+                        }
+                    }
+                }
+            }
+        }
+
+        return $expired;
+    }
 }
 
 function reloadRatingEngineTables () {

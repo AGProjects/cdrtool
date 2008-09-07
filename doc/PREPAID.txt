@@ -203,7 +203,10 @@ max_session_time (session, from, to) {
     list(balance,active_sessions)=get_prepaid_account_from_database();
 
     if (count(active_sessions[from]) > 0) {
-        purge_expired_sessions()
+        if (purge_expired_sessions()) {
+            // reload prepaid data
+            list(balance,active_sessions)=get_prepaid_account_from_database();
+        }
 
         // simulate call termination for all ongoing calls
         foreach (call in active_sessions[from]) {
