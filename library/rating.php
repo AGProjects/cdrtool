@@ -937,6 +937,7 @@ class RatingTables {
                            "destinations"=>array("name"=>"Destinations",
                                                  "keys"=>array("id"),
                                                  "exceptions" =>array(),
+                                                 "order"=>"dest_id ASC",
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
                                                                   "gateway"=>array("size"=>15,
@@ -1047,6 +1048,7 @@ class RatingTables {
                            "billing_rates"=>array("name"=>"Rates",
                                                  "keys"=>array("id"),
                                                  "size"=>10,
+                                                 "order"=>"destination ASC, name ASC",
                                                  "domainFilterColumn"=>"domain",
                                                  "exceptions" =>array('trafficRate'),
                                                  "fields"=>array(
@@ -1080,6 +1082,7 @@ class RatingTables {
                            "billing_rates_history"=>array("name"=>"Rates history",
                                                  "keys"=>array("id"),
                                                  "size"=>10,
+                                                 "order"=>"destination ASC, name ASC",
                                                  "domainFilterColumn"=>"domain",
                                                  "exceptions" =>array('trafficRate'),
                                                  "fields"=>array(
@@ -1147,8 +1150,9 @@ class RatingTables {
                            "prepaid"=>array("name"=>"Prepaid accounts",
                                                  "keys"=>array("id"),
                                                  "size"=>15,
-                                                 "exceptions" =>array('active_sessions','call_in_progress','call_lock'),
+                                                 "exceptions" =>array('change_date','active_sessions','call_in_progress','call_lock'),
                                                  "domainFilterColumn"=>"account",
+                                                 "order"=>"change_date DESC",
                                                  "fields"=>array("account"=>array("size"=>35,
                                                                                "name"=>"SIP prepaid account",
                                                                                "readonly"=>0
@@ -1168,8 +1172,8 @@ class RatingTables {
                                                                                   "name"=>"Last price",
                                                                                  "readonly"=>1
                                                                                  ),
-                                                                 "maxsessiontime"=>array("size"=>5,
-                                                                                  "name"=>"Maxtime",
+                                                                 "maxsessiontime"=>array("size"=>10,
+                                                                                  "name"=>"Max session time",
                                                                                  "readonly"=>1
                                                                                  ),
                                                                  "destination"=>array("size"=>15,
@@ -3736,8 +3740,8 @@ class RatingTables {
             $maxrows=$rows;
         }
         
-        if (!$order && $order_by[$table]) {
-            $order="order by ".$order_by[$table]." ASC " ;
+        if (!$order && $this->tables[$table]['order']) {
+        	$order=sprintf(" order by %s  ",$this->tables[$table]['order']);
         }
         
         $query=sprintf("select * from %s where (1=1) %s and %s %s limit %s, %s",
