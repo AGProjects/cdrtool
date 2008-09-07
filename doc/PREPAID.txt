@@ -118,12 +118,9 @@ and should unlock the account but leave the credit untouched.
 Prepaid calls in progress
 -------------------------
 
-To see the calls in progress go to Rating -> Prepaid -> Search with Lock = 1
+To see the calls in progress go to Rating -> Prepaid.
 
-If the connection between the SIP Proxy call control module and CDRTool
-rating engine is broken it is possible to have prepaid accounts that
-remained locked because no DebitBalance command has been received. To unlock
-these accounts find them in Rating -> Prepaid section and set Lock to 0.
+Fill in the Sesssions field: >0 and click Search.
 
 
 Third party tools
@@ -150,40 +147,39 @@ Simultaneous prepaid calls
 --------------------------
 
 Since version 6.6.0 is possible to have multiple calls using the same
-prepaid account without the risk of reaching a negative balance, without
-call locking and without having to regularly poll the database which could
-become major scalability problem.
+prepaid account without the risk of reaching a negative balance.
 
 The modus operandi is based on a simple model: all prepaid calls belonging
-to the sip sip account must end in the same moment regadless of where the
-calls are connected to and their different prices. The rating engine simply
-calculates that moment based on the data available from ongoing calls,
-available balance and the new call setup request. This scheme provides a
-fair balancing policy with small performance penalty on the servers.
+to the same account must end at the same moment regadless of the called
+destinations and their different prices. The rating engine simply calculates
+that moment based on the data available from ongoing calls, available
+balance and the new call setup request. This scheme provides a fair
+balancing policy with small performance penalty on the servers.
 
-To have this working your must set $RatingEngine['prepaid_lock'] to 0 in
-/etc/cdrtool/global.inc and update the call control software module that
-keeps track of the maximum session time to enforce call ending for all calls
-belonging to the same sip account at the same time based on the last value
-of MaxSessionTime received from the rating engine. The previous version
-required the call control module to keep the time counter per sip session,
-now it needs to sync the counter for all calls belonging to the same sip
-account.
+By using this simple model there is no need to poll any database during
+ongoing calls, which could become major scalability problem. All the work is
+done only once at call setup time. This will increase the load on the rating
+engine only during call setup and only for the users that have parallel
+sessions, the rating engine will perform internally during each call setup 2
+x the number of sessions calls to ShowPrice and MaxSessionTime functions.
 
-Having simultaneous prepaid calls for the same account will increase the
-load on the rating engine during call setup (it will perform internally
-during each call setup (2 x the number of parallel sip sessions per sip
-account) number of calls to ShowPrice and MaxSessionTime functions) but
-there is no locking or database polling needed during the duration of the
-calls to check the balance.
+You must set $RatingEngine['prepaid_lock'] to 0 in etc/cdrtool/global.inc
+and update the call control software module that keeps track of the maximum
+session time to enforce call ending for all calls belonging to the same sip
+account at the same time based on the last value of MaxSessionTime received
+from the rating engine. The previous version required the call control
+module to keep the time counter per sip session, now it needs to sync the
+counter for all calls belonging to the same sip account. See below the
+pseudo code for the call control engine.
 
 The list of ongoing prepaid calls can be monitored in the Prepaid accounts
 section of the Rating pages. For each sip account that has ongoing calls a
-link marked Sessions apear in the left side of the record. Click on it to
-display the ongoing prepaid sessions. The 'Delete session' button allows the
-removal of the session form the rating engine. The expired sessions that
-have not been closed properly by the call control module are automatically
-purged 30 seconds after expiration.
+link marked Sessions apears in the left side of the prepaid record. Click on
+it to display the ongoing prepaid sessions. The 'Delete session' button
+allows the removal of the session form the rating engine. The expired
+sessions that have not been closed properly by the call control module are
+automatically purged 120 seconds after expiration, which has been chosen to
+cover a reasonable call setup time.
 
 The time and balance distribution between parallel calls is logged detailed
 in the syslog:
@@ -200,6 +196,8 @@ cdrtool[13292]: CallId=waaivgq89atxmpig6jisphodue0trvf- BillingParty=adi@umts.ro
 
 Pseudo-code for rating engine
 -----------------------------
+
+This code is actually implemented in cdrtool.
 
 max_session_time (session, from, to) { 
     list(balance,active_sessions)=get_prepaid_account_from_database();
@@ -287,19 +285,18 @@ Notes
 the user has a bigger balance while the ongoing calls together will not be
 able to use it until a new call is setup. One way to improve the algorithm
 would be to return a new maxsessiontime with the answer for DebitBalance()
-and update the remaining active calls accordingly.
+and update the timer of the remaining active sessions accordingly.
 
 2. The rating engine calculates an aggregated common maxsessiontime for all
 active calls for a user. This however cannot take in consideration the
-duration of the setup time (because is unknown at that stage how long it
-would take) for the calls that have not yet been established. This can lead
-to less talk time for end-user but cannot lead to negative balance.
+duration of the setup time (because is unknown how long it would take) for
+the calls that have not yet been established. This can lead to less talk
+time for end-user but cannot lead to negative balance.
 
 3. It is not possible to predict when a call will end as it depends on user
 choice so when a call spans multiple profiles that have different rates it
 is possible that the aggregated prediction will not match. It is unclear if
 this can leed to a negative balance. If it does the balance lost by the
 operator in the worst case is the tariff diference between profiles for some
-calls in some corner situations.
+sessions in some corner situations.
 
-    

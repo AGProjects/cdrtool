@@ -1147,7 +1147,7 @@ class RatingTables {
                            "prepaid"=>array("name"=>"Prepaid accounts",
                                                  "keys"=>array("id"),
                                                  "size"=>15,
-                                                 "exceptions" =>array('active_sessions','call_in_progress'),
+                                                 "exceptions" =>array('active_sessions','call_in_progress','call_lock'),
                                                  "domainFilterColumn"=>"account",
                                                  "fields"=>array("account"=>array("size"=>35,
                                                                                "name"=>"SIP prepaid account",
@@ -1160,9 +1160,9 @@ class RatingTables {
                                                                                   "name"=>"Last change",
                                                                                  "readonly"=>1
                                                                                  ),
-                                                                 "call_lock"=>array("size"=>1,
-                                                                                  "name"=>"Lock",
-                                                                                 "readonly"=>0
+                                                                 "session_counter"=>array("size"=>3,
+                                                                                  "name"=>"Sessions",
+                                                                                 "readonly"=>1
                                                                                  ),
                                                                  "last_call_price"=>array("size"=>10,
                                                                                   "name"=>"Last price",
@@ -4147,9 +4147,9 @@ class RatingTables {
                         $duration=time()-$active_sessions[$_session]['timestamp'];
                         $active_sessions[$_session]['startTime']=Date("Y-m-d H:i",$active_sessions[$_session]['timestamp']);
                         $active_sessions[$_session]['duration']=sec2hms($duration). " (".$duration."s)";
-                        $active_sessions[$_session]['maxsessiontime']=sec2hms($maxsessiontime). " (".$maxsessiontime."s)";;
+                        $active_sessions[$_session]['maxSessionTime']=sec2hms($maxsessiontime). " (".$maxsessiontime."s)";;
                         foreach (array_keys($active_sessions[$_session]) as $key) {
-                            $extraInfo.= sprintf ("<tr><td class=border><b>%s</b></td><td>%s</td></tr>",$key,$active_sessions[$_session][$key]);
+                            $extraInfo.= sprintf ("<tr><td class=border><b>%s</b></td><td>%s</td></tr>",ucfirst($key),$active_sessions[$_session][$key]);
                         }
                     	$extraInfo.= sprintf("<tr><td colspan=2><input type=submit name=subaction value='Delete session'></td></tr>");
                     }
@@ -4167,21 +4167,11 @@ class RatingTables {
                     $table,$next,$_session,$search_text
                     );
 
-                    if (count($active_sessions)) {
-                        printf ("
-                        <td onClick=\"return toggleVisibility('row%s')\"><a href=#>$found | %s Sessions</td>
-                        ",$found,count($active_sessions));
-                    } else {
-                        print "
-                        <td>$found. </td>
-                        ";
-                    }
-
-                } else {
-                    print "
-                    <td>$found. </td>
-                    ";
                 }
+                print "
+                <td>$found. </td>
+                ";
+
             }
 
 
@@ -4217,9 +4207,22 @@ class RatingTables {
                                 </td>";
             
                             } else {
-                                print "<td>
-                                <input type=text bgcolor=grey size=$field_size maxlength=$size name=$Fname value=\"$value\" $extra_form_els>
-                                </td>";
+                				if ($table == 'prepaid' && $Fname == 'session_counter' && $value) {
+                                    if (count($active_sessions) > 1) {
+                                		$session_counter_txt=sprintf("%d sessions",$value);
+                                    } else {
+                                		$session_counter_txt=sprintf("%d session",$value);
+                                    }
+
+                                    printf("<td onClick=\"return toggleVisibility('row%s')\"><a href=#>%s</td>",$found,$session_counter_txt);
+
+                                } else {
+                                    print "<td>
+                                    <input type=text bgcolor=grey size=$field_size maxlength=$size name=$Fname value=\"$value\" $extra_form_els>
+                                    </td>";
+                                }
+            
+
                             }
         
         
@@ -5397,7 +5400,7 @@ class RatingEngine {
         last_call_price      = '%s',
         active_sessions      = '%s',
         destination          = '%s',
-        call_lock            = '0',
+        session_counter      = '%s',
         maxsessiontime       = %s
         where account        = '%s'",
         $this->prepaid_table,
@@ -5405,6 +5408,7 @@ class RatingEngine {
         $balance,
         addslashes(json_encode($active_sessions)),
         $destination,
+        count($active_sessions),
         $maxsessiontime,
         addslashes($account)
         );
@@ -5816,7 +5820,7 @@ class RatingEngine {
                 return "none";
             }
 
-            if ($this->prepaid_lock && $this->db->f('call_lock') == "1") {
+            if ($this->prepaid_lock && $this->db->f('session_counter')) {
                 $log = sprintf ("Account locked by another call");
                 syslog(LOG_NOTICE, $log);
                 $this->logRuntime();
@@ -6040,14 +6044,17 @@ class RatingEngine {
             // add new active session
 			$active_sessions[$CDR->callId]= array('timestamp'       => $CDR->timestamp,
             			                          'duration'        => $CDR->duration,
-                                                  'DestinationId'   => $CDR->DestinationId,
-                                                  'Destination'     => $NetFields['to'],
                                       			  'BillingPartyId'  => $CDR->BillingPartyId,
                                                   'domain'          => $CDR->domain,
                                                   'gateway'         => $CDR->gateway,
-                                                  'ENUMtld'         => $CDR->ENUMtld,
+                                                  'Destination'     => $CDR->destinationPrint,
+                                                  'DestinationId'   => $CDR->DestinationId,
                                                   'connectCost'     => $Rate->connectCost
                                                   );
+
+			if ($CDR->ENUMtld) {
+            	$active_sessions[$CDR->callId]['ENUMtld']=$CDR->ENUMtld;
+            }
 
             $this->runtime['calculate_maxduration']=microtime_float();
 
@@ -6091,16 +6098,16 @@ class RatingEngine {
                 // mark the account that is locked during call
                 $query=sprintf("update %s
                 set
-                active_sessions = '%s',
+                active_sessions  = '%s',
                 call_in_progress = NOW(),
-                maxsessiontime = '%d',
-                call_lock      = '%s',
-                destination    = '%s'
-                where account  = '%s'",
+                maxsessiontime   = '%d',
+                session_counter  = '%s',
+                destination      = '%s'
+                where account    = '%s'",
                 addslashes($this->prepaid_table),
                 addslashes(json_encode($active_sessions)),
                 $maxduration,
-                addslashes($this->prepaid_lock),
+                count($active_sessions),
                 addslashes($CDR->destinationPrint),
                 addslashes($CDR->BillingPartyId));
 
@@ -6118,11 +6125,13 @@ class RatingEngine {
                 $query=sprintf("update %s
                 set
                 active_sessions = '%s',
+                session_counter  = '%s',
                 call_in_progress = NOW(),
                 maxsessiontime = '%d'
                 where account  = '%s'",
                 addslashes($this->prepaid_table),
                 addslashes(json_encode($active_sessions)),
+                count($active_sessions),
                 $maxduration,
                 addslashes($CDR->BillingPartyId));
 
