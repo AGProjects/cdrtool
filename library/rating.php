@@ -2949,6 +2949,8 @@ class RatingTables {
 
         if (!$table) return false;
 
+        if ($this->readonly) return true;
+
         // Init table structure
         if (!is_array($this->tables[$table]['exceptions'])) $this->tables[$table]['exceptions']=array();
         if (!is_array($this->tables[$table]['keys']))       $this->tables[$table]['keys']=array();
@@ -4160,7 +4162,9 @@ class RatingTables {
                         if ($maxsessiontime < $duration ) {
                             $extraInfo.= sprintf ("<tr><td class=border colspan=2><font color=red><b>Session expired since %d s</b></font></td></tr>",$duration-$maxsessiontime);
                         }
-                    	$extraInfo.= sprintf("<tr><td colspan=2><input type=submit name=subaction value='Delete session'></td></tr>");
+                        if (!$this->readonly) {
+                    		$extraInfo.= sprintf("<tr><td colspan=2><input type=submit name=subaction value='Delete session'></td></tr>");
+                        }
                     }
 
                     $extraInfo.=sprintf("
