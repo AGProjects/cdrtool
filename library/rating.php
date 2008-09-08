@@ -5816,17 +5816,6 @@ class RatingEngine {
             	$active_sessions=array();
             }
 
-            /*
-			if (count($active_sessions)) {
-				if (in_array($NetFields['callid'],array_keys($active_sessions))) {
-                    $log = sprintf ("Error: session %s is already an active session for %s expiring over %d seconds",$NetFields['callid'],$active_sessions[$NetFields['callid']]['BillingPartyId'],
-                    $active_sessions[$NetFields['callid']]['timestamp'] + $maxsessiontime_last - time());
-                    syslog(LOG_NOTICE, $log);
-                    return "error";
-                }
-            }
-            */
-
 			if ($this->purgeExpiredPrepaidSessions($active_sessions)) {
                 // reload prepaid account data because we purged old sessions which lead to debit balance
                 $query=sprintf("select * from %s where account = '%s'",addslashes($this->prepaid_table),addslashes($CDR->BillingPartyId));
@@ -5888,7 +5877,6 @@ class RatingEngine {
 
             $maxduration=0;
             // Build Rate dictionary containing normalized CDR fields plus customer Balance
-
 
 			if (count($active_sessions)) {
 
