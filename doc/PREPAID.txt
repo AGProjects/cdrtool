@@ -161,7 +161,10 @@ ongoing calls, which could become major scalability problem. All the work is
 done only once at call setup time. This will increase the load on the rating
 engine only during call setup and only for the users that have parallel
 sessions, the rating engine will perform internally during each call setup 2
-x the number of sessions calls to ShowPrice and MaxSessionTime functions.
+x the number of sessions calls to ShowPrice and MaxSessionTime functions. To
+be antirely accurate the call control must also connect back to the rating
+engine when the call has been setup so that the session expiration can be
+updated.
 
 You must set $RatingEngine['prepaid_lock'] to 0 in etc/cdrtool/global.inc
 and update the call control software module that keeps track of the maximum
@@ -208,28 +211,8 @@ max_session_time (session, from, to) {
             list(balance,active_sessions)=get_prepaid_account_from_database();
         }
 
-        // simulate call termination for all ongoing calls
-        foreach (call in active_sessions[from]) {
-            due_balance=used_balance+show_price(call)
-        }
-
-        // calculate new virtual balance
-        balance_new=balance-due_balance
-
-        // simulate we start parallel calls from scratch at this moment
-        // including the new sessionn setup request
-        // we skip any connect cost for session already in progress
-        active_sessions_new[from]=active_sessions[from]
-        active_sessions_new[from][]=session
-        foreach (call in active_sessions_new[from]) {
-            rate = new Rate(call)
-            maxsessiontime=rate->max_session_time()
-            // calculate price per second for each session
-            price_per_second=price_per_second+balance_new/maxsessiontime
-        }
-
-        // return aggregated maxsessiontime
-        return balance/price_per_second
+        max=calculate_aggregated_maxsession_time(active_sessions[from],balance)
+        return max
 
     } else {
         // is the first session
@@ -237,6 +220,30 @@ max_session_time (session, from, to) {
         active_sessions[from][]=session         
         return rate->max_session_time()
     }
+}
+
+calculate_aggregated_maxsession_time(active_sessions,balance)  {
+    // simulate call termination for all ongoing calls
+    foreach (call in active_sessions[from]) {
+        due_balance=used_balance+show_price(call)
+    }
+
+    // calculate new virtual balance
+    balance_new=balance-due_balance
+
+    // simulate we start parallel calls from scratch at this moment
+    // including the new sessionn setup request
+    // we skip any connect cost for session already in progress
+    active_sessions_new[from]=active_sessions[from]
+    active_sessions_new[from][]=session
+    foreach (call in active_sessions_new[from]) {
+        rate = new Rate(call)
+        maxsessiontime=rate->max_session_time()
+        // calculate price per second for each session
+        price_per_second=price_per_second+balance_new/maxsessiontime
+    }
+
+    return balance/price_per_second
 }
 
 debit_balance(session, from, to, duration) {
@@ -250,6 +257,12 @@ debit_balance(session, from, to, duration) {
     price=showprice(session,from,to,duration)
     balance=balance-price
     update_prepaid_account_to_database(balance,active_sessions);
+    if (count(active_sessions[from]) > 0) {
+        max=calculate_aggregated_maxsession_time() 
+    } else {
+        max=0 
+    }
+    return max
 }
 
 
@@ -260,6 +273,8 @@ on_session_setup () {
     max=cdrtool_max_session_time(session, from, to)
     if (sip_connect_call() == true) { 
         // add session to the list of active sessions
+	// update tiomer again becuase we had a variable setup time	
+        max=cdrtool_max_session_time(session, from, to)
         active_sessions[from][]=session
         // set maxsession time for all remaining calls of the same user
         foreach (call in active_sessions[from]) {
@@ -270,7 +285,7 @@ on_session_setup () {
 
 on_session_disconnect () {
    sip_disconnect_call();
-   cdrtool_debit_balance(session, from, to, duration)
+   max=cdrtool_debit_balance(session, from, to, duration)
    // remove session from the list of active sessions
    foreach (call in active_sessions[from]) {
        if (call == session) continue
@@ -278,25 +293,16 @@ on_session_disconnect () {
    }  
    // update list of active sessions 
    active_sessions[from]=new_active_sessions
+   foreach (call in active_sessions[from]) {
+       call.maxsessiontime = max
+   }
 }
 
 
 Notes
 -----
 
-1. The algorithm still suffers from the fact that on disconnect of a call
-the user has a bigger balance while the ongoing calls together will not be
-able to use it until a new call is setup. One way to improve the algorithm
-would be to return a new maxsessiontime with the answer for DebitBalance()
-and update the timer of the remaining active sessions accordingly.
-
-2. The rating engine calculates an aggregated common maxsessiontime for all
-active calls for a user. This however cannot take in consideration the
-duration of the setup time (because is unknown how long it would take) for
-the calls that have not yet been established. This can lead to less talk
-time for end-user but cannot lead to negative balance.
-
-3. It is not possible to predict when a call will end as it depends on user
+It is not possible to predict when a call will end as it depends on user
 choice so when a call spans multiple profiles that have different rates it
 is possible that the aggregated prediction will not match. It is unclear if
 this can leed to a negative balance. If it does the balance lost by the
