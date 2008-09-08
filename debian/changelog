@@ -5,9 +5,8 @@ cdrtool (6.6.0) unstable; urgency=low
   * Added pseudo code examples for call control engine
   * Apply the changes from setup/mysql/alter_tables.mysql
   * Added interface to kill ongoing sessions in Prepaid page
-  * Added debian repository for installing cdrtool using apt-get
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 08 Sep 2008 13:14:30 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 08 Sep 2008 13:37:20 +0200
 
 cdrtool (6.5.8) unstable; urgency=low
 
