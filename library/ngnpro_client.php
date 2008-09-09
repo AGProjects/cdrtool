@@ -2235,11 +2235,17 @@ class SipAccounts extends Records {
                         $bgcolor="white";
                     }
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&username_filter=%s&domain_filter=%s",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($account->id->username),
-                    urlencode($account->id->domain)
+			        $_url = $this->url.'&'.$this->addFiltersToURL().sprintf("&service=%s&action=Delete",
+                    urlencode($this->SoapEngine->service)
                     );
+
+                    if (!$this->filters['domain']) {
+			        	$_url .= sprintf("&domain_filter=%s",urlencode($account->id->domain));
+                    }
+
+                    if (!$this->filters['username']) {
+                    	$_url .= sprintf("&username_filter=%s",urlencode($account->id->username));
+                    }
 
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['username_filter'] == $account->id->username &&
@@ -2445,12 +2451,18 @@ class SipAccounts extends Records {
 
                         );
 
-        unset($this->filters);
+        foreach (array_keys($this->filters) as $_filter) {
+            if ($_filter == 'username' || $_filter == 'domain') continue;
+            $new_filters[$_filter]=$this->filters[$_filter];
+        }
+
+        $this->filters=$new_filters;
+
         return $this->SoapEngine->execute($function,$this->html);
     }
 
     function showAddForm() {
-        if ($this->selectionActive) return;
+        if ($this->filters['username']) return;
 
         if (!count($this->allowedDomains)) {
             print "<p><font color=red>You must create at least one SIP domain before adding SIP accounts</font>";

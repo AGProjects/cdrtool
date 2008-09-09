@@ -5804,7 +5804,7 @@ class RatingEngine {
                 return "error";
             }
             if (!$this->db->num_rows()) {
-                $log=sprintf ("CallId=%s BillingParty=%s MaxSessionTime=unlimited Type=postpaid",$NetFields['callid'],$CDR->BillingPartyId);
+                $log=sprintf ("MaxSessionTime=unlimited Type=postpaid CallId=%s BillingParty=%s",$NetFields['callid'],$CDR->BillingPartyId);
                 syslog(LOG_NOTICE, $log);
                 return "none";
             }
@@ -5991,12 +5991,12 @@ class RatingEngine {
                 return "error";
             }
 
-            $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Balance=%s MaxSessionTime=%s Spans=%d Type=prepaid",
+            $log=sprintf ("MaxSessionTime=%s Type=prepaid CallId=%s BillingParty=%s DestId=%s Balance=%s Spans=%d",
+            $maxduration,
             $NetFields['callid'],
             $CDR->BillingPartyId,
             $CDR->DestinationId,
             $RateDictionary['Balance'],
-            $maxduration,
             $Rate->MaxSessionTimeSpans
             );
 
@@ -6134,12 +6134,12 @@ class RatingEngine {
 
             if ($CDR->duration) {
 
-                $log=sprintf ("CallId=%s BillingParty=%s DestId=%s Duration=%s Price=%s MaxSessionTime=%d",
+                $log=sprintf ("Price=%s Duration=%s CallId=%s BillingParty=%s DestId=%s MaxSessionTime=%d",
+                $Rate->price,
+                $CDR->duration,
                 $NetFields['callid'],
                 $CDR->BillingPartyId,
                 $CDR->DestinationId,
-                $CDR->duration,
-                $Rate->price,
                 $result
                 );
 
