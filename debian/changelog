@@ -1,3 +1,9 @@
+cdrtool (6.6.2) unstable; urgency=low
+
+  * Fixed concurrent prepaid calls handling
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 09 Sep 2008 18:50:05 +0200
+
 cdrtool (6.6.1) unstable; urgency=low
 
   * Fixed update of existing prepaid session
