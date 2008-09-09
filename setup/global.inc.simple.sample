@@ -46,7 +46,8 @@ $RatingEngine=array("socketIP"               => "IP.address.of.the.private.inter
                     "trafficSizeRated"       => 1024,  // same as above but for data traffic
                     "reportMissingRates"     => 0,     // send email notifications if rates are missing from the ratingEngine
                     "minimumDuration"        => 0,     // minimum duration to rate, if call duration is shorter the price is zero
-                    "allow"                  => array ('10.')  // list with local network clients allowed to connect
+                    "allow"                  => array ('10.'),  // list with local network clients allowed to connect
+		    "MaxSessionTime"         => 36000  // limit all prepaid calls to maximum 10 hours
                     );
 
 ###########################################

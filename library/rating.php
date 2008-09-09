@@ -5672,9 +5672,9 @@ class RatingEngine {
         "Version\n".
         "Help\n".
         "ShowClients\n".
-        "MaxSessionTime        From=sip:123@example.com To=sip:0031650222333@example.com Duration=7200 Gateway=10.0.0.1 Lock=1\n".
+        "MaxSessionTime        CallId=6432622xvv@1 From=sip:123@example.com To=sip:0031650222333@example.com Duration=7200 Gateway=10.0.0.1 Lock=1\n".
         "ShowPrice             From=sip:123@example.com To=sip:0031650222333@example.com Gateway=10.0.0.1 Duration=59\n".
-        "DebitBalance          From=sip:123@example.com To=sip:0031650222333@example.com Gateway=10.0.0.1 Duration=59\n".
+        "DebitBalance          CallId=6432622xvv@1 From=sip:123@example.com To=sip:0031650222333@example.com Gateway=10.0.0.1 Duration=59\n".
         "AddBalance            From=123@example.com Value=10.00\n".
         "GetBalance            From=123@example.com\n".
         "GetBalanceHistory     From=123@example.com\n".
@@ -5778,8 +5778,14 @@ class RatingEngine {
                 return "error";
             }
 
-            if (!$NetFields['duration']) {
-                $NetFields['duration']=12*3600; // 12 hours
+            if (!$NetFields['callid']) {
+                $log=sprintf ("Error: Missing Call Id parameter");
+                syslog(LOG_NOTICE, $log);
+                return "error";
+            }
+
+            if (!$NetFields['duration'] && $this->settings['MaxSessionTime']) {
+            	$NetFields['duration']=$this->settings['MaxSessionTime'];
             }
 
             $CDRStructure=array (
@@ -6086,6 +6092,12 @@ class RatingEngine {
 
             if (!$NetFields['gateway']) {
                 $log=sprintf ("Error: Missing gateway parameter");
+                syslog(LOG_NOTICE, $log);
+                return "error";
+            }
+
+            if (!$NetFields['callid']) {
+                $log=sprintf ("Error: Missing Call Id parameter");
                 syslog(LOG_NOTICE, $log);
                 return "error";
             }
