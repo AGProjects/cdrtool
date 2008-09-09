@@ -1,3 +1,13 @@
+cdrtool (6.6.1) unstable; urgency=low
+
+  * Fixed update of existing prepaid session
+  * Return error text for maxsessiontime and debitbalance
+  * Callid in maxsessiontime and debitbalance is mandatory
+  * Preserve search criteria after delete sip account
+  * Better logs for prepaid calls
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 09 Sep 2008 11:20:24 +0200
+
 cdrtool (6.6.0) unstable; urgency=low
 
   * Allow simultaneous calls for prepaid accounts, see the Simultaneous
