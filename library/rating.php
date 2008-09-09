@@ -5763,25 +5763,25 @@ class RatingEngine {
             if (!$NetFields['from']) {
                 $log=sprintf ("Error: Missing From parameter");
                 syslog(LOG_NOTICE, $log);
-                return "error";
+                return $log;
             }
 
             if (!$NetFields['to']) {
                 $log=sprintf ("Error: Missing To parameter");
                 syslog(LOG_NOTICE, $log);
-                return "error";
+                return $log;
             }
 
             if (!$NetFields['gateway']) {
                 $log=sprintf ("Error: Missing gateway parameter");
                 syslog(LOG_NOTICE, $log);
-                return "error";
+                return $log;
             }
 
             if (!$NetFields['callid']) {
                 $log=sprintf ("Error: Missing Call Id parameter");
                 syslog(LOG_NOTICE, $log);
-                return "error";
+                return $log;
             }
 
             if (!$NetFields['duration'] && $this->settings['MaxSessionTime']) {
@@ -5889,9 +5889,8 @@ class RatingEngine {
             // Build Rate dictionary containing normalized CDR fields plus customer Balance
 
 			if (count($active_sessions)) {
-
                 // set  $this->remaining_balance and $this->parallel_calls for ongoing calls:
-                if (!$this->getActivePrepaidSessions($active_sessions,$Balance,$CDR->BillingPartyId)) {
+                if (!$this->getActivePrepaidSessions($active_sessions,$Balance,$CDR->BillingPartyId,array($CDR->callId))) {
                     return 0;
                 }
 
@@ -6075,31 +6074,31 @@ class RatingEngine {
             if (!$NetFields['from']) {
                 $log=sprintf ("Error: Missing From parameter");
                 syslog(LOG_NOTICE, $log);
-                return "Failed";
+                return $log;
             }
 
             if (!$NetFields['to']) {
                 $log=sprintf ("Error: Missing To parameter");
                 syslog(LOG_NOTICE, $log);
-                return "Failed";
+                return $log;
             }
 
             if (!strlen($NetFields['duration'])) {
                 $log=sprintf ("Error: Missing Duration parameter");
                 syslog(LOG_NOTICE, $log);
-                return "Failed";
+                return $log;
             }
 
             if (!$NetFields['gateway']) {
                 $log=sprintf ("Error: Missing gateway parameter");
                 syslog(LOG_NOTICE, $log);
-                return "error";
+                return $log;
             }
 
             if (!$NetFields['callid']) {
                 $log=sprintf ("Error: Missing Call Id parameter");
                 syslog(LOG_NOTICE, $log);
-                return "error";
+                return $log;
             }
 
             $timestamp=time();
@@ -6483,12 +6482,20 @@ class RatingEngine {
         return $expired;
     }
 
-    function getActivePrepaidSessions($active_sessions,$Balance,$BillingPartyId) {
+    function getActivePrepaidSessions($active_sessions,$Balance,$BillingPartyId,$exceptSessions=array()) {
         $this->parallel_calls=array();
         $this->remaining_balance=$Balance;
-    
+
         foreach (array_keys($active_sessions) as $_session) {
-    
+			if (in_array($_session,$exceptSessions)) {
+                $log = sprintf ("Ongoing prepaid session %s for %s updated",
+                $_session,
+                $BillingPartyId
+                );
+                syslog(LOG_NOTICE, $log);
+            	continue;
+            }
+
             $Rate_session = new Rate($this->settings, $this->db);
     
             $passed_time=time()-$active_sessions[$_session]['timestamp'];
