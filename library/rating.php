@@ -5914,7 +5914,7 @@ class RatingEngine {
 
             	$_maxduration = round($Rate->MaxSessionTime($RateDictionary));
 
-	            $log = sprintf ("Maximum duration of session % for %s to destination %s having balance=%s is %s",
+	            $log = sprintf ("Maximum duration for session %s of %s to destination %s having balance=%s is %s",
                 $CDR->callId,
                 $CDR->BillingPartyId,
                 $CDR->DestinationId,
@@ -6486,14 +6486,18 @@ class RatingEngine {
         $this->parallel_calls=array();
         $this->remaining_balance=$Balance;
 
+        $ongoing_rates=array();
+
         foreach (array_keys($active_sessions) as $_session) {
 			if (in_array($_session,$exceptSessions)) {
+                /*
                 $log = sprintf ("Ongoing prepaid session %s for %s updated",
                 $_session,
                 $BillingPartyId
                 );
                 syslog(LOG_NOTICE, $log);
-            	continue;
+            	*/
+                continue;
             }
 
             $Rate_session = new Rate($this->settings, $this->db);
@@ -6545,6 +6549,10 @@ class RatingEngine {
         }
     
         foreach (array_keys($active_sessions) as $_session) {
+			if (in_array($_session,$exceptSessions)) {
+                continue;
+            }
+
             $RateDictionary_session=array(
                                   'callId'          => $_session,
                                   'timestamp'       => time(),
@@ -6564,8 +6572,9 @@ class RatingEngine {
             $Rate = new Rate($this->settings, $this->db);
             $_maxduration = round($Rate->MaxSessionTime($RateDictionary_session));
     
-            $log = sprintf ("Maximum duration of session % for %s to destination %s having balance=%s is %s",
+            $log = sprintf("Maximum duration for session %s of %s to destination %s having balance=%s is %s",
             $_session,
+            $BillingPartyId,
             $active_sessions[$_session]['DestinationId'],
             $this->remaining_balance,
             $_maxduration);
@@ -6574,8 +6583,10 @@ class RatingEngine {
             if ($_maxduration > 0) {
                 $this->parallel_calls[$_session]=array('pricePerSecond' => $this->remaining_balance/$_maxduration);
             } else {
+                /*
                 $log = sprintf ("Maxduration for session %s of %s will be negative",$_session,$active_sessions[$_session]['BillingPartyId']);
                 syslog(LOG_NOTICE, $log);
+                */
                 return 0;
             }
         }
@@ -6593,14 +6604,18 @@ class RatingEngine {
     
         if ($sum_price_per_second >0 ) {
             $maxduration=intval($balance/$sum_price_per_second);
-    
-            $log = sprintf ("Maximum duration agregated for %s is (Balance=%s)/(Sum of price per second for each destination=%s)=%s s",
-            $BillingPartyId,$balance,sprintf("%0.4f",$sum_price_per_second),$maxduration);
-            syslog(LOG_NOTICE, $log);
+
+            if (count($parallel_calls) > 1) {
+            	$log = sprintf ("Maximum duration agregated for %s is (Balance=%s)/(Sum of price per second for each destination=%s)=%s s",
+            	$BillingPartyId,$balance,sprintf("%0.4f",$sum_price_per_second),$maxduration);
+            	syslog(LOG_NOTICE, $log);
+            }
     
         } else {
+            /*
             $log = sprintf ("Error: sum_price_per_second for %s is negative",$BillingPartyId);
             syslog(LOG_NOTICE, $log);
+            */
             $maxduration = 0;
         }
 
