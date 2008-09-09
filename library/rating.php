@@ -4138,11 +4138,11 @@ class RatingTables {
                     $maxsessiontime=$this->db->f('maxsessiontime');
 
                     $extraInfo="
+                    <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
                     <form action=$PHP_SELF method=post>
                     <input type=hidden name=action value=update>
                     <input type=hidden name=next value=$next>
                     <input type=hidden name=id value=$id>
-                    <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
                     <tr>
                     <td valign=top>
                     <table border=0>
