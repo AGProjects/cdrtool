@@ -298,14 +298,3 @@ on_session_disconnect () {
    }
 }
 
-
-Notes
------
-
-It is not possible to predict when a call will end as it depends on user
-choice so when a call spans multiple profiles that have different rates it
-is possible that the aggregated prediction will not match. It is unclear if
-this can leed to a negative balance. If it does the balance lost by the
-operator in the worst case is the tariff diference between profiles for some
-sessions in some corner situations.
-
