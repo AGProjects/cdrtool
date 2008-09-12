@@ -19,6 +19,7 @@ class Rate {
     var $price                  = 0;
     var $spans                  = 0;     // number of spans we looped through
 	var $connectCost            = 0;
+    var $rateValuesCache        = array(); // used to speed up prepaid apoplication
 
     function Rate($settings=array(),&$db) {
 
@@ -673,6 +674,9 @@ class Rate {
     }
 
     function MaxSessionTime(&$dictionary) {
+
+		$this->rateValuesCache=array();
+
         // Used for prepaid application
         $this->MaxSessionTimeSpans=0;
 
@@ -720,7 +724,6 @@ class Rate {
         while ($Balance > 0 ) {
             $span++;
             $this->MaxSessionTimeSpans++;
-            //syslog(LOG_NOTICE,"Getting rate $i");
 
             if ($i == "0") {
                 $dayofweek       = date("w",$this->timestampBilling);
@@ -815,6 +818,10 @@ class Rate {
 
     function lookupRateValues($rateName,$DestinationId,$applicationType='audio') {
 
+    	if (is_array($this->rateValuesCache[$rateName][$DestinationId][$applicationType])) {
+            return $this->rateValuesCache[$rateName][$DestinationId][$applicationType];
+        }
+
         if ($this->settings['split_rating_table']) {
             if ($rateName) {
                 $table="billing_rates_".$rateName;
@@ -830,14 +837,12 @@ class Rate {
 
         } else {
             $table="billing_rates";
-            $query=sprintf("select durationRate, trafficRate, connectCost from %s
-            where name = '%s' and destination = '%s' and application = '%s'",
+            $query=sprintf("select durationRate, trafficRate, connectCost from %s where name = '%s' and destination = '%s' and application = '%s'",
             $table,
             $rateName,
             $DestinationId,
             $applicationType
             );
-
         }
 
         // lookup rate from MySQL
@@ -870,11 +875,14 @@ class Rate {
 
         if ($this->db->num_rows()) {
             $this->db->next_record();
-            return array(
+            $values=array(
                         "durationRate"    => $this->db->Record['durationRate'],
                         "trafficRate"     => $this->db->Record['trafficRate'],
                         "connectCost"     => $this->db->Record['connectCost']
                        );
+            // cache values
+            $this->rateValuesCache[$rateName][$DestinationId][$applicationType]=$values;
+            return $values;
         } else {
             return false;
         }

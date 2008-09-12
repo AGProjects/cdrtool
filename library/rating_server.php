@@ -103,7 +103,7 @@ class Daemon {
     }
 
     function removePid() {
-        unlink($this->pid);
+        if (file_exists($this->pid)) unlink($this->pid);
     }
 }
 

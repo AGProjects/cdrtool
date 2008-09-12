@@ -1055,11 +1055,11 @@ class CDRS {
 
         if ($type=="destination" && $NumberStack['E164']) {
             // lookup destination id for the E164 number
-            $dst_struct                     = $this->lookupDestination($NumberStack[E164],$subscriber,$domain,$gateway);
+            $dst_struct                     = $this->lookupDestination($NumberStack['E164'],$subscriber,$domain,$gateway);
             $NumberStack['DestinationId']   = $dst_struct[0];
             $NumberStack['destinationName'] = $dst_struct[1];
 
-            $NumberStack['NumberPrint']     = "+".$NumberStack[E164];
+            $NumberStack['NumberPrint']     = "+".$NumberStack['E164'];
 
             if (!$ENUMtld) {
             $NumberStack['Normalized']      = $this->intAccessCode.
@@ -1756,7 +1756,7 @@ class CDR {
     function show() {
     }
 
-    function normalize($save="",$table) {
+    function normalize($save="",$table="") {
 
         if (!$table) $table = $this->CDRS->table;
 

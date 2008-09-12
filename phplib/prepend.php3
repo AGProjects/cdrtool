@@ -1,5 +1,4 @@
-<?php
-
+<?
 define_syslog_variables();
 openlog("cdrtool", LOG_PID, LOG_LOCAL0);
 
@@ -13,13 +12,7 @@ $lib_dirs=ini_get('include_path').":".
 
 ini_set('include_path', $lib_dirs);
 
-if (!is_array($_PHPLIB)) {
-# Aren't we nice? We are prepending this everywhere 
-# we require or include something so you can fake
-# include_path  when hosted at provider that sucks.
-  $_PHPLIB["libdir"] = ""; 
-}
-
+if (!is_array($_PHPLIB)) $_PHPLIB["libdir"] = "";
 require("db_mysql.inc");  /* Change this to match your database. */
 require("ct_sql.inc");    /* Change this to match your data storage container */
 require("session.inc");   /* Required for everything below.      */

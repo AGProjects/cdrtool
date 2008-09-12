@@ -2047,8 +2047,8 @@ class CDR_ser_radius extends CDR {
 
         if ($this->aNumber) {
             $NormalizedNumber        = $this->CDRS->NormalizeNumber($this->aNumber,"source");
-            $this->aNumberPrint      = $NormalizedNumber[NumberPrint];
-            $this->aNumberNormalized = $NormalizedNumber[Normalized];
+            $this->aNumberPrint      = $NormalizedNumber['NumberPrint'];
+            $this->aNumberNormalized = $NormalizedNumber['Normalized'];
             $this->aNumberDomain     = $NormalizedNumber['domain'];
         }
 
