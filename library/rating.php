@@ -3638,6 +3638,10 @@ class RatingTables {
         if (!is_array($this->tables[$table]['keys']))       $this->tables[$table]['keys']=array();
         if (!is_array($this->tables[$table]['fields']))     $this->tables[$table]['fields']=array();
 
+        if ($table=='prepaid' && strlen($_REQUEST['search_session_counter'])) {
+        	$this->readonly=true;
+        }
+
         if ($this->readonly) {
             $this->tables[$table]['readonly']=1;
         }
@@ -4161,11 +4165,13 @@ class RatingTables {
                         $t++;
                         $extraInfo.=sprintf ("<tr bgcolor=lightgrey><td class=border>%d. Session id</td><td>%s</td></tr>",$t,$_session);
                         $duration=time()-$active_sessions[$_session]['timestamp'];
-                        $active_sessions[$_session]['startTime']=Date("Y-m-d H:i",$active_sessions[$_session]['timestamp']);
-                        $active_sessions[$_session]['duration']=sec2hms($duration). " (".$duration."s)";
-                        $active_sessions[$_session]['maxSessionTime']=sec2hms($maxsessiontime). " (".$maxsessiontime."s)";;
                         foreach (array_keys($active_sessions[$_session]) as $key) {
-                            $extraInfo.= sprintf ("<tr><td class=border><b>%s</b></td><td>%s</td></tr>",ucfirst($key),$active_sessions[$_session][$key]);
+                            if ($key=='timestamp') {
+                            	$extraInfo.= sprintf ("<tr><td class=border><b>StartTime</b></td><td>%s</td></tr>",Date("Y-m-d H:i",$active_sessions[$_session]['timestamp']));
+                                $extraInfo.= sprintf ("<tr><td class=border><b>Progress</b></td><td>%s (%s s)</td></tr>",sec2hms($duration),$duration);
+                            } else {
+                            	$extraInfo.= sprintf ("<tr><td class=border><b>%s</b></td><td>%s</td></tr>",ucfirst($key),$active_sessions[$_session][$key]);
+                            }
                         }
                         if ($maxsessiontime < $duration ) {
                             $extraInfo.= sprintf ("<tr><td class=border colspan=2><font color=red><b>Session expired since %d s</b></font></td></tr>",$duration-$maxsessiontime);
@@ -4194,7 +4200,6 @@ class RatingTables {
                 ";
 
             }
-
 
             $j=0;
             while ($j < $this->db->num_fields()) {
@@ -4242,13 +4247,23 @@ class RatingTables {
                                     <input type=text bgcolor=grey size=$field_size maxlength=$size name=$Fname value=\"$value\" $extra_form_els>
                                     </td>";
                                 }
-            
 
                             }
         
-        
                         } else {
-                            print "<td>$value</td>";
+                            if ($table == 'prepaid' && $Fname == 'session_counter' && $value) {
+                                if (count($active_sessions) > 1) {
+                                    $session_counter_txt=sprintf("%d sessions",$value);
+                                } else {
+                                    $session_counter_txt=sprintf("%d session",$value);
+                                }
+
+                                printf("<td onClick=\"return toggleVisibility('row%s')\"><a href=#>%s</td>",$found,$session_counter_txt);
+
+                            } else {
+                            	print "<td>$value</td>";
+                            }
+
                         }
 
                     } else {
@@ -4283,34 +4298,43 @@ class RatingTables {
                 print "\n";
             }
         
-            if (!$export && !$this->tables[$table]['readonly']) {
-                if ($subaction=="Delete" && $idForDeletion == $id && !$confirmDelete) {
-                    print "<td class=border bgcolor=lightgrey>";
-                    print "<input type=hidden name=confirmDelete value=1>";
-                    print "<input type=submit name=subaction value=Delete>";
-                } else {
+            if (!$export) {
+            	if (!$this->tables[$table]['readonly']) {
+                    if ($subaction=="Delete" && $idForDeletion == $id && !$confirmDelete) {
+                        print "<td class=border bgcolor=lightgrey>";
+                        print "<input type=hidden name=confirmDelete value=1>";
+                        print "<input type=submit name=subaction value=Delete>";
+                    } else {
+                        print "
+                        <td class=border>
+                        <input type=submit name=subaction value=Update>
+                        <input type=submit name=subaction value=Delete>
+                        ";
+                        print "<input type=hidden name=confirmDelete value=1>";
+                    }
+            
                     print "
-                    <td class=border>
-                    <input type=submit name=subaction value=Update>
-                    <input type=submit name=subaction value=Delete>
+                    <input type=hidden name=table value=$table>
+                    <input type=hidden name=next value=$next>
+                    <input type=hidden name=search_text value=\"$search_text\">
+                    </td>
+                    </tr>
+                    </form>
+
+                        <td></td>
+                        <td colspan=$t_columns>$extraInfo</td>
+                        </tr>
                     ";
-                    print "<input type=hidden name=confirmDelete value=1>";
+                } else {
+                    if ($table=='prepaid') {
+                        print "
+                        <tr>
+                        <td></td>
+                        <td colspan=$t_columns>$extraInfo</td>
+                        </tr>
+                        ";
+                    }
                 }
-        
-                print "
-                <input type=hidden name=table value=$table>
-                <input type=hidden name=next value=$next>
-                <input type=hidden name=search_text value=\"$search_text\">
-                </td>
-                </tr>
-                </form>
-
-                <tr>
-                <td></td>
-                <td colspan=$t_columns>$extraInfo</td>
-                </tr>
-
-                ";
             }
             $i++;
         }

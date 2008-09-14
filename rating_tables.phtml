@@ -90,12 +90,13 @@ if ($CDRTool['filter']['domain']) {
 $RatingTables->updateTable($whereDomainFilter);
 $RatingTables->showTable($whereDomainFilter);
 
-$layout->showFooter();
-
-print "
-</body>
-</html>
-";
+if (!$export) {
+	$layout->showFooter();
+    print "
+    </body>
+    </html>
+    ";
+}
 
 page_close();
 ?>

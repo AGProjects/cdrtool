@@ -1,3 +1,10 @@
+cdrtool (6.6.4) unstable; urgency=low
+
+  * Added links to Prepaid calls and quota in the main menu
+  * 
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 14 Sep 2008 18:03:10 +0200
+
 cdrtool (6.6.3) unstable; urgency=low
 
   * Cache rate values from billing_rates table during MaxSessionTime to
