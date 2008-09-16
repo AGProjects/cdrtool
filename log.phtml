@@ -16,6 +16,7 @@ $log_description = $_REQUEST['log_description'];
 $next            = $_REQUEST['next'];
 $maxrowsperpage  = 20;
 $PHP_SELF        = $_SERVER['PHP_SELF'];
+$thisMonth       = $_REQUEST['thisMonth'];
 
 $db              = new DB_CDRTool;
 
@@ -32,11 +33,19 @@ if ($search_text) {
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
 
+if ($thisMonth) {
+	$checked_thisMonth='checked';
+} else {
+	$checked_thisMonth='';
+}
+
 print "
 <form method=post action=$PHP_SELF>
 <table border=0 align=right>
 <tr>
 <td>
+This month:
+<input type=checkbox name=thisMonth value=1 $checked_thisMonth>
 <input type=text size=30 name=search_text value=\"$search_text\">
 <input type=submit value=Search>
 </td>
@@ -114,10 +123,15 @@ if (!$perm->have_perm("admin")) {
 }
 
 if ($search_text) {
-    $where.=sprintf(" and (description like '%s%s%s' or url like '%s' or id = '%s')",
+    $where.= sprintf(" and (description like '%s%s%s' or url like '%s' or id = '%s')",
     "%",$search_text,"%",$search_text,$search_text);
     $search_text_enc=urlencode($search_text);
-    $url_log=$url_log."&search_text=$search_text_enc";
+    $url_log .="&search_text=$search_text_enc";
+}
+
+if ($thisMonth) {
+    $where.= sprintf(" and date like '%s'",date ('Y-m').'%');
+    $url_log .= "&thisMonth=1";
 }
 
 $query = "select count(*) as records from log where ". $where;
