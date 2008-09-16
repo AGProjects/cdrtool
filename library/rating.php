@@ -960,7 +960,7 @@ class RatingTables {
                                                                  "dest_id"=>array("size"=>20,
                                                                                   "name"=>"Destination Id"
                                                                                  ),
-                                                                 "dest_name"=>array("size"=>20,
+                                                                 "dest_name"=>array("size"=>35,
                                                                                   "name"=>"Description"
                                                                                  )
 
@@ -1022,28 +1022,28 @@ class RatingTables {
                                                                  "subscriber"=>array("size"=>25,
                                                                                   "name"=>"Subscriber"
                                                                                  ),
-                                                                  "name"=>array("size"=>10,
+                                                                  "name"=>array("size"=>12,
                                                                                   "name"=>"Profile Id"
                                                                                 ),
-                                                                 "rate_name1"=>array("size"=>10,
+                                                                 "rate_name1"=>array("size"=>12,
                                                                                   "name"=>"Rate Id1"
                                                                                  ),
                                                                  "hour1"=>array("size"=>3,
                                                                                   "name"=>"00-H1"
                                                                                  ),
-                                                                 "rate_name2"=>array("size"=>10,
+                                                                 "rate_name2"=>array("size"=>12,
                                                                                   "name"=>"Rate Id2"
                                                                                  ),
                                                                  "hour2"=>array("size"=>3,
                                                                                   "name"=>"H1-H2"
                                                                                  ),
-                                                                 "rate_name3"=>array("size"=>10,
+                                                                 "rate_name3"=>array("size"=>12,
                                                                                   "name"=>"Rate Id3"
                                                                                  ),
                                                                  "hour3"=>array("size"=>3,
                                                                                   "name"=>"H2-H3"
                                                                                  ),
-                                                                 "rate_name4"=>array("size"=>10,
+                                                                 "rate_name4"=>array("size"=>12,
                                                                                   "name"=>"Rate Id4"
                                                                                  ),
                                                                  "hour4"=>array("size"=>3,
@@ -1069,10 +1069,10 @@ class RatingTables {
                                                                  "subscriber"=>array("size"=>25,
                                                                                   "name"=>"Subscriber"
                                                                                  ),
-                                                                 "name"=>array("size"=>10,
+                                                                 "name"=>array("size"=>12,
                                                                                "name"=>"Rate Id"
                                                                                 ),
-                                                                 "destination"=>array("size"=>15,
+                                                                 "destination"=>array("size"=>12,
                                                                                   "name"=>"Destination"
                                                                                  ),
                                                                  "durationRate"=>array("size"=>10,
@@ -3825,7 +3825,7 @@ class RatingTables {
             
             // Search form
             print "
-            <form action=$PHP_SELF method=post>
+            <form action=$PHP_SELF method=post name=rating>
             <input type=hidden name=action value=Search>
             <tr>
             <td>&nbsp; </td>";
@@ -3874,10 +3874,19 @@ class RatingTables {
                 $j++;
             }
             
+            printf("
+            <script type=\"text/JavaScript\">
+            function jumpMenu(){
+                location.href=\"%s?table=\" + document.rating.table.options[document.rating.table.selectedIndex].value;
+            }
+            </script>",
+            $PHP_SELF
+            );
             print "
             <td>
-            <select name=table value=$table>
             ";
+            printf("<select name='table' onChange=\"jumpMenu('this.form')\">\n");
+
             $selected_table[$table]="selected";
             foreach (array_keys($this->tables) as $tb) {
                 $sel_name=$this->tables[$tb]['name'];

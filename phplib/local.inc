@@ -741,7 +741,7 @@ class pageLayout {
         }
 
         print " | <a href=log.phtml>Logs</a>";
-        print " | <a href=accounts.phtml>Login accounts</a>";
+        print " | <a href=accounts.phtml>Accounts</a>";
         
         $now_print=Date("Y-m-d H:i:s",time());
         $tz=$CDRTool['provider']['timezone'];
