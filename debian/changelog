@@ -2,8 +2,9 @@ cdrtool (6.6.4) unstable; urgency=low
 
   * Added links to Prepaid calls and quota in the main menu
   * Fixed showFooter() when exporting csv files from rating page
+  * Fixed prepaid table mysql schema
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 14 Sep 2008 18:04:40 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 21 Sep 2008 01:39:00 +0200
 
 cdrtool (6.6.3) unstable; urgency=low
 
