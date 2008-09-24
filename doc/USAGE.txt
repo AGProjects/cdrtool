@@ -21,10 +21,3 @@ You may also login using the SIP credentials for SER subscriber table.
 - Add new CDRTool users in the Accounts page
 - Provision prepaid accounts in Rating tables
 
-Obtaining cumulative statistics from memcache
-
-Telnet to memcache server address as defined in /etc/default/cdrtool
-
-The following commands retrieve the current monthly usage for SIP users:
-
-get mu:user@example.com
