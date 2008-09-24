@@ -5,54 +5,28 @@ The quota system
 The quota system works with OpenSER data sources. It enforces usage limits
 for post-paid accounts. 
 
-The system is based on collected statistics and its accuracy is never 100%.
-Variations between actual usage and quota limits depends on the number and
-moment of calls that were still in progress during the block operation for
-users who exceeded their quota. On a platform basis the fraud is minimized
-even if the system is not 100% accurate.
-
 The quota system builds incremental statistics with usage information from
 the normalized SIP sessions, it compares the curent usage with the monthly
 quota assigned by administrator and blocks the accounts in the SIP Proxy
-when the quota is exceeded. The system will not stop in real-time ongoing
-calls but provides in practice a perfect protection against fraudulent usage
-on a platform basis.
+when the quota is exceeded. 
 
-The quota system does not impose a high load on the CDR database by using an
-efficient caching and a memcached server. The usage data is incrementally
-updated during the normalization process thus offloading the server from
-scanning the whole CDR table at each checking interval. The process is able
-to check the quotas for 100K users in less then 60 seconds.
-
-To start/stop memcache server used by the quota system use:
-
-/etc/init.d/cdrtool stopmemcache
-/etc/init.d/cdrtool startmemcache
-
-Memcached can be manually downloaded from http://www.danga.com/memcached or
-is automatically installed during debian package installation. Beware that
-memcached server has no built in security, for this reason is advisable to
-configure it to listen only on a private network interface.
+The system will not stop in real-time ongoing calls but provides in practice
+a practical protection against fraudulent usage of the platform.
 
 The quota is checked by a cron job:
 
 /var/www/CDRTool/scripts/SER/quotaCheck.php
 
-To check the current quota usage run:
-
-/var/www/CDRTool/scripts/SER/quotaShowAccounts.php
-
-To check if the cached quota is in sync with the stored CDRs use run:
-
-/var/www/prj/dnshosting/CDRTool/scripts/SER/quotaCompareUsage.php
-
-At the beginning of each month the current quota usage is reset and all users
-are unblocked by this cron job:
+At the beginning of each calendar month the quota usage is reset and all
+users are unblocked:
 
 /var/www/CDRTool/scripts/SER/quotaReset.php
 
-When quota is exceeded email notifications are sent to the end-user and a
-copy to the system administrator. To customize the email message subject,
-body and other header fields you must create some entries in
+The current quota usage can be monitored in Rating -> Quota usage web page.
+
+When quota is exceeded, an email notification is sent to the user and a copy
+of the message to the platform administrator. To customize the email message
+subject, body and other header fields you must create some entries in
 cdrtool.settings table. See CDRTool/setup/mysql/custom_notifications.mysql
 for an example.
+
