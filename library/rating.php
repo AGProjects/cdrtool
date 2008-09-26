@@ -5475,11 +5475,12 @@ class RatingEngine {
         );
 
         if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             syslog(LOG_NOTICE, $log);
+            return 0;
         }
 
         return $maxsessiontime;
-
     }
 
     function CreditBalance($account,$balance) {
@@ -5855,6 +5856,7 @@ class RatingEngine {
                 syslog(LOG_NOTICE, $log);
                 return "none";
             }
+
             $this->db->next_record();
             $Balance             = $this->db->f('balance');
             $maxsessiontime_last = $this->db->f('maxsessiontime');
@@ -5863,35 +5865,39 @@ class RatingEngine {
             if (strlen($this->db->f('active_sessions'))) {
             	// load active sessions
                 $active_sessions = json_decode($this->db->f('active_sessions'),true);
+
+                if (count($active_sessions)) {
+        
+                    $active_sessions_new=array();
+
+        		 	$expired=0;
+
+                    foreach (array_keys($active_sessions) as $_session) {
+                    
+                        $expired_since=time() - $active_sessions[$_session]['timestamp'] - $active_sessions[$_session]['MaxSessionTime'];
+                        if ($expired_since > 120) {
+                            // this session has passed its maxsessiontime plus its reasonable setup time of 2 minutes,
+                            // it could be stale
+                            // because the call control module did not call debitbalance, so we purge it
+        
+                            $log = sprintf ("Session %s for %s has expired since %d seconds",
+                            $_session,
+                            $active_sessions[$_session]['BillingPartyId'],
+                            $expired_since);
+                            syslog(LOG_NOTICE, $log);
+                            $expired++;
+                        } else {
+                            $active_sessions_new[$_session]=$active_sessions[$_session];
+                        }
+                    }
+        
+                    if ($expired) {
+                        $active_sessions=$active_sessions_new;
+                    }
+                }
+
             } else {
             	$active_sessions=array();
-            }
-
-			if ($this->purgeExpiredPrepaidSessions($active_sessions)) {
-                // reload prepaid account data because we purged old sessions which lead to debit balance
-                $query=sprintf("select * from %s where account = '%s'",addslashes($this->prepaid_table),addslashes($CDR->BillingPartyId));
-                if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                    syslog(LOG_NOTICE,$log);
-                    $this->logRuntime();
-                    return "error";
-                }
-                if (!$this->db->num_rows()) {
-                    $log=sprintf ("CallId=%s BillingParty=%s MaxSessionTime=unlimited Type=postpaid",$NetFields['callid'],$CDR->BillingPartyId);
-                    syslog(LOG_NOTICE, $log);
-                    return "none";
-                }
-                $this->db->next_record();
-                $Balance             = $this->db->f('balance');
-                $maxsessiontime_last = $this->db->f('maxsessiontime');
-                $session_counter     = $this->db->f('session_counter');
-                if (strlen($this->db->f('active_sessions'))) {
-                    // load active sessions
-                    $active_sessions = json_decode($this->db->f('active_sessions'),true);
-                } else {
-                    $active_sessions=array();
-                }
-
             }
 
             if (!$Balance) {
@@ -6476,51 +6482,6 @@ class RatingEngine {
         }
 
         return 0;
-    }
-
-    function purgeExpiredPrepaidSessions($active_sessions=array()) {
-        $expired=0;
-        if (count($active_sessions)) {
-            foreach (array_keys($active_sessions) as $_session) {
-                $expired_since=time() - $active_sessions[$_session]['timestamp'] - $active_sessions[$_session]['MaxSessionTime'];
-                if ($expired_since > 120) {
-                    // this session has passed its maxsessiontime plus its reasonable setup time of 2 minutes,
-                    // it could be stale
-                    // because the call control module did not call debitbalance, so we purge it
-
-                    $log = sprintf ("Session %s for %s has expired since %d seconds",
-                    $_session,
-                    $active_sessions[$_session]['BillingPartyId'],
-                    $expired_since);
-                    syslog(LOG_NOTICE, $log);
-
-                    $RateDictionary_session=array(
-                                          'callId'          => $_session,
-                                          'duration'        => $active_sessions[$_session]['MaxSessionTime'],
-                                          'timestamp'       => $active_sessions[$_session]['timestamp'],
-                                          'DestinationId'   => $active_sessions[$_session]['DestinationId'],
-                                          'domain'          => $active_sessions[$_session]['domain'],
-                                          'BillingPartyId'  => $active_sessions[$_session]['BillingPartyId'],
-                                          'ENUMtld'         => $active_sessions[$_session]['ENUMtld'],
-                                          'RatingTables'    => &$this->CDRS->RatingTables
-                                          );
-
-                    $Rate = new Rate($this->settings, $this->db);
-                    $Rate->calculate($RateDictionary_session);
-                    if ($this->DebitBalance($active_sessions[$_session]['BillingPartyId'],$Rate->price,$_session)) {
-                        $expired++;
-                        $log=sprintf("Debited %s from %s for expired session %s, duration=%s",$Rate->price,$active_sessions[$_session]['BillingPartyId'],$_session,$active_sessions[$_session]['MaxSessionTime']);
-                        syslog(LOG_NOTICE, $log);
-                    } else {
-                        $log = sprintf("Error: failed to debit balance of %s for session %s",
-                        $active_sessions[$_session]['BillingPartyId'],$_session);
-                        syslog(LOG_NOTICE, $log);
-                    }
-                }
-            }
-        }
-
-        return $expired;
     }
 
     function getActivePrepaidSessions($active_sessions,$Balance,$BillingPartyId,$exceptSessions=array()) {
