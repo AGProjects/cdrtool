@@ -5275,6 +5275,7 @@ class RatingEngine {
     var $prepaid_lock = 1;
     var $method = '';
     var $log_runtime = false;
+    var $sessionDoesNotExist = false;
 
     function RatingEngine (&$CDRS) {
     	global $RatingEngine;   // set in global.inc
@@ -5384,7 +5385,7 @@ class RatingEngine {
         return $line;
     }
 
-    function DebitBalance($account,$balance,$callid) {
+    function DebitBalance($account,$balance,$session_id) {
 
         $els=explode(":",$account);
 
@@ -5402,7 +5403,7 @@ class RatingEngine {
             return 0;
         }
 
-        if (!$callid) {
+        if (!$session_id) {
             syslog(LOG_NOTICE, "DebitBalance() error: missing call id");
             return 0;
         }
@@ -5432,28 +5433,34 @@ class RatingEngine {
             // remove active session
             $active_sessions=array();
             $old_active_sessions = json_decode($this->db->f('active_sessions'),true);
-            $destination=$old_active_sessions[$callid]['Destination'];
+            $destination=$old_active_sessions[$session_id]['Destination'];
+
+            if (!in_array($session_id,array_keys($old_active_sessions))) {
+                $this->sessionDoesNotExist=true;
+                $log=sprintf("Error: session %s for %s does not exist",$session_id,$account);
+                syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+
             foreach (array_keys($old_active_sessions) as $_key) {
-                if ($_key==$callid) continue;
+                if ($_key==$session_id) continue;
                 $active_sessions[$_key]=$old_active_sessions[$_key];
             }
 
         } else {
-            $active_sessions=array();
+            $this->sessionDoesNotExist=true;
+            $log=sprintf ("Error: session %s for %s does not exist",$session_id,$account);
+            syslog(LOG_NOTICE, $log);
+            return 0;
         }
 
-		if (count($active_sessions)){
-            $next_balance=$this->db->f('balance')-$balance;
+        $next_balance=$this->db->f('balance')-$balance;
 
-            //get parallel calls and remaining_balance
-            $this->getActivePrepaidSessions($active_sessions,$next_balance,$account);
+        //get parallel calls and remaining_balance
+        $this->getActivePrepaidSessions($active_sessions,$next_balance,$account);
 
-            // calculate the updated maxsessiontime
-            $maxsessiontime=$this->getAggregatedMaxSessiontime($this->parallel_calls,$this->remaining_balance,$account);
-
-        } else {
-        	$maxsessiontime=0;
-        }
+        // calculate the updated maxsessiontime
+        $maxsessiontime=$this->getAggregatedMaxSessiontime($this->parallel_calls,$this->remaining_balance,$account);
 
         $query=sprintf("update %s
         set balance          = balance - '%s',
@@ -5781,7 +5788,11 @@ class RatingEngine {
 
             $_dict  = explode("=",$_els[$i]);
             $_key   = strtolower(trim($_dict[0]));
-            $_value = strtolower(trim($_dict[1]));
+            if ($_key == 'CallId') {
+            	$_value = trim($_dict[1]);
+            } else {
+            	$_value = strtolower(trim($_dict[1]));
+            }
 
             if ($_key && $seenField[$_key]) {
                 $log=sprintf ("Error: '$_key' attribute is present more than once in $tinput");
@@ -6187,6 +6198,10 @@ class RatingEngine {
             $this->runtime['calculate_rate']=microtime_float();
 
             $result = $this->DebitBalance($CDR->BillingPartyId,$Rate->price,$NetFields['callid']);
+
+            if ($this->sessionDoesNotExist) {
+                return sprintf("Session %s does not exist",$NetFields['callid']);
+            }
 
             $this->runtime['debit_balance']=microtime_float();
 
