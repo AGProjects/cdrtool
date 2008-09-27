@@ -1,3 +1,9 @@
+cdrtool (6.6.6) unstable; urgency=low
+
+  * Do not debit balance for inexistent prepaid sessions
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 28 Sep 2008 00:18:54 +0200
+
 cdrtool (6.6.5) unstable; urgency=low
 
   * Fixed purging of expired prepaid sessions
