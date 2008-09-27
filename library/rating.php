@@ -5788,7 +5788,7 @@ class RatingEngine {
 
             $_dict  = explode("=",$_els[$i]);
             $_key   = strtolower(trim($_dict[0]));
-            if ($_key == 'CallId') {
+            if ($_key == 'callid') {
             	$_value = trim($_dict[1]);
             } else {
             	$_value = strtolower(trim($_dict[1]));
