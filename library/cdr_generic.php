@@ -1419,7 +1419,7 @@ class CDRS {
         $query=sprintf("select min(%s) as min,max(%s) as max from %s where %s >= '%s' and %s < '%s' ",
         $this->CDRFields['id'],$this->CDRFields['id'],$sourceTable,$this->CDRFields['startTime'],$beginDate,$this->CDRFields['startTime'],$endDate);
 
-        print($query);
+        dprint($query);
 
         if (!$this->CDRdb->query($query)) {
             printf ("Error: %s",$this->CDRdb->Error);
@@ -2348,6 +2348,27 @@ class SIPonline {
 
         print "</table>";
 
+    }
+}
+
+class PrepaidHistory {
+    function PrepaidHistory() {
+        $this->db = new DB_cdrtool;
+    }
+        
+    function purge($days=7) {
+        $beforeDate=Date("Y-m-d", time()-$days*3600*24);
+        $query=sprintf("delete from prepaid_history where date < '%s' and action like 'Debit balance%s'",$beforeDate,'%');
+        
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)\n",$query,$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+        } else {
+            $log=sprintf ("Purged %d records from prepaid history before %s\n",$this->db->affected_rows(),$beforeDate);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+        }
     }
 }
 

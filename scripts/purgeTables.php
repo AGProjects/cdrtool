@@ -1,12 +1,16 @@
 #!/usr/bin/php
 <?
-# Note:
-# This script has not been tested anymore since the auto-rotation performed by
-# the MySQL stored procedures has been introduced in version 5.0
 
 require("/etc/cdrtool/global.inc");
 require("cdr_generic.php");
 
+// purge old logs of debit balance
+$PrepaidHistory = new PrepaidHistory();
+$PrepaidHistory->purge();
+
+print "\n";
+
+// purge old CDRs when using a central radius table
 while (list($k,$v) = each($DATASOURCES)) {
     if (strlen($v['purgeCDRsAfter'])) {
         $class_name=$v["class"];
