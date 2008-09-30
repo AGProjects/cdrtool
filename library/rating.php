@@ -5482,6 +5482,7 @@ class RatingEngine {
         );
 
         if (!$this->db->query($query)) {
+        	$log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             syslog(LOG_NOTICE, $log);
             return 0;
@@ -6219,7 +6220,7 @@ class RatingEngine {
             $result = $this->DebitBalance($CDR->BillingPartyId,$Rate->price,$NetFields['callid']);
 
             if ($this->sessionDoesNotExist) {
-                return sprintf("Session %s does not exist",$NetFields['callid']);
+                return sprintf("Failed\nSession %s does not exist",$NetFields['callid']);
             }
 
             $this->runtime['debit_balance']=microtime_float();
