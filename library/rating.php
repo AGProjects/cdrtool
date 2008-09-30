@@ -275,7 +275,7 @@ class Rate {
             "        Span: $span\n".
             "    Duration: $durationForRating s\n";
 
-            $this->rateSyslog .= "Span=$span Duration=$durationForRating DestId=$this->DestinationId $thisRate[customer]";
+            $this->rateSyslog .= sprintf("CallId=%s Span=%s Duration=%s DestId=%s %s",$this->callId,$span,$durationForRating,$this->DestinationId,$thisRate['customer']);
 
             if ($thisRate['profile']) {
                 $this->rateInfo .= 
@@ -284,7 +284,7 @@ class Rate {
                 "        Rate: $durationRatePrint / $this->durationPeriodRated s\n".
                 "       Price: $spanPricePrint\n";
                 #" TrafficRate: $trafficRatePrint / $this->trafficSizeRated KBytes\n".
-                $this->rateSyslog .= " Profile=$thisRate[profile] Period=$thisRate[day] Rate=$thisRate[rate] Interval=$thisRate[interval] Cost=$durationRatePrint/$this->durationPeriodRated";
+                $this->rateSyslog .= sprintf(" Profile=%s Period=%s Rate=%s Interval=%s Cost=%s/%s",$thisRate['profile'],$thisRate['day'],$thisRate['rate'],$thisRate['interval'],$durationRatePrint,$this->durationPeriodRated);
 
             } else {
                 $this->rateInfo .= 
@@ -5275,7 +5275,6 @@ class RatingEngine {
     var $prepaid_lock = 1;
     var $method = '';
     var $log_runtime = false;
-    var $sessionDoesNotExist = false;
 
     function RatingEngine (&$CDRS) {
     	global $RatingEngine;   // set in global.inc
@@ -5437,7 +5436,7 @@ class RatingEngine {
 
             if (!in_array($session_id,array_keys($old_active_sessions))) {
                 $this->sessionDoesNotExist=true;
-                $log=sprintf("Error: session %s for %s does not exist",$session_id,$account);
+                $log=sprintf("Error: session %s of %s does not exist",$session_id,$account);
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
@@ -5483,7 +5482,6 @@ class RatingEngine {
 
         if (!$this->db->query($query)) {
         	$log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             syslog(LOG_NOTICE, $log);
             return 0;
         }
@@ -6209,7 +6207,7 @@ class RatingEngine {
                                   'RatingTables'    => &$this->CDRS->RatingTables
                                   );
 
-            $Rate    = new Rate($this->settings, $this->db);
+            $Rate = new Rate($this->settings, $this->db);
 
             $this->runtime['instantiate_rate']=microtime_float();
 
@@ -6217,17 +6215,19 @@ class RatingEngine {
 
             $this->runtime['calculate_rate']=microtime_float();
 
+			$this->sessionDoesNotExist=false;
+
             $result = $this->DebitBalance($CDR->BillingPartyId,$Rate->price,$NetFields['callid']);
 
             if ($this->sessionDoesNotExist) {
-                return sprintf("Failed\nSession %s does not exist",$NetFields['callid']);
+                return "Failed";
             }
 
             $this->runtime['debit_balance']=microtime_float();
 
             if ($CDR->duration) {
 
-                $log=sprintf ("Price=%s Duration=%s CallId=%s BillingParty=%s DestId=%s MaxSessionTime=%d",
+                $log = sprintf ("Price=%s Duration=%s CallId=%s BillingParty=%s DestId=%s MaxSessionTime=%d",
                 $Rate->price,
                 $CDR->duration,
                 $NetFields['callid'],
