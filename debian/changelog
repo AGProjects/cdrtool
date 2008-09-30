@@ -1,3 +1,9 @@
+cdrtool (6.6.8) unstable; urgency=low
+
+  * Log debit balance to prepaid_history table
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 30 Sep 2008 05:19:58 +0200
+
 cdrtool (6.6.7) unstable; urgency=low
 
   * Do not debit balance for inexistent prepaid sessions

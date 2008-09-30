@@ -3405,7 +3405,7 @@ class SipSettings {
         print _("Action");
         print "</td>";
         print "<td class=h>";
-        print _("Card");
+        print _("Info");
         print "</td>";
         print "<td class=h align=right>";
         print _("Value");

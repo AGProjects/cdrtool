@@ -3054,7 +3054,7 @@ class RatingTables {
                                 $query=sprintf("insert into prepaid_history
                                 (username,domain,action,number,value,balance,date)
                                 values
-                                ('%s','%s','Set balance','Manual update by administrator','%s','%s',NOW())",
+                                ('%s','%s','Set balance','Update by administrator','%s','%s',NOW())",
                                 addslashes($username),
                                 addslashes($domain),
                                 addslashes($value),
@@ -5485,6 +5485,25 @@ class RatingEngine {
             $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             syslog(LOG_NOTICE, $log);
             return 0;
+        }
+
+        list($prepaidUser,$prepaidDomain)=explode("@",$account);
+
+        $query=sprintf("insert into prepaid_history
+        (username,domain,action,number,value,balance,date)
+        values 
+        ('%s','%s','Debit balance for %s','Session %s','%s','%s',NOW())",
+        addslashes($prepaidUser),
+        addslashes($prepaidDomain),
+        addslashes($destination),
+        addslashes($session_id),
+        $balance,
+        $next_balance
+        );
+
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE, $log);
         }
 
         return $maxsessiontime;
