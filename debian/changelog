@@ -1,8 +1,11 @@
 cdrtool (6.6.9) unstable; urgency=low
 
   * Purge old entries from prepaid_history table
+  * Fixed wrong return to call control engine becuase sessionDoesNotExist
+    variable was not initialized properly at each request
+  * Print the call id in the syslog when calculating rate
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 30 Sep 2008 20:22:51 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 01 Oct 2008 00:11:35 +0200
 
 cdrtool (6.6.8) unstable; urgency=low
 
