@@ -1,27 +1,25 @@
-DESCRIPTION
------------
 
 Prepaid functionality is achieved by:
 
-1. An external call control module (not provided by CDRTool) that maintains
-call status and terminates calls by sending BYEs to both SIP end-points. The
-call control module communicates with both the SIP Proxy and CDRTool using
-an API described below. 
+1. An external session control module, not provided by CDRTool, that
+maintains the session status and terminates the sessions by sending BYE
+messages to both SIP end-points. The session control module communicates
+with both the SIP Proxy and CDRTool using the API described below.
 
-2. CDRTool rating engine - provides session locking, calculates maximum
+2. CDRTool rating engine - provides session management, calculates maximum
 session time based on user balance and destination using the same algorithm
 as the postpaid engine and debits the subscriber balance.
 
-See doc/PrepaidEngine.pdf for a detailed call flow.
+See doc/PrepaidEngine.pdf for a detailed session flow.
 
 
 Prepaid API
 -----------
 
-CDRTool prepaid engine is used to compute session times based on user credit
-and destination rates and debit the balance when the call has ended. The
-prepaid engine is accessible over the TCP socket where the rating engine
-listens.
+CDRTool prepaid engine is used to compute session times based on user
+balance and destination dependent rates and debit the balance when the
+session has ended. The prepaid engine is accessible over the TCP socket
+where the rating engine listens.
 
 The TCP socket location is configured in /etc/default/cdrtool. The
 connection can be tested manually using the telnet command and by typing
@@ -32,50 +30,57 @@ Trying 10.0.0.1...
 Connected to 10.0.0.1.
 Escape character is '^]'.
 Help
-MaxSessionTime        From=sip:123@example.com To=sip:0031650222333@example.com Duration=7200 Gateway=10.0.0.1 Lock=1
+MaxSessionTime        CallId=6432622xvv@1 From=sip:123@example.com To=sip:0031650222333@example.com Duration=7200 Gateway=10.0.0.1 Lock=1
+ShowPrice             From=sip:123@example.com To=sip:0031650222333@example.com Gateway=10.0.0.1 Duration=59
+DebitBalance          CallId=6432622xvv@1 From=sip:123@example.com To=sip:0031650222333@example.com Gateway=10.0.0.1 Duration=59
 AddBalance            From=123@example.com Value=10.00
 GetBalance            From=123@example.com
 GetBalanceHistory     From=123@example.com
 DeleteBalance         From=123@example.com
 DeleteBalanceHistory  From=123@example.com
-DebitBalance          From=sip:123@example.com To=sip:0031650222333@example.com Gateway=10.0.0.1 Duration=59
-ShowPrepaidAccounts   Filter=123@example.com
-ReloadPrepaidAccounts Account=abc@example.com
 
 In the example above only the commands related to the prepaid functionality
 are highlighted.
 
-Call control module sends commands based on the syntax described below, to
-the CDRTool prepaid engine that handles the prepaid accounts. A command is a
-line of text containing a keyword, which is the command itself followed by a
-number of parameters separated by space. The command ends with an enter in
-unix style: '\n' For each such request there will be a reply on one or more
-lines, containing information that depends on the command that was sent. A
-reply ends when a double end of line (\n) is received: \n\n (this is needed
-because there are commands that require multiline responses). How the
-information contained in a reply is to be interpreted depends on the command
-itself and is described below.
+The session control module must send commands based on the syntax described
+below, to the CDRTool prepaid engine. A command is a line of text containing
+a keyword, which is the command itself followed by a number of parameters
+separated by space. The command ends with an enter in unix style: '\n' For
+each such request there will be a reply on one or more lines, containing
+information that depends on the command that was sent. A reply ends when a
+double end of line (\n) is received: \n\n (this is needed because there are
+commands that require multiline responses). How the information contained in
+a reply is to be interpreted depends on the command itself and is described
+below.
 
 
-1. Asking for the call time limit
+1. Asking for the session time limit
    ------------------------------
 
-To request the maximum time for a session, the following request must be
+To request the maximum time for a new session, the following request must be
 sent to CDRTool rating engine on one line:
 
-MaxSessionTime From=sip:123@example.com To=sip:0031650222@example.com
-Duration=7200 Gateway=81.20.68.10 ENUMtl=tld.com Lock=1\n
+MaxSessionTime CallId=6432622xvv@1 From=sip:123@example.com
+To=sip:0031650222@example.com Duration=7200 Gateway=81.20.68.10
+ENUMtl=tld.com\n
+
+MaxSessionTime request is created when a new INVITE arrives at the SIP
+Proxy/session control application. Depending on the session setup time, the
+maximum session time might not be accurate because the session setup time is
+unknown at the INVITE stage. You can call MaxSessionTime again when the
+session has been setup (the OK has been received), in which case the rating
+engine will provide the updated maximum session time for the session that
+was in progress.
 
 Duration is a limit imposed to the time allowed, in case you want to limit
-the call time to a maximum duration. This will be a top limit for the call's
-time, even if the user could talk more than that based on his current
-balance. The SIP proxy may limit all calls to 7200 seconds for example. 
-Lock specifies if the account is to be locked or not (i.e. don't allow the
-same user make multiple calls at the same time). This is used because
-sometimes we only need to peek at the time but not actually start a call and
-lock the user. When the call starts the account should always be locked. To
-may actually be sip:number@domain;param=value so you must extract the
-username part which is the number From is a sip URI which can be "full name"
+the session time to a maximum duration. This will be a top limit for the
+session's time, even if the user could talk more than that based on his
+current balance. The session control module may limit all sessions to 7200
+seconds for example.
+
+To may actually be sip:number@domain;param=value so you must extract the
+username part which is the number From is a sip URI which can be "full
+name".
 
 ENUMtld parameter is optional but if present discounts based on ENUM can be
 applied (see RATING.txt for more information on ENUM discounts).
@@ -84,11 +89,9 @@ Call control expects a reply like below:
 
 value\n\n
 
-value is the numeric time in seconds, or one of the keywords Locked or None
-(None meaning it's not a prepaid account and it doesn't have any limitation,
-or it's a free destination, like a 0800... number).  There is no empty line
-before value (response starts with value on the first line and then it has 2
-enters unix style as described).
+value is the numeric time in seconds, or None, None meaning it's not a
+prepaid account and it doesn't have any limitation, or it's a free
+destination, like a 0800 number.
 
 To field must be the canonical destination SIP URI after all possible
 lookups in the SIP Proxy.
@@ -96,29 +99,44 @@ lookups in the SIP Proxy.
 2. Debiting the balance when the conversation ends
    -----------------------------------------------
 
-To debit money from the user account when the conversation ends, the Call
+To debit money from the user balance when the conversation ends, the session
 control module must send the following command on one line:
 
-DebitBalance From=sip:123@example.com To=sip:0031650222@example.com
-Gateway=81.20.68.10 Duration=59\n
+DebitBalance CallId=6432622xvv@1 From=sip:123@example.com
+To=sip:0031650222@example.com Gateway=81.20.68.10 Duration=59\n
 
-Same notes about the From and To fields as above apply.
+Same notes about the From and To fields as above apply. The call id must
+match the call id provided to the correspondent MaxSessionTime command.
 
 and expects in return:
 
-value\n\n
+value
+maxsessiontime\n\n
 
 where value is one of: OK (success), Failed (failure), Not Prepaid (account
-is not prepaid - this case is not considered a failure)
+is not prepaid - this case is not considered a failure). 
 
-There are cases where we call DebitBalance with a 0 duration. This is valid
-and should unlock the account but leave the credit untouched.
+The second line contains the new maximum session time that is valid after
+debiting the balance for this session. It can be used to update the maximum
+session time of other sessions that are already in progress for the same
+user.
+
+Note that once your have called once MaxSessiontime, you must also call the
+correspondent DebitBalance even if the session has zero seconds duration. If
+you do not do this, the session will stay in progress for the maximum
+session time and any subsequent session setup will have its maximum duration
+altered by this existing session in progress. Sessions in progress will be
+automatically purged after they expire when a new MaxSessionTime request for
+the same user is received.
+
+The debited value and the new balance is recorded in the prepaid_history
+table.
 
 
-Prepaid calls in progress
--------------------------
+Prepaid ongoing sessions
+------------------------
 
-To see the calls in progress go to Rating -> Prepaid.
+To see the sessions in progress go to Rating -> Prepaid.
 
 Fill in the Sesssions field: >0 and click Search.
 
@@ -129,7 +147,7 @@ Third party tools
 FreeRADIUS-CDRTool by Dan-Cristian Bogos 
 
 FreeRADIUS module providing connectivity to CDRTool prepaid engine. Provides
-prepaid authentication for calls proxied by OpenSER and returns to OpenSER
+prepaid authentication for sessions proxied by OpenSER and returns to OpenSER
 MaxCallDuration and user Credit. Can be easily extended to support other SIP
 or H323 devices.
 
@@ -140,52 +158,52 @@ Notes
 -----
 
 The balance is debited correctly regardless of the moment of CDR
-normalization. Renormalization of calls do not recalculate balance.
+normalization. Renormalization of sessions do not recalculate balance.
 
 
-Simultaneous prepaid calls
---------------------------
+Simultaneous prepaid sessions
+-----------------------------
 
-Since version 6.6.0 is possible to have multiple calls using the same
+Since version 6.6.0 is possible to have multiple sessions using the same
 prepaid account without the risk of reaching a negative balance.
 
-The modus operandi is based on a simple model: all prepaid calls belonging
-to the same account must end at the same moment regadless of the called
-destinations and their different prices. The rating engine simply calculates
-that moment based on the data available from ongoing calls, available
-balance and the new call setup request. This scheme provides a fair
-balancing policy with small performance penalty on the servers.
+The modus operandi is based on a simple model: all prepaid sessions
+belonging to the same account must end at the same moment regadless of the
+called destinations and their different prices. The rating engine simply
+calculates that moment based on the data available from ongoing sessions,
+available balance and the new session setup request. This scheme provides a
+fair balancing policy with small performance penalty on the servers.
 
 By using this simple model there is no need to poll any database during
-ongoing calls, which could become major scalability problem. All the work is
-done only once at call setup time. This will increase the load on the rating
-engine only during call setup and only for the users that have parallel
-sessions, the rating engine will perform internally during each call setup 2
-x the number of sessions calls to ShowPrice and MaxSessionTime functions. To
-be antirely accurate the call control must also connect back to the rating
-engine when the call has been setup so that the session expiration can be
-updated.
+ongoing sessions, which could become major scalability problem. All the work
+is done only once at session setup time. This will increase the load on the
+rating engine only during session setup and only for the users that have
+parallel sessions, the rating engine will perform internally during each
+session setup 2 x the number of sessions sessions to ShowPrice and
+MaxSessionTime functions. To be antirely accurate the session control must
+also connect back to the rating engine when the session has been setup so
+that the session expiration can be updated.
 
 You must set $RatingEngine['prepaid_lock'] to 0 in etc/cdrtool/global.inc
-and update the call control software module that keeps track of the maximum
-session time to enforce call ending for all calls belonging to the same sip
-account at the same time based on the last value of MaxSessionTime received
-from the rating engine. The previous version required the call control
-module to keep the time counter per sip session, now it needs to sync the
-counter for all calls belonging to the same sip account. See below the
-pseudo code for the call control engine.
+and update the session control software module that keeps track of the
+maximum session time to enforce session ending for all sessions belonging to
+the same sip account at the same time based on the last value of
+MaxSessionTime received from the rating engine. The previous version
+required the session control module to keep the time counter per sip
+session, now it needs to sync the counter for all sessions belonging to the
+same sip account. See below the pseudo code for the session control engine.
 
-The list of ongoing prepaid calls can be monitored in the Prepaid accounts
-section of the Rating pages. For each sip account that has ongoing calls a
-link marked Sessions apears in the left side of the prepaid record. Click on
-it to display the ongoing prepaid sessions. The 'Delete session' button
-allows the removal of the session form the rating engine. The expired
-sessions that have not been closed properly by the call control module are
-automatically purged 120 seconds after expiration, which has been chosen to
-cover a reasonable call setup time.
+The list of ongoing prepaid sessions can be monitored in the Prepaid
+accounts section of the Rating pages. For each sip account that has ongoing
+sessions a link marked Sessions apears in the left side of the prepaid
+record. Click on it to display the ongoing prepaid sessions. The 'Delete
+session' button allows the removal of the session form the rating engine.
+The expired sessions that have not been closed properly by the session
+control module are automatically purged 120 seconds after expiration, which
+has been chosen to cover a reasonable session setup time.
 
-The time and balance distribution between parallel calls is logged detailed
-in the syslog:
+The time and balance distribution between parallel sessions is logged
+detailed in the syslog:
 
 cdrtool[13292]: MaxSessionTime From=sip:adi@umts.ro Lock=1 To=sip:00318008185@umts.ro CallId=waaivgq89aTxmPIG6JIsPhODUe0tRVf- Duration=36000 Gateway=80.101.96.20
 cdrtool[13292]: ConnectFee=0.0450 Span=1 Duration=16 DestId=31646 default Profile=442 Period=weekend Rate=442 Interval=0-24 Cost=0.1600/60 Price=0.0427
@@ -223,21 +241,21 @@ max_session_time (session, from, to) {
 }
 
 calculate_aggregated_maxsession_time(active_sessions,balance)  {
-    // simulate call termination for all ongoing calls
-    foreach (call in active_sessions[from]) {
-        due_balance=used_balance+show_price(call)
+    // simulate session termination for all ongoing sessions
+    foreach (session in active_sessions[from]) {
+        due_balance=used_balance+show_price(session)
     }
 
     // calculate new virtual balance
     balance_new=balance-due_balance
 
-    // simulate we start parallel calls from scratch at this moment
+    // simulate we start parallel sessions from scratch at this moment
     // including the new sessionn setup request
     // we skip any connect cost for session already in progress
     active_sessions_new[from]=active_sessions[from]
     active_sessions_new[from][]=session
-    foreach (call in active_sessions_new[from]) {
-        rate = new Rate(call)
+    foreach (session in active_sessions_new[from]) {
+        rate = new Rate(session)
         maxsessiontime=rate->max_session_time()
         // calculate price per second for each session
         price_per_second=price_per_second+balance_new/maxsessiontime
@@ -248,9 +266,9 @@ calculate_aggregated_maxsession_time(active_sessions,balance)  {
 
 debit_balance(session, from, to, duration) {
     list(balance,active_sessions)=get_prepaid_account_from_database();
-    foreach (call in active_sessions[from]) {
-        if (call == session) continue
-        new_active_sessions[] = call 
+    foreach (session in active_sessions[from]) {
+        if (session == session) continue
+        new_active_sessions[] = session 
     }  
     // update list of active sessions 
     active_sessions[from]=new_active_sessions
@@ -266,35 +284,35 @@ debit_balance(session, from, to, duration) {
 }
 
 
-Pseudo-code for call control engine
------------------------------------
+Pseudo-code for session control engine
+--------------------------------------
 
 on_session_setup () {
     max=cdrtool_max_session_time(session, from, to)
-    if (sip_connect_call() == true) { 
+    if (sip_connect_session() == true) { 
         // add session to the list of active sessions
 	// update tiomer again becuase we had a variable setup time	
         max=cdrtool_max_session_time(session, from, to)
         active_sessions[from][]=session
-        // set maxsession time for all remaining calls of the same user
-        foreach (call in active_sessions[from]) {
-            call.maxsessiontime = max
+        // set maxsession time for all remaining sessions of the same user
+        foreach (session in active_sessions[from]) {
+            session.maxsessiontime = max
         }
     } 
 }
 
 on_session_disconnect () {
-   sip_disconnect_call();
+   sip_disconnect_session();
    max=cdrtool_debit_balance(session, from, to, duration)
    // remove session from the list of active sessions
-   foreach (call in active_sessions[from]) {
-       if (call == session) continue
-       new_active_sessions[] = call 
+   foreach (session in active_sessions[from]) {
+       if (session == session) continue
+       new_active_sessions[] = session 
    }  
    // update list of active sessions 
    active_sessions[from]=new_active_sessions
-   foreach (call in active_sessions[from]) {
-       call.maxsessiontime = max
+   foreach (session in active_sessions[from]) {
+       session.maxsessiontime = max
    }
 }
 
