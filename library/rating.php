@@ -5832,25 +5832,25 @@ class RatingEngine {
         if ($NetFields['action']=="maxsessiontime") {
 
             if (!$NetFields['from']) {
-                $log=sprintf ("Error: Missing From parameter");
+                $log=sprintf ("error: missing From parameter");
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['to']) {
-                $log=sprintf ("Error: Missing To parameter");
+                $log=sprintf ("error: missing To parameter");
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['gateway']) {
-                $log=sprintf ("Error: Missing gateway parameter");
+                $log=sprintf ("error: missing gateway parameter");
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['callid']) {
-                $log=sprintf ("Error: Missing Call Id parameter");
+                $log=sprintf ("error: missing Call Id parameter");
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
@@ -5878,8 +5878,10 @@ class RatingEngine {
                 $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                 syslog(LOG_NOTICE,$log);
                 $this->logRuntime();
-                return "error";
+                $log=sprintf("error: database error %s (%s)",$this->db->Error,$this->db->Errno);
+                return $log;
             }
+
             if (!$this->db->num_rows()) {
                 $log=sprintf ("MaxSessionTime=unlimited Type=postpaid CallId=%s BillingParty=%s",$NetFields['callid'],$CDR->BillingPartyId);
                 syslog(LOG_NOTICE, $log);
@@ -5954,10 +5956,10 @@ class RatingEngine {
                 return "none";
             } else {
                 if (!$CDR->DestinationId) {
-                    $log = sprintf ("Error: cannot figure out the destination id for $CDR->CanonicalURI");
+                    $log = sprintf ("error: cannot figure out the destination id for %s",$CDR->CanonicalURI);
                     $this->logRuntime();
                     syslog(LOG_NOTICE, $log);
-                    return "error";
+                	return "none";
                 }
             }
 
@@ -6049,9 +6051,9 @@ class RatingEngine {
             $this->runtime['calculate_maxduration']=microtime_float();
 
             if ($maxduration < 0) {
-                $log = sprintf ("Error: maxduration is negative ($maxduration)");
+                $log = sprintf ("error: maxduration %s is negative",$maxduration);
                 syslog(LOG_NOTICE, $log);
-                return "error";
+                return $log;
             }
 
             if ($Rate->minimumDurationCharged && $maxduration < $Rate->minimumDurationCharged) {
@@ -6061,15 +6063,15 @@ class RatingEngine {
             }
 
             if (!$Rate->billingTimezone) {
-                $log = sprintf ("Error: cannot figure out the billing timezone");
+                $log = sprintf ("error: cannot figure out the billing timezone");
                 syslog(LOG_NOTICE, $log);
-                return "error";
+                return $log;
             }
 
             if (!$Rate->startTimeBilling) {
-                $log = sprintf ("Error: cannot figure out the billing start time");
+                $log = sprintf ("error: cannot figure out the billing start time");
                 syslog(LOG_NOTICE, $log);
-                return "error";
+                return $log;
             }
 
             $log=sprintf ("MaxSessionTime=%s Type=prepaid CallId=%s BillingParty=%s DestId=%s Balance=%s Spans=%d",
@@ -6087,8 +6089,7 @@ class RatingEngine {
                 if ($NetFields['lock'] && $this->prepaid_lock) {
     
                     // mark the account that is locked during call
-                    $query=sprintf("update %s
-                    set
+                    $query=sprintf("update %s set
                     active_sessions  = '%s',
                     call_in_progress = NOW(),
                     maxsessiontime   = '%d',
@@ -6105,13 +6106,10 @@ class RatingEngine {
                     if (!$this->db->query($query)) {
                         $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                         syslog(LOG_NOTICE,$log);
-                        return "error";
+                        $log=sprintf ("error: database error %s (%s)",$this->db->Error,$this->db->Errno);
+                        return $log;
                     }
     
-                    if (!$this->db->affected_rows()) {
-                        $log=sprintf ("$CDR->BillingPartyId is already locked");
-                        syslog(LOG_NOTICE, $log);
-                    }
                 } else {
                     $query=sprintf("update %s
                     set
@@ -6129,12 +6127,8 @@ class RatingEngine {
                     if (!$this->db->query($query)) {
                         $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                         syslog(LOG_NOTICE,$log);
-                        return "error";
-                    }
-    
-                    if (!$this->db->affected_rows()) {
-                        $log=sprintf ("$CDR->BillingPartyId is already locked");
-                        syslog(LOG_NOTICE, $log);
+                        $log=sprintf ("error: database error %s (%s)",$this->db->Error,$this->db->Errno);
+                        return $log;
                     }
                 }
             }
@@ -6148,31 +6142,31 @@ class RatingEngine {
         } else if ($NetFields['action'] == "debitbalance") {
 
             if (!$NetFields['from']) {
-                $log=sprintf ("Error: Missing From parameter");
+                $log=sprintf ("error: missing From parameter");
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['to']) {
-                $log=sprintf ("Error: Missing To parameter");
+                $log=sprintf ("error: missing To parameter");
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!strlen($NetFields['duration'])) {
-                $log=sprintf ("Error: Missing Duration parameter");
+                $log=sprintf ("error: missing Duration parameter");
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['gateway']) {
-                $log=sprintf ("Error: Missing gateway parameter");
+                $log=sprintf ("error: missing gateway parameter");
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['callid']) {
-                $log=sprintf ("Error: Missing Call Id parameter");
+                $log=sprintf ("error: missing Call Id parameter");
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
