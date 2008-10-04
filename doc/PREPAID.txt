@@ -132,6 +132,12 @@ the same user is received.
 The debited value and the new balance is recorded in the prepaid_history
 table.
 
+If the session does not exist, no balance will be debited. To force the
+DebitBalance to debit the balance even if no session in progress exists, you
+can supply Force=1 parameter. This can be useful if for some reason the
+requests have been lost due to network problems. In such case the requests
+can be applied at a later time.
+
 
 Prepaid ongoing sessions
 ------------------------

@@ -5384,7 +5384,7 @@ class RatingEngine {
         return $line;
     }
 
-    function DebitBalance($account,$balance,$session_id) {
+    function DebitBalance($account,$balance,$session_id,$force=false) {
 
         $els=explode(":",$account);
 
@@ -5434,11 +5434,13 @@ class RatingEngine {
             $old_active_sessions = json_decode($this->db->f('active_sessions'),true);
             $destination=$old_active_sessions[$session_id]['Destination'];
 
-            if (!in_array($session_id,array_keys($old_active_sessions))) {
-                $this->sessionDoesNotExist=true;
-                $log=sprintf("Error: session %s of %s does not exist",$session_id,$account);
-                syslog(LOG_NOTICE, $log);
-                return 0;
+            if (!$force) {
+               if (!in_array($session_id,array_keys($old_active_sessions))) {
+                   $this->sessionDoesNotExist=true;
+                   $log=sprintf("Error: session %s of %s does not exist",$session_id,$account);
+                   syslog(LOG_NOTICE, $log);
+                   return 0;
+               }
             }
 
             foreach (array_keys($old_active_sessions) as $_key) {
@@ -5447,10 +5449,12 @@ class RatingEngine {
             }
 
         } else {
-            $this->sessionDoesNotExist=true;
-            $log=sprintf ("Error: session %s for %s does not exist",$session_id,$account);
-            syslog(LOG_NOTICE, $log);
-            return 0;
+            if (!$force) {
+                $this->sessionDoesNotExist=true;
+                $log=sprintf ("Error: session %s for %s does not exist",$session_id,$account);
+                syslog(LOG_NOTICE, $log);
+                return 0;
+            }
         }
 
         $next_balance=$this->db->f('balance')-$balance;
@@ -6171,6 +6175,12 @@ class RatingEngine {
                 return $log;
             }
 
+            $force=false;
+
+            if ($NetFields['force']) {
+                $force=true;
+            }
+
             $timestamp=time();
 
             $CDRStructure=array (
@@ -6211,7 +6221,7 @@ class RatingEngine {
 
 			$this->sessionDoesNotExist=false;
 
-            $result = $this->DebitBalance($CDR->BillingPartyId,$Rate->price,$NetFields['callid']);
+            $result = $this->DebitBalance($CDR->BillingPartyId,$Rate->price,$NetFields['callid'],$force);
 
             if ($this->sessionDoesNotExist) {
                 return "Failed";
