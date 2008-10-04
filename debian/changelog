@@ -1,3 +1,12 @@
+cdrtool (6.6.10) unstable; urgency=low
+
+  * Added Force=1 parameter to DebitBalance(), see PREPAID.txt for more info
+  * Return none when destination id cannot be found (unlimited max session time)
+  * More consistent return codes and logging messages for prepaid calls
+  * Improve prepaid documentation
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 04 Oct 2008 12:36:04 +0200
+
 cdrtool (6.6.9) unstable; urgency=low
 
   * Purge old entries from prepaid_history table
