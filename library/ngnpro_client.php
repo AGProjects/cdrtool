@@ -4690,7 +4690,6 @@ class EnumMappings extends Records {
                             <td></td>
                             <td></td>
                             <td></td>
-                            <td></td>
                             <td>%s</td>
                             <td><a href=%s>%s</a></td>
                             </tr>",
