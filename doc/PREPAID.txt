@@ -186,7 +186,7 @@ is done only once at session setup time. This will increase the load on the
 rating engine only during session setup and only for the users that have
 parallel sessions, the rating engine will perform internally during each
 session setup 2 x the number of sessions sessions to ShowPrice and
-MaxSessionTime functions. To be antirely accurate the session control must
+MaxSessionTime functions. To be entirely accurate the session control must
 also connect back to the rating engine when the session has been setup so
 that the session expiration can be updated.
 
