@@ -63,7 +63,7 @@ PHP setup and Apache setup
 Install PHP and dependencies. If you have chosen to install the debian
 package, the dependencies will be resolved during installation. 
 
-Example for Debian systems and php4:
+Example for Debian systems and php5:
 
 Enable php-mysql module in /etc/php5/*/php.ini:
 
@@ -140,9 +140,7 @@ Enable rating engine
 
 The rating engine is used for prepaid applications and as price calculator
 for postpaid traffic. It provides access to the rating tables and stays in
-memory (running as a daemon) to avoid reading the rating tables at every
-rating request. The rating tables can be reloaded without restarting the
-rating engine.
+memory (running as a daemon).
 
 See the information in the head of the scripts/ratingEngine.php daemon for
 how to enable prepaid or other rating functionality. For prepaid, an
