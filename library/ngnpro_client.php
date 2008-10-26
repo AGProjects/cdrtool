@@ -11642,8 +11642,16 @@ class recordGenerator extends SoapEngine {
                     $sipAccount['email']     = $this->template['email'];
                 }
 
-                if ($this->template['pstn'] && strlen($number) > intval($this->template['rpid_strip_digits'])) {
-                    $sipAccount['rpid']=substr($number,intval($this->template['rpid_strip_digits']));
+
+                if ($this->template['pstn']) {
+
+                    $strip_rpid=intval($this->template['rpid_strip_digits']);
+
+                	if ($strip_rpid && strlen($number) > $strip_rpid) {
+                    	$sipAccount['rpid']=substr($number,intval($this->template['rpid_strip_digits']));
+                    } else {
+                		$sipAccount['rpid']=$number;
+                    }
                 }
 
             } else {
