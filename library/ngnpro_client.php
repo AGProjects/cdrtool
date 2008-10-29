@@ -3948,7 +3948,7 @@ class EnumRanges extends Records {
         if ($result = $this->SoapEngine->execute($function,$this->html)) {
             if (is_object($this->SoapEngineEnumRemote)) {
                 $this->SoapEngineEnumRemote->addHeader($this->SoapAuthEnumRemote);
-                $result = $this->SoapEngineEnumRemote->addRange($range);
+                $result = $this->SoapEngineEnumRemote->addRange($result);
 
                 if (PEAR::isError($result)) {
                     $error_msg  = $result->getMessage();
@@ -6459,21 +6459,26 @@ class DnsZones extends Records {
                                             'parameters' => array($zone),
                                             'logs'       => array('success' => sprintf('DNS zone %s has been updated',$filter['name'])))
                         );
-        if (is_object($this->SoapEngineDnsRemote)) {
-            $this->SoapEngineDnsRemote->addHeader($this->SoapAuthDnsRemote);
-            $result = $this->SoapEngineDnsRemote->updateZone($zone);
 
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlDnsRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                unset($this->filters);
-
-                return false;
-            } else {
-                return true;
+        if ($result = $this->SoapEngine->execute($function,$this->html)) {
+            if (is_object($this->SoapEngineDnsRemote)) {
+                $this->SoapEngineDnsRemote->addHeader($this->SoapAuthDnsRemote);
+                $result = $this->SoapEngineDnsRemote->updateZone($zone);
+    
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlDnsRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    unset($this->filters);
+    
+                    return false;
+                } else {
+                    return true;
+                }
             }
+        } else {
+        	return false;
         }
 
     }
