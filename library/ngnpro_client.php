@@ -13009,7 +13009,7 @@ class DnsRecordsActions extends Actions {
     var $actions=array(
                        'changettl'      => 'Change TTL to:',
                        'changepriority' => 'Change Priority to:',
-                       'changevalue'    => 'Change value:',
+                       'changevalue'    => 'Change value to:',
                        'delete'         => 'Delete records'
                        );
 
@@ -13110,7 +13110,7 @@ class DnsRecordsActions extends Actions {
 
                     $function=array('commit'   => array('name'       => 'updateRecord',
                                                         'parameters' => array($record),
-                                                        'logs'       => array('success' => sprintf('Value record %d has been set to %s',$key['id'],$sub_action_parameter)
+                                                        'logs'       => array('success' => sprintf('Value of record %d has been set to %s',$key['id'],$sub_action_parameter)
                                                                               )
                                                        )
                                     );
