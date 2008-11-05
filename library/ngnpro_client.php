@@ -1437,6 +1437,53 @@ class Records {
         print "</pre>\n";
     }
 
+    function initRemoteReplicationEngine($reseller) {
+        if (!$reseller) return false;
+        if (!$this->remote_engine_name)  return false;
+
+        dprint_r($this->SoapEngine->login_credentials['reseller_filters'][$reseller]);
+
+        $remote_engine=$this->SoapEngine->login_credentials['reseller_filters'][$reseller][$this->remote_engine_name];
+
+        if (!strlen($remote_engine)) {
+        	return false;
+        }
+
+        if ($this->SoapEngine->soapEngine == $remote_engine) {
+        	return false;
+        }
+
+        if (!in_array($remote_engine,array_keys($this->SoapEngine->soapEngines))) {
+        	return false;
+        }
+
+        $this->SOAPloginRemote = array(
+                               "username"    => $this->SoapEngine->soapEngines[$remote_engine]['username'],
+                               "password"    => $this->SoapEngine->soapEngines[$remote_engine]['password'],
+                               "admin"       => true,
+                               "impersonate" => intval($reseller)
+                           );
+
+        $this->SOAPurlRemote=$this->SoapEngine->soapEngines[$remote_engine]['url'];
+
+        $log=sprintf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
+        dprint($log);
+
+        $this->SoapAuthRemote  = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
+
+        $this->SoapEngineRemote = new $this->SoapEngine->soap_class($this->SOAPurlRemote);
+
+        if (strlen($this->soapEngines[$remote_engine]['timeout'])) {
+            $this->SoapEngineRemote->_options['timeout'] = intval($this->soapEngines[$remote_engine]['timeout']);
+        } else {
+            $this->SoapEngineRemote->_options['timeout'] = $this->soapTimeout;
+        }
+
+        $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+        return true;
+    }
 }
 
 class SipDomains extends Records {
@@ -3409,6 +3456,7 @@ class SipAliases extends Records {
 
 class EnumRanges extends Records {
     var $selectionActiveExceptions=array('tld');
+    var $remote_engine_name='enum_engine_remote';
 
     // only admin can add prefixes below
     var $deniedPrefixes=array('1','20','210','211','212','213','214','215','216','217','218','219','220','221','222','223','224','225','226','227','228','229','230','231','232','233','234','235','236','237','238','239','240','241','242','243','244','245','246','247','248','249','250','251','252','253','254','255','256','257','258','259','260','261','262','263','264','265','266','267','268','269','27','280','281','282','283','284','285','286','287','288','289','290','291','292','293','294','295','296','297','298','299','30','31','32','33','34','350','351','352','353','354','355','356','357','358','359','36','370','371','372','373','374','375','376','377','378','379','380','381','382','383','384','385','386','387','388','389','39','40','41','420','421','422','423','424','425','426','427','428','429','43','44','45','46','47','48','49','500','501','502','503','504','505','506','507','508','509','51','52','53','54','55','56','57','58','590','591','592','593','594','595','596','597','598','599','60','61','62','63','64','65','66','670','671','672','673','674','675','676','677','678','679','680','681','682','683','684','685','686','687','688','689','690','691','692','693','694','695','696','697','698','699','7','800','801','802','803','804','805','806','807','808','809','81','82','830','831','832','833','834','835','836','837','838','839','84','850','851','852','853','854','855','856','857','858','859','86','870','871','872','873','874','875','876','877','878','879','880','881','882','883','884','885','886','887','888','889','890','891','892','893','894','895','896','897','898','899','90','91','92','93','94','95','960','961','962','963','964','965','966','967','968','969','970','971','972','973','974','975','976','977','978','979','98','990','991','992','993','994','995','996','997','998','999');
@@ -3463,44 +3511,6 @@ class EnumRanges extends Records {
                                                  'help'=>'Name servers authoritative for this DNS zone'
                                                  );
 
-        }
-
-        if ($this->reseller) {
-        	dprint_r($this->SoapEngine->login_credentials['reseller_filters'][$this->reseller]);
-
-            $enum_engine_remote=$this->SoapEngine->login_credentials['reseller_filters'][$this->reseller]['enum_engine_remote'];
- 
-            if (strlen($enum_engine_remote) && $this->SoapEngine->soapEngine != $enum_engine_remote) {
-                // replicate change
- 
-                if (in_array($enum_engine_remote,array_keys($this->SoapEngine->soapEngines))) {
-                    $this->SOAPloginRemote = array(
-                                           "username"    => $this->SoapEngine->soapEngines[$enum_engine_remote]['username'],
-                                           "password"    => $this->SoapEngine->soapEngines[$enum_engine_remote]['password'],
-                                           "admin"       => true,
-                                           "impersonate" => intval($this->reseller)
-                                       );
-    
-                    //dprint_r($this->SOAPloginRemote);
-                    $this->SOAPurlRemote=$this->SoapEngine->soapEngines[$enum_engine_remote]['url'];
-    
-                    $log=sprintf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
-                    dprint($log);
- 
-                    $this->SoapAuthRemote  = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
- 
-                    $this->SoapEngineRemote = new $this->SoapEngine->soap_class($this->SOAPurlRemote);
- 
-                    if (strlen($this->soapEngines[$enum_engine_remote]['timeout'])) {
-                        $this->SoapEngineRemote->_options['timeout'] = intval($this->soapEngines[$enum_engine_remote]['timeout']);
-                    } else {
-                        $this->SoapEngineRemote->_options['timeout'] = $this->soapTimeout;
-                    }
- 
-                    $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-                    $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-                }
-            }
         }
 
     }
@@ -3645,6 +3655,8 @@ class EnumRanges extends Records {
                     urlencode($range->id->tld)
                     );
 
+                    if ($this->adminonly) $_url.= sprintf ("&reseller_filter=%s",$range->reseller);
+
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['prefix_filter'] == $range->id->prefix &&
                         $_REQUEST['tld_filter'] == $range->id->tld) {
@@ -3683,7 +3695,6 @@ class EnumRanges extends Records {
                         urlencode($this->SoapEngine->customer_engine),
                         urlencode($range->customer)
                         );
-
 
 						$_nameservers='';
                         foreach ($range->nameservers as $_ns) {
@@ -3791,6 +3802,12 @@ class EnumRanges extends Records {
 
         $rangeId=array('prefix'=>$this->filters['prefix'],
                        'tld'=>$this->filters['tld']);
+
+        if ($this->adminonly) {
+			$this->initRemoteReplicationEngine($this->filters['reseller']);
+        } else {
+			$this->initRemoteReplicationEngine($this->reseller);
+        }
 
         $function=array('commit'   => array('name'       => 'deleteRange',
                                             'parameters' => array($rangeId),
@@ -3917,6 +3934,8 @@ class EnumRanges extends Records {
 
         list($customer,$reseller)=$this->customerFromLogin($dictionary);
 
+		$this->initRemoteReplicationEngine($reseller);
+
         if (!trim($_REQUEST['ttl'])) {
             $ttl=3600;
         } else {
@@ -3967,7 +3986,7 @@ class EnumRanges extends Records {
 
             if (is_object($this->SoapEngineRemote)) {
                 $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                $result = $this->SoapEngineRemote->addRange($result);
+                $result = $this->SoapEngineRemote->addRange($range);
 
                 if (PEAR::isError($result)) {
                     $error_msg  = $result->getMessage();
@@ -4212,6 +4231,8 @@ class EnumRanges extends Records {
             return false;
         }
 
+		$this->initRemoteReplicationEngine($range->reseller);
+
         $range_old=$range;
 
         foreach (array_keys($this->Fields) as $item) {
@@ -4333,6 +4354,8 @@ class EnumRanges extends Records {
 }
 
 class EnumMappings extends Records {
+    var $remote_engine_name='enum_engine_remote';
+
     var $default_ttl = 3600;
     var $default_priority = 5;
 
@@ -4461,42 +4484,6 @@ class EnumMappings extends Records {
         $this->Records(&$SoapEngine);
         $this->getAllowedDomains();
 
-        if ($this->reseller) {
-        	dprint_r($this->SoapEngine->login_credentials['reseller_filters'][$this->reseller]);
-
-            $enum_engine_remote=$this->SoapEngine->login_credentials['reseller_filters'][$this->reseller]['enum_engine_remote'];
- 
-            if (strlen($enum_engine_remote) && $this->SoapEngine->soapEngine != $enum_engine_remote) {
-                // replicate change
- 
-                if (in_array($enum_engine_remote,array_keys($this->SoapEngine->soapEngines))) {
-                    $this->SOAPloginRemote = array(
-                                           "username"    => $this->SoapEngine->soapEngines[$enum_engine_remote]['username'],
-                                           "password"    => $this->SoapEngine->soapEngines[$enum_engine_remote]['password'],
-                                           "admin"       => true,
-                                           "impersonate" => intval($this->reseller)
-                                       );
-    
-                    $this->SOAPurlRemote=$this->SoapEngine->soapEngines[$enum_engine_remote]['url'];
-    
-                    $log=sprintf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
-                    dprint($log);
- 
-                    $this->SoapAuthRemote  = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
- 
-                    $this->SoapEngineRemote = new $this->SoapEngine->soap_class($this->SOAPurlRemote);
- 
-                    if (strlen($this->soapEngines[$enum_engine_remote]['timeout'])) {
-                        $this->SoapEngineRemote->_options['timeout'] = intval($this->soapEngines[$enum_engine_remote]['timeout']);
-                    } else {
-                        $this->SoapEngineRemote->_options['timeout'] = $this->soapTimeout;
-                    }
- 
-                    $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-                    $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-                }
-            }
-        }
     }
 
     function listRecords() {
@@ -4664,6 +4651,8 @@ class EnumMappings extends Records {
                         urlencode($number->id->tld),
                         urlencode($_mapping->mapto)
                         );
+
+                        if ($this->adminonly) $_url.= sprintf ("&reseller_filter=%s",$number->reseller);
     
                         if ($_REQUEST['action'] == 'Delete' &&
                             $_REQUEST['number_filter'] == $number->id->number &&
@@ -4682,6 +4671,8 @@ class EnumMappings extends Records {
                             urlencode($number->id->number),
                             urlencode($number->id->tld)
                             );
+
+ 		                   	if ($this->adminonly) $_number_url.= sprintf ("&reseller_filter=%s",$number->reseller);
 
                             if ($this->version > 1) {
                                 $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
@@ -4818,7 +4809,9 @@ class EnumMappings extends Records {
                         urlencode($number->id->tld),
                         urlencode($_mapping->mapto)
                         );
-    
+
+ 		                if ($this->adminonly) $_url.= sprintf ("&reseller_filter=%s",$number->reseller);
+
                         if ($_REQUEST['action'] == 'Delete' &&
                             $_REQUEST['number_filter'] == $number->id->number &&
                             $_REQUEST['tld_filter'] == $number->id->tld &&
@@ -4834,6 +4827,8 @@ class EnumMappings extends Records {
                         urlencode($number->id->number),
                         urlencode($number->id->tld)
                         );
+
+ 		                if ($this->adminonly) $_number_url.= sprintf ("&reseller_filter=%s",$number->reseller);
 
                         if ($this->version > 1) {
                             $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
@@ -5046,6 +5041,12 @@ class EnumMappings extends Records {
                        'tld'    => $tld
                        );
 
+        if ($this->adminonly) {
+			$this->initRemoteReplicationEngine($this->filters['reseller']);
+        } else {
+			$this->initRemoteReplicationEngine($this->reseller);
+        }
+
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $result     = $this->SoapEngine->soapclient->getNumber($enum_id);
 
@@ -5154,6 +5155,8 @@ class EnumMappings extends Records {
     function showAddForm() {
         //if ($this->selectionActive) return;
 
+        if ($this->adminonly && !$this->filters['reseller']) return;
+
         if (!count($this->ranges)) {
             //print "<p><font color=red>You must create at least one ENUM range before adding ENUM numbers</font>";
             return false;
@@ -5166,6 +5169,11 @@ class EnumMappings extends Records {
         ";
 
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+
+        if ($this->adminonly) {
+        	printf (" <input type=hidden name=reseller_filter value='%s'>",$this->filters['reseller']);
+        }
+
         print "
         <td align=left>
         ";
@@ -5201,8 +5209,7 @@ class EnumMappings extends Records {
         }
 
         printf (" Map to");
-        print "<select name=type>
-        ";
+        print "<select name=type>";
 
         if ($_REQUEST['type']) {
             $selected_naptr_service[$_REQUEST['type']]='selected';
@@ -5356,7 +5363,7 @@ class EnumMappings extends Records {
             return false;
         }
 
-        list($customer,$reseller)=$this->customerFromLogin($dictionary);
+		$this->initRemoteReplicationEngine($reseller);
 
         if ($dictionary['ttl']) {
             $ttl = intval($dictionary['ttl']);
@@ -5801,6 +5808,8 @@ class EnumMappings extends Records {
             return false;
         }
 
+		$this->initRemoteReplicationEngine($number->reseller);
+
         $number_old=$number;
 
         $new_mappings=array();
@@ -5914,6 +5923,7 @@ class EnumMappings extends Records {
 }
 
 class DnsZones extends Records {
+    var $remote_engine_name='dns_engine_remote';
 
     var $FieldsAdminOnly=array(
                               'reseller'      => array('type'=>'integer',
@@ -6111,6 +6121,8 @@ class DnsZones extends Records {
                     urlencode($zone->name)
                     );
 
+                    if ($this->adminonly) $_url.= sprintf ("&reseller_filter=%s",$zone->reseller);
+
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['name_filter'] == $zone->name) {
                         $_url .= "&confirm=1";
@@ -6119,20 +6131,23 @@ class DnsZones extends Records {
                         $actionText = "Delete";
                     }
 
-                    if ($this->adminonly) {
-                        $zone_url=sprintf('<a href=%s&service=%s&reseller_filter=%s&name_filter=%s>%s</a>',$this->url,$this->SoapEngine->service,$zone->reseller,$zone->name,$zone->name);
-                    } else {
-                        $zone_url=sprintf('<a href=%s&&service=%s&name_filter=%s>%s</a>',$this->url,$this->SoapEngine->service,$zone->name,$zone->name);
-                    }
-
-                    $customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    urlencode($this->SoapEngine->customer_engine),
-                    urlencode($zone->customer)
+                    $zone_url=sprintf('%s&service=%s&name_filter=%s',
+                    $this->url,
+                    $this->SoapEngine->service,
+                    $zone->name
                     );
 
                     $records_url = $this->url.sprintf("&service=dns_records@%s&zone_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
                     urlencode($zone->name)
+                    );
+
+                    if ($this->adminonly) $zone_url    .= sprintf("&reseller_filter=%s",$zone->reseller);
+                    if ($this->adminonly) $records_url .= sprintf("&reseller_filter=%s",$zone->reseller);
+
+                    $customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                    urlencode($this->SoapEngine->customer_engine),
+                    urlencode($zone->customer)
                     );
 
                     sort($zone->nameservers);
@@ -6146,7 +6161,7 @@ class DnsZones extends Records {
                     <tr bgcolor=%s>
                     <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
-                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
                     <td>%s</td>
                     <td>%s</td>
                     <td><a href=%s>Records</a></td>
@@ -6161,6 +6176,7 @@ class DnsZones extends Records {
                     $zone->customer,
                     $zone->reseller,
                     $zone_url,
+                    $zone->name,
                     $zone->email,
                     $zone->info,
                     $records_url,
@@ -6204,6 +6220,12 @@ class DnsZones extends Records {
         }
 
 		$name=$this->filters['name'];
+
+        if ($this->adminonly) {
+			$this->initRemoteReplicationEngine($this->filters['reseller']);
+        } else {
+			$this->initRemoteReplicationEngine($this->reseller);
+        }
 
         $function=array('commit'   => array('name'       => 'deleteZone',
                                             'parameters' => array($name),
@@ -6298,6 +6320,7 @@ class DnsZones extends Records {
         }
 
         list($customer,$reseller)=$this->customerFromLogin($dictionary);
+		$this->initRemoteReplicationEngine($reseller);
 
         if (!trim($_REQUEST['ttl'])) {
             $ttl=3600;
@@ -6501,6 +6524,8 @@ class DnsZones extends Records {
             return false;
         }
 
+		$this->initRemoteReplicationEngine($zone->reseller);
+
         $zone_old=$zone;
 
         foreach (array_keys($this->Fields) as $item) {
@@ -6669,6 +6694,7 @@ class DnsZones extends Records {
 }
 
 class DnsRecords extends Records {
+    var $remote_engine_name='dns_engine_remote';
 	var $max_zones_selection = 50;
 	var $typeFilter  = false;
     var $default_ttl = 3600;
@@ -6923,43 +6949,6 @@ class DnsRecords extends Records {
         $this->Records(&$SoapEngine);
         $this->getAllowedDomains();
 
-        if ($this->reseller) {
-        	dprint_r($this->SoapEngine->login_credentials['reseller_filters'][$this->reseller]);
-
-            $dns_engine_remote=$this->SoapEngine->login_credentials['reseller_filters'][$this->reseller]['dns_engine_remote'];
- 
-            if (strlen($dns_engine_remote) && $this->SoapEngine->soapEngine != $dns_engine_remote) {
-                // replicate change
- 
-                if (in_array($dns_engine_remote,array_keys($this->SoapEngine->soapEngines))) {
-                    $this->SOAPloginRemote = array(
-                                           "username"    => $this->SoapEngine->soapEngines[$dns_engine_remote]['username'],
-                                           "password"    => $this->SoapEngine->soapEngines[$dns_engine_remote]['password'],
-                                           "admin"       => true,
-                                           "impersonate" => intval($this->reseller)
-                                       );
-    
-                    $this->SOAPurlRemote=$this->SoapEngine->soapEngines[$dns_engine_remote]['url'];
-    
-                    $log=sprintf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
-                    dprint($log);
- 
-                    $this->SoapAuthRemote  = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
- 
-                    $this->SoapEngineRemote = new $this->SoapEngine->soap_class($this->SOAPurlRemote);
- 
-                    if (strlen($this->soapEngines[$dns_engine_remote]['timeout'])) {
-                        $this->SoapEngineRemote->_options['timeout'] = intval($this->soapEngines[$dns_engine_remote]['timeout']);
-                    } else {
-                        $this->SoapEngineRemote->_options['timeout'] = $this->soapTimeout;
-                    }
- 
-                    $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-                    $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-                }
-            }
-        }
-
     }
 
     function listRecords() {
@@ -7102,6 +7091,8 @@ class DnsRecords extends Records {
                     urlencode($record->id)
                     );
 
+                    if ($this->adminonly) $_url.= sprintf ("&reseller_filter=%s",$record->reseller);
+
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['id_filter'] == $record->id) {
                         $_url .= "&confirm=1";
@@ -7120,12 +7111,16 @@ class DnsRecords extends Records {
                     urlencode($record->zone)
                     );
 
+                    if ($this->adminonly) $_zone_url.= sprintf ("&reseller_filter=%s",$record->reseller);
+
                     $_record_url = $this->url.sprintf("&service=%s@%s&zone_filter=%s&id_filter=%s",
                     urlencode($this->SoapEngine->service),
                     urlencode($this->SoapEngine->soapEngine),
                     urlencode($record->zone),
                     urlencode($record->id)
                     );
+
+                    if ($this->adminonly) $_record_url.= sprintf ("&reseller_filter=%s",$record->reseller);
 
                     if ($record->owner) {
                         $_owner_url = sprintf
@@ -7140,7 +7135,6 @@ class DnsRecords extends Records {
                     }          
 
 		            if ($this->fancy) {
-
                         printf("
                         <tr bgcolor=%s>
                         <td>%s</td>
@@ -7272,6 +7266,12 @@ class DnsRecords extends Records {
             return false;
         }
 
+        if ($this->adminonly) {
+			$this->initRemoteReplicationEngine($this->filters['reseller']);
+        } else {
+			$this->initRemoteReplicationEngine($this->reseller);
+        }
+
         $function=array('commit'   => array('name'       => $this->deleteRecordFunction,
                                             'parameters' => array($id),
                                             'logs'       => array('success' => sprintf('Dns record %s has been deleted',$id)))
@@ -7293,7 +7293,7 @@ class DnsRecords extends Records {
         } else {
             if (is_object($this->SoapEngineRemote)) {
                 $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                $result = call_user_func_array(array(&$this->SoapEngineRemote,$this->deleteRecordFunction),array($result));
+                $result = call_user_func_array(array(&$this->SoapEngineRemote,$this->deleteRecordFunction),array($id));
 
                 if (PEAR::isError($result)) {
                     $error_msg  = $result->getMessage();
@@ -7311,6 +7311,8 @@ class DnsRecords extends Records {
 
     function showAddForm() {
 
+        if ($this->adminonly && !$this->filters['reseller']) return;
+
         print "
         <p>
         <table border=0 class=border width=100% bgcolor=lightblue>
@@ -7318,6 +7320,11 @@ class DnsRecords extends Records {
         ";
 
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+
+        if ($this->adminonly) {
+        	printf (" <input type=hidden name=reseller_filter value='%s'>",$this->filters['reseller']);
+        }
+
         print "
         <td align=left>
         ";
@@ -7489,7 +7496,18 @@ class DnsRecords extends Records {
 
         $value=rtrim($value,".");
 
-        list($customer,$reseller)=$this->customerFromLogin($dictionary);
+        if ($this->adminonly) {
+            if ($dictionary['reseller']) {
+				$this->initRemoteReplicationEngine($dictionary['reseller']);
+            } else if ($this->filters['reseller']) {
+				$this->initRemoteReplicationEngine($this->filters['reseller']);
+            } else {
+            	printf ("<p><font color=red>Error: Missing reseller. </font>");
+                return false;
+            }
+        } else {
+			$this->initRemoteReplicationEngine($this->reseller);
+        }
 
         if ($dictionary['ttl']) {
             $ttl = intval($dictionary['ttl']);
@@ -7868,6 +7886,8 @@ class DnsRecords extends Records {
         if (!$record = $this->getRecord(intval($_REQUEST['id_filter']))) {
             return false;
         }
+
+		$this->initRemoteReplicationEngine($record->reseller);
 
         $record_old=$record;
 
