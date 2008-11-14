@@ -682,6 +682,132 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                                     'use' => 'encoded'));
         return $result;
     }
+
+    function &addGateway($gateway)
+    {
+        // gateway is a ComplexType Gateway,
+        // refer to wsdl for more info
+        $gateway = new SOAP_Value('gateway', '{urn:AGProjects:NGNPro}Gateway', $gateway);
+        $result = $this->call('addGateway',
+                              $v = array('gateway' => $gateway),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &updateGateway($gateway)
+    {
+        // gateway is a ComplexType Gateway,
+        // refer to wsdl for more info
+        $gateway = new SOAP_Value('gateway', '{urn:AGProjects:NGNPro}Gateway', $gateway);
+        $result = $this->call('updateGateway',
+                              $v = array('gateway' => $gateway),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &deleteGateway($name)
+    {
+        $result = $this->call('deleteGateway',
+                              $v = array('name' => $name),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getGateways($query)
+    {
+        // query is a ComplexType GatewayQuery,
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}GatewayQuery', $query);
+        $result = $this->call('getGateways',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &addCarrier($carrier)
+    {
+        // carrier is a ComplexType Carrier,
+        // refer to wsdl for more info
+        $carrier = new SOAP_Value('carrier', '{urn:AGProjects:NGNPro}Carrier', $carrier);
+        $result = $this->call('addCarrier',
+                              $v = array('carrier' => $carrier),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &deleteCarrier($name)
+    {
+        $result = $this->call('deleteCarrier',
+                              $v = array('name' => $name),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getCarriers($query)
+    {
+        // query is a ComplexType CarrierQuery,
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}CarrierQuery', $query);
+        $result = $this->call('getCarriers',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &addRoutes($routes)
+    {
+        // routes is a ComplexType RouteArray,
+        // refer to wsdl for more info
+        $routes = new SOAP_Value('routes', '{urn:AGProjects:NGNPro}RouteArray', $routes);
+        $result = $this->call('addRoutes',
+                              $v = array('routes' => $routes),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &deleteRoutes($routes)
+    {
+        // routes is a ComplexType RouteArray,
+        // refer to wsdl for more info
+        $routes = new SOAP_Value('routes', '{urn:AGProjects:NGNPro}RouteArray', $routes);
+        $result = $this->call('deleteRoutes',
+                              $v = array('routes' => $routes),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getRoutes($query)
+    {
+        // query is a ComplexType RouteQuery,
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}RouteQuery', $query);
+        $result = $this->call('getRoutes',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+
 }
 class WebService_NGNPro_VoicemailPort extends SOAP_Client_Custom
 {

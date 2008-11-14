@@ -218,30 +218,31 @@ class SoapEngine {
                                            'description'   => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. ',
                                            'resellers_only'=> true
                                            ),
-                        'pstn_gateway_groups' => array(
-                                           'records_class' => 'GatewayGroups',
-                                           'name'          => 'PSTN groups',
-                                           'soap_class'    => 'WebService_NGNPro_NetworkPort',
-                                           'category'      => 'pstn',
-                                           'description'   => 'Manage groups of gateways used to call to the PSTN. You must add individual gateways to each group. ',
-                                           'resellers_only'=> true
-                                           ),
-                        'pstn_gateways'  => array(
-                                           'records_class' => 'Gateways',
-                                           'name'          => 'PSTN gateways',
-                                           'soap_class'    => 'WebService_NGNPro_NetworkPort',
-                                           'category'      => 'pstn',
-                                           'description'   => 'Manage gateways used to call to the PSTN. Set the IP address and IP protocol. ',
-                                           'resellers_only'=> true
-                                           ),
-                        'pstn_routes'    => array(
-                                           'records_class' => 'Routes',
-                                           'name'          => 'PSTN routes',
-                                           'soap_class'    => 'WebService_NGNPro_NetworkPort',
-                                           'category'      => 'pstn',
-                                           'description'   => 'Assign gateways groups to PSTN prefixes. Use _ or % to match one or more characters. ',
-                                           'resellers_only'=> true
-                                           )
+                         'pstn_gateway_groups' => array(
+                                             'records_class' => 'GatewayGroups',
+                                             'name'          => 'PSTN carriers',
+                                             'soap_class'    => 'WebService_NGNPro_NetworkPort',
+                                             'category'      => 'pstn',
+                                             'description'   => 'Manage groups of gateways used to call to the PSTN. You must add individual gateways to each group. ',
+                                             'resellers_only'=> true
+                                             ),
+                          'pstn_gateways'  => array(
+                                             'records_class' => 'Gateways',
+                                             'name'          => 'PSTN gateways',
+                                             'soap_class'    => 'WebService_NGNPro_NetworkPort',
+                                             'category'      => 'pstn',
+                                             'description'   => 'Manage gateways used to call to the PSTN. Set the IP address and IP protocol. ',
+                                             'resellers_only'=> true
+                                             ),
+                          'pstn_routes'    => array(
+                                             'records_class' => 'Routes',
+                                             'name'          => 'PSTN routes',
+                                             'soap_class'    => 'WebService_NGNPro_NetworkPort',
+                                             'category'      => 'pstn',
+                                             'description'   => 'Assign gateways groups to PSTN prefixes. Use _ or % to match one or more characters. ',
+                                             'resellers_only'=> true
+                                             )
+
                         );
 
     function getSoapEngineAllowed($soapEngines,$filter) {
@@ -385,6 +386,35 @@ class SoapEngine {
                 $default_port='sip_accounts';
             }
 
+            if ($this->version > 3) {
+                $this->ports['pstn_gateway_groups'] = array(
+                                    'records_class' => 'Carriers',
+                                    'name'          => 'PSTN carrier',
+                                    'soap_class'    => 'WebService_NGNPro_SipPort',
+                                    'category'      => 'pstn',
+                                    'description'   => 'Manage carrier used to call to the PSTN. You must add individual gateways to each carrier. ',
+                                    'resellers_only'=> true
+                                    );
+    
+                $this->ports['pstn_gateways'] = array(
+                                    'records_class' => 'Gateways',
+                                    'name'          => 'PSTN gateways',
+                                    'soap_class'    => 'WebService_NGNPro_SipPort',
+                                    'category'      => 'pstn',
+                                    'description'   => 'Manage gateways used to call to the PSTN. Set the IP address and IP protocol. ',
+                                    'resellers_only'=> true
+                                    );
+    
+                $this->ports['pstn_routes'] = array(
+                                    'records_class' => 'Routes',
+                                    'name'          => 'PSTN routes',
+                                    'soap_class'    => 'WebService_NGNPro_SipPort',
+                                    'category'      => 'pstn',
+                                    'description'   => 'Assign gateways groups to PSTN prefixes. Use _ or % to match one or more characters. ',
+                                    'resellers_only'=> true
+                                    );
+            }
+
             if (count($this->allowedPorts[$this->soapEngine]) > 0 ) {
                 if (in_array($_els[0],$this->allowedPorts[$this->soapEngine])) {
                     $this->port=$_els[0];
@@ -495,6 +525,7 @@ class SoapEngine {
             $log=sprintf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soap_class,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
             dprint($log);
             $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+
 
             // Instantiate the SOAP client
             if (!class_exists($this->soap_class)) return ;
@@ -1246,31 +1277,59 @@ class Records {
     }
 
     function getGatewayGroups () {
-        $Query=array('filter'  => array('name'=>''),
-                     'orderBy' => array('attribute' => 'name',
-                                        'direction' => 'ASC'
-                                  ),
-                     'range'   => array('start' => 0,
-                                        'count' => 1000)
-                     );
+        if (count($this->gatewayGroups)) return true;
 
-        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
-        $result     = $this->SoapEngine->soapclient->getGatewayGroups($Query);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-            if ($this->version > 1) {
-                foreach ($result->groups as $_grp){
-                    $this->gatewayGroups[]=$_grp->name;
-                }
+        if ($this->version > 3 ) {
+            $Query=array('filter'  => array('name'=>''),
+                         'orderBy' => array('attribute' => 'name',
+                                            'direction' => 'ASC'
+                                      ),
+                         'range'   => array('start' => 0,
+                                            'count' => 1000)
+                         );
+    
+            $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+            $result     = $this->SoapEngine->soapclient->getCarriers($Query);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
             } else {
-                if (is_array($result->groups)) {
-                    $this->gatewayGroups=$result->groups;
+                foreach ($result->carriers as $_carrier){
+                	$this->gatewayGroups[]=$_carrier->name;
+                }
+            }
+
+        } else {
+            $Query=array('filter'  => array('name'=>''),
+                         'orderBy' => array('attribute' => 'name',
+                                            'direction' => 'ASC'
+                                      ),
+                         'range'   => array('start' => 0,
+                                            'count' => 1000)
+                         );
+    
+            $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+            $result     = $this->SoapEngine->soapclient->getGatewayGroups($Query);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+                if ($this->version > 1) {
+                    foreach ($result->groups as $_grp){
+                        $this->gatewayGroups[]=$_grp->name;
+                    }
+                } else {
+                    if (is_array($result->groups)) {
+                        $this->gatewayGroups=$result->groups;
+                    }
                 }
             }
         }
@@ -8284,6 +8343,305 @@ class TrustedPeers extends Records {
     }
 
 }
+class Carriers extends Records {
+    var $carriers=array();
+
+    var $sortElements=array(
+                            'name'   => 'Name'
+                            );
+
+    function showCustomerTextBox () {
+        print "Reseller";
+        $this->showResellerForm('reseller');
+    }
+
+    function Carriers(&$SoapEngine) {
+        $this->filters   = array('name'   => trim($_REQUEST['name_filter'])
+                                 );
+
+        $this->Records(&$SoapEngine);
+    }
+
+    function listRecords() {
+
+        $this->showSeachForm();
+
+        // Insert credetials
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+
+        // Filter
+        $filter=array('name'     => $this->filters['name'],
+                      'reseller' => intval($this->filters['reseller'])
+                      );
+
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'name';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'ASC';
+
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'orderBy' => $orderBy,
+                     'range'   => $range
+                     );
+
+        // Call function
+        $result     = $this->SoapEngine->soapclient->getCarriers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+            $this->rows = $result->total;
+
+            print "
+            <table border=0 align=center>
+            <tr><td>$this->rows records found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            ";
+
+            print "
+            <tr bgcolor=lightgrey>
+                <td><b>Id</b></th>
+                <td><b>Reseller</b></td>
+                <td><b>Name</b></th>
+                <td><b>Change date</b></td>
+                <td><b>Actions</b></td>
+            </tr>
+            ";
+
+            if (!$this->next)  $this->next=0;
+
+            if ($this->rows > $this->maxrowsperpage)  {
+                $maxrows = $this->maxrowsperpage + $this->next;
+                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+            } else {
+                $maxrows=$this->rows;
+            }
+
+            $i=0;
+
+            if ($this->rows) {
+                while ($i < $maxrows)  {
+    
+                    if (!$result->carriers[$i]) break;
+    
+                    $carrier = $result->carriers[$i];
+    
+                    $index=$this->next+$i+1;
+
+                    $rr=floor($index/2);
+                    $mod=$index-$rr*2;
+            
+                    if ($mod ==0) {
+                        $bgcolor="lightgrey";
+                    } else {
+                        $bgcolor="white";
+                    }
+
+                    if ($this->version > 1) {
+                        $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s",
+                        urlencode($this->SoapEngine->service),
+                        urlencode($carrier->name)
+                        );
+
+                        $_carrier_url = $this->url.sprintf("&service=pstn_gateways@%s&carrier_filter=%s",
+                        urlencode($this->SoapEngine->soapEngine),
+                        urlencode($carrier->name)
+                        );
+
+
+                        if ($_REQUEST['action'] == 'Delete' &&
+                            $_REQUEST['name_filter'] == $carrier->name) {
+                            $_url .= "&confirm=1";
+                            $actionText = "<font color=red>Confirm</font>";
+                        } else {
+                            $actionText = "Delete";
+                        }
+
+                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SoapEngine->customer_engine),
+                        urlencode($carrier->customer)
+                        );
+    
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        <td><a href=%s>%s</a></td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $carrier->reseller,
+                        $_carrier_url,
+                        $carrier->name,
+                        $carrier->changeDate,
+                        $_url,
+                        $actionText
+                        );
+    
+                        printf("
+                        </tr>
+                        ");
+                    } else {
+                        $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s",
+                        urlencode($this->SoapEngine->service),
+                        urlencode($carrier)
+                        );
+
+                        if ($_REQUEST['action'] == 'Delete' &&
+                            $_REQUEST['name_filter'] == $carrier) {
+                            $_url .= "&confirm=1";
+                            $actionText = "<font color=red>Confirm</font>";
+                        } else {
+                            $actionText = "Delete";
+                        }
+
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $carrier,
+                        $_url,
+                        $actionText
+                        );
+    
+                        printf("
+                        </tr>
+                        ");
+                    }
+
+                    $i++;
+    
+                }
+    
+            }
+
+            print "</table>";
+
+            $this->showPagination($maxrows);
+
+            return true;
+        }
+    }
+
+    function showAddForm() {
+        if ($this->selectionActive) return;
+        print "
+        <p>
+        <table border=0 class=border width=100% bgcolor=lightblue>
+        <tr>
+            ";
+            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            print "
+            <td align=left>
+            ";
+
+            print "
+            <input type=submit name=action value=Add>
+            ";
+
+            $this->showCustomerTextBox();
+
+            printf (" Name<input type=text size=20 name=name>");
+
+            print "
+            </td>
+            <td align=right>
+            ";
+
+            print "
+            </td>
+            ";
+            $this->printHiddenFormElements();
+
+            print "
+            </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function addRecord($dictionary=array()) {
+
+        if ($dictionary['name']) {
+            $name=$dictionary['name'];
+        } else {
+            $name = trim($_REQUEST['name']);
+        }
+
+        list($customer,$reseller)=$this->customerFromLogin($dictionary);
+
+        $structure=array('name'     => $name,
+                         'reseller' => intval($reseller)
+                         );
+
+
+        if (!strlen($name)) {
+            printf ("<p><font color=red>Error: Missing name. </font>");
+            return false;
+        }
+
+        $function=array('commit'   => array('name'       => 'addCarrier',
+                                            'parameters' => array($structure),
+                                            'logs'       => array('success' => sprintf('Carrier %s has been added',$name)))
+                        );
+     
+        return $this->SoapEngine->execute($function,$this->html);
+    }
+
+    function deleteRecord($dictionary=array()) {
+        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
+            print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
+            return true;
+        }
+
+        if ($dictionary['name']) {
+            $name   = $dictionary['name'];
+        } else {
+            $name   = trim($this->filters['name']);
+        }
+
+        if (!strlen($name)) {
+            print "<p><font color=red>Error: missing gateway group name </font>";
+            return false;
+        }
+
+        $function=array('commit'   => array('name'       => 'deleteCarrier',
+                                            'parameters' => array($name),
+                                            'logs'       => array('success' => sprintf('Carrier %s has been deleted',$name)))
+                        );
+     
+        unset($this->filters);
+        return $this->SoapEngine->execute($function,$this->html);
+    }
+
+    function showSeachFormCustom() {
+        printf (" Name<input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
+    }
+
+}
 
 class GatewayGroups extends Records {
     var $gatewayGroups=array();
@@ -8616,7 +8974,7 @@ class Gateways extends Records {
     }
 
     function listRecords() {
-        $this->getGatewayGroups();
+    	$this->getGatewayGroups();
 
         $this->showSeachForm();
 
@@ -8624,11 +8982,19 @@ class Gateways extends Records {
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
         // Filter
-        $filter=array('name'  => $this->filters['name'],
-                      'group' => $this->filters['group'],
-                      'customer' => intval($this->filters['customer']),
-                      'reseller' => intval($this->filters['reseller'])
-                      );
+        if ($this->version > 3) {
+            $filter=array('name'  => $this->filters['name'],
+                          'carrier' => $this->filters['group'],
+                          'customer' => intval($this->filters['customer']),
+                          'reseller' => intval($this->filters['reseller'])
+                          );
+        } else {
+            $filter=array('name'  => $this->filters['name'],
+                          'group' => $this->filters['group'],
+                          'customer' => intval($this->filters['customer']),
+                          'reseller' => intval($this->filters['reseller'])
+                          );
+        }
 
         // Range
         $range=array('start' => intval($this->next),
@@ -8674,11 +9040,21 @@ class Gateways extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) {
+                if ($this->version > 3) {
+                    print "
+                    <td><b>Reseller</b></td>
+                    <td><b>Name</b></th>
+                    <td><b>Carrier</b></td>
+                    <td><b>Address</b></td>
+                    <td><b>Rules</b></td>
+                    <td><b>Change date</b></td>
+                    <td><b>Actions</b></td>
+                    ";
+                } else if ($this->version > 1) {
                     print "
                     <td><b>Customer</b></td>
                     <td><b>Name</b></th>
-                    <td><b>Group</b></td>
+                    <td><b>Carrier</b></td>
                     <td><b>Address</b></td>
                     <td><b>Strip</b></td>
                     <td><b>Prefix</b></td>
@@ -8741,7 +9117,53 @@ class Gateways extends Records {
                         $actionText = "Delete";
                     }
 
-                    if ($this->version > 1) {
+                    if ($this->version > 3) {
+                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SoapEngine->customer_engine),
+                        urlencode($gateway->reseller)
+                        );
+
+                        $rules='';
+                        $_id=0;
+                        foreach ($gateway->rules as $_rule) {
+                            $_id++;
+                            $rules .= sprintf ("<tr><td colspan=2><b>Rule %d</b></td></tr>",$_id);
+                        	foreach ($_rule as $_key => $_value) {
+                            	$rules .= sprintf ("<tr><td>%s</td><td>%s</td></tr>",$_key,$_value);
+                            }
+
+                        }
+
+                        printf("
+                        <tr bgcolor=%s>
+                        <td valign=top>%s</td>
+                        <td valign=top><a href=%s>%s</a></td>
+                        <td valign=top>%s</td>
+                        <td valign=top>%s</td>
+                        <td valign=top>%s:%s:%s</td>
+                        <td valign=top><table border=0>%s</table></td>
+                        <td valign=top>%s</td>
+                        <td valign=top><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $gateway->reseller,
+                        $gateway->name,
+                        $gateway->carrier,
+                        $gateway->transport,
+                        $gateway->ip,
+                        $gateway->port,
+                        $rules,
+                        $gateway->changeDate,
+                        $_url,
+                        $actionText
+                        );
+    
+                        printf("
+                        </tr>
+                        ");
+                    } else if ($this->version > 1) {
                         $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                         urlencode($this->SoapEngine->customer_engine),
                         urlencode($gateway->customer)
@@ -8858,15 +9280,18 @@ class Gateways extends Records {
             printf (" </select>");
 
             printf (" Address<input type=text size=25 name=address>");
-            printf (" Strip: <select name=strip>");
-            $t=0;
-            while ($t<10) {
-                print "<option value=$t>$t digits";
-                $t++;
-            }
 
-            print "</select>";
-            printf (" Add prefix<input type=text size=5 name=prefix>");
+            if ($this->version < 4) {
+                printf (" Strip: <select name=strip>");
+                $t=0;
+                while ($t<10) {
+                    print "<option value=$t>$t digits";
+                    $t++;
+                }
+    
+                print "</select>";
+                printf (" Add prefix<input type=text size=5 name=prefix>");
+            }
 
             print "
             </td>
@@ -8936,20 +9361,30 @@ class Gateways extends Records {
             }
         }
 
-        $gateway=array(
-                     'name'      => $name,
-                     'group'     => $group,
-                     'ip'        => $ip,
-                     'port'      => intval($port),
-                     'uriScheme' => 'sip',
-                     'transport' => $transport,
-                     'strip'     => intval($strip),
-                     'prefix'    => $prefix
-                    );
+        if ($this->version > 3) {
+            $gateway=array(
+                         'name'      => $name,
+                         'carrier'   => $group,
+                         'ip'        => $ip,
+                         'port'      => intval($port),
+                         'transport' => $transport
+                        );
+        } else {
+            $gateway=array(
+                         'name'      => $name,
+                         'group'     => $group,
+                         'ip'        => $ip,
+                         'port'      => intval($port),
+                         'uriScheme' => 'sip',
+                         'transport' => $transport,
+                         'strip'     => intval($strip),
+                         'prefix'    => $prefix
+                        );
+        }
 
         $function=array('commit'   => array('name'       => 'addGateway',
                                             'parameters' => array($gateway),
-                                            'logs'       => array('success' => sprintf('Gateway grup %s has been added',$address)))
+                                            'logs'       => array('success' => sprintf('Gateway %s has been added',$address)))
                         );
      
         unset($this->filters);
@@ -8975,7 +9410,7 @@ class Gateways extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteGateway',
                                             'parameters' => array($name),
-                                            'logs'       => array('success' => sprintf('Gateway grup %s has been deleted',$name)))
+                                            'logs'       => array('success' => sprintf('Gateway %s has been deleted',$name)))
                         );
         unset($this->filters);
         return $this->SoapEngine->execute($function,$this->html);
@@ -9075,11 +9510,21 @@ class Routes extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) {
+                if ($this->version > 3) {
+                    print "
+                    <td><b>Reseller</b></td>
+                    <td><b>Prefix</b></th>
+                    <td><b>Originator</b></td>
+                    <td><b>Carrier</b></td>
+                    <td><b>Priority</b></td>
+                    <td><b>Change date</b></td>
+                    <td><b>Actions</b></td>
+                    ";
+                } else if ($this->version > 1) {
                     print "
                     <td><b>Customer</b></td>
                     <td><b>Prefix</b></th>
-                    <td><b>Gateway Group</b></td>
+                    <td><b>Carriers</b></td>
                     <td><b>Priority</b></td>
                     <td><b>Change date</b></td>
                     <td><b>Actions</b></td>
@@ -9126,25 +9571,84 @@ class Routes extends Records {
                         $bgcolor="white";
                     }
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&gatewayGroup_filter=%s&priority_filter=%s",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($route->prefix),
-                    urlencode($route->gatewayGroup),
-                    urlencode($route->priority)
-                    );
+                    if ($this->version > 3) {
+                        $_url = $this->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&gatewayGroup_filter=%s&priority_filter=%s",
+                        urlencode($this->SoapEngine->service),
+                        urlencode($route->prefix),
+                        urlencode($route->gatewayGroup),
+                        urlencode($route->priority)
+                        );
+                        if ($_REQUEST['action'] == 'Delete' &&
+                            $_REQUEST['prefix_filter'] == $route->prefix &&
+                            $_REQUEST['carrier_filter'] == $route->carrier &&
+                            $_REQUEST['priority_filter'] == $route->priority) {
+    
+                            $_url .= "&confirm=1";
+                            $actionText = "<font color=red>Confirm</font>";
+                        } else {
+                            $actionText = "Delete";
+                        }
 
-                    if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['prefix_filter'] == $route->prefix &&
-                        $_REQUEST['gatewayGroup_filter'] == $route->gatewayGroup &&
-                        $_REQUEST['priority_filter'] == $route->priority) {
-
-                        $_url .= "&confirm=1";
-                        $actionText = "<font color=red>Confirm</font>";
                     } else {
-                        $actionText = "Delete";
+                        $_url = $this->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&carrier_filter=%s&priority_filter=%s",
+                        urlencode($this->SoapEngine->service),
+                        urlencode($route->prefix),
+                        urlencode($route->carrier),
+                        urlencode($route->priority)
+                        );
+                        if ($_REQUEST['action'] == 'Delete' &&
+                            $_REQUEST['prefix_filter'] == $route->prefix &&
+                            $_REQUEST['gatewayGroup_filter'] == $route->gatewayGroup &&
+                            $_REQUEST['priority_filter'] == $route->priority) {
+    
+                            $_url .= "&confirm=1";
+                            $actionText = "<font color=red>Confirm</font>";
+                        } else {
+                            $actionText = "Delete";
+                        }
+
                     }
 
-                    if ($this->version > 1) {
+                    if ($this->version > 3) {
+                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SoapEngine->customer_engine),
+                        urlencode($route->reseller)
+                        );
+
+                        $_group_url = $this->url.sprintf("&service=pstn_gateways@%s&carrier_filter=%s",
+                        urlencode($this->SoapEngine->soapEngine),
+                        urlencode($route->carrier)
+                        );
+
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $route->reseller,
+                        $route->prefix,
+                        $route->originator,
+                        $_group_url,
+                        $route->carrier,
+                        $route->priority,
+                        $route->changeDate,
+                        $_url,
+                        $actionText
+                        );
+    
+                        printf("
+                        </tr>
+                        ");
+                    } else if ($this->version > 1) {
                         $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                         urlencode($this->SoapEngine->customer_engine),
                         urlencode($route->customer)
@@ -9242,11 +9746,13 @@ class Routes extends Records {
             <input type=submit name=action value=Add>
             ";
 
+            printf (" Originator<input type=text size=20 name=originator>");
+
             printf (" Prefix<input type=text size=20 name=prefix>");
 
             printf (" Group: ");
 
-            print "<select name=gatewayGroup> ";
+            print "<select name=group> ";
             foreach ($this->gatewayGroups as $_grp) {
                 printf ("<option value='%s'>%s",$_grp,$_grp);
             }
@@ -9277,10 +9783,15 @@ class Routes extends Records {
         } else {
             $prefix   = trim($_REQUEST['prefix']);
         }
-        if ($dictionary['gatewayGroup']) {
-            $gatewayGroup   = $dictionary['gatewayGroup'];
+        if ($dictionary['group']) {
+            $group   = $dictionary['group'];
         } else {
-            $gatewayGroup   = trim($_REQUEST['gatewayGroup']);
+            $group   = trim($_REQUEST['group']);
+        }
+        if ($dictionary['originator']) {
+            $originator   = $dictionary['originator'];
+        } else {
+            $originator   = trim($_REQUEST['originator']);
         }
         if ($dictionary['priority']) {
             $priority   = $dictionary['priority'];
@@ -9288,17 +9799,30 @@ class Routes extends Records {
             $priority   = trim($_REQUEST['priority']);
         }
 
-        //if (!strlen($prefix) || !strlen($gatewayGroup)) {
-        if (!strlen($gatewayGroup)) {
-            printf ("<p><font color=red>Error: Missing gatewayGroup. </font>");
-            return false;
+        if ($this->version > 3 ) {
+            if (!strlen($group)) {
+                printf ("<p><font color=red>Error: Missing carrier. </font>");
+                return false;
+            }
+    
+            $route=array(
+                         'prefix'       => $prefix,
+                         'originator'   => $originator,
+                         'carrier'      => $group,
+                         'priority'     => intval($priority)
+                         );
+        } else {
+            if (!strlen($group)) {
+                printf ("<p><font color=red>Error: Missing gatewayGroup. </font>");
+                return false;
+            }
+    
+            $route=array(
+                         'prefix'       => $prefix,
+                         'gatewayGroup' => $gatewayGroup,
+                         'priority'     => intval($priority)
+                         );
         }
-
-        $route=array(
-                     'prefix'       => $prefix,
-                     'gatewayGroup' => $gatewayGroup,
-                     'priority'     => intval($priority)
-                     );
 
         $routes=array($route);
 
