@@ -371,15 +371,30 @@ prepaid
 +------------------+
 | id               |
 | account          |
-| disabled         |
 | balance          |
-| balance_previous |
 | change_date      |
-| expires          |
 | call_lock        |
-| call_in_progress |
 | last_call_price  |
+| destination      |
+| active_sessions  |
+| maxsessiontime   |
+| call_in_progress |
+| session_counter  |
 +------------------+
+
+prepaid_history
++----------+
+| Field    |
++----------+
+| id       | 
+| username | 
+| domain   | 
+| action   | 
+| number   | 
+| value    | 
+| balance  | 
+| date     | 
++----------+
 
 billing_enum_tlds
 +-------------+
