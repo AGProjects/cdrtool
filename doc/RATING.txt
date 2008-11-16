@@ -32,14 +32,27 @@ be provisioned. Multiple time zones are supported for multiple billing
 parties hosted on the same platform.
 
 
-Determination of application type
----------------------------------
+Rating logic
+------------
+
+The following steps are performed to rate a CDR:
+
+1. Determination of application type
+2. Determination of the billing party
+3. Determination of the destination
+4. Determination of the costs
+
+The steps are described in detial below.
+
+
+1. Determination of application type
+------------------------------------
 
 The only supported application type is 'audio'.
 
 
-Determination of the billing party
------------------------------------
+2. Determination of the billing party
+-------------------------------------
 
 CDRTool identifies the rating plans associated with a session based on a
 Billing Party entity, which is calculated on the fly. The calculus is based
@@ -62,8 +75,8 @@ not use hostnames for this field.
 They both relate to the source IP address that generated the SIP session.
 
 
-Determination of the destination
---------------------------------
+3. Determination of the destination
+-----------------------------------
 
 CDRTool identifies the destination for which to perform the rating based on
 one of the destination fields from the accounting table. The destination is
@@ -82,11 +95,11 @@ A destination ID is then calculated based on the longest match of this
 destination in the billing_destinations table and the billing party.
 
 
-PSTN rating 
------------
+4. Determination of one time and recurrent costs
+------------------------------------------------
 
 The following steps are taken to rate the calls terminated to PSTN based on
-the destination ID and billing party found in previous steps. 
+the destination ID and the billing party found in previous steps.
 
 1. Lookup the billing Profile in cdrtool.billing_customers table in the
    following order: subscriber,domain,gateway (based on $this->dayofweek):
@@ -253,11 +266,13 @@ The results of the import operation is logged in the database and can be
 viewed in the Log section of the web interface and the syslog.
 
 
-Rating tables
---------------
+MySQL schema
+------------
 
-To see the tables structures use describe table_name after connecting to
-cdrtool database. Run show tables and describe table_name:
+To see the rating tables and their structures connect to the cdrtool
+database using mysql client.
+
+Run 'show tables' and 'describe table_name':
  
 billing_customers
 +-------------------+
@@ -380,8 +395,8 @@ billing_enum_tlds
 +-------------+
 
 
-Rating tables management
-------------------------
+Web based rating tables management
+----------------------------------
 
 The rating tables can be edited from the web, click on Rating tables link.
 One may insert/update/delete records or apply changes on selections. For
@@ -453,12 +468,11 @@ To apply discounts based on ENUM certain conditions must be met.
 Reloading rating tables
 -----------------------
 
-The rating engine is a daemon sued for prepaid and other services, which
-loads all rating tables and remains active in the server memory. Reload of
-rating tables is possible without stopping the daemon by connecting to it
-and issuing the reload command. The init.d script can also be used for
-reloading the rating engine with the current values from the rating
-database.
+The rating engine loads some of the rating tables in the memory, when the
+tables change a reload is needed. Reload of rating tables is possible
+without stopping the daemon by connecting to it and issuing the reload
+command. The init.d script can also be used for reloading the rating engine
+with the current values from the rating database.
 
 There are 3 ways of reloading the rating tables:
 
@@ -571,9 +585,9 @@ CDRTool in the prepaid table the balance by using + or -.
 Known limitations
 -----------------
 
-The rating engine does not calculate prcies based on the outbound carriers
-or outbound gateways, the rates are based per calling party and not per
-called party.
+The rating engine does not calculate prices based on the outbound carriers
+or outbound gateways, the rating plan is is assigned by the calling party
+and not by called party.
 
 Price discounts (except those based on ENUM tld) must be applied outside
 CDRTool, in the billing system that prints the actual invoices. CDRTool has
