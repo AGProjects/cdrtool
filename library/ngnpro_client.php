@@ -218,30 +218,30 @@ class SoapEngine {
                                            'description'   => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. ',
                                            'resellers_only'=> true
                                            ),
-                         'pstn_gateway_groups' => array(
-                                             'records_class' => 'GatewayGroups',
-                                             'name'          => 'PSTN carriers',
-                                             'soap_class'    => 'WebService_NGNPro_NetworkPort',
-                                             'category'      => 'pstn',
-                                             'description'   => 'Manage groups of gateways used to call to the PSTN. You must add individual gateways to each group. ',
-                                             'resellers_only'=> true
-                                             ),
+                         'pstn_carriers' => array(
+                                           'records_class' => 'GatewayGroups',
+                                           'name'          => 'PSTN carriers',
+                                           'soap_class'    => 'WebService_NGNPro_NetworkPort',
+                                           'category'      => 'pstn',
+                                           'description'   => 'Manage groups of gateways used to call to the PSTN. You must add individual gateways to each group. ',
+                                           'resellers_only'=> true
+                                           ),
                           'pstn_gateways'  => array(
-                                             'records_class' => 'Gateways',
-                                             'name'          => 'PSTN gateways',
-                                             'soap_class'    => 'WebService_NGNPro_NetworkPort',
-                                             'category'      => 'pstn',
-                                             'description'   => 'Manage gateways used to call to the PSTN. Set the IP address and IP protocol. ',
-                                             'resellers_only'=> true
-                                             ),
+                                           'records_class' => 'Gateways',
+                                           'name'          => 'PSTN gateways',
+                                           'soap_class'    => 'WebService_NGNPro_NetworkPort',
+                                           'category'      => 'pstn',
+                                           'description'   => 'Manage gateways used to call to the PSTN. Set the IP address and IP protocol. ',
+                                           'resellers_only'=> true
+                                           ),
                           'pstn_routes'    => array(
-                                             'records_class' => 'Routes',
-                                             'name'          => 'PSTN routes',
-                                             'soap_class'    => 'WebService_NGNPro_NetworkPort',
-                                             'category'      => 'pstn',
-                                             'description'   => 'Assign gateways groups to PSTN prefixes. Use _ or % to match one or more characters. ',
-                                             'resellers_only'=> true
-                                             )
+                                           'records_class' => 'Routes',
+                                           'name'          => 'PSTN routes',
+                                           'soap_class'    => 'WebService_NGNPro_NetworkPort',
+                                           'category'      => 'pstn',
+                                           'description'   => 'Assign gateways groups to PSTN prefixes. Use _ or % to match one or more characters. ',
+                                           'resellers_only'=> true
+                                           )
 
                         );
 
@@ -387,32 +387,9 @@ class SoapEngine {
             }
 
             if ($this->version > 3) {
-                $this->ports['pstn_gateway_groups'] = array(
-                                    'records_class' => 'Carriers',
-                                    'name'          => 'PSTN carrier',
-                                    'soap_class'    => 'WebService_NGNPro_SipPort',
-                                    'category'      => 'pstn',
-                                    'description'   => 'Manage carrier used to call to the PSTN. You must add individual gateways to each carrier. ',
-                                    'resellers_only'=> true
-                                    );
-    
-                $this->ports['pstn_gateways'] = array(
-                                    'records_class' => 'Gateways',
-                                    'name'          => 'PSTN gateways',
-                                    'soap_class'    => 'WebService_NGNPro_SipPort',
-                                    'category'      => 'pstn',
-                                    'description'   => 'Manage gateways used to call to the PSTN. Set the IP address and IP protocol. ',
-                                    'resellers_only'=> true
-                                    );
-    
-                $this->ports['pstn_routes'] = array(
-                                    'records_class' => 'Routes',
-                                    'name'          => 'PSTN routes',
-                                    'soap_class'    => 'WebService_NGNPro_SipPort',
-                                    'category'      => 'pstn',
-                                    'description'   => 'Assign gateways groups to PSTN prefixes. Use _ or % to match one or more characters. ',
-                                    'resellers_only'=> true
-                                    );
+                $this->ports['pstn_carriers']['soap_class'] = 'WebService_NGNPro_SipPort';
+                $this->ports['pstn_gateways']['soap_class'] = 'WebService_NGNPro_SipPort';
+                $this->ports['pstn_routes']['soap_class']   = 'WebService_NGNPro_SipPort';
             }
 
             if (count($this->allowedPorts[$this->soapEngine]) > 0 ) {
@@ -1277,7 +1254,7 @@ class Records {
     }
 
     function getGatewayGroups () {
-        if (count($this->gatewayGroups)) return true;
+        if (count($this->carriers)) return true;
 
         if ($this->version > 3 ) {
             $Query=array('filter'  => array('name'=>''),
@@ -1299,7 +1276,7 @@ class Records {
                 return false;
             } else {
                 foreach ($result->carriers as $_carrier){
-                	$this->gatewayGroups[]=$_carrier->name;
+                	$this->carriers[]=$_carrier->name;
                 }
             }
 
@@ -1324,11 +1301,11 @@ class Records {
             } else {
                 if ($this->version > 1) {
                     foreach ($result->groups as $_grp){
-                        $this->gatewayGroups[]=$_grp->name;
+                        $this->carriers[]=$_grp->name;
                     }
                 } else {
                     if (is_array($result->groups)) {
-                        $this->gatewayGroups=$result->groups;
+                        $this->carriers=$result->groups;
                     }
                 }
             }
@@ -9249,8 +9226,8 @@ class Gateways extends Records {
 
         $this->getGatewayGroups();
 
-        if (!count($this->gatewayGroups)) {
-            print "<p>Create a gateway group first";
+        if (!count($this->carriers)) {
+            print "<p>Create a carrier first";
             return false;
         }
 
@@ -9270,11 +9247,11 @@ class Gateways extends Records {
 
             printf (" Name<input type=text size=20 name=name>");
 
-            printf (" Group: ");
+            printf (" Carrier: ");
 
 
             print "<select name=group> ";
-            foreach ($this->gatewayGroups as $_grp) {
+            foreach ($this->carriers as $_grp) {
                 printf ("<option value='%s'>%s",$_grp,$_grp);
             }
             printf (" </select>");
@@ -9421,9 +9398,9 @@ class Gateways extends Records {
         printf (" Name<input type=text size=15 name=name_filter value='%s'>",$this->filters['name']);
         print "
         <select name=group_filter>
-        <option value=''>Group";
+        <option value=''>Carrier";
         $selected_group[$this->filters['group']]='selected';
-        foreach ($this->gatewayGroups as $_grp) {
+        foreach ($this->carriers as $_grp) {
             printf ("<option value='%s' %s>%s",$_grp,$selected_group[$_grp],$_grp);
         }
         printf (" </select>");
@@ -9727,8 +9704,8 @@ class Routes extends Records {
     function showAddForm() {
         if ($this->selectionActive) return;
 
-        if (!count($this->gatewayGroups)) {
-            print "<p>Create a gateway group first";
+        if (!count($this->carriers)) {
+            print "<p>Create a carrier first";
             return false;
         }
 
@@ -9736,42 +9713,43 @@ class Routes extends Records {
         <p>
         <table border=0 class=border width=100% bgcolor=lightblue>
         <tr>
-            ";
-            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-            print "
-            <td align=left>
-            ";
+        ";
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "
+        <td align=left>
+        ";
 
-            print "
-            <input type=submit name=action value=Add>
-            ";
+        print "
+        <input type=submit name=action value=Add>
+        ";
 
-            printf (" Originator<input type=text size=20 name=originator>");
+        if ($this->version > 3) {
+        	printf (" Originator<input type=text size=20 name=originator>");
+        }
+        printf (" Prefix<input type=text size=20 name=prefix>");
 
-            printf (" Prefix<input type=text size=20 name=prefix>");
+        printf (" Carrier: ");
 
-            printf (" Group: ");
+        print "<select name=group> ";
+        foreach ($this->carriers as $_grp) {
+            printf ("<option value='%s'>%s",$_grp,$_grp);
+        }
 
-            print "<select name=group> ";
-            foreach ($this->gatewayGroups as $_grp) {
-                printf ("<option value='%s'>%s",$_grp,$_grp);
-            }
+        printf (" </select>");
+        printf (" Priority<input type=text size=5 name=priority>");
 
-            printf (" </select>");
-            printf (" Priority<input type=text size=5 name=priority>");
+        print "
+        </td>
+        <td align=right>
+        ";
+        print "
+        </td>
+        ";
 
-            print "
-            </td>
-            <td align=right>
-            ";
-            print "
-            </td>
-            ";
+        $this->printHiddenFormElements();
 
-            $this->printHiddenFormElements();
-
-            print "
-            </form>
+        print "
+        </form>
         </tr>
         </table>
         ";
@@ -9886,9 +9864,9 @@ class Routes extends Records {
         print "
         <select name=gatewayGroup_filter>
         <option value=''>Group";
-        $selected_gatewayGroups[$this->filters['gatewayGroup']]='selected';
-        foreach ($this->gatewayGroups as $_grp) {
-            printf ("<option value='%s' %s>%s",$_grp,$selected_gatewayGroups[$_grp],$_grp);
+        $selected_carriers[$this->filters['gatewayGroup']]='selected';
+        foreach ($this->carriers as $_grp) {
+            printf ("<option value='%s' %s>%s",$_grp,$selected_carriers[$_grp],$_grp);
         }
         printf (" </select>");
 
