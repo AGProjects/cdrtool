@@ -388,6 +388,8 @@ class SoapEngine {
 
             if ($this->version > 3) {
                 $this->ports['pstn_carriers']['soap_class'] = 'WebService_NGNPro_SipPort';
+                $this->ports['pstn_carriers']['records_class']= 'Carriers';
+
                 $this->ports['pstn_gateways']['soap_class'] = 'WebService_NGNPro_SipPort';
                 $this->ports['pstn_routes']['soap_class']   = 'WebService_NGNPro_SipPort';
             }
@@ -8327,16 +8329,16 @@ class Carriers extends Records {
                             'name'   => 'Name'
                             );
 
-    function showCustomerTextBox () {
-        print "Reseller";
-        $this->showResellerForm('reseller');
-    }
-
     function Carriers(&$SoapEngine) {
         $this->filters   = array('name'   => trim($_REQUEST['name_filter'])
                                  );
 
         $this->Records(&$SoapEngine);
+    }
+
+    function showCustomerTextBox () {
+        print "Reseller";
+        $this->showResellerForm('reseller');
     }
 
     function listRecords() {
@@ -9023,7 +9025,11 @@ class Gateways extends Records {
                     <td><b>Name</b></th>
                     <td><b>Carrier</b></td>
                     <td><b>Address</b></td>
-                    <td><b>Rules</b></td>
+                    <td><b>Prefix</b></td>
+                    <td><b>Strip</b></td>
+                    <td><b>Prepend</b></td>
+                    <td><b>Min</b></td>
+                    <td><b>Max</b></td>
                     <td><b>Change date</b></td>
                     <td><b>Actions</b></td>
                     ";
@@ -9100,46 +9106,101 @@ class Gateways extends Records {
                         urlencode($gateway->reseller)
                         );
 
-                        $rules='';
-                        $_id=0;
-                        foreach ($gateway->rules as $_rule) {
-                            $_id++;
-                            $rules .= sprintf ("<tr><td colspan=2><b>Rule %d</b></td></tr>",$_id);
-                        	foreach ($_rule as $_key => $_value) {
-                            	$rules .= sprintf ("<tr><td>%s</td><td>%s</td></tr>",$_key,$_value);
+                        $_r=0;
+
+                        if (count($gateway->rules)) {
+                            foreach ($gateway->rules as $_rule) {
+                                $_r++;
+                                if ($_r == 1) {
+                                    printf("
+                                    <tr bgcolor=%s>
+                                    <td valign=top>%s</td>
+                                    <td valign=top><a href=%s>%s</a></td>
+                                    <td valign=top>%s</td>
+                                    <td valign=top>%s</td>
+                                    <td valign=top>%s:%s:%s</td>
+                                    <td valign=top>%s</td>
+                                    <td valign=top>%s</td>
+                                    <td valign=top>%s</td>
+                                    <td valign=top>%s</td>
+                                    <td valign=top>%s</td>
+                                    <td valign=top>%s</td>
+                                    <td valign=top><a href=%s>%s</a></td>
+                                    </tr>",
+                                    $bgcolor,
+                                    $index,
+                                    $_customer_url,
+                                    $gateway->reseller,
+                                    $gateway->name,
+                                    $gateway->carrier,
+                                    $gateway->transport,
+                                    $gateway->ip,
+                                    $gateway->port,
+                                    $_rule->prefix,
+                                    $_rule->strip,
+                                    $_rule->prepend,
+                                    $_rule->min_length,
+                                    $_rule->max_length,
+                                    $gateway->changeDate,
+                                    $_url,
+                                    $actionText
+                                    );
+                
+                                } else {
+    
+                                    printf("
+                                    <tr bgcolor=%s>
+                                    <td valign=top colspan=5></td>
+                                    <td valign=top>%s</td>
+                                    <td valign=top>%s</td>
+                                    <td valign=top>%s</td>
+                                    <td valign=top>%s</td>
+                                    <td valign=top>%s</td>
+                                    <td valign=top colspan=2></td>
+                                    </tr>",
+                                    $bgcolor,
+                                    $_rule->prefix,
+                                    $_rule->strip,
+                                    $_rule->prepend,
+                                    $_rule->min_length,
+                                    $_rule->max_length
+                                    );
+                
+                                }
                             }
 
+                        } else {
+
+                            printf("
+                            <tr bgcolor=%s>
+                            <td valign=top>%s</td>
+                            <td valign=top><a href=%s>%s</a></td>
+                            <td valign=top>%s</td>
+                            <td valign=top>%s</td>
+                            <td valign=top>%s:%s:%s</td>
+                            <td valign=top colspan=5></td>
+                            <td valign=top>%s</td>
+                            <td valign=top><a href=%s>%s</a></td>
+                            </tr>",
+                            $bgcolor,
+                            $index,
+                            $_customer_url,
+                            $gateway->reseller,
+                            $gateway->name,
+                            $gateway->carrier,
+                            $gateway->transport,
+                            $gateway->ip,
+                            $gateway->port,
+                            $gateway->changeDate,
+                            $_url,
+                            $actionText
+                            );
+        
+                            printf("
+                            </tr>
+                            ");
                         }
 
-                        printf("
-                        <tr bgcolor=%s>
-                        <td valign=top>%s</td>
-                        <td valign=top><a href=%s>%s</a></td>
-                        <td valign=top>%s</td>
-                        <td valign=top>%s</td>
-                        <td valign=top>%s:%s:%s</td>
-                        <td valign=top><table border=0>%s</table></td>
-                        <td valign=top>%s</td>
-                        <td valign=top><a href=%s>%s</a></td>
-                        </tr>",
-                        $bgcolor,
-                        $index,
-                        $_customer_url,
-                        $gateway->reseller,
-                        $gateway->name,
-                        $gateway->carrier,
-                        $gateway->transport,
-                        $gateway->ip,
-                        $gateway->port,
-                        $rules,
-                        $gateway->changeDate,
-                        $_url,
-                        $actionText
-                        );
-    
-                        printf("
-                        </tr>
-                        ");
                     } else if ($this->version > 1) {
                         $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                         urlencode($this->SoapEngine->customer_engine),
