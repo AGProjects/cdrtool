@@ -6,8 +6,8 @@ CDRTool provides on-the-fly rating of CDRs from multiple data-sources like
 OpenSER, Asterisk or Cisco gateways based on an easy to build rating plan,
 which can be imported from external data sources.
 
-A Call Detail Record (or CDR) is one record from the radius radacct table.
-The CDR record contains all information related to a session, like session
+A Call Detail Record (CDR) is one record from the radius radacct table. The
+CDR record contains all information related to a session, like session
 duration, calling, called party and media information. The rating engine
 calculates the price of the session, which is applied in real-time to the
 web output and saved to the database containing the CDRs.
@@ -39,10 +39,11 @@ The following steps are performed to rate a CDR:
 
 1. Determination of application type
 2. Determination of the billing party
-3. Determination of the destination
+3. Determination of the destination id
 4. Determination of the costs
 
-The steps are described in detial below.
+Each step must succeed in order to calculate the price for the session. The
+steps are described in detail below.
 
 
 1. Determination of application type
@@ -54,8 +55,8 @@ The only supported application type is 'audio'.
 2. Determination of the billing party
 -------------------------------------
 
-CDRTool identifies the rating plans associated with a session based on a
-Billing Party entity, which is calculated on the fly. The calculus is based
+CDRTool identifies the rating plan associated with a session based on a
+billing party entity, which is calculated on the fly. The calculus is based
 on the first successful match of the BillingPartyId field from the CDR
 database (radacct.UserName for radius data sources) in the following order:
 
@@ -68,19 +69,18 @@ The longest match is done against entries present in the billing_customers
 table. The match yields a set of profiles to be used further depending on
 the type of session and day of the week.
 
-The billing_customers table field that matches the Source IP is gateway. Do
-not use hostnames for this field.
+The billing_customers table field that matches the Source IP is called
+gateway. Do not use hostnames for this field. "gateway" or "trusted peer"
+terms are used interchangebly in this document. They both relate to the
+source IP address that generated the SIP session.
 
-"gateway" or "trusted peer" terms are used interchangebly in this document.
-They both relate to the source IP address that generated the SIP session.
 
-
-3. Determination of the destination
------------------------------------
+3. Determination of the destination id
+--------------------------------------
 
 CDRTool identifies the destination for which to perform the rating based on
-one of the destination fields from the accounting table. The destination is
-taken from the first non-empty field in this order:
+one of the destination fields from the accounting table. The destination
+field is taken from the first non-empty field in this order:
 
 1. CanonicalURI (the destination after all lookups inside the SIP Proxy) 
 2. SipTranslatedRequestURI (the Request URI as presented by the SIP UA)
@@ -88,18 +88,30 @@ taken from the first non-empty field in this order:
 
 The CanonicalURI is preferred because the destination field must contain the
 real SIP destination after all possible lookups performed by the SIP Proxy
-(except for the DNS lookups). You must configure OpenSER to send this Radius
-attribute when doing accounting (instructions are available in INSTALL.txt).
+as this is something reliable and the dialing user cannot control it.
+OpenSER must be configured to send CanonicalURI Radius attribute when doing
+accounting (instructions are available in INSTALL.txt).
 
-A destination ID is then calculated based on the longest match of this
-destination in the billing_destinations table and the billing party.
+The destination id is then calculated based on the longest match of this
+destination field in the billing_destinations table and the billing party.
+
+The longest match for the chosen destination field is performed by the
+E164_Europe class from cdr_generic.php. It assumes the destination always
+starts with a zero for a national call and with double zero for an
+international call. If your dialing plan is different you must design a
+custom class and function to and defined in global.inc as follows:
+
+$CDRTool['normalize']['E164class']='MyE164Class';
+
+For an example see E164_USA class from cdr_generic.php that matches American
+dialing plan.
 
 
 4. Determination of one time and recurrent costs
 ------------------------------------------------
 
 The following steps are taken to rate the calls terminated to PSTN based on
-the destination ID and the billing party found in previous steps.
+the destination id and the billing party found in previous steps.
 
 1. Lookup the billing Profile in cdrtool.billing_customers table in the
    following order: subscriber,domain,gateway (based on $this->dayofweek):
