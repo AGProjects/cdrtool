@@ -734,15 +734,15 @@ class Records {
 
     function showCustomerSelection() {
         if ($this->version > 1) {
-            print " Customer ";
-    
+            $this->showCustomerForm();
+        }
+    }
+
+    function showResellerSelection() {
+        if ($this->version > 1) {
             if ($this->adminonly) {
-                $this->showCustomerForm();
-                print ".";
                 $this->showResellerForm();
             } else {
-                $this->showCustomerForm();
-                print ".";
                 printf ("%s",$this->reseller);
             }
         }
@@ -836,7 +836,10 @@ class Records {
         <tr>
         <td colspan=2>
         ";
+
+    	$this->showTextBeforeCustomerSelection();
         $this->showCustomerSelection();
+        $this->showResellerSelection();
 
         $this->showSeachFormCustom();
         print "
@@ -1182,6 +1185,9 @@ class Records {
                 printf ("<input type=text size=7 name=%s value='%s'>",$name,$this->filters['reseller']);
             }
         }
+    }
+    function showTextBeforeCustomerSelection() {
+        print "Customer";
     }
 
     function addFiltersToURL() {
@@ -8090,15 +8096,33 @@ class TrustedPeers extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 ";
-                if ($this->version > 1) print "<td><b>Customer</b></td>";
-                print"
-                <td><b>IP address</b></td>
-                <td><b>Protocol</b></td>
-                <td><b>From pattern</b></td>
-                <td><b>Description</b></td>";
+                if ($this->version > 3) {
+                	print "
+                    <td><b>Reseller</b></td>
+                    <td><b>IP address</b></td>
+                    <td><b>Protocol</b></td>
+                    <td><b>From pattern</b></td>
+                    <td><b>Description</b></td>
+                    <td><b>Change date</b></td>
+                    ";
 
-                if ($this->version > 1) print "<td><b>Change date</b></td>";
-
+                } else if ($this->version > 1) {
+                	print "
+                    <td><b>Customer</b></td>
+                    <td><b>IP address</b></td>
+                    <td><b>Protocol</b></td>
+                    <td><b>From pattern</b></td>
+                    <td><b>Description</b></td>
+                    <td><b>Change date</b></td>
+                    ";
+                } else {
+                	print "
+                    <td><b>IP address</b></td>
+                    <td><b>Protocol</b></td>
+                    <td><b>From pattern</b></td>
+                    <td><b>Description</b></td>
+                    ";
+                }
                 print "<td><b>Actions</b></td>
 
 
@@ -8147,7 +8171,37 @@ class TrustedPeers extends Records {
                         $actionText = "Delete";
                     }
 
-                       if ($this->version > 1) {
+                    if ($this->version > 3) {
+                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SoapEngine->customer_engine),
+                        urlencode($peer->reseller)
+                        );
+
+                        printf("
+                        <tr bgcolor=%s>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>",
+                        $bgcolor,
+                        $index,
+                        $_customer_url,
+                        $peer->reseller,
+                        $peer->ip,
+                        $peer->protocol,
+                        $peer->fromPattern,
+                        $peer->description,
+                        $peer->changeDate,
+                        $_url,
+                        $actionText
+                        );
+
+                    } else if ($this->version > 1) {
                         $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                         urlencode($this->SoapEngine->customer_engine),
                         urlencode($peer->customer)
@@ -8321,6 +8375,18 @@ class TrustedPeers extends Records {
 
     }
 
+    function showCustomerTextBox () {
+        print "Reseller";
+        $this->showResellerForm('reseller');
+    }
+
+    function showTextBeforeCustomerSelection() {
+        print "Reseller";
+    }
+
+    function showCustomerForm() {
+    }
+
 }
 class Carriers extends Records {
     var $carriers=array();
@@ -8433,19 +8499,22 @@ class Carriers extends Records {
                     }
 
                     if ($this->version > 1) {
-                        $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s",
+                        $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s&reseller_filter=%s",
                         urlencode($this->SoapEngine->service),
-                        urlencode($carrier->name)
+                        urlencode($carrier->name),
+                        urlencode($carrier->reseller)
                         );
 
-                        $_carrier_url = $this->url.sprintf("&service=pstn_gateways@%s&carrier_filter=%s",
+                        $_carrier_url = $this->url.sprintf("&service=pstn_gateways@%s&carrier_filter=%s&reseller_filter=%s",
                         urlencode($this->SoapEngine->soapEngine),
-                        urlencode($carrier->name)
+                        urlencode($carrier->name),
+                        urlencode($carrier->reseller)
                         );
 
 
                         if ($_REQUEST['action'] == 'Delete' &&
-                            $_REQUEST['name_filter'] == $carrier->name) {
+                            $_REQUEST['name_filter'] == $carrier->name &&
+                            $_REQUEST['reseller_filter'] == $carrier->reseller) {
                             $_url .= "&confirm=1";
                             $actionText = "<font color=red>Confirm</font>";
                         } else {
@@ -8618,6 +8687,13 @@ class Carriers extends Records {
 
     function showSeachFormCustom() {
         printf (" Name<input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
+    }
+
+    function showCustomerForm() {
+    }
+
+    function showTextBeforeCustomerSelection() {
+        print "Reseller";
     }
 
 }
@@ -8932,23 +9008,37 @@ class GatewayGroups extends Records {
         printf (" Name<input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
     }
 
+    function showCustomerForm() {
+    }
+    function showTextBeforeCustomerSelection() {
+        print "Reseller";
+    }
+
 }
 
 class Gateways extends Records {
     var $gatewayGroups=array();
 
-    var $sortElements=array(
-                            'name'   => 'Name',
-                            'group'  => 'Group',
-                            'ip'     => 'IP address',
-                            'prefix' => 'Prefix'
-                            );
 
     function Gateways(&$SoapEngine) {
         $this->filters   = array('name'   => trim($_REQUEST['name_filter']),
                                  'group'  => trim($_REQUEST['group_filter'])
                                  );
 
+        if ($this->version > 3) {
+            $this->sortElements=array(
+                                'name'       => 'Name',
+                                'group'      => 'Carrier',
+                                'ip'         => 'IP address',
+                                'changeDate' => 'Change date'
+                                );
+        } else {
+            $this->sortElements=array(
+                                'name'   => 'Name',
+                                'carrier'  => 'Carrier',
+                                'ip'     => 'IP address'
+                                );
+        }
         $this->Records(&$SoapEngine);
     }
 
@@ -9087,13 +9177,15 @@ class Gateways extends Records {
                         $bgcolor="white";
                     }
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s",
+                    $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s&reseller_filter=%s",
                     urlencode($this->SoapEngine->service),
-                    urlencode($gateway->name)
+                    urlencode($gateway->name),
+                    urlencode($gateway->reseller)
                     );
 
                     if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['name_filter'] == $gateway->name) {
+                        $_REQUEST['name_filter'] == $gateway->name &&
+                        $_REQUEST['reseller_filter'] == $gateway->reseller) {
                         $_url .= "&confirm=1";
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
@@ -9467,6 +9559,11 @@ class Gateways extends Records {
         printf (" </select>");
 
     }
+    function showCustomerForm() {
+    }
+    function showTextBeforeCustomerSelection() {
+        print "Reseller";
+    }
 
 }
 
@@ -9479,9 +9576,11 @@ class Routes extends Records {
                             );
 
     function Routes(&$SoapEngine) {
-        $this->filters   = array('prefix'       => trim($_REQUEST['prefix_filter']),
-                                 'priority'     => trim($_REQUEST['priority_filter']),
-                                 'gatewayGroup' => trim($_REQUEST['gatewayGroup_filter'])
+        $this->filters   = array('prefix'   => trim($_REQUEST['prefix_filter']),
+                                 'priority' => trim($_REQUEST['priority_filter']),
+                                 'group'    => trim($_REQUEST['group_filter']),
+                                 'reseller' => trim($_REQUEST['reseller_filter']),
+                                 'id'       => trim($_REQUEST['id_filter'])
                                  );
 
         $this->Records(&$SoapEngine);
@@ -9498,11 +9597,21 @@ class Routes extends Records {
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
         // Filter
-        $filter=array('prefix'       => $this->filters['prefix'],
-                      'gatewayGroup' => $this->filters['gatewayGroup'],
-                      'customer'     => intval($this->filters['customer']),
-                      'reseller'     => intval($this->filters['reseller'])
-                      );
+        // Filter
+        if ($this->version > 3) {
+            $filter=array('prefix'       => $this->filters['prefix'],
+                          'carrier'      => $this->filters['group'],
+                          'reseller'     => intval($this->filters['reseller']),
+                          'id'           => intval($this->filters['id'])
+                          );
+        } else {
+            $filter=array('prefix'       => $this->filters['prefix'],
+                          'gatewayGroup' => $this->filters['group'],
+                          'customer'     => intval($this->filters['customer']),
+                          'reseller'     => intval($this->filters['reseller'])
+                          );
+        }
+
 
         // Range
         $range=array('start' => intval($this->next),
@@ -9610,17 +9719,12 @@ class Routes extends Records {
                     }
 
                     if ($this->version > 3) {
-                        $_url = $this->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&gatewayGroup_filter=%s&priority_filter=%s",
+                        $_url = $this->url.sprintf("&service=%s&action=Delete&id_filter=%d",
                         urlencode($this->SoapEngine->service),
-                        urlencode($route->prefix),
-                        urlencode($route->gatewayGroup),
-                        urlencode($route->priority)
+                        urlencode($route->id)
                         );
                         if ($_REQUEST['action'] == 'Delete' &&
-                            $_REQUEST['prefix_filter'] == $route->prefix &&
-                            $_REQUEST['carrier_filter'] == $route->carrier &&
-                            $_REQUEST['priority_filter'] == $route->priority) {
-    
+                            $_REQUEST['id_filter'] == $route->id) {
                             $_url .= "&confirm=1";
                             $actionText = "<font color=red>Confirm</font>";
                         } else {
@@ -9628,16 +9732,19 @@ class Routes extends Records {
                         }
 
                     } else {
-                        $_url = $this->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&carrier_filter=%s&priority_filter=%s",
+                        $_url = $this->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&carrier_filter=%s&priority_filter=%s&reseller_filter=%s",
                         urlencode($this->SoapEngine->service),
                         urlencode($route->prefix),
                         urlencode($route->carrier),
-                        urlencode($route->priority)
+                        urlencode($route->priority),
+                        urlencode($route->reseller)
                         );
+
                         if ($_REQUEST['action'] == 'Delete' &&
                             $_REQUEST['prefix_filter'] == $route->prefix &&
                             $_REQUEST['gatewayGroup_filter'] == $route->gatewayGroup &&
-                            $_REQUEST['priority_filter'] == $route->priority) {
+                            $_REQUEST['priority_filter'] == $route->priority &&
+                            $_REQUEST['reseller_filter'] == $route->reseller) {
     
                             $_url .= "&confirm=1";
                             $actionText = "<font color=red>Confirm</font>";
@@ -9881,32 +9988,47 @@ class Routes extends Records {
             return true;
         }
 
-        if ($dictionary['prefix']) {
-            $prefix   = $dictionary['prefix'];
-        } else {
-            $prefix   = trim($this->filters['prefix']);
-        }
-        if ($dictionary['gatewayGroup']) {
-            $gatewayGroup   = $dictionary['gatewayGroup'];
-        } else {
-            $gatewayGroup   = trim($this->filters['gatewayGroup']);
-        }
-        if ($dictionary['priority']) {
-            $priority   = $dictionary['priority'];
-        } else {
-            $priority   = trim($this->filters['priority']);
-        }
+        if ($this->version > 3) {
+            if ($dictionary['id']) {
+                $id   = $dictionary['id'];
+            } else {
+                $id   = trim($this->filters['id']);
+            }
 
-        if (!strlen($gatewayGroup)) {
-            print "<p><font color=red>Error: missing gatewayGroup. </font>";
-            return false;
-        }
+            if (!strlen($id)) {
+                print "<p><font color=red>Error: missing route id. </font>";
+                return false;
+            }
 
-        $route=array(
-                     'prefix'       => $prefix,
-                     'gatewayGroup' => $gatewayGroup,
-                     'priority'     => intval($priority)
-                    );
+            $route=array('id'=> intval($id));
+        } else {
+            if ($dictionary['prefix']) {
+                $prefix   = $dictionary['prefix'];
+            } else {
+                $prefix   = trim($this->filters['prefix']);
+            }
+            if ($dictionary['gatewayGroup']) {
+                $gatewayGroup   = $dictionary['gatewayGroup'];
+            } else {
+                $gatewayGroup   = trim($this->filters['gatewayGroup']);
+            }
+            if ($dictionary['priority']) {
+                $priority   = $dictionary['priority'];
+            } else {
+                $priority   = trim($this->filters['priority']);
+            }
+    
+            if (!strlen($gatewayGroup)) {
+                print "<p><font color=red>Error: missing gatewayGroup. </font>";
+                return false;
+            }
+
+            $route=array(
+                         'prefix'       => $prefix,
+                         'gatewayGroup' => $gatewayGroup,
+                         'priority'     => intval($priority)
+                        );
+        }
 
         $routes=array($route);
 
@@ -9924,7 +10046,7 @@ class Routes extends Records {
         printf (" Prefix<input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
         print "
         <select name=gatewayGroup_filter>
-        <option value=''>Group";
+        <option value=''>Carrier";
         $selected_carriers[$this->filters['gatewayGroup']]='selected';
         foreach ($this->carriers as $_grp) {
             printf ("<option value='%s' %s>%s",$_grp,$selected_carriers[$_grp],$_grp);
@@ -9932,6 +10054,18 @@ class Routes extends Records {
         printf (" </select>");
 
     }
+
+    function showCustomerTextBox () {
+        print "Reseller";
+        $this->showResellerForm('reseller');
+    }
+
+    function showCustomerForm() {
+    }
+    function showTextBeforeCustomerSelection() {
+        print "Reseller";
+    }
+
 }
 
 class Customers extends Records {
