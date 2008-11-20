@@ -9024,14 +9024,16 @@ class Gateways extends Records {
                               );
 
     var $Fields=array(
-                              'name'      => array('type'=>'string'),
+                              'name'      => array('type'=>'string',
+                                                   'readonly' => true),
                               'carrier'   => array('type'=>'string'),
                               'transport' => array('type'=>'string'),
                               'ip'        => array('type'=>'string'),
                               'port'      => array('type'=>'integer')
                               );
 
-    var $transports=array('udp','tcp','tls');
+    //var $transports=array('udp','tcp','tls');
+    var $transports=array('udp');
 
     function Gateways(&$SoapEngine) {
         $this->filters   = array('name'   => trim($_REQUEST['name_filter']),
@@ -9433,11 +9435,20 @@ class Gateways extends Records {
 
             printf (" Carrier: ");
 
-
             print "<select name=group> ";
             foreach ($this->carriers as $_grp) {
                 printf ("<option value='%s'>%s",$_grp,$_grp);
             }
+            printf (" </select>");
+
+            printf (" Transport: ");
+
+            print "<select name=transport> ";
+
+            foreach ($this->transports as $_transport) {
+                printf ("<option value='%s'>%s",$_transport,$_transport);
+            }
+
             printf (" </select>");
 
             printf (" Address<input type=text size=25 name=address>");
@@ -9486,6 +9497,11 @@ class Gateways extends Records {
         } else {
             $address   = trim($_REQUEST['address']);
         }
+        if ($dictionary['transport']) {
+            $transport   = $dictionary['transport'];
+        } else {
+            $transport   = trim($_REQUEST['transport']);
+        }
         if ($dictionary['strip']) {
             $strip   = $dictionary['strip'];
         } else {
@@ -9505,21 +9521,15 @@ class Gateways extends Records {
         $address_els=explode(':',$address);
 
         if (count($address_els) == 1) {
-            $ip=$address_els[0];
-            $transport='udp';
-            $port='5060';
+            $ip   = $address_els[0];
+            $port ='5060';
         } else if (count($address_els) == 2) {
-            $ip=$address_els[0];
-            $port=$address_els[1];
-            $transport='udp';
-        } else if (count($address_els) == 3) {
-            $ip=$address_els[1];
-            $port=intval($address_els[2]);
-            if ($address_els[0] == 'tcp' || $address_els[0] == 'tls' || $address_els[0] == 'udp') {
-                $transport=$address_els[0];
-            } else {
-                $transport='udp';
-            }
+            $ip   = $address_els[0];
+            $port = $address_els[1];
+        }
+
+        if (!in_array($transport,$this->transports)) {
+        	$transport=$this->transports[0];
         }
 
         if ($this->version > 3) {
@@ -9615,8 +9625,6 @@ class Gateways extends Records {
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
 
-        printf ("<tr><td class=border>Gateway</td><td class=border>%s</td></td>",$gateway->name);
-
         foreach (array_keys($this->Fields) as $item) {
             if ($this->Fields[$item]['name']) {
                 $item_name=$this->Fields[$item]['name'];
@@ -9626,12 +9634,46 @@ class Gateways extends Records {
 
             printf ("<tr>
             <td class=border valign=top>%s</td>
-            <td class=border><input name=%s_form size=30 type=text value='%s'></td>
-            </tr>",
-            $item_name,
-            $item,
-            $gateway->$item
+            <td class=border>",
+            $item_name
             );
+
+            if ($this->Fields[$item]['readonly']) {
+                printf ("<input name=%s_form type=hidden value='%s'>%s</td>",
+                $item,
+                $gateway->$item,
+                $gateway->$item
+                );
+            } else {
+                if ($item == 'carrier') {
+                    printf ("<select name=%s_form>",$item);
+                    $selected_carrier[$gateway->$item]='selected';
+                    foreach ($this->carriers as $_grp) {
+                        printf ("<option value='%s' %s>%s",$_grp,$selected_carrier[$_grp],$_grp);
+                    }
+    
+                    print "</select>";
+    
+                } else if ($item == 'transport') {
+                    printf ("<select name=%s_form>",$item);
+                    $selected_transport[$gateway->$item]='selected';
+                    foreach ($this->transports as $_transport) {
+                        printf ("<option value='%s' %s>%s",$_transport,$selected_transport[$_transport],$_transport);
+                    }
+    
+                    print "</select>";
+    
+                } else {
+                    printf ("<input name=%s_form size=30 type=text value='%s'></td>",
+                    $item,
+                    $gateway->$item
+                    );
+                }
+            }
+            print "
+            </tr>";
+
+
         }
 
         printf ("<input type=hidden name=name_filter value='%s'",$gateway->name);
@@ -9648,7 +9690,7 @@ class Gateways extends Records {
 
         print "<table border=0>";
         print "<tr>";
-        print "<td class=border>Rule</td>";
+        print "<td class=border>Id</td>";
         print "<td class=border>Prefix</td>";
         print "<td class=border>Strip digits</td>";
         print "<td class=border>Prepend</td>";
