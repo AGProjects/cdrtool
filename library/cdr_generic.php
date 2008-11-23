@@ -268,6 +268,12 @@ class CDRS {
 			$mc_destinations=$this->cdrtool->f('value');
 
             $_dests=explode("\n",$mc_destinations);
+
+            if (!strlen($mc_destinations)) {
+            	$log=sprintf("Error: cached destinations key contains no data");
+            	syslog(LOG_NOTICE,$log);
+            }
+
             foreach ($_dests as $_dest)  {
                 if (!strlen($_dest)) continue;
                 $this->destinations_count++;
@@ -316,6 +322,12 @@ class CDRS {
             }
     
             $this->cdrtool->query($query);
+
+        	if (!$this->cdrtool->num_rows()) {
+            	$log=sprintf("Error: could not find any entries in the destinations table");
+            	syslog(LOG_NOTICE,$log);
+                return 0;
+            }
 
             $destinations_cache = "\n";
             $destinations_sip_cache = "\n";
@@ -383,6 +395,13 @@ class CDRS {
                     }
                 }
             }
+
+            if (!strlen($destinations_cache)) {
+            	$log=sprintf("Error: cached destinations key contains no data");
+            	syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
 
             $query=sprintf("select `value` from memcache where `key` = 'destinations'");
             if (!$this->cdrtool->query($query)) {
@@ -1163,6 +1182,10 @@ class CDRS {
                 }
             }
         }
+
+        $log=sprintf("Error: cannot find destination id for %s, customer = %s, total destinations = %d\n",$destination,$fCustomer,count($codes));
+        syslog(LOG_NOTICE,$log);
+
         return false;
     }
 
@@ -1690,6 +1713,43 @@ class CDRS_unknown extends CDRS {
     }
 }
 
+class E164 {
+    // Class that helps normalization of a telephone number in E164 format
+
+    // Based on this normalization, CDRTool rating engine decides whether
+    // to consider the session a PSTN destination and rate it according
+    // to the PSTN rating plan
+
+    function E164($intAccessCode='00', $natAccessCode='0',$CountryCode='',$ENUMtldRegexp="") {
+        $this->regexp_international = "/^".$intAccessCode."([0-9]{5,})\$/";
+        $this->regexp_national      = "/^".$natAccessCode."([0-9]{3,})\$/";
+        $this->CountryCode          = trim($CountryCode);
+        $this->ENUMtldRegexp        = trim($ENUMtldRegexp);
+    }
+
+    function E164Format($Number) {
+        //dprint "E164Format($Number,ENUMtldRegexp=$this->ENUMtldRegexp)";
+        // This function returns the full E164 format for a PSTN number without leading zero or +
+        // E164 = Country Code + Network Code + Subscriber Number
+        // Example: 31208015100 is an E164 number from Holland (country code 31)
+
+        // If nothing is returned by this function the session is considered an Internet destination 
+
+        if (preg_match($this->regexp_international,$Number,$m)) {
+            return $m[1];
+        } else if (preg_match($this->regexp_national,$Number,$m)) {
+            // Add default country code
+            return $this->CountryCode.$m[1];
+        } else if (strlen($this->ENUMtldRegexp)) {
+            $_regexp="/^".$this->ENUMtldRegexp."\$/";
+            if (preg_match($_regexp,$Number,$m)) {
+                return $m[1];
+            }
+        } 
+        return false;
+    }
+}
+
 class E164_Europe extends E164 {
     function E164_Europe ($intAccessCode='00', $natAccessCode='0',$CountryCode='',$ENUMtldRegexp="([1-9][0-9]{7,})") {
         $this->regexp_international = "/^".$intAccessCode."([1-9][0-9]{5,})\$/";
@@ -2079,9 +2139,11 @@ function validDay($month,$day,$year) {
 }
 
 // include CDRTool modules defined in global.inc
-foreach ($CDRToolModules as $module) {
-    $module_filename="cdr_".$module.".php";
-    include($module_filename);
+if (is_array($CDRToolModules)) {
+    foreach ($CDRToolModules as $module) {
+        $module_filename="cdr_".$module.".php";
+        include($module_filename);
+    }
 }
 
 function unLockNormalization ($dbid,$lockname) {
