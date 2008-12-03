@@ -3756,7 +3756,7 @@ class Media_trace {
     function getTrace ($proxyIP,$callid,$fromtag,$totag) {
 
         if ($this->enableThor) {
-            $this->info = json_decode($this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag));
+            $this->info=$this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag);
 
         } else {
 
@@ -3801,18 +3801,16 @@ class Media_trace {
 
         $result     = $this->soapclient->getMediaTrace($filter);
 
-		//print_r($result);
-
         if (PEAR::isError($result)) {
             $error_msg   = $result->getMessage();
             $error_fault = $result->getFault();
             $error_code  = $result->getCode();
 
-            printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->faultstring,$error_fault->faultcode);
+            printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         }
 
-        $this->info = json_decode($result);
+        return $result;
     }
 
     function show($proxyIP,$callid,$fromtag,$totag) {

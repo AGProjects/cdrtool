@@ -39,6 +39,7 @@ class MediaSessions {
         if (!$this->dispatcher_port) return false;
 
         if ($fp = fsockopen ($this->dispatcher_ip, $this->dispatcher_port, $errno, $errstr, $this->timeout)) {
+            printf ("<p>Connected to MediaProxy2 dispatcher %s:%s",$this->dispatcher_ip, $this->dispatcher_port);
 
             if (!count($this->allowedDomains)) {
                fputs($fp, "summary\r\n");

@@ -7356,7 +7356,12 @@ class DnsRecords extends Records {
 
     function showAddForm() {
 
-        if ($this->adminonly && !$this->filters['reseller']) return;
+        if ($this->adminonly) {
+        	if (!$this->filters['reseller']) {
+                print "<p>To add a new record you must search first for a customer";
+            	return;
+            }
+        }
 
         print "
         <p>
@@ -7507,7 +7512,6 @@ class DnsRecords extends Records {
         $name=rtrim($name,".");
 
         if (preg_match("/^(.*)@(.*)$/",$name,$m)) {
-            $name=$m[1];
             $zone=$m[2];
         } else {
             if ($dictionary['zone']) {
@@ -7518,12 +7522,14 @@ class DnsRecords extends Records {
             }
         }
 
-        $this->filters['zone']=$zone;
-
         if (!strlen($zone)) {
             printf ("<p><font color=red>Error: Missing zone name. </font>");
             return false;
         }
+
+        $this->filters['zone']=$zone;
+
+        $name=$name.'@'.$zone;
 
         if ($this->typeFilter) {
             $type = $this->typeFilter;
