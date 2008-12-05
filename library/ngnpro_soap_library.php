@@ -807,7 +807,26 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                                     'use' => 'encoded'));
         return $result;
     }
-
+    function &getMediaSummary()
+    {
+        $result = $this->call('getMediaSummary',
+                              $v = null,
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getMediaSessions()
+    {
+        $result = $this->call('getMediaSessions',
+                              $v = null,
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
 }
 class WebService_NGNPro_VoicemailPort extends SOAP_Client_Custom
 {

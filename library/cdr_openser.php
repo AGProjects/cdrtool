@@ -3845,7 +3845,7 @@ class Media_trace {
 
         print "<table border=0>";
         printf ("<tr><td class=border>Call duration</td><td class=border>%s</td></tr>",$this->info->duration);
-        list($relay_ip,$relay_port)=explode(":",$this->info->streams[0]->caller_local);
+        list($relay_ip,$relay_port)=explode(":",$this->info->streams[0]->callerLocal);
         printf ("<tr><td class=border>Media relay</td><td class=border>%s</td></tr>",$relay_ip);
         print "</table>";
 
@@ -3892,20 +3892,20 @@ class Media_trace {
 
         foreach (array_values($this->info->streams) as $_val) {
 
-            $w_col1=intval($_val->start_time*$w/$this->info->duration);
-            $w_col2=intval(($_val->end_time-$_val->start_time-$_val->timeout_wait)*$w/$this->info->duration);
-            $w_col3=intval(($this->info->duration-$_val->end_time+$_val->timeout_wait)*$w/$this->info->duration);
+            $w_col1=intval($_val->startTime*$w/$this->info->duration);
+            $w_col2=intval(($_val->endTime-$_val->startTime-$_val->timeoutWait)*$w/$this->info->duration);
+            $w_col3=intval(($this->info->duration-$_val->endTime+$_val->timeout_wait)*$w/$this->info->duration);
 
-            print "<tr><td width=$w1 class=border>$_val->media_type</td>";
+            print "<tr><td width=$w1 class=border>$_val->mediaType</td>";
 
-            $t2=$_val->end_time-$_val->timeout_wait;
+            $t2=$_val->endTime-$_val->timeoutWait;
             $t3=$this->info->duration;
 
             print "<td>
             <table width=100%><tr>";
             print "<td width=$w_col1 bgcolor=white></td>";
             print "<td width=$w_col2 bgcolor=green align=right><font color=white>$t2</font></td>";
-            if ($_val->timeout_wait) {
+            if ($_val->timeoutWait) {
                 print "<td width=$w_col3 bgcolor=red align=right><font color=white>$t3</font></td>";
             } else {
                 print "<td width=$w_col3 bgcolor=white align=right></td>";
@@ -3924,9 +3924,7 @@ class Media_trace {
         </table>
         ";
 
-
     }
-
 }
 
 include_once("phone_images.php");

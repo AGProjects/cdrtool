@@ -43,50 +43,37 @@ class MediaSessions {
 
             if (!count($this->allowedDomains)) {
                fputs($fp, "summary\r\n");
-   
-               while (!feof($fp)) {
-                   $line  = fgets($fp);
-   
-                   if (preg_match("/^\r\n/",$line)) {
-                       break;
-                   }
-   
-                   $this->relays[] = json_decode($line);
-               }
+               $line  = fgets($fp);
+               $this->relays = json_decode($line);
+
             }
 
             fputs($fp, "sessions\r\n");
+            $line = fgets($fp);
 
-            while (!feof($fp)) {
-                $line = fgets($fp);
+			$_sessions=json_decode($line);
 
-                if (preg_match("/^\r\n/",$line)) {
-                    break;
-                }
-
-                $line=json_decode($line);
-
-                if (count($this->allowedDomains)) {
-                    list($user1,$domain1)=explode("@",$line->from_uri);
-                    list($user2,$domain2)=explode("@",$line->to_uri);
+            if (count($this->allowedDomains)) {
+                foreach ($_sessions as $_session) {
+                    list($user1,$domain1)=explode("@",$_session->from_uri);
+                    list($user2,$domain2)=explode("@",$_session->to_uri);
                     if (!in_array($domain1,$this->allowedDomains) && !in_array($domain2,$this->allowedDomains)) {
                         continue;
                     }
-                }
 
-                if (strlen($this->filters['user'])) {
-                    $user=$this->filters['user'];
-                    if (preg_match("/$user/",$line->from_uri) ||
-                        preg_match("/$user/",$line->to_uri)
-                        ) {
-                        $this->sessions[] = $line;
+                   	if (strlen($this->filters['user'])) {
+                        $user=$this->filters['user'];
+                        if (preg_match("/$user/",$_session->from_uri) ||
+                            preg_match("/$user/",$_session->to_uri)
+                                                                   ) {
+                            $this->sessions[] = $_session;
+                        }
                     }
-
-                } else {
-                    $this->sessions[] = $line;
                 }
-
+            } else {
+                $this->sessions = $_sessions;
             }
+
 
             fclose($fp);
             return true;
