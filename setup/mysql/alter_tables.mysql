@@ -515,3 +515,9 @@ alter table memcache change `value` `value` longblob not null;
 
 alter table prepaid add column active_sessions text not null;
 alter table prepaid add column session_counter int unsigned not null;
+
+
+6.7.0
+alter table billing_rates add column cdrtool.durationRatePurchased varchar(25) not null;
+alter table billing_rates add column cdrtool.trafficRatePurchased varchar(25) not null;
+alter table billing_rates add column cdrtool.connectCostPurchased varchar(25) not null;
