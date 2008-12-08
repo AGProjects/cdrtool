@@ -105,7 +105,6 @@ class Rate {
 
         if (!$this->applicationType) $this->applicationType='audio';
 
-        $trafficRate            = 0;
         $durationRate           = 0;
 
         $foundRates=array();
@@ -226,22 +225,33 @@ class Rate {
 
             $connectCost     = $thisRate['values']['connectCost'];
             $durationRate    = $thisRate['values']['durationRate'];
-            $trafficRate     = $thisRate['values']['trafficRate'];
+
+            $connectCostIn   = $thisRate['values']['connectCostIn'];
+            $durationRateIn  = $thisRate['values']['durationRateIn'];
 
             if ($span=="1") {
                 $connectCostSpan=$connectCost;
 				$this->connectCost=number_format($connectCost/$this->priceDenominator,$this->priceDecimalDigits);
+
+                $connectCostSpanIn=$connectCostIn;
+				$this->connectCostIn=number_format($connectCostIn/$this->priceDenominator,$this->priceDecimalDigits);
             } else {
                 $connectCostSpan=0;
+                $connectCostSpanIn=0;
             }
 
             $connectCostPrint     = number_format($connectCostSpan/$this->priceDenominator,$this->priceDecimalDigits);
             $durationRatePrint    = number_format($durationRate/$this->priceDenominator,$this->priceDecimalDigits);
-            $trafficRatePrint     = number_format($trafficRate/$this->priceDenominator,$this->priceDecimalDigits);
+
+            $connectCostPrintIn   = number_format($connectCostSpanIn/$this->priceDenominator,$this->priceDecimalDigits);
+            $durationRatePrintIn  = number_format($durationRateIn/$this->priceDenominator,$this->priceDecimalDigits);
 
             if (!$connectCostSpan)     $connectCostSpan=0;
             if (!$durationRate)        $durationRate=0;
-            if (!$trafficRate)         $trafficRate=0;
+
+            if (!$connectCostSpanIn)   $connectCostSpanIn=0;
+            if (!$durationRateIn)      $durationRateIn=0;
+
             if (!$this->inputTraffic)  $this->inputTraffic=0;
             if (!$this->outputTraffic) $this->outputTraffic=0;
 
@@ -255,20 +265,26 @@ class Rate {
                             $trafficRate/$this->priceDenominator/$this->trafficSizeRated*($this->inputTraffic+$this->outputTraffic)/8");
 
             */
-            $spanPrice   =  $durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator+
-                            $trafficRate/$this->priceDenominator/$this->trafficSizeRated*($this->inputTraffic+$this->outputTraffic)/8;
 
+            $spanPrice      = $durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator;
             $this->price    = $this->price+$spanPrice;
             $spanPricePrint = number_format($spanPrice,$this->priceDecimalDigits);
 
+            $spanPriceIn      = $durationRateIn*$durationForRating/$this->durationPeriodRated/$this->priceDenominator;
+            $this->priceIn    = $this->priceIn+$spanPriceIn;
+            $spanPricePrintIn = number_format($spanPriceIn,$this->priceDecimalDigits);
+
             $this->rateSyslog="";
+
             if ($span=="1" && $thisRate['profile']) {
                 $this->rateInfo .= 
-                " Connect fee: $connectCostPrint\n".
+                "  Connect in: $connectCostPrintIn\n".
+                "     Connect: $connectCostPrint\n".
                 "   StartTime: $this->startTimeBilling\n".
                 "--\n";
                 $this->rateSyslog .= "ConnectFee=$connectCostPrint ";
-                $this->price  = $this->price+$connectCostSpan/$this->priceDenominator*$payConnect;
+                $this->price    = $this->price+$connectCostSpan/$this->priceDenominator*$payConnect;
+                $this->priceIn  = $this->priceIn+$connectCostSpanIn/$this->priceDenominator*$payConnect;
             }
 
             $this->rateInfo .= 
@@ -283,7 +299,10 @@ class Rate {
                 "      RateId: $thisRate[rate] / $thisRate[interval]h\n".
                 "        Rate: $durationRatePrint / $this->durationPeriodRated s\n".
                 "       Price: $spanPricePrint\n";
-                #" TrafficRate: $trafficRatePrint / $this->trafficSizeRated KBytes\n".
+
+                $this->rateInfo .= 
+                "    Price in: $spanPricePrintIn\n";
+
                 $this->rateSyslog .= sprintf(" Profile=%s Period=%s Rate=%s Interval=%s Cost=%s/%s",$thisRate['profile'],$thisRate['day'],$thisRate['rate'],$thisRate['interval'],$durationRatePrint,$this->durationPeriodRated);
 
             } else {
@@ -294,9 +313,16 @@ class Rate {
             }
 
             $this->rateSyslog .= " Price=".sprintf("%.4f",$spanPrice);
-               syslog(LOG_NOTICE, $this->rateSyslog);
+            $this->rateSyslog .= " Price in=".sprintf("%.4f",$spanPriceIn);
+            syslog(LOG_NOTICE, $this->rateSyslog);
 
             $j++;
+        }
+                 
+        if ($this->priceIn) {
+                $this->rateInfo .= "\n".
+                "    Price in:".sprintf("%.4f",$this->priceIn)."\n";
+
         }
 
         $this->rateInfo=trim($this->rateInfo);
@@ -680,7 +706,6 @@ class Rate {
         // Used for prepaid application
         $this->MaxSessionTimeSpans=0;
 
-        $trafficRate            = 0;
         $durationRate           = 0;
 
         /////////////////////////////////////////////////////
@@ -828,8 +853,7 @@ class Rate {
             } else {
                 $table="billing_rates_default";
             }
-            $query=sprintf("select durationRate, trafficRate, connectCost from %s
-            where destination = '%s' and application = '%s'",
+            $query=sprintf("select * from %s where destination = '%s' and application = '%s'",
             $table,
             $DestinationId,
             $applicationType
@@ -837,7 +861,7 @@ class Rate {
 
         } else {
             $table="billing_rates";
-            $query=sprintf("select durationRate, trafficRate, connectCost from %s where name = '%s' and destination = '%s' and application = '%s'",
+            $query=sprintf("select * from %s where name = '%s' and destination = '%s' and application = '%s'",
             $table,
             $rateName,
             $DestinationId,
@@ -856,8 +880,7 @@ class Rate {
             }
             // try the main table
             // lookup rate from MySQL
-            $query=sprintf("select durationRate, trafficRate, connectCost from billing_rates
-            where name = '%s' and destination = '%s' and application = '%s'",
+            $query=sprintf("select * from billing_rates where name = '%s' and destination = '%s' and application = '%s'",
             $rateName,
             $DestinationId,
             $applicationType
@@ -876,9 +899,10 @@ class Rate {
         if ($this->db->num_rows()) {
             $this->db->next_record();
             $values=array(
+                        "connectCost"     => $this->db->Record['connectCost'],
                         "durationRate"    => $this->db->Record['durationRate'],
-                        "trafficRate"     => $this->db->Record['trafficRate'],
-                        "connectCost"     => $this->db->Record['connectCost']
+                        "connectCostIn"   => $this->db->Record['connectCostIn'],
+                        "durationRateIn"  => $this->db->Record['durationRateIn']
                        );
             // cache values
             $this->rateValuesCache[$rateName][$DestinationId][$applicationType]=$values;
@@ -1058,7 +1082,6 @@ class RatingTables {
                                                  "size"=>10,
                                                  "order"=>"destination ASC, name ASC",
                                                  "domainFilterColumn"=>"domain",
-                                                 "exceptions" =>array('trafficRate'),
                                                  "fields"=>array(
                                                                   "gateway"=>array("size"=>15,
                                                                                   "name"=>"Trusted peer"
@@ -1075,14 +1098,20 @@ class RatingTables {
                                                                  "destination"=>array("size"=>12,
                                                                                   "name"=>"Destination"
                                                                                  ),
-                                                                 "durationRate"=>array("size"=>10,
-                                                                                  "name"=>"Price"
-                                                                                 ),
                                                                  "application"=>array("size"=>6,
                                                                                   "name"=>"App"
                                                                                  ),
-                                                                 "connectCost"=>array("size"=>10,
+                                                                 "connectCost"=>array("size"=>8,
                                                                                   "name"=>"Connect"
+                                                                                 ),
+                                                                 "durationRate"=>array("size"=>8,
+                                                                                  "name"=>"Price"
+                                                                                 ),
+                                                                 "connectCostIn"=>array("size"=>8,
+                                                                                  "name"=>"Connect in"
+                                                                                 ),
+                                                                 "durationRateIn"=>array("size"=>8,
+                                                                                  "name"=>"Price in"
                                                                                  )
 
                                                                   )
@@ -1092,11 +1121,10 @@ class RatingTables {
                                                  "size"=>10,
                                                  "order"=>"destination ASC, name ASC",
                                                  "domainFilterColumn"=>"domain",
-                                                 "exceptions" =>array('trafficRate'),
                                                  "fields"=>array(
-                                                                  "gateway"=>array("size"=>15,
+                                                                 "gateway"=>array("size"=>15,
                                                                                   "name"=>"Trusted peer"
-                                                                                ),
+                                                                                 ),
                                                                  "domain"=>array("size"=>15,
                                                                                   "name"=>"Domain"
                                                                                  ),
@@ -1109,14 +1137,20 @@ class RatingTables {
                                                                  "destination"=>array("size"=>12,
                                                                                   "name"=>"Destination"
                                                                                  ),
-                                                                 "durationRate"=>array("size"=>8,
-                                                                                  "name"=>"Price"
-                                                                                 ),
                                                                  "application"=>array("size"=>6,
                                                                                   "name"=>"App"
                                                                                  ),
                                                                  "connectCost"=>array("size"=>8,
                                                                                   "name"=>"Connect"
+                                                                                 ),
+                                                                 "durationRate"=>array("size"=>8,
+                                                                                  "name"=>"Price"
+                                                                                 ),
+                                                                 "connectCostIn"=>array("size"=>8,
+                                                                                  "name"=>"Connect in"
+                                                                                 ),
+                                                                 "durationRateIn"=>array("size"=>8,
+                                                                                  "name"=>"Price in"
                                                                                  ),
                                                                  "startDate"=>array("size"=>11,
                                                                                   "name"=>"Start Date"
@@ -1309,15 +1343,17 @@ class RatingTables {
 
             $p = explode($this->delimiter, $buffer);
 
-            $ops             = trim($p[0]);
-            $gateway         = trim($p[1]);
-            $domain          = trim($p[2]);
-            $subscriber      = trim($p[3]);
-            $name            = trim($p[4]);
-            $destination     = trim($p[5]);
-            $durationRate    = trim($p[6]);
-            $application     = trim($p[7]);
-            $connectCost     = trim($p[8]);
+            $ops            = trim($p[0]);
+            $gateway        = trim($p[1]);
+            $domain         = trim($p[2]);
+            $subscriber     = trim($p[3]);
+            $name           = trim($p[4]);
+            $destination    = trim($p[5]);
+            $application    = trim($p[6]);
+            $connectCost    = trim($p[7]);
+            $durationRate   = trim($p[8]);
+            $connectCostIn  = trim($p[9]);
+            $durationRateIn = trim($p[10]);
 
             if (!$application) $application='audio';
 
@@ -1330,11 +1366,13 @@ class RatingTables {
                 subscriber,
                 name,
                 destination,
-                durationRate,
-                trafficRate,
                 application,
-                connectCost
+                connectCost,
+                durationRate,
+                connectCostIn,
+                durationRateIn
                 ) values (
+                '%s',
                 '%s',
                 '%s',
                 '%s',
@@ -1350,10 +1388,11 @@ class RatingTables {
                 addslashes($subscriber),
                 addslashes($name),
                 addslashes($destination),
-                addslashes($durationRate),
-                addslashes($trafficRate),
                 addslashes($application),
-                addslashes($connectCost)
+                addslashes($connectCost),
+                addslashes($durationRate),
+                addslashes($connectCostIn),
+                addslashes($durationRateIn)
                 );
 
                 if (!$this->db->query($query)) {
@@ -1380,12 +1419,15 @@ class RatingTables {
                             subscriber,
                             name,
                             destination,
-                            durationRate,
-                            trafficRate,
                             application,
-                            connectCost
+                            connectCost,
+                            durationRate,
+                            connectCostIn,
+                            durationRateIn
                             ) values (
                             LAST_INSERT_ID(),
+                            '%s',
+                            '%s',
                             '%s',
                             '%s',
                             '%s',
@@ -1402,10 +1444,11 @@ class RatingTables {
                             addslashes($subscriber),
                             addslashes($name),
                             addslashes($destination),
-                            addslashes($durationRate),
-                            addslashes($trafficRate),
                             addslashes($application),
-                            addslashes($connectCost)
+                            addslashes($connectCost),
+                            addslashes($durationRate),
+                            addslashes($connectCostIn),
+                            addslashes($durationRateIn)
                             );
             
                             if (!$this->db->query($query)) {
@@ -1504,9 +1547,10 @@ class RatingTables {
 
                 if ($this->db->num_rows()) {
                     $query=sprintf("update billing_rates set
+                    connectCost     = '%s',
                     durationRate    = '%s',
-                    trafficRate     = '%s',
-                    connectCost     = '%s'
+                    connectCostIn   = '%s',
+                    durationRateIn  = '%s'
                     where name      = '%s'
                     and destination = '%s'
                     and gateway     = '%s'
@@ -1514,16 +1558,16 @@ class RatingTables {
                     and subscriber  = '%s'
                     and application = '%s'
                     ",
-                    addslashes($durationRate),
-                    addslashes($trafficRate),
                     addslashes($connectCost),
+                    addslashes($durationRate),
+                    addslashes($connectCostIn),
+                    addslashes($durationRateIn),
                     addslashes($name),
                     addslashes($destination),
                     addslashes($gateway),
                     addslashes($domain),
                     addslashes($subscriber),
-                       addslashes($application)
-
+                    addslashes($application)
                     );
 
                     if (!$this->db->query($query)) {
@@ -1541,9 +1585,10 @@ class RatingTables {
                                 $_table = 'billing_rates_default';
                             }
                             $query=sprintf("update %s set
+                            connectCost     = '%s',
                             durationRate    = '%s',
-                            trafficRate     = '%s',
-                            connectCost     = '%s'
+                            connectCostIn   = '%s',
+                            durationRateIn  = '%s'
                             where name      = '%s'
                             and destination = '%s'
                             and gateway     = '%s'
@@ -1552,9 +1597,10 @@ class RatingTables {
                             and application = '%s'
                             ",
                             addslashes($_table),
-                            addslashes($durationRate),
-                            addslashes($trafficRate),
                             addslashes($connectCost),
+                            addslashes($durationRate),
+                            addslashes($connectCostIn),
+                            addslashes($durationRateIn),
                             addslashes($name),
                             addslashes($destination),
                             addslashes($gateway),
@@ -1580,11 +1626,13 @@ class RatingTables {
                     subscriber,
                     name,
                     destination,
-                    durationRate,
-                    trafficRate,
                     application,
-                    connectCost
+                    connectCost,
+                    durationRate,
+                    connectCostIn,
+                    durationRateIn
                     ) values (
+                    '%s',
                     '%s',
                     '%s',
                     '%s',
@@ -1600,10 +1648,11 @@ class RatingTables {
                     addslashes($subscriber),
                     addslashes($name),
                     addslashes($destination),
-                    addslashes($durationRate),
-                    addslashes($trafficRate),
                     addslashes($application),
-                    addslashes($connectCost)
+                    addslashes($connectCost),
+                    addslashes($durationRate),
+                    addslashes($connectCostIn),
+                    addslashes($durationRateIn)
                     );
 
                     if (!$this->db->query($query)) {
@@ -1630,12 +1679,14 @@ class RatingTables {
                                subscriber,
                                name,
                                destination,
+                               application
+                               connectCost,
                                durationRate,
-                               trafficRate,
-                               application,
-                               connectCost
+                               connectCostIn,
+                               durationRateIn
                                ) values (
                                LAST_INSERT_ID(),
+                               '%s',
                                '%s',
                                '%s',
                                '%s',
@@ -1652,10 +1703,11 @@ class RatingTables {
                                addslashes($subscriber),
                                addslashes($name),
                                addslashes($destination),
-                               addslashes($durationRate),
-                               addslashes($trafficRate),
                                addslashes($application),
-                               addslashes($connectCost)
+                               addslashes($connectCost),
+                               addslashes($durationRate),
+                               addslashes($connectCostIn),
+                               addslashes($durationRateIn)
                                );
 
                                if (!$this->db->query($query)) {
@@ -1708,17 +1760,19 @@ class RatingTables {
 
             $p = explode($this->delimiter, $buffer);
 
-            $ops             = trim($p[0]);
-            $gateway         = trim($p[1]);
-            $domain          = trim($p[2]);
-            $subscriber      = trim($p[3]);
-            $name            = trim($p[4]);
-            $destination     = trim($p[5]);
-            $durationRate    = trim($p[6]);
-            $application     = trim($p[7]);
-            $connectCost     = trim($p[8]);
-            $startDate       = trim($p[9]);
-            $endDate         = trim($p[10]);
+            $ops            = trim($p[0]);
+            $gateway        = trim($p[1]);
+            $domain         = trim($p[2]);
+            $subscriber     = trim($p[3]);
+            $name           = trim($p[4]);
+            $destination    = trim($p[5]);
+            $application    = trim($p[6]);
+            $connectCost    = trim($p[7]);
+            $durationRate   = trim($p[8]);
+            $connectCostIn  = trim($p[9]);
+            $durationRateIn = trim($p[10]);
+            $startDate      = trim($p[11]);
+            $endDate        = trim($p[12]);
 
             if ($ops=="1") {
 
@@ -1729,12 +1783,16 @@ class RatingTables {
                 subscriber,
                 name,
                 destination,
-                durationRate,
                 application,
                 connectCost,
+                durationRate,
+                connectCostIn,
+                durationRateIn,
                 startDate,
                 endDate
                 ) values (
+                '%s',
+                '%s',
                 '%s',
                 '%s',
                 '%s',
@@ -1751,9 +1809,11 @@ class RatingTables {
                 addslashes($subscriber),
                 addslashes($name),
                 addslashes($destination),
-                addslashes($durationRate),
                 addslashes($application),
                 addslashes($connectCost),
+                addslashes($durationRate),
+                addslashes($connectCostIn),
+                addslashes($durationRateIn),
                 addslashes($startDate),
                 addslashes($endDate)
                 );
@@ -1826,9 +1886,11 @@ class RatingTables {
 
                 if ($this->db->num_rows()) {
                     $query=sprintf("update billing_rates_history set
-                    durationRate    = '%s',
                     application     = '%s',
-                    connectCost     = '%s'
+                    connectCost     = '%s',
+                    durationRate    = '%s',
+                    connectCostIn   = '%s',
+                    durationRateIn  = '%s'
                     where name      = '%s'
                     and destination = '%s'
                     and gateway     = '%s'
@@ -1837,9 +1899,11 @@ class RatingTables {
                     and startDate   = '%s'
                     and endDate     = '%s'
                     ",
-                    addslashes($durationRate),
                     addslashes($application),
                     addslashes($connectCost),
+                    addslashes($durationRate),
+                    addslashes($connectCostIn),
+                    addslashes($durationRateIn),
                     addslashes($name),
                     addslashes($destination),
                     addslashes($gateway),
@@ -1868,12 +1932,16 @@ class RatingTables {
                     subscriber,
                     name,
                     destination,
-                    durationRate,
                     application,
                     connectCost,
+                    durationRate,
+                    connectCostIn,
+                    durationRateIn,
                     startDate,
                     endDate
                     ) values (
+                    '%s',
+                    '%s',
                     '%s',
                     '%s',
                     '%s',
@@ -1890,9 +1958,11 @@ class RatingTables {
                     addslashes($subscriber),
                     addslashes($name),
                     addslashes($destination),
-                    addslashes($durationRate),
                     addslashes($application),
                     addslashes($connectCost),
+                    addslashes($durationRate),
+                    addslashes($connectCostIn),
+                    addslashes($durationRateIn),
                     addslashes($startDate),
                     addslashes($endDate)
                     );
@@ -2650,11 +2720,12 @@ class RatingTables {
 
                 $_rates[$this->db->Record['name']][$this->db->Record['destination']][$_app][$this->db->Record['id']]=
                 array(
-                     "durationRate"    => $this->db->Record['durationRate'],
-                     "trafficRate"     => $this->db->Record['trafficRate'],
-                     "connectCost"     => $this->db->Record['connectCost'],
-                     "startDate"       => $this->db->Record['startDateTimestamp'],
-                     "endDate"         => $this->db->Record['endDateTimestamp']
+                     "connectCost"    => $this->db->Record['connectCost'],
+                     "durationRate"   => $this->db->Record['durationRate'],
+                     "connectCostIn"  => $this->db->Record['connectCostIn'],
+                     "durationRateIn" => $this->db->Record['durationRateIn'],
+                     "startDate"      => $this->db->Record['startDateTimestamp'],
+                     "endDate"        => $this->db->Record['endDateTimestamp']
                 );
             }
         }
@@ -3323,18 +3394,18 @@ class RatingTables {
                 if ($confirmCopy) {
                     if ($toRate == 'history') {
                         $values=sprintf("
-                        (gateway,domain,subscriber,name,destination,durationRate,
-                        trafficRate,application,connectCost,startDate,endDate)
+                        (gateway,domain,subscriber,name,destination,application,connectCost,durationRate,connectCostIn,durationRateIn,startDate,endDate)
                         select
                         billing_rates.gateway,
                         billing_rates.domain,
                         billing_rates.subscriber,
                         '%s',
                         billing_rates.destination,
-                        billing_rates.durationRate,
-                        billing_rates.trafficRate,
                         billing_rates.application,
                         billing_rates.connectCost,
+                        billing_rates.durationRate,
+                        billing_rates.connectCostIn,
+                        billing_rates.durationRateIn,
                         NOW(),
                         NOW()
                         from billing_rates ",
@@ -3343,18 +3414,18 @@ class RatingTables {
                     } else {
         
                         $values=sprintf("
-                        (gateway,domain,subscriber,name,destination,durationRate,
-                        trafficRate,application,connectCost)
+                        (gateway,domain,subscriber,name,destination,application,connectCost,durationRate,connectCostIn,durationRateIn)
                         select
                         billing_rates.gateway,
                         billing_rates.domain,
                         billing_rates.subscriber,
                         '%s',
                         billing_rates.destination,
-                        billing_rates.durationRate,
-                        billing_rates.trafficRate,
                         billing_rates.application,
-                        billing_rates.connectCost
+                        billing_rates.connectCost,
+                        billing_rates.durationRate,
+                        billing_rates.connectCostIn,
+                        billing_rates.durationRateIn
                         from billing_rates ",
                         $toRate);
                     }

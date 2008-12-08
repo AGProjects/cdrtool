@@ -518,6 +518,17 @@ alter table prepaid add column session_counter int unsigned not null;
 
 
 6.7.0
-alter table billing_rates add column cdrtool.durationRatePurchased varchar(25) not null;
-alter table billing_rates add column cdrtool.trafficRatePurchased varchar(25) not null;
-alter table billing_rates add column cdrtool.connectCostPurchased varchar(25) not null;
+alter table billing_rates drop column trafficRate;
+alter table cdrtool.billing_rates_history drop column trafficRate;
+
+alter table billing_rates_history modify application varchar(25)  not null default 'audio' after destination;
+alter table billing_rates modify application varchar(25)  not null default 'audio' after destination;
+
+alter table billing_rates_history modify connectCost varchar(25)  not null after application;
+alter table billing_rates modify connectCost varchar(25)  not null after application;
+
+alter table billing_rates add column connectCostIn varchar(25) not null;
+alter table billing_rates add column durationRateIn varchar(25) not null;
+
+alter table cdrtool.billing_rates_history add column connectCostIn varchar(25) not null after durationRate;
+alter table cdrtool.billing_rates_history add column durationRateIn varchar(25) not null after connectCostIn;
