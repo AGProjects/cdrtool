@@ -173,7 +173,6 @@ class Rate {
 
             while ($durationRatedTotal < $this->duration) {
 
-
                 if ($i == "0") {
                     $dayofweek       = date("w",$this->timestampBilling);
                     $hourofday       = date("G",$this->timestampBilling);
@@ -231,10 +230,10 @@ class Rate {
 
             if ($span=="1") {
                 $connectCostSpan=$connectCost;
-				$this->connectCost=number_format($connectCost/$this->priceDenominator,$this->priceDecimalDigits);
+                $this->connectCost=number_format($connectCost/$this->priceDenominator,$this->priceDecimalDigits);
 
                 $connectCostSpanIn=$connectCostIn;
-				$this->connectCostIn=number_format($connectCostIn/$this->priceDenominator,$this->priceDecimalDigits);
+                $this->connectCostIn=number_format($connectCostIn/$this->priceDenominator,$this->priceDecimalDigits);
             } else {
                 $connectCostSpan=0;
                 $connectCostSpanIn=0;
@@ -277,8 +276,12 @@ class Rate {
             $this->rateSyslog="";
 
             if ($span=="1" && $thisRate['profile']) {
+            	if ($connectCostIn) {
                 $this->rateInfo .= 
-                "  Connect in: $connectCostPrintIn\n".
+                "  Connect in: $connectCostPrintIn\n";
+                }
+
+                $this->rateInfo .= 
                 "     Connect: $connectCostPrint\n".
                 "   StartTime: $this->startTimeBilling\n".
                 "--\n";
@@ -300,8 +303,10 @@ class Rate {
                 "        Rate: $durationRatePrint / $this->durationPeriodRated s\n".
                 "       Price: $spanPricePrint\n";
 
+                if ($spanPriceIn) {
                 $this->rateInfo .= 
                 "    Price in: $spanPricePrintIn\n";
+                }
 
                 $this->rateSyslog .= sprintf(" Profile=%s Period=%s Rate=%s Interval=%s Cost=%s/%s",$thisRate['profile'],$thisRate['day'],$thisRate['rate'],$thisRate['interval'],$durationRatePrint,$this->durationPeriodRated);
 
@@ -320,8 +325,10 @@ class Rate {
         }
                  
         if ($this->priceIn) {
-                $this->rateInfo .= "\n".
-                "    Price in:".sprintf("%.4f",$this->priceIn)."\n";
+                $this->rateInfo .= "--\n".
+                "   Price out: ".sprintf("%.4f",$this->price)."\n".
+                "    Price in: ".sprintf("%.4f",$this->priceIn)."\n".
+                "      Margin: ".sprintf("%.4f",$this->price-$this->priceIn)."\n";
 
         }
 

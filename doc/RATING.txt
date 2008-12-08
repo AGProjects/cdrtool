@@ -193,9 +193,7 @@ the destination id and the billing party found in previous steps.
 
    if durationForRating >= minimumDurationCharged then
    		Price = connectCost/priceDenominator+
-           durationRate*durationForRating/durationPeriodRated/priceDenominator+
-           trafficRate/priceDenominator*(inputTraffic+outputTraffic)/8+
-           applicationRate/priceDenominator
+           durationRate*durationForRating/durationPeriodRated/priceDenominator
    else 
         Price = 0
 
@@ -212,6 +210,18 @@ the destination id and the billing party found in previous steps.
    and the TLDs with their corespondent discounts must be provisioned in the
    Rating tables section. See ENUM TLD discounts section for more
    information.
+
+
+   Purchasing price
+   ----------------
+
+   From version 6.7.0, a second price called 'Price in' is calculated using
+   the same formula but based on connectCostIn and durationRateIn values. It
+   can be used to match the purchasing price and calculate the margin. The
+   information about both prices is stored in the RateInfo field of the CDR. 
+   The values for connectCostIn and durationRateIn must be provisioned in
+   the billing_rates and billing_rates_istory tables using the web interafce
+   or by importing csv files.
 
 
 8. Save the calculated price, Billing Party and Destination Id for each call
