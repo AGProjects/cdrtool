@@ -7529,14 +7529,21 @@ class DnsRecords extends Records {
 
         $this->filters['zone']=$zone;
 
-        $name=$name.'@'.$zone;
-
         if ($this->typeFilter) {
             $type = $this->typeFilter;
         } else if ($dictionary['type']) {
             $type = $dictionary['type'];
         } else {
             $type = trim($_REQUEST['type']);
+        }
+
+        if (!strlen($type)) {
+            printf ("<p><font color=red>Error: Missing record type. </font>");
+            return false;
+        }
+
+        if ($type=='MBOXFW') {
+        	$name=$name.'@'.$zone;
         }
 
         if ($dictionary['value']) {

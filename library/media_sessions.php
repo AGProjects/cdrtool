@@ -26,7 +26,6 @@ class MediaSessions {
 
         $this->userAgentImages = $userAgentImages;
 
-
         $this->filters = $filters;
         $this->allowedDomains  = $allowedDomains;
 
