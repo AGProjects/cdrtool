@@ -333,10 +333,11 @@ billing_rates
 | subscriber      |
 | name            |
 | destination     |
-| durationRate    |
-| trafficRate     |
 | application     |
 | connectCost     |
+| durationRate    |
+| connectCostIn   |
+| durationRateIn  |
 +-----------------+
 
 billing_rates_history
@@ -349,10 +350,11 @@ billing_rates_history
 | subscriber      |
 | name            |
 | destination     |
-| durationRate    |
-| trafficRate     |
 | application     |
 | connectCost     |
+| durationRate    |
+| connectCostIn   |
+| durationRateIn  |
 | startDate       |
 | endDate         |
 +-----------------+
