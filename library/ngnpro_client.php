@@ -11000,9 +11000,11 @@ class Customers extends Records {
         </td>
         </tr>
         <tr>
-        <td colspan=2>";
+        <td colspan=2>Id";
+
 
         $this->showCustomerSelection();
+        $this->showResellerSelection();
 
         $this->showSeachFormCustom();
         print "</td>

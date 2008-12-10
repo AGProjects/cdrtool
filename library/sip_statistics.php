@@ -314,8 +314,8 @@ class ThorNetworkImage {
 }
 
 class SIPstatistics {
-    var $SipEnabledZones = array();
-	var $online          = array();
+    var $SipEnabledZones        = array();
+	var $online                 = array();
     var $StatisticsPresentities = array();
 
     function SIPstatistics () {
@@ -332,9 +332,6 @@ class SIPstatistics {
         $this->generateMrtgDataScript     = $this->path."/scripts/generateMrtgData.php";
         $this->generateMrtgConfigScript   = $this->path."/scripts/generateMrtgConfig.php";
 
-        $this->db        = new DB_cdrtool();
-        $this->ser_db    = new DB_openser();
-
         if (class_exists('DB_siponline')) {
         	$this->online_db = new DB_siponline();
         } else {
@@ -349,15 +346,9 @@ class SIPstatistics {
     function getSipEnabledZones () {
         global $CDRTool;
 
-        $query="select domain from domain";
+        if (!is_array($CDRTool['statistics']['zoneFilter'])) return;
 
-        if (!$this->ser_db->query($query)) return 0;
-        if (!$this->ser_db->num_rows()) return 0;
-
-		while ($this->ser_db->next_record()) {
-            $zName=$this->ser_db->f('domain');
-
-            if (is_array($CDRTool['statistics']['zoneFilter']) && !in_array($zName,$CDRTool['statistics']['zoneFilter'])) continue;
+        foreach ($CDRTool['statistics']['zoneFilter'] as $zName) {
 
             if (!$seen[$zName]) {
             	$this->SipEnabledZones[$zName] = $zName;
@@ -371,27 +362,6 @@ class SIPstatistics {
             	$seen[$zName]++;
         	}
         }
-
-        if (is_array($CDRTool['statistics']['extraZones'])) {
-            foreach ($CDRTool['statistics']['extraZones'] as $zName) {
-    
-                if (!$seen[$zName]) {
-                    $this->SipEnabledZones[$zName] = $zName;
-                    $this->statistics[$zName] =
-                                   array( 'online_users' => '0',
-                                          'sessions'     => '0',
-                                          'traffic'      => '0',
-                                          'caller'       => '0',
-                                          'called'       => '0'
-                                          );
-                    $seen[$zName]++;
-                }
-            }
-        }
-
-        //print_r($this->SipEnabledZones);
-        //dprint_r($this->statistics);
-
     }
 
     function generateMrtgConfigFile () {

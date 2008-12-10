@@ -14,7 +14,6 @@ require("sip_statistics.php");
 $title='Platform usage';
 include("../../header.phtml");
 
-
 $SIPstatistics=new SIPstatistics ();
 $SIPstatistics->getSipEnabledZones();
 
@@ -33,13 +32,13 @@ if (strlen($CDRTool['filter']['domain'])) {
 <? if ($perm->have_perm('admin')) { ?>
 
 <TR>
-<TD><DIV align='center'><B> Registered SIP devices</B></DIV>
+<TD><DIV align='center'><B> Registered SIP accounts</B></DIV>
 <DIV><A HREF='total_users.html'><IMG BORDER=0 ALT='total_users Traffic Graph' SRC='total_users-day.png'></A>
 <SMALL><!--#flastmod file='total_users.html' --></SMALL></DIV>
-</TD><TD><DIV align='center'><B> Active sessions</B></DIV>
+</TD><TD><DIV align='center'><B> Active RTP media sessions</B></DIV>
 <DIV><A HREF='total_sessions.html'><IMG BORDER=0 ALT='total_sessions Traffic Graph' SRC='total_sessions-day.png'></A>
 <SMALL><!--#flastmod file='total_sessions.html' --></SMALL></DIV>
-</TD><TD><DIV align='center'><B> Relayed IP Traffic </B></DIV>
+</TD><TD><DIV align='center'><B> Relayed RTP media traffic </B></DIV>
 <DIV><A HREF='total_traffic.html'><IMG BORDER=0 ALT='total_traffic Traffic Graph' SRC='total_traffic-day.png'></A>
 <SMALL><!--#flastmod file='total_traffic.html' --></SMALL></DIV>
 </TD></TR>
@@ -95,15 +94,5 @@ foreach ($domains as $key) {
 </HTML>
 <?
 
-$db = new DB_CDRTool;
-$loginname=$auth->auth["uname"];
-
-$log_query=sprintf("insert into log
-(date,login,ip,datasource,description)
-values (NOW(),'%s','%s','Usage','View statistics')",
-addslashes($loginname),
-addslashes($_SERVER['REMOTE_ADDR'])
-);
-$db->query($log_query);
 page_close();
 ?>

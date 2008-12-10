@@ -524,10 +524,10 @@ class MediaSessionsNGNPro extends MediaSessions {
                 $this->domain_statistics['total']['sessions']++;
                 foreach ($_session->streams as $streamInfo) {
                 	print_r($streamInfo);
-                	$this->domain_statistics[$domain1]['caller']=$streamInfo->caller_bytes/$_session->duration*2;
-                    $this->domain_statistics['total']['caller']=$streamInfo->caller_bytes/$_session->duration*2;
-                    $this->domain_statistics[$domain1]['callee']=$streamInfo->callee_bytes/$_session->duration*2;
-                    $this->domain_statistics['total']['callee']=$streamInfo->callee_bytes/$_session->duration*2;
+                	$this->domain_statistics[$domain1]['caller']=$this->domain_statistics[$domain1]['caller']+$streamInfo->caller_bytes/$_session->duration*2;
+                    $this->domain_statistics['total']['caller']=$this->domain_statistics['total']['caller']+$streamInfo->caller_bytes/$_session->duration*2;
+                    $this->domain_statistics[$domain1]['callee']=$this->domain_statistics[$domain1]['callee']+$streamInfo->callee_bytes/$_session->duration*2;
+                    $this->domain_statistics['total']['callee']=$this->domain_statistics['total']['callee']+$streamInfo->callee_bytes/$_session->duration*2;
                 }
                 $_sessions2[] = $_session;
             }
@@ -535,15 +535,16 @@ class MediaSessionsNGNPro extends MediaSessions {
             foreach ($_sessions as $_session) {
                 list($user1,$domain1)=explode("@",$_session->from_uri);
                 list($user2,$domain2)=explode("@",$_session->to_uri);
+                if (preg_match("/^(.*):/",$domain1,$m)) $domain1=$m[1];
 
                 $this->domain_statistics[$domain1]['sessions']++;
                 $this->domain_statistics['total']['sessions']++;
 
                 foreach ($_session->streams as $streamInfo) {
-                	$this->domain_statistics[$domain1]['caller']=$streamInfo->caller_bytes/$_session->duration*2;
-                    $this->domain_statistics['total']['caller']=$streamInfo->caller_bytes/$_session->duration*2;
-                    $this->domain_statistics[$domain1]['callee']=$streamInfo->callee_bytes/$_session->duration*2;
-                    $this->domain_statistics['total']['callee']=$streamInfo->callee_bytes/$_session->duration*2;
+                	$this->domain_statistics[$domain1]['caller']=$this->domain_statistics[$domain1]['caller']+$streamInfo->caller_bytes/$_session->duration*2;
+                    $this->domain_statistics['total']['caller']=$this->domain_statistics['total']['caller']+$streamInfo->caller_bytes/$_session->duration*2;
+                    $this->domain_statistics[$domain1]['callee']=$this->domain_statistics[$domain1]['callee']+$streamInfo->callee_bytes/$_session->duration*2;
+                    $this->domain_statistics['total']['callee']=$this->domain_statistics['total']['callee']+$streamInfo->callee_bytes/$_session->duration*2;
                 }
             }
             $_sessions2 = $_sessions;
