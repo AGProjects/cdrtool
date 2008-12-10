@@ -3,11 +3,315 @@
     Copyright (c) 2007-2008 AG Projects
     http://ag-projects.com
     Author Adrian Georgescu
-
-    This page provides functions for building graphical
-    usage statistics for OpenSER and MediaProxy
-
 */
+
+class NetworkStatistics {
+	var $statistics        = array();
+    var $status            = array();
+	var $sip_summary       = array();
+    var $sip_proxies       = array();
+    var $node_statistics   = array();
+    var $domain_statistics = array();
+
+    function NetworkStatistics($engineId,$allowedDomains=array()) {
+    	if (!strlen($engineId)) return false;
+
+        $this->allowedDomains  = $allowedDomains;
+        $this->soapEngineId    = $engineId;
+
+    	require("/etc/cdrtool/ngnpro_engines.inc");
+        require_once("ngnpro_soap_library.php");
+
+        $this->SOAPlogin = array(
+                               "username"    => $soapEngines[$this->soapEngineId]['username'],
+                               "password"    => $soapEngines[$this->soapEngineId]['password'],
+                               "admin"       => true
+                               );
+
+        $this->SOAPurl=$soapEngines[$this->soapEngineId]['url'];
+
+        $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+
+        $this->soapclient = new WebService_NGNPro_NetworkPort($this->SOAPurl);
+
+        $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+    }
+
+    function getStatistics() {
+
+        $this->soapclient->addHeader($this->SoapAuth);
+        $result = $this->soapclient->getStatistics();
+
+        if (PEAR::isError($result)) {
+            $error_msg   = $result->getMessage();
+            $error_fault = $result->getFault();
+            $error_code  = $result->getCode();
+
+            $log=sprintf("Error from %s: %s: %s",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
+        $statistics=json_decode($result,true);
+
+        $this->statistics=$statistics;
+
+        foreach (array_keys($statistics) as $_ip) {
+        	if ($_ip == 'summary') {
+                foreach (array_keys($statistics[$_ip]) as $_role) {
+                    if ($_role == 'sip_proxy') {
+                        foreach (array_keys($statistics[$_ip][$_role]) as $_section) {
+                            foreach (array_keys($statistics[$_ip][$_role][$_section]) as $_domain) {
+                                if (count($this->allowedDomains) && !in_array($_domain,$this->allowedDomains)) continue;
+                                $this->sip_summary[$_section]=$this->sip_summary[$_section]+$statistics[$_ip][$_role][$_section][$_domain];
+                            }
+                        }
+                    }
+                }
+
+                continue;
+
+            }
+
+            foreach (array_keys($statistics[$_ip]) as $_role) {
+                if ($_role == 'sip_proxy') {
+					foreach (array_keys($statistics[$_ip][$_role]) as $_section) {
+                        foreach (array_keys($statistics[$_ip][$_role][$_section]) as $_domain) {
+                            if (count($this->allowedDomains) && !in_array($_domain,$this->allowedDomains)) continue;
+                            $this->domain_statistics[$_domain][$_section] = $this->domain_statistics[$_domain][$_section] + $statistics[$_ip][$_role][$_section][$_domain];
+                            $this->domain_statistics['total'][$_section]  = $this->domain_statistics['total'][$_section]  + $statistics[$_ip][$_role][$_section][$_domain];
+                    		$this->node_statistics[$_ip][$_section]       = $this->node_statistics[$_ip][$_section]       + $statistics[$_ip][$_role][$_section][$_domain];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function getStatus() {
+
+        $this->soapclient->addHeader($this->SoapAuth);
+        $result = $this->soapclient->getStatus();
+
+        if (PEAR::isError($result)) {
+            $error_msg   = $result->getMessage();
+            $error_fault = $result->getFault();
+            $error_code  = $result->getCode();
+
+            $log=sprintf("Error from %s: %s: %s",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
+        $this->status=json_decode($result,true);
+
+        foreach (array_keys($this->status) as $_id) {
+            foreach ($this->status[$_id]['roles'] as $_role) {
+
+                if ($_role=='sip_proxy') $this->sip_proxies[$this->status[$_id]['ip']]++;
+
+				$ip=$this->status[$_id]['ip'];
+                $this->roles[$_role][$ip]=array('ip'      => $ip,
+                                                'version' => $this->status[$_id]['version']
+                                                );
+                foreach(array_keys($this->status[$_id]) as $_attr) {
+                    if ($_attr == 'ip' || $_attr == 'version' || $_attr == 'roles') continue;
+                	$this->roles[$_role][$ip]['attributes'][$_attr]=$this->status[$_id][$_attr];
+                }
+            }
+        }
+    }
+
+    function showStatus() {
+        $this->getStatus();
+
+        print "<table border=0>";
+        print "<tr bgcolor=lightgrey>";
+        print "<td><b>Role</b></td><td><b>IP address</b></td><td><b>Version</b></td><td><b>Attributes</b></td></tr>";
+
+        foreach (array_keys($this->roles) as $_role) {
+            foreach ($this->roles[$_role] as $_entity) {
+                if (!$print_role[$_role]) {
+                	$_role_print=preg_replace("/_/"," ",$_role);
+                } else {
+                	$_role_print='';
+                }
+
+                $a_print="<table border=0>";
+                foreach (array_keys($_entity['attributes']) as $_a1) {
+                    $a_print .= sprintf ("<tr><td>%s</td><td>%s</td></tr>",$_a1,$_entity['attributes'][$_a1]);
+                }
+
+                $a_print.="</table>";
+
+            	printf ("<tr><td><b>%s</b></td><td class=border>%s</td><td class=border>%s</td><td class=border>%s</td></tr>",
+            	ucfirst($_role_print),$_entity['ip'],$_entity['version'],$a_print);
+                $print_role[$_role]++;
+            }
+        }
+
+        print "</table>";
+
+	}
+
+    function showStatistics() {
+        $this->getStatistics();
+
+        print "<table border=0>";
+        print "<tr bgcolor=lightgrey>";
+        foreach (array_keys($this->sip_summary) as $_section) {
+        	$_section_print=preg_replace("/_/"," ",$_section);
+            printf ("<td class=border><b>%s</b></td>",ucfirst($_section_print));
+        }
+        print "</tr>";
+        print "<tr>";
+        foreach (array_keys($this->sip_summary) as $_section) {
+            printf ("<td class=border>%s</td>",$this->sip_summary[$_section]);
+        }
+        print "</tr>";
+        print "<table>";
+
+	}
+}
+
+class ThorNetworkImage {
+    var $imgsize      = 630;
+    var $nodes        = array();
+
+    function ThorNetworkImage($engineId,$allowedDomains=array()) {
+
+        if (!strlen($engineId)) return false;
+
+        $this->soapEngineId=$engineId;
+        $NetworkStatistics=new NetworkStatistics($engineId,$allowedDomains);
+
+        $NetworkStatistics->getStatus();
+        $NetworkStatistics->getStatistics();
+
+        $this->nodes=$NetworkStatistics->sip_proxies;
+        $this->node_statistics=$NetworkStatistics->node_statistics;
+    }
+
+    function buildImage() {
+        $img   = imagecreatetruecolor($this->imgsize, $this->imgsize);
+        $white = imagecolorallocate($img, 255, 255, 255);
+        $black = imagecolorallocate($img, 0, 0, 0);
+        
+        imagefill($img, 0, 0, $white);
+    
+        $c=count($this->nodes);
+        imagestring ($img, 5, 20, 20, "SIP Thor network", $black);
+     
+        $cx=$this->imgsize/2;
+        $cy=$cx;
+     
+        $radius=0.7*$cx;
+     
+        // Get ThorNode image
+        $node_img = @imagecreatefrompng('Node.png');
+        list($nw, $nh) = getimagesize('Node.png');
+    
+        // Get ClassicNode image
+        $cnode_img = @imagecreatefrompng('ClassicNode.png');
+        list($cnw, $cnh) = getimagesize('ClassicNode.png');
+    
+        // Get Cloud Image
+        $cloud_img = @imagecreatefrompng('InternetCloud.png');
+        list($cw, $ch) = getimagesize('InternetCloud.png');
+    
+        // Get Thor rectangle image
+        $thor_img = @imagecreatefrompng('P2PThorTitle.png');
+        list($tw, $th) = getimagesize('P2PThorTitle.png');
+    
+        // Get Classic rectangle image
+        $cthor_img = @imagecreatefrompng('ClassicRectangle.png');
+        list($ctw, $cth) = getimagesize('ClassicRectangle.png');
+    
+        if (count($this->nodes)) {
+            if (count($this->nodes) > 1) {
+                imagecopy ($img,$thor_img, $this->imgsize/2-$tw/2, $this->imgsize/2-$th/2-5, 0, 0, $tw, $th);
+                imagecopy ($img,$cloud_img, $this->imgsize/2-$cw/2, $this->imgsize/2-$ch/2, 0, 0, $cw, $ch);
+        
+                $dash=false; 
+                $dashsize=2;
+                
+                for ($angle=0; $angle<=(180+$dashsize); $angle+=$dashsize) { 
+                  $x = ($radius * cos(deg2rad($angle))); 
+                  $y = ($radius * sin(deg2rad($angle))); 
+             
+                  if ($dash) { 
+                      imageline($img, $cx+$px, $cy+$py, $cx+$x, $cy+$y, 'black');
+                      imageline($img, $cx-$px, $cx-$py, $cx-$x, $cy-$y, 'black');
+                  } 
+                  
+                  $dash=!$dash; 
+                  $px=$x; 
+                  $py=$y; 
+                }
+            } else {
+                imagecopy ($img,$cthor_img, $this->imgsize/2-$ctw/2, $this->imgsize/2-$cth/2+50, 0, 0, $ctw, $cth);
+            }
+    
+            $dashsize=360/count($this->nodes);
+            $j=0;
+
+            $node_names=array_keys($this->nodes);
+
+            for ($angle=0; $angle<360; $angle+=$dashsize) {
+         
+              $x = ($radius * cos(deg2rad($angle)));
+              $y = ($radius * sin(deg2rad($angle))); 
+              
+              $text = $node_names[$j];
+              $px=$x; 
+              $py=$y;
+
+              $accounts_text=intval($this->node_statistics[$text]['online_accounts']). ' accounts';
+         
+              if (count($this->nodes) > 1) {
+                  if (($angle >= 120 && $angle < 240)) {
+                    imagestring ($img, 3, $cx+$px-70, $cy+$py-60, $text, $black);
+                    imagestring ($img, 3, $cx+$px-70, $cy+$py-50, $accounts_text, $black);
+                  } else {
+                    imagestring ($img, 3, $cx+$px-110, $cy+$py-30, $text, $black);
+                    imagestring ($img, 3, $cx+$px-110, $cy+$py-20, $accounts_text, $black);
+                  }
+                  imagecopy ($img,$node_img, $cx+$px-$nw/2+7, $cy+$py-$nh/2+5, 0, 0, $nw-20, $nh-20);
+              } else {
+                  imagecopy ($img,$cnode_img, $this->imgsize/2-$cnw/2-100, $this->imgsize/2-$cnh/2, 0, 0, $cnw, $cnh);
+                  imagestring ($img, 3, $this->imgsize/2-$cnw/2-60, $this->imgsize/2-$cnh/2+220, $text, $black);
+              }
+              $j++;
+              
+            }
+        } else {
+            imagecopy ($img,$thor_img, $this->imgsize/2-$tw/2, $this->imgsize/2-$th/2-5, 0, 0, $tw, $th);
+            imagecopy ($img,$cloud_img, $this->imgsize/2-$cw/2, $this->imgsize/2-$ch/2, 0, 0, $cw, $ch);
+            $dash=false; 
+            $dashsize=2;
+            
+            for ($angle=0; $angle<=(180+$dashsize); $angle+=$dashsize) { 
+              $x = ($radius * cos(deg2rad($angle))); 
+              $y = ($radius * sin(deg2rad($angle))); 
+         
+              if ($dash) { 
+                  imageline($img, $cx+$px, $cy+$py, $cx+$x, $cy+$y, 'black');
+                  imageline($img, $cx-$px, $cx-$py, $cx-$x, $cy-$y, 'black');
+              } 
+              
+              $dash=!$dash; 
+              $px=$x; 
+              $py=$y; 
+            }
+
+        }
+    
+        return $img;
+    }
+}
 
 class SIPstatistics {
     var $SipEnabledZones = array();
@@ -24,7 +328,7 @@ class SIPstatistics {
         $this->mrtgcfg_dir     = $this->path."/status/usage";
         $this->index_file      = $this->path."/status/usage/index.phtml";
 
-        $this->harvest_script  = $this->path."/scripts/harvestStatistics.php";
+        $this->harvest_script  = $this->path."/scripts/harvestStatistics2.php";
         $this->generateMrtgDataScript     = $this->path."/scripts/generateMrtgData.php";
         $this->generateMrtgConfigScript   = $this->path."/scripts/generateMrtgConfig.php";
 
@@ -203,7 +507,6 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         dprint_r($this->online);
 	}
 
-
     function harvestStatistics() {
         if (!$handle = fopen($this->harvest_file, 'w+')) {
         	echo "Error opening $this->harvest_file\n";
@@ -321,7 +624,6 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         fclose($handle);
     }
 
-
     function getrtpsessions($ip, $port, $_domains) {
         if ($fp = fsockopen ($ip, $port, $errno, $errstr, "5") ) {
             fputs($fp, "status\n");
@@ -412,93 +714,6 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
 
     }
 
-    function getOnlineTrend() {
-    	$ips_old=array();
-        $ips_new=array();
-
-		$query="select count(*) as c from location";
-    	$this->online_db->query($query);
-        $this->online_db->next_record();
-        $count_new=$this->online_db->f('c');
-
-        printf ("%d Contacts new registerd\n",$count_new);
-
-		$query="select count(*) as c from count_contacts";
-    	$this->online_db->query($query);
-        $this->online_db->next_record();
-        $count_old=$this->online_db->f('c');
-
-        printf ("%d Contacts old registerd\n",$count_old);
-
-		$query="select * from online_ips";
-
-        dprint($query);
-    	$this->online_db->query($query);
-        while ($this->online_db->next_record()) {
-			$els=explode(";",$this->online_db->f('ip'));
-            $ips_old[]=$els[0];
-        }
-        sort($ips_old);
-
-        printf ("%d IPs old registerd\n",count($ips_old));
-
-		$query="select distinct(SUBSTRING_INDEX(SUBSTRING_INDEX(contact, '@',-1),':',1))
-        as ip from location";
-        dprint($query);
-        $this->online_db->query($query);
-        while ($this->online_db->next_record()) {
-			$els=explode(";",$this->online_db->f('ip'));
-            $ips_new[]=$els[0];
-        }
-        sort($ips_new);
-
-        printf ("%d IPs new registerd\n",count($ips_new));
-
-        $left=array_diff($ips_old,$ips_new);
-        $join=array_diff($ips_new,$ips_old);
-
-        sort($left);
-        sort($join);
-
-        if (count($join)) {
-        	printf ("%d IPs joined: ",count($join));
-            foreach ($join as $var) print "$var ";
-            print "\n";
-        }
-
-        if (count($left)) {
-        	printf ("%d IPs left: ",count($left));
-            foreach ($left as $var) print "$var ";
-            print "\n";
-        }
-
-        //print_r($left);
-
-        $query="drop table if exists online_ips";
-        dprint($query);
-
-        $this->online_db->query($query);
-
-        $query="create table online_ips
-        select distinct(SUBSTRING_INDEX(SUBSTRING_INDEX(contact, '@',-1),':',1))
-        as ip from location";
-        dprint($query);
-
-        $this->online_db->query($query);
-
-        $query="drop table if exists count_contacts";
-        dprint($query);
-
-        $this->online_db->query($query);
-
-        $query="create table count_contacts
-        select count(*)a as c from location";
-        dprint($query);
-
-        $this->online_db->query($query);
-
-        //dprint_r($this->online);
-	}
 
     function publishPresence ($soapEngine,$SIPaccount,$note,$activity) {
 
@@ -547,6 +762,5 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         return true;
     }
 }
-
 
 ?>

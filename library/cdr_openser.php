@@ -3806,7 +3806,9 @@ class Media_trace {
             $error_fault = $result->getFault();
             $error_code  = $result->getCode();
 
-            printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            if ($error_fault->detail->exception->errorcode != 1060) {
+            	printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            }
             return false;
         }
 

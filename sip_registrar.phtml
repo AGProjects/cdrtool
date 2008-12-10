@@ -1,16 +1,21 @@
 <?
 require("/etc/cdrtool/global.inc");
-
 page_open(
     array("sess" => "CDRTool_Session",
           "auth" => "CDRTool_Auth",
           "perm" => "CDRTool_Perm"
           ));
 
+require("sip_statistics.php");
+require("media_sessions.php");
+
 $perm->check("statistics");
 
-$title="SIP registrar - online subscribers";
+$title="SIP registrar statistics";
 include("header.phtml");
+
+global $CDRTool;
+if (strlen($CDRTool['filter']['domain'])) $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
 
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
@@ -21,26 +26,56 @@ if ($_REQUEST['datasource']) {
     $datasources=array_keys($DATASOURCES);
 }
 
+$filters=array('domain'=>$_REQUEST['domain']);
+
 foreach ($datasources as $datasource) {
 
     if (in_array($datasource,$CDRTool['dataSourcesAllowed'])) {
-        if ($DATASOURCES[$datasource]['enableThor'] && $DATASOURCES[$datasource]['thorStatusNode']) {
-	    	printf ("<h1>%s</h1>",$DATASOURCES[$datasource]['name']);
+        print "<table border=0>";
+        print "<tr>";
+        print "<td valign=top>";
 
-            printf ("
-            <p>
-            <img src=images/thorNetworkImage.php?node=%s>
-            ",
-            $DATASOURCES[$datasource]['thorStatusNode']);
+        if ($DATASOURCES[$datasource]['networkStatus']) {
+            printf ("<img src=images/SipThorOverview.php?engine=%s&role=%s align=left>",
+            $DATASOURCES[$datasource]['networkStatus'],$_REQUEST['role']);
 
         } else if ($DATASOURCES[$datasource]['db_class_siponline']){
+
 			require_once("cdr_generic.php");
+			$online = new SIPonline($datasource,$DATASOURCES[$datasource]['db_class_siponline']);
 
-	    	printf ("<h1>%s</h1>",$DATASOURCES[$datasource]['name']);
-
-			$online= new SIPonline($datasource,$DATASOURCES[$datasource]['db_class_siponline']);
-			$online->showAll();
+	    	printf ("<h3>%s</h3>",$DATASOURCES[$datasource]['name']);
+            $online->showAll();
         }
+
+        print "</td>";
+        print "<td valign=top>";
+
+        if ($DATASOURCES[$datasource]['mediaSessions']) {
+            if (!$allowedDomains) {
+                $MediaSessions = new MediaSessionsNGNPro($DATASOURCES[$datasource]['mediaSessions'],$allowedDomains);
+                print "<h2>Media relays</h2>";
+                $MediaSessions->showSummary();
+            }
+        }
+
+        if ($DATASOURCES[$datasource]['networkStatus']) {
+
+        	$NetworkStatistics = new NetworkStatistics($DATASOURCES[$datasource]['networkStatus'],$allowedDomains);
+
+            print "<h2>SIP statistics</h2>";
+            $NetworkStatistics->showStatistics();
+
+            if (!$allowedDomains) {
+                print "<p>";
+                print "<h2>Network topology</h2>";
+                $NetworkStatistics->showStatus();
+            }
+        }
+
+        print "</td>";
+        print "</tr>";
+        print "</table>";
     }
 }
 

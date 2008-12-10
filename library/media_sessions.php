@@ -2,8 +2,8 @@
 class MediaSessions {
 
     /*
-       connect to a mediaproxy dispatcher
-       get media sessions and display them
+       connect to a mediaproxy2 dispatcher
+       get media sessions and relay summary
 
     */
 
@@ -45,14 +45,6 @@ class MediaSessions {
         if (!$this->dispatcher_port) return false;
 
         if ($fp = fsockopen ($this->dispatcher_ip, $this->dispatcher_port, $errno, $errstr, $this->timeout)) {
-            printf ("<p>Connected to MediaProxy2 dispatcher %s:%s",$this->dispatcher_ip, $this->dispatcher_port);
-
-            if (!count($this->allowedDomains)) {
-               fputs($fp, "summary\r\n");
-               $line  = fgets($fp);
-               $this->relays = json_decode($line);
-
-            }
 
             fputs($fp, "sessions\r\n");
             $line = fgets($fp);
@@ -66,20 +58,47 @@ class MediaSessions {
                     if (!in_array($domain1,$this->allowedDomains) && !in_array($domain2,$this->allowedDomains)) {
                         continue;
                     }
-
-                   	if (strlen($this->filters['user'])) {
-                        $user=$this->filters['user'];
-                        if (preg_match("/$user/",$_session->from_uri) ||
-                            preg_match("/$user/",$_session->to_uri)
-                                                                   ) {
-                            $this->sessions[] = $_session;
-                        }
+                    $_sessions2[] = $_session;
+                }
+            } else {
+                $_sessions2 = $_sessions;
+            }
+    
+            if (strlen($this->filters['user'])) {
+                foreach ($_sessions2 as $_session) {
+                    $user=$this->filters['user'];
+                    if (preg_match("/$user/",$_session->from_uri) ||
+                        preg_match("/$user/",$_session->to_uri)) {
+    
+                        $this->sessions[] = $_session;
                     }
                 }
             } else {
-                $this->sessions = $_sessions;
+                $this->sessions = $_sessions2;
             }
 
+            fclose($fp);
+            return true;
+
+        } else {
+            printf ("<p><font color=red>Error connecting to %s:%s: %s (%s) </font>\n",$this->dispatcher_ip,$this->dispatcher_port,$errstr,$errno);
+            return false;
+        }
+    }
+
+    function getSummary () {
+
+        if (!$this->dispatcher_ip) return false;
+        if (!$this->dispatcher_port) return false;
+
+        if ($fp = fsockopen ($this->dispatcher_ip, $this->dispatcher_port, $errno, $errstr, $this->timeout)) {
+
+            if (!count($this->allowedDomains)) {
+               fputs($fp, "summary\r\n");
+               $line  = fgets($fp);
+               $this->summary = json_decode($line);
+
+            }
 
             fclose($fp);
             return true;
@@ -164,25 +183,26 @@ class MediaSessions {
     function showFooter() {
     }
 
-    function show() {
+    function showAll() {
 
         $this->showHeader();
 
-        print "<h3>Media sessions</h3>";
-
         $this->showSearch();
 
-        if (!count($this->allowedDomains)) {
-            $this->showRelays();
-        }
+        $this->showSummary();
 
         $this->showSessions();
 
         $this->showFooter();
     }
 
-    function showRelays() {
-        if (!count($this->sessions)) return;
+    function showSummary() {
+
+		$this->getSummary();
+
+        if (!count($this->summary)) return;
+
+        if (count($this->allowedDomains)) return;
 
         print "
         <table border=0 class=border cellpadding=2 cellspacing=0>
@@ -206,7 +226,7 @@ class MediaSessions {
     
         $i = 1;
 
-        foreach ($this->relays as $relay) {
+        foreach ($this->summary as $relay) {
 
             unset($media_types);
 
@@ -266,6 +286,8 @@ class MediaSessions {
     }
 
     function showSessions () {
+        $this->getSessions();
+
         if (!count($this->sessions)) return;
         print "
         <table border=0 cellpadding=2 cellspacing=0 class=border>
@@ -432,6 +454,133 @@ class MediaSessions {
     }
 }
 
+class MediaSessionsNGNPro extends MediaSessions {
+	var $domain_statistics;
+
+    function MediaSessionsNGNPro($engineId,$allowedDomains=array(),$filters=array()) {
+
+        if (!strlen($engineId)) return false;
+
+        global $userAgentImages;
+        global $userAgentImagesFile;
+
+        if (!isset($userAgentImagesFile)) {
+            $userAgentImagesFile="phone_images.php";
+        }
+        require_once($userAgentImagesFile);
+
+        $this->userAgentImages = $userAgentImages;
+
+        $this->filters = $filters;
+        $this->allowedDomains  = $allowedDomains;
+        $this->soapEngineId=$engineId;
+
+    	require("/etc/cdrtool/ngnpro_engines.inc");
+        require_once("ngnpro_soap_library.php");
+
+        $this->SOAPlogin = array(
+                               "username"    => $soapEngines[$this->soapEngineId]['username'],
+                               "password"    => $soapEngines[$this->soapEngineId]['password'],
+                               "admin"       => true
+                               );
+
+        $this->SOAPurl=$soapEngines[$this->soapEngineId]['url'];
+
+        $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+
+        // Instantiate the SOAP client
+        $this->soapclient = new WebService_NGNPro_SipPort($this->SOAPurl);
+
+        $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+    }
+
+    function getSessions() {
+
+        $this->soapclient->addHeader($this->SoapAuth);
+        $result     = $this->soapclient->getMediaSessions();
+
+        if (PEAR::isError($result)) {
+            $error_msg   = $result->getMessage();
+            $error_fault = $result->getFault();
+            $error_code  = $result->getCode();
+
+            printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        $_sessions=json_decode($result);
+
+        if (count($this->allowedDomains)) {
+            foreach ($_sessions as $_session) {
+                list($user1,$domain1)=explode("@",$_session->from_uri);
+                list($user2,$domain2)=explode("@",$_session->to_uri);
+                if (preg_match("/^(.*):/",$domain1,$m)) $domain1=$m[1];
+                if (!in_array($domain1,$this->allowedDomains) && !in_array($domain2,$this->allowedDomains)) {
+                    continue;
+                }
+                $this->domain_statistics[$domain1]['sessions']++;
+                $this->domain_statistics['total']['sessions']++;
+                foreach ($_session->streams as $streamInfo) {
+                	print_r($streamInfo);
+                	$this->domain_statistics[$domain1]['caller']=$streamInfo->caller_bytes/$_session->duration*2;
+                    $this->domain_statistics['total']['caller']=$streamInfo->caller_bytes/$_session->duration*2;
+                    $this->domain_statistics[$domain1]['callee']=$streamInfo->callee_bytes/$_session->duration*2;
+                    $this->domain_statistics['total']['callee']=$streamInfo->callee_bytes/$_session->duration*2;
+                }
+                $_sessions2[] = $_session;
+            }
+        } else {
+            foreach ($_sessions as $_session) {
+                list($user1,$domain1)=explode("@",$_session->from_uri);
+                list($user2,$domain2)=explode("@",$_session->to_uri);
+
+                $this->domain_statistics[$domain1]['sessions']++;
+                $this->domain_statistics['total']['sessions']++;
+
+                foreach ($_session->streams as $streamInfo) {
+                	$this->domain_statistics[$domain1]['caller']=$streamInfo->caller_bytes/$_session->duration*2;
+                    $this->domain_statistics['total']['caller']=$streamInfo->caller_bytes/$_session->duration*2;
+                    $this->domain_statistics[$domain1]['callee']=$streamInfo->callee_bytes/$_session->duration*2;
+                    $this->domain_statistics['total']['callee']=$streamInfo->callee_bytes/$_session->duration*2;
+                }
+            }
+            $_sessions2 = $_sessions;
+        }
+
+        if (strlen($this->filters['user'])) {
+            foreach ($_sessions2 as $_session) {
+                $user=$this->filters['user'];
+                if (preg_match("/$user/",$_session->from_uri) ||
+                    preg_match("/$user/",$_session->to_uri)) {
+
+                    $this->sessions[] = $_session;
+                }
+            }
+        } else {
+        	$this->sessions = $_sessions2;
+        }
+
+    }
+
+    function getSummary() {
+
+        $this->soapclient->addHeader($this->SoapAuth);
+        $result     = $this->soapclient->getMediaSummary();
+
+        if (PEAR::isError($result)) {
+            $error_msg   = $result->getMessage();
+            $error_fault = $result->getFault();
+            $error_code  = $result->getCode();
+
+            printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+		$this->summary=json_decode($result);
+    }
+}
 class MediaSessions1 {
     function MediaSessions1 ($servers=array(),$allowedDomains=array()) {
         $this->servers = $servers;
@@ -849,5 +998,4 @@ class MediaSessions1 {
         }
     }
 }
-
 ?>

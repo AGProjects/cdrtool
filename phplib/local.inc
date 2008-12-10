@@ -726,12 +726,11 @@ class pageLayout {
         }
 
         if ($perm->have_perm("provisioning")) {
-            print " | <a href=provisioning.phtml>SIP</a>";
+            print " | <a href=provisioning.phtml>Accounts</a>";
         }
-
         
         if ($perm->have_perm("statistics")) {
-            print " | <a href=sip_registrar.phtml>Registrar</a>";
+            print " | <a href=sip_registrar.phtml>Network</a>";
             print " | <a href=media_sessions.phtml>Sessions</a>";
             print " | <a href=status/usage/index.phtml target=usage>Usage</a>";
         }
@@ -741,7 +740,7 @@ class pageLayout {
         }
 
         print " | <a href=log.phtml>Logs</a>";
-        print " | <a href=accounts.phtml>Accounts</a>";
+        print " | <a href=accounts.phtml>Login</a>";
         
         $now_print=Date("Y-m-d H:i:s",time());
         $tz=$CDRTool['provider']['timezone'];

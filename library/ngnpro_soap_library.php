@@ -256,14 +256,6 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                             'style'=>'rpc',
                             'use'=>'encoded' ));
     }
-    function &getDomainStatistics($filter) {
-        return $this->call("getDomainStatistics", 
-                        $v = array("filter"=>$filter), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
     function &addTrustedPeer($peer) {
         // peer is a ComplexType TrustedPeer,
         //refer to wsdl for more info
@@ -1398,6 +1390,26 @@ class WebService_NGNPro_NetworkPort extends SOAP_Client_Custom
                             'soapaction'=>'',
                             'style'=>'rpc',
                             'use'=>'encoded' ));
+    }
+    function &getStatistics()
+    {
+        $result = $this->call('getStatistics',
+                              $v = null,
+                              array('namespace' => 'urn:AGProjects:NGNPro:Network',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getStatus()
+    {
+        $result = $this->call('getStatus',
+                              $v = null,
+                              array('namespace' => 'urn:AGProjects:NGNPro:Network',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
 }
 class WebService_SoapSIMPLEProxy_PresencePort extends SOAP_Client_Custom
