@@ -532,3 +532,8 @@ alter table billing_rates add column durationRateIn varchar(25) not null;
 
 alter table cdrtool.billing_rates_history add column connectCostIn varchar(25) not null after durationRate;
 alter table cdrtool.billing_rates_history add column durationRateIn varchar(25) not null after connectCostIn;
+
+alter table prepaid_history add column duration bigint unsigned not null after action;
+alter table prepaid_history add column session varchar(255) unsigned not null after duration;
+alter table prepaid_history create index session_idx(session);
+

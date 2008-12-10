@@ -415,12 +415,15 @@ CREATE TABLE `prepaid_history` (
   `domain` varchar(64) NOT NULL default '',
   `action` varchar(255) NOT NULL default '',
   `number` varchar(255) NOT NULL default '',
+  `duration` bigint unsigned not null after action,
+  `session` varchar(255) unsigned not null,
   `value` decimal(10,4)  not null,
   `balance` decimal(10,4)  not null,
   `date` datetime default NULL,
   PRIMARY KEY  (`id`),
-  KEY `acct_id` (`username`,`domain`)
-)  DEFAULT CHARSET=latin1;
+  KEY `acct_id` (`username`,`domain`),
+  index session_idx(session) 
+) DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `settings`
