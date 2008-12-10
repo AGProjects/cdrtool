@@ -175,7 +175,7 @@ $DATASOURCES=array(
                     "SIPProxies"         => array("10.0.0.1" => "node01",  // friendly names in sip trace table
                                                   "10.0.0.2" => "node02",
                                                 ),
-                    "db_class_siponline" => "DB_openser",
+                    "db_registrar"       => "DB_openser",
                     "mediaDispatcher"    => "10.0.0.1"  // where to get the active media sessions from MediaProxy 2.0
                     ),
 "asterisk_vm"  =>array("name"            => "Voicemail server",

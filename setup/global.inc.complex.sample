@@ -210,7 +210,6 @@ $DATASOURCES=array(
                     "normalizedField"    => "Normalized",
                     "BillingPartyIdField"=> "UserName",
                     "AccountsDBClass"	 => "DB_openser",
-                    "enableThor"         => false,	  // set true if using SIP Thor      
                     "domain_table"	 => "domain",     // table of AccountsDBClass that holds domains served by the sip proxy
                     "subscriber_table"	 => "subscriber", // table of AccountsDBClass that holds susbcribers served by the sip proxy
                     "intAccessCode"      => "00",	  // international acess code, numbers prefixed with this are considered international destinations 
@@ -231,6 +230,9 @@ $DATASOURCES=array(
                                                   ),
                     "purgeCDRsAfter"     => 120, // how many days to keep old CDRs
                     "db_registrar"       => "DB_openser",   // openser location database
+                    "enableThor"         => false,	  // set true if using SIP Thor      
+                    "mediaSessions"      => "sipthor",    // NGNPro engine id used by SIP Thor
+                    "networkStatus"      => "sipthor",    // NGNPro engine id used by SIP Thor
                     "mediaDispatcher"    => "10.0.0.1",     // where to get the active media sessions from MediaProxy 2.0
                     "mediaServers"       => array(
                                                   "10.0.0.2",
