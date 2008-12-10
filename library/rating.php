@@ -5462,7 +5462,7 @@ class RatingEngine {
         return $line;
     }
 
-    function DebitBalance($account,$balance,$session_id,$force=false) {
+    function DebitBalance($account,$balance,$session_id,$duration,$force=false) {
 
         $els=explode(":",$account);
 
@@ -5571,15 +5571,17 @@ class RatingEngine {
         list($prepaidUser,$prepaidDomain)=explode("@",$account);
 
         $query=sprintf("insert into prepaid_history
-        (username,domain,action,number,value,balance,date)
+        (username,domain,action,number,value,balance,date,session,duration)
         values 
-        ('%s','%s','Debit balance for %s','Session %s','%s','%s',NOW())",
+        ('%s','%s','Debit balance for %s','Session %s','%s','%s',NOW(),'%s','%d')",
         addslashes($prepaidUser),
         addslashes($prepaidDomain),
         addslashes($destination),
         addslashes($session_id),
         $balance,
-        $next_balance
+        $next_balance,
+        addslashes($session_id),
+        $duration
         );
 
         if (!$this->db->query($query)) {
@@ -6253,10 +6255,11 @@ class RatingEngine {
                 return $log;
             }
 
-            $force=false;
 
             if ($NetFields['force']) {
                 $force=true;
+            } else {
+            	$force=false;
             }
 
             $timestamp=time();
@@ -6299,7 +6302,7 @@ class RatingEngine {
 
 			$this->sessionDoesNotExist=false;
 
-            $result = $this->DebitBalance($CDR->BillingPartyId,$Rate->price,$NetFields['callid'],$force);
+            $result = $this->DebitBalance($CDR->BillingPartyId,$Rate->price,$NetFields['callid'],$CDR->duration,$force);
 
             if ($this->sessionDoesNotExist) {
                 return "Failed";
