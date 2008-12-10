@@ -29,6 +29,7 @@ if ($_REQUEST['datasource']) {
 foreach ($datasources as $datasource) {
     if (in_array($datasource,$CDRTool['dataSourcesAllowed'])) {
         if ($DATASOURCES[$datasource]['mediaSessions']) {
+            // MediaProxy 2 over NGNPro
 	    	printf ("<h1>%s (MediaProxy 2)</h1>",$DATASOURCES[$datasource]['name']);
 
            	$filters=array('user'=>$_REQUEST['user']);
@@ -38,17 +39,20 @@ foreach ($datasources as $datasource) {
            	$MediaSessions->showAll();
 
         } else if ($DATASOURCES[$datasource]['mediaDispatcher']) {
+            // MediaProxy 2 via dispatcher tcp socket
 	    	printf ("<h1>%s (MediaProxy 2.x)</h1>",$DATASOURCES[$datasource]['name']);
 
            	$filters=array('user'=>$_REQUEST['user']);
            
            	$MediaSessions = new MediaSessions($DATASOURCES[$datasource]['mediaDispatcher'],$allowedDomains,$filters);
+        	$MediaSessions->getSessions();
            	$MediaSessions->showAll();
-        }
 
-        if ($DATASOURCES[$datasource]['mediaServers']){
+        } else if ($DATASOURCES[$datasource]['mediaServers']){
+            // MediaProxy 1 via relay tcp socket
 	    	printf ("<h1>%s (MediaProxy 1.x)</h1>",$DATASOURCES[$datasource]['name']);
            	$MediaSessions = new MediaSessions1($DATASOURCES[$datasource]['mediaServers'],$allowedDomains);
+        	$MediaSessions->getSessions();
            	$MediaSessions->show();
         }
     }

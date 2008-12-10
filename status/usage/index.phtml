@@ -15,7 +15,6 @@ $title='Platform usage';
 include("../../header.phtml");
 
 $SIPstatistics=new SIPstatistics ();
-$SIPstatistics->getSipEnabledZones();
 
 global $CDRTool;
 
@@ -47,9 +46,9 @@ if (strlen($CDRTool['filter']['domain'])) {
 <?
 }
 if (is_array($allowedDomains))  {
-	$domains=array_intersect($allowedDomains,array_keys($SIPstatistics->SipEnabledZones));
+	$domains=array_intersect($allowedDomains,array_keys($SIPstatistics->domains));
 } else {
-    $domains=array_keys($SIPstatistics->SipEnabledZones);
+    $domains=array_keys($SIPstatistics->domains);
 }
 
 foreach ($domains as $key) {

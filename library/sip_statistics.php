@@ -140,12 +140,10 @@ class NetworkStatistics {
                 	$_role_print='';
                 }
 
-                $a_print="<table border=0>";
+			$a_print='';
                 foreach (array_keys($_entity['attributes']) as $_a1) {
-                    $a_print .= sprintf ("<tr><td>%s</td><td>%s</td></tr>",$_a1,$_entity['attributes'][$_a1]);
+                    $a_print .= sprintf ("%s=%s ",$_a1,$_entity['attributes'][$_a1]);
                 }
-
-                $a_print.="</table>";
 
             	printf ("<tr><td><b>%s</b></td><td class=border>%s</td><td class=border>%s</td><td class=border>%s</td></tr>",
             	ucfirst($_role_print),$_entity['ip'],$_entity['version'],$a_print);
@@ -314,58 +312,40 @@ class ThorNetworkImage {
 }
 
 class SIPstatistics {
-    var $SipEnabledZones        = array();
-	var $online                 = array();
-    var $StatisticsPresentities = array();
+    var $domains        = array();
 
     function SIPstatistics () {
         global $CDRTool;
 
 		$this->path=$CDRTool['Path'];
 
-    	$this->mrtgcfg_file    = $this->path."/status/usage/sip_statistics.mrtg";
-        $this->harvest_file    = "/tmp/CDRTool-sip-statistics.txt";
-        $this->mrtgcfg_dir     = $this->path."/status/usage";
-        $this->index_file      = $this->path."/status/usage/index.phtml";
+        $this->harvest_file             = "/tmp/CDRTool-sip-statistics.txt";
 
-        $this->harvest_script  = $this->path."/scripts/harvestStatistics2.php";
-        $this->generateMrtgDataScript     = $this->path."/scripts/generateMrtgData.php";
-        $this->generateMrtgConfigScript   = $this->path."/scripts/generateMrtgConfig.php";
+    	$this->mrtgcfg_file             = $this->path."/status/usage/sip_statistics.mrtg";
+        $this->mrtgcfg_dir              = $this->path."/status/usage";
+        $this->index_file               = $this->path."/status/usage/index.phtml";
 
-        if (class_exists('DB_siponline')) {
-        	$this->online_db = new DB_siponline();
-        } else {
-        	$this->online_db = new DB_openser();
-        }
+        $this->harvest_script           = $this->path."/scripts/harvestStatistics.php";
 
-        if (is_array($CDRTool['StatisticsPresentities'])) {
-        	$this->StatisticsPresentities = $CDRTool['StatisticsPresentities'];
-        }
+        $this->generateMrtgDataScript   = $this->path."/scripts/generateMrtgData.php";
+        $this->generateMrtgConfigScript = $this->path."/scripts/generateMrtgConfig.php";
+
+        $this->getDomains();
+
 	}
 
-    function getSipEnabledZones () {
+    function getDomains () {
         global $CDRTool;
 
-        if (!is_array($CDRTool['statistics']['zoneFilter'])) return;
+        if (!is_array($CDRTool['statistics']['domains'])) return;
 
-        foreach ($CDRTool['statistics']['zoneFilter'] as $zName) {
-
-            if (!$seen[$zName]) {
-            	$this->SipEnabledZones[$zName] = $zName;
-                $this->statistics[$zName] =
-                               array( 'online_users' => '0',
-				                      'sessions'     => '0',
-				                      'traffic'      => '0',
-				                      'caller'       => '0',
-				                      'called'       => '0'
-                                      );
-            	$seen[$zName]++;
-        	}
+        foreach ($CDRTool['statistics']['domains'] as $_domain) {
+        	$this->domains[$_domain]=$_domain;
         }
     }
 
     function generateMrtgConfigFile () {
-        $this->getSipEnabledZones();
+        $this->getDomains();
         
         if (!$handle = fopen($this->mrtgcfg_file, 'w+')) {
         	echo "Error opening {$this->mrtgcfg_file}.\n";
@@ -382,7 +362,7 @@ Refresh: 300
 #WriteExpires: Yes
         ");
 
-        $_zones=$this->SipEnabledZones;
+        $_zones=$this->domains;
         $_zones['total']='total';
 
         while(list($key,$value) = each($_zones)) {
@@ -462,27 +442,94 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         printf ("%d\n%d\n0\n0\n\n",$value1,$value2);
     }
 
-    function getSIPOnlineUsers() {
+    function getOnlineAccountsFromMySQL($class) {
+
+		$domains=array();
+
+        if (!class_exists($class)) return array();
+
+        $db=new $class();
 
         $query="select count(*) as c, domain from location group by domain";
         dprint($query);
 
-        if (!$this->online_db->query($query)) return 0;
-        if (!$this->online_db->num_rows()) return 0;
+        if (!$db->query($query)) return array();
+        if (!$db->num_rows()) return array();
 
-        while ($this->online_db->next_record()) {
-            $this->online[$this->online_db->f('domain')]=$this->online_db->f('c');
+        while ($db->next_record()) {
+            $domains[$db->f('domain')]=array('online_accounts'=>intval($db->f('c')));
         }
 
-        dprint_r($this->online);
+        return $domains;
 	}
 
-    function harvestStatistics() {
+    function writeHarvestFile($body) {
+        if (!strlen($body)) return 0;
         if (!$handle = fopen($this->harvest_file, 'w+')) {
         	echo "Error opening $this->harvest_file\n";
         	return 0;
         }
 
+        fwrite($handle,$body);
+		fclose($handle);
+    }
+
+    function harvestStatistics() {
+        global $DATASOURCES;
+
+        $datasources=array_keys($DATASOURCES);
+
+        $totals=array();
+
+        foreach ($datasources as $datasource) {
+            if ($DATASOURCES[$datasource]['mediaSessions']) {
+                // MediaProxy 2 via NGNPro
+            	require_once("media_sessions.php");
+                $MediaSessions = new MediaSessionsNGNPro($DATASOURCES[$datasource]['mediaSessions']);
+                $MediaSessions->getSessions();
+                $totals=array_merge_recursive($totals,$MediaSessions->domain_statistics);
+            } else if ($DATASOURCES[$datasource]['mediaDispatcher']) {
+                // MediaProxy 2 via dispatcher tcp socket
+            	require_once("media_sessions.php");
+                $MediaSessions = new MediaSessions($DATASOURCES[$datasource]['mediaDispatcher']);
+                $MediaSessions->getSessions();
+                $totals=array_merge_recursive($totals,$MediaSessions->domain_statistics);
+            } else if ($DATASOURCES[$datasource]['mediaServers']){
+                // MediaProxy 1 via relay tcp socket
+                $MediaSessions = new MediaSessions1($DATASOURCES[$datasource]['mediaServers'],$allowedDomains);
+                $MediaSessions->getSessions();
+                $totals=array_merge_recursive($totals,$MediaSessions->domain_statistics);
+            }
+        
+            if ($DATASOURCES[$datasource]['networkStatus']) {
+                // OpenSIPS via NGNPro
+                $NetworkStatistics = new NetworkStatistics($DATASOURCES[$datasource]['networkStatus']);
+                $NetworkStatistics->getStatistics();
+                $totals=array_merge_recursive($totals,$NetworkStatistics->domain_statistics);
+            } else if ($DATASOURCES[$datasource]['db_registrar']) {
+                // OpenSIPS via MySQL query
+                $db_registrar_domains=$this->getOnlineAccountsFromMySQL($DATASOURCES[$datasource]['db_registrar']);
+                $totals=array_merge_recursive($totals,$db_registrar_domains);
+            }
+        }
+
+        $body="domains\t\t\tonline_accounts\tsessions\tcaller\tcallee\n\n";
+        foreach (array_keys($totals) as $_domain) {
+            if (!$totals[$_domain]['online_accounts'] && !$totals[$_domain]['sessions']) continue;
+        
+            $body.=sprintf("%s\t\t%d\t\t%d\t\t%s\t%s\n",
+            $_domain,
+            $totals[$_domain]['online_accounts'],
+            $totals[$_domain]['sessions'],
+            intval($totals[$_domain]['caller']),
+            intval($totals[$_domain]['callee'])
+            );
+        }
+
+		$this->writeHarvestFile($body);
+    }
+
+    function harvestStatisticsOld() {
         global $DATASOURCES;
 
         $_mediaServers     = array();
@@ -492,24 +539,20 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         	if (is_array($DATASOURCES[$ds]['mediaServers'])) {
                 $_mediaServers=array_merge($_mediaServers,$DATASOURCES[$ds]['mediaServers']);
             }
-        	if (strlen($DATASOURCES[$ds]['mediaDispatcher'])) {
-                $_mediaDispatchers[]=$DATASOURCES[$ds]['mediaDispatcher'];
-            }
         }
 
         $this->mediaServers     = array_unique($_mediaServers);
-        $this->mediaDispatchers = array_unique($_mediaDispatchers);
 
-        fwrite($handle,"domains\t\t\tonline_users\tsessions\tcaller\tcalled\n\n");
+        $body="domains\t\t\tonline_devices\tsessions\tcaller\tcallee\n\n";
 
-		$this->getSipEnabledZones();
+		$this->getDomains();
         $this->getSIPOnlineUsers();
 
         foreach($this->mediaServers as $server) {
-            $this->statistics = $this->getrtpsessions($server, "25060", $this->statistics);
+            $this->statistics = $this->getMediaSessionsFromRelay($server, "25060", $this->statistics);
         }
 
-        $domains=array_keys($this->SipEnabledZones);
+        $domains=array_keys($this->domains);
 
         ksort($domains);
 
@@ -562,39 +605,20 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
                 $called=0;
             }
 
-        	fwrite($handle,"{$key}\t\t{$online_users}\t\t{$sessions}\t\t{$caller}\t{$called}\n");
-            if (in_array($key,array_keys($this->StatisticsPresentities))) {
-
-                if (!$online_users) {
-                	$activity='busy';
-                } else {
-                	$activity='open';
-                }
-
-                $note=sprintf("%s: Sessions %d, Online %d",$key, $sessions,$online_users);
-
-                $this->publishPresence ($this->StatisticsPresentities[$key]['soapEngine'],
-                                        $this->StatisticsPresentities[$key]['SIPaccount'],
-                                        $note,
-                                        $activity);
-
-            }
-
+        	$body.=sprintf("%s\t\t%d\t\t%d\t\t%d\t%d\n",$key,$online_users,$sessions,$caller,$called);
         }
 
-		$total_text=sprintf("total\t\t%d\t\t%d\t\t%s\t%s\n",
+		$body.=sprintf("total\t\t%d\t\t%d\t\t%s\t%s\n",
         $totals['online_users'],
         $totals['sessions'],
         $totals['caller'],
         $totals['called']
         );
 
-        fwrite($handle,$total_text);
-        
-        fclose($handle);
+        $this->writeHarvestFile($body);
     }
 
-    function getrtpsessions($ip, $port, $_domains) {
+    function getMediaSessionsFromRelay($ip, $port, $_domains) {
         if ($fp = fsockopen ($ip, $port, $errno, $errstr, "5") ) {
             fputs($fp, "status\n");
             $proxy      = array('status' => 'Ok');
@@ -682,54 +706,6 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         system($this->harvest_script);
         system("env LANG=C mrtg $this->mrtgcfg_file");
 
-    }
-
-
-    function publishPresence ($soapEngine,$SIPaccount,$note,$activity) {
-
-	  	unset($soapEngines);
-    	require("/etc/cdrtool/ngnpro_engines.inc");
-		require_once("ngnpro_soap_library.php");
-
-        //$soapEngines
-        if (!array_key_exists($soapEngine,$soapEngines)) {
-            print "Error: soapEngine '$soapEngine' does not exist.\n";
-            return false;
-        }
-
-		$this->SOAPurl       = $soapEngines[$soapEngine]['url'];
-        $this->PresencePort  = new WebService_SoapSIMPLEProxy_PresencePort($this->SOAPurl);
-
-        $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-        $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-        $this->PresencePort->setOpt('curl', CURLOPT_TIMEOUT, 1);
-
-        $allowed_activities=array('open',
-                                  'idle',
-                                  'busy',
-                                  'available'
-                                 );
-    
-        if (in_array($activity,$allowed_activities)) {
-            $presentity['activity'] = $activity;
-        } else {
-            $presentity['activity'] = 'open';
-        }
-    
-        $presentity['note']     = $note;
-
-		dprint_r($presentity);
-        $result = $this->PresencePort->setPresenceInformation(array("username" =>$SIPaccount['username'],"domain"   =>$SIPaccount['domain']),$SIPaccount['password'], $presentity);
-    
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        }
-    
-        return true;
     }
 }
 
