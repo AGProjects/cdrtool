@@ -39,10 +39,10 @@ foreach ($datasources as $datasource) {
             printf ("<img src=images/SipThorOverview.php?engine=%s&role=%s align=left>",
             $DATASOURCES[$datasource]['networkStatus'],$_REQUEST['role']);
 
-        } else if ($DATASOURCES[$datasource]['db_class_siponline']){
+        } else if ($DATASOURCES[$datasource]['db_registrar']){
 
 			require_once("cdr_generic.php");
-			$online = new SIPonline($datasource,$DATASOURCES[$datasource]['db_class_siponline']);
+			$online = new SIPonline($datasource,$DATASOURCES[$datasource]['db_registrar']);
 
 	    	printf ("<h3>%s</h3>",$DATASOURCES[$datasource]['name']);
             $online->showAll();
@@ -52,11 +52,11 @@ foreach ($datasources as $datasource) {
         print "<td valign=top>";
 
         if ($DATASOURCES[$datasource]['mediaSessions']) {
-            if (!$allowedDomains) {
-                $MediaSessions = new MediaSessionsNGNPro($DATASOURCES[$datasource]['mediaSessions'],$allowedDomains);
-                print "<h2>Media relays</h2>";
-                $MediaSessions->showSummary();
-            }
+            $MediaSessions = new MediaSessionsNGNPro($DATASOURCES[$datasource]['mediaSessions'],$allowedDomains);
+            $MediaSessions->getSessions();
+            $MediaSessions->getSummary();
+            print "<h2>Media relays</h2>";
+            $MediaSessions->showSummary();
         }
 
         if ($DATASOURCES[$datasource]['networkStatus']) {
