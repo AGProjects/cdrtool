@@ -1996,6 +1996,18 @@ class CDR_ser_radius extends CDR {
             $this->$field = $CDRfields[$this->CDRS->CDRFields[$field]];
         }
 
+		if (!$this->normalized) {
+            $query=sprintf("select duration from prepaid_history where session = '%s' order by id desc limit 1",$this->callId);
+        	if ($this->CDRS->cdrtool->query($query)) {
+                if ($this->CDRS->cdrtool->num_rows()) {
+                    $this->CDRS->cdrtool->next_record();
+                    $this->durationNormalized=$this->CDRS->cdrtool->f('duration');
+                }
+            } else {
+                printf ("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
+            }
+        }
+
         if ($this->CanonicalURI) {
             $this->CanonicalURI   = quoted_printable_decode($this->CanonicalURI);
         }
@@ -2194,7 +2206,7 @@ class CDR_ser_radius extends CDR {
                                   'inputTraffic'    => $this->inputTraffic,
                                   'outputTraffic'   => $this->outputTraffic,
                                   'DestinationId'   => $this->DestinationId,
-                                   'From'            => $this->BillingPartyId,
+                                  'From'            => $this->BillingPartyId,
                                   'To'              => $this->DestinationForRating,
                                   'Domain'          => $this->domain,
                                   'Gateway'         => $this->gateway,
@@ -2946,7 +2958,7 @@ class SIP_trace {
     
     
             if (!$this->db->query($query)) {
-                printf ("<p>Error: database error %s %s",$this->db->Error,$query);
+                printf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                 return false;
             }
     
@@ -3770,7 +3782,7 @@ class Media_trace {
             );
 
             if (!$this->db->query($query)) {
-                printf ("<p>Error: database error %s %s",$this->db->Error,$query);
+                printf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                 return false;
             }
     

@@ -1835,79 +1835,77 @@ class CDR {
             $query2 ="";
 
             if ($this->CDRS->normalizedField) {
-                $Field=$this->CDRS->normalizedField;
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query .= " $Field = '1' ";
+                $query.=sprintf(" %s='1' ",$this->CDRS->normalizedField);
                 $updatedFields++;
+            }
+
+            if (strlen($this->durationNormalized) && $this->durationNormalized != $this->duration) {
+
+                if ($updatedFields) $query .= ", ";
+                $updatedFields++;
+                $query.=sprintf(" %s ='%s' ",$this->CDRS->durationField,$this->durationNormalized);
+                $this->duration=$this->durationNormalized;
             }
 
             if ($this->CDRS->DestinationIdField) {
-                $Field=$this->CDRS->DestinationIdField;
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=" $Field  = '".$this->DestinationId."' ";
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->DestinationIdField,$this->DestinationId);
             }
 
 			if ($this->usernameNormalized && $this->usernameNormalized!=$this->username) {
-                $Field=$this->CDRS->usernameField;
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=" $Field = '".addslashes($this->usernameNormalized)."' ";
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->usernameField,addslashes($this->usernameNormalized));
             }
 
             if ($this->aNumberNormalized && $this->aNumberNormalized!=$this->aNumber) {
-                $Field=$this->CDRS->aNumberField;
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=" $Field = '".addslashes($this->aNumberNormalized)."' ";
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->aNumberField,addslashes($this->aNumberNormalized));
                 $this->aNumber=$this->aNumberNormalized;
             }
 
             if ($this->CDRS->applicationTypeField && $this->applicationTypeNormalized) {
-                $Field=$this->CDRS->applicationTypeField;
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=" $Field = '".addslashes($this->applicationTypeNormalized)."' ";
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->applicationTypeField,addslashes($this->applicationTypeNormalized));
                 $this->applicationType=$this->applicationTypeNormalized;
             }
 
             if ($this->domainNormalized && $this->domainNormalized != $this->domain) {
-                $Field=$this->CDRS->domainField;
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=" $Field = '".addslashes($this->domainNormalized)."' ";
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->domainField,addslashes($this->domainNormalized));
                 $this->domainNumber=$this->domainNormalized;
                 $this->domain=$this->domainNormalized;
             }
 
             if ($this->cNumberNormalized && $this->cNumberNormalized!=$this->cNumber) {
-                $Field=$this->CDRS->cNumberField;
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=" $Field = '".addslashes($this->cNumberNormalized)."' ";
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->cNumberField,addslashes($this->cNumberNormalized));
                 $this->cNumber=$this->cNumberNormalized;
             }
 
             if ($this->CDRS->BillingIdField && $this->BillingId) {
-                $Field=$this->CDRS->BillingIdField;
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=" $Field = '".addslashes($this->BillingId)."' ";
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->BillingIdField,addslashes($this->BillingId));
             }
 
             if ($this->CDRS->RemoteAddressField && $this->RemoteAddressNormalized && $this->RemoteAddressNormalized!= $this->RemoteAddress) {
-                $Field=$this->CDRS->RemoteAddressField;
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=" $Field = '".addslashes($this->RemoteAddressNormalized)."' ";
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->RemoteAddressField,addslashes($this->RemoteAddressNormalized));
             }
 
             if ($this->CDRS->CanonicalURIField && $this->CanonicalURINormalized && $this->CanonicalURINormalized!= $this->CanonicalURI) {
-                $Field=$this->CDRS->CanonicalURIField;
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=" $Field = '".addslashes($this->CanonicalURINormalized)."' ";
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->CanonicalURIField,addslashes($this->CanonicalURINormalized));
             }
 
             if ($this->CDRS->ratingEnabled && $this->duration) {
@@ -1939,16 +1937,14 @@ class CDR {
 
                 if ($this->CDRS->priceField) {
 
-                    $Field=$this->CDRS->priceField;
                     if ($updatedFields) $query .= ", ";
                     $updatedFields++;
-                    $query.=" $Field = '".$this->pricePrint."' ";
+                	$query.=sprintf(" %s = '%s' ",$this->CDRS->priceField,$this->pricePrint);
     
                     if ($this->CDRS->rateField ) {
-                        $Field=$this->CDRS->rateField;
                         if ($updatedFields) $query .= ", ";
                         $updatedFields++;
-                        $query.=" $Field = '".$this->rateInfo."' ";
+                		$query.=sprintf(" %s = '%s' ",$this->CDRS->rateField,$this->rateInfo);
                 	}
                 }
             }
@@ -2009,7 +2005,7 @@ class CDR {
 
                     return 1;
                 } else {
-                	$log=sprintf ("Database error: %s (%s)",$this->CDRS->CDRdb1->Error,$this->CDRS->CDRdb1->Errno);
+                	$log=sprintf ("Database error for query %s: %s (%s)",$query1,$this->CDRS->CDRdb1->Error,$this->CDRS->CDRdb1->Errno);
                     syslog(LOG_NOTICE, $log);
                     print($log);
                     return 0;
