@@ -754,7 +754,7 @@ class MediaSessions1 {
                                       'streams'   => array());
                         $proxy['sessions'][$crtSession] = $info;
                         $allowed_session=1;
-                        list($user1,$domain1)=explode("@",$elements[2]);
+                        list($user1,$domain1)=explode("@",$proxy['sessions'][$crtSession]['from']);
                 		if (preg_match("/^(.*):/",$domain1,$m)) $domain1=$m[1];
                     } else {
                         unset($allowed_session);
@@ -771,14 +771,11 @@ class MediaSessions1 {
                                     'idletime' => $elements[8]);
                     $proxy['sessions'][$crtSession]['streams'][] = $stream;
 
-                	$this->domain_statistics[$domain1]['caller']=$this->domain_statistics[$domain1]['caller']+intval($stream['caller']/$info['duration']*2);
-                    $this->domain_statistics['total']['caller']=$this->domain_statistics['total']['caller']  +intval($stream['caller']/$info['duration']*2);
+                	$this->domain_statistics[$domain1]['caller'] += floor($proxy['sessions'][$crtSession]['streams'][0]['bytes'][0]/$proxy['sessions'][$crtSession]['duration']);
+                    $this->domain_statistics['total']['caller']  += floor($proxy['sessions'][$crtSession]['streams'][0]['bytes'][0]/$proxy['sessions'][$crtSession]['duration']);
 
-                    $this->domain_statistics[$domain1]['callee']=$this->domain_statistics[$domain1]['callee']+intval($stream['callee']/$info['duration']*2);
-                    $this->domain_statistics['total']['callee']=$this->domain_statistics['total']['callee']  +intval($stream['callee']/$info['duration']*2);
-
-                } else {
-                    //print "Invalid line: '$line'<br>\n";
+                    $this->domain_statistics[$domain1]['callee'] += floor($proxy['sessions'][$crtSession]['streams'][0]['bytes'][1]/$proxy['sessions'][$crtSession]['duration']);
+                    $this->domain_statistics['total']['callee']  += floor($proxy['sessions'][$crtSession]['streams'][0]['bytes'][1]/$proxy['sessions'][$crtSession]['duration']);
                 }
             }
             fclose($fp);

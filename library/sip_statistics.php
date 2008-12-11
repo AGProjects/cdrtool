@@ -130,7 +130,7 @@ class NetworkStatistics {
 
         print "<table border=0>";
         print "<tr bgcolor=lightgrey>";
-        print "<td><b>Role</b></td><td><b>IP address</b></td><td><b>Version</b></td><td><b>Attributes</b></td></tr>";
+        print "<td><b>Role</b></td><td><b>Address</b></td><td><b>Version</b></td><td><b>Attributes</b></td></tr>";
 
         foreach (array_keys($this->roles) as $_role) {
             foreach ($this->roles[$_role] as $_entity) {
@@ -200,6 +200,7 @@ class ThorNetworkImage {
 
         $this->nodes=$NetworkStatistics->sip_proxies;
         $this->node_statistics=$NetworkStatistics->node_statistics;
+
     }
 
     function buildImage() {
@@ -457,7 +458,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
 
         if (!class_exists($class)) return array();
 
-        $db=new $class();
+        $db = new $class();
 
         $query="select count(*) as c, domain from location group by domain";
         dprint($query);
@@ -536,177 +537,6 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         }
 
 		$this->writeHarvestFile($body);
-    }
-
-    function harvestStatisticsOld() {
-        global $DATASOURCES;
-
-        $_mediaServers     = array();
-        $_mediaDispatchers = array();
-
-        foreach (array_keys($DATASOURCES) as $ds) {
-        	if (is_array($DATASOURCES[$ds]['mediaServers'])) {
-                $_mediaServers=array_merge($_mediaServers,$DATASOURCES[$ds]['mediaServers']);
-            }
-        }
-
-        $this->mediaServers     = array_unique($_mediaServers);
-
-        $body="domains\t\t\tonline_devices\tsessions\tcaller\tcallee\n\n";
-
-		$this->getDomains();
-        $this->getSIPOnlineUsers();
-
-        foreach($this->mediaServers as $server) {
-            $this->statistics = $this->getMediaSessionsFromRelay($server, "25060", $this->statistics);
-        }
-
-        $domains=array_keys($this->domains);
-
-        ksort($domains);
-
-        foreach($domains as $_domain) {
-
-        	foreach (array_keys($this->online) as $_domain_online) {
-                if ($_domain == $_domain_online) {
-                    // update online users in big stats array
-                    $this->statistics[$_domain]['online_users']=$this->online[$_domain];
-                }
-            }
-        }
-
-        // we must multiply the IP traffic by 2 when traffic enters and exists the network where the relay is located
-        // this depends however on topology, if IP traffic is relayed to a node on the same physical network as the media relay
-        // the relayed traffic will not corespond with the IP traffic monitored at the edge of the network
-
-        $totals=array('online_users' =>0,
-                      'sessions'     =>0,
-                      'caller'       =>0,
-                      'called'       =>0
-                      );
-
-
-		dprint_r($this->statistics);
-
-        while(list($key, $usage) = each($this->statistics)) {
-        	if ($usage['online_users']) {
-                $online_users=$usage['online_users'];
-                $totals['online_users']+=$usage['online_users'];
-            } else {
-                $online_users=0;
-            }
-        	if ($usage['sessions']) {
-                $sessions=$usage['sessions'];
-                $totals['sessions']+=$usage['sessions'];
-            } else {
-                $sessions=0;
-            }
-        	if ($usage['caller']) {
-                $caller=$usage['caller']*2;
-                $totals['caller']+=$usage['caller']*2;
-            } else {
-                $caller=0;
-            }
-        	if ($usage['called']) {
-                $called=$usage['called']*2;
-                $totals['called']+=$usage['called']*2;
-            } else {
-                $called=0;
-            }
-
-        	$body.=sprintf("%s\t\t%d\t\t%d\t\t%d\t%d\n",$key,$online_users,$sessions,$caller,$called);
-        }
-
-		$body.=sprintf("total\t\t%d\t\t%d\t\t%s\t%s\n",
-        $totals['online_users'],
-        $totals['sessions'],
-        $totals['caller'],
-        $totals['called']
-        );
-
-        $this->writeHarvestFile($body);
-    }
-
-    function getMediaSessionsFromRelay($ip, $port, $_domains) {
-        if ($fp = fsockopen ($ip, $port, $errno, $errstr, "5") ) {
-            fputs($fp, "status\n");
-            $proxy      = array('status' => 'Ok');
-            $crtSession = 'None';
-            while (!feof($fp)) {
-                $j++;
-                $line = fgets($fp, 2048);
-                $elements = explode(" ", $line);
-
-                if ($elements[0] == 'proxy' && count($elements)==3) {
-                    $proxy['sessionCount'] = $elements[1];
-                    $traffic = explode("/", $elements[2]);
-                    $proxy['traffic'] = array('caller'  => $traffic[0],
-                                              'called'  => $traffic[1],
-                                              'relayed' => $traffic[2]);
-                    $proxy['sessions'] = array();
-                } else if ($elements[0]=='session' && count($elements)==7) {
-                        $crtSession = $elements[1];
-                        $info = array('from' => $elements[2],
-                                      'to'   => $elements[3],
-                                      'fromAgent' => "'".$elements[4]."'",
-                                      'toAgent'   => "'".$elements[5]."'",
-                                      'duration'  => $elements[6],
-                                      'streams'   => array());
-                        $proxy['sessions'][$crtSession] = $info;
-
-                        list($caller, $caller_domain) = explode("@", $proxy['sessions'][$crtSession]['from']);
-                        $caller_domain_els=explode(":",$caller_domain);
-                        $caller_domain=$caller_domain_els[0];
-
-                        if (!strlen($caller_domain)) $caller_domain='unknown';
-
-                        $_domains[$caller_domain]['sessions'] += 1;
-
-                } else if ($elements[0] == 'stream' && count($elements)==9 && $proxy['sessions'][$crtSession]['duration'] > 0) {
-                       $stream = array('caller'   => $elements[1],
-                                       'called'   => $elements[2],
-                                       'via'      => $elements[3],
-                                       'bytes'    => explode("/", $elements[4]),
-                                       'status'   => $elements[5],
-                                       'codec'    => $elements[6],
-                                       'type'     => $elements[7],
-                                       'idletime' => $elements[8]);
-                       $proxy['sessions'][$crtSession]['streams'][] = $stream;
-
-                       $_domains[$caller_domain]['caller'] += floor($proxy['sessions'][$crtSession]['streams'][0]['bytes'][0]/$proxy['sessions'][$crtSession]['duration']);
-                       $_domains[$caller_domain]['called'] += floor($proxy['sessions'][$crtSession]['streams'][0]['bytes'][1]/$proxy['sessions'][$crtSession]['duration']);
-                       $_domains[$caller_domain]['traffic'] += $proxy['sessions'][$crtSession]['streams'][0]['bytes'][0];
-                       $_domains[$caller_domain]['traffic'] += $proxy['sessions'][$crtSession]['streams'][0]['bytes'][1];
-                }
-            }
-            return $_domains;
-         }
-    }
-
-    function normalizeBytes($bytes) {
-        $mb = $bytes/1024/1024.0;
-        $kb = $bytes/1024.0;
-        if ($mb >= 0.95) {
-            return sprintf("%.2fM", $mb);
-        } else if ($kb >= 1) {
-            return sprintf("%.2fk", $kb);
-        } else {
-            return sprintf("%d", $bytes);
-        }
-    }
-    
-    function normalizeTraffic($traffic) {
-        // input is in bytes/second
-        $traffic = $traffic * 8;
-        $mb = $traffic/1024/1024.0;
-        $kb = $traffic/1024.0;
-        if ($mb >= 0.95) {
-            return sprintf("%.2fMbps", $mb);
-        } else if ($kb >= 1) {
-            return sprintf("%.2fkbps",$kb);
-        } else {
-            return sprintf("%dbps",$traffic);
-        }
     }
 
     function buildStatistics() {

@@ -63,7 +63,7 @@ foreach ($datasources as $datasource) {
 
         	$NetworkStatistics = new NetworkStatistics($DATASOURCES[$datasource]['networkStatus'],$allowedDomains);
 
-            print "<h2>SIP statistics</h2>";
+            print "<h2>SIP accounts</h2>";
             $NetworkStatistics->showStatistics();
 
             if (!$allowedDomains) {
