@@ -146,9 +146,6 @@ class MediaSessions {
     function getSummary () {
 
         if (count($this->allowedDomains)){
-        	if (is_array($this->relay_statistics)) {
-        		$this->summary = $this->relay_tatistics;
-            }
         	$this->summary = $this->relay_statistics;
         } else {
             if (!$this->dispatcher_ip) return false;

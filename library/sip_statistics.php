@@ -177,9 +177,6 @@ class NetworkStatistics {
         }
         print "</tr>";
         print "<tr>";
-        foreach (array_keys($this->sip_summary) as $_section) {
-            printf ("<td class=border>%s</td>",$this->sip_summary[$_section]);
-        }
         print "</tr>";
         print "<table>";
 
@@ -205,6 +202,13 @@ class ThorNetworkImage {
         $this->nodes=$NetworkStatistics->sip_proxies;
         $this->node_statistics=$NetworkStatistics->node_statistics;
 
+        require_once("media_sessions.php");
+        $MediaSessions = new MediaSessionsNGNPro($engineId);
+        $MediaSessions->getSummary();
+
+        foreach ($MediaSessions->summary as $_relay) {
+        	$this->node_statistics[$_relay['ip']]['sessions']=$_relay['session_count'];
+        }
     }
 
     function buildImage() {
@@ -281,15 +285,26 @@ class ThorNetworkImage {
               $px=$x; 
               $py=$y;
 
-              $accounts_text=intval($this->node_statistics[$text]['online_accounts']). ' accounts';
+              if (strlen($this->node_statistics[$text]['online_accounts']) && strlen($this->node_statistics[$text]['sessions'])) {
+              	$extra_text1=intval($this->node_statistics[$text]['online_accounts']). ' accounts';
+               	$extra_text2=intval($this->node_statistics[$text]['sessions']). ' sessions';
+              } else if (strlen($this->node_statistics[$text]['online_accounts'])) {
+              	$extra_text1=intval($this->node_statistics[$text]['online_accounts']). ' accounts';
+               	$extra_text2="";
+              } else if (strlen($this->node_statistics[$text]['sessions'])) {
+               	$extra_text1=intval($this->node_statistics[$text]['sessions']). ' sessions';
+              	$extra_text2="";
+              }
          
               if (count($this->nodes) > 1) {
                   if (($angle >= 120 && $angle < 240)) {
-                    imagestring ($img, 3, $cx+$px-70, $cy+$py-60, $text, $black);
-                    imagestring ($img, 3, $cx+$px-70, $cy+$py-50, $accounts_text, $black);
+                    imagestring ($img, 3, $cx+$px-70, $cy+$py-72, $text, $black);
+                    imagestring ($img, 3, $cx+$px-70, $cy+$py-62, $extra_text1, $black);
+                    imagestring ($img, 3, $cx+$px-70, $cy+$py-52, $extra_text2, $black);
                   } else {
                     imagestring ($img, 3, $cx+$px-110, $cy+$py-30, $text, $black);
-                    imagestring ($img, 3, $cx+$px-110, $cy+$py-20, $accounts_text, $black);
+                    imagestring ($img, 3, $cx+$px-110, $cy+$py-20, $extra_text1, $black);
+                    imagestring ($img, 3, $cx+$px-110, $cy+$py-10, $extra_text2, $black);
                   }
                   imagecopy ($img,$node_img, $cx+$px-$nw/2+7, $cy+$py-$nh/2+5, 0, 0, $nw-20, $nh-20);
               } else {
