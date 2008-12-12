@@ -54,6 +54,9 @@ $RatingEngine=array("socketIP"               => "IP.address.of.the.private.inter
 # Normalize engine settings
 $CDRTool['normalize']['defaultCountryCode']      = "31";
 
+# build graphical statistics for these domains:
+$CDRTool['statistics']['domains']=array("example.com");
+
 ###########################################
 # Anti-fraud settings
 # create group quota in OpenSER and deny calls to users in this group
@@ -175,8 +178,10 @@ $DATASOURCES=array(
                     "SIPProxies"         => array("10.0.0.1" => "node01",  // friendly names in sip trace table
                                                   "10.0.0.2" => "node02",
                                                 ),
-                    "db_registrar"       => "DB_openser",
-                    "mediaDispatcher"    => "10.0.0.1"  // where to get the active media sessions from MediaProxy 2.0
+                    "db_registrar"         => "DB_openser",
+                    "sipTraceDataSource"   => "sip_trace",
+                    "mediaTraceDataSource" => "media_trace",
+                    "mediaDispatcher"      => "10.0.0.1"  // where to get the active media sessions from MediaProxy 2.0
                     ),
 "asterisk_vm"  =>array("name"            => "Voicemail server",
                     "class"              => "CDRS_asterisk",

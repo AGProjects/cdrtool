@@ -7657,9 +7657,10 @@ class DnsRecords extends Records {
             }
 
         } else if (in_array($type,array_keys($this->recordTypesTemplate))) {
+
             foreach (array_values($this->recordTypesTemplate[$type]['records']) as $_records) {
                 $value_new='';
-    
+
                 if (strlen($_records['value'])) {
                 	if (preg_match("/^_sip/",$_records['name'])) {
                         if (!$value) {
@@ -7674,6 +7675,7 @@ class DnsRecords extends Records {
                     }
 
                     $els=explode("|",$_records['value']);
+
                     foreach ($els as $el) {
                         if (preg_match("/#VALUE#/",$el)) {
                         	if ($value) {
@@ -7699,7 +7701,6 @@ class DnsRecords extends Records {
                 
                         $this->setLoginProperties($_p);
                     }
-
                 }
 
 		        if (!in_array($_records['type'],array_keys($this->recordTypes))) {
@@ -7714,6 +7715,7 @@ class DnsRecords extends Records {
                               'priority' => intval($_records['priority'])
                               );
 
+                //print_r($record);
                 $function=array('commit'   => array('name'       => $this->addRecordFunction,
                                                     'parameters' => array($record),
                                                     'logs'       => array('success' => sprintf('Dns %s record under %s has been added',$_records['type'],$zone))
@@ -7743,8 +7745,6 @@ class DnsRecords extends Records {
                             printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                             unset($this->filters);
                         }
-                    } else {
-                        return true;
                     }
                 }
             }

@@ -6,6 +6,8 @@
 */
 
 class NetworkStatistics {
+    // obtain statistics from SIP Thor network
+
 	var $statistics        = array();
     var $status            = array();
 	var $sip_summary       = array();
@@ -185,6 +187,8 @@ class NetworkStatistics {
 }
 
 class ThorNetworkImage {
+    // plot graphical SIP Thor network status
+
     var $imgsize      = 630;
     var $nodes        = array();
 
@@ -322,6 +326,8 @@ class ThorNetworkImage {
 }
 
 class SIPstatistics {
+    // build graphical statistics with sip registrar and media relay usage
+
     var $domains        = array();
 
     function SIPstatistics () {

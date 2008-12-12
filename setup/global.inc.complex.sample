@@ -57,6 +57,9 @@ $RatingEngine=array("socketIP"               => "IP.address.of.the.private.inter
 
 $CDRTool['normalize']['defaultCountryCode']      = "31";
 
+# build graphical statistics for these domains:
+$CDRTool['statistics']['domains']=array("example.com");
+
 # Carrier selection codes, strip first digits
 # and allocate custom Billing Party
 $CDRTool['normalize']['CS_CODES']= array("1684" => array ("name"       =>"test@Call",
@@ -66,20 +69,6 @@ $CDRTool['normalize']['CS_CODES']= array("1684" => array ("name"       =>"test@C
                                                       )
 											    );
 
-$CDRTool['statistics']['zoneFilter']=array("example1.com","example2.com"); // can filter for which zones we wish to build statistics
-
-
-###########################################
-# usage statistics
-# filter local SIP domains if many do not have traffic  
-$CDRTool['statistics']['zoneFilter']=array("example1.com",
-                                           "example2.com"
-                                           );
-                                           
-# useful to add external domains to the statistics                                           
-$CDRTool['statistics']['extraZones']=array("anonymous.invalid",
-                                           "example4.com"
-                                           );
 ###########################################
 # Anti-fraud settings
 # create group quota in SER and deny calls to users in this group
@@ -210,17 +199,18 @@ $DATASOURCES=array(
                     "normalizedField"    => "Normalized",
                     "BillingPartyIdField"=> "UserName",
                     "AccountsDBClass"	 => "DB_openser",
-                    "domain_table"	 => "domain",     // table of AccountsDBClass that holds domains served by the sip proxy
+                    "domain_table"	     => "domain",     // table of AccountsDBClass that holds domains served by the sip proxy
                     "subscriber_table"	 => "subscriber", // table of AccountsDBClass that holds susbcribers served by the sip proxy
-                    "intAccessCode"      => "00",	  // international acess code, numbers prefixed with this are considered international destinations 
+                    "intAccessCode"      => "00",	      // international acess code, numbers prefixed with this are considered international destinations
                     "natAccessCode"      => "0",          // international acess code, numbers prefixed with this are considered national destinations
-                    "sipTraceDataSource" => "sip_trace",
+                    "sipTraceDataSource"   => "sip_trace",
+                    "mediaTraceDataSource" => "media_trace",
                     "traceOutURL"        => array(
                                             "sipvm.example.com"=>"asterisk",
                                             "voipgw02.example.com"=>"cisco"
                     			    		),
                     "UserQuotaClass"     => "OpenSERQuota",
-                    "UserQuotaNotify"    => "0",	// send e-mail notifications when quota is exceeded
+                    "UserQuotaNotify"    => "0",	      // send e-mail notifications when quota is exceeded
                     "soapEngineId"       => '',
                     "domainTranslation"  => array(
                                                   "gw02.domain.com"      => "pstn.domain.com" // translate Realm
@@ -228,12 +218,12 @@ $DATASOURCES=array(
                     "SourceIPRealmTranslation"  => array(
                                                   "10.0.0.1"      => "gateway.example.com" // translate Realm for sessions originating from IP address 10.0.0.1
                                                   ),
-                    "purgeCDRsAfter"     => 120, // how many days to keep old CDRs
-                    "db_registrar"       => "DB_openser",   // openser location database
-                    "enableThor"         => false,	  // set true if using SIP Thor      
-                    "mediaSessions"      => "sipthor",    // NGNPro engine id used by SIP Thor
-                    "networkStatus"      => "sipthor",    // NGNPro engine id used by SIP Thor
-                    "mediaDispatcher"    => "10.0.0.1",     // where to get the active media sessions from MediaProxy 2.0
+                    "purgeCDRsAfter"     => 120,           // how many days to keep old CDRs
+                    "db_registrar"       => "DB_openser",  // openser location database
+                    "enableThor"         => false,	       // set true if using SIP Thor
+                    "mediaSessions"      => "sipthor",     // NGNPro engine id used by SIP Thor
+                    "networkStatus"      => "sipthor",     // NGNPro engine id used by SIP Thor
+                    "mediaDispatcher"    => "10.0.0.1",    // Where to get the active media sessions from MediaProxy 2.0
                     "mediaServers"       => array(
                                                   "10.0.0.2",
                                                   "10.0.0.3"
