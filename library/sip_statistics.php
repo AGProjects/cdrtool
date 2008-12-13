@@ -187,13 +187,13 @@ class NetworkStatistics {
 	}
 }
 
-class ThorNetworkImage {
+class SipThorNetworkImage {
     // plot graphical SIP Thor network status
 
     var $imgsize      = 630;
     var $nodes        = array();
 
-    function ThorNetworkImage($engineId,$allowedDomains=array()) {
+    function SipThorNetworkImage($engineId,$allowedDomains=array()) {
 
         if (!strlen($engineId)) return false;
 
@@ -225,29 +225,24 @@ class ThorNetworkImage {
         imagefill($img, 0, 0, $white);
     
         $c=count($this->sip_proxies);
-        imagestring ($img, 5, 20, 20, "SIP Thor network", $black);
-     
         $cx=$this->imgsize/2;
         $cy=$cx;
      
         $radius=0.7*$cx;
      
-        // Thor node image
-        $node_img = @imagecreatefrompng('Node.png');
-        list($nw, $nh) = getimagesize('Node.png');
+        // Sip Thor node image
+        $sip_thor_node_img = @imagecreatefrompng('SipThorNode.png');
+        list($nw, $nh) = getimagesize('SipThorNode.png');
     
         // Internet cloud Image
         $cloud_img = @imagecreatefrompng('InternetCloud.png');
         list($cw, $ch) = getimagesize('InternetCloud.png');
     
-        // Thor title rectangle image
-        $thor_img = @imagecreatefrompng('P2PThorTitle.png');
-        list($tw, $th) = getimagesize('P2PThorTitle.png');
+        // Sip Thor title rectangle image
+        $sip_thor_background_img = @imagecreatefrompng('SipThorNetworkBackground.png');
+        list($tw, $th) = getimagesize('SipThorNetworkBackground.png');
     
-        imagecopy ($img,$thor_img, $this->imgsize/2-$tw/2, $this->imgsize/2-$th/2-5, 0, 0, $tw, $th);
-        imagecopy ($img,$cloud_img, $this->imgsize/2-$cw/2, $this->imgsize/2-$ch/2, 0, 0, $cw, $ch);
-
-        imagecopy ($img,$thor_img, $this->imgsize/2-$tw/2, $this->imgsize/2-$th/2-5, 0, 0, $tw, $th);
+        imagecopy ($img,$sip_thor_background_img, $this->imgsize/2-$tw/2, $this->imgsize/2-$th/2, 0, 0, $tw, $th);
         imagecopy ($img,$cloud_img, $this->imgsize/2-$cw/2, $this->imgsize/2-$ch/2, 0, 0, $cw, $ch);
 
         $dash=false;
@@ -277,7 +272,7 @@ class ThorNetworkImage {
             $h1=0;
             $t=count($this->dns_managers);
             foreach (array_keys($this->dns_managers) as $_ip) {
-    			imagecopy ($img,$node_img, $this->imgsize-120-$h1, 0, 0, 0, $nw-20, $nh-20);
+    			imagecopy ($img,$sip_thor_node_img, $this->imgsize-120-$h1, 0, 0, 0, $nw-20, $nh-20);
 
                 $text=sprintf("DNS%s",$t--);
             	imagestring ($img, 3, $this->imgsize-65-$h1, 80, $text, $black);
@@ -285,7 +280,6 @@ class ThorNetworkImage {
             	$h1=$h1+50;
 
             }
-
         }
 
         if (count($this->sip_proxies)) {
@@ -298,7 +292,7 @@ class ThorNetworkImage {
             for ($angle=0; $angle<360; $angle+=$dashsize) {
          
               $x = ($radius * cos(deg2rad($angle)));
-              $y = ($radius * sin(deg2rad($angle))); 
+              $y = ($radius * sin(deg2rad($angle)));
               
               $text = $node_names[$j];
               $px=$x; 
@@ -324,7 +318,7 @@ class ThorNetworkImage {
                 imagestring ($img, 3, $cx+$px-110, $cy+$py-20, $extra_text1, $black);
                 imagestring ($img, 3, $cx+$px-110, $cy+$py-10, $extra_text2, $black);
               }
-              imagecopy ($img,$node_img, $cx+$px-$nw/2+7, $cy+$py-$nh/2+5, 0, 0, $nw-20, $nh-20);
+              imagecopy ($img,$sip_thor_node_img, $cx+$px-$nw/2+7, $cy+$py-$nh/2+5, 0, 0, $nw-20, $nh-20);
               $j++;
               
             }

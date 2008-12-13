@@ -36,8 +36,8 @@ foreach ($datasources as $datasource) {
         print "<td valign=top>";
 
         if ($DATASOURCES[$datasource]['networkStatus']) {
-            printf ("<img src=images/SipThorOverview.php?engine=%s&role=%s align=left>",
-            $DATASOURCES[$datasource]['networkStatus'],$_REQUEST['role']);
+            printf ("<img src=images/SipThorNetwork.php?engine=%s align=left>",
+            $DATASOURCES[$datasource]['networkStatus']);
 
         } else if ($DATASOURCES[$datasource]['db_registrar']){
 
