@@ -31,7 +31,6 @@ if (!$_REQUEST['export']) {
     Header($h);
 }
 
-$tables=$RatingTables->tables;
 $RatingTables->updateTable();
 $RatingTables->showTable();
 

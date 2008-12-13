@@ -964,28 +964,7 @@ class RatingTables {
     var $requireReload  = array('destinations');
     var $whereDomainFilter = " (1=1) ";
 
-    function RatingTables ($readonly=false) {
-        global $CDRTool;
-        global $RatingEngine;
-
-		$this->table = $_REQUEST['table'];
-        $this->readonly=$readonly;
-
-        $this->settings=$RatingEngine;
-
-        $this->CDRTool = $CDRTool;
-
-        $this->db = new DB_cdrtool;
-        $this->db1 = new DB_cdrtool;
-
-        $this->db->Halt_On_Error="no";
-        $this->db1->Halt_On_Error="no";
-
-        if ($this->settings['csv_delimiter']) {
-            $this->delimiter=$this->settings['csv_delimiter'];
-        }
-
-        $this->tables=array(
+    var $tables=array(
                            "destinations"=>array("name"=>"Destinations",
                                                  "keys"=>array("id"),
                                                  "exceptions" =>array(),
@@ -1313,6 +1292,29 @@ class RatingTables {
                                                                   )
                                                    )
                            );
+
+
+    function RatingTables ($readonly=false) {
+        global $CDRTool;
+        global $RatingEngine;
+
+        $this->settings = $RatingEngine;
+        $this->CDRTool  = $CDRTool;
+
+		$this->table = $_REQUEST['table'];
+        if (!$this->table || !in_array($this->table,array_keys($this->tables))) $this->table="destinations";
+
+        $this->readonly=$readonly;
+
+        $this->db = new DB_cdrtool;
+        $this->db1 = new DB_cdrtool;
+
+        $this->db->Halt_On_Error="no";
+        $this->db1->Halt_On_Error="no";
+
+        if ($this->settings['csv_delimiter']) {
+            $this->delimiter=$this->settings['csv_delimiter'];
+        }
 
         if ($this->CDRTool['filter']['domain']) {
             $Realms      = explode(" ",$this->CDRTool['filter']['domain']);
@@ -3734,26 +3736,25 @@ class RatingTables {
             ${$_el}= $_REQUEST[$_el];
         }
 
-        if (!$table) $table="destinations";
-        if ($table == 'prepaid_cards') {
+        if ($this->table == 'prepaid_cards') {
             print "<p>
             <a href=prepaid_cards.phtml>Prepaid card generator</a>";
         }
 
         // Init table structure
-        if (!is_array($this->tables[$table]['exceptions'])) $this->tables[$table]['exceptions']=array();
-        if (!is_array($this->tables[$table]['keys']))       $this->tables[$table]['keys']=array();
-        if (!is_array($this->tables[$table]['fields']))     $this->tables[$table]['fields']=array();
+        if (!is_array($this->tables[$this->table]['exceptions'])) $this->tables[$this->table]['exceptions']=array();
+        if (!is_array($this->tables[$this->table]['keys']))       $this->tables[$this->table]['keys']=array();
+        if (!is_array($this->tables[$this->table]['fields']))     $this->tables[$this->table]['fields']=array();
 
-        if ($table=='prepaid' && strlen($_REQUEST['search_session_counter'])) {
+        if ($this->table=='prepaid' && strlen($_REQUEST['search_session_counter'])) {
         	$this->readonly=true;
         }
 
         if ($this->readonly) {
-            $this->tables[$table]['readonly']=1;
+            $this->tables[$this->table]['readonly']=1;
         }
 
-        $metadata  = $this->db->metadata($table="$table");
+        $metadata  = $this->db->metadata($this->table);
         $cc        = count($metadata);
         // end init table structure
 
@@ -3764,14 +3765,14 @@ class RatingTables {
             $delimiter=",";
         }
 
-        $query="select count(*) as c from $table where $this->whereDomainFilter";
+        $query="select count(*) as c from $this->table where $this->whereDomainFilter";
         
         $t=0;
         $j=0;
         while ($j < $cc ) {
             $Fname=$metadata[$j]['name'];
             $size=$metadata[$j]['len'];
-            if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+            if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                 $f_name="search_".$Fname;
                 $value=$_REQUEST[$f_name];
                 #print "$Fname $size $t  $nrsf $f_name ${$f_name}<br>";
@@ -3819,7 +3820,7 @@ class RatingTables {
                 } else {
                     $this->db->query("select var_value from settings where var_name = 'reloadRating' and var_value='1'");
                     if ($this->db->num_rows()) {
-                        print " | <a href=rating_tables.phtml?ReloadRatingTables=1&table=$table><font color=red>Reload rating tables</font></a>";
+                        print " | <a href=rating_tables.phtml?ReloadRatingTables=1&table=$this->table><font color=red>Reload rating tables</font></a>";
                     }
                 }
         
@@ -3863,12 +3864,12 @@ class RatingTables {
             $maxrows=$rows;
         }
         
-        if (!$order && $this->tables[$table]['order']) {
-        	$order=sprintf(" order by %s  ",$this->tables[$table]['order']);
+        if (!$order && $this->tables[$this->table]['order']) {
+        	$order=sprintf(" order by %s  ",$this->tables[$this->table]['order']);
         }
         
         $query=sprintf("select * from %s where (1=1) %s and %s %s limit %s, %s",
-        $table,
+        $this->table,
         $where,
         $this->whereDomainFilter,
         $order,
@@ -3890,9 +3891,9 @@ class RatingTables {
         
         while ($k < $cc) {
             $th=$metadata[$k]['name'];
-            if (!in_array($th,$this->tables[$table]['exceptions']) ) {
-                if ($this->tables[$table]['fields'][$th]['name']) {
-                    $th=$this->tables[$table]['fields'][$th]['name'];
+            if (!in_array($th,$this->tables[$this->table]['exceptions']) ) {
+                if ($this->tables[$this->table]['fields'][$th]['name']) {
+                    $th=$this->tables[$this->table]['fields'][$th]['name'];
                 } else {
                     $th=ucfirst($th);
                 }
@@ -3942,7 +3943,7 @@ class RatingTables {
                 $Fname=$metadata[$j]['name'];
                 $size=$metadata[$j]['len'];
             
-                if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                     $SEARCH_NAME="search_".$Fname;
                     $value=$_REQUEST[$SEARCH_NAME];
                     if ($value != "") {
@@ -3950,13 +3951,13 @@ class RatingTables {
                     }
                     $maxlength=$size;
             
-                    if ($this->tables[$table]['fields'][$Fname]['size']) {
-                        $field_size=$this->tables[$table]['fields'][$Fname]['size'];
+                    if ($this->tables[$this->table]['fields'][$Fname]['size']) {
+                        $field_size=$this->tables[$this->table]['fields'][$Fname]['size'];
                     } else {
                         $field_size=$el_size;
                     }
             
-                    if (!in_array($Fname,$this->tables[$table]['keys']) ) {
+                    if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
                         if ($Fname=="domain" && count($this->insertDomainOption)) {
                             print "<td><select name=search_$Fname>";
                             $selected_domain[$value]="selected";
@@ -3994,7 +3995,7 @@ class RatingTables {
             ";
             printf("<select name='table' onChange=\"jumpMenu('this.form')\">\n");
 
-            $selected_table[$table]="selected";
+            $selected_table[$this->table]="selected";
             foreach (array_keys($this->tables) as $tb) {
                 $sel_name=$this->tables[$tb]['name'];
                 print "<option value=$tb $selected_table[$tb]>$sel_name";
@@ -4010,7 +4011,7 @@ class RatingTables {
             while ($j < $cc ) {
                 $Fname=$metadata[$j]['name'];
                 $size=$metadata[$j]['len'];
-                if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                     $SEARCH_NAME="search_".$Fname;
                     $value=$_REQUEST[$SEARCH_NAME];
                     print "<input type=hidden name=search_$Fname value=\"$value\">";
@@ -4019,11 +4020,11 @@ class RatingTables {
                 $j++;    
             }
         
-            if ($table!=='prepaid_cards' ) {
-                print "
-                <input type=hidden name=table value=$table>
-                <input type=submit value=\"Export $table_fname[$table]\">
-                ";
+            if ($this->table!=='prepaid_cards' ) {
+                printf ("
+                <input type=hidden name=table value=%s>
+                <input type=submit value=\"Export %s\">
+                ",$this->table,$this->table_to_csv_name[$this->table]);
             }
         
             print "</td>
@@ -4037,7 +4038,7 @@ class RatingTables {
             </tr>
             ";
             
-            if ($selection_made && !$this->tables[$table]['readonly']) {
+            if ($selection_made && !$this->tables[$this->table]['readonly']) {
                 // Update all form
                 print "
                 <tr><td class=border colspan=$t_columns>
@@ -4057,15 +4058,15 @@ class RatingTables {
                 while ($j < $cc ) {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
-                    if ($this->tables[$table]['fields'][$Fname]['size']) {
-                        $field_size=$this->tables[$table]['fields'][$Fname]['size'];
+                    if ($this->tables[$this->table]['fields'][$Fname]['size']) {
+                        $field_size=$this->tables[$this->table]['fields'][$Fname]['size'];
                     } else {
                         $field_size=$el_size;
                     }
             
             
-                    if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
-                        if (!in_array($Fname,$this->tables[$table]['keys']) ) {
+                    if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
+                        if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
                             if ($Fname=="domain" && count($this->insertDomainOption)) {
                                 print "<td><select name=$Fname>";
                                 foreach ($this->insertDomainOption as $_option) {
@@ -4091,7 +4092,7 @@ class RatingTables {
                 while ($j < $cc ) {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
-                    if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                    if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         $SEARCH_NAME="search_".$Fname;
                         $value=$_REQUEST[$SEARCH_NAME];
                         print "<input type=hidden name=search_$Fname value=\"$value\">";
@@ -4105,9 +4106,9 @@ class RatingTables {
                     print "<input type=hidden name=confirmDelete value=1>";
                     print "<input type=submit name=subaction value=\"Delete selection\">";
                     print " ($rows records)";
-                } else if (!$this->tables[$table]['readonly']){
+                } else if (!$this->tables[$this->table]['readonly']){
         
-                    if ($table == "billing_rates" && strlen($_REQUEST['search_name'])) {
+                    if ($this->table == "billing_rates" && strlen($_REQUEST['search_name'])) {
                         if ($subaction=="Copy rate" && !$confirmCopy) {
                         print "<td bgcolor=lightgrey>";
                             print "<input type=hidden name=confirmCopy value=1>";
@@ -4162,14 +4163,14 @@ class RatingTables {
         
                 print "
                     <td>
-                    <input type=hidden name=table value=$table>
+                    <input type=hidden name=table value=$this->table>
                     <input type=hidden name=search_text value=\"$search_text\">
                     </td>
                 </tr>
                 </form>
                 ";
             
-            } else if (!$this->tables[$table]['readonly']){
+            } else if (!$this->tables[$this->table]['readonly']){
                 // Insert form
                 $j=0;
                 print "
@@ -4184,14 +4185,14 @@ class RatingTables {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
             
-                    if ($this->tables[$table]['fields'][$Fname]['size']) {
-                        $field_size=$this->tables[$table]['fields'][$Fname]['size'];
+                    if ($this->tables[$this->table]['fields'][$Fname]['size']) {
+                        $field_size=$this->tables[$this->table]['fields'][$Fname]['size'];
                     } else {
                         $field_size=$el_size;
                     }
             
-                    if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
-                        if (!in_array($Fname,$this->tables[$table]['keys']) ) {
+                    if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
+                        if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
                             if ($Fname=="domain" && count($this->insertDomainOption)) {
                                 print "<td><select  name=$Fname>";
                                 foreach ($this->insertDomainOption as $_option) {
@@ -4216,7 +4217,7 @@ class RatingTables {
                 while ($j < $cc ) {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
-                    if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                    if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         $SEARCH_NAME="search_".$Fname;
                         $value=$_REQUEST[$SEARCH_NAME];
                         print "<input type=hidden name=search_$Fname value=\"$value\">";
@@ -4227,7 +4228,7 @@ class RatingTables {
                 
                 print "
                     <td class=border>
-                    <input type=hidden name=table value=\"$table\">
+                    <input type=hidden name=table value=\"$this->table\">
                     <input type=hidden name=search_text value=\"$search_text\">
                     <input type=submit name=subaction value=Insert>
                     </td>
@@ -4259,7 +4260,7 @@ class RatingTables {
                 <tr>
                 ";
 
-                if ($table == 'prepaid') {
+                if ($this->table == 'prepaid') {
                     $active_sessions = json_decode($this->db->f('active_sessions'),true);
 
                     $account=$this->db->f('account');
@@ -4307,7 +4308,7 @@ class RatingTables {
                     </td>
                     </tr>
                     </table>",
-                    $table,$next,$_session,$search_text
+                    $this->table,$next,$_session,$search_text
                     );
 
                 }
@@ -4323,21 +4324,21 @@ class RatingTables {
                 $Fname=$metadata[$j]['name'];
                 $size=$metadata[$j]['len'];
         
-                if ($this->tables[$table]['fields'][$Fname]['size']) {
-                    $field_size=$this->tables[$table]['fields'][$Fname]['size'];
+                if ($this->tables[$this->table]['fields'][$Fname]['size']) {
+                    $field_size=$this->tables[$this->table]['fields'][$Fname]['size'];
                 } else {
                     $field_size=$el_size;
                 }
         
-                if ($this->tables[$table]['fields'][$Fname]['readonly']=="1") {
+                if ($this->tables[$this->table]['fields'][$Fname]['readonly']=="1") {
                     $extra_form_els="disabled=true";
                 } else {
                     $extra_form_els="";
                 }
         
-                if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                     if (!$export) {
-                        if (!in_array($Fname,$this->tables[$table]['keys']) && !$this->readonly) {
+                        if (!in_array($Fname,$this->tables[$this->table]['keys']) && !$this->readonly) {
                             if ($Fname=="domain" && count($this->insertDomainOption)) {
                                 print "<td><select name=$Fname>";
                                 $selected_domain[$value]="selected";
@@ -4349,7 +4350,7 @@ class RatingTables {
                                 </td>";
             
                             } else {
-                				if ($table == 'prepaid' && $Fname == 'session_counter' && $value) {
+                				if ($this->table == 'prepaid' && $Fname == 'session_counter' && $value) {
                                     if (count($active_sessions) > 1) {
                                 		$session_counter_txt=sprintf("%d sessions",$value);
                                     } else {
@@ -4367,7 +4368,7 @@ class RatingTables {
                             }
         
                         } else {
-                            if ($table == 'prepaid' && $Fname == 'session_counter' && $value) {
+                            if ($this->table == 'prepaid' && $Fname == 'session_counter' && $value) {
                                 if (count($active_sessions) > 1) {
                                     $session_counter_txt=sprintf("%d sessions",$value);
                                 } else {
@@ -4399,7 +4400,7 @@ class RatingTables {
                 $Fname=$metadata[$j]['name'];
                 $size=$metadata[$j]['len'];
         
-                if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                     $SEARCH_NAME="search_".$Fname;
                     $value=$_REQUEST[$SEARCH_NAME];
                     if (!$export) {
@@ -4415,7 +4416,7 @@ class RatingTables {
             }
         
             if (!$export) {
-            	if (!$this->tables[$table]['readonly']) {
+            	if (!$this->tables[$this->table]['readonly']) {
                     if ($subaction=="Delete" && $idForDeletion == $id && !$confirmDelete) {
                         print "<td class=border bgcolor=lightgrey>";
                         print "<input type=hidden name=confirmDelete value=1>";
@@ -4430,7 +4431,7 @@ class RatingTables {
                     }
             
                     print "
-                    <input type=hidden name=table value=$table>
+                    <input type=hidden name=table value=$this->table>
                     <input type=hidden name=next value=$next>
                     <input type=hidden name=search_text value=\"$search_text\">
                     </td>
@@ -4442,7 +4443,7 @@ class RatingTables {
                         </tr>
                     ";
                 } else {
-                    if ($table=='prepaid') {
+                    if ($this->table=='prepaid') {
                         print "
                         <tr>
                         <td></td>
@@ -4480,7 +4481,7 @@ class RatingTables {
                 <input type=hidden name=maxrowsperpage value=$this->maxrowsperpage>
                 <input type=hidden name=next           value=$mod_show_next>
                 <input type=hidden name=action         value=Search>
-                <input type=hidden name=table          value=$table>
+                <input type=hidden name=table          value=$this->table>
                 <input type=hidden name=search_text    value=\"$search_text\">
                 ";
             
@@ -4489,7 +4490,7 @@ class RatingTables {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
             
-                    if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                    if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         $SEARCH_NAME="search_".$Fname;
                         $value=$_REQUEST[$SEARCH_NAME];
                         print "<input type=hidden name=search_$Fname value=\"$value\">
@@ -4515,7 +4516,7 @@ class RatingTables {
                 print "
                 <input type=hidden name=maxrowsperpage value=$this->maxrowsperpage>
                 <input type=hidden name=next           value=$show_next>
-                <input type=hidden name=table           value=$table>
+                <input type=hidden name=table           value=$this->table>
                 <input type=hidden name=action           value=Search>
                 ";
                 $j=0;
@@ -4523,7 +4524,7 @@ class RatingTables {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
             
-                    if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
+                    if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         $SEARCH_NAME="search_".$Fname;
                         $value=$_REQUEST[$SEARCH_NAME];
                         print "<input type=hidden name=search_$Fname value=\"$value\">";
