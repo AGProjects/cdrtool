@@ -14,7 +14,6 @@ class CDRS {
     var $normalizedField     = 'Normalized';
     var $DestinationIdField  = 'DestinationId';
     var $BillingIdField      = 'UserName';
-    var $sipTraceDataSource  = 'sip_trace';
     var $defaults            = array();
 	var $whereUnnormalized   = '';
 	var $skipNormalize       = false;
@@ -106,17 +105,24 @@ class CDRS {
         }
 
         // connect to the CDR database(s)
+		if(!$this->DATASOURCES[$this->cdr_source]['db_class']) {
+            $log=sprintf("Error: \$DATASOURCES['%s']['db_class'] is not defined in global.inc",$this->cdr_source);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return 0;
+        }
+
         $_dbClass            = $this->DATASOURCES[$this->cdr_source]['db_class'];
 
         if (is_array($_dbClass)) {
-            if (class_exists($_dbClass[0])) $this->primary_database   = $_dbClass[0];
-            if (class_exists($_dbClass[1])) $this->secondary_database = $_dbClass[1];
+            if ($_dbClass[0]) $this->primary_database   = $_dbClass[0];
+            if ($_dbClass[1]) $this->secondary_database   = $_dbClass[1];
         } else {
             $this->primary_database = $_dbClass;
         }
 
 		if(!class_exists($this->primary_database)) {
-            $log="Error instantiating db class: $this->primary_database\n";
+            $log=sprintf("Error: database class '%s' is not defined in global.inc",$this->primary_database);
             print $log;
             syslog(LOG_NOTICE, $log);
             return 0;

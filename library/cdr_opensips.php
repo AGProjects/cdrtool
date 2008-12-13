@@ -4,7 +4,9 @@ class CDRS_opensips extends CDRS {
     var $CDR_class             = "CDR_opensips";
     var $subscriber_table      = "subscriber";
     var $ENUMtld               = '';
-    var $maxCDRsNormalizeWeb = 500;
+    var $maxCDRsNormalizeWeb   = 500;
+    var $sipTraceDataSource    = 'sip_trace';
+    var $mediaTraceDataSource  = 'media_trace';
 
     var $CDRFields=array('id'              => 'RadAcctId',
                          'callId'          => 'AcctSessionId',
@@ -1039,6 +1041,12 @@ class CDRS_opensips extends CDRS {
 
     function show() {
         global $perm;
+
+		if (!is_object($this->CDRdb)) {
+            $log=sprintf("Error: CDR database is not initalized");
+            print $log;
+            return false;
+        }
 
         foreach ($this->FormElements as $_el) {
             ${$_el} = trim($_REQUEST[$_el]);
@@ -2147,29 +2155,6 @@ class CDR_opensips extends CDR {
     
         }
 
-		if (!$this->normalized) {
-            // fix the duration of prepaid sessions if the prepaid duration is different than radius calculated duration
-            $query=sprintf("select duration from prepaid_history
-            where session = '%s'
-            and destination = '%s'
-            order by id desc limit 1",
-            $this->callId,
-            $this->DestinationId
-            );
-
-            if ($this->CDRS->cdrtool->query($query)) {
-                if ($this->CDRS->cdrtool->num_rows()) {
-                    $this->CDRS->cdrtool->next_record();
-                    $this->duration           = $this->CDRS->cdrtool->f('duration');
-                    $this->durationNormalized = $this->CDRS->cdrtool->f('duration');
-                }
-            } else {
-                $log=sprintf("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
-                print $log;
-                syslog(LOG_NOTICE,$log);
-            }
-        }
-
         if ($this->applicationType=="presence") {
 
             $this->destinationPrint     = $this->cNumberUsername.$this->cNumberDelimiter.$this->cNumberDomain;
@@ -2203,7 +2188,33 @@ class CDR_opensips extends CDR {
             $this->outputTrafficPrint = number_format($this->outputTraffic/1024,2);
         }
 
-        $this->durationPrint      = sec2hms($this->duration);
+		if (!$this->normalized) {
+            // fix the duration of prepaid sessions if the prepaid duration is different than radius calculated duration
+            $query=sprintf("select duration from prepaid_history
+            where session = '%s'
+            and destination = '%s'
+            order by id desc limit 1",
+            $this->callId,
+            $this->destinationPrint     // must be synced with maxsession time
+            );
+
+            if ($this->CDRS->cdrtool->query($query)) {
+                if ($this->CDRS->cdrtool->num_rows()) {
+                    $this->CDRS->cdrtool->next_record();
+                    $this->durationNormalized = $this->CDRS->cdrtool->f('duration');
+        			$this->durationPrint      = sec2hms($this->durationNormalized);
+                } else {
+        			$this->durationPrint      = sec2hms($this->duration);
+
+                }
+            } else {
+                $log=sprintf("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
+                print $log;
+                syslog(LOG_NOTICE,$log);
+            }
+        } else {
+        	$this->durationPrint      = sec2hms($this->duration);
+        }
 
         if ($this->disconnect) {
             $this->disconnectPrint    = $this->NormalizeDisconnect($this->disconnect);
@@ -2869,11 +2880,11 @@ class CDR_opensips extends CDR {
 }
 
 class SIP_trace {
-    var $enableThor  = false;
-    var $trace_array = array();
-    var $traced_ip   = array();
-    var $SIPProxies  = array();
-    var $mediaTraceDataSource  = false;
+    var $enableThor           = false;
+    var $trace_array          = array();
+    var $traced_ip            = array();
+    var $SIPProxies           = array();
+    var $mediaTraceDataSource = false;
 
     function SIP_trace ($cdr_source) {
         global $DATASOURCES, $auth;

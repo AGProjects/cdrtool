@@ -5549,6 +5549,7 @@ class RatingEngine {
         last_call_price      = '%s',
         active_sessions      = '%s',
         destination          = '%s',
+        duration             = '%s',
         session_counter      = '%s',
         maxsessiontime       = %s
         where account        = '%s'",
@@ -5557,6 +5558,7 @@ class RatingEngine {
         $balance,
         addslashes(json_encode($active_sessions)),
         $destination,
+        $duration,
         count($active_sessions),
         $maxsessiontime,
         addslashes($account)
@@ -5571,9 +5573,9 @@ class RatingEngine {
         list($prepaidUser,$prepaidDomain)=explode("@",$account);
 
         $query=sprintf("insert into prepaid_history
-        (username,domain,action,number,value,balance,date,session,duration)
+        (username,domain,action,number,value,balance,date,session,duration,destination)
         values 
-        ('%s','%s','Debit balance','Session to %s for %ds','%s','%s',NOW(),'%s','%d')",
+        ('%s','%s','Debit balance','Session to %s for %ds','%s','%s',NOW(),'%s','%d','%s')",
         addslashes($prepaidUser),
         addslashes($prepaidDomain),
         addslashes($destination),
@@ -5581,7 +5583,8 @@ class RatingEngine {
         $balance,
         $next_balance,
         addslashes($session_id),
-        $duration
+        $duration,
+        addslashes($destination)
         );
 
         if (!$this->db->query($query)) {

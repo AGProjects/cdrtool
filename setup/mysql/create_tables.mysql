@@ -377,6 +377,7 @@ CREATE TABLE `prepaid` (
   `call_lock` enum('0','1') default '0',
   `last_call_price` decimal(10,4) NOT NULL default '0.0000',
   `destination` varchar(50) NOT NULL default '',
+  `duration` bigint unsigned not null,
   `active_sessions` text NOT NULL,
   `maxsessiontime` bigint(20) unsigned NOT NULL,
   `call_in_progress` datetime NOT NULL default '0000-00-00 00:00:00',
