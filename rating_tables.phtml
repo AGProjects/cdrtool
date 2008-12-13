@@ -7,49 +7,7 @@ page_open(
                   "perm" => "CDRTool_Perm"));
 
 $perm->check("rates");
-
-$export= $_REQUEST['export'];
-$table = $_REQUEST['table'];
-
-$table_fname=array(
-                   "destinations"          => "destinations.csv",
-                   "billing_customers"     => "customers.csv",
-                   "billing_profiles"      => "profiles.csv",
-                   "billing_rates"         => "rates.csv",
-                   "billing_rates_history" => "ratesHistory.csv",
-                   "prepaid"   	           => "prepaid.csv",
-                   "billing_enum_tlds"     => "enumtld.csv",
-                   "quota_usage"           => "quotausage.csv"
-                   );
-
-if (!$export) {
-    $title="Rating tables";
-    if (is_readable("/etc/cdrtool/local/header.phtml")) {
-        include("/etc/cdrtool/local/header.phtml");
-    } else {
-        include("header.phtml");
-    }
-
-} else {
-    if ($table_fname[$table]) {
-        Header("Content-type: text/plain");
-        Header("Content-Disposition: inline; filename=$table_fname[$table]");
-    } else {
-        exit ;
-    }
-}
-
-$PHP_SELF           = $_SERVER['PHP_SELF'];
-$REMOTE_ADDR        = $_SERVER['REMOTE_ADDR'];
-
-global $CDRTool;
-
 include("rating.php");
-
-if (!$export) {
-	$layout = new pageLayoutLocal();
-	$layout->showTopMenu($title);
-}
 
 if ($perm->have_perm("readonly")) {
 	$RatingTables=new RatingTables('readonly');
@@ -57,40 +15,27 @@ if ($perm->have_perm("readonly")) {
 	$RatingTables=new RatingTables();
 }
 
-$tables=$RatingTables->tables;
-
-$whereDomainFilter = " (1=1) ";
-if ($CDRTool['filter']['domain']) {
-	$Realms      = explode(" ",$CDRTool['filter']['domain']);
-
-    if ($tables[$table]['domainFilterColumn']) {
-	    $whereDomainFilter = $whereDomainFilter. " and ".$tables[$table]['domainFilterColumn']." in (" ;
-    	$rr=0;
-	    foreach ($Realms as $realm) {
-    		if ($rr) $whereDomainFilter = $whereDomainFilter.",";
-    		$whereDomainFilter = $whereDomainFilter."'".addslashes($realm)."'";
-            $insertDomainOption[]=$realm;
-	    	$rr++;
-		}
-		$whereDomainFilter = $whereDomainFilter.") ";
+if (!$_REQUEST['export']) {
+    $title="Rating tables";
+    if (is_readable("/etc/cdrtool/local/header.phtml")) {
+        include("/etc/cdrtool/local/header.phtml");
+    } else {
+        include("header.phtml");
     }
+	$layout = new pageLayoutLocal();
+	$layout->showTopMenu($title);
 
-    if ($tables[$table][domainMatchColumn]) {
-        $whereDomainFilter  = $whereDomainFilter ." and (" ;
-        $rr=0;
-        foreach ($Realms as $realm) {
-            if ($rr) $whereDomainFilter = $whereDomainFilter." or ";
-            $whereDomainFilter = $whereDomainFilter." ".$tables[$table][domainMatchColumn]." like '%@".addslashes($realm)."'";
-            $rr++;
-        }
-        $whereDomainFilter = $whereDomainFilter." ) ";
-    }
+} else {
+    Header("Content-type: text/plain");
+    $h=sprintf("Content-Disposition: inline; filename=%s",$RatingTables->table_to_csv_name[$_REQUEST['table']]);
+    Header($h);
 }
 
-$RatingTables->updateTable($whereDomainFilter);
-$RatingTables->showTable($whereDomainFilter);
+$tables=$RatingTables->tables;
+$RatingTables->updateTable();
+$RatingTables->showTable();
 
-if (!$export) {
+if (!$_REQUEST['export']) {
 	$layout->showFooter();
     print "
     </body>

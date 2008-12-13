@@ -538,3 +538,5 @@ alter table prepaid_history add column destination varchar (15) not null after d
 alter table prepaid_history create index session_idx(session);
 
 alter table prepaid add column duration bigint(20) unsigned not null after destination;
+alter table prepaid add column domain varchar(128) not null after account;
+update prepaid set domain = SUBSTRING_INDEX(account, '@',-1);

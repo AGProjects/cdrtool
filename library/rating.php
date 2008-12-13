@@ -921,8 +921,19 @@ class Rate {
 }
 
 class RatingTables {
-    var $maxrowsperpage=15;
+    var $table_to_csv_name=array(
+                           "destinations"          => "destinations.csv",
+                           "billing_customers"     => "customers.csv",
+                           "billing_profiles"      => "profiles.csv",
+                           "billing_rates"         => "rates.csv",
+                           "billing_rates_history" => "ratesHistory.csv",
+                           "prepaid"   	           => "prepaid.csv",
+                           "billing_enum_tlds"     => "enumtld.csv",
+                           "quota_usage"           => "quotausage.csv"
+                           );
 
+    var $maxrowsperpage=15;
+	var $insertDomainOption=array();
     var $delimiter=",";
     var $filesToImport=array();
     var $importFilesPatterns=array('ratesHistory',
@@ -951,11 +962,13 @@ class RatingTables {
                             );
 
     var $requireReload  = array('destinations');
+    var $whereDomainFilter = " (1=1) ";
 
     function RatingTables ($readonly=false) {
         global $CDRTool;
         global $RatingEngine;
 
+		$this->table = $_REQUEST['table'];
         $this->readonly=$readonly;
 
         $this->settings=$RatingEngine;
@@ -1200,7 +1213,7 @@ class RatingTables {
                                                  "keys"=>array("id"),
                                                  "size"=>15,
                                                  "exceptions" =>array('change_date','active_sessions','call_in_progress','call_lock'),
-                                                 "domainFilterColumn"=>"account",
+                                                 "domainFilterColumn"=>"domain",
                                                  "order"=>"change_date DESC",
                                                  "fields"=>array("account"=>array("size"=>35,
                                                                                "name"=>"SIP prepaid account",
@@ -1235,7 +1248,7 @@ class RatingTables {
                                                  "keys"=>array("id"),
                                                  "size"=>15,
                                                  "exceptions" =>array('service'),
-                                                 "domainFilterColumn"=>"account",
+                                                 "domainFilterColumn"=>"domain",
                                                  "fields"=>array("batch"=>array("size"=>40,
                                                                                "name"=>"Batch name"
                                                                                 ),
@@ -1265,7 +1278,7 @@ class RatingTables {
                                                  "size"=>15,
                                                  "readonly"=>1,
                                                  "exceptions" =>array("change_date","traffic"),
-
+                                                 "domainFilterColumn"=>"domain",
                                                  "fields"=>array("datasource"=>array("size"=>15,
                                                                                "readonly"=>1
                                                                                 ),
@@ -1300,6 +1313,22 @@ class RatingTables {
                                                                   )
                                                    )
                            );
+
+        if ($this->CDRTool['filter']['domain']) {
+            $Realms      = explode(" ",$this->CDRTool['filter']['domain']);
+        
+            if ($this->tables[$this->table]['domainFilterColumn']) {
+                $this->whereDomainFilter .= " and ".$this->tables[$this->table]['domainFilterColumn']." in (" ;
+                $rr=0;
+                foreach ($Realms as $realm) {
+                    if ($rr) $this->whereDomainFilter .= ",";
+                    $this->whereDomainFilter .= "'".addslashes($realm)."'";
+                    $this->insertDomainOption[]=$realm;
+                    $rr++;
+                }
+                $this->whereDomainFilter .= ") ";
+            }
+        }
 
         if ($this->settings['split_rating_table']) {
             $this->tables['billing_rates']['fields']['name']['readonly']=1;
@@ -3023,7 +3052,7 @@ class RatingTables {
         return true;
     }
 
-    function updateTable($whereDomainFilter) {
+    function updateTable() {
 
         global $auth;
 
@@ -3083,7 +3112,7 @@ class RatingTables {
 
                 $log_entity=" id = $id ";
         
-                $where = " id = '".$id."' and $whereDomainFilter";
+                $where = " id = '".$id."' and $this->whereDomainFilter";
 
                 if ($table == "billing_rates") {
                     if ($this->settings['split_rating_table']) {
@@ -3222,7 +3251,7 @@ class RatingTables {
                     $kkk++;
                 }
         
-                $where = $whereDomainFilter;
+                $where = $this->whereDomainFilter;
 
                 if ($kkk) {
                     // reconstruct where clause to apply all changes to selection
@@ -3313,7 +3342,7 @@ class RatingTables {
                     // build where clause
                     // Search build for each field
 
-                    $where = $whereDomainFilter;
+                    $where = $this->whereDomainFilter;
                     $j=0;
                     while ($j < $cc ) {
             
@@ -3437,7 +3466,7 @@ class RatingTables {
                         $toRate);
                     }
 
-                    $where=$whereDomainFilter;
+                    $where=$this->whereDomainFilter;
 
                     $j=0;
                     while ($j < $cc ) {
@@ -3526,7 +3555,7 @@ class RatingTables {
         
             } elseif ($subaction == "Insert") {
                 //print "<h3>Insert</h3>";
-                if (is_array($insertDomainOption) && !in_array($domain,$insertDomainOption)) {
+                if (count($this->insertDomainOption) && !in_array($domain,$this->insertDomainOption)) {
                     print "<font color=red>
                     Error: Invalid domain $domain
                     </font>
@@ -3612,7 +3641,7 @@ class RatingTables {
                 }
             } elseif ($subaction == "Delete") {
                 if ($confirmDelete) {
-                    $query="delete from $table where id = '$id' and $whereDomainFilter";
+                    $query="delete from $table where id = '$id' and $this->whereDomainFilter";
                     if ($this->db->query($query)) {
                         $affected_rows=$this->db->affected_rows();
                         if ($affected_rows && in_array($table,$this->requireReload)) {
@@ -3697,7 +3726,7 @@ class RatingTables {
         } 
     }
 
-    function showTable($whereDomainFilter) {
+    function showTable() {
 
         $PHP_SELF=$_SERVER['PHP_SELF'];
 
@@ -3735,7 +3764,7 @@ class RatingTables {
             $delimiter=",";
         }
 
-        $query="select count(*) as c from $table where $whereDomainFilter";
+        $query="select count(*) as c from $table where $this->whereDomainFilter";
         
         $t=0;
         $j=0;
@@ -3841,7 +3870,7 @@ class RatingTables {
         $query=sprintf("select * from %s where (1=1) %s and %s %s limit %s, %s",
         $table,
         $where,
-        $whereDomainFilter,
+        $this->whereDomainFilter,
         $order,
         $i,
         $this->maxrowsperpage
@@ -3928,11 +3957,11 @@ class RatingTables {
                     }
             
                     if (!in_array($Fname,$this->tables[$table]['keys']) ) {
-                        if ($Fname=="domain" && is_array($insertDomainOption)) {
+                        if ($Fname=="domain" && count($this->insertDomainOption)) {
                             print "<td><select name=search_$Fname>";
                             $selected_domain[$value]="selected";
                             print "<option>";
-                            foreach ($insertDomainOption as $_option) {
+                            foreach ($this->insertDomainOption as $_option) {
                                 print "<option $selected_domain[$_option]>$_option";
                             }
                             print "
@@ -4037,9 +4066,9 @@ class RatingTables {
             
                     if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
                         if (!in_array($Fname,$this->tables[$table]['keys']) ) {
-                            if ($Fname=="domain" && is_array($insertDomainOption)) {
+                            if ($Fname=="domain" && count($this->insertDomainOption)) {
                                 print "<td><select name=$Fname>";
-                                foreach ($insertDomainOption as $_option) {
+                                foreach ($this->insertDomainOption as $_option) {
                                     print "<option $selected_domain[$_option]>$_option";
                                 }
                                 print "
@@ -4163,9 +4192,9 @@ class RatingTables {
             
                     if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
                         if (!in_array($Fname,$this->tables[$table]['keys']) ) {
-                            if ($Fname=="domain" && is_array($insertDomainOption)) {
+                            if ($Fname=="domain" && count($this->insertDomainOption)) {
                                 print "<td><select  name=$Fname>";
-                                foreach ($insertDomainOption as $_option) {
+                                foreach ($this->insertDomainOption as $_option) {
                                     print "<option>$_option";
                                 }
                                 print "
@@ -4309,10 +4338,10 @@ class RatingTables {
                 if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
                     if (!$export) {
                         if (!in_array($Fname,$this->tables[$table]['keys']) && !$this->readonly) {
-                            if ($Fname=="domain" && is_array($insertDomainOption)) {
+                            if ($Fname=="domain" && count($this->insertDomainOption)) {
                                 print "<td><select name=$Fname>";
                                 $selected_domain[$value]="selected";
-                                foreach ($insertDomainOption as $_option) {
+                                foreach ($this->insertDomainOption as $_option) {
                                     print "<option $selected_domain[$_option]>$_option";
                                 }
                                 print "
