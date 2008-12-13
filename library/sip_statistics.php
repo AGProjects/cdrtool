@@ -203,7 +203,7 @@ class ThorNetworkImage {
         $NetworkStatistics->getStatus();
         $NetworkStatistics->getStatistics();
 
-        $this->sip_proxies     = #NetworkStatistics->sip_proxies;
+        $this->sip_proxies     = $NetworkStatistics->sip_proxies;
         $this->dns_managers    = $NetworkStatistics->dns_managers;
         $this->thor_mangers    = $NetworkStatistics->thor_managers;
         $this->node_statistics = $NetworkStatistics->node_statistics;
@@ -525,7 +525,6 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
                 // MediaProxy 1 via relay tcp socket
                 $MediaSessions = new MediaSessions1($DATASOURCES[$datasource]['mediaServers'],$allowedDomains);
                 $MediaSessions->getSessions();
-                print_r($MediaSessions->domain_statistics);
                 $totals=array_merge_recursive($totals,$MediaSessions->domain_statistics);
             }
         
