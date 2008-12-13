@@ -24,20 +24,20 @@ if (strlen($CDRTool['filter']['domain'])) {
 
 ?>
 
-<h2>Consolidated SIP platform usage statistics</h2>
+<h2>Platform usage</h2>
 
 <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=10>
 
 <? if ($perm->have_perm('admin')) { ?>
 
 <TR>
-<TD><DIV align='center'><B> Registered SIP accounts</B></DIV>
+<TD><DIV align='center'><B> Total SIP accounts</B></DIV>
 <DIV><A HREF='total_users.html'><IMG BORDER=0 ALT='total_users Traffic Graph' SRC='total_users-day.png'></A>
 <SMALL><!--#flastmod file='total_users.html' --></SMALL></DIV>
-</TD><TD><DIV align='center'><B> Active RTP media sessions</B></DIV>
+</TD><TD><DIV align='center'><B> Total RTP media sessions</B></DIV>
 <DIV><A HREF='total_sessions.html'><IMG BORDER=0 ALT='total_sessions Traffic Graph' SRC='total_sessions-day.png'></A>
 <SMALL><!--#flastmod file='total_sessions.html' --></SMALL></DIV>
-</TD><TD><DIV align='center'><B> Relayed RTP media traffic </B></DIV>
+</TD><TD><DIV align='center'><B> Total relayed RTP traffic </B></DIV>
 <DIV><A HREF='total_traffic.html'><IMG BORDER=0 ALT='total_traffic Traffic Graph' SRC='total_traffic-day.png'></A>
 <SMALL><!--#flastmod file='total_traffic.html' --></SMALL></DIV>
 </TD></TR>
@@ -45,6 +45,7 @@ if (strlen($CDRTool['filter']['domain'])) {
 
 <?
 }
+
 if (is_array($allowedDomains))  {
 	$domains=array_intersect($allowedDomains,array_keys($SIPstatistics->domains));
 } else {
@@ -54,13 +55,13 @@ if (is_array($allowedDomains))  {
 foreach ($domains as $key) {
     printf ("
     <TR>
-    <TD><DIV align='center'><B> Registered SIP devices on %s </B></DIV>
+    <TD><DIV align='center'><B> SIP accounts on %s </B></DIV>
     <DIV><A HREF='%s_users.html'><IMG BORDER=0 ALT='%s_users Traffic Graph' SRC='%s_users-day.png'></A>
     <SMALL><!--#flastmod file='%s_users.html' --></SMALL></DIV>
-    </TD><TD><DIV align='center'><B> Active RTP media dessions for %s </B></DIV>
+    </TD><TD><DIV align='center'><B> RTP media sessions for %s </B></DIV>
     <DIV><A HREF='%s_sessions.html'><IMG BORDER=0 ALT='%s_sessions Traffic Graph' SRC='%s_sessions-day.png'></A>
     <SMALL><!--#flastmod file='%s_sessions.html' --></SMALL></DIV>
-    </TD><TD><DIV align='center'><B> Relayed RTP media traffic %s </B></DIV>
+    </TD><TD><DIV align='center'><B> Relayed RTP traffic for %s </B></DIV>
     <DIV><A HREF='%s_traffic.html'><IMG BORDER=0 ALT='%s_traffic Traffic Graph' SRC='%s_traffic-day.png'></A>
     <SMALL><!--#flastmod file='%s_traffic.html' --></SMALL></DIV>
     </TD></TR>

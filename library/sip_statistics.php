@@ -114,6 +114,8 @@ class NetworkStatistics {
             foreach ($this->status[$_id]['roles'] as $_role) {
 
                 if ($_role=='sip_proxy') $this->sip_proxies[$this->status[$_id]['ip']]++;
+                if ($_role=='thor_dnsmanager') $this->dns_managers[$this->status[$_id]['ip']]++;
+                if ($_role=='thor_manager') $this->thor_managers[$this->status[$_id]['ip']]++;
 
 				$ip=$this->status[$_id]['ip'];
                 $this->roles[$_role][$ip]=array('ip'      => $ip,
@@ -175,8 +177,10 @@ class NetworkStatistics {
         	$_section_print=preg_replace("/_/"," ",$_section);
             printf ("<td class=border><b>%s</b></td>",ucfirst($_section_print));
         }
-        print "</tr>";
         print "<tr>";
+        foreach (array_keys($this->sip_summary) as $_section) {
+            printf ("<td class=border>%s</td>",$this->sip_summary[$_section]);
+        }
         print "</tr>";
         print "<table>";
 
@@ -199,7 +203,10 @@ class ThorNetworkImage {
         $NetworkStatistics->getStatus();
         $NetworkStatistics->getStatistics();
 
-        $this->nodes=$NetworkStatistics->sip_proxies;
+        $this->sip_proxies=$NetworkStatistics->sip_proxies;
+        $this->dns_managers=$NetworkStatistics->dns_managers;
+        $this->thor_mangers=$NetworkStatistics->thor_managers;
+
         $this->node_statistics=$NetworkStatistics->node_statistics;
 
         require_once("media_sessions.php");
@@ -218,7 +225,7 @@ class ThorNetworkImage {
         
         imagefill($img, 0, 0, $white);
     
-        $c=count($this->nodes);
+        $c=count($this->sip_proxies);
         imagestring ($img, 5, 20, 20, "SIP Thor network", $black);
      
         $cx=$this->imgsize/2;
@@ -230,10 +237,6 @@ class ThorNetworkImage {
         $node_img = @imagecreatefrompng('Node.png');
         list($nw, $nh) = getimagesize('Node.png');
     
-        // Get ClassicNode image
-        $cnode_img = @imagecreatefrompng('ClassicNode.png');
-        list($cnw, $cnh) = getimagesize('ClassicNode.png');
-    
         // Get Cloud Image
         $cloud_img = @imagecreatefrompng('InternetCloud.png');
         list($cw, $ch) = getimagesize('InternetCloud.png');
@@ -242,39 +245,56 @@ class ThorNetworkImage {
         $thor_img = @imagecreatefrompng('P2PThorTitle.png');
         list($tw, $th) = getimagesize('P2PThorTitle.png');
     
-        // Get Classic rectangle image
-        $cthor_img = @imagecreatefrompng('ClassicRectangle.png');
-        list($ctw, $cth) = getimagesize('ClassicRectangle.png');
-    
-        if (count($this->nodes)) {
-            if (count($this->nodes) > 1) {
-                imagecopy ($img,$thor_img, $this->imgsize/2-$tw/2, $this->imgsize/2-$th/2-5, 0, 0, $tw, $th);
-                imagecopy ($img,$cloud_img, $this->imgsize/2-$cw/2, $this->imgsize/2-$ch/2, 0, 0, $cw, $ch);
+        imagecopy ($img,$thor_img, $this->imgsize/2-$tw/2, $this->imgsize/2-$th/2-5, 0, 0, $tw, $th);
+        imagecopy ($img,$cloud_img, $this->imgsize/2-$cw/2, $this->imgsize/2-$ch/2, 0, 0, $cw, $ch);
+
+        imagecopy ($img,$thor_img, $this->imgsize/2-$tw/2, $this->imgsize/2-$th/2-5, 0, 0, $tw, $th);
+        imagecopy ($img,$cloud_img, $this->imgsize/2-$cw/2, $this->imgsize/2-$ch/2, 0, 0, $cw, $ch);
+
+        $dash=false;
+        $dashsize=2;
         
-                $dash=false; 
-                $dashsize=2;
-                
-                for ($angle=0; $angle<=(180+$dashsize); $angle+=$dashsize) { 
-                  $x = ($radius * cos(deg2rad($angle))); 
-                  $y = ($radius * sin(deg2rad($angle))); 
-             
-                  if ($dash) { 
-                      imageline($img, $cx+$px, $cy+$py, $cx+$x, $cy+$y, 'black');
-                      imageline($img, $cx-$px, $cx-$py, $cx-$x, $cy-$y, 'black');
-                  } 
-                  
-                  $dash=!$dash; 
-                  $px=$x; 
-                  $py=$y; 
-                }
-            } else {
-                imagecopy ($img,$cthor_img, $this->imgsize/2-$ctw/2, $this->imgsize/2-$cth/2+50, 0, 0, $ctw, $cth);
+        for ($angle=0; $angle<=(180+$dashsize); $angle+=$dashsize) { 
+          $x = ($radius * cos(deg2rad($angle))); 
+          $y = ($radius * sin(deg2rad($angle))); 
+     
+          if ($dash) { 
+              imageline($img, $cx+$px, $cy+$py, $cx+$x, $cy+$y, 'black');
+              imageline($img, $cx-$px, $cx-$py, $cx-$x, $cy-$y, 'black');
+          } 
+          
+          $dash=!$dash; 
+          $px=$x; 
+          $py=$y;
+
+          if ($dash) { 
+              imageline($img, $cx+$px, $cy+$py, $cx+$x, $cy+$y, 'black');
+              imageline($img, $cx-$px, $cx-$py, $cx-$x, $cy-$y, 'black');
+          } 
+
+        }
+
+        if (count($this->dns_managers)) {
+            $h1=0;
+            $t=count($this->dns_managers);
+            foreach (array_keys($this->dns_managers) as $_ip) {
+    			imagecopy ($img,$node_img, $this->imgsize-120-$h1, 0, 0, 0, $nw-20, $nh-20);
+
+                $text=sprintf("DNS%s",$t--);
+            	imagestring ($img, 3, $this->imgsize-65-$h1, 80, $text, $black);
+                $v1=$v1+10;
+            	$h1=$h1+50;
+
             }
+
+        }
+
+        if (count($this->sip_proxies)) {
     
-            $dashsize=360/count($this->nodes);
+            $dashsize=360/count($this->sip_proxies);
             $j=0;
 
-            $node_names=array_keys($this->nodes);
+            $node_names=array_keys($this->sip_proxies);
 
             for ($angle=0; $angle<360; $angle+=$dashsize) {
          
@@ -296,44 +316,19 @@ class ThorNetworkImage {
               	$extra_text2="";
               }
          
-              if (count($this->nodes) > 1) {
-                  if (($angle >= 120 && $angle < 240)) {
-                    imagestring ($img, 3, $cx+$px-70, $cy+$py-72, $text, $black);
-                    imagestring ($img, 3, $cx+$px-70, $cy+$py-62, $extra_text1, $black);
-                    imagestring ($img, 3, $cx+$px-70, $cy+$py-52, $extra_text2, $black);
-                  } else {
-                    imagestring ($img, 3, $cx+$px-110, $cy+$py-30, $text, $black);
-                    imagestring ($img, 3, $cx+$px-110, $cy+$py-20, $extra_text1, $black);
-                    imagestring ($img, 3, $cx+$px-110, $cy+$py-10, $extra_text2, $black);
-                  }
-                  imagecopy ($img,$node_img, $cx+$px-$nw/2+7, $cy+$py-$nh/2+5, 0, 0, $nw-20, $nh-20);
+              if (($angle >= 120 && $angle < 240)) {
+                imagestring ($img, 3, $cx+$px-70, $cy+$py-72, $text, $black);
+                imagestring ($img, 3, $cx+$px-70, $cy+$py-62, $extra_text1, $black);
+                imagestring ($img, 3, $cx+$px-70, $cy+$py-52, $extra_text2, $black);
               } else {
-                  imagecopy ($img,$cnode_img, $this->imgsize/2-$cnw/2-100, $this->imgsize/2-$cnh/2, 0, 0, $cnw, $cnh);
-                  imagestring ($img, 3, $this->imgsize/2-$cnw/2-60, $this->imgsize/2-$cnh/2+220, $text, $black);
+                imagestring ($img, 3, $cx+$px-110, $cy+$py-30, $text, $black);
+                imagestring ($img, 3, $cx+$px-110, $cy+$py-20, $extra_text1, $black);
+                imagestring ($img, 3, $cx+$px-110, $cy+$py-10, $extra_text2, $black);
               }
+              imagecopy ($img,$node_img, $cx+$px-$nw/2+7, $cy+$py-$nh/2+5, 0, 0, $nw-20, $nh-20);
               $j++;
               
             }
-        } else {
-            imagecopy ($img,$thor_img, $this->imgsize/2-$tw/2, $this->imgsize/2-$th/2-5, 0, 0, $tw, $th);
-            imagecopy ($img,$cloud_img, $this->imgsize/2-$cw/2, $this->imgsize/2-$ch/2, 0, 0, $cw, $ch);
-            $dash=false; 
-            $dashsize=2;
-            
-            for ($angle=0; $angle<=(180+$dashsize); $angle+=$dashsize) { 
-              $x = ($radius * cos(deg2rad($angle))); 
-              $y = ($radius * sin(deg2rad($angle))); 
-         
-              if ($dash) { 
-                  imageline($img, $cx+$px, $cy+$py, $cx+$x, $cy+$y, 'black');
-                  imageline($img, $cx-$px, $cx-$py, $cx-$x, $cy-$y, 'black');
-              } 
-              
-              $dash=!$dash; 
-              $px=$x; 
-              $py=$y; 
-            }
-
         }
     
         return $img;
