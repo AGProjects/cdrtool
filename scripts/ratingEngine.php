@@ -10,13 +10,19 @@ require('cdr_generic.php');
 require('rating.php');
 require('rating_server.php');
 
-if (!strlen($RatingEngine['socketIP']) || !$RatingEngine['socketPort'] || !$RatingEngine['CDRS_class']) {
-    die('Please define RatingEngine[socketIP], RatingEngine[socketPort] and RatingEngine[CDRS_class] in /etc/cdrtool/global.inc\n');
+if (!strlen($RatingEngine['socketIP']) || !$RatingEngine['socketPort'] || !$RatingEngine['cdr_source']) {
+    $log=sprintf("Please define \$RatingEngine['socketIP'], \$RatingEngine['socketPort'] and \$RatingEngine['cdr_source'] in /etc/cdrtool/global.inc\n");
+    die ($log);
+}
+
+if (!is_array($DATASOURCES[$RatingEngine['cdr_source']])) {
+    $log=sprintf("Datasource '%s' does not exist in /etc/cdrtool/global.inc\n",$RatingEngine['cdr_source']);
+    die ($log);
 }
 
 // Init CDRS
-$CDR_class  = $DATASOURCES[$RatingEngine['CDRS_class']]["class"];
-$CDRS       = new $CDR_class($RatingEngine['CDRS_class']);
+$CDR_class  = $DATASOURCES[$RatingEngine['cdr_source']]["class"];
+$CDRS       = new $CDR_class($RatingEngine['cdr_source']);
 
 // Load rating tables
 $CDRS->RatingTables = new RatingTables();
