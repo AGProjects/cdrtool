@@ -1,7 +1,7 @@
 <?
-class CDRS_ser_radius extends CDRS {
+class CDRS_opensips extends CDRS {
     var $table                 = "radacct";
-    var $CDR_class             = "CDR_ser_radius";
+    var $CDR_class             = "CDR_opensips";
     var $subscriber_table      = "subscriber";
     var $ENUMtld               = '';
     var $maxCDRsNormalizeWeb = 500;
@@ -105,7 +105,7 @@ class CDRS_ser_radius extends CDRS {
         "unnormalize","MediaTimeout","cdr_table"
         );
 
-    var $createTableFile="/setup/radius/OpenSER/radacct.mysql";
+    var $createTableFile="/setup/radius/OpenSIPS/radacct.mysql";
 
     function LoadDisconnectCodes() {
 
@@ -1966,7 +1966,7 @@ class CDRS_ser_radius extends CDRS {
     }
 }
 
-class CDR_ser_radius extends CDR {
+class CDR_opensips extends CDR {
 
     var $show_in_icon=0;
     var $show_out_icon=0;
@@ -1986,7 +1986,7 @@ class CDR_ser_radius extends CDR {
         "JI"=>"Jitter in ms"
         );
 
-    function CDR_ser_radius(&$parent, $CDRfields) {
+    function CDR_opensips(&$parent, $CDRfields) {
 
         $this->CDRS = &$parent;
 
@@ -1994,18 +1994,6 @@ class CDR_ser_radius extends CDR {
 
         foreach (array_keys($this->CDRS->CDRFields) as $field) {
             $this->$field = $CDRfields[$this->CDRS->CDRFields[$field]];
-        }
-
-		if (!$this->normalized) {
-            $query=sprintf("select duration from prepaid_history where session = '%s' order by id desc limit 1",$this->callId);
-        	if ($this->CDRS->cdrtool->query($query)) {
-                if ($this->CDRS->cdrtool->num_rows()) {
-                    $this->CDRS->cdrtool->next_record();
-                    $this->durationNormalized=$this->CDRS->cdrtool->f('duration');
-                }
-            } else {
-                printf ("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
-            }
         }
 
         if ($this->CanonicalURI) {
@@ -2122,8 +2110,7 @@ class CDR_ser_radius extends CDR {
         }
 
         if ($this->CanonicalURI) {
-            $this->CanonicalURIPrint=$this->CanonicalURI;
-    
+            $this->CanonicalURIPrint            = $this->CanonicalURI;
             $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->CanonicalURI,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
             $this->CanonicalURINormalized       = $NormalizedNumber['Normalized'];
             $this->CanonicalURIUsername         = $NormalizedNumber['username'];
@@ -2141,8 +2128,8 @@ class CDR_ser_radius extends CDR {
             $this->cNumberNormalized            = $NormalizedNumber['Normalized'];
             $this->cNumberUsername              = $NormalizedNumber['username'];
             $this->cNumberDomain                = $NormalizedNumber['domain'];
-            $this->cNumberPrint                  = $NormalizedNumber['username'].$NormalizedNumber['delimiter'].$NormalizedNumber['domain'];
-            $this->cNumberDelimiter                = $NormalizedNumber['delimiter'];
+            $this->cNumberPrint                 = $NormalizedNumber['username'].$NormalizedNumber['delimiter'].$NormalizedNumber['domain'];
+            $this->cNumberDelimiter             = $NormalizedNumber['delimiter'];
         }
 
         if ($this->RemoteAddress) {
@@ -2156,13 +2143,36 @@ class CDR_ser_radius extends CDR {
             $this->RemoteAddressDelimiter       = $NormalizedNumber['delimiter'];
     
             $this->remoteGateway                = $NormalizedNumber['domain'];
-            $this->remoteUsername                = $NormalizedNumber['username'];
+            $this->remoteUsername               = $NormalizedNumber['username'];
     
+        }
+
+		if (!$this->normalized) {
+            // fix the duration of prepaid sessions if the prepaid duration is different than radius calculated duration
+            $query=sprintf("select duration from prepaid_history
+            where session = '%s'
+            and destination = '%s'
+            order by id desc limit 1",
+            $this->callId,
+            $this->DestinationId
+            );
+
+            if ($this->CDRS->cdrtool->query($query)) {
+                if ($this->CDRS->cdrtool->num_rows()) {
+                    $this->CDRS->cdrtool->next_record();
+                    $this->duration           = $this->CDRS->cdrtool->f('duration');
+                    $this->durationNormalized = $this->CDRS->cdrtool->f('duration');
+                }
+            } else {
+                $log=sprintf("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
+                print $log;
+                syslog(LOG_NOTICE,$log);
+            }
         }
 
         if ($this->applicationType=="presence") {
 
-            $this->destinationPrint = $this->cNumberUsername.$this->cNumberDelimiter.$this->cNumberDomain;
+            $this->destinationPrint     = $this->cNumberUsername.$this->cNumberDelimiter.$this->cNumberDomain;
             $this->DestinationForRating = $this->cNumberNormalized;
 
         } else {

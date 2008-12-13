@@ -34,7 +34,7 @@ $CDRTool['provider']['sampleLoginDomain']     = "example.com";
 # Rating engine settings
 $RatingEngine=array("socketIP"               => "IP.address.of.the.private.interface.of.cdrtool.example.com",
                     "socketPort"             => "9024",
-                    "CDRS_class"             => "ser_radius",
+                    "CDRS_class"             => "opensips_radius",
                     "prepaid_lock"           => true,
                     "log_delay"              => 0.05,
                     "split_rating_table"     => false,
@@ -59,7 +59,7 @@ $CDRTool['statistics']['domains']=array("example.com");
 
 ###########################################
 # Anti-fraud settings
-# create group quota in OpenSER and deny calls to users in this group
+# create group quota in OpenSIPS and deny calls to users in this group
 # $UserQuota["default"]["traffic"]  = 5000;            // MBytes
 $UserQuota["default"]["cost"]     = 1000;              // Euro
 
@@ -100,16 +100,16 @@ class DB_radius2 extends DB_Sql {
 
 class DB_subscribers extends DB_Sql {
   var $Host     = "sipdb";
-  var $Database = "openser";
-  var $User     = "openser";
+  var $Database = "opensips";
+  var $User     = "opensips";
   var $Password = "PASSWORD";
   var $Halt_On_Error ="yes";
 }
 
-class DB_openser extends DB_Sql {
+class DB_opensips extends DB_Sql {
   var $Host     = "sipdb";
-  var $Database = "openser";
-  var $User     = "openser";
+  var $Database = "opensips";
+  var $User     = "opensips";
   var $Password = "PASSWORD";
   var $Halt_On_Error ="yes";
 }
@@ -117,7 +117,7 @@ class DB_openser extends DB_Sql {
 class DB_siptrace extends DB_Sql {
   var $Host     = "sipdb";
   var $Database = "siptrace";
-  var $User     = "openser";
+  var $User     = "opensips";
   var $Password = "PASSWORD";
   var $Halt_On_Error ="yes";
 }
@@ -164,21 +164,21 @@ $DATASOURCES=array(
 "unknown"=>array(
                     "class"              => "CDRS_unknown" // leave it here
                     ),
-"ser_radius"=>array(
-                    "name"               => "OpenSER",
-                    "class"              => "CDRS_ser_radius",
+"opensips_radius"=>array(
+                    "name"               => "OpenSIPS",
+                    "class"              => "CDRS_opensips",
                     "table"              => "radacct".date("Ym"),
                     "db_class"           => array("DB_radius2","DB_radius"),  
                     "rating"             => "1",
                     "normalizedField"    => "Normalized",
-                    "UserQuotaClass"     => "OpenSERQuota",
-                    "AccountsDBClass"    => "DB_openser",
+                    "UserQuotaClass"     => "OpenSIPSQuota",
+                    "AccountsDBClass"    => "DB_opensips",
                     "UserQuotaNotify"    => "1",
                     "purgeCDRsAfter"     => 120, // how many days to keep the CDRs
                     "SIPProxies"         => array("10.0.0.1" => "node01",  // friendly names in sip trace table
                                                   "10.0.0.2" => "node02",
                                                 ),
-                    "db_registrar"         => "DB_openser",
+                    "db_registrar"         => "DB_opensips",
                     "sipTraceDataSource"   => "sip_trace",
                     "mediaTraceDataSource" => "media_trace",
                     "mediaDispatcher"      => "10.0.0.1"  // where to get the active media sessions from MediaProxy 2.0
@@ -190,10 +190,10 @@ $DATASOURCES=array(
                     "rating"             => "1",
                     "normalizedField"    => "Normalized",
                     "contexts" 		 => array(
-                                            "SIP"=>array("WEBName"=>"OpenSER"),
+                                            "SIP"=>array("WEBName"=>"OpenSIPS"),
                                             ),
                     "traceInURL"         => array(
-                                            "SIP"=>"ser_radius"
+                                            "OpenSIPS"=>"opensips_radius"
                     			    		),
                     "traceOutURL"        => array(),
                     "purgeCDRsAfter"    => 180 // how many days to keep the CDRs
@@ -216,7 +216,7 @@ $DATASOURCES=array(
 );
 
 // load CDRTool libraries 
-$CDRToolModules=array("openser","asterisk");
+$CDRToolModules=array("opensips","asterisk");
 
 if ($_SERVER['REMOTE_ADDR']=="10.0.0.1") {
     //$verbose=1;

@@ -753,6 +753,10 @@ class MediaSessions1 {
                         $allowed_session=1;
                         list($user1,$domain1)=explode("@",$proxy['sessions'][$crtSession]['from']);
                 		if (preg_match("/^(.*):/",$domain1,$m)) $domain1=$m[1];
+
+                        $this->domain_statistics[$domain1]['sessions']++;
+                        $this->domain_statistics['total']['sessions']++;
+
                     } else {
                         unset($allowed_session);
                     }

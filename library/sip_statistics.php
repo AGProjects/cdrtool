@@ -1,6 +1,6 @@
 <?
 /*
-    Copyright (c) 2007-2008 AG Projects
+    Copyright (c) 2008 AG Projects
     http://ag-projects.com
     Author Adrian Georgescu
 */
@@ -203,11 +203,10 @@ class ThorNetworkImage {
         $NetworkStatistics->getStatus();
         $NetworkStatistics->getStatistics();
 
-        $this->sip_proxies=$NetworkStatistics->sip_proxies;
-        $this->dns_managers=$NetworkStatistics->dns_managers;
-        $this->thor_mangers=$NetworkStatistics->thor_managers;
-
-        $this->node_statistics=$NetworkStatistics->node_statistics;
+        $this->sip_proxies     = #NetworkStatistics->sip_proxies;
+        $this->dns_managers    = $NetworkStatistics->dns_managers;
+        $this->thor_mangers    = $NetworkStatistics->thor_managers;
+        $this->node_statistics = $NetworkStatistics->node_statistics;
 
         require_once("media_sessions.php");
         $MediaSessions = new MediaSessionsNGNPro($engineId);
@@ -233,15 +232,15 @@ class ThorNetworkImage {
      
         $radius=0.7*$cx;
      
-        // Get ThorNode image
+        // Thor node image
         $node_img = @imagecreatefrompng('Node.png');
         list($nw, $nh) = getimagesize('Node.png');
     
-        // Get Cloud Image
+        // Internet cloud Image
         $cloud_img = @imagecreatefrompng('InternetCloud.png');
         list($cw, $ch) = getimagesize('InternetCloud.png');
     
-        // Get Thor rectangle image
+        // Thor title rectangle image
         $thor_img = @imagecreatefrompng('P2PThorTitle.png');
         list($tw, $th) = getimagesize('P2PThorTitle.png');
     
@@ -345,16 +344,13 @@ class SIPstatistics {
 
 		$this->path=$CDRTool['Path'];
 
-        $this->harvest_file             = "/tmp/CDRTool-sip-statistics.txt";
+        $this->harvest_file       = "/tmp/CDRTool-sip-statistics.txt";
+        $this->harvest_script     = $this->path."/scripts/harvestStatistics.php";
 
-    	$this->mrtgcfg_file             = $this->path."/status/usage/sip_statistics.mrtg";
-        $this->mrtgcfg_dir              = $this->path."/status/usage";
-        $this->index_file               = $this->path."/status/usage/index.phtml";
-
-        $this->harvest_script           = $this->path."/scripts/harvestStatistics.php";
-
-        $this->generateMrtgDataScript   = $this->path."/scripts/generateMrtgData.php";
-        $this->generateMrtgConfigScript = $this->path."/scripts/generateMrtgConfig.php";
+        $this->mrtgcfg_dir        = $this->path."/status/usage";
+    	$this->mrtgcfg_file       = $this->path."/status/usage/sip_statistics.mrtg";
+        $this->mrtg_data_script   = $this->path."/scripts/generateMrtgData.php";
+        $this->mrtg_config_script = $this->path."/scripts/generateMrtgConfig.php";
 
         $this->getDomains();
 
@@ -371,8 +367,7 @@ class SIPstatistics {
     }
 
     function generateMrtgConfigFile () {
-        $this->getDomains();
-        
+
         if (!$handle = fopen($this->mrtgcfg_file, 'w+')) {
         	echo "Error opening {$this->mrtgcfg_file}.\n";
             return 0;
@@ -388,14 +383,11 @@ Refresh: 300
 #WriteExpires: Yes
         ");
 
-        $_zones=$this->domains;
-        $_zones['total']='total';
-
-        while(list($key,$value) = each($_zones)) {
+        while(list($key,$value) = each($this->domains)) {
         	fwrite($handle,"\n\n
 ## {$key}
 
-Target[{$key}_users]: `{$this->generateMrtgDataScript} {$key} users`
+Target[{$key}_users]: `{$this->mrtg_data_script} {$key} users`
 Options[{$key}_users]: growright, gauge, nobanner
 BodyTag[{$key}_users]: <BODY LEFTMARGIN=\"1\" TOPMARGIN=\"1\">
 #PNGTitle[{$key}_users]: <center>Online Users for {$key}</center>
@@ -410,7 +402,7 @@ LegendI[{$key}_users]:   Online Users
 LegendO[{$key}_users]: 
 PageTop[{$key}_users]: <H1> Online Users for {$key} </H1>
 
-Target[{$key}_sessions]: `{$this->generateMrtgDataScript} {$key} sessions`
+Target[{$key}_sessions]: `{$this->mrtg_data_script} {$key} sessions`
 Options[{$key}_sessions]: growright, nobanner, gauge
 BodyTag[{$key}_sessions]: <BODY LEFTMARGIN=\"1\" TOPMARGIN=\"1\">
 MaxBytes[{$key}_sessions]: 50000
@@ -424,7 +416,7 @@ LegendI[{$key}_sessions]:   Active Sessions
 LegendO[{$key}_sessions]:   
 PageTop[{$key}_sessions]: <H1> Active Sessions for {$key} </H1>
 
-Target[{$key}_traffic]: `{$this->generateMrtgDataScript} {$key} traffic`
+Target[{$key}_traffic]: `{$this->mrtg_data_script} {$key} traffic`
 Options[{$key}_traffic]: gauge, growright, bits, nobanner
 BodyTag[{$key}_traffic]: <BODY LEFTMARGIN=\"1\" TOPMARGIN=\"1\">
 #PNGTitle[{$key}_traffic]: {$key} traffic
@@ -479,7 +471,12 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         $query="select count(*) as c, domain from location group by domain";
         dprint($query);
 
-        if (!$db->query($query)) return array();
+        if (!$db->query($query))  {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+        	return array();
+        }
         if (!$db->num_rows()) return array();
 
         while ($db->next_record()) {
@@ -490,10 +487,14 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
 	}
 
     function writeHarvestFile($body) {
+
         if (!strlen($body)) return 0;
+
         if (!$handle = fopen($this->harvest_file, 'w+')) {
-        	echo "Error opening $this->harvest_file\n";
-        	return 0;
+            $log=sprintf ("Error opening mrtg harvest file %s\n",$this->harvest_file);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+        	return false;
         }
 
         fwrite($handle,$body);
@@ -524,6 +525,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
                 // MediaProxy 1 via relay tcp socket
                 $MediaSessions = new MediaSessions1($DATASOURCES[$datasource]['mediaServers'],$allowedDomains);
                 $MediaSessions->getSessions();
+                print_r($MediaSessions->domain_statistics);
                 $totals=array_merge_recursive($totals,$MediaSessions->domain_statistics);
             }
         
@@ -557,7 +559,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
 
     function buildStatistics() {
 
-    	system($this->generateMrtgConfigScript);
+    	system($this->mrtg_config_script);
         system($this->harvest_script);
         system("env LANG=C mrtg $this->mrtgcfg_file");
 

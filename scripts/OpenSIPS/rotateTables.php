@@ -15,7 +15,7 @@ require("/etc/cdrtool/global.inc");
 require("cdr_generic.php");
 require("rating.php");
 
-$cdr_source     = "ser_radius";
+$cdr_source     = "opensips_radius";
 $CDR_class      = $DATASOURCES[$cdr_source]["class"];
 $CDRS           = new $CDR_class($cdr_source);
 

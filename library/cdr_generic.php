@@ -64,8 +64,15 @@ class CDRS {
         global $DATASOURCES;
    		global $RatingEngine;
 
+        if (!$cdr_source) {
+            $log="Error: cdr_source not defined\n";
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return 0;
+        }
+
         if (!$DATASOURCES[$cdr_source] || !$DATASOURCES[$cdr_source]['db_class']) {
-            $log="Error: cdr_source or database not defined\n";
+            $log="Error: no such datasource defined ($cdr_source) \n";
             print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
@@ -161,9 +168,9 @@ class CDRS {
         if ($this->DATASOURCES[$this->cdr_source]['AccountsDBClass'] && class_exists($this->DATASOURCES[$this->cdr_source]['AccountsDBClass'])) {
             $this->AccountsDB       = new $this->DATASOURCES[$this->cdr_source]['AccountsDBClass'];
             $this->AccountsDBClass  = $this->DATASOURCES[$this->cdr_source]['AccountsDBClass'];
-        } else if (class_exists('DB_openser')) {
-            $this->AccountsDB       = new DB_openser();
-            $this->AccountsDBClass  = 'DB_openser';
+        } else if (class_exists('DB_opensips')) {
+            $this->AccountsDB       = new DB_opensips();
+            $this->AccountsDBClass  = 'DB_opensips';
         }
     
         if ($this->DATASOURCES[$this->cdr_source]['BillingIdField']) {
@@ -868,7 +875,6 @@ class CDRS {
         $this->whereUnnormalized
         );
 
-
         if ($this->CDRdb->query($query)) {
             $this->CDRdb->next_record();
             $c=$this->CDRdb->f('c');
@@ -896,7 +902,8 @@ class CDRS {
         $lockName=sprintf("%s:%s",$this->cdr_source,$table);
 
         if (!$this->getNormalizeLock($lockName)) {
-            return 1;
+            //printf("Cannot get obtain lock %s",$lockName);
+            return true;
         }
 
 		$this->buildWhereForUnnormalizedSessions();

@@ -36,7 +36,7 @@ $CDRTool['provider']['sampleLoginDomain']       = "317100001@subdomain.example.c
 # Rating engine settings
 $RatingEngine=array("socketIP"               => "IP.address.of.the.private.interface.of.cdrtool.example.com",
                     "socketPort"             => "9024",
-                    "CDRS_class"             => "ser_radius",
+                    "CDRS_class"             => "opensips_radius",
                     "prepaid_lock"           => true,
                     "log_delay"              => 0.05,
                     "split_rating_table"     => false, // when true individual rating tables are automatically created for each rate id 
@@ -49,7 +49,7 @@ $RatingEngine=array("socketIP"               => "IP.address.of.the.private.inter
                     "reportMissingRates"     => 0,     // send email notifications if rates are missing from the ratingEngine
                     "minimumDuration"        => 0,      // minimum duration to rate, if call duration is shorter the price is zero
                     "allow"                  => array ('10.','192.168.0.1','127.0.0.1'), // list with clients allowed to connect
-		    "MaxSessionTime"         => 36000  // limit all prepaid calls to maximum 10 hours
+		            "MaxSessionTime"         => 36000  // limit all prepaid calls to maximum 10 hours
                     );
 
 ###########################################
@@ -105,16 +105,16 @@ class DB_radius extends DB_Sql {
 
 class DB_subscribers extends DB_Sql {
   var $Host     = "sipdb";
-  var $Database = "openser";
-  var $User     = "openser";
+  var $Database = "opensips";
+  var $User     = "opensips";
   var $Password = "PASSWORD";
   var $Halt_On_Error ="yes";
 }
 
-class DB_openser extends DB_Sql {
+class DB_opensips extends DB_Sql {
   var $Host     = "sipdb";
-  var $Database = "openser";
-  var $User     = "openser";
+  var $Database = "opensips";
+  var $User     = "opensips";
   var $Password = "PASSWORD";
   var $Halt_On_Error ="yes";
 }
@@ -122,7 +122,7 @@ class DB_openser extends DB_Sql {
 class DB_siptrace extends DB_Sql {
   var $Host     = "sipdb";
   var $Database = "siptrace";
-  var $User     = "openser";
+  var $User     = "opensips";
   var $Password = "PASSWORD";
   var $Halt_On_Error ="yes";
 }
@@ -187,9 +187,9 @@ $DATASOURCES=array(
 "unknown"=>array(
                     "class"              => "CDRS_unknown"		// do not delete this datasource
                     ),
-"ser_radius"=>array(
-                    "name"               => "OpenSER",
-                    "class"              => "CDRS_ser_radius",
+"opensips_radius"=>array(
+                    "name"               => "OpenSIPS",
+                    "class"              => "CDRS_opensips",
                     "db_class"           => array("DB_radius2","DB_radius"),  
                     "table"              => "radacct",      // or "radacct".date("Ym") if sql.conf uses the mysql procedure to auto-rotate tables
                     "rateField"          => "Rate",
@@ -198,18 +198,18 @@ $DATASOURCES=array(
                     "DestinationIdField" => "DestinationId",
                     "normalizedField"    => "Normalized",
                     "BillingPartyIdField"=> "UserName",
-                    "AccountsDBClass"	 => "DB_openser",
+                    "AccountsDBClass"	 => "DB_opensips",
                     "domain_table"	     => "domain",     // table of AccountsDBClass that holds domains served by the sip proxy
                     "subscriber_table"	 => "subscriber", // table of AccountsDBClass that holds susbcribers served by the sip proxy
-                    "intAccessCode"      => "00",	      // international acess code, numbers prefixed with this are considered international destinations
-                    "natAccessCode"      => "0",          // international acess code, numbers prefixed with this are considered national destinations
+                    "intAccessCode"        => "00",	      // international acess code, numbers prefixed with this are considered international destinations
+                    "natAccessCode"        => "0",          // international acess code, numbers prefixed with this are considered national destinations
                     "sipTraceDataSource"   => "sip_trace",
                     "mediaTraceDataSource" => "media_trace",
                     "traceOutURL"        => array(
                                             "sipvm.example.com"=>"asterisk",
                                             "voipgw02.example.com"=>"cisco"
                     			    		),
-                    "UserQuotaClass"     => "OpenSERQuota",
+                    "UserQuotaClass"     => "OpenSIPSQuota",
                     "UserQuotaNotify"    => "0",	      // send e-mail notifications when quota is exceeded
                     "soapEngineId"       => '',
                     "domainTranslation"  => array(
@@ -218,9 +218,9 @@ $DATASOURCES=array(
                     "SourceIPRealmTranslation"  => array(
                                                   "10.0.0.1"      => "gateway.example.com" // translate Realm for sessions originating from IP address 10.0.0.1
                                                   ),
-                    "purgeCDRsAfter"     => 120,           // how many days to keep old CDRs
-                    "db_registrar"       => "DB_openser",  // openser location database
-                    "enableThor"         => false,	       // set true if using SIP Thor
+                    "purgeCDRsAfter"     => 120,           // how many days to keep old CDRs, valid only when Radius tables are not atomatically rotated
+                    "db_registrar"       => "DB_opensips", // opensips location database
+                    "enableThor"         => false,	       // set to true if using SIP Thor
                     "mediaSessions"      => "sipthor",     // NGNPro engine id used by SIP Thor
                     "networkStatus"      => "sipthor",     // NGNPro engine id used by SIP Thor
                     "mediaDispatcher"    => "10.0.0.1",    // Where to get the active media sessions from MediaProxy 2.0
@@ -239,12 +239,11 @@ $DATASOURCES=array(
                     "DestinationIdField" => "DestinationId",
                     "normalizedField"    => "Normalized",
                     "traceInURL"         => array(
-                                            "10.0.0.2"=>"ser_radius",
+                                            "10.0.0.2"=>"opensips_radius",
                                             "Asterisk"=>"asterisk"
                     			    		),
                     "traceOutURL"        => array(
-                                            "10.0.0.2"=>"ser_radius",
-                                            "ISDN 1"=>"ipnxcdr"
+                                            "10.0.0.2"=>"opensips_radius"
                     			    		),
                     "purgeCDRsAfter"    => 180 // how many days to keep the CDRs
                     ),
@@ -262,10 +261,10 @@ $DATASOURCES=array(
                                             "PSTN"=>array("WEBName"=>"PSTN 2 ENUM")
                                       		),
                     "traceInURL"         => array(
-                                            "SIP"=>"ser_radius"
+                                            "SIP"=>"opensips_radius"
                     			    		),
                     "traceOutURL"        => array(
-                                            "SIP"=>"ser_radius"
+                                            "SIP"=>"opensips_radius"
                     			    		),
                     "purgeCDRsAfter"    => 180 // how many days to keep the CDRs
                                                         
@@ -304,7 +303,7 @@ $DATASOURCES=array(
 );
 
 // load other CDRTool libraries
-$CDRToolModules=array("openser","asterisk");
+$CDRToolModules=array("opensips","asterisk");
 
 $tz=$CDRTool['provider']['timezone'];
 putenv("TZ=$tz");

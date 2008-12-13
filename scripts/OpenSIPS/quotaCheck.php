@@ -1,10 +1,10 @@
 #!/usr/bin/php
 <?
-# This script blocks accounts in OpenSER
+# This script blocks accounts in OpenSIPS
 # based on platform wide or user specified quota
-# - quota can be specified in openser.subscriber.quota
+# - quota can be specified in opensips.subscriber.quota
 # - account is blocked by adding SIP account in group quota
-#   and configuring openser.cfg to reject calls from such users
+#   and configuring opensips.cfg to reject calls from such users
 # - Blocked Users must be deblocked manualy and their quota
 #   must be changed to a higher value otherwise
 #   subscriber gets blocked again at the next script run
@@ -19,9 +19,9 @@ require("rating.php");
 
 $b=time();
 
-$lockFile=sprintf("/var/lock/CDRTool_QuotaDeblock.lock",$cdr_source);
+$lockFile=sprintf("/var/lock/CDRTool_QuotaCheck.lock",$cdr_source);
 
-$abort_text="Another deblock process is in progress. Try again later.\n";
+$abort_text="Another check is in progress. Try again later.\n";
 
 $f=fopen($lockFile,"w");
 if (flock($f, LOCK_EX + LOCK_NB, $w)) {
@@ -43,21 +43,23 @@ while (list($k,$v) = each($DATASOURCES)) {
         $class_name=$v["class"];
         $CDRS = new $class_name($k);
 
-        $SERQuota_class = $v["UserQuotaClass"];
+        $Quota_class = $v["UserQuotaClass"];
 
 		$log=sprintf("Checking user quotas for data source %s\n",$v['name']);
         syslog(LOG_NOTICE,$log);
         //print $log;
 
-        $Quota = new $SERQuota_class($CDRS);
-        $Quota->deblockAccounts();
+        $Quota = new $Quota_class($CDRS);
+        $Quota->checkQuota($v['UserQuotaNotify']);
         $d=time()-$b;
-        $log=sprintf("Runtime: %d s",$d);
-        syslog(LOG_NOTICE,$log);
+        if ($d > 5) {
+        	$log=sprintf("Runtime: %d s",$d);
+        	syslog(LOG_NOTICE,$log);
+        }
 	}
 }
 
-function deleteQuotaDeblock($lockFile) {
+function deleteQuotaCheckLockfile($lockFile) {
 	if (!unlink($lockFile)) {
     	print "Error: cannot delete lock file $lockFile. Aborting.\n";
     	syslog(LOG_NOTICE,"Error: cannot delete lock file $lockFile");

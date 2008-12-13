@@ -880,7 +880,7 @@ class Rate {
 
         if (!$this->db->query($query)) {
             if ($this->db->Errno != 1146) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errnoc);
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
@@ -894,7 +894,7 @@ class Rate {
             );
 
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errnoc);
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
@@ -4524,12 +4524,12 @@ class RatingTables {
     }
 }
 
-class OpenSERQuota {
+class OpenSIPSQuota {
     var $localDomains  = array();
     var $quotaGroup    = 'quota'; // group set if subscriber was blocked by quota
     var $timeout       = 5;       // soap connection timeout
 
-    function OpenSERQuota(&$parent) {
+    function OpenSIPSQuota(&$parent) {
 
         global $DATASOURCES;
 
@@ -5343,7 +5343,7 @@ class OpenSERQuota {
     }
 }
 
-class SERQuota extends OpenSERQuota {
+class SERQuota extends OpenSIPSQuota {
 }
 
 class RatingEngine {

@@ -14,13 +14,13 @@ while (list($k,$v) = each($DATASOURCES)) {
         $class_name=$v["class"];
         $CDRS = new $class_name($k);
 
-        $SERQuota_class = $v["UserQuotaClass"];
+        $Quota_class = $v["UserQuotaClass"];
 
 		$log=sprintf("Reset user quotas for data source %s\n",$v['name']);
         syslog(LOG_NOTICE,$log);
         //print $log;
 
-        $Quota = new $SERQuota_class($CDRS);
+        $Quota = new $Quota_class($CDRS);
 		$Quota->deleteQuotaInitFlag();
 	}
 }
