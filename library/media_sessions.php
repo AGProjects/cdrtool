@@ -268,15 +268,15 @@ class MediaSessions {
               <tr bgcolor=#c0c0c0 class=border align=right>
                 <th class=bordertb width=10px></th>
                 <th class=bordertb width=10px></th>
-                <th class=bordertb>Address</th>
+                <td><b>Address</b></td>
+                <th class=bordertb width=10px></b></td>
+                <td><b>Relayed traffic</b></td>
                 <th class=bordertb width=10px></th>
-                <th class=bordertb>Relayed traffic</th>
+                <td><b>Sessions</b></td>
                 <th class=bordertb width=10px></th>
-                <th class=bordertb>Sessions</th>
+                <td><b>Streams</b></td>
                 <th class=bordertb width=10px></th>
-                <th class=bordertb>Streams</th>
-                <th class=bordertb width=10px></th>
-                <th class=bordertb>Status</th>
+                <td><b>Status</b></td>
               </tr>";
         } else {
             print "
@@ -284,19 +284,19 @@ class MediaSessions {
               <tr bgcolor=#c0c0c0 class=border align=right>
                 <th class=bordertb width=10px></th>
                 <th class=bordertb width=10px></th>
-                <th class=bordertb>Address</th>
+                <td><b>Address</b></td>
                 <th class=bordertb width=10px></th>
-                <th class=bordertb>Version</th>
+                <td><b>Version</b></td>
                 <th class=bordertb width=10px></th>
-                <th class=bordertb>Uptime</th>
+                <td><b>Uptime</b></td>
                 <th class=bordertb width=10px></th>
-                <th class=bordertb>Relayed traffic</th>
+                <td><b>Relayed traffic</b></td>
                 <th class=bordertb width=10px></th>
-                <th class=bordertb>Sessions</th>
+                <td><b>Sessions</b></td>
                 <th class=bordertb width=10px></th>
-                <th class=bordertb>Streams</th>
+                <td><b>Streams</b></td>
                 <th class=bordertb width=10px></th>
-                <th class=bordertb>Status</th>
+                <td><b>Status</b></td>
               </tr>";
         }
         $i = 1;
@@ -817,19 +817,19 @@ class MediaSessions1 {
           <tr bgcolor=#c0c0c0 class=border align=right>
             <th class=bordertb width=10px></th>
             <th class=bordertb width=10px></th>
-            <th class=bordertb>Server</th>
+            <td><b>Server</b></td>
             <th class=bordertb width=10px></th>
-            <th class=bordertb>Version</th>
+            <td><b>Version</b></td>
             <th class=bordertb width=10px></th>
-            <th class=bordertb>Caller traffic</th>
+            <td><b>Caller traffic</b></td>
             <th class=bordertb width=10px></th>
-            <th class=bordertb>Called traffic</th>
+            <td><b>Called traffic</b></td>
             <th class=bordertb width=10px></th>
-            <th class=bordertb>Relayed traffic</th>
+            <td><b>Relayed traffic</b></td>
             <th class=bordertb width=10px></th>
-            <th class=bordertb>Sessions</th>
+            <td><b>Sessions</b></td>
             <th class=bordertb width=10px></th>
-            <th class=bordertb>Status</th>
+            <td><b>Status</b></td>
           </tr>";
     
         $i = 1;
