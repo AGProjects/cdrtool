@@ -8,7 +8,6 @@ page_open(
 
 require("sip_statistics.php");
 require("media_sessions.php");
-
 $perm->check("statistics");
 
 $title="SIP registrar statistics";
@@ -20,31 +19,22 @@ if (strlen($CDRTool['filter']['domain'])) $allowedDomains=explode(' ',$CDRTool['
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
 
-if ($_REQUEST['datasource']) {
-	$datasources=array($_REQUEST['datasource']);
-} else {
-    $datasources=array_keys($DATASOURCES);
-}
+print "<table border=0>";
+foreach (array_keys($DATASOURCES) as $datasource) {
 
-$filters=array('domain'=>$_REQUEST['domain']);
-
-foreach ($datasources as $datasource) {
-
-    if (in_array($datasource,$CDRTool['dataSourcesAllowed'])) {
-        print "<table border=0>";
+    if (in_array($datasource,$CDRTool['dataSourcesAllowed']) && !$DATASOURCES[$datasource]['invisible']) {
         print "<tr>";
         print "<td valign=top>";
 
         if ($DATASOURCES[$datasource]['networkStatus']) {
+	      	printf ("<h1>%s</h1>",$DATASOURCES[$datasource]['name']);
             printf ("<img src=images/SipThorNetwork.php?engine=%s align=left>",
             $DATASOURCES[$datasource]['networkStatus']);
 
         } else if ($DATASOURCES[$datasource]['db_registrar']){
-
+	      	printf ("<h1>%s</h1>",$DATASOURCES[$datasource]['name']);
 			require_once("cdr_generic.php");
 			$online = new SIPonline($datasource,$DATASOURCES[$datasource]['db_registrar']);
-
-	    	printf ("<h3>%s</h3>",$DATASOURCES[$datasource]['name']);
             $online->showAll();
         }
 
@@ -52,7 +42,14 @@ foreach ($datasources as $datasource) {
         print "<td valign=top>";
 
         if ($DATASOURCES[$datasource]['mediaSessions']) {
-            $MediaSessions = new MediaSessionsNGNPro($DATASOURCES[$datasource]['mediaSessions'],$allowedDomains);
+           	$MediaSessions = new MediaSessionsNGNPro($DATASOURCES[$datasource]['mediaSessions'],$allowedDomains);
+            $MediaSessions->getSessions();
+            $MediaSessions->getSummary();
+            print "<h2>Media relays</h2>";
+            $MediaSessions->showSummary();
+
+        } else if ($DATASOURCES[$datasource]['mediaDispatcher']) {
+           	$MediaSessions = new MediaSessions($DATASOURCES[$datasource]['mediaDispatcher'],$allowedDomains);
             $MediaSessions->getSessions();
             $MediaSessions->getSummary();
             print "<h2>Media relays</h2>";
@@ -60,9 +57,7 @@ foreach ($datasources as $datasource) {
         }
 
         if ($DATASOURCES[$datasource]['networkStatus']) {
-
         	$NetworkStatistics = new NetworkStatistics($DATASOURCES[$datasource]['networkStatus'],$allowedDomains);
-
             print "<h2>SIP accounts</h2>";
             $NetworkStatistics->showStatistics();
 
@@ -75,9 +70,10 @@ foreach ($datasources as $datasource) {
 
         print "</td>";
         print "</tr>";
-        print "</table>";
     }
 }
+
+print "</table>";
 
 $layout->showFooter();
 
