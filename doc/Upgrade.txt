@@ -4,23 +4,25 @@ Upgrade instructions
 
 From version 6.6.x to version 6.7.0
 
-Apply changes from setup/mysql/alter_tables.mysql
+Apply the changes from setup/mysql/alter_tables.mysql
 
 Changes in global.inc configuration file:
 
 - Replace $RatingEngine['CDRS_class'] with $RatingEngine['cdr_source']       
-- Replace db_siponline with db_registrar
+- Replace db_class_siponline with db_registrar
 - Replace $CDRToolModules=array("openser") to $CDRToolModules=array("opensips")
 - Replace ser_radius with opensips_radius        
 - Replace OpenSERQuota to OpenSIPSQuota
 - Replace DB_openser to DB_opensips
+- Replace sipTraceDataSource with sipTrace
+- Replace mediaTraceDataSource with mediaTrace
 
 Changes in /etc/cron.d/cdrtool:
 
-- Replace scripts/SER/ with scripts/OpenSIPS
+- Replace the path scripts/SER/ with scripts/OpenSIPS
 
-Grant access to datasource opensips_radius in the Login page for accounts
-that had acesss to ser_radius.
+Grant access to the datasource opensips_radius in the Login page for
+accounts that had acesss to ser_radius.
 
 
 Version 5.3.0

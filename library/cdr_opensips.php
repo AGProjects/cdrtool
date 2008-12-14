@@ -5,8 +5,8 @@ class CDRS_opensips extends CDRS {
     var $subscriber_table      = "subscriber";
     var $ENUMtld               = '';
     var $maxCDRsNormalizeWeb   = 500;
-    var $sipTraceDataSource    = 'sip_trace';
-    var $mediaTraceDataSource  = 'media_trace';
+    var $sipTrace    = 'sip_trace';
+    var $mediaTrace  = 'media_trace';
 
     var $CDRFields=array('id'              => 'RadAcctId',
                          'callId'          => 'AcctSessionId',
@@ -2348,8 +2348,8 @@ class CDR_opensips extends CDR {
         urlencode($this->callId)
         );
 
-        if ($this->CDRS->sipTraceDataSource) {
-            $trace_datasource = $this->CDRS->sipTraceDataSource;
+        if ($this->CDRS->sipTrace) {
+            $trace_datasource = $this->CDRS->sipTrace;
             $callid_enc       = urlencode($this->callId);
             $fromtag_enc      = urlencode($this->SipFromTag);
             $totag_enc        = urlencode($this->SipToTag);
@@ -2486,8 +2486,8 @@ class CDR_opensips extends CDR {
                 <td colspan=3><b>Media information</b></td>
             </tr>
             ";
-            if ($this->CDRS->mediaTraceDataSource) {
-                $media_trace_datasource = $this->CDRS->mediaTraceDataSource;
+            if ($this->CDRS->mediaTrace) {
+                $media_trace_datasource = $this->CDRS->mediaTrace;
 
                 $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
                 'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here to see the media information for this call</a> &nbsp;";
@@ -2884,7 +2884,7 @@ class SIP_trace {
     var $trace_array          = array();
     var $traced_ip            = array();
     var $SIPProxies           = array();
-    var $mediaTraceDataSource = false;
+    var $mediaTrace = false;
 
     function SIP_trace ($cdr_source) {
         global $DATASOURCES, $auth;
@@ -2896,16 +2896,16 @@ class SIP_trace {
             $this->enableThor = $DATASOURCES[$this->cdr_source]['enableThor'];
         }
 
-        if (strlen($DATASOURCES[$this->cdr_source]['mediaTraceDataSource'])) {
-            $this->mediaTraceDataSource = $DATASOURCES[$this->cdr_source]['mediaTraceDataSource'];
+        if (strlen($DATASOURCES[$this->cdr_source]['mediaTrace'])) {
+            $this->mediaTrace = $DATASOURCES[$this->cdr_source]['mediaTrace'];
         }
 
         if ($this->enableThor) {
 	    	require("/etc/cdrtool/ngnpro_engines.inc");
+            require_once("ngnpro_soap_library.php");
 
             if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
                 $this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
-                require_once("ngnpro_soap_library.php");
 
                 $this->SOAPlogin = array(
                                        "username"    => $soapEngines[$this->soapEngineId]['username'],
@@ -2925,7 +2925,7 @@ class SIP_trace {
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
     
             } else {
-                print "Error: soapEngineID not defined in datasource $this->cdr_source";
+                printf ("<p><font color=red>Error: soapEngineID not defined in datasource %s</font>",$this->cdr_source);
                 return false;
             }
 
@@ -2933,7 +2933,12 @@ class SIP_trace {
             $this->table             = $DATASOURCES[$this->cdr_source]['table'];
             $db_class                = $DATASOURCES[$this->cdr_source]['db_class'];
             $this->purgeRecordsAfter = $DATASOURCES[$this->cdr_source]['purgeRecordsAfter'];
-            $this->db                = new $db_class;
+            if (class_exists($db_class)) {
+            	$this->db                = new $db_class;
+            } else {
+                printf("<p><font color=red>Error: database class %s is not defined in datasource %s</font>",$db_class,$this->cdr_source);
+                return false;
+            }
         }
 
         if (is_object($auth)) $this->isAuthorized=1;
@@ -2972,7 +2977,11 @@ class SIP_trace {
         } else {
             // get trace from SQL
 
-            $query=sprintf("select *,UNIX_TIMESTAMP(date) as timestamp
+			if (!is_object($this->db)) {
+                print "<p><font color=red>Error: no database connection defined</font>";
+                return false;
+            }
+            $query=sprintf("select *,UNIX_TIMESTAMP(time_stamp) as timestamp
             from %s where callid = '%s' order by id asc",
             $this->table,
             $callid);
@@ -3234,10 +3243,10 @@ class SIP_trace {
             print "<td align=left width=50%>";
         }
 
-        if ($this->mediaTraceDataSource) {
+        if ($this->mediaTrace) {
             $this->mediaTraceLink=sprintf("<p><a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&totag=%s&proxyIP=%s', 'mediatrace',
             'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here for the media trace</a>",
-            $this->mediaTraceDataSource,
+            $this->mediaTrace,
             urlencode($callid),
             urlencode($fromtag),
             urlencode($totag),
@@ -3733,7 +3742,7 @@ class SIP_trace {
 
 class Media_trace {
     var $enableThor  = false;
-    var $table = 'media_sessions';
+    var $table       = 'media_sessions';
 
     function Media_trace ($cdr_source) {
         global $DATASOURCES;
@@ -3748,10 +3757,10 @@ class Media_trace {
 
         if ($this->enableThor) {
 	    	require("/etc/cdrtool/ngnpro_engines.inc");
+            require_once("ngnpro_soap_library.php");
 
             if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
                 $this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
-                require_once("ngnpro_soap_library.php");
 
                 $this->SOAPlogin = array(
                                        "username"    => $soapEngines[$this->soapEngineId]['username'],
@@ -3777,13 +3786,17 @@ class Media_trace {
 
         } else {
             if ($DATASOURCES[$this->cdr_source]['table']) {
-                $this->table             = $DATASOURCES[$this->cdr_source]['table'];
+                $this->table = $DATASOURCES[$this->cdr_source]['table'];
             }
 
-            $db_class                = $DATASOURCES[$this->cdr_source]['db_class'];
-            $this->db                = new $db_class;
+            $db_class = $DATASOURCES[$this->cdr_source]['db_class'];
+            if (class_exists($db_class)) {
+            	$this->db                = new $db_class;
+            } else {
+                printf("<p><font color=red>Error: database class %s is not defined in datasource %s</font>",$db_class,$this->cdr_source);
+                return false;
+            }
         }
-
     }
 
     function getTrace ($proxyIP,$callid,$fromtag,$totag) {
@@ -3792,9 +3805,12 @@ class Media_trace {
             $this->info=$this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag);
 
         } else {
+			if (!is_object($this->db)) {
+                print "<p><font color=red>Error: no database connection defined</font>";
+                return false;
+            }
 
             // get trace from SQL
-
             $query=sprintf("select info from %s where call_id = '%s' and from_tag = '%s' and to_tag= '%s'",
             $this->table,
             addslashes($callid),
@@ -3803,7 +3819,7 @@ class Media_trace {
             );
 
             if (!$this->db->query($query)) {
-                printf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                printf ("<p><font color=red>Database error for query %s: %s (%s)</font>",$query,$this->db->Error,$this->db->Errno);
                 return false;
             }
     
@@ -3813,14 +3829,22 @@ class Media_trace {
             }
         }
 
+        /*
+        print "<pre>";
+        print_r($this->info);
+        print "</pre>";
+        */
     }
 
     function getTraceFromThor($proxyIP,$callid,$fromtag,$totag) {
         // get trace using soap request
-        if (!$proxyIP || !$callid || !$fromtag) return false;
+        if (!$proxyIP || !$callid || !$fromtag) {
+            print "<p><font color=red>Error: proxyIP or callid or fromtag are not defined</font>";
+        	return false;
+        }
 
         if (!is_object($this->soapclient)) {
-            print "Error: soap client is not defined.";
+            print "<p><font color=red>Error: soap client is not defined</font>";
             return false;
         }
 
@@ -3880,7 +3904,7 @@ class Media_trace {
 
         print "<table border=0>";
         printf ("<tr><td class=border>Call duration</td><td class=border>%s</td></tr>",$this->info->duration);
-        list($relay_ip,$relay_port)=explode(":",$this->info->streams[0]->callerLocal);
+        list($relay_ip,$relay_port)=explode(":",$this->info->streams[0]->caller_local);
         printf ("<tr><td class=border>Media relay</td><td class=border>%s</td></tr>",$relay_ip);
         print "</table>";
 
@@ -3908,12 +3932,6 @@ class Media_trace {
 
         print "</table>";
 
-        /*
-        print "<pre>";
-        print_r($this->info);
-        print "</pre>";
-        */
-
         print "<h3>Stream succession</h3>";
 
         $w=500;
@@ -3927,20 +3945,20 @@ class Media_trace {
 
         foreach (array_values($this->info->streams) as $_val) {
 
-            $w_col1=intval($_val->startTime*$w/$this->info->duration);
-            $w_col2=intval(($_val->endTime-$_val->startTime-$_val->timeoutWait)*$w/$this->info->duration);
-            $w_col3=intval(($this->info->duration-$_val->endTime+$_val->timeout_wait)*$w/$this->info->duration);
+            $w_col1=intval($_val->start_time*$w/$this->info->duration);
+            $w_col2=intval(($_val->end_time-$_val->start_time-$_val->timeout_wait)*$w/$this->info->duration);
+            $w_col3=intval(($this->info->duration-$_val->end_time+$_val->timeout_wait)*$w/$this->info->duration);
 
             print "<tr><td width=$w1 class=border>$_val->mediaType</td>";
 
-            $t2=$_val->endTime-$_val->timeoutWait;
+            $t2=$_val->end_time-$_val->timeout_wait;
             $t3=$this->info->duration;
 
             print "<td>
             <table width=100%><tr>";
             print "<td width=$w_col1 bgcolor=white></td>";
             print "<td width=$w_col2 bgcolor=green align=right><font color=white>$t2</font></td>";
-            if ($_val->timeoutWait) {
+            if ($_val->timeout_wait) {
                 print "<td width=$w_col3 bgcolor=red align=right><font color=white>$t3</font></td>";
             } else {
                 print "<td width=$w_col3 bgcolor=white align=right></td>";
@@ -3958,7 +3976,6 @@ class Media_trace {
         <tr><td bgcolor=red width=50>&nbsp;</td><td>Timeout period</td></tr>
         </table>
         ";
-
     }
 }
 

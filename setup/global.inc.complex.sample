@@ -199,16 +199,12 @@ $DATASOURCES=array(
                     "normalizedField"    => "Normalized",
                     "BillingPartyIdField"=> "UserName",
                     "AccountsDBClass"	 => "DB_opensips",
-                    "domain_table"	     => "domain",     // table of AccountsDBClass that holds domains served by the sip proxy
+                    "domain_table"	 => "domain",     // table of AccountsDBClass that holds domains served by the sip proxy
                     "subscriber_table"	 => "subscriber", // table of AccountsDBClass that holds susbcribers served by the sip proxy
-                    "intAccessCode"        => "00",	      // international acess code, numbers prefixed with this are considered international destinations
-                    "natAccessCode"        => "0",          // international acess code, numbers prefixed with this are considered national destinations
-                    "sipTraceDataSource"   => "sip_trace",
-                    "mediaTraceDataSource" => "media_trace",
-                    "traceOutURL"        => array(
-                                            "sipvm.example.com"=>"asterisk",
-                                            "voipgw02.example.com"=>"cisco"
-                    			    		),
+                    "intAccessCode"      => "00",	  // international acess code, numbers prefixed with this are considered international destinations
+                    "natAccessCode"      => "0",          // international acess code, numbers prefixed with this are considered national destinations
+                    "sipTrace"           => "sip_trace",
+                    "mediaTrace"         => "media_trace",
                     "UserQuotaClass"     => "OpenSIPSQuota",
                     "UserQuotaNotify"    => "0",	      // send e-mail notifications when quota is exceeded
                     "soapEngineId"       => '',
@@ -220,7 +216,7 @@ $DATASOURCES=array(
                                                   ),
                     "purgeCDRsAfter"     => 120,           // how many days to keep old CDRs, valid only when Radius tables are not atomatically rotated
                     "db_registrar"       => "DB_opensips", // opensips location database
-                    "enableThor"         => false,	       // set to true if using SIP Thor
+                    "enableThor"         => false,	   // set to true if using SIP Thor
                     "mediaSessions"      => "sipthor",     // NGNPro engine id used by SIP Thor
                     "networkStatus"      => "sipthor",     // NGNPro engine id used by SIP Thor
                     "mediaDispatcher"    => "10.0.0.1",    // Where to get the active media sessions from MediaProxy 2.0
@@ -274,19 +270,19 @@ $DATASOURCES=array(
                     "db_class"           => "DB_siptrace",
                     "table"              => "sip_trace",
                     "purgeRecordsAfter"  => "7",
-                    "SIPProxies"        => array("10.0.0.1"=>"SIP Proxy 1",
+                    "SIPProxies"         => array("10.0.0.1"=>"SIP Proxy 1",
                                                  "10.0.0.2"=>"SIP Proxy 2"
                                                 ),
                      "invisible"          => 1, // hide this datasource in call search page / datasource selection 
-                    "mediaTraceDataSource" => "media_trace"
+                    "mediaTrace" => "media_trace"
                     ),
                     
 "sip_trace_thor"   =>array(
                     "name"               => "SIP trace Thor",
                     "enableThor"         => true,
                     "soapEngineId"       => "sipthor",   
+                    "mediaTrace"         => "media_trace_thor"
                     "invisible"          => 1, 
-                    "mediaTraceDataSource" => "media_trace_thor"
                     ),
 "media_trace"   =>array(
                     "name"               => "Media trace",

@@ -183,12 +183,12 @@ class CDRS {
             $this->BillingIdField  = $this->DATASOURCES[$this->cdr_source]['BillingIdField'];
         }
 
-        if ($this->DATASOURCES[$this->cdr_source]['sipTraceDataSource']) {
-            $this->sipTraceDataSource=$this->DATASOURCES[$this->cdr_source]['sipTraceDataSource'];
+        if ($this->DATASOURCES[$this->cdr_source]['sipTrace']) {
+            $this->sipTrace=$this->DATASOURCES[$this->cdr_source]['sipTrace'];
         }
 
-        if ($this->DATASOURCES[$this->cdr_source]['mediaTraceDataSource']) {
-            $this->mediaTraceDataSource=$this->DATASOURCES[$this->cdr_source]['mediaTraceDataSource'];
+        if ($this->DATASOURCES[$this->cdr_source]['mediaTrace']) {
+            $this->mediaTrace=$this->DATASOURCES[$this->cdr_source]['mediaTrace'];
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['domain_table']) {

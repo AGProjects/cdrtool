@@ -178,10 +178,10 @@ $DATASOURCES=array(
                     "SIPProxies"         => array("10.0.0.1" => "node01",  // friendly names in sip trace table
                                                   "10.0.0.2" => "node02",
                                                 ),
-                    "db_registrar"         => "DB_opensips",
-                    "sipTraceDataSource"   => "sip_trace",
-                    "mediaTraceDataSource" => "media_trace",
-                    "mediaDispatcher"      => "10.0.0.1"  // where to get the active media sessions from MediaProxy 2.0
+                    "db_registrar"       => "DB_opensips",
+                    "sipTrace"           => "sip_trace",
+                    "mediaTrace"         => "media_trace",
+                    "mediaDispatcher"    => "10.0.0.1"  // where to get the active media sessions from MediaProxy 2.0
                     ),
 "asterisk_vm"  =>array("name"            => "Voicemail server",
                     "class"              => "CDRS_asterisk",
@@ -202,14 +202,13 @@ $DATASOURCES=array(
                     "name"               => "SIP trace",
                     "db_class"           => "DB_siptrace",
                     "table"              => "sip_trace",
-                    "enableThor"         => false,
+                    "mediaTrace"         => "media_trace",
                     "purgeRecordsAfter"  => "7",
                     "invisible"          => 1 
                     ),
 "media_trace"   =>array(
                     "name"               => "Media trace",
                     "db_class"           => "DB_mediaproxy",
-                    "enableThor"         => false,
                     "invisible"          => 1 
                     )
 
