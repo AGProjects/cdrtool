@@ -19,6 +19,8 @@ Changes in global.inc configuration file:
 - Replace mediaServers used by MediaProxy1 with mediaDispatcher used by MediaProxy2
   in the format tls:hostname:port
 - Add mediaTrace to the sip_trace datasource
+- Move if present $CDRTool['normalize']['E164Class'] to E164_class inside each
+  datasource 
 
 Changes in /etc/cron.d/cdrtool:
 

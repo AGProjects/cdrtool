@@ -96,14 +96,17 @@ The destination id is then calculated based on the longest match of this
 destination field in the billing_destinations table and the billing party.
 
 The longest match for the chosen destination field is performed by the
-E164_Europe class from cdr_generic.php. It assumes the destination always
-starts with a zero for a national call and with double zero for an
-international call. If your dialing plan is different you must design a
-custom class and function to and defined in global.inc as follows:
+E164_class which by default uses E164_Europe, see cdr_generic.php for
+tenactual logic. It assumes the destination always starts with a zero for a
+national call and with double zero for an international call. 
 
-$CDRTool['normalize']['E164class']='MyE164Class';
+If your dialing plan is different you must use other provided class like
+E164_US or create a custom class and point to it in global.inc for each
+datasource as follows:
 
-For an example see E164_USA class from cdr_generic.php that matches American
+'E164_class'=>'MyE164Class',
+
+For an example see E164_US class from cdr_generic.php that matches American
 dialing plan.
 
 

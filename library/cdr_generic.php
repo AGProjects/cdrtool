@@ -21,6 +21,7 @@ class CDRS {
 	var $usageKeysForDeletionFromCache = array();
 	var $localDomains        = array();
 	var $maxCDRsNormalizeWeb = 500;
+    var $E164_class          = 'E164_Europe';
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
@@ -181,6 +182,14 @@ class CDRS {
     
         if ($this->DATASOURCES[$this->cdr_source]['BillingIdField']) {
             $this->BillingIdField  = $this->DATASOURCES[$this->cdr_source]['BillingIdField'];
+        }
+
+        if ($this->DATASOURCES[$this->cdr_source]['E164_class']) {
+            if (class_exists($this->DATASOURCES[$this->cdr_source]['E164_class'])) {
+            	$this->E164_class=$this->DATASOURCES[$this->cdr_source]['E164_class'];
+            } else {
+                printf ("Error: E164 class '%s' defined in datasource %s does not exist, using default '%s'",$this->DATASOURCES[$this->cdr_source]['E164_class'],$this->cdr_source,$this->E164_class);
+            }
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['sipTrace']) {
@@ -1072,15 +1081,10 @@ class CDRS {
                 }
             }
 
-			if ($this->CDRTool['normalize']['E164Class'] && class_exists($this->CDRTool['normalize']['E164Class'])) {
-				$E164_class = $this->CDRTool['normalize']['E164Class'];
-            } else {
-				$E164_class = "E164_Europe";
-            }
-
 			if (!$CountryCode) $CountryCode=$this->CDRTool['normalize']['defaultCountryCode'];
 
-            $E164 =  new $E164_class($this->intAccessCode, $this->natAccessCode,$CountryCode,$this->ENUMtlds[$ENUMtld]['e164_regexp']);
+			$e164class=$this->E164_class;
+            $E164 =  new $e164class($this->intAccessCode, $this->natAccessCode,$CountryCode,$this->ENUMtlds[$ENUMtld]['e164_regexp']);
 
             $NumberStack['E164']=$E164->E164Format($NumberStack['username']);
         }

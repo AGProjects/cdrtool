@@ -154,12 +154,6 @@ class DomainAuthLocal extends DomainAuth {	// defined in phplib/local.inc
 class PageLayoutLocal extends PageLayout {      // defined in phplib/local.inc
 }
 
-# To customize E164 normalization
-class E164_custom extends E164 {      // defined in library/cdr_lib.phtml
-}
-# $CDRTool['normalize']['E164Class']           = "E164_custom";
-
-
 $DATASOURCES=array(
 "unknown"=>array(
                     "class"              => "CDRS_unknown" // leave it here

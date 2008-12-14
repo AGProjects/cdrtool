@@ -178,11 +178,6 @@ class DomainAuthLocal extends DomainAuth {
 class PageLayoutLocal extends PageLayout {
 }
 
-# To customize E164 normalization
-class E164_custom extends E164 {      // defined in library/cdr_lib.phtml
-}
-# $CDRTool['normalize']['E164Class']           = "E164_custom";
-
 $DATASOURCES=array(
 "unknown"=>array(
                     "class"              => "CDRS_unknown"		// do not delete this datasource
@@ -194,6 +189,8 @@ $DATASOURCES=array(
                     "table"              => "radacct",      // or "radacct".date("Ym") if sql.conf uses the mysql procedure to auto-rotate tables
                     "rateField"          => "Rate",
                     "rating"             => "1",
+                    "E164_class"         => "E164_custom",  // define a custom class to determine the E164 for a telephone number
+                                                            // see E164 classes as example in library/cdr_generic.php
                     "priceField"         => "Price",
                     "DestinationIdField" => "DestinationId",
                     "normalizedField"    => "Normalized",
@@ -282,7 +279,7 @@ $DATASOURCES=array(
                     "name"               => "SIP trace Thor",
                     "enableThor"         => true,
                     "soapEngineId"       => "sipthor",   
-                    "mediaTrace"         => "media_trace_thor"
+                    "mediaTrace"         => "media_trace_thor",
                     "invisible"          => 1, 
                     ),
 "media_trace"   =>array(

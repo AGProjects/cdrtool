@@ -5,8 +5,8 @@ class CDRS_opensips extends CDRS {
     var $subscriber_table      = "subscriber";
     var $ENUMtld               = '';
     var $maxCDRsNormalizeWeb   = 500;
-    var $sipTrace    = 'sip_trace';
-    var $mediaTrace  = 'media_trace';
+    var $sipTrace              = 'sip_trace';
+    var $mediaTrace            = 'media_trace';
 
     var $CDRFields=array('id'              => 'RadAcctId',
                          'callId'          => 'AcctSessionId',
@@ -1857,7 +1857,7 @@ class CDRS_opensips extends CDRS {
         }
 
         if (!is_object($this->AccountsDB)) {
-            $log=printf("Error: Cannot load domains because AccountsDB is not a valid database object");
+            $log=printf("Error: AccountsDB is not a valid database object");
             print $log;
             syslog(LOG_NOTICE,$log);
             return false;
@@ -1897,6 +1897,13 @@ class CDRS_opensips extends CDRS {
 
     function getQuota($account) {
         if (!$account) return;
+
+        if (!is_object($this->AccountsDB)) {
+            $log=printf("Error: AccountsDB is not a valid database object");
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
 
         list($username,$domain) = explode("@",$account);
 
@@ -1940,6 +1947,13 @@ class CDRS_opensips extends CDRS {
     function getBlockedByQuotaStatus($account) {
 
         if (!$account) return 0;
+        if (!is_object($this->AccountsDB)) {
+            $log=printf("Error: AccountsDB is not a valid database object");
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
         list($username,$domain) = explode("@",$account);
 
         if ($this->enableThor) {
