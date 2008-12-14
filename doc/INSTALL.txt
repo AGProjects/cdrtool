@@ -129,9 +129,9 @@ cp /var/www/CDRTool/setup/global.inc.simple.sample /etc/cdrtool/global.inc
 Edit global.inc and setup your variables to match your system.
 
 For each different datasource you must instantiate a new class
-extending one of the existing classes (ser, asterisk or cisco).
+extending one of the existing classes (opensips, asterisk or cisco).
 
-global.inc.in contains a more elaborate example for setting up 
+global.inc.complex.sample contains a more elaborate example for setting up
 datasources
 
 
@@ -152,11 +152,9 @@ datasource in global.inc:
 
 $RatingEngine=array("socketIP"   =>  "IP.address.of.the.private.interface.of.cdrtool.example.com",
                      "socketPort" => "9024",
-                     "CDRS_class" => "ser_radius",
+                     "cdr_source" => "opensips_radius",
                      "allow"      => array('10.0.0')
                    );
-
-The MSQL schema for prepaid accounts: setup/mysql/create_prepaid.mysql 
 
 For non Debian systems you must create /etc/default/cdrtool as follows:
 
@@ -271,16 +269,17 @@ or added if missing.
 Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.ser to /etc/freeradius
 
 
-OpenSIPs setup
+OpenSIPS setup
 -------------- 
 
-Enable MySQL storage for subscribers and Radius accounting. For SIP tracing
-you need to configure the OpenSIPs siptrace module. To enable quota you must
-add an extra column in the subscriber table:
+Configure OpenSIPS for MySQL storage of subscribers and Radius accounting.
+For SIP tracing you need to configure the OpenSIPs to enable the siptrace
+module. To enable quota you must add an extra column in the subscriber
+table:
 
-alter table openser.subscriber add column quota int not null;
+alter table opensips.subscriber add column quota int not null;
 
-Entries required in openser.cfg:
+Entries required in opensips.cfg:
 
 loadmodule "acc.so"
 
@@ -293,7 +292,7 @@ modparam("acc", "log_level",          1)
 modparam("acc", "log_flag",           1)
 modparam("acc", "log_missed_flag",    1)
 
-modparam("acc", "radius_config",      "/etc/openser/radius/client.conf")
+modparam("acc", "radius_config",      "/etc/opensips/radius/client.conf")
 modparam("acc", "radius_flag",        1)
 modparam("acc", "radius_missed_flag", 1)
 modparam("acc", "radius_extra",       "User-Name=$Au; \
@@ -326,7 +325,7 @@ route {
        ...
 }
 
-Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.ser to /etc/openser/radius/
+Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.ser to /etc/opensips/radius/
 and uncomment the line:
 
 $INCLUDE               /etc/radiusclient-ng/dictionary
@@ -344,19 +343,9 @@ MediaProxy setup
 
 MediaProy can log into CDRTool the IP bandwidth utilization, the codecs and
 the User Agents. MediaProxy logs this information into the database used by
-the Radius server in the radacct table. MediaProxy also correct the session
-duration of CDRs for which no BYE messages have been received.
-
-The following information is logged: 
-
-- InputOctets and OutputOctets
-- Codecs (like GSM or G711)
-- Applications (text/audio/video)
-- User Agent(s)
-- Local and remore IP:port combinations used by RTP streams
-
-See MediaProxy documentation for how to enable Radius and database
-accounting.
+the Freeradius server in radacct table. MediaProxy also corrects the session
+duration of CDRs for which no BYE messages have been received. See
+MediaProxy documentation for how to enable Radius and database accounting.
 
 MediaProxy logs detailed information about each individual stream (its type,
 duration, time-out end point ports). The logging is performed in a separate
@@ -412,14 +401,6 @@ aaa accounting connection h323 start-stop group radius
 gw-accounting h323
 gw-accounting h323 vsa
 gw-accounting voip
-
-
-Manual CDR uploads
-------------------
-
-If MySQL is down you will miss CDRs written by RADIUS. These CDRs can be
-reload manually from radius accounting files using the supplied upload
-scripts in scripts directory (IPNX, OpenSIPs and CISCO import scripts available).
 
 
 Q931 Release codes for Cisco
