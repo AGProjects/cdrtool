@@ -272,7 +272,7 @@ Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.ser to /etc/freeradius
 
 
 OpenSIPs setup
-------------- 
+-------------- 
 
 Enable MySQL storage for subscribers and Radius accounting. For SIP tracing
 you need to configure the OpenSIPs siptrace module. To enable quota you must
@@ -336,7 +336,7 @@ Note
 
 Many of the standard Radius attributes previously logged by default in the
 accounting packets must be added manually to "radius_extra" parameter of the
-acc module when using OpenSIPs >= 1.2.
+acc module when using OpenSIPs >= 1.4.
 
 
 MediaProxy setup
@@ -344,20 +344,49 @@ MediaProxy setup
 
 MediaProy can log into CDRTool the IP bandwidth utilization, the codecs and
 the User Agents. MediaProxy logs this information into the database used by
-the Radiusserver, the radacct table.
-
-MediaProxy can also correct the session duration of CDRs for which no BYE
-messages have been received.
+the Radius server in the radacct table. MediaProxy also correct the session
+duration of CDRs for which no BYE messages have been received.
 
 The following information is logged: 
 
 - InputOctets and OutputOctets
-- CodecType (like GSM or G711)
-- ApplicationType (text/audio/video)
+- Codecs (like GSM or G711)
+- Applications (text/audio/video)
 - User Agent(s)
-- Media IP source and IP destination
+- Local and remore IP:port combinations used by RTP streams
 
-See MediaProxy documentation for how to enable Radius or database accounting.
+See MediaProxy documentation for how to enable Radius and database
+accounting.
+
+MediaProxy logs detailed information about each individual stream (its type,
+duration, time-out end point ports). The logging is performed in a separate
+mysql table (default mediaproxy.media_sessions). The SQL schema is as
+follows:
+
+CREATE TABLE `media_sessions` (
+  `id` int(11) NOT NULL auto_increment,
+  `call_id` text NOT NULL,
+  `from_tag` text NOT NULL,
+  `to_tag` text,
+  `info` blob NOT NULL,
+  `start_time` datetime NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM; 
+
+The detailed information about the media streams is displayed in the SIP
+trace web page, follow the link about media trace.
+
+It is possible to retrieve also real-time information about the ongoing
+sessions and streams, this can be used to plot usage statitistics from
+external applications. The Usage and Sessions web pages display this
+information. The information is obtained from any mediaproxy dispatcher,
+which has connections to all configured relays. You must create or copy the
+TLS certificate of a relay in /etc/cdrtool/mediaproxy.pem and set the
+option:
+
+"mediaDispatcher"      => "tls:hostname:25061"
+
+for each datasource that uses MediaProxy.
 
 
 Asterisk setup
@@ -414,27 +443,17 @@ sample configuration file for monit is available in setup/monit/monitrc.
 Edit the IP address and hostname where the rating engine runs and copy
 /var/www/CDRTool/setup/monit/monitrc /etc/monit/monit.d/cdrtool
 
+
 Usage statistics
 ----------------
 
 CDRTool can build  usage statistics of the number of online SIP devices from
 OpenSIPs, simultaneous number of media streams and relayed IP traffic by
-MediaProxy.
+MediaProxy. To obatin the statistics defined for OpenSIPS datasource the
+following settings:
 
-Define DB_siponline as a new database class in global.inc. Example:
-
-class DB_siponline extends DB_Sql {
-  var $Host     = "db";
-  var $Database = "openser";
-  var $User     = "openser";
-  var $Password = "password";
-  var $Halt_On_Error ="no";
-}
-
-Define all media proxy servers as follows:
-
-For MediaProxy 1.x: mediaServers variable of each data source 
-For MediaProxy 2.x: mediaDispatcher variable of each data source 
+'db_registrar'    => 'DB_opensips',  // must be defined as mysql connection class
+'mediaDispatcher' => 'tls://hostname:25061'
 
 The script that gathers the usage information and builds the graphical
 statistics is /var/www/CDRTool/scripts/buildStatistics.php

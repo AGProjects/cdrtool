@@ -4,8 +4,10 @@ class MediaSessions {
 
     var $dispatcher_port   = 25061;
     var $sessions          = array();
+    var $summary           = array();
 	var $domain_statistics = array();
     var $timeout           = 3;
+	var $mp_tls_cert_file  = '/etc/cdrtool/mediaproxy.pem';
 
     function MediaSessions ($dispatcher='',$allowedDomains=array(),$filters=array()) {
 
@@ -29,32 +31,58 @@ class MediaSessions {
         $this->userAgentImages = $userAgentImages;
     }
 
-    function fetchSessionFromNetwork() {
+    function connectSocket() {
         if (!strlen($this->dispatcher)) return false;
 
-        list($ip,$port) = explode(":",$this->dispatcher);
+        if (preg_match("/^(tls|tcp):(.*):(.*)$/",$this->dispatcher,$m)) {
+            $hostname  = $m[1].'://'.$m[2];
+            $port      = $m[3];
+            $target= $m[1].'://'.$m[2].':'.$m[3];
 
-        $this->dispatcher_ip = $ip;
+            if ($m[1] == 'tls') {
+                if (!file_exists($this->mp_tls_cert_file)) {
+                    printf ("<p><font color=red>Error: mediaproxy certificate file %s does not exist. </font>\n",$this->mp_tls_cert_file);
+                    return false;
+                }
 
-        if ($port) $this->dispatcher_port = $port;
+                $tls_options=array('ssl' => array('local_cert'        => $this->mp_tls_cert_file));
 
-        if (!$this->dispatcher_ip) return false;
-        if (!$this->dispatcher_port) return false;
-
-        if ($fp = fsockopen ($this->dispatcher_ip, $this->dispatcher_port, $errno, $errstr, $this->timeout)) {
-
-            fputs($fp, "sessions\r\n");
-            $line = fgets($fp);
-
-			$_sessions=json_decode($line);
-
-            fclose($fp);
-            return $_sessions;
+                $context=stream_context_create($tls_options);
+            } else {
+                $context=stream_context_create(array());
+            }
 
         } else {
-            printf ("<p><font color=red>Error connecting to %s:%s: %s (%s) </font>\n",$this->dispatcher_ip,$this->dispatcher_port,$errstr,$errno);
+            printf ("<p><font color=red>Error: MediaProxy dispatcher '%s' must be in the form: tls:hostname:port or tcp:hostname:port</font>",$this->dispatcher);
             return false;
         }
+
+        if ($fp = stream_socket_client ($target, $errno, $errstr,$this->timeout,STREAM_CLIENT_CONNECT,$context)) {
+            return $fp;
+        } else {
+            printf ("<p><font color=red>Error connecting to %s: %s (%s) </font>\n",$target,$errstr,$errno);
+                                 return false;
+        }
+    }
+
+    function fetchSessionFromNetwork() {
+
+        if (!$fp = $this->connectSocket()) return array();
+
+        fputs($fp, "sessions\r\n");
+        $line = fgets($fp);
+        return json_decode($line);
+    }
+
+    function fetchSummaryFromNetwork() {
+        if (count($this->allowedDomains)) return array();
+        if (!$fp = $this->connectSocket()) return array();
+
+        fwrite($fp, "summary\r\n");
+
+        $line = fgets($fp);
+        fclose($fp);
+        return json_decode($line,true);
     }
 
     function getSessions () {
@@ -144,28 +172,12 @@ class MediaSessions {
     }
 
     function getSummary () {
-
         if (count($this->allowedDomains)){
-        	$this->summary = $this->relay_statistics;
-        } else {
-            if (!$this->dispatcher_ip) return false;
-            if (!$this->dispatcher_port) return false;
-    
-            if ($fp = fsockopen ($this->dispatcher_ip, $this->dispatcher_port, $errno, $errstr, $this->timeout)) {
-    
-                if (!count($this->allowedDomains)) {
-                   fputs($fp, "summary\r\n");
-                   $line = fgets($fp);
-                   $this->summary = json_decode($line,true);
-                }
-    
-                fclose($fp);
-                return true;
-    
-            } else {
-                printf ("<p><font color=red>Error connecting to %s:%s: %s (%s) </font>\n",$this->dispatcher_ip,$this->dispatcher_port,$errstr,$errno);
-                return false;
+        	if (is_array($this->relay_statistics)) {
+        		$this->summary = $this->relay_statistics;
             }
+        } else {
+            $this->summary = $this->fetchSummaryFromNetwork();
         }
     }
 
@@ -607,31 +619,23 @@ class MediaSessionsNGNPro extends MediaSessions {
 
     }
 
-    function getSummary() {
-
-        if (count($this->allowedDomains)) {
-        	if (is_array($this->relay_statistics)) {
-        		$this->summary = $this->relay_statistics;
-            }
-        } else {
-            if (!is_object($this->soapclient)) return false;
+    function fetchSummaryFromNetwork() {
+        if (!is_object($this->soapclient)) return array();
     
-            $this->soapclient->addHeader($this->SoapAuth);
-            $result     = $this->soapclient->getMediaSummary();
+        $this->soapclient->addHeader($this->SoapAuth);
+        $result     = $this->soapclient->getMediaSummary();
     
-            if (PEAR::isError($result)) {
-                $error_msg   = $result->getMessage();
-                $error_fault = $result->getFault();
-                $error_code  = $result->getCode();
+        if (PEAR::isError($result)) {
+            $error_msg   = $result->getMessage();
+            $error_fault = $result->getFault();
+            $error_code  = $result->getCode();
     
-                printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            }
-    
-            $this->summary=json_decode($result,true);
+            printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return array();
         }
-        return true;
-    }
+    
+        return json_decode($result,true);
+	}
 }
 
 class MediaSessions1 {

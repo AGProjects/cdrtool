@@ -181,7 +181,8 @@ $DATASOURCES=array(
                     "db_registrar"       => "DB_opensips",
                     "sipTrace"           => "sip_trace",
                     "mediaTrace"         => "media_trace",
-                    "mediaDispatcher"    => "10.0.0.1"  // where to get the active media sessions from MediaProxy 2.0
+                    "mediaDispatcher"    => "tls://10.0.0.1:25061",    // Where to get the active media sessions from MediaProxy 2.0
+                                                                       // Create /etc/cdrtool/mediaproxy.pem containing the certificate and private key
                     ),
 "asterisk_vm"  =>array("name"            => "Voicemail server",
                     "class"              => "CDRS_asterisk",
