@@ -2913,9 +2913,9 @@ class SIP_trace {
 
     function SIP_trace ($cdr_source) {
         global $DATASOURCES, $auth;
-        $this->cdr_source = $cdr_source;
 
-        $this->cdrtool  = new DB_CDRTool();
+        $this->cdr_source = $cdr_source;
+        $this->cdrtool    = new DB_CDRTool();
 
         if (strlen($DATASOURCES[$this->cdr_source]['enableThor'])) {
             $this->enableThor = $DATASOURCES[$this->cdr_source]['enableThor'];
@@ -2994,9 +2994,110 @@ class SIP_trace {
     function getTrace ($proxyIP,$callid,$fromtag,$totag) {
 
         if ($this->enableThor) {
-            $this->seen_ip=array();
-            $this->trace_array=$this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag);
+            // get trace using soap request
+            if (!$proxyIP || !$callid || !$fromtag) return false;
+    
+            if (!is_object($this->soapclient)) {
+                print "Error: soap client is not defined.";
+                return false;
+            }
 
+            $this->seen_ip=array();
+
+            $filter=array('nodeIp'  => $proxyIP,
+                          'callId'  => $callid,
+                          'fromTag' => $fromtag,
+                          'toTag'   => $totag
+                          );
+            $this->soapclient->addHeader($this->SoapAuth);
+    
+            $result     = $this->soapclient->getSipTrace($filter);
+    
+            if (PEAR::isError($result)) {
+                $error_msg   = $result->getMessage();
+                $error_fault = $result->getFault();
+                $error_code  = $result->getCode();
+    
+                printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->faultstring,$error_fault->faultcode);
+                return false;
+            }
+    
+            $columns=0;
+
+            $traces=json_decode($result);
+
+            $trace_array=array();
+    
+            foreach ($traces as $_trace) {
+    
+                if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$_trace->to_ip,$m)) {
+                    $toip      = $m[2];
+                    $transport = $m[1];
+                    $toport    = $m[3];
+                } else if (preg_match("/^(.*):(.*)$/",$_trace->to_ip,$m)) {
+                    $toip      = $m[1];
+                    $transport = 'udp';
+                    $toport    = $m[2];
+                } else {
+                    $toip      = $_trace->to_ip;
+                    $transport = 'udp';
+                    $toport    = '5060';
+                }
+    
+                if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$_trace->from_ip,$m)) {
+                    $fromip    = $m[2];
+                    $fromport  = $m[3];
+                } else if (preg_match("/^(.*):(.*)$/",$_trace->from_ip,$m)) {
+                    $fromip    = $m[1];
+                    $fromport  = $m[2];
+                } else {
+                    $fromip    = $_trace->from_ip;
+                }
+    
+                if (!$this->seen_ip[$toip] && $this->isProxy($toip)) {
+                    $this->seen_ip[$toip]++;
+                }
+    
+                if (!$this->seen_ip[$fromip] && $this->isProxy($fromip)) {
+                    $this->seen_ip[$fromip]++;
+                }
+    
+                if (!$this->column[$fromip]) {
+                    $this->column[$fromip] = $columns+1;
+                    $this->column_port[$fromip]=$fromport;
+                    $columns++;
+                }
+    
+                if (!$this->column[$toip]) {
+                    $this->column[$toip]   = $columns+1;
+                    $this->column_port[$toip]=$toport;
+                    $columns++;
+                }
+    
+                preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/",$_trace->time_stamp,$m);
+                $timestamp = mktime($m[4],$m[5],$m[6],$m[2],$m[3],$m[1]);
+    
+                $idx=$proxyIP.'_'.$_trace->id;
+    
+                $trace_array[$idx]=
+                            array (
+                                   'id'         => $idx,
+                                   'direction'  => $_trace->direction,
+                                   'fromip'     => $fromip,
+                                   'toip'       => $toip,
+                                   'fromport'   => $fromport,
+                                   'toport'     => $toport,
+                                   'method'     => $_trace->method,
+                                   'transport'  => $transport,
+                                   'date'       => $_trace->date,
+                                   'status'     => $_trace->status,
+                                   'timestamp'  => $timestamp,
+                                   'msg'        => $_trace->msg,
+                                   'md5'        => md5($_trace->msg)
+                                   );
+            }
+    
+            $this->trace_array=$trace_array;
             $this->rows = count($this->trace_array);
 
         } else {
@@ -3006,11 +3107,11 @@ class SIP_trace {
                 print "<p><font color=red>Error: no database connection defined</font>";
                 return false;
             }
+
             $query=sprintf("select *,UNIX_TIMESTAMP(time_stamp) as timestamp
             from %s where callid = '%s' order by id asc",
             $this->table,
             $callid);
-    
     
             if (!$this->db->query($query)) {
                 printf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -3087,122 +3188,13 @@ class SIP_trace {
             }
         }
 
-    }
-
-    function getTraceFromThor($proxyIP,$callid,$fromtag,$totag) {
-        // get trace using soap request
-        if (!$proxyIP || !$callid || !$fromtag) return false;
-
-        if (!is_object($this->soapclient)) {
-            print "Error: soap client is not defined.";
-            return false;
-        }
-
-        if ($this->traced_ip[$proxyIP]) return true;
-
-        $this->traced_ip[$proxyIP]++;
-
-        $filter=array('nodeIp'  => $proxyIP,
-                      'callId'  => $callid,
-                      'fromTag' => $fromtag,
-                      'toTag'   => $totag
-                      );
-        $this->soapclient->addHeader($this->SoapAuth);
-
-        $result     = $this->soapclient->getSipTrace($filter);
-
-        if (PEAR::isError($result)) {
-            $error_msg   = $result->getMessage();
-            $error_fault = $result->getFault();
-            $error_code  = $result->getCode();
-
-            printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->faultstring,$error_fault->faultcode);
-            return false;
-        }
-
         /*
         print "<pre>";
-        print_r($result);
+        print_r($this->trace_array);
         print "</pre>";
         */
 
-        $columns=0;
-
-        $trace_array=array();
-
-        foreach ($result as $_trace) {
-
-            if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$_trace->toIp,$m)) {
-                $toip      = $m[2];
-                $transport = $m[1];
-                $toport    = $m[3];
-            } else if (preg_match("/^(.*):(.*)$/",$_trace->toIp,$m)) {
-                $toip      = $m[1];
-                $transport = 'udp';
-                $toport    = $m[2];
-            } else {
-                $toip      = $_trace->toIp;
-                $transport = 'udp';
-                $toport    = '5060';
-            }
-
-            if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$_trace->fromIp,$m)) {
-                $fromip    = $m[2];
-                $fromport  = $m[3];
-            } else if (preg_match("/^(.*):(.*)$/",$_trace->fromIp,$m)) {
-                $fromip    = $m[1];
-                $fromport  = $m[2];
-            } else {
-                $fromip    = $_trace->fromIp;
-            }
-
-            if (!$this->seen_ip[$toip] && $this->isProxy($toip)) {
-                $this->seen_ip[$toip]++;
-            }
-
-            if (!$this->seen_ip[$fromip] && $this->isProxy($fromip)) {
-                $this->seen_ip[$fromip]++;
-            }
-
-            if (!$this->column[$fromip]) {
-                $this->column[$fromip] = $columns+1;
-                $this->column_port[$fromip]=$fromport;
-                $columns++;
-            }
-
-            if (!$this->column[$toip]) {
-                $this->column[$toip]   = $columns+1;
-                $this->column_port[$toip]=$toport;
-                $columns++;
-            }
-
-            preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/",$_trace->date,$m);
-            $timestamp = mktime($m[4],$m[5],$m[6],$m[2],$m[3],$m[1]);
-
-            $idx=$proxyIP.'_'.$_trace->id;
-
-            $trace_array[$idx]=
-                        array (
-                               'id'         => $idx,
-                               'direction'  => $_trace->direction,
-                               'fromip'     => $fromip,
-                               'toip'       => $toip,
-                               'fromport'   => $fromport,
-                               'toport'     => $toport,
-                               'method'     => $_trace->method,
-                               'transport'  => $transport,
-                               'date'       => $_trace->date,
-                               'status'     => $_trace->status,
-                               'timestamp'  => $timestamp,
-                               'msg'        => $_trace->msg,
-                               'md5'        => md5($_trace->msg)
-                               );
-        }
-
-        return $trace_array;
-
     }
-
 
     function show($proxyIP,$callid,$fromtag,$totag) {
 
@@ -3333,12 +3325,6 @@ class SIP_trace {
             }
         }
 
-        /*
-        print "<pre>";
-        print_r($this->trace_array);
-        print "</pre>";
-        */
-
         print "
         <p>
         <a name=#top>
@@ -3390,7 +3376,7 @@ class SIP_trace {
             $timestamp = $this->trace_array[$key]['timestamp'];
             $method    = $this->trace_array[$key]['method'];
             $isProxy   = $this->trace_array[$key]['isProxy'];
-            $transport  = $this->trace_array[$key]['transport'];
+            $transport = $this->trace_array[$key]['transport'];
 
             $msg_possition   = $this->trace_array[$key]['msg_possition'];
             $arrow_possition = $this->trace_array[$key]['arrow_possition'];
@@ -3402,8 +3388,6 @@ class SIP_trace {
             $timeline=$timestamp-$begin_timestamp;
 
             $sip_phone_img=getImageForUserAgent($msg);
-
-            //if (!$msg) continue;
 
             if ($seen_msg[$md5]) continue;
 
@@ -3827,7 +3811,39 @@ class Media_trace {
     function getTrace ($proxyIP,$callid,$fromtag,$totag) {
 
         if ($this->enableThor) {
-            $this->info=$this->getTraceFromThor($proxyIP,$callid,$fromtag,$totag);
+            // get trace using soap request
+            if (!$proxyIP || !$callid || !$fromtag) {
+                print "<p><font color=red>Error: proxyIP or callid or fromtag are not defined</font>";
+                return false;
+            }
+    
+            if (!is_object($this->soapclient)) {
+                print "<p><font color=red>Error: soap client is not defined</font>";
+                return false;
+            }
+    
+            $filter=array('nodeIp'  => $proxyIP,
+                          'callId'  => $callid,
+                          'fromTag' => $fromtag,
+                          'toTag'   => $totag
+                          );
+    
+            $this->soapclient->addHeader($this->SoapAuth);
+    
+            $result     = $this->soapclient->getMediaTrace($filter);
+    
+            if (PEAR::isError($result)) {
+                $error_msg   = $result->getMessage();
+                $error_fault = $result->getFault();
+                $error_code  = $result->getCode();
+    
+                if ($error_fault->detail->exception->errorcode != 1060) {
+                    printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                }
+                return false;
+            }
+    
+            $this->info = json_decode($result);
 
         } else {
 			if (!is_object($this->db)) {
@@ -3859,42 +3875,7 @@ class Media_trace {
         print_r($this->info);
         print "</pre>";
         */
-    }
 
-    function getTraceFromThor($proxyIP,$callid,$fromtag,$totag) {
-        // get trace using soap request
-        if (!$proxyIP || !$callid || !$fromtag) {
-            print "<p><font color=red>Error: proxyIP or callid or fromtag are not defined</font>";
-        	return false;
-        }
-
-        if (!is_object($this->soapclient)) {
-            print "<p><font color=red>Error: soap client is not defined</font>";
-            return false;
-        }
-
-        $filter=array('nodeIp'  => $proxyIP,
-                      'callId'  => $callid,
-                      'fromTag' => $fromtag,
-                      'toTag'   => $totag
-                      );
-
-        $this->soapclient->addHeader($this->SoapAuth);
-
-        $result     = $this->soapclient->getMediaTrace($filter);
-
-        if (PEAR::isError($result)) {
-            $error_msg   = $result->getMessage();
-            $error_fault = $result->getFault();
-            $error_code  = $result->getCode();
-
-            if ($error_fault->detail->exception->errorcode != 1060) {
-            	printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            }
-            return false;
-        }
-
-        return $result;
     }
 
     function show($proxyIP,$callid,$fromtag,$totag) {
@@ -3910,6 +3891,12 @@ class Media_trace {
         if (!is_object($this->info)) {
             print "<p>No information available.";
             return false;
+        }
+
+        if (!count($this->info->streams)) {
+            print "<p>
+            No media streams have been established for this session.";
+            return;
         }
 
         print "
@@ -3974,7 +3961,7 @@ class Media_trace {
             $w_col2=intval(($_val->end_time-$_val->start_time-$_val->timeout_wait)*$w/$this->info->duration);
             $w_col3=intval(($this->info->duration-$_val->end_time+$_val->timeout_wait)*$w/$this->info->duration);
 
-            print "<tr><td width=$w1 class=border>$_val->mediaType</td>";
+            print "<tr><td width=$w1 class=border>$_val->media_type</td>";
 
             $t2=$_val->end_time-$_val->timeout_wait;
             $t3=$this->info->duration;
