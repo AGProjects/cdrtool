@@ -11,11 +11,14 @@ Changes in global.inc configuration file:
 - Replace $RatingEngine['CDRS_class'] with $RatingEngine['cdr_source']       
 - Replace db_class_siponline with db_registrar
 - Replace $CDRToolModules=array("openser") to $CDRToolModules=array("opensips")
-- Replace ser_radius with opensips_radius        
+- Replace datasource name ser_radius with opensips_radius        
 - Replace OpenSERQuota to OpenSIPSQuota
 - Replace DB_openser to DB_opensips
 - Replace sipTraceDataSource with sipTrace
 - Replace mediaTraceDataSource with mediaTrace
+- Replace mediaServers used by MediaProxy1 with mediaDispatcher used by MediaProxy2
+  in the format tls:hostname:port
+- Add mediaTrace to the sip_trace datasource
 
 Changes in /etc/cron.d/cdrtool:
 
