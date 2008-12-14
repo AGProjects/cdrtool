@@ -1850,6 +1850,16 @@ class CDRS_opensips extends CDRS {
     function LoadDomains() {
 
         if (!$this->AccountsDBClass) {
+            $log=printf("Error: Cannot load domains because AccountsDBClass is not defined in datasource %s",$this->cdr_source);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
+        if (!is_object($this->AccountsDB)) {
+            $log=printf("Error: Cannot load domains because AccountsDB is not a valid database object");
+            print $log;
+            syslog(LOG_NOTICE,$log);
             return false;
         }
 
@@ -1860,6 +1870,7 @@ class CDRS_opensips extends CDRS {
         }
 
         $query=sprintf("select domain from %s",$this->domain_table);
+
         if ($this->CDRTool['filter']['aNumber']) {
             $els=explode("@",$this->CDRTool['filter']['aNumber']);
             $query.=" where domain = '$els[1]' ";

@@ -1,15 +1,12 @@
-Mailing list support
---------------------
+Free support
+------------
 
-Places where one may find support from the communities using CDRTool like
-OpenSER and Asterisk:
+Mialing list:
 
-- http://www.freelists.org/list/cdrtool-users 
-- http://openser.org/cgi-bin/mailman/listinfo/users
-- http://lists.iptel.org/mailman/listinfo/serusers
-- http://lists.digium.com/mailman/listinfo/asterisk-users
+http://opensips.org/cgi-bin/mailman/listinfo/users
+
 
 Commercial support
 ------------------
 
-CDRTool is supported by AG Projects only for its customers.
+CDRTool is supported commercially by AG Projects http://ag-projects.com.

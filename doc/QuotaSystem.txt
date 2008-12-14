@@ -2,25 +2,37 @@
 The quota system
 ----------------
 
-The quota system works with OpenSER data sources. It enforces usage limits
-for post-paid accounts. 
+The quota system works with OpenSIPS data sources. It enforces maximum
+monthly usage limits for post-paid accounts. The system is not stopping in
+real-time ongoing calls but provides in practice a protection against
+fraudulent usage on a platform basis.
 
-The quota system builds incremental statistics with usage information from
-the normalized SIP sessions, it compares the curent usage with the monthly
-quota assigned by administrator and blocks the accounts in the SIP Proxy
-when the quota is exceeded. 
+To enable quotas you must:
 
-The system will not stop in real-time ongoing calls but provides in practice
-a practical protection against fraudulent usage of the platform.
+1. Add the the column quota to the opensips subscriber mysql table:
 
-The quota is checked by a cron job:
+alter table opensips.subscriber add column quota int unsigned not null;
 
-/var/www/CDRTool/scripts/SER/quotaCheck.php
+2. Set the quota for each subscriber to a value, which represents the cost
+the subscriber is allowed to spend per calendar month.
+
+3. Configure OpenSIPS to deny sessions initiated by subscribers belonging to
+the quota group:
+
+The quota system then builds incremental statistics, and stores them in
+cdrtool.quota_usage mysql table, with usage information from the normalized
+SIP sessions. It then compares the curent usage with the assigned monthly
+quota and blocks the subscribers when their quota is exceeded by adding them
+to the group 'quota'.
+
+The quota is checked by the cron job:
+
+/var/www/CDRTool/scripts/OpenSIPS/quotaCheck.php
 
 At the beginning of each calendar month the quota usage is reset and all
 users are unblocked:
 
-/var/www/CDRTool/scripts/SER/quotaReset.php
+/var/www/CDRTool/scripts/OpenSIPS/quotaReset.php
 
 The current quota usage can be monitored in Rating -> Quota usage web page.
 
