@@ -921,6 +921,7 @@ class Rate {
 }
 
 class RatingTables {
+	var $checkDomainForTables =array('destinations','billing_customers','billing_profiles','billing_rates','billing_rates_history','billing_enum_tlds');
     var $table_to_csv_name=array(
                            "destinations"          => "destinations.csv",
                            "billing_customers"     => "customers.csv",
@@ -972,12 +973,15 @@ class RatingTables {
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
                                                                   "gateway"=>array("size"=>15,
+                                                                                  "checkType"=>'ip',
                                                                                   "name"=>"Trusted peer"
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
-                                                                                  "name"=>"Domain"
+                                                                                  "name"=>"Domain",
+                                                                                  "checkType"=>'domain'
                                                                                  ),
                                                                  "subscriber"=>array("size"=>15,
+                                                                                  "checkType"=>'sip_account',
                                                                                   "name"=>"Subscriber"
                                                                                  ),
                                                                  "dest_id"=>array("size"=>20,
@@ -994,13 +998,16 @@ class RatingTables {
                                                  "domainFilterColumn"=>"domain",
                                                  "exceptions" =>array('country_code'),
                                                  "fields"=>array("gateway"=>array("size"=>15,
+                                                                                  "checkType"=>'ip',
                                                                                   "name"=>"Trusted peer"
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
+                                                                                  "checkType"=>'domain',
                                                                                   "name"=>"Domain"
                                                                                  ),
                                                                  "subscriber"=>array("size"=>25,
-                                                                                  "name"=>"Subscriber"
+                                                                               "checkType"=>'sip_account',
+                                                                                  "name"=>"Subscriber",
                                                                                  ),
                                                                  "profile_name1"=>array("size"=>8,
                                                                                   "name"=>"WeekDay"
@@ -1018,9 +1025,11 @@ class RatingTables {
                                                                                   "name"=>"Timezone"
                                                                                  ),
                                                                  "increment"     =>array("size"=>3,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"Incr"
                                                                                  ),
                                                                  "min_duration"  =>array("size"=>3,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"Minim"
                                                                                  ),
                                                                  "country_code"  =>array("size"=>3,
@@ -1037,12 +1046,15 @@ class RatingTables {
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
                                                                   "gateway"=>array("size"=>15,
+                                                                                  "checkType"=>'ip',
                                                                                   "name"=>"Trusted peer"
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
+                                                                                  "checkType"=>'domain',
                                                                                   "name"=>"Domain"
                                                                                  ),
                                                                  "subscriber"=>array("size"=>25,
+                                                                               "checkType"=>'sip_account',
                                                                                   "name"=>"Subscriber"
                                                                                  ),
                                                                   "name"=>array("size"=>12,
@@ -1052,24 +1064,28 @@ class RatingTables {
                                                                                   "name"=>"Rate Id1"
                                                                                  ),
                                                                  "hour1"=>array("size"=>3,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"00-H1"
                                                                                  ),
                                                                  "rate_name2"=>array("size"=>12,
                                                                                   "name"=>"Rate Id2"
                                                                                  ),
                                                                  "hour2"=>array("size"=>3,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"H1-H2"
                                                                                  ),
                                                                  "rate_name3"=>array("size"=>12,
                                                                                   "name"=>"Rate Id3"
                                                                                  ),
                                                                  "hour3"=>array("size"=>3,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"H2-H3"
                                                                                  ),
                                                                  "rate_name4"=>array("size"=>12,
                                                                                   "name"=>"Rate Id4"
                                                                                  ),
                                                                  "hour4"=>array("size"=>3,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"H3-24"
                                                                                  ),
 
@@ -1083,12 +1099,15 @@ class RatingTables {
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
                                                                   "gateway"=>array("size"=>15,
+                                                                                  "checkType"=>'ip',
                                                                                   "name"=>"Trusted peer"
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
+                                                                                  "checkType"=>'domain',
                                                                                   "name"=>"Domain"
                                                                                  ),
                                                                  "subscriber"=>array("size"=>25,
+                                                                               "checkType"=>'sip_account',
                                                                                   "name"=>"Subscriber"
                                                                                  ),
                                                                  "name"=>array("size"=>12,
@@ -1101,15 +1120,19 @@ class RatingTables {
                                                                                   "name"=>"App"
                                                                                  ),
                                                                  "connectCost"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"Connect"
                                                                                  ),
                                                                  "durationRate"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"Price"
                                                                                  ),
                                                                  "connectCostIn"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"Connect in"
                                                                                  ),
                                                                  "durationRateIn"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"Price in"
                                                                                  )
 
@@ -1122,12 +1145,15 @@ class RatingTables {
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
                                                                  "gateway"=>array("size"=>15,
+                                                                                  "checkType"=>'ip',
                                                                                   "name"=>"Trusted peer"
                                                                                  ),
                                                                  "domain"=>array("size"=>15,
+                                                                                  "checkType"=>'domain',
                                                                                   "name"=>"Domain"
                                                                                  ),
                                                                  "subscriber"=>array("size"=>20,
+                                                                               "checkType"=>'sip_account',
                                                                                   "name"=>"Subscriber"
                                                                                  ),
                                                                  "name"=>array("size"=>10,
@@ -1140,15 +1166,19 @@ class RatingTables {
                                                                                   "name"=>"App"
                                                                                  ),
                                                                  "connectCost"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"Connect"
                                                                                  ),
                                                                  "durationRate"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"Price"
                                                                                  ),
                                                                  "connectCostIn"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"Connect in"
                                                                                  ),
                                                                  "durationRateIn"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"Price in"
                                                                                  ),
                                                                  "startDate"=>array("size"=>11,
@@ -1167,21 +1197,29 @@ class RatingTables {
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
                                                                   "gateway"=>array("size"=>15,
+                                                                                  "checkType"=>'ip',
                                                                                   "name"=>"Trusted peer"
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
+                                                                                  "checkType"=>'domain',
                                                                                   "name"=>"Domain"
                                                                                  ),
                                                                  "subscriber"=>array("size"=>25,
+                                                                               "checkType"=>'sip_account',
                                                                                   "name"=>"Subscriber"
                                                                                  ),
                                                                   "enum_tld"=>array("size"=>35,
+                                                                               "mustExist"=>true,
+                                                                                  "checkType"=>'domain',
                                                                                   "name"=>"ENUM TLD"
                                                                                 ),
                                                                   "e164_regexp"=>array("size"=>35,
+                                                                               "mustExist"=>true,
                                                                                   "name"=>"E164 regexp"
                                                                                 ),
                                                                  "discount"=>array("size"=>10,
+                                                                               "mustExist"=>true,
+                                                                               "checkType"=>'numeric',
                                                                                   "name"=>"Discount"
                                                                                  )
 
@@ -1191,12 +1229,13 @@ class RatingTables {
                            "prepaid"=>array("name"=>"Prepaid accounts",
                                                  "keys"=>array("id"),
                                                  "size"=>15,
-                                                 "exceptions" =>array('change_date','active_sessions','call_in_progress','call_lock'),
+                                                 "exceptions" =>array('change_date','active_sessions','call_in_progress','call_lock','domain'),
                                                  "domainFilterColumn"=>"domain",
                                                  "order"=>"change_date DESC",
                                                  "fields"=>array("account"=>array("size"=>35,
                                                                                "name"=>"SIP prepaid account",
-                                                                               "readonly"=>0
+                                                                               "checkType"=>'sip_account',
+                                                                               "mustExist"=>true
                                                                                 ),
                                                                  "balance"=>array("size"=>10,
                                                                                   "name"=>"Balance"
@@ -1217,6 +1256,10 @@ class RatingTables {
                                                                                   "name"=>"Max session time",
                                                                                  "readonly"=>1
                                                                                  ),
+                                                                 "duration"=>array("size"=>10,
+                                                                                  "name"=>"Duration",
+                                                                                 "readonly"=>1
+                                                                                 ),
                                                                  "destination"=>array("size"=>15,
                                                                                   "name"=>"Last destination",
                                                                                  "readonly"=>1
@@ -1229,18 +1272,24 @@ class RatingTables {
                                                  "exceptions" =>array('service'),
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array("batch"=>array("size"=>40,
-                                                                               "name"=>"Batch name"
+                                                                               "name"=>"Batch name",
+                                                                               "readonly"=>1
                                                                                 ),
                                                                  "date_batch"=>array("size"=>11,
                                                                                   "name"=>"Batch date"
                                                                                  ),
                                                                  "number"=>array("size"=>20,
+                                                                               "checkType"=>'numeric',
+                                                                               "mustExist"=>true,
                                                                                   "name"=>"Card number"
                                                                                  ),
                                                                  "id"=>array("size"=>20,
+                                                                               "checkType"=>'numeric',
+                                                                               "mustExist"=>true,
                                                                                   "name"=>"Card id"
                                                                                  ),
                                                                  "value"=>array("size"=>6,
+                                                                               "mustExist"=>true,
                                                                                   "name"=>"Card value"
                                                                                  ),
                                                                  "blocked"=>array("size"=>1,
@@ -3079,141 +3128,155 @@ class RatingTables {
         if ($action =="update") {
             $affected_rows=0;
             if ($subaction == "Update") {
-                $update_set='';
-                $k=0;
-                while ($k < $cc ) {
-                    $k++;
-                    $Fname=$metadata[$k]['name'];
-                    if (!$Fname) continue;
-
-                    $value=$_REQUEST[$Fname];
-
-                    if ($this->tables[$table]['fields'][$Fname]['readonly']) {
-                        continue;
-                    }
-                    if (in_array($Fname,$this->tables[$table]['exceptions'])) {
-                        continue;
-                    }
-
-                    if (in_array($Fname,$this->tables[$table]['keys'])) {
-                        continue;
-                    }
-
-                    if ($kkk > 0) {
-                        $comma = ",";
-                    } else {
-                        $comma = "";
-                    }
-                    if (preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
-                        $update_set .= $comma.$Fname."= ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
-                    } else {
-                        $update_set .= $comma.$Fname."='".$value."'";
-                    }
-                    $kkk++;
-                }
-
-                $log_entity=" id = $id ";
-        
-                $where = " id = '".$id."' and $this->whereDomainFilter";
-
-                if ($table == "billing_rates") {
-                    if ($this->settings['split_rating_table']) {
+                if ($this->checkValues($table,$_REQUEST)) {
+                    $update_set='';
+                    $k=0;
+                    while ($k < $cc ) {
+                        $k++;
+                        $Fname=$metadata[$k]['name'];
+                        if (!$Fname) continue;
     
-                        $rate_table_affected=array();
-                        $query_r="select distinct (name) from billing_rates where". $where;
-                        if ($this->db->query($query_r)) {
-                            while($this->db->next_record()) {
-                                $rate_tables_affected[]='billing_rates_'.$this->db->f('name');
-                            }
+                        $value=$_REQUEST[$Fname];
+    
+                        if ($this->tables[$table]['fields'][$Fname]['readonly']) {
+                            continue;
+                        }
+
+                        if (in_array($Fname,$this->tables[$table]['exceptions'])) {
+                            continue;
+                        }
+    
+                        if (in_array($Fname,$this->tables[$table]['keys'])) {
+                            continue;
+                        }
+    
+                        if ($kkk > 0) {
+                            $comma = ",";
                         } else {
-                            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
+                            $comma = "";
                         }
-                    }
-                } else if ($table=="prepaid") {
-                    register_shutdown_function("unLockTables",$this->db);
-        
-                    if ($this->db->query("lock table prepaid write")) {
-                        $query_q=sprintf("select * from prepaid where account = '%s'",addslashes($account));
-                        if ($this->db->query($query_q) && $this->db->num_rows()) {
-                            $this->db->next_record();
-                            $old_balance=$this->db->f('balance');
+
+                        if (preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
+                            $update_set .= $comma.$Fname."= ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
+                        } else {
+                            $update_set .= $comma.$Fname."='".$value."'";
                         }
-        
-                        $this->db->query("unlock tables");
+                        $kkk++;
                     }
-                }
 
-                $query = sprintf("update %s set %s where %s " ,
-                $table,
-                $update_set,
-                $where
-                );
-
-                if ($this->db->query($query)) {
-                    $affected_rows=$this->db->affected_rows();
-                    if ($affected_rows) {
-                        if ($table=="prepaid") {
-                            list($username,$domain)=explode("@",$account);
+                    $k=0;
+                    while ($k < $cc ) {
+                        if ($metadata[$k]['name'] == 'change_date') {
+                        	$update_set .= sprintf("%s %s = NOW() ",$comma,$metadata[$k]['name']);
+                            break;
+                        }
+                        $k++;
+                    }
+    
+                    $log_entity=" id = $id ";
+            
+                    $where = " id = '".$id."' and $this->whereDomainFilter";
+    
+                    if ($table == "billing_rates") {
+                        if ($this->settings['split_rating_table']) {
         
-                            $value=$balance-$old_balance;
-        
-                            if (floatval($balance) != floatval($old_balance))  {
-                                $query=sprintf("insert into prepaid_history
-                                (username,domain,action,number,value,balance,date)
-                                values
-                                ('%s','%s','Set balance','Update by administrator','%s','%s',NOW())",
-                                addslashes($username),
-                                addslashes($domain),
-                                addslashes($value),
-                                addslashes($balance)
-                                );
-                                $this->db->query($query);
-        
-                                $log_query=sprintf("insert into log
-                                (date,login,ip,datasource,results,description)
-                                values
-                                (NOW(),'%s','%s','Rating tables','%d','Prepaid balance for %s@%s set to %s')",
-                                addslashes($loginname),
-                                addslashes($_SERVER['REMOTE_ADDR']),
-                                addslashes($affected_rows),
-                                addslashes($username),
-                                addslashes($domain),
-                                addslashes($balance)
-                                );
-        
-                                $this->db->query($log_query);
+                            $rate_table_affected=array();
+                            $query_r="select distinct (name) from billing_rates where". $where;
+                            if ($this->db->query($query_r)) {
+                                while($this->db->next_record()) {
+                                    $rate_tables_affected[]='billing_rates_'.$this->db->f('name');
+                                }
+                            } else {
+                                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
                             }
-        
-                        } else if ($table=='billing_rates') {
-                            if ($this->settings['split_rating_table']) {
-                                foreach ($rate_tables_affected as $extra_rate_table) {
-                                    $query_u = sprintf("update %s set %s where %s ",
-                                    $extra_rate_table,
-                                    $update_set,
-                                    $where
+                        }
+                    } else if ($table=="prepaid") {
+                        register_shutdown_function("unLockTables",$this->db);
+            
+                        if ($this->db->query("lock table prepaid write")) {
+                            $query_q=sprintf("select * from prepaid where account = '%s'",addslashes($account));
+                            if ($this->db->query($query_q) && $this->db->num_rows()) {
+                                $this->db->next_record();
+                                $old_balance=$this->db->f('balance');
+                            }
+            
+                            $this->db->query("unlock tables");
+                        }
+                    }
+    
+                    $query = sprintf("update %s set %s where %s " ,
+                    $table,
+                    $update_set,
+                    $where
+                    );
+
+                    if ($this->db->query($query)) {
+                        $affected_rows=$this->db->affected_rows();
+                        if ($affected_rows) {
+                            if ($table=="prepaid") {
+                                list($username,$domain)=explode("@",$account);
+            
+                                $value=$balance-$old_balance;
+            
+                                if (floatval($balance) != floatval($old_balance))  {
+                                    $query=sprintf("insert into prepaid_history
+                                    (username,domain,action,number,value,balance,date)
+                                    values
+                                    ('%s','%s','Set balance','Update by administrator','%s','%s',NOW())",
+                                    addslashes($username),
+                                    addslashes($domain),
+                                    addslashes($value),
+                                    addslashes($balance)
                                     );
-                                    if (!$this->db->query($query_u)) {
-                                        $log=sprintf ("Database error for query %s: %s (%s)",$query_u,$this->db->Error,$this->db->Errno);
-                                        print $log;
-                                        syslog(LOG_NOTICE, $log);
+                                    $this->db->query($query);
+            
+                                    $log_query=sprintf("insert into log
+                                    (date,login,ip,datasource,results,description)
+                                    values
+                                    (NOW(),'%s','%s','Rating tables','%d','Prepaid balance for %s@%s set to %s')",
+                                    addslashes($loginname),
+                                    addslashes($_SERVER['REMOTE_ADDR']),
+                                    addslashes($affected_rows),
+                                    addslashes($username),
+                                    addslashes($domain),
+                                    addslashes($balance)
+                                    );
+            
+                                    $this->db->query($log_query);
+                                }
+            
+                            } else if ($table=='billing_rates') {
+                                if ($this->settings['split_rating_table']) {
+                                    foreach ($rate_tables_affected as $extra_rate_table) {
+                                        $query_u = sprintf("update %s set %s where %s ",
+                                        $extra_rate_table,
+                                        $update_set,
+                                        $where
+                                        );
+                                        if (!$this->db->query($query_u)) {
+                                            $log=sprintf ("Database error for query %s: %s (%s)",$query_u,$this->db->Error,$this->db->Errno);
+                                            print $log;
+                                            syslog(LOG_NOTICE, $log);
+                                        }
                                     }
                                 }
                             }
-                        }
-
-                        if (in_array($table,$this->requireReload)) {
-                            if (!$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'")){
-                                printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+    
+                            if (in_array($table,$this->requireReload)) {
+                                if (!$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'")){
+                                    printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+                                }
                             }
+    
                         }
-
+                    } else {
+                        printf ("<font color=red>Database error for query '%s': %s (%s)</font>",$query,$this->db->Error,$this->db->Errno);
                     }
                 } else {
-                    printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+                    print "<p>Correct the values and try again.";
                 }
-        
             } elseif ($subaction == "Update selection") {
                 $k=0;
                 $kkk=0;
@@ -3557,12 +3620,7 @@ class RatingTables {
         
             } elseif ($subaction == "Insert") {
                 //print "<h3>Insert</h3>";
-                if (count($this->insertDomainOption) && !in_array($domain,$this->insertDomainOption)) {
-                    print "<font color=red>
-                    Error: Invalid domain $domain
-                    </font>
-                    ";
-                } else {
+                if ($this->checkValues($table,$_REQUEST)) {
                     $query="insert into $table ( ";
             
                     $k=1;
@@ -3579,8 +3637,12 @@ class RatingTables {
                             $kkk++;
                         }
                         $k++;
-                        
                     }
+
+                    if ($table=="prepaid") {
+                    	$query .= $comma.'domain';
+                    }
+
                     $query .= ") values ( ";
                     $k=1;
                     $kkk=0;
@@ -3600,13 +3662,17 @@ class RatingTables {
                         $k++;
                         
                     }
+
+                    if ($table=="prepaid") {
+                    	$query .= $comma."SUBSTRING_INDEX(account, '@',-1)";
+                    }
+
                     $query .= ") ";
             
                     $k=1;
                     while ($k < $cc ) {
                         $Fname=$metadata[$k]['name'];
                         $value=$_REQUEST[$Fname];
-                        #print "var $Fname = ${$Fname} $this->tables[$table]['keys']<br>";
                         if (in_array($Fname,$this->tables[$table]['keys']) ) {
                             if ($value == "") {
                                 $Fname_print_insert=substr($Fname,4);
@@ -3615,9 +3681,10 @@ class RatingTables {
                             }                
                         }
                         $k++;
-                        
                     }
+
                     if (!$empty_insert) {
+                        //print $query;
                         if ($this->db->query($query)) {
                         	$affected_rows=$this->db->affected_rows();
                         	if ($affected_rows) {
@@ -3632,7 +3699,7 @@ class RatingTables {
                             }
         
                         } else {
-                            printf ("<font color=red>Database error: %s</font>",$this->db->Error);
+                            printf ("<font color=red>Database error for query %s: %s (%s)</font>",$query,$this->db->Error,$this->db->Errno);
                         }
                     } else {
                         print "<font color=red>
@@ -3640,6 +3707,8 @@ class RatingTables {
                         </font>
                         ";
                     }
+                } else {
+                    print "<p>Correct the values and try again.";
                 }
             } elseif ($subaction == "Delete") {
                 if ($confirmDelete) {
@@ -4551,6 +4620,90 @@ class RatingTables {
             </html>
             ";
         }
+    }
+
+    function checkValues($table,$values=array()) {
+        if (!$table) return false;
+
+        $metadata  = $this->db->metadata($table);
+
+        if (!is_array($metadata)) return false;
+
+        if (in_array($table,$this->checkDomainForTables)) {
+            if (count($this->insertDomainOption) && !in_array($_REQUEST['domain'],$this->insertDomainOption)) {
+                printf ("<p><font color=red>Error: Invalid domain %s</font>",$domain);
+                return false;
+            }
+        }
+
+        $k=1;
+        while ($k < count($metadata)) {
+            $db_name   = $metadata[$k]['name'];
+        	$k++;
+
+            $web_name  = $this->tables[$table]['fields'][$db_name]['name'];
+            $value     = $values[$db_name];
+			$checkType = $this->tables[$table]['fields'][$db_name]['checkType'];
+            $mustExist = $this->tables[$table]['fields'][$db_name]['mustExist'];
+
+            if ($web_name) {
+            	$name_print=$web_name;
+            } else {
+            	$name_print=$db_name;
+            }
+
+            if ($mustExist) {
+                if (!strlen($value)) {
+                	printf ("Error: field '%s' must be filled in\n",$name_print);
+                	return false;
+                }
+            }
+
+            if ($checkType) {
+                if (!strlen($value)) {
+                	if (!$mustExist) continue;
+                }
+
+                if ($checkType == 'sip_account') {
+                    if (!checkEmail($value)) {
+                        printf ("Error: value '%s' for field '%s' must be of format 'user@domain'\n",$value,$name_print);
+                        return false;
+                    }
+                }
+
+                if ($checkType == 'domain') {
+                	if (stristr($value,"-.") || !preg_match("/^([a-zA-Z0-9][a-zA-Z0-9-]*\.)+[a-zA-Z]{2,}$/i",$value)) {
+                        printf ("Error: value '%s' for field '%s' must be of format 'example.com'\n",$value,$name_print);
+        				return false;
+    				}
+                }
+
+                if ($checkType == 'ip') {
+                	if (!preg_match("/^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/i",$value,$m)) {
+                        printf ("Error: value '%s' for field '%s' must be of format 'X.X.X.X'\n",$value,$name_print);
+        				return false;
+    				} else {
+                        $i=1;
+                        while ($i<=4) {
+                            if ($m[$i] < 1 || $m[$i] > 255) {
+                        		printf ("Error: value '%s' for field '%s' must be of a valid IP address\n",$value,$name_print);
+        						return false;
+                            }
+                            $i++;
+                        }
+                    }
+                }
+
+                if ($checkType == 'numeric') {
+                    if (!is_numeric($value)) {
+                        printf ("Error: value '%s' for field '%s' must be of type '%s'\n",$value,$name_print,$checkType);
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 }
 

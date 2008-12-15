@@ -3089,11 +3089,11 @@ class SIP_trace {
                                    'toport'     => $toport,
                                    'method'     => $_trace->method,
                                    'transport'  => $transport,
-                                   'date'       => $_trace->date,
+                                   'date'       => $_trace->time_stamp,
                                    'status'     => $_trace->status,
                                    'timestamp'  => $timestamp,
-                                   'msg'        => $_trace->msg,
-                                   'md5'        => md5($_trace->msg)
+                                   'msg'        => $_trace->message,
+                                   'md5'        => md5($_trace->message)
                                    );
             }
     
@@ -3187,12 +3187,6 @@ class SIP_trace {
                                    );
             }
         }
-
-        /*
-        print "<pre>";
-        print_r($this->trace_array);
-        print "</pre>";
-        */
 
     }
 
