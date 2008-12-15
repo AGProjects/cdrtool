@@ -14,9 +14,8 @@ tar zxvf cdrtool*.tgz
 You must create /etc/cdrtool config directory unless you have installed the
 debian package.
 
-For people running Debian testing or unstable is an official public
-repository provided by AG Projects. To use it, add these lines in
-/etc/apt/sources.list
+For people running Debian testing or unstable is a public repository
+provided by AG Projects. To use it, add these lines to /etc/apt/sources.list
 
 # AG Projects software
 deb	http://ag-projects.com/debian unstable main
@@ -127,35 +126,27 @@ Create a configuration file
 cp /var/www/CDRTool/setup/global.inc.simple.sample /etc/cdrtool/global.inc 
 
 Edit global.inc and setup your variables to match your system.
-
-For each different datasource you must instantiate a new class
-extending one of the existing classes (opensips, asterisk or cisco).
-
 global.inc.complex.sample contains a more elaborate example for setting up
-datasources
+multiple datasources.
 
 
 Enable rating engine
 --------------------
 
-The rating engine is used for prepaid applications and as price calculator
-for postpaid traffic. It provides access to the rating tables and stays in
-memory (running as a daemon).
+The rating engine is used by the prepaid application and as price calculator
+for postpaid traffic.
 
-See the information in the head of the scripts/ratingEngine.php daemon for
-how to enable prepaid or other rating functionality. For prepaid, an
-external call controll application is required, CDRTool itself provides only
-the rating and update balance functions.
+For prepaid, an external call controll application is required, CDRTool
+itself provides only the maxsession time and debit balance functions. Call
+Control can be used to terminate the session based on these functions. For
+setting up Call Control see PREPAID.txt.
 
-For setting up the Call Control for prepaid application see PREPAID.txt.
+Set in global.inc the IP and port where the rating engine listens to:
 
-Set the IP and port where the rating engine listens to and the OpenSIPs
-datasource in global.inc:
-
-$RatingEngine=array("socketIP"   =>  "IP.address.of.the.private.interface.of.cdrtool.example.com",
-                     "socketPort" => "9024",
-                     "cdr_source" => "opensips_radius",
-                     "allow"      => array('10.0.0')
+$RatingEngine=array("socketIP"   =>  "IP.address.of.cdrtool.example.com",
+                    "socketPort" => "9024",
+                    "cdr_source" => "opensips_radius",
+                    "allow"      => array('10.0.0')
                    );
 
 For non Debian systems you must create /etc/default/cdrtool as follows:
@@ -180,20 +171,33 @@ CRON setup
 ----------
 
 Some operations must be scheduled to run periodically by cron. Such
-operations are the scripts that block fraudulous accounts in OpenSIPs,
-normalize the call detail records, purge the old SIP traces.
-
-The sample cron file is in /var/www/CDRTool/setup/crontabs/
-
-This is done automatically if you install the debian package.
+operations are the scripts that block fraudulous accounts in OpenSIPS,
+normalize the call detail records, purge the old SIP traces. This is done
+automatically if you install the debian package. For other Linux systems
+modifyt and install the cron file from /var/www/CDRTool/setup/crontabs/
 
 
-RADIUS setup
-------------
+Freeradius setup
+----------------
 
-CDRTool works with FreeRadius server from http://www.freeradius.org
+CDRTool works with Freeradius server from http://www.freeradius.org
+
+OpenSIPS generates START and STOP radius messages when a session is
+established by INVITE request, 200 OK response combination and respectively
+terminated by a BYE request, these packets are handled by the Freeradius
+server, which writes them into the MySQL database. For failed SIP sessions a
+radius packte type FAILED is generated. A failed SIP session is a session
+that has been rejected by the Proxy server or by the destination.
+Unfortunately Freeradius server is not able to cope with FAILED packets. The
+server must be patched and recompiled if you wish to support accounting for
+failed SIP sessions. A patch and instrcutions for how to apply it is found
+is in setup/freeradius/. Alternatively you can install the freeradius-xs
+debian package provides in the AG Projects debian repository.
+
+Install the server:
 
 apt-get install freeradius freeradius-mysql 
+
 Create the database for radius tables on MySQL server
 
 mysqladmin -u root create radius
@@ -210,11 +214,11 @@ Patch radacct table for storage of CISCO VSA and rating. Apply a patch to
 the default radacct table. This will add fields necessary to store Vendor
 Specific Atributes from Cisco or OpenSIPs.
 
-It is not possible to mix call details records from CISCO and OpenSIPs
+It is not possible to mix call details records from CISCO and OpenSIPS
 in the same radius table. You need to create multiple radius server
 profiles and save the CDRs into dedicated tables for each datasource.
 
-Modify the default radacct table for OpenSIPs by running:
+Modify the default radacct table for OpenSIPS by running:
 
 /var/www/CDRTool/setup/radius/OpenSIPs/radacct-patch.sh
 
@@ -288,7 +292,7 @@ OpenSIPS setup
 -------------- 
 
 Configure OpenSIPS for MySQL storage of subscribers and Radius accounting.
-For SIP tracing you need to configure the OpenSIPs to enable the siptrace
+For SIP tracing you need to configure the OpenSIPS to enable the siptrace
 module. To enable quota you must add an extra column in the subscriber
 table:
 
@@ -348,15 +352,16 @@ route {
        ...
 }
 
-Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.opensips to /etc/opensips/radius/dictionary
+Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.opensips to
+/etc/opensips/radius/dictionary
 
 
 MediaProxy setup
 ----------------
 
-MediaProy can log into CDRTool the IP bandwidth utilization, the codecs and
-the User Agents. MediaProxy logs this information into the database used by
-the Freeradius server in radacct table. MediaProxy also corrects the session
+MediaProy can log the IP bandwidth utilization, the codecs and the User
+Agents. MediaProxy logs this information into the database used by the
+Freeradius server in radacct table. MediaProxy also corrects the session
 duration of CDRs for which no BYE messages have been received. See
 MediaProxy documentation for how to enable Radius and database accounting.
 
@@ -379,7 +384,7 @@ The detailed information about the media streams is displayed in the SIP
 trace web page, follow the link about media trace.
 
 It is possible to retrieve also real-time information about the ongoing
-sessions and streams, this can be used to plot usage statitistics from
+sessions and streams, this can be used to plot usage statistics from
 external applications. The Usage and Sessions web pages display this
 information. The information is obtained from any mediaproxy dispatcher,
 which has connections to all configured relays. You must create or copy the
