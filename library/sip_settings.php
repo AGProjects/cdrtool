@@ -3886,7 +3886,8 @@ class SipSettings {
                 $uri         = $this->calls_placed[$call]['to'];
                 $price       = $this->calls_placed[$call]['price'];
                 $status      = $this->calls_placed[$call]['status'];
-                $duration      = normalizeTime($this->calls_placed[$call]['duration']);
+                $rateinfo    = $this->calls_placed[$call]['rateInfo'];
+                $duration    = normalizeTime($this->calls_placed[$call]['duration']);
                 $dialURI     = $this->PhoneDialURL($uri) ;
                 $htmlDate    = $this->colorizeDate($this->calls_placed[$call]['date']);
                 $htmlURI     = $this->htmlURI($uri);
@@ -3949,15 +3950,13 @@ class SipSettings {
             return false;
         }
 
-        //dprint_r($result);
-
         // received  calls
         foreach ($result->received as $callStructure) {
             $this->calls_received[]=array(
-                                    "from"    =>quoted_printable_decode($callStructure->fromURI),
-                                    "duration"=>$callStructure->duration,
+                                    "from"     => quoted_printable_decode($callStructure->fromURI),
+                                    "duration" => $callStructure->duration,
                                     "status"   => $callStructure->status,
-                                    "date"    =>getLocalTime($this->timezone,$callStructure->startTime)
+                                    "date"     => getLocalTime($this->timezone,$callStructure->startTime)
                                      );         
         }
 
@@ -3970,6 +3969,7 @@ class SipSettings {
                                     "to"       => quoted_printable_decode($callStructure->toURI),
                                     "duration" => $callStructure->duration,
                                     "price"    => $callStructure->price,
+                                    "rate"     => $callStructure->rate,
                                     "status"   => $callStructure->status,
                                     "date"     => getLocalTime($this->timezone,$callStructure->startTime)
                                      );         
