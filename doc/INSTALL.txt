@@ -14,9 +14,9 @@ tar zxvf cdrtool*.tgz
 You must create /etc/cdrtool config directory unless you have installed the
 debian package.
 
-For people running Debian testing or unstable on an i386 architecture there
-is an official public repository provided by AG Projects. To use it, add
-these lines in /etc/apt/sources.list
+For people running Debian testing or unstable is an official public
+repository provided by AG Projects. To use it, add these lines in
+/etc/apt/sources.list
 
 # AG Projects software
 deb	http://ag-projects.com/debian unstable main
@@ -144,8 +144,10 @@ memory (running as a daemon).
 
 See the information in the head of the scripts/ratingEngine.php daemon for
 how to enable prepaid or other rating functionality. For prepaid, an
-external B2BUA is required, CDRTool provides only the rating and update
-balance functions.
+external call controll application is required, CDRTool itself provides only
+the rating and update balance functions.
+
+For setting up the Call Control for prepaid application see PREPAID.txt.
 
 Set the IP and port where the rating engine listens to and the OpenSIPs
 datasource in global.inc:
@@ -181,7 +183,7 @@ Some operations must be scheduled to run periodically by cron. Such
 operations are the scripts that block fraudulous accounts in OpenSIPs,
 normalize the call detail records, purge the old SIP traces.
 
-The sample cron file is in /var/www/CDRTool/setup/crontabs/ 
+The sample cron file is in /var/www/CDRTool/setup/crontabs/
 
 This is done automatically if you install the debian package.
 
@@ -283,6 +285,7 @@ Entries required in opensips.cfg:
 
 loadmodule "acc.so"
 
+# global acc parameters
 modparam("acc", "failed_transaction_flag", 1)
 modparam("acc", "report_cancels",     0)
 modparam("acc", "report_ack",         0)
@@ -298,18 +301,18 @@ modparam("acc", "radius_missed_flag", 1)
 modparam("acc", "radius_extra",       "User-Name=$Au; \
                                        Calling-Station-Id=$from; \
                                        Called-Station-Id=$to; \
-                                       Sip-Translated-Request-URI=$ruri; \
+                                       Sip-Translated-Request-URI=$ru; \
                                        Sip-RPid=$avp(s:rpid); \
-                                       Source-IP=$si; \
-                                       Source-Port=$sp; \
+                                       Source-IP=$avp(s:source_ip); \
+                                       Source-Port=$avp(s:source_port); \
+                                       SIP-Proxy-IP=$avp(s:sip_proxy_ip); \
                                        Canonical-URI=$avp(s:can_uri); \
                                        Billing-Party=$avp(billing_party); \
-                                       Divert-Reason=$avp(s:divert_reason); \
-                                       X-RTP-Stat=$hdr(X-RTP-Stat); \
-                                       User-Agent=$hdr(user-agent); \ 
+                                       Divert-Reason=$avp(s:divert_reason);
+                                       \
+                                       User-Agent=$hdr(user-agent); \
                                        Contact=$hdr(contact); \
                                        Event=$hdr(event); \
-                                       SIP-Proxy-IP=$avp(s:sip_proxy_ip); \
                                        ENUM-TLD=$avp(s:enum_tld)")
 
 Further, you must enable accounting in various parts of the routing script
@@ -325,10 +328,7 @@ route {
        ...
 }
 
-Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.ser to /etc/opensips/radius/
-and uncomment the line:
-
-$INCLUDE               /etc/radiusclient-ng/dictionary
+Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.opensips to /etc/opensips/radius/dictionary
 
 Note
 ----
