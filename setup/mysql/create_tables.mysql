@@ -223,7 +223,7 @@ CREATE TABLE `billing_rates` (
   `connectCost` varchar(25) NOT NULL default '',
   `durationRate` varchar(25) NOT NULL default '',
   `connectCostIn` varchar(25) NOT NULL default '',
-  `durationRateIn` varchar(25) NOT NULL default ''
+  `durationRateIn` varchar(25) NOT NULL default '',
   PRIMARY KEY  (`id`),
   UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`,`application`),
   KEY `name_idx` (`name`),
