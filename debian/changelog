@@ -2,8 +2,11 @@ cdrtool (6.7.0) unstable; urgency=low
 
   * Migrated from OpenSER to OpenSIPS, this version is incompatible with
     OpenSER, do not upgrade to this version if you still use OpenSER
+  * Added support for Call Control 2.0 prepaid application, now open source
   * Normalize the duration of prepaid CDRs to match the value debited by the
     call controller
+  * Updated OpenSIPS radius dictionary
+  * Updated Radius server setup procedure
   * Added checks for values of rating tables changed from the web page
   * Improved retrieval and display of SIP and Media traces from OpenSIPS
   * Added new fields in billing_rates connectCostIn and durationRateIn to
@@ -25,7 +28,7 @@ cdrtool (6.7.0) unstable; urgency=low
   * To upgrade you must apply the changes from docs/Upgrade.txt and
     setup/mysql/alter_tables.mysql
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 15 Dec 2008 13:33:26 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 15 Dec 2008 15:57:42 +0100
 
 cdrtool (6.6.10) unstable; urgency=low
 

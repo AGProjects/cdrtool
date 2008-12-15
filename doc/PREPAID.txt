@@ -1,16 +1,20 @@
 
 Prepaid functionality is achieved by:
 
-1. An external session control module, not provided by CDRTool, that
-maintains the session status and terminates the sessions by sending BYE
-messages to both SIP end-points. The session control module communicates
-with both the SIP Proxy and CDRTool using the API described below.
 
-2. CDRTool rating engine - provides session management, calculates maximum
+1. OpenSIPS callcontrol module, available from version 1.5 - provides the
+interface between OpenSIPS dialog module to the external Call Control
+application.
+
+2. Call Control application available from http://download.ag-projects.com
+Call control maintains the session status and terminates the sessions by
+sending BYE messages to both SIP end-points. The session control module
+communicates with both the SIP Proxy and CDRTool using the API described
+below.
+
+3. CDRTool rating engine - provides session management, calculates maximum
 session time based on user balance and destination using the same algorithm
 as the postpaid engine and debits the subscriber balance.
-
-See doc/PrepaidEngine.pdf for a detailed session flow.
 
 
 Prepaid API
@@ -147,31 +151,18 @@ To see the sessions in progress go to Rating -> Prepaid.
 Fill in the Sesssions field: >0 and click Search.
 
 
-Third party tools
------------------
-
-FreeRADIUS-CDRTool by Dan-Cristian Bogos 
-
-FreeRADIUS module providing connectivity to CDRTool prepaid engine. Provides
-prepaid authentication for sessions proxied by OpenSER and returns to OpenSER
-MaxCallDuration and user Credit. Can be easily extended to support other SIP
-or H323 devices.
-
-http://sourceforge.net/projects/frad-cdrtool
-
-
 Notes
 -----
 
 The balance is debited correctly regardless of the moment of CDR
-normalization. Renormalization of sessions do not recalculate balance.
+normalization. Renormalization of sessions does not recalculate balance.
 
 
 Simultaneous prepaid sessions
 -----------------------------
 
-Since version 6.6.0 is possible to have multiple sessions using the same
-prepaid account without the risk of reaching a negative balance.
+It is possible to have multiple sessions using the same prepaid account
+without the risk of reaching a negative balance.
 
 The modus operandi is based on a simple model: all prepaid sessions
 belonging to the same account must end at the same moment regadless of the

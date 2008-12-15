@@ -730,7 +730,7 @@ class pageLayout {
         }
         
         if ($perm->have_perm("statistics")) {
-            print " | <a href=network_status.php>Network</a>";
+            print " | <a href=network_status.phtml>Network</a>";
             print " | <a href=media_sessions.phtml>Sessions</a>";
             print " | <a href=status/usage/index.phtml target=usage>Usage</a>";
         }

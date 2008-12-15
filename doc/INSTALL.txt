@@ -252,7 +252,7 @@ Edit the database connection details in sql.conf and restart Freeradius
 server.
 
 Add RADIUS clients in clients.conf. Each device sending RADIUS accounting
-requests must be added to /etc/radddb/clients.conf. Examples:
+requests must be added to /etc/freeradius/clients.conf. Examples:
 
 client 10.0.0.0/8 {
         secret=DssUET01
@@ -268,7 +268,20 @@ or added if missing.
 	sql 
 	}
 
-Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.ser to /etc/freeradius
+Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.opensips to /etc/freeradius
+Copy /var/www/CDRTool/setup/radius/MediaProxy/dictionary.mediaproxy to /etc/freeradius
+
+Edit /etc/freeradius/dictionary as follows:
+
+# standard radius dictionary
+$INCLUDE	/usr/share/freeradius/dictionary
+
+# OpenSER dictionary
+$INCLUDE 	/etc/freeradius/dictionary.opensips
+
+# MediaProxy dictionary
+$INCLUDE 	/etc/freeradius/dictionary.mediaproxy
+
 
 
 OpenSIPS setup
@@ -283,6 +296,7 @@ alter table opensips.subscriber add column quota int not null;
 
 Entries required in opensips.cfg:
 
+loadmodule "siptrace.so"
 loadmodule "acc.so"
 
 # global acc parameters
@@ -315,11 +329,17 @@ modparam("acc", "radius_extra",       "User-Name=$Au; \
                                        Event=$hdr(event); \
                                        ENUM-TLD=$avp(s:enum_tld)")
 
-Further, you must enable accounting in various parts of the routing script
-by setting the accounting flag and saving the AVP containing the proxy IP
-address. It is important to save $avp(s:can_uri) after the Proxy has performed
-all possible lookups except DNS. The Canonical-URI will be used for rating
-the session. Example:
+modparam("siptrace", "db_url", "mysql://opensips:password@localhost/opensips")
+modparam("siptrace", "traced_user_avp", "$avp(s:traced_user)")
+modparam("siptrace", "trace_on",        1)
+modparam("siptrace", "trace_flag",      2)
+
+
+Further, you must enable siptrace and accounting in various parts of the
+routing script by setting the accounting flag and saving the AVP containing
+the proxy IP address. It is important to save $avp(s:can_uri) after the
+Proxy has performed all possible lookups except DNS. The Canonical-URI will
+be used for rating the session. Example:
 
 route {
        ...
@@ -329,13 +349,6 @@ route {
 }
 
 Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.opensips to /etc/opensips/radius/dictionary
-
-Note
-----
-
-Many of the standard Radius attributes previously logged by default in the
-accounting packets must be added manually to "radius_extra" parameter of the
-acc module when using OpenSIPs >= 1.4.
 
 
 MediaProxy setup
