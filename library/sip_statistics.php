@@ -331,7 +331,7 @@ class SipThorNetworkImage {
 class SIPstatistics {
     // build graphical statistics with sip registrar and media relay usage
 
-    var $domains        = array();
+    var $domains        = array('total'=>'total');
 
     function SIPstatistics () {
         global $CDRTool;
