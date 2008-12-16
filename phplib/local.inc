@@ -559,7 +559,7 @@ class pageLayout {
     	";
 	$this->hasAGProjectslogo=1;
 	$logo=$CDRTool['tld']."/images/CDRTool.gif";
-        print "<a href=http://ag-projects.com target=agprojects><img src=$logo border=0></a>";
+        print "<a href=http://cdrtool.ag-projects.com target=agprojects><img src=$logo border=0></a>";
         print "
         <form action=\"$url\" method=post>
         <p>
@@ -693,7 +693,7 @@ class pageLayout {
         } else {
             $this->hasAGProjectslogo=1;
             print "<td>";
-            printf ("<a href=http://ag-projects.com target=agprojects><img src='%s/images/CDRTool.gif' border=0></a>",$CDRTool['tld']);
+            printf ("<a href=http://cdrtool.ag-projects.com target=agprojects><img src='%s/images/CDRTool.gif' border=0></a>",$CDRTool['tld']);
             print "</td>";
         }
 
@@ -841,7 +841,7 @@ class pageLayout {
         <table border=0 align=center>
         <tr>
         <td>
-        <a href=http://ag-projects.com target=agprojects><img src=images/CDRTool.gif border=0></a>
+        <a href=http://cdrtool.ag-projects.com target=agprojects><img src=images/CDRTool.gif border=0></a>
         <p>
         <h2>Terms and conditions</h2>
         <p>
@@ -873,7 +873,7 @@ class pageLayout {
             <table width=100% border=0 align=center>
             <tr>
             <td align=right>
-            <a href=http://ag-projects.com target=agprojects><img src=images/PoweredbyAGProjects.gif border=0>
+            <a href=http://cdrtool.ag-projects.com target=agprojects><img src=images/PoweredbyAGProjects.gif border=0>
             </td>
             </tr>
             </table>
