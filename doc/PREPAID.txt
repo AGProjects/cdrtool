@@ -1,20 +1,23 @@
 
 Prepaid functionality is achieved by:
 
+1. OpenSIPS callcontrol module, available from version 1.5.
 
-1. OpenSIPS callcontrol module, available from version 1.5 - provides the
-interface between OpenSIPS dialog module to the external Call Control
-application.
+It provides the interface between OpenSIPS dialog module to the external
+Call Control application.
 
-2. Call Control application available from http://download.ag-projects.com
+2. Call Control application available at http://callcontrol.ag-projects.com
+
 Call control maintains the session status and terminates the sessions by
 sending BYE messages to both SIP end-points. The session control module
 communicates with both the SIP Proxy and CDRTool using the API described
 below.
 
-3. CDRTool rating engine - provides session management, calculates maximum
-session time based on user balance and destination using the same algorithm
-as the postpaid engine and debits the subscriber balance.
+3. CDRTool rating engine
+
+Provides session management, calculates maximum session time based on user
+balance and destination using the same algorithm as the postpaid engine and
+debits the subscriber balance.
 
 
 Prepaid API
