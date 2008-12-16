@@ -190,8 +190,8 @@ radius packet type FAILED is generated. A failed SIP session is a session
 that has been rejected by the Proxy server or by the destination.
 Unfortunately Freeradius server is not able to cope with FAILED packets. The
 server must be patched and recompiled if you wish to support accounting for
-failed SIP sessions. A patch and instrcutions for how to apply it is found
-is in setup/freeradius/. Alternatively you can install the freeradius-xs
+failed SIP sessions. A patch and instructions for how to apply it is found
+is in setup/radius/FreeRadius/. Alternatively you can install the freeradius-xs
 debian package provided in the AG Projects debian repository.
 
 Install the server:
