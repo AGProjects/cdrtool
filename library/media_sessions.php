@@ -316,6 +316,7 @@ class MediaSessions {
         foreach ($this->summary as $relay) {
 
             unset($media_types);
+            unset($streams);
 
 			$media_types=count($relay['stream_count']);
 
