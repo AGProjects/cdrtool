@@ -53,6 +53,7 @@ if (is_array($allowedDomains))  {
 }
 
 foreach ($domains as $key) {
+    if ($key == 'total') continue;
     printf ("
     <TR>
     <TD><DIV align='center'><B> SIP accounts on %s </B></DIV>
