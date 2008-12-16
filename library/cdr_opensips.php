@@ -3214,7 +3214,7 @@ class SIP_trace {
         }
 
         print "
-        <h1>CDRTool trace</h1>
+        <h1>CDRTool SIP trace</h1>
         <h2>SIP session $callid $authorize</h2>
 
         <table border=0 width=100%>
@@ -3894,7 +3894,7 @@ class Media_trace {
         }
 
         print "
-        <h1>CDRTool Media information</h1>
+        <h1>CDRTool media trace</h1>
         <h2>Media session $callid</h2>
         ";
 
