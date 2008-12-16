@@ -1,0 +1,10 @@
+
+CREATE TABLE `media_sessions` (
+  `id` int(11) NOT NULL auto_increment,
+  `call_id` text NOT NULL,
+  `from_tag` text NOT NULL,
+  `to_tag` text,
+  `info` blob NOT NULL,
+  `start_time` datetime NOT NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM; 
