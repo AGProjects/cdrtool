@@ -19,6 +19,8 @@ Provides session management, calculates maximum session time based on user
 balance and destination using the same algorithm as the postpaid engine and
 debits the subscriber balance.
 
+Prepaid accounts can be managed in the Prepaid section of Rating web page.
+
 
 Prepaid API
 -----------
