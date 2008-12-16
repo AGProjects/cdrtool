@@ -1,3 +1,2 @@
-- Fix mrtg statistics to work with mediaproxy 2.0
-- Sync changes made from Rating web page to partial rating tables
+- Apply the same checks for web or csv provisioning of rating tables
 - Mail broken rates moved to Rate class
