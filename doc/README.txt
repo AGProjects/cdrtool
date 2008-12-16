@@ -66,16 +66,21 @@ This feature allows fast communication and troubleshooting when multiple
 departments work together to find a resolution for a problem and communicate
 it with the customer.
 
-- Real-time rating engine
-- Tracing from CDR level to SIP protocol stack level
-- Multiple data-sources with consistent search and export capabilities  
-- Trace calls at CDR level down to protocol level between data-sources
-- Login accounts can restrict access to CDRs per user, domain or gateway
-- End-user web access to own Call Detail Records
-- Customizable end-user and administrative web frond-ends
-- Link searches to trouble-tickets
-- Combined rating based on traffic, duration, application type and destination
- 
+ * Real-time rating engine for postpaid and prepaid accounting
+ * Web and CSV file management for rating tables
+ * CDR search with query criteria saved for later use
+ * Search results can be grouped by any field available in the CDR 
+ * Links from CDR level down to SIP trace and Media trace level
+ * Multiple data-sources with consistent search and export capabilities  
+ * Login accounts can restrict access to CDRs per subscriber, domain or gateway
+ * Rating based on day of week, time of day, duration, destination and ENUM tree
+ * Display ongoing media sessions from MediaProxy
+ * Display registered SIP accounts from OpenSIPS
+ * Displays SIP trace from sip_trace OpenSIPS module
+ * Displays Media trace from MediaProxy media_sesions table
+ * Manage prepaid cards and accounts for Call Control
+ * Builds graphical usage statistics for SIP platform usage
+
 
 Data sources
 ------------
