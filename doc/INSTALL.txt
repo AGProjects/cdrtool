@@ -186,13 +186,13 @@ OpenSIPS generates START and STOP radius messages when a session is
 established by INVITE request, 200 OK response combination and respectively
 terminated by a BYE request, these packets are handled by the Freeradius
 server, which writes them into the MySQL database. For failed SIP sessions a
-radius packte type FAILED is generated. A failed SIP session is a session
+radius packet type FAILED is generated. A failed SIP session is a session
 that has been rejected by the Proxy server or by the destination.
 Unfortunately Freeradius server is not able to cope with FAILED packets. The
 server must be patched and recompiled if you wish to support accounting for
 failed SIP sessions. A patch and instrcutions for how to apply it is found
 is in setup/freeradius/. Alternatively you can install the freeradius-xs
-debian package provides in the AG Projects debian repository.
+debian package provided in the AG Projects debian repository.
 
 Install the server:
 
@@ -212,7 +212,7 @@ mysql -u root radius < /usr/share/doc/freeradius/examples/db_mysql.sql
 
 Patch radacct table for storage of CISCO VSA and rating. Apply a patch to
 the default radacct table. This will add fields necessary to store Vendor
-Specific Atributes from Cisco or OpenSIPs.
+Specific Atributes from Cisco or OpenSIPS.
 
 It is not possible to mix call details records from CISCO and OpenSIPS
 in the same radius table. You need to create multiple radius server
@@ -220,7 +220,7 @@ profiles and save the CDRs into dedicated tables for each datasource.
 
 Modify the default radacct table for OpenSIPS by running:
 
-/var/www/CDRTool/setup/radius/OpenSIPs/radacct-patch.sh
+/var/www/CDRTool/setup/radius/OpenSIPS/radacct-patch.sh
 
 and for CISCO by running:
 
@@ -228,12 +228,12 @@ and for CISCO by running:
 
 Configure Freeradius to write data into the radacct table:
 
-cp /var/www/CDRTool/setup/radius/OpenSIPs/sql.conf /etc/freeradius/sql.conf  
+cp /var/www/CDRTool/setup/radius/OpenSIPS/sql.conf /etc/freeradius/sql.conf  
 
 For large volume of CDRs it is usefull automatically rotate the tables in
 which the data is written. 
 
-/var/www/CDRTool/setup/radius/OpenSIPs/radius_accounting.*, contain mysql
+/var/www/CDRTool/setup/radius/OpenSIPS/radius_accounting.*, contain mysql
 procedures that automatically create monthly tables in the format
 radacctYYYYMM. To use mysql procedures, your must use MySQL server version 5
 or greater and Freeradius server mysql module must be compiled to support
@@ -249,7 +249,7 @@ if (!(mysql_sock->sock = mysql_real_connect(&(mysql_sock->conn),
                                             NULL, 
                                             CLIENT_FOUND_ROWS|CLIENT_MULTI_RESULTS ))) {
 
-Also, if you use MediaProxy for accounting in combination with OpenSIPs you
+Also, if you use MediaProxy for accounting in combination with OpenSIPS you
 must use the MediaProxy version that supports the same mysql procedures.
  
 Edit the database connection details in sql.conf and restart Freeradius
@@ -272,7 +272,7 @@ or added if missing.
 	sql 
 	}
 
-Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.opensips to /etc/freeradius
+Copy /var/www/CDRTool/setup/radius/OpenSIPS/dictionary.opensips to /etc/freeradius
 Copy /var/www/CDRTool/setup/radius/MediaProxy/dictionary.mediaproxy to /etc/freeradius
 
 Edit /etc/freeradius/dictionary as follows:
@@ -352,7 +352,7 @@ route {
        ...
 }
 
-Copy /var/www/CDRTool/setup/radius/OpenSIPs/dictionary.opensips to
+Copy /var/www/CDRTool/setup/radius/OpenSIPS/dictionary.opensips to
 /etc/opensips/radius/dictionary
 
 
@@ -447,7 +447,7 @@ Usage statistics
 ----------------
 
 CDRTool can build  usage statistics of the number of online SIP devices from
-OpenSIPs, simultaneous number of media streams and relayed IP traffic by
+OpenSIPS, simultaneous number of media streams and relayed IP traffic by
 MediaProxy. To obatin the statistics defined for OpenSIPS datasource the
 following settings:
 
