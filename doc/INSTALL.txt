@@ -367,18 +367,8 @@ MediaProxy documentation for how to enable Radius and database accounting.
 
 MediaProxy logs detailed information about each individual stream (its type,
 duration, time-out end point ports). The logging is performed in a separate
-mysql table (default mediaproxy.media_sessions). The SQL schema is as
-follows:
-
-CREATE TABLE `media_sessions` (
-  `id` int(11) NOT NULL auto_increment,
-  `call_id` text NOT NULL,
-  `from_tag` text NOT NULL,
-  `to_tag` text,
-  `info` blob NOT NULL,
-  `start_time` datetime NOT NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM; 
+mysql table (default mediaproxy.media_sessions). The MySQL schema is defined
+in setup/radius/MediaProxy/create_table_media_sessions.mysql.
 
 The detailed information about the media streams is displayed in the SIP
 trace web page, follow the link about media trace.
