@@ -375,6 +375,10 @@ the rights to the configured database.
 The detailed information about the media streams is displayed in the SIP
 trace web page, follow the link about media trace.
 
+Enable the accounting in MediaProxy /etc/mediaproxy/config.ini:
+
+accounting = radius,database
+
 It is possible to retrieve also real-time information about the ongoing
 sessions and streams, this can be used to plot usage statistics from
 external applications. The Usage and Sessions web pages display this
@@ -383,7 +387,7 @@ which has connections to all configured relays. You must create or copy both
 a relay certificate and its key in /etc/cdrtool/mediaproxy.pem:
 
 cat /etc/mediaproxy/tls/relay.crt \
-/etc/mediaproxy/tls/relay.key >> /etc/cdrtool/mediaproxy.pem
+/etc/mediaproxy/tls/relay.key >> /etc/cdrtool/mediaproxy.hostname.pem
 
 and set the option:
 
@@ -391,9 +395,7 @@ and set the option:
 
 for each datasource that uses MediaProxy.
 
-Enable the accounting in MediaProxy /etc/mediaproxy/config.ini:
-
-accounting = radius,database
+Replace the hostname with the real IP or hostname of the mediaproxy dispatcher. 
 
 
 Asterisk setup

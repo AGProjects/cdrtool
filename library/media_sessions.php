@@ -7,15 +7,14 @@ class MediaSessions {
     var $summary           = array();
 	var $domain_statistics = array();
     var $timeout           = 3;
-	var $mp_tls_cert_file  = '/etc/cdrtool/mediaproxy.pem';
 
     function MediaSessions ($dispatcher='',$allowedDomains=array(),$filters=array()) {
 
         $this->dispatcher     = $dispatcher;
         $this->filters        = $filters;
         $this->allowedDomains = $allowedDomains;
-
         $this->getUserAgentPictures();
+
     }
 
     function getUserAgentPictures (){
@@ -38,6 +37,8 @@ class MediaSessions {
             $hostname  = $m[1].'://'.$m[2];
             $port      = $m[3];
             $target= $m[1].'://'.$m[2].':'.$m[3];
+
+		    $this->mp_tls_cert_file  = '/etc/cdrtool/mediaproxy.'.$m[2].'.pem';
 
             if ($m[1] == 'tls') {
                 if (!file_exists($this->mp_tls_cert_file)) {
