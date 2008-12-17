@@ -383,8 +383,8 @@ It is possible to retrieve also real-time information about the ongoing
 sessions and streams, this can be used to plot usage statistics from
 external applications. The Usage and Sessions web pages display this
 information. The information is obtained from any mediaproxy dispatcher,
-which has connections to all configured relays. You must create or copy both
-a relay certificate and its key in /etc/cdrtool/mediaproxy.pem:
+which has connections to all configured relays. Create or copy both a media
+relay certificate and its key to /etc/cdrtool/mediaproxy.hostname.pem:
 
 cat /etc/mediaproxy/tls/relay.crt \
 /etc/mediaproxy/tls/relay.key >> /etc/cdrtool/mediaproxy.hostname.pem
@@ -393,7 +393,7 @@ and set the option:
 
 "mediaDispatcher"      => "tls:hostname:25061"
 
-for each datasource that uses MediaProxy.
+for each datasource that uses MediaProxy in global.inc.
 
 Replace the hostname with the real IP or hostname of the mediaproxy dispatcher. 
 

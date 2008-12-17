@@ -14,7 +14,8 @@ $soapEngines=array(
                                          'username'            => 'admin',
                                          'password'            => 'passwd',
                                          'url'                 => 'http://sip.example.com:9200/',
-                                         'version'             => 3,
+                                         'pstn_access'       => true,
+                                         'version'             => 4,
                                          'record_generator'    => 'rg',
                                          'sip_engine'          => 'sip',
                                          'presence_engine'     => 'ssp',
@@ -46,14 +47,14 @@ $soapEngines=array(
                           );
 $recordGenerators =array (
 			  'rg'=>array(
-                                      'sipEngine' => 'sip',
-                                      'enumEngine'=> 'sip'
+                                      'sip_engine' => 'sip',
+                                      'enum_engine'=> 'sip'
                                      )
                          );
 
 $resellerFilters=array('default'  => array('soap_filter'        => 'sip'
                                           ),
-                       '1745'     => array('soap_filter'        => 'sip:customers,enum_ranges,enum_numbers sip2:sip_domains,sip_accounts,sip_aliases,trusted_peers',
+                       '1745'     => array('soap_filter'        => 'sip:customers,enum_ranges,enum_numbers',
                                            'record_generator'  => 'rg',
                                            'voicemail_engine'  => 'vm',
                                            'currency'          => '&euro'
