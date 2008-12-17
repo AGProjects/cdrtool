@@ -86,14 +86,6 @@ class DB_radius2 extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
-class DB_subscribers extends DB_Sql {
-  var $Host     = "sipdb";
-  var $Database = "opensips";
-  var $User     = "opensips";
-  var $Password = "PASSWORD";
-  var $Halt_On_Error ="yes";
-}
-
 class DB_opensips extends DB_Sql {
   var $Host     = "sipdb";
   var $Database = "opensips";
@@ -157,10 +149,6 @@ $DATASOURCES=array(
                     "normalizedField"    => "Normalized",
                     "UserQuotaClass"     => "OpenSIPSQuota",
                     "UserQuotaNotify"    => "1",
-                    "purgeCDRsAfter"     => 120, // how many days to keep the CDRs
-                    "SIPProxies"         => array("10.0.0.1" => "node01",  // friendly names in sip trace table
-                                                  "10.0.0.2" => "node02",
-                                                ),
                     "sipTrace"           => "sip_trace",
                     "mediaTrace"         => "media_trace",
                     "mediaDispatcher"    => "tls://10.0.0.1:25061",    // Where to get the active media sessions from MediaProxy 2.0
