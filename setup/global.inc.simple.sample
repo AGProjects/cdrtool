@@ -34,20 +34,8 @@ $CDRTool['provider']['sampleLoginDomain']     = "example.com";
 # Rating engine settings
 $RatingEngine=array("socketIP"               => "IP.address.of.the.private.interface.of.cdrtool.example.com",
                     "socketPort"             => "9024",
-                    "CDRS_class"             => "opensips_radius",
-                    "prepaid_lock"           => true,
-                    "log_delay"              => 0.05,
-                    "split_rating_table"     => false,
-                    "csv_delimiter"          => ",",
-                    "priceDenominator"       => 10000, // e.g. 1 Eur = 10000 units
-                    "priceDecimalDigits"     => 4,     // how many digits to round the prices to
-                    "minimumDurationCharged" => 0,     // Only calls greater than this duration will be charged
-                    "durationPeriodRated"    => 60,    // the prices from the rating table are calculated per this period
-                    "trafficSizeRated"       => 1024,  // same as above but for data traffic
-                    "reportMissingRates"     => 0,     // send email notifications if rates are missing from the ratingEngine
-                    "minimumDuration"        => 0,     // minimum duration to rate, if call duration is shorter the price is zero
-                    "allow"                  => array ('10.'),  // list with local network clients allowed to connect
-		    "MaxSessionTime"         => 36000  // limit all prepaid calls to maximum 10 hours
+                    "cdr_source"             => "opensips_radius",
+                    "allow"                  => array ('10.')  // list with local network clients allowed to connect
                     );
 
 ###########################################
@@ -132,7 +120,7 @@ class DB_mediaproxy extends DB_Sql {
 
 $replicated_databases=array('cluster1'=>array(
                                               "db1"=>array('ip'      =>'10.0.0.131',
-                                                               'slave_of'=>'db-log2',
+                                                               'slave_of'=>'db2',
                                                                'user'    =>'process',
                                                                'password'=>'password',
                                                                'replication_user'    =>'replication',
@@ -140,7 +128,7 @@ $replicated_databases=array('cluster1'=>array(
                                                                'active_master' => true
                                                                ),
                                               "db2"=>array('ip'      =>'10.0.0.132',
-                                                               'slave_of'=>'db-log1',
+                                                               'slave_of'=>'db1',
                                                                'user'    =>'process',
                                                                'password'=>'password',
                                                                'replication_user'    =>'replication',
@@ -163,16 +151,16 @@ $DATASOURCES=array(
                     "class"              => "CDRS_opensips",
                     "table"              => "radacct".date("Ym"),
                     "db_class"           => array("DB_radius2","DB_radius"),  
+                    "db_subscribers"     => "DB_opensips",
+                    "db_registrar"       => "DB_opensips",
                     "rating"             => "1",
                     "normalizedField"    => "Normalized",
                     "UserQuotaClass"     => "OpenSIPSQuota",
-                    "AccountsDBClass"    => "DB_opensips",
                     "UserQuotaNotify"    => "1",
                     "purgeCDRsAfter"     => 120, // how many days to keep the CDRs
                     "SIPProxies"         => array("10.0.0.1" => "node01",  // friendly names in sip trace table
                                                   "10.0.0.2" => "node02",
                                                 ),
-                    "db_registrar"       => "DB_opensips",
                     "sipTrace"           => "sip_trace",
                     "mediaTrace"         => "media_trace",
                     "mediaDispatcher"    => "tls://10.0.0.1:25061",    // Where to get the active media sessions from MediaProxy 2.0

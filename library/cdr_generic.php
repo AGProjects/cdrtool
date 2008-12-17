@@ -172,12 +172,12 @@ class CDRS {
         	$this->natAccessCode  = $this->DATASOURCES[$this->cdr_source]['natAccessCode'];
         }
 
-        if ($this->DATASOURCES[$this->cdr_source]['AccountsDBClass'] && class_exists($this->DATASOURCES[$this->cdr_source]['AccountsDBClass'])) {
-            $this->AccountsDB       = new $this->DATASOURCES[$this->cdr_source]['AccountsDBClass'];
-            $this->AccountsDBClass  = $this->DATASOURCES[$this->cdr_source]['AccountsDBClass'];
+        if ($this->DATASOURCES[$this->cdr_source]['db_susbcribers'] && class_exists($this->DATASOURCES[$this->cdr_source]['db_susbcribers'])) {
+            $this->AccountsDB       = new $this->DATASOURCES[$this->cdr_source]['db_susbcribers'];
+            $this->db_susbcribers  = $this->DATASOURCES[$this->cdr_source]['db_susbcribers'];
         } else if (class_exists('DB_opensips')) {
             $this->AccountsDB       = new DB_opensips();
-            $this->AccountsDBClass  = 'DB_opensips';
+            $this->db_susbcribers  = 'DB_opensips';
         }
     
         if ($this->DATASOURCES[$this->cdr_source]['BillingIdField']) {

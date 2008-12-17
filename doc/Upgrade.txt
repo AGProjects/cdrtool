@@ -13,6 +13,7 @@ Changes in global.inc configuration file:
 - Replace $CDRToolModules=array("openser") to $CDRToolModules=array("opensips")
 - Replace datasource name ser_radius with opensips_radius        
 - Replace OpenSERQuota to OpenSIPSQuota
+- Replace AccountsDBClass to db_subscribers
 - Replace DB_openser to DB_opensips
 - Replace sipTraceDataSource with sipTrace
 - Replace mediaTraceDataSource with mediaTrace
