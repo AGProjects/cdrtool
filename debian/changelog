@@ -13,6 +13,7 @@ cdrtool (6.7.0) unstable; urgency=low
   * Added checks for values in rating tables changed from the web page
   * Improved retrieval and display of SIP traces from OpenSIPS
   * Improved retrieval and display of Media traces from MediaProxy
+  * Reset the imported records counter before importing each csv file
   * Added new fields in billing_rates connectCostIn and durationRateIn to
     store the purchased price, the rating info now contains two prices for
     each call. The CSV format of rating table has been changed to support
@@ -33,7 +34,7 @@ cdrtool (6.7.0) unstable; urgency=low
   * To upgrade you must apply the changes from doc/Upgrade.txt and
     setup/mysql/alter_tables.mysql
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 16 Dec 2008 13:31:33 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 17 Dec 2008 14:13:54 +0100
 
 cdrtool (6.6.10) unstable; urgency=low
 
