@@ -1401,6 +1401,7 @@ class RatingTables {
 
         $this->scanFilesForImport($dir);
 
+		$results=0;
         foreach ($this->filesToImport as $file) {
             $importFunction="Import".ucfirst($file['type']);
 
