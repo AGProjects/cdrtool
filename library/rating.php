@@ -5526,9 +5526,6 @@ class OpenSIPSQuota {
     }
 }
 
-class SERQuota extends OpenSIPSQuota {
-}
-
 class RatingEngine {
     // set in global.inc $RatingEngine['prepaid_lock'] = 0;
     // to enable concurent calls for prepaid accounts
