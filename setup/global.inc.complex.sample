@@ -103,14 +103,6 @@ class DB_radius extends DB_Sql {
   var $Halt_On_Error ="no";
 }
 
-class DB_subscribers extends DB_Sql {
-  var $Host     = "sipdb";
-  var $Database = "opensips";
-  var $User     = "opensips";
-  var $Password = "PASSWORD";
-  var $Halt_On_Error ="yes";
-}
-
 class DB_opensips extends DB_Sql {
   var $Host     = "sipdb";
   var $Database = "opensips";
@@ -131,23 +123,6 @@ class DB_mediaproxy extends DB_Sql {
   var $Host     = "sipdb";
   var $Database = "mediaproxy";
   var $User     = "mediaproxy";
-  var $Password = "PASSWORD";
-  var $Halt_On_Error ="yes";
-}
-
-// Used by /var/www/CDRTool/scripts/replicationStatus.php
-class DB1 extends DB_Sql {
-  var $Host     = "10.0.0.1";
-  var $Database = "mysql";
-  var $User     = "root";
-  var $Password = "PASSWORD";
-  var $Halt_On_Error ="yes";
-}
-
-class DB2 extends DB_Sql {
-  var $Host     = "10.0.0.2";
-  var $Database = "mysql";
-  var $User     = "root";
   var $Password = "PASSWORD";
   var $Halt_On_Error ="yes";
 }
