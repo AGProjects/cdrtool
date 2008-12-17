@@ -9767,7 +9767,7 @@ class Gateways extends Records {
     function updateRecord () {
         //print "<p>Updating gateway ...";
 
-        if (!$_REQUEST['name_filter'] || !$_REQUEST['reseller_filter']) return;
+        if (!$_REQUEST['name_filter'] || !strlen($_REQUEST['reseller_filter'])) return;
 
         if (!$gateway = $this->getRecord($name_filter)) {
             return false;
