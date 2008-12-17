@@ -368,7 +368,9 @@ MediaProxy documentation for how to enable Radius and database accounting.
 MediaProxy logs detailed information about each individual stream (its type,
 duration, time-out end point ports). The logging is performed in a separate
 mysql table (default mediaproxy.media_sessions). The MySQL schema is defined
-in setup/radius/MediaProxy/create_table_media_sessions.mysql.
+in setup/radius/MediaProxy/create_table_media_sessions.mysql. You do not
+need to create that table, the mediaproxy does it automatically if it has
+the rights to the configured database.
 
 The detailed information about the media streams is displayed in the SIP
 trace web page, follow the link about media trace.
@@ -377,13 +379,21 @@ It is possible to retrieve also real-time information about the ongoing
 sessions and streams, this can be used to plot usage statistics from
 external applications. The Usage and Sessions web pages display this
 information. The information is obtained from any mediaproxy dispatcher,
-which has connections to all configured relays. You must create or copy the
-TLS certificate of a relay in /etc/cdrtool/mediaproxy.pem and set the
-option:
+which has connections to all configured relays. You must create or copy both
+a relay certificate and its key in /etc/cdrtool/mediaproxy.pem:
+
+cat /etc/mediaproxy/tls/relay.crt \
+/etc/mediaproxy/tls/relay.key >> /etc/cdrtool/mediaproxy.pem
+
+and set the option:
 
 "mediaDispatcher"      => "tls:hostname:25061"
 
 for each datasource that uses MediaProxy.
+
+Enable the accounting in MediaProxy /etc/mediaproxy/config.ini:
+
+accounting = radius,database
 
 
 Asterisk setup
