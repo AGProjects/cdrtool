@@ -12,11 +12,13 @@ require('rating_server.php');
 
 if (!strlen($RatingEngine['socketIP']) || !$RatingEngine['socketPort'] || !$RatingEngine['cdr_source']) {
     $log=sprintf("Please define \$RatingEngine['socketIP'], \$RatingEngine['socketPort'] and \$RatingEngine['cdr_source'] in /etc/cdrtool/global.inc\n");
+    syslog(LOG_NOTICE,$log);
     die ($log);
 }
 
 if (!is_array($DATASOURCES[$RatingEngine['cdr_source']])) {
     $log=sprintf("Datasource '%s' does not exist in /etc/cdrtool/global.inc\n",$RatingEngine['cdr_source']);
+    syslog(LOG_NOTICE,$log);
     die ($log);
 }
 
