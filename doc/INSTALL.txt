@@ -58,59 +58,20 @@ The script performs the following:
 PHP setup and Apache setup
 --------------------------
 
-Install PHP and dependencies. If you have chosen to install the debian
-package, the dependencies will be resolved during installation. 
+Install PHP and its dependencies. If you have chosen to install the debian
+package, the dependencies will be resolved during installation.
 
-Example for Debian systems and php5:
+Configure php both the command line and apache module to support mysql.
 
-Enable php-mysql module in /etc/php5/*/php.ini:
+Configure Apache2 server to support php scripting.
 
-extension=mysql.so
-
-Enable php in apache web server. Configuration example for apache on
-Debian systems:
-
-/etc/apache/httpd.conf 
-
-DirectoryIndex index.phtml index.php index.html index.htm index.shtml index.cgi
-AddType application/x-httpd-php .php
-AddType application/x-httpd-php .phtml
-
-Make sure php module is enbaled in apache configuration. For apache this is
-done in /etc/apache/modules.conf: 
-
-LoadModule php4_module /usr/lib/apache/1.3/libphp4.so
-
-Change AllowOverride None  to
-    AllowOverride All 
-
-For apache2 us a2enmode php command.
-
-Create a virtual host for cdrtool. Example for apache2:
+Create a virtual host for cdrtool web pages:
 
 cp setup/apache2/sites-available/cdrtool.example.com /etc/apache2/sites-enabled 
 cp setup/apache2/conf.d/cdrtool /etc/apache2/conf.d/
 
-<VirtualHost cdrtool.example.com:80>
-
-   ServerName          cdrtool.example.com
-   DocumentRoot        /var/www/
-   CustomLog           /var/log/apache2/cdrtool-access.log combined
-   ErrorLog            /var/log/apache2/cdrtool-errors.log
-   SetEnvIf User-Agent ".*MSIE.*"      nokeepalive ssl-unclean-shutdown
-
-   # To enable SSL:
-   # a2enmode ssl
-   # add Listen 443 to ports.conf file
-   # generate site certificates
-
-   # SSLEngine           On
-   # SSLCertificateFile    /etc/apache2/ssl/snakeoil-rsa.crt
-   # SSLCertificateKeyFile /etc/apache2/ssl/snakeoil-rsa.key
-
-</VirtualHost>
-
-Enable the virtual site using:
+Edit /etc/apache2/sites-enabled/cdrtool.example.com to suit your
+environment. Enable the virtual site using:
 
 a2ensite cdrtool.example.com
 
@@ -119,16 +80,24 @@ generate a site certificate using the instructions provided by apache2
 software.
 
 
-Create a configuration file
----------------------------
+Create CDRTool configuration file
+---------------------------------
 
 cp /var/www/CDRTool/setup/global.inc.simple.sample /etc/cdrtool/global.inc 
 
-Edit global.inc and setup your variables to match your system.
+Edit global.inc and setup your variables to match your system. The file
 global.inc.complex.sample contains a more elaborate example for setting up
 multiple datasources.
 
+You must change at least the following settings:
 
+- The RatingEngine IP address
+- The mysql connection details to cdrtool, radius, opensisps, siptrace and
+ mediaproxy MySQL databases, which are described in the following sections
+ of this document
+- The mediaDispatcher address
+
+ 
 Enable rating engine
 --------------------
 
@@ -155,25 +124,32 @@ RUN_ratingEngine=yes
 For non Debian systems copy the init script from setup/init.d/cdrtool to
 /etc/init.d/cdrtool 
 
-Then start the rating engine:
+Then restart the rating engine, which you must do every time you made
+changes to global.inc:
 
 /etc/init.d/cdrtool restart
 
-
-High availability
------------------  
-
-Setup heartbeat and MySQL replication.
+To verify that the rating engine has started correctly check syslog for
+errors. To verify the connection to the rating engine you can telnet to port
+9024 and type 'help' command.
 
 
-CRON setup
-----------
+Insert default sample rates
+
+cp /var/www/CDRTool/setup/csv/* /var/spool/cdrtool
+/var/www/CDRTool/scripts/importRatingTables.php
+
+For more information about provisioning of rating tables see doc/RATING.txt.
+
+
+CRON jobs setup
+---------------
 
 Some operations must be scheduled to run periodically by cron. Such
 operations are the scripts that block fraudulous accounts in OpenSIPS,
 normalize the call detail records, purge the old SIP traces. This is done
 automatically if you install the debian package. For other Linux systems
-modifyt and install the cron file from /var/www/CDRTool/setup/crontabs/
+modify and install the cron file from /var/www/CDRTool/setup/crontabs/
 
 
 Freeradius setup
@@ -216,7 +192,7 @@ apt-get install freeradius freeradius-mysql
 Alternatively you can install the freeradius-xs debian package provided in
 the AG Projects debian repository that contains all required patches:
 
-sudo apt-get install freeradius-xs freeradius-xs-mysql
+apt-get install freeradius-xs freeradius-xs-mysql
 
 Create the database for radius tables on the MySQL server:
 
@@ -253,10 +229,10 @@ client 10.0.0.0/8 {
 Enable MySQL accounting in FreeRadius server. Edit radius.conf "sql" must be uncommented
 or added if missing.   
 
-# accounting { 
+accounting { 
 	detail 
 	sql 
-	}
+}
 
 Copy the radius dictionaries from OpenSIPS and MediaProxy:
 
@@ -373,7 +349,15 @@ trace web page, follow the link about media trace.
 
 Enable the accounting in MediaProxy /etc/mediaproxy/config.ini:
 
+[Dispatcher]
 accounting = radius,database
+
+[Database]
+dburi = mysql://mediaproxy:password@db/mediaproxy
+
+[Radius]
+config_file = /etc/opensips/radius/client.conf
+additional_dictionary = radius/dictionary
 
 It is possible to retrieve also real-time information about the ongoing
 sessions and streams, this can be used to plot usage statistics from
@@ -466,3 +450,4 @@ tabs. This file can be easily parsed by external scripts to build statistics
 using other tools like SNMP.
 
 To see the graphical statistics, follow the Usage link.
+

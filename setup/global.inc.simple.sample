@@ -75,28 +75,12 @@ class DB_radius extends DB_Sql {
   var $Database = "radius";
   var $User     = "radius";
   var $Password = "PASSWORD";
-  var $Halt_On_Error ="no";
-}
-
-class DB_radius2 extends DB_Sql {
-  var $Host     = "sipdb2";
-  var $Database = "radius";
-  var $User     = "radius";
-  var $Password = "PASSWORD";
-  var $Halt_On_Error ="no";
+  var $Halt_On_Error ="yes";
 }
 
 class DB_opensips extends DB_Sql {
   var $Host     = "sipdb";
   var $Database = "opensips";
-  var $User     = "opensips";
-  var $Password = "PASSWORD";
-  var $Halt_On_Error ="yes";
-}
-
-class DB_siptrace extends DB_Sql {
-  var $Host     = "sipdb";
-  var $Database = "siptrace";
   var $User     = "opensips";
   var $Password = "PASSWORD";
   var $Halt_On_Error ="yes";
@@ -110,24 +94,6 @@ class DB_mediaproxy extends DB_Sql {
   var $Halt_On_Error ="yes";
 }
 
-$replicated_databases=array('cluster1'=>array(
-                                              "db1"=>array('ip'      =>'10.0.0.131',
-                                                               'slave_of'=>'db2',
-                                                               'user'    =>'process',
-                                                               'password'=>'password',
-                                                               'replication_user'    =>'replication',
-                                                               'replication_password'=>'password',
-                                                               'active_master' => true
-                                                               ),
-                                              "db2"=>array('ip'      =>'10.0.0.132',
-                                                               'slave_of'=>'db1',
-                                                               'user'    =>'process',
-                                                               'password'=>'password',
-                                                               'replication_user'    =>'replication',
-                                                               'replication_password'=>'password'
-                           )                                    )
-                 );
-                 
 class DomainAuthLocal extends DomainAuth {	// defined in phplib/local.inc
 }
 
@@ -142,7 +108,7 @@ $DATASOURCES=array(
                     "name"               => "OpenSIPS",
                     "class"              => "CDRS_opensips",
                     "table"              => "radacct".date("Ym"),
-                    "db_class"           => array("DB_radius2","DB_radius"),  
+                    "db_class"           => array("DB_radius"),  
                     "db_subscribers"     => "DB_opensips",
                     "db_registrar"       => "DB_opensips",
                     "rating"             => "1",
@@ -151,8 +117,7 @@ $DATASOURCES=array(
                     "UserQuotaNotify"    => "1",
                     "sipTrace"           => "sip_trace",
                     "mediaTrace"         => "media_trace",
-                    "mediaDispatcher"    => "tls:10.0.0.1:25061",    // Where to get the active media sessions from MediaProxy 2.0
-                                                                       // Create /etc/cdrtool/mediaproxy.pem containing the certificate and private key
+                    "mediaDispatcher"    => "tls:10.0.0.1:25061",
                     ),
 "asterisk_vm"  =>array("name"            => "Voicemail server",
                     "class"              => "CDRS_asterisk",
@@ -171,7 +136,7 @@ $DATASOURCES=array(
                     ),
 "sip_trace"   =>array(
                     "name"               => "SIP trace",
-                    "db_class"           => "DB_siptrace",
+                    "db_class"           => "DB_opensips",
                     "table"              => "sip_trace",
                     "mediaTrace"         => "media_trace",
                     "purgeRecordsAfter"  => "7",
@@ -188,10 +153,4 @@ $DATASOURCES=array(
 // load CDRTool libraries 
 $CDRToolModules=array("opensips","asterisk");
 
-if ($_SERVER['REMOTE_ADDR']=="10.0.0.1") {
-    //$verbose=1;
-} else {
-    // prevent set of verbose via post/get
-    unset($verbose);
-}
 ?>
