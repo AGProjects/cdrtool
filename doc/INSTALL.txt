@@ -44,8 +44,7 @@ setup/create_users.mysql
 
 Then run the database setup script:
 
-cd /var/www/CDRtool/setup/mysql/
-./setup_mysql.sh <password> <dbserver>
+/var/www/CDRtool/setup/mysql/setup_mysql.sh <password> <dbserver>
 
 The script performs the following: 
 
@@ -190,70 +189,57 @@ radius packet type FAILED is generated. A failed SIP session is a session
 that has been rejected by the Proxy server or by the destination.
 Unfortunately Freeradius server is not able to cope with FAILED packets. The
 server must be patched and recompiled if you wish to support accounting for
-failed SIP sessions. A patch and instructions for how to apply it is found
-is in setup/radius/FreeRadius/. Alternatively you can install the freeradius-xs
-debian package provided in the AG Projects debian repository.
+failed SIP sessions. 
 
-Install the server:
+The patches and instructions for how to apply them are found in
+setup/radius/FreeRadius/ and contrib/freeradius-brandinger/.
 
-apt-get install freeradius freeradius-mysql 
-
-Create the database for radius tables on MySQL server
-
-mysqladmin -u root create radius
-
-Create RADIUS tables
-
-The paths might differ depending on freeradius installation
-
-cp /usr/share/doc/freeradius/examples/db_mysql.sql.gz .
-gunzip db_mysql.sql.gz 
-mysql -u root radius < /usr/share/doc/freeradius/examples/db_mysql.sql
-
-Patch radacct table for storage of CISCO VSA and rating. Apply a patch to
-the default radacct table. This will add fields necessary to store Vendor
-Specific Atributes from Cisco or OpenSIPS.
-
-It is not possible to mix call details records from CISCO and OpenSIPS
-in the same radius table. You need to create multiple radius server
-profiles and save the CDRs into dedicated tables for each datasource.
-
-Modify the default radacct table for OpenSIPS by running:
-
-/var/www/CDRTool/setup/radius/OpenSIPS/radacct-patch.sh
-
-and for CISCO by running:
-
-/var/www/CDRTool/setup/radius/CISCO/radacct-patch.sh 
-
-Configure Freeradius to write data into the radacct table:
-
-cp /var/www/CDRTool/setup/radius/OpenSIPS/sql.conf /etc/freeradius/sql.conf  
-
-For large volume of CDRs it is usefull automatically rotate the tables in
-which the data is written. 
-
-/var/www/CDRTool/setup/radius/OpenSIPS/radius_accounting.*, contain mysql
-procedures that automatically create monthly tables in the format
-radacctYYYYMM. To use mysql procedures, your must use MySQL server version 5
-or greater and Freeradius server mysql module must be compiled to support
-CLIENT_MULTI_RESULTS mysql connection flag. This must be done in
-src/modules/rlm_sql/drivers/rlm_sql_mysql/sql_mysql.c:
+Secondly, to use the MySQL procedures to create a table automatically for
+each calendar month radacctYYYYMM, your must use MySQL 5 and Freeradius
+server mysql module must be compiled to support CLIENT_MULTI_RESULTS mysql
+connection flag in src/modules/rlm_sql/drivers/rlm_sql_mysql/sql_mysql.c:
 
 if (!(mysql_sock->sock = mysql_real_connect(&(mysql_sock->conn),
                                             config->sql_server,
                                             config->sql_login,
                                             config->sql_password,
                                             config->sql_db,
-                                            atoi(config->sql_port),
-                                            NULL, 
-                                            CLIENT_FOUND_ROWS|CLIENT_MULTI_RESULTS ))) {
+                                            atoi(config->sql_port), NULL,
+                                            CLIENT_FOUND_ROWS|CLIENT_MULTI_RESULTS
+                                            ))) {
 
-Also, if you use MediaProxy for accounting in combination with OpenSIPS you
-must use the MediaProxy version that supports the same mysql procedures.
- 
-Edit the database connection details in sql.conf and restart Freeradius
-server.
+Install the server from Debian package or your own compiled version after
+your applied the patches:
+
+apt-get install freeradius freeradius-mysql 
+
+Alternatively you can install the freeradius-xs debian package provided in
+the AG Projects debian repository that contains all required patches:
+
+sudo apt-get install freeradius-xs freeradius-xs-mysql
+
+Create the database for radius tables on the MySQL server:
+
+mysqladmin -u root create radius
+
+Create RADIUS tables
+
+mysql -u root radius < /var/www/CDRTool/setup/radius/OpenSIPS/radacct.mysql
+
+Configure Freeradius to write data into mysql:
+
+a. To write data into one radacct table:
+
+   cp /var/www/CDRTool/setup/radius/OpenSIPS/sql.conf /etc/freeradius/sql.conf  
+
+b. To automatically create a table for each calendar month radacctYYYYMM:
+
+   cp /var/www/CDRTool/setup/radius/OpenSIPS/radius_accounting.conf /etc/freeradius/sql.conf
+
+   Load the MySQL stored procedures that create the monthly tables:
+   
+   mysql -u root radius < /var/www/CDRTool/setup/radius/OpenSIPS/radius_accounting.proc
+
 
 Add RADIUS clients in clients.conf. Each device sending RADIUS accounting
 requests must be added to /etc/freeradius/clients.conf. Examples:
@@ -272,8 +258,10 @@ or added if missing.
 	sql 
 	}
 
-Copy /var/www/CDRTool/setup/radius/OpenSIPS/dictionary.opensips to /etc/freeradius
-Copy /var/www/CDRTool/setup/radius/MediaProxy/dictionary.mediaproxy to /etc/freeradius
+Copy the radius dictionaries from OpenSIPS and MediaProxy:
+
+cp /var/www/CDRTool/setup/radius/OpenSIPS/dictionary.opensips to /etc/freeradius
+cp /var/www/CDRTool/setup/radius/MediaProxy/dictionary.mediaproxy to /etc/freeradius
 
 Edit /etc/freeradius/dictionary as follows:
 
@@ -287,14 +275,20 @@ $INCLUDE 	/etc/freeradius/dictionary.opensips
 $INCLUDE 	/etc/freeradius/dictionary.mediaproxy
 
 
+Grant access to radius user to the radius database, replace PASSWORD and
+PRIVATE_IP_NETWORK with the real values:
+
+GRANT ALL ON radius.*  TO radius@'PRIVATE_IP_NETWORK.%' IDENTIFIED by 'PASSWORD';
+
 
 OpenSIPS setup
 -------------- 
 
 Configure OpenSIPS for MySQL storage of subscribers and Radius accounting.
 For SIP tracing you need to configure the OpenSIPS to enable the siptrace
-module. To enable quota you must add an extra column in the subscriber
-table:
+module. 
+
+To enable quota you must add one extra column in the subscriber table:
 
 alter table opensips.subscriber add column quota int not null;
 
@@ -341,9 +335,11 @@ modparam("siptrace", "trace_flag",      2)
 
 Further, you must enable siptrace and accounting in various parts of the
 routing script by setting the accounting flag and saving the AVP containing
-the proxy IP address. It is important to save $avp(s:can_uri) after the
-Proxy has performed all possible lookups except DNS. The Canonical-URI will
-be used for rating the session. Example:
+the proxy IP address. 
+
+It is critical to save $avp(s:can_uri) after the Proxy has performed all
+possible lookups except DNS. The Canonical-URI will be used for rating the
+session. Example:
 
 route {
        ...
@@ -383,11 +379,13 @@ It is possible to retrieve also real-time information about the ongoing
 sessions and streams, this can be used to plot usage statistics from
 external applications. The Usage and Sessions web pages display this
 information. The information is obtained from any mediaproxy dispatcher,
-which has connections to all configured relays. Create or copy both a media
-relay certificate and its key to /etc/cdrtool/mediaproxy.hostname.pem:
+which has connections to all configured relays. 
 
-cat /etc/mediaproxy/tls/relay.crt \
-/etc/mediaproxy/tls/relay.key >> /etc/cdrtool/mediaproxy.hostname.pem
+Create or copy both a media relay certificate and its key to
+/etc/cdrtool/mediaproxy.hostname.pem:
+
+cat /etc/mediaproxy/tls/relay.crt >> /etc/cdrtool/mediaproxy.hostname.pem
+cat /etc/mediaproxy/tls/relay.key >> /etc/cdrtool/mediaproxy.hostname.pem
 
 and set the option:
 
@@ -395,7 +393,8 @@ and set the option:
 
 for each datasource that uses MediaProxy in global.inc.
 
-Replace the hostname with the real IP or hostname of the mediaproxy dispatcher. 
+Replace the hostname with the real IP or hostname of the mediaproxy
+dispatcher.
 
 
 Asterisk setup
@@ -453,7 +452,7 @@ OpenSIPS, simultaneous number of media streams and relayed IP traffic by
 MediaProxy. To obatin the statistics defined for OpenSIPS datasource the
 following settings:
 
-'db_registrar'    => 'DB_opensips',  // must be defined as mysql connection class
+'db_registrar'    => 'DB_opensips',  // must be defined as mysql class
 'mediaDispatcher' => 'tls://hostname:25061'
 
 The script that gathers the usage information and builds the graphical
