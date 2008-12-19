@@ -1,3 +1,10 @@
+cdrtool (6.7.1) unstable; urgency=low
+
+  * Simplified the sample configuration file global.inc.simple.sample
+  * Improved installation documentation 
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 19 Dec 2008 09:51:13 +0100
+
 cdrtool (6.7.0) unstable; urgency=low
 
   * Migrated to OpenSIPS, this version is incompatible with OpenSER, do not
