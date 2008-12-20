@@ -61,11 +61,9 @@ foreach (array_keys($DATASOURCES) as $datasource) {
             print "<h2>SIP accounts</h2>";
             $NetworkStatistics->showStatistics();
 
-            if (!$allowedDomains) {
-                print "<p>";
-                print "<h2>Network topology</h2>";
-                $NetworkStatistics->showStatus();
-            }
+            print "<p>";
+            print "<h2>Network topology</h2>";
+            $NetworkStatistics->showStatus();
         }
 
         print "</td>";

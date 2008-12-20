@@ -14,6 +14,17 @@ class NetworkStatistics {
     var $sip_proxies       = array();
     var $node_statistics   = array();
     var $domain_statistics = array();
+    var $allowedRoles      = array('sip_proxy',
+                                   'media_relay',
+                                   'provisioning_server',
+                                   'xcap_server',
+                                   'thor_dnsmanager',
+                                   'thor_database',
+                                   'voicemail_server'
+                                   );
+	var $allowedSummary    = array('online_accounts',
+                                   'total_accounts'
+                                   );
 
     function NetworkStatistics($engineId,$allowedDomains=array()) {
     	if (!strlen($engineId)) return false;
@@ -68,6 +79,7 @@ class NetworkStatistics {
                         foreach (array_keys($statistics[$_ip][$_role]) as $_section) {
                             foreach (array_keys($statistics[$_ip][$_role][$_section]) as $_domain) {
                                 if (count($this->allowedDomains) && !in_array($_domain,$this->allowedDomains)) continue;
+                                if (count($this->allowedDomains) && !in_array($_section,$this->allowedSummary)) continue;
                                 $this->sip_summary[$_section]=$this->sip_summary[$_section]+$statistics[$_ip][$_role][$_section][$_domain];
                             }
                         }
@@ -134,9 +146,16 @@ class NetworkStatistics {
 
         print "<table border=0>";
         print "<tr bgcolor=lightgrey>";
-        print "<td><b>Role</b></td><td><b>Address</b></td><td><b>Version</b></td><td><b>Attributes</b></td></tr>";
+        if (count($this->allowedDomains)) {
+        	print "<td><b>Role</b></td><td><b>Address</b></td><td><b>Version</b></td></tr>";
+        } else {
+        	print "<td><b>Role</b></td><td><b>Address</b></td><td><b>Version</b></td><td><b>Attributes</b></td></tr>";
+        }
 
         foreach (array_keys($this->roles) as $_role) {
+            if (count($this->allowedDomains)) {
+                if (!in_array($_role,$this->allowedRoles)) continue;
+            }
             foreach ($this->roles[$_role] as $_entity) {
                 if (!$print_role[$_role]) {
                 	$_role_print=preg_replace("/_/"," ",$_role);
@@ -144,22 +163,28 @@ class NetworkStatistics {
                 	$_role_print='';
                 }
 
-			$a_print='';
-                foreach (array_keys($_entity['attributes']) as $_a1) {
-                    if ($_a1 == 'dburi') {
-                        if (preg_match("/^(mysql:\/\/\w*):\w*(@.*)$/",$_entity['attributes'][$_a1],$m)) {
-                        	$val=$m[1].':xxx'.$m[2];
-                        } else {
-                        	$val=$_entity['attributes'][$_a1];
-                        }
-                    } else {
-                        $val=$_entity['attributes'][$_a1];
-                    }
-                    $a_print .= sprintf ("%s=%s ",$_a1,$val);
-                }
+            	if (count($this->allowedDomains)) {
+            		printf ("<tr><td><b>%s</b></td><td class=border>%s</td><td class=border>%s</td></tr>",
+            		ucfirst($_role_print),$_entity['ip'],$_entity['version']);
+				} else {
+                	$a_print='';
 
-            	printf ("<tr><td><b>%s</b></td><td class=border>%s</td><td class=border>%s</td><td class=border>%s</td></tr>",
-            	ucfirst($_role_print),$_entity['ip'],$_entity['version'],$a_print);
+                    foreach (array_keys($_entity['attributes']) as $_a1) {
+                        if ($_a1 == 'dburi') {
+                            if (preg_match("/^(mysql:\/\/\w*):\w*(@.*)$/",$_entity['attributes'][$_a1],$m)) {
+                                $val=$m[1].':xxx'.$m[2];
+                            } else {
+                                $val=$_entity['attributes'][$_a1];
+                            }
+                        } else {
+                            $val=$_entity['attributes'][$_a1];
+                        }
+                        $a_print .= sprintf ("%s=%s ",$_a1,$val);
+                    }
+
+            		printf ("<tr><td><b>%s</b></td><td class=border>%s</td><td class=border>%s</td><td class=border>%s</td></tr>",
+            		ucfirst($_role_print),$_entity['ip'],$_entity['version'],$a_print);
+                }
                 $print_role[$_role]++;
             }
         }
@@ -192,6 +217,7 @@ class SipThorNetworkImage {
 
     var $imgsize      = 630;
     var $nodes        = array();
+	var $node_statistics = array();
 
     function SipThorNetworkImage($engineId,$allowedDomains=array()) {
 
@@ -282,12 +308,12 @@ class SipThorNetworkImage {
             }
         }
 
-        if (count($this->sip_proxies)) {
+        if (count($this->node_statistics)) {
     
-            $dashsize=360/count($this->sip_proxies);
+            $dashsize=360/count($this->node_statistics);
             $j=0;
 
-            $node_names=array_keys($this->sip_proxies);
+            $node_names=array_keys($this->node_statistics);
 
             for ($angle=0; $angle<360; $angle+=$dashsize) {
          
