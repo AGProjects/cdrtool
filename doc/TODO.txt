@@ -1,3 +1,2 @@
-- Print stream duration instead of stop time in media trace
 - Apply the same checks for web or csv provisioning of rating tables
 - Mail broken rates moved to Rate class

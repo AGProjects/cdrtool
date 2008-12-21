@@ -3957,17 +3957,19 @@ class Media_trace {
 
             print "<tr><td width=$w1 class=border>$_val->media_type</td>";
 
-            $t2=$_val->end_time-$_val->timeout_wait;
+            //$t2=$_val->end_time-$_val->timeout_wait;
+            $t2=$_val->end_time-$_val->start_time;
+            if (!$t2) $t2='';
             $t3=$this->info->duration;
 
             print "<td>
             <table width=100%><tr>";
             print "<td width=$w_col1 bgcolor=white></td>";
-            print "<td width=$w_col2 bgcolor=green align=right><font color=white>$t2</font></td>";
+            print "<td width=$w_col2 bgcolor=green align=center><font color=white>$t2</font></td>";
             if ($_val->timeout_wait) {
-                print "<td width=$w_col3 bgcolor=red align=right><font color=white>$t3</font></td>";
+                print "<td width=$w_col3 bgcolor=red align=center><font color=white>$t3</font></td>";
             } else {
-                print "<td width=$w_col3 bgcolor=white align=right></td>";
+                print "<td width=$w_col3 bgcolor=white></td>";
             }
 
             print "</table>";
