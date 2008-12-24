@@ -66,7 +66,6 @@ if (class_exists($CDR_class)) {
     }
 
     if ($action=='edit' || !$action ) {
-
         if ($CDRTool['filter']['aNumber']) {
             $CDRS->searchFormSubscriber();
         } else {
@@ -82,7 +81,7 @@ if (class_exists($CDR_class)) {
     }
 
 } else {
-    $log=sprint("Error initializing datasource '%s', class '%s' is not defined",$cdr_source,$CDR_class);
+    $log=sprintf("Error initializing datasource '%s', class '%s' is not defined",$cdr_source,$CDR_class);
     print "<p>$log";
 }
 
