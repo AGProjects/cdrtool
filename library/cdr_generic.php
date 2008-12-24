@@ -1,6 +1,4 @@
 <?
-if (!$maxrowsperpage) $maxrowsperpage=15;
-
 $tz=$CDRTool['provider']['timezone'];
 putenv("TZ=$tz");
 

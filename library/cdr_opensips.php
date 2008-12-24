@@ -45,19 +45,19 @@ class CDRS_opensips extends CDRS {
                          'ENUMtld'         => 'ENUMtld'
                          );
 
-    var $CDRNormalizationFields=array('id'               => 'RadAcctId',
+    var $CDRNormalizationFields=array('id'              => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
                                       'username'        => 'UserName',
-                                      'domain'            => 'Realm',
+                                      'domain'          => 'Realm',
                                       'gateway'         => 'SourceIP',
                                       'duration'        => 'AcctSessionTime',
                                       'startTime'       => 'AcctStartTime',
                                       'stopTime'        => 'AcctStopTime',
                                       'inputTraffic'    => 'AcctInputOctets',
                                       'outputTraffic'   => 'AcctOutputOctets',
-                                      'aNumber'          => 'CallingStationId',
-                                      'cNumber'           => 'CalledStationId',
-                                      'timestamp'        => 'timestamp',
+                                      'aNumber'         => 'CallingStationId',
+                                      'cNumber'         => 'CalledStationId',
+                                      'timestamp'       => 'timestamp',
                                       'RemoteAddress'   => 'SipTranslatedRequestURI',
                                       'CanonicalURI'    => 'CanonicalURI',
                                       'SipMethod'       => 'SipMethod',
@@ -262,7 +262,7 @@ class CDRS_opensips extends CDRS {
             $Realm  = $this->CDRTool['filter']['domain'];
         }
 
-        if (!$maxrowsperpage) $maxrowsperpage=25;
+        if (!$_REQUEST['maxrowsperpage']) $maxrowsperpage=25;
 
         $this->f = new form;
 
@@ -273,9 +273,7 @@ class CDRS_opensips extends CDRS {
             }
         }
         
-        if (!$cdr_source) {
-            $cdr_source=$cdr_source_els[0]['value'];
-        }
+        if (!$cdr_source) $cdr_source=$cdr_source_els[0]['value'];
 
         $this->f->add_element(array("name"=>"cdr_source",
                                     "type"=>"select",
@@ -331,18 +329,20 @@ class CDRS_opensips extends CDRS {
             $end_hour       = $_REQUEST["end_hour"];
             $end_min        = $_REQUEST["end_min"];
         }
+
+        // corect last day of the month to be valid day
+        $begin_day = validDay($begin_month,$begin_day,$begin_year);
+        $end_day   = validDay($end_month,$end_day,$end_year);
+
+        $default_year  = Date("Y");
+        $default_month = Date("m");
+        $default_day   = Date("d");
+        $default_hour  = Date(H,time());
         
-        $default_year    =Date("Y");
-        $default_month    =Date("m");
-        $default_day    =Date("d");
-        $default_hour    =Date(H,time());
+        if ($default_hour > 1) $default_hour=$default_hour-1;
         
-        if ($default_hour > 1) {
-            $default_hour=$default_hour-1;
-        }
-        
-        $default_hour=preg_replace("/^(\d)$/","0$1",$default_hour);
-        $default_min    =Date("i");
+        $default_hour = preg_replace("/^(\d)$/","0$1",$default_hour);
+        $default_min  = Date("i");
         
         if ($default_min > 10) {
             $default_min=$default_min-10;

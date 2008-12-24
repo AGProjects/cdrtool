@@ -1,73 +1,59 @@
 <?
 require("/etc/cdrtool/global.inc");
 
-set_time_limit(1800);
-
 page_open(
     array("sess" => "CDRTool_Session",
           "auth" => "CDRTool_Auth",
           "perm" => "CDRTool_Perm"
-          ));
+          )
+          );
 
-$export      = $_REQUEST['export'];
-$SERVER_NAME = $_SERVER['SERVER_NAME'];
+$perm->check('callsearch');
+
+$export     = $_REQUEST['export'];
+$cdr_source = $_REQUEST["cdr_source"];
+$trace      = $_REQUEST["trace"];
+$action     = $_REQUEST["action"];
+
+require("cdr_generic.php");
+require("rating.php");
+
+set_time_limit(1800);
 
 if (!$export) {
-    $title="Call search on $SERVER_NAME";
+    $title="CDRTool call search ";
     if (is_readable("/etc/cdrtool/local/header.phtml")) {
         include("/etc/cdrtool/local/header.phtml");
     } else {
         include("header.phtml");
     }
 
-	if ($_REQUEST['previous_page'] == 'license_page') {
-        // save agreement
+    if ($_REQUEST['previous_page'] == 'license_page') {
+
         $db = new DB_CDRTool();
-    	$query=sprintf("insert into settings
-        (billing_party, var_module,var_name,var_value)
-        values
-    	('%s','login','I_agree_with_license','True')
-        ",$auth->auth["uname"]);
-        //dprint($query);
-    	$db->query($query);
+
+        $query = sprintf("insert into settings (billing_party, var_module,var_name,var_value)
+        values ('%s','login','I_agree_with_license','True')",$auth->auth["uname"]);
+
+        $db->query($query);
      }
+
 } else {
     Header("Content-type: text/plain");
-    Header("Content-Disposition: inline; filename=CDR.txt");
+    Header("Content-Disposition: inline; filename=cdr.txt");
 }
 
-$perm->check("callsearch");
-
-require("cdr_generic.php");
-require("rating.php");
-
-$loginname=$auth->auth["uname"];
-
-$cdr_source     = $_REQUEST["cdr_source"];
-$trace          = $_REQUEST["trace"];
-$action         = $_REQUEST["action"];
-
-if (isset($CDRTool[dataSourcesAllowed])) {
-    while (list($k,$v)=each($CDRTool[dataSourcesAllowed])) {
-        $cdr_source_els[]=array("label"=>$DATASOURCES[$v][name],"value"=>$v);
+if (isset($CDRTool['dataSourcesAllowed'])) {
+    while (list($k,$v)=each($CDRTool['dataSourcesAllowed'])) {
+        $cdr_source_els[]=array("label"=>$DATASOURCES[$v]['name'],"value"=>$v);
     }
-}
-
-if (!$cdr_source) {
-    $cdr_source=$cdr_source_els[0][value];
-}
-
-// corect last day of the month to be valid
-if ($begin_day) {
-    $begin_day=validDay($begin_month,$begin_day,$begin_year);
-}
-if ($end_day) {
-    $end_day=validDay($end_month,$end_day,$end_year);
+    if (!$cdr_source) $cdr_source = $cdr_source_els[0]['value'];
 }
 
 $CDR_class=$DATASOURCES[$cdr_source]["class"];
 
-if (class_exists($CDR_class) && $CDRS = new $CDR_class($cdr_source)) {
+if (class_exists($CDR_class)) {
+    $CDRS = new $CDR_class($cdr_source);
 
     if (!$export && !$trace) {
         $layout = new pageLayoutLocal();
@@ -96,7 +82,8 @@ if (class_exists($CDR_class) && $CDRS = new $CDR_class($cdr_source)) {
     }
 
 } else {
-    print "<p>Error initializing CDRTool datasource $cdr_source";
+    $log=sprint("Error initializing datasource '%s', class '%s' is not defined",$cdr_source,$CDR_class);
+    print "<p>$log";
 }
 
 if (!$export && !$trace) {
