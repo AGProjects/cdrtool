@@ -104,7 +104,7 @@ class CDRS_opensips extends CDRS {
         "duration","action","MONTHYEAR",
         "order_by","order_type","group_by",
         "cdr_source","trace",
-        "unnormalize","MediaTimeout","cdr_table"
+        "unnormalize","MediaTimeout","cdr_table","maxrowsperpage"
         );
 
     var $createTableFile="/setup/radius/OpenSIPS/radacct.mysql";
@@ -262,7 +262,7 @@ class CDRS_opensips extends CDRS {
             $Realm  = $this->CDRTool['filter']['domain'];
         }
 
-        if (!$_REQUEST['maxrowsperpage']) $maxrowsperpage=25;
+        if (!$maxrowsperpage) $maxrowsperpage=15;
 
         $this->f = new form;
 
@@ -2085,21 +2085,21 @@ class CDR_opensips extends CDR {
             $this->aNumberDomain     = $NormalizedNumber['domain'];
         }
 
-        if ($this->domain) {
-             if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'])
-                 && in_array($this->domain,array_keys($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation']))
-                 && strlen($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain])) {
-                 $this->domainNormalized=$this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain];
-             } else if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation'])
-                 && in_array($this->SourceIP,array_keys($this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation']))
-                 && strlen($this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation'][$this->SourceIP])) {
-                 $this->domainNormalized=$this->CDRS->DATASOURCES[$this->cdr_source]['SourceIPRealmTranslation'][$this->SourceIP];
-             } else {
-                 $this->domainNormalized=$this->domain;
-             }
-     
-             $this->domainNormalized=strtolower($this->domainNormalized);
+        $this->domainNormalized = $this->domain;
+
+		if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation_SourceIP']) &&
+            in_array($this->SourceIP,array_keys($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation_SourceIP'])) &&
+            strlen($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation_SourceIP'][$this->SourceIP])) {
+
+            $this->domainNormalized=$this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation_SourceIP'][$this->SourceIP];
+        } else if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation']) &&
+            in_array($this->domain,array_keys($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'])) &&
+            strlen($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain])) {
+
+            $this->domainNormalized=$this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain];
         }
+     
+        $this->domainNormalized=strtolower($this->domainNormalized);
 
         if (!$this->BillingPartyId || $this->BillingPartyId == 'n/a') {
             $this->BillingPartyId=$this->aNumberPrint;

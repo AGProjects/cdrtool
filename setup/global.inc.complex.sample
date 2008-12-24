@@ -1,5 +1,5 @@
 <?
-# This sample file contains examples for all possible settings of CDRTool
+# This file contains examples for all possible settings for CDRTool
 #
 # 1. Change all hostnames and passwords according to the installation
 # 2. Copy this file to /etc/cdrtool/global.inc
@@ -36,11 +36,11 @@ $CDRTool['provider']['sampleLoginDomain']       = "317100001@subdomain.example.c
 # Rating engine settings
 $RatingEngine=array("socketIP"               => "IP.address.of.the.private.interface.of.cdrtool.example.com",
                     "socketPort"             => "9024",
-                    "cdr_source"             => "opensips_radius",
-                    "prepaid_lock"           => true,
+                    "cdr_source"             => "opensips_radius", // points to a defined DATASOURCE
+                    "prepaid_lock"           => true,              // maximum one parallel prepaid session per subscribe
                     "log_delay"              => 0.05,
                     "split_rating_table"     => false, // when true individual rating tables are automatically created for each rate id 
-                    "csv_delimiter"          => ",",
+                    "csv_delimiter"          => ",",   // when importin CSV files
                     "priceDenominator"       => 10000, // e.g. 1 Eur = 10000 units
                     "priceDecimalDigits"     => 4,     // how many digits to round the prices to
                     "minimumDurationCharged" => 0,     // Only calls greater than this duration will be charged
@@ -54,9 +54,9 @@ $RatingEngine=array("socketIP"               => "IP.address.of.the.private.inter
 
 ###########################################
 # Normalize engine settings
-
 $CDRTool['normalize']['defaultCountryCode']      = "31";
 
+###########################################
 # build graphical statistics for these domains:
 $CDRTool['statistics']['domains']=array("example.com");
 
@@ -76,8 +76,7 @@ $UserQuota["default"]["traffic"]  = 5000;              // MBytes
 $UserQuota["default"]["cost"]     = 1000;              // Euro
 
 ###########################################
-# CDRTool datasources
-# you must define all connections to MySQL database here
+# CDRTool databases
 
 class DB_CDRTool extends DB_Sql {
   var $Host     = "sipdb";
@@ -153,6 +152,9 @@ class DomainAuthLocal extends DomainAuth {
 class PageLayoutLocal extends PageLayout {
 }
 
+###########################################
+# CDRTool datasources
+
 $DATASOURCES=array(
 "unknown"=>array(
                     "class"              => "CDRS_unknown"		// do not delete this datasource
@@ -162,8 +164,8 @@ $DATASOURCES=array(
                     "class"              => "CDRS_opensips",
                     "db_class"           => array("DB_radius2","DB_radius"),  
                     "table"              => "radacct",      // or "radacct".date("Ym") if sql.conf uses the mysql procedure to auto-rotate tables
-                    "rateField"          => "Rate",
-                    "rating"             => "1",
+                    "rating"             => "1",            // enable rating
+                    "rateField"          => "Rate",         // which field stores the rating info
                     "E164_class"         => "E164_custom",  // define a custom class to determine the E164 for a telephone number
                                                             // see E164 classes as example in library/cdr_generic.php
                     "priceField"         => "Price",
@@ -171,21 +173,21 @@ $DATASOURCES=array(
                     "normalizedField"    => "Normalized",
                     "BillingPartyIdField"=> "UserName",
                     "db_susbcribers"	 => "DB_opensips",
-                    "domain_table"	 => "domain",     // table of db_susbcribers that holds domains served by the sip proxy
-                    "subscriber_table"	 => "subscriber", // table of db_susbcribers that holds susbcribers served by the sip proxy
-                    "intAccessCode"      => "00",	  // international acess code, numbers prefixed with this are considered international destinations
-                    "natAccessCode"      => "0",          // international acess code, numbers prefixed with this are considered national destinations
-                    "sipTrace"           => "sip_trace",
-                    "mediaTrace"         => "media_trace",
+                    "domain_table"	 => "domain",       // table of db_susbcribers that holds domains served by the sip proxy
+                    "subscriber_table"	 => "subscriber",   // table of db_susbcribers that holds susbcribers served by the sip proxy
+                    "intAccessCode"      => "00",	    // international acess code, numbers prefixed with this are considered international destinations
+                    "natAccessCode"      => "0",            // international acess code, numbers prefixed with this are considered national destinations
+                    "sipTrace"           => "sip_trace",    // which datasource is used for display of sip trace
+                    "mediaTrace"         => "media_trace",  // which datasource is used for display of media trace
                     "UserQuotaClass"     => "OpenSIPSQuota",
-                    "UserQuotaNotify"    => "0",	      // send e-mail notifications when quota is exceeded
-                    "soapEngineId"       => '',
+                    "UserQuotaNotify"    => "1",	    // send e-mail notifications when quota is exceeded
+                    "soapEngineId"       => '',             // used by Multimedia Service Platform
+                    "domainTranslation_SourceIP"  => array(
+                                                  "10.0.0.1"      => "gateway.example.com" // translate Realm for sessions originating from IP address 10.0.0.1
+                                                  ),
                     "domainTranslation"  => array(
                                                   "gw02.domain.com"      => "pstn.domain.com" // translate Realm
                                                   ), 
-                    "SourceIPRealmTranslation"  => array(
-                                                  "10.0.0.1"      => "gateway.example.com" // translate Realm for sessions originating from IP address 10.0.0.1
-                                                  ),
                     "purgeCDRsAfter"     => 120,           // how many days to keep old CDRs, valid only when Radius tables are not atomatically rotated
                     "db_registrar"       => "DB_opensips", // opensips location database
                     "enableThor"         => false,	   // set to true if using SIP Thor

@@ -1647,7 +1647,7 @@ class CDRS {
             }
 
             if ($return == 0) {
-            	$log=sprintf("Warning: data source %s normalize in progress, lock id %s ",$lockname,$this->lock_connection_id);
+            	$log=sprintf("Data source %s normalization in progress, lock id %s ",$lockname,$this->lock_connection_id);
             	syslog(LOG_NOTICE, $log);
                 print "$log\n";
                 return 0;

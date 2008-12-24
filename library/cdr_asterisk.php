@@ -66,7 +66,7 @@ class CDRS_asterisk extends CDRS {
         "UserName","UserName_comp","BillingId",
         "applicationType","context","channel_in","channel_out","data",
         "duration","action","redirect","MONTHYEAR",
-        "order_by","order_type","group_by","cdr_table");
+        "order_by","order_type","group_by","cdr_table","maxrowsperpage");
 
     function LoadDisconnectCodes() {
     }
@@ -659,9 +659,7 @@ class CDRS_asterisk extends CDRS {
             $UserName=$this->CDRTool['filter']['aNumber'];
         }
 
-        if (!$maxrowsperpage) {
-            $maxrowsperpage=50;
-        }
+        if (!$maxrowsperpage) $maxrowsperpage=15;
 
         $this->f = new form;
         
@@ -672,9 +670,7 @@ class CDRS_asterisk extends CDRS {
             }
         }
         
-        if (!$cdr_source) {
-            $cdr_source=$cdr_source_els[0]['value'];
-        }
+        if (!$cdr_source) $cdr_source=$cdr_source_els[0]['value'];
 
         $this->f->add_element(array("name"=>"cdr_source",
                                     "type"=>"select",

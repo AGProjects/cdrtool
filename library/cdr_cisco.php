@@ -79,7 +79,7 @@ class CDRS_cisco extends CDRS {
         "NASIPAddress","NASPortId","RemoteAddress","H323CallType","H323CallOrigin","release_cause",
         "duration","action","MONTHYEAR","showRate",
         "order_by","order_type","group_by",
-        "cdr_source","trace","cdr_table");
+        "cdr_source","trace","cdr_table","maxrowsperpage");
 
     function LoadDisconnectCodes() {
 
@@ -200,9 +200,7 @@ class CDRS_cisco extends CDRS {
 
         $action         = "search";
 
-        if (!$maxrowsperpage) {
-            $maxrowsperpage=50;
-        }
+        if (!$maxrowsperpage) $maxrowsperpage=15;
 
         $this->f = new form;
 
@@ -213,9 +211,7 @@ class CDRS_cisco extends CDRS {
             }
         }
         
-        if (!$cdr_source) {
-            $cdr_source=$cdr_source_els[0]['value'];
-        }
+        if (!$cdr_source) $cdr_source=$cdr_source_els[0]['value'];
 
         $this->f->add_element(array("name"=>"cdr_source",
                                     "type"=>"select",
