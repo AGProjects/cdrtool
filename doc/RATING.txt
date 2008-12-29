@@ -3,7 +3,7 @@ CDRTool rating engine
 ---------------------
 
 CDRTool provides on-the-fly rating of CDRs from multiple data-sources like
-OpenSER, Asterisk or Cisco gateways based on an easy to build rating plan,
+OpenSIPS, Asterisk or Cisco gateways based on an easy to build rating plan,
 which can be imported from external data sources.
 
 A Call Detail Record (CDR) is one record from the radius radacct table. The
@@ -37,72 +37,64 @@ Rating logic
 
 The following steps are performed to rate a CDR:
 
-1. Determination of application type
-2. Determination of the billing party
-3. Determination of the destination id
-4. Determination of the costs
+1. Determination of the billing party
+2. Determination of the destination id
+3. Determination of the costs
 
-Each step must succeed in order to calculate the price for the session. The
-steps are described in detail below.
+The steps are described in detail below.
 
 
-1. Determination of application type
-------------------------------------
-
-The only supported application type is 'audio'.
-
-
-2. Determination of the billing party
+1. Determination of the billing party
 -------------------------------------
+
+Different customers can have different rating plans. To be able to rate a
+session the rating engine must determine whose rating plan to use.
+
+The rating engine performs a match against entries in the billing_customers
+table for the the BillingPartyId field of the the CDR (radacct.UserName for
+radius based datasources) in the following order:
 
 CDRTool identifies the rating plan associated with a session based on a
 billing party entity, which is calculated on the fly. The calculus is based
-on the longest match of the BillingPartyId field from the CDR database
-(radacct.UserName for radius data sources) in the following order:
+on the first successful match of the BillingPartyId field from the CDR
+database (radacct.UserName for radius data sources) in the following order:
 
-1. SIP account user@domain 
-2. SIP domain of the SIP account
-3. Source IP of the SIP session
-4. Default (when none of the above matches)
+The first match is considered to be the billing party for which the rating
+plan is determined. The rating plan is the set of profiles associated with
+the entry found in the billing_customers.
 
-The longest match is done against entries present in the billing_customers
-table. The match yields a set of profiles to be used further depending on
-the type of session and day of the week.
+Note
 
 The billing_customers table field that matches the Source IP is called
-gateway. Do not use hostnames for this field. "gateway" or "trusted peer"
-terms are used interchangebly in this document. They both relate to the
-source IP address that generated the SIP session.
+gateway. "gateway" or "trusted peer" terms are used interchangeably in this
+document. They both relate to the source IP address that generated the SIP
+session.
 
 
-3. Determination of the destination id
+2. Determination of the destination id
 --------------------------------------
 
-CDRTool must identify the 'destination id' for which to perform the rating
-based on one of the destination fields from the accounting table. 
+CDRTool identifies the destination for which to perform the rating based on
+one of the destination fields from the accounting table. The destination
+field is taken from the first non-empty field in this order:
 
-First, the actual destination of the call is considered to be one of the
-non-empty CDR fields in this order:
-
-1. CanonicalURI (the next hop URI calculated by the SIP Proxy)
-2. SipTranslatedRequestURI (the Request URI presented by the SIP UA)
+1. CanonicalURI (the destination after all lookups inside the SIP Proxy) 
+2. SipTranslatedRequestURI (the Request URI as presented by the SIP UA)
 3. CalledStationId (the content of the To header)
 
-The CanonicalURI is the destination after all possible lookups performed by
-the SIP Proxy, it is something reliable configured by the operator and the
-dialing user cannot control or fake it. OpenSIPS must be configured to send
-Canonical-URI radius attribute when doing accounting. Instructions for how
-to generate this atrribute are available in INSTALL.txt file.
+The CanonicalURI is preferred because the destination field must contain the
+real SIP destination after all possible lookups performed by the SIP Proxy
+as this is something reliable and the dialing user cannot control it.
+OpenSER must be configured to send CanonicalURI Radius attribute when doing
+accounting (instructions are available in INSTALL.txt).
 
-The destination determined above is then fed to a function that decides
-whether it is a PSTN destination and if yes, which E164 number it corespond
-to. This is done by the E164_class, which by default is assuming a European
-dialing plan, see cdr_generic.php for the actual logic. It assumes the
-destination number starts with a zero for a national call and with double
-zero for an international call.
+The destination id is then calculated based on the longest match of this
+destination field in the billing_destinations table and the billing party.
 
-The actual 'destination id' is then calculated based on the longest match of
-this destination in the billing_destinations table and the billing party.
+The longest match for the chosen destination field is performed by the
+E164_class which by default uses E164_Europe, see cdr_generic.php for
+tenactual logic. It assumes the destination always starts with a zero for a
+national call and with double zero for an international call. 
 
 If your dialing plan is different you must use other provided class like
 E164_US or create a custom class and point to it in global.inc for each
@@ -115,11 +107,12 @@ dialing plan. Any custom class that yields the E164 number must be synced
 with the Canonical-URI radius attribute generated by OpenSIPS.
 
 
-4. Determination of one time and recurrent costs
-------------------------------------------------
+3. Determination of the costs
+-----------------------------
 
-The following steps are taken to rate the calls terminated to PSTN based on
-the destination id and the billing party found in previous steps.
+The following steps are taken to rate the calls terminated to the PSTN based
+on the 'destination id' and the billing party determined in the previous
+steps.
 
 1. Lookup the billing Profile in cdrtool.billing_customers table in the
    following order: subscriber,domain,gateway (based on $this->dayofweek):
@@ -228,11 +221,11 @@ the destination id and the billing party found in previous steps.
    can be used to match the purchasing price and calculate the margin. The
    information about both prices is stored in the RateInfo field of the CDR. 
    The values for connectCostIn and durationRateIn must be provisioned in
-   the billing_rates and billing_rates_istory tables using the web interafce
+   the billing_rates and billing_rates_history tables using the web interface
    or by importing csv files.
 
 
-8. Save the calculated price, Billing Party and Destination Id for each call
+7. Save the calculated price, Billing Party and Destination Id for each call
    in the CDRs. Having the price stored in database, it is possible to build
    statistics to display consolidated revenues per country code, network or
    subscriber.
@@ -243,16 +236,16 @@ the destination id and the billing party found in previous steps.
 Importing and exporting of rating files
 ---------------------------------------
 
-There are different data files needed for rating CDRs. The data files are
-imported into corresponding MySQL tables. The files must be uploaded to
-/var/spool/cdrtool directory.  To load the files into the database run
-the following command:
+There are different data files needed for rating. The data files are
+imported into their corresponding MySQL tables. The files must be uploaded
+to /var/spool/cdrtool directory. To load the files into the database run the
+following command:
 
 /var/www/CDRTool/scripts/importRatingTables.php
 
 The import script knows to import the files only once so you may dump
 several files there and safely run the import script from cron. The import
-script detects whether the files have been imported by building a unique key
+script detects whether each file have been imported by building a unique key
 out of the filename and the hash of the file content. So you may use the
 same filenames as long as the content differs and viceversa. If the import
 file has changed any records, the rating engine is automatically instructed
@@ -506,8 +499,8 @@ To apply discounts based on ENUM certain conditions must be met.
     - Regexp: 011([1-9][0-9]{7,})
     - Discount: 25
 
-   The paranthezis of the Regexp field indicate the E164 number returned by
-   the match and discount is a percentage that will be substracted form the
+   The parenthesis of the Regexp field indicate the E164 number returned by
+   the match and discount is a percentage that will be subtracted form the
    total price of the call. The formula is described in the PSTN rating
    section.
 
@@ -602,7 +595,7 @@ the selection is right re-run the query by selecting Re-normalize button.
 
 After renormalization, the monthly usage information used by the quota
 system will be out of date. At the next run of the quotaCheck script, a full
-table scan will be performed. See QuoatSystem.txt for more information about
+table scan will be performed. See QuotaSystem.txt for more information about
 quota.
 
 Holidays must be added as individual days YYYY-MM-DD in table
@@ -680,10 +673,10 @@ Client means either a SIP Proxy entity or a CDRTool server, which performs
 the normalization process.
 
 The rates are read directly from MySQL from version 6.1 instead of
-beeing cached as they are found based on a known index.
+being cached as they are found based on a known index.
 
 To monitor the connections to the rating engin server telnet to
-the rating engine port and issse the ShowClients command. Example output:
+the rating engine port and issue the ShowClients command. Example output:
 
 ShowClients
 
@@ -708,3 +701,4 @@ Statistics:
 Total requests: 33
 Uptime: 169 seconds
 Load: 0.20/s
+

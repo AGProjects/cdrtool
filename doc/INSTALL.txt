@@ -313,6 +313,11 @@ Further, you must enable siptrace and accounting in various parts of the
 routing script by setting the accounting flag and saving the AVP containing
 the proxy IP address. 
 
+Copy /var/www/CDRTool/setup/radius/OpenSIPS/dictionary.opensips to
+/etc/opensips/radius/dictionary
+
+Generation of the Canonical-URI
+
 It is critical to save $avp(s:can_uri) after the Proxy has performed all
 possible lookups except DNS. The Canonical-URI will be used for rating the
 session. Example:
@@ -324,8 +329,11 @@ route {
        ...
 }
 
-Copy /var/www/CDRTool/setup/radius/OpenSIPS/dictionary.opensips to
-/etc/opensips/radius/dictionary
+The Canonical-URI must by synced with the class used to determine the E164
+format of the destination. The default behavior of the rating engine is to
+consider an European dialing plan where a local number starts with a zero
+and an international number starts with two zeros. See the Chapter
+'Determination of the destination id' in RATING.txt for more information.
 
 
 MediaProxy setup
