@@ -4499,7 +4499,10 @@ class EnumMappings extends Records {
                               "schemas"=>array("http://")),
         "key:http"  => array("service"=>"key:http",
                               "webname"=>"Public key",
-                              "schemas"=>array("http://"))
+                              "schemas"=>array("http://")),
+        "key:https"  => array("service"=>"key:https",
+                              "webname"=>"Public key (HTTPS)",
+                              "schemas"=>array("https://"))
         );
 
     function EnumMappings(&$SoapEngine) {
