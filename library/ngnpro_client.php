@@ -1376,6 +1376,7 @@ class Records {
             } else {
                 $customer = $this->login_credentials['customer'];
             }
+            if (!$customer) $customer = $reseller;
         } else {
             if ($dictionary['reseller']) {
                 $reseller = $dictionary['reseller'];
@@ -1388,7 +1389,7 @@ class Records {
                 $customer = trim($_REQUEST['customer']);
             }
 
-            if (!$customer) $customer=$reseller;
+            if (!$customer) $customer = $reseller;
         }
 
         return array(intval($customer),intval($reseller));
@@ -1852,7 +1853,7 @@ class SipDomains extends Records {
 
             $this->showCustomerTextBox();
 
-            printf (" Domain<input type=text size=20 name=domain>");
+            printf (" SIP domain<input type=text size=20 name=domain>");
 
             print "
             </td>
@@ -6332,8 +6333,7 @@ class DnsZones extends Records {
             ";
             $this->showCustomerTextBox();
 
-            printf (" Name <input type=text size=25 name=name value='%s'> ",$_REQUEST['name']);
-            printf (" Info<input type=text size=25 name=info value='%s'> ",$_REQUEST['info']);
+            printf (" DNS zone <input type=text size=25 name=name value='%s'> ",$_REQUEST['name']);
 
             print "
             </td>
@@ -6368,6 +6368,7 @@ class DnsZones extends Records {
         }
 
         list($customer,$reseller)=$this->customerFromLogin($dictionary);
+
 		$this->initRemoteReplicationEngine($reseller);
 
         if (!trim($_REQUEST['ttl'])) {
@@ -11875,14 +11876,13 @@ class Customers extends Records {
                 } else {
                     $_permission = 'customer';
                     $var_value   =  trim($_REQUEST[$var_name]);
-
                 }
 
                 if (strlen($var_value)) {
                     $customer->properties[] = array('name'       => $item,
                                                     'value'      => $var_value,
                                                     'category'   => $this->allProperties[$item]['category'],
-                                                    'permission' => $_permission
+                                                    'permission' => $this->allProperties[$item]['permission']
                                                      );
                 }
 
@@ -12572,6 +12572,22 @@ class Customers extends Records {
                 return false;
             }
         }
+    }
+
+    function setInitialCredits($credits=array()) {
+
+		$properties=array();
+
+        foreach (array_keys($credits) as $item) {
+            if ($this->allProperties[$item]['category'] != 'credit') continue;
+            $properties[] = array('name'       => $item,
+                                  'value'      => "$credits[$item]",
+                                  'category'   => $this->allProperties[$item]['category'],
+                                  'permission' => $this->allProperties[$item]['permission']
+                                  );
+        }
+
+        return $properties;
     }
 }
 

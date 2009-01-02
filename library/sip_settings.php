@@ -1999,17 +1999,21 @@ class SipSettings {
             }
         }
 
-        if ($this->prepaid) $checked_box_prepaid="checked";
-        if (!$this->prepaid_changes_allowed) $disabled_box_prepaid   = "disabled=true";
+        if ($this->pstn_access) {
 
-        print "
-        <tr $bgcolor>
-        <td class=border valign=top>Prepaid</td>
-        <td class=border>
-        <input type=checkbox value=1 name=prepaid $checked_box_prepaid $disabled_box_prepaid>
-        </td>
-        </tr>
-        ";
+            if ($this->prepaid) $checked_box_prepaid="checked";
+
+            if (!$this->prepaid_changes_allowed) $disabled_box_prepaid   = "disabled=true";
+    
+            print "
+            <tr $bgcolor>
+            <td class=border valign=top>Prepaid</td>
+            <td class=border>
+            <input type=checkbox value=1 name=prepaid $checked_box_prepaid $disabled_box_prepaid>
+            </td>
+            </tr>
+            ";
+        }
 
         foreach (array_keys($this->availableGroups) as $key) {
 
