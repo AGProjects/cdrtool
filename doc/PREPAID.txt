@@ -1,34 +1,37 @@
 
-Prepaid functionality is achieved by:
+CDRTool prepaid functionality
+-----------------------------
 
-1. OpenSIPS callcontrol module, available from version 1.5.
+The prepaid functionality is achieved by the combination of:
 
-It provides the interface between OpenSIPS dialog module to the external
-Call Control application.
+1. OpenSIPS call_control module, available from version 1.5
+
+   call_control module provides the interface between OpenSIPS dialog module
+   to the external Call Control application.
 
 2. Call Control application available at http://callcontrol.ag-projects.com
 
-Call control maintains the session status and terminates the sessions by
-sending BYE messages to both SIP end-points. The session control module
-communicates with both the SIP Proxy and CDRTool using the API described
-below.
+   Call Control maintains the session status and terminates the sessions by
+   sending BYE messages to both SIP end-points. The session control module
+   communicates with both the SIP Proxy and CDRTool using the API described
+   below.
 
 3. CDRTool rating engine
 
-Provides session management, calculates maximum session time based on user
-balance and destination using the same algorithm as the postpaid engine and
-debits the subscriber balance.
+   Rating engine calculates the maximum session time based on subscriber
+   balance and destination using the same algorithm as the postpaid engine
+   Show Price function and debits the subscriber balance.
 
-Prepaid accounts can be managed in the Prepaid section of Rating web page.
+   Prepaid accounts are managed in the Prepaid section of Rating web page.
 
 
 Prepaid API
 -----------
 
-CDRTool prepaid engine is used to compute session times based on user
-balance and destination dependent rates and debit the balance when the
-session has ended. The prepaid engine is accessible over the TCP socket
-where the rating engine listens.
+CDRTool prepaid engine is used to compute the maximum session time based on
+a subscriber balance and debits the balance when the session has ended. The
+prepaid engine is accessible over the TCP socket where the rating engine
+listens.
 
 The connection can be tested manually using the telnet command and by typing
 help at the prompt:
@@ -66,7 +69,7 @@ below.
    ------------------------------
 
 To request the maximum time for a new session, the following request must be
-sent to CDRTool rating engine on one line:
+sent to CDRTool rating engine (on one single line):
 
 MaxSessionTime CallId=6432622xvv@1 From=sip:123@example.com
 To=sip:0031650222@example.com Duration=7200 Gateway=81.20.68.10
@@ -150,16 +153,17 @@ can be applied at a later time.
 Prepaid ongoing sessions
 ------------------------
 
-To see the sessions in progress go to Rating -> Prepaid.
+To see the prepaid sessions in progress go to Rating -> Prepaid.
 
-Fill in the Sesssions field: >0 and click Search.
+Fill in the Sesssions field: >0 and click the Search button.
 
 
 Notes
 -----
 
 The balance is debited correctly regardless of the moment of CDR
-normalization. Renormalization of sessions does not recalculate balance.
+normalization. CDR re-normalization of sessions does not recalculate
+balance.
 
 
 Simultaneous prepaid sessions
