@@ -30,8 +30,7 @@ balance and destination dependent rates and debit the balance when the
 session has ended. The prepaid engine is accessible over the TCP socket
 where the rating engine listens.
 
-The TCP socket location is configured in /etc/default/cdrtool. The
-connection can be tested manually using the telnet command and by typing
+The connection can be tested manually using the telnet command and by typing
 help at the prompt:
 
 tstuser@host:~$ telnet 10.0.0.0.1 9024
