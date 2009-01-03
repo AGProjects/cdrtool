@@ -1804,7 +1804,7 @@ class SipDomains extends Records {
     function showSeachFormCustom() {
 
         if ($this->version > 1) {
-            printf (" Domain<input type=text size=20 name=domain_filter value='%s'>",$this->filters['domain']);
+            printf (" SIP domain<input type=text size=20 name=domain_filter value='%s'>",$this->filters['domain']);
         }
     }
 
@@ -6436,7 +6436,7 @@ class DnsZones extends Records {
     }
 
     function showSeachFormCustom() {
-    	printf (" Name<input type=text size=25 name=name_filter value='%s'>",$this->filters['name']);
+    	printf (" DNS zone<input type=text size=25 name=name_filter value='%s'>",$this->filters['name']);
     	printf (" Info<input type=text size=25 name=info_filter value='%s'>",$this->filters['info']);
     }
 
