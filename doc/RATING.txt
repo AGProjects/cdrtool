@@ -9,8 +9,9 @@ which can be provisioned in a web interface or imported from csv files.
 A Call Detail Record (CDR) is one record from the radius radacct table. The
 CDR contains all information related to a session, its duration, the calling
 and called party and media information. The rating engine calculates the
-price of the session, which is applied in real-time to the web output and
-saved to the CDR table.
+price of the session. The calculation is done once and its results are saved
+in the CDR table for later use. It is possible to re-calculated the prices
+at a later time for example when having to change the tariffs.
 
 Based on exceptions, different rates may be applied per caller party
 identified by source IP, domain or subscriber.
@@ -35,6 +36,10 @@ parties hosted on the same platform.
 Rating logic
 ------------
 
+Different customers can have different rating plans. A rating plan is a
+unique combination of holidays, day of week, time of day, destination ids,
+and associated costs.
+
 The following steps are performed to rate a CDR:
 
 1. Determination of the billing party
@@ -47,8 +52,9 @@ The steps are described in detail below.
 1. Determination of the billing party
 -------------------------------------
 
-Different customers can have different rating plans. To be able to rate a
-session the rating engine must determine whose rating plan to use.
+
+To be able to calculate the Price for a call the rating engine must
+determine whose rating plan to use.
 
 The rating engine does this by performing a match against entries in the
 billing_customers table for the the BillingPartyId field of the the CDR
@@ -60,8 +66,10 @@ c. Source IP of the session
 d. Default (when none of the above matches)
 
 The first match is considered to be the billing party for which the rating
-plan is determined. The rating plan is the set of profiles associated with
-the entry found in the billing_customers.
+plan is determined. 
+
+The rating plan is further derived from the profiles associated with the
+entry found in the billing_customers.
 
 Note
 
@@ -105,10 +113,10 @@ The 'destination id' is then calculated based on the longest match of this
 destination field in the billing_destinations table.
 
 The longest match for the chosen destination field is performed by the
-E164_class, which by default uses E164_Europe that defines and european
-numbering plan. It assumes the destination always starts with a zero for a
-national call and with double zero for an international call. See
-cdr_generic.php for the actual logic.
+E164_class, which by default uses E164_Europe that defines an European
+numbering plan. It assumes the destinations start with a zero for a national
+call and with double zero for an international call. See cdr_generic.php for
+the actual logic.
 
 If your dialing plan is different, you must use other provided class like
 E164_US or create a custom class and point to it in global.inc for each
@@ -123,9 +131,8 @@ American dialing plan.
 3. Determination of the costs
 -----------------------------
 
-The following steps are taken to determine the costs of the calls terminated
-to the PSTN based on the 'destination id' and the billing party determined
-in the previous steps.
+The following steps are taken to determine the cost for the calls based on
+the 'destination id' and the billing party determined at the previous steps.
 
 1. Lookup the billing profiles in cdrtool.billing_customers table in the
    following order: subscriber,domain,gateway (based on $this->dayofweek):
@@ -140,6 +147,9 @@ in the previous steps.
    - profile_name2 matches also holidays from billing_holidays table
    
    The week starts with 0 (Sunday) and ends with 6 (Saturday)
+
+   This step determines which rates should be applied based on the day of
+   the week when the call started.
 
 2. Using the profile_name found, lookup the rate_name based
    on $this->hourofday in cdrtool.billing_profiles table
@@ -158,28 +168,36 @@ in the previous steps.
    rate in billing_rates, if no record is found use the rate called
    'default'
 
+   This step determines which rate should be applied for the time of day
+   when the call started.
+
 3. Lookup in the cdrtool.billing_rates table the record having same name
    found at point 2 having billing_rates.destination = 'destination id'
    and billing_rates.application = application type found in the steps above.
 
    - return an array with all the rating values and the duration rated
 
-  No rate will be returned if no 'destination id' is found. Make sure each
-  possible destination has a 'corresponding id' and name in the destinations
-  table.
+   No rate will be returned if no 'destination id' is found. Make sure each
+   possible destination has a 'corresponding id' and name in the destinations
+   table.
+
+   This step determines the costs within the current time span associated
+   with the time of day and destination id. If the call duration exceeds
+   this time span (that is a new interval for which another rate applies is
+   reached), step 4 is performed.
 
 4. If the duration rated at point 3 is less than total call duration, apply
-   point 3 again for the remaining call duration in the next profile.  A
+   point 3 again for the remaining call duration in the next profile. A
    maximum of 10 spans (different rates depending of time of day, day of the
    week) can be calculated using this mechanism. After 10 spans, the engine
    bails out to avoid loops caused by invalid tables provisioning.
 
-5. Lookup the call cost based on time (peak/of-peak, day of week, holiday) 
+5. Calculate the total call Price based on its duration and connection fees.
 
-6. Calculate the call Price based onits duration. In global.inc there are
-   several variables that affect how the price is calculated. These settings
-   are global per CDRTool installation but some can be overwritten with per
-   customer values in the billing_customers table.
+   In global.inc there are several variables that affect how the price is
+   calculated. These settings are global per CDRTool installation but some
+   can be overwritten with per customer values in the billing_customers
+   table.
 
    $RatingEngine=array( 
            "priceDenominator"        => 10000, // Rates units (global setting)
@@ -219,7 +237,7 @@ in the previous steps.
    The rating engine can apply a discount associated with the ENUM top
    level domain that returned the final destination.
 
-   Price = Price - Price * ENUM discount /100
+   Price = Price - Price * ENUM discount / 100
 
    To apply ENUM based discounts, the ENUM TLD must be saved with each CDR
    and the TLDs with their corespondent discounts must be provisioned in the
@@ -230,19 +248,20 @@ in the previous steps.
    Purchasing price
    ----------------
 
-   From version 6.7.0, a second price called 'Price in' is calculated using
-   the same formula but based on connectCostIn and durationRateIn values. It
-   can be used to match the purchasing price and calculate the margin. The
-   information about both prices is stored in the RateInfo field of the CDR. 
-   The values for connectCostIn and durationRateIn must be provisioned in
-   the billing_rates and billing_rates_history tables using the web interface
-   or by importing csv files.
+   A second price called 'Price in' is calculated using the same formula but
+   based on connectCostIn and durationRateIn values. It can be used to match
+   the purchasing price and calculate the margin between purchasing and
+   selling prices. The information about both prices is stored in the
+   RateInfo field of the CDR.  The values for connectCostIn and
+   durationRateIn must be provisioned in the billing_rates and
+   billing_rates_history tables using the web interface or by importing csv
+   files.
 
 
-7. Save the calculated price, Billing Party and Destination Id for each call
-   in the CDRs. Having the price stored in the database, it is possible to
-   build statistics to display consolidated revenues per country code,
-   network or subscriber.
+7. Save the calculated Price, billing party and 'destination id' for each
+   call in the CDR table. Having the price stored in the database, it is
+   possible to build statistics to display consolidated revenues per country
+   code, network or subscriber.
 
 
 Testing the rating engine
@@ -252,7 +271,7 @@ You can test the rating engine by telneting to the IP and port configured in
 global.inc. Type 'help' once connected to see the available commands. Use
 'ShowPrice' command to simulate the rating of one session, for example:
 
-adigeo@ws1:/var/www/prj/dnshosting/CDRTool/doc$ telnet ws1 9024
+adigeo@w1:/var/www/CDRTool/doc$ telnet ws1 9024
 Trying 10.0.0.1 ...
 Connected to 10.0.0.1.
 Escape character is '^]'.
@@ -274,7 +293,8 @@ Duration: 59 s
        Price: 0.1573
 
 
-Below is a decsription of the fields:
+Below is a description of the fields that must be separated by one or more
+spaces:
 
  * From - must contain the caller party
  * Gateway - must contain the source IP of the session
