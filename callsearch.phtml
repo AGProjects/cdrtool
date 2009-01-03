@@ -52,36 +52,41 @@ if (isset($CDRTool['dataSourcesAllowed'])) {
 
 $CDR_class=$DATASOURCES[$cdr_source]["class"];
 
-if (class_exists($CDR_class)) {
-    $CDRS = new $CDR_class($cdr_source);
-
-    if (!$export && !$trace) {
-        $layout = new pageLayoutLocal();
-        if ($CDRTool['filter']['aNumber']) {
-            $layout->showHeader();
-            $layout->showTopMenuSubscriber();
-        } else {
-            $layout->showTopMenu();
-        }
-    }
-
-    if ($action=='edit' || !$action ) {
-        if ($CDRTool['filter']['aNumber']) {
-            $CDRS->searchFormSubscriber();
-        } else {
-            $CDRS->searchForm();
+if (is_array($DATASOURCES[$cdr_source])) {
+    if (class_exists($CDR_class)) {
+        $CDRS = new $CDR_class($cdr_source);
+    
+        if (!$export && !$trace) {
+            $layout = new pageLayoutLocal();
+            if ($CDRTool['filter']['aNumber']) {
+                $layout->showHeader();
+                $layout->showTopMenuSubscriber();
+            } else {
+                $layout->showTopMenu();
+            }
         }
     
-    } elseif ($action==search) {
-        $CDRS->show();
+        if ($action=='edit' || !$action ) {
+            if ($CDRTool['filter']['aNumber']) {
+                $CDRS->searchFormSubscriber();
+            } else {
+                $CDRS->searchForm();
+            }
+        
+        } elseif ($action==search) {
+            $CDRS->show();
+        }
+    
+        if (!$export && !$trace) {
+            $layout->showFooter();
+        }
+    
+    } else {
+        $log=sprintf("Error initializing datasource '%s', class '%s' is not defined",$cdr_source,$CDR_class);
+        print "<p>$log";
     }
-
-    if (!$export && !$trace) {
-        $layout->showFooter();
-    }
-
 } else {
-    $log=sprintf("Error initializing datasource '%s', class '%s' is not defined",$cdr_source,$CDR_class);
+	$log=sprintf("Error: datasource '%s' is not defined",$cdr_source);
     print "<p>$log";
 }
 

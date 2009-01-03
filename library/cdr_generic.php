@@ -105,7 +105,7 @@ class CDRS {
 
         // connect to the CDR database(s)
 		if(!$this->DATASOURCES[$this->cdr_source]['db_class']) {
-            $log=sprintf("Error: \$DATASOURCES['%s']['db_class'] is not defined in global.inc",$this->cdr_source);
+            $log=sprintf("Error: \$DATASOURCES['%s']['db_class'] is not defined",$this->cdr_source);
             print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
@@ -121,7 +121,7 @@ class CDRS {
         }
 
 		if(!class_exists($this->primary_database)) {
-            $log=sprintf("Error: database class '%s' is not defined in global.inc",$this->primary_database);
+            $log=sprintf("Error: database class '%s' is not defined",$this->primary_database);
             print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
@@ -170,12 +170,24 @@ class CDRS {
         	$this->natAccessCode  = $this->DATASOURCES[$this->cdr_source]['natAccessCode'];
         }
 
-        if ($this->DATASOURCES[$this->cdr_source]['db_susbcribers'] && class_exists($this->DATASOURCES[$this->cdr_source]['db_susbcribers'])) {
-            $this->AccountsDB       = new $this->DATASOURCES[$this->cdr_source]['db_susbcribers'];
-            $this->db_susbcribers  = $this->DATASOURCES[$this->cdr_source]['db_susbcribers'];
+        if ($this->DATASOURCES[$this->cdr_source]['db_susbcribers']) {
+        	if (class_exists($this->DATASOURCES[$this->cdr_source]['db_susbcribers'])) {
+            	$this->AccountsDB       = new $this->DATASOURCES[$this->cdr_source]['db_susbcribers'];
+            	$this->db_susbcribers  = $this->DATASOURCES[$this->cdr_source]['db_susbcribers'];
+            } else {
+            	$log=sprintf("Error: susbcribers database class %s is not defined",$this->DATASOURCES[$this->cdr_source]['db_susbcribers']);
+            	print $log;
+            	syslog(LOG_NOTICE, $log);
+            	return 0;
+            }
         } else if (class_exists('DB_opensips')) {
-            $this->AccountsDB       = new DB_opensips();
+            $this->AccountsDB      = new DB_opensips();
             $this->db_susbcribers  = 'DB_opensips';
+        } else {
+        	$log=sprintf("Error: subcribers database is not defined, please define 'db_subcribers' in datasource '%s'",$this->cdr_source);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return 0;
         }
     
         if ($this->DATASOURCES[$this->cdr_source]['BillingIdField']) {
@@ -1620,12 +1632,14 @@ class CDRS {
 
         if (!$locker = new DB_Locker()) {
             $log=sprintf("Error: cannot init locker database. ");
+            print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
         }
      
         if (!$lockname) {
             $log=sprintf("Error: no lockname provided. ");
+            print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
         }

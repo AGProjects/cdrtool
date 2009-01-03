@@ -1530,7 +1530,7 @@ class SipSettings {
         </tr>
         ";
 
-        $chapter=sprintf(_("SIP settings"));
+        $chapter=sprintf(_("SIP account"));
         $this->showChapter($chapter);
 
         print "
@@ -1763,7 +1763,7 @@ class SipSettings {
         <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
         ";
 
-        $chapter=sprintf(_("Account settings"));
+        $chapter=sprintf(_("SIP account"));
         $this->showChapter($chapter);
 
         if ($this->login_type != "admin" && $this->login_type != "reseller") {
@@ -2190,7 +2190,7 @@ class SipSettings {
         }
 
         if ($this->Preferences['advanced']) {
-            $chapter=sprintf(_("Divert calls"));
+            $chapter=sprintf(_("Call diversion"));
             $this->showChapter($chapter);
 
             $this->showDiversions();
@@ -2385,7 +2385,7 @@ class SipSettings {
                 <td align=left>
                 ";
                 print "<b>";
-                print _("Online status");
+                print _("Devices");
                 print "</b>
                 </td>
                 <td align=right><b>";

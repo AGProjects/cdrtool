@@ -2917,6 +2917,12 @@ class SIP_trace {
         $this->cdr_source = $cdr_source;
         $this->cdrtool    = new DB_CDRTool();
 
+        if (!is_array($DATASOURCES[$this->cdr_source])) {
+			$log=sprintf("Error: datasource '%s' is not defined",$this->cdr_source);
+            print $log;
+            return 0;
+        }
+
         if (strlen($DATASOURCES[$this->cdr_source]['enableThor'])) {
             $this->enableThor = $DATASOURCES[$this->cdr_source]['enableThor'];
         }
@@ -2958,10 +2964,11 @@ class SIP_trace {
             $this->table             = $DATASOURCES[$this->cdr_source]['table'];
             $db_class                = $DATASOURCES[$this->cdr_source]['db_class'];
             $this->purgeRecordsAfter = $DATASOURCES[$this->cdr_source]['purgeRecordsAfter'];
+
             if (class_exists($db_class)) {
             	$this->db                = new $db_class;
             } else {
-                printf("<p><font color=red>Error: database class %s is not defined in datasource %s</font>",$db_class,$this->cdr_source);
+                printf("<p><font color=red>Error: database class '%s' is not defined</font>",$db_class);
                 return false;
             }
         }
@@ -3751,8 +3758,13 @@ class Media_trace {
         global $DATASOURCES;
 
         $this->cdr_source = $cdr_source;
-
         $this->cdrtool  = new DB_CDRTool();
+
+        if (!is_array($DATASOURCES[$this->cdr_source])) {
+			$log=sprintf("Error: datasource '%s' is not defined",$this->cdr_source);
+            print $log;
+            return 0;
+        }
 
         if (strlen($DATASOURCES[$this->cdr_source]['enableThor'])) {
             $this->enableThor = $DATASOURCES[$this->cdr_source]['enableThor'];
