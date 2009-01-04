@@ -593,9 +593,9 @@ class SoapEngine {
             if ($html) {
                 printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
             } else {
-                printf ("Error from %s: %s (%s): %s\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
-            }
+                printf ("Error from %s: %s (%s): %s\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
 
+            }
             return false;
 
         } else {
@@ -2360,11 +2360,15 @@ class SipAccounts extends Records {
                     }
 
                     if ($this->sip_settings_page) {
-                        $url=sprintf('%s?account=%s@%s&reseller=%s&sip_engine=%s',
-                        $this->sip_settings_page,$account->id->username,$account->id->domain,
-                        $resellersip_settings_page,$this->SoapEngine->sip_engine);
+                        $url=sprintf('%s?account=%s@%s&sip_engine=%s',
+                        $this->sip_settings_page,$account->id->username,$account->id->domain,$this->SoapEngine->sip_engine);
 
-                        if ($this->adminonly) $url  .= sprintf('&adminonly=%s',$this->adminonly);
+                        if ($this->adminonly) {
+                        	$url  .= sprintf('&reseller=%s',$resellersip_settings_page);
+                        	$url  .= sprintf('&adminonly=%s',$this->adminonly);
+                        } else {
+                        	if ($account->reseller == $this->reseller) $url  .= sprintf('&reseller=%s',$resellersip_settings_page);
+                        }
 
                         foreach (array_keys($this->SoapEngine->extraFormElements) as $element) {
                             if (!strlen($this->SoapEngine->extraFormElements[$element])) continue;
@@ -12588,6 +12592,227 @@ class Customers extends Records {
         }
 
         return $properties;
+    }
+
+    function showVcard($vcardDictionary) {
+        #http://www.stab.nu/vcard/
+        # This file will return an vCard Version 3.0 Compliant file to the user. Observe that you should set up     #
+        # your web-server with the correct MIME-type. The reason to use the \r\n as breakes is because it should be #
+        # more compatible with MS Outlook. All other, better coded, clients sholdnt have any problems with this.    #
+        #                                                                                                           #
+        # Version 1.0 (2003-08-29)                                                                                  #
+        #                                                                                                           #
+        # Author: Alf Lovbo <affe@stab.nu>                                                                          #
+        #                                                                                                           #
+        # This document is released under the GNU General Public License.                                           #
+        #                                                                                                           #
+        #############################################################################################################
+        #                                                                                                           #
+        # USAGE                                                                                                     #
+        # -----                                                                                                     #
+        # The following variables can be used togheter with this document for accessing the functions supplied. All #
+        # of the functions listed below takes an value described by the comment after the |-symbol.                 #
+        #                                                                                                           #
+        # $vcard_birtda | Birthday YYYY-MM-DD                $vcard_f_name | Family name                            #
+        # $vcard_cellul | Cellular Phone Number              $vcard_compan | Company Name                           #
+        # $vcard_h_addr | Street Address (home)              $vcard_h_city | City (home)                            #
+        # $vcard_h_coun | Country (home)                     $vcard_h_fax  | Fax (home)                             #
+        # $vcard_h_mail | E-mail (home)                      $vcard_h_phon | Phone (home)                           #
+        # $vcard_h_zip  | Zip-code (home)                    $vcard_nickna | Nickname                               #
+        # $vcard_note   | Note                               $vcard_s_name | Given name                             #
+        # $vcard_uri    | Homepage, URL                      $vcard_w_addr | Street Address (work)                  #
+        # $vcard_w_city | City (work)                        $vcard_w_coun | Country (work)                         #
+        # $vcard_w_fax  | Fax (work)                         $vcard_w_mail | E-mail (work)                          #
+        # $vcard_w_phon | Phone (work)                       $vcard_w_role | Function (work)                        #
+        # $vcard_w_titl | Title (work)                       $vcard_w_zip  | Zip-code (work)                        #
+        #                                                                                                           #
+        #############################################################################################################
+        # You dont need to change anything below this comment.                                                      #
+        #############################################################################################################
+
+        /*
+        $vcardDictionary=array(
+                               "vcard_nickna"	=> $this->username,
+                               "vcard_f_name"	=> $this->lastname,
+                               "vcard_s_name"	=> $this->firstname,
+                               "vcard_compan"	=> $this->organization,
+                               "vcard_w_addr"	=> $this->address,
+                               "vcard_w_zip"	=> $this->postcode,
+                               "vcard_w_city"	=> $this->city,
+                               "vcard_w_state"	=> $this->county,
+                               "vcard_w_coun"	=> $this->country,
+                               "vcard_w_mail"	=> $this->email,
+                               "vcard_w_phon"	=> $this->tel,
+                               "vcard_w_fax"	=> $this->fax,
+                               "vcard_enum"	    => $this->enum,
+                               "vcard_sip"	    => $this->sip,
+                               "vcard_uri"		=> $this->web,
+                               "vcard_cellul"	=> $this->mobile
+                               );
+        */
+
+        foreach (array_keys($vcardDictionary) as $field) {
+            $value=$vcardDictionary[$field];
+            ${$field}=$value;
+        }
+    
+        if ($vcard_w_state=="N/A") $vcard_w_state=" ";
+        $vcard_w_addr = preg_replace("/[\n|\r]/"," ",$vcard_w_addr);
+    
+        $vcard_sortst = $vcard_f_name;
+    
+        $vcard_tz = date("O");
+        $vcard_rev = date("Y-m-d");
+    
+        $vcard = "BEGIN:VCARD\r\n";
+        $vcard .= "VERSION:3.0\r\n";
+        $vcard .= "CLASS:PUBLIC\r\n";
+        $vcard .= "PRODID:-//PHP vCard Class//NONSGML Version 1//SE\r\n";
+        $vcard .= "REV:" . $vcard_rev . "\r\n";
+        $vcard .= "TZ:" . $vcard_tz . "\r\n";
+        if ($vcard_f_name != ""){
+            if ($vcard_s_name != ""){
+                $vcard .= "FN:" . $vcard_s_name . " " . $vcard_f_name . "\r\n";
+                $vcard .= "N:" . $vcard_f_name . ";" . $vcard_s_name . "\r\n";
+            }
+            else {
+                $vcard .= "FN:" . $vcard_f_name . "\r\n";
+                $vcard .= "N:" . $vcard_f_name . "\r\n";
+            }
+        }
+        elseif ($vcard_s_name != ""){
+            $vcard .= "FN:" . $vcard_s_name . "\r\n";
+            $vcard .= "N:" . $vcard_s_name . "\r\n";
+        }
+        if ($vcard_nickna != ""){
+            $vcard .= "NICKNAME:" . $vcard_nickna . "\r\n";
+        }
+        if ($vcard_compan != ""){
+            $vcard .= "ORG:" . $vcard_compan . "\r\n";
+            $vcard .= "SORTSTRING:" . $vcard_compan . "\r\n";
+        }
+        elseif ($vcard_f_name != ""){
+            $vcard .= "SORTSTRING:" . $vcard_f_name . "\r\n";
+        }
+        if ($vcard_birtda != ""){
+            $vcard .= "BDAY:" . $vcard_birtda . "\r\n";
+        }
+        if ($vcard_w_role != ""){
+            $vcard .= "ROLE:" . $vcard_w_role . "\r\n";
+        }
+        if ($vcard_w_titl != ""){
+            $vcard .= "TITLE:" . $vcard_w_titl . "\r\n";
+        }
+        if ($vcard_note != ""){
+            $vcard .= "NOTE:" . $vcard_note . "\r\n";
+        }
+        if ($vcard_w_mail != ""){
+            $item++;
+            $vcard .= "item$item.EMAIL;TYPE=INTERNET;type=PREF:" . $vcard_w_mail . "\r\n";
+            $vcard .= "item$item.X-ABLabel:email" . "\r\n";
+        }
+        if ($vcard_cellul != ""){
+            $vcard .= "TEL;TYPE=VOICE,CELL:" . $vcard_cellul . "\r\n";
+        }
+        if ($vcard_enum != ""){
+            $item++;
+            $vcard .= "item$item.TEL:" . $vcard_enum . "\r\n";
+            $vcard .= "item$item.X-ABLabel:ENUM" . "\r\n";
+        }
+        if ($vcard_sip != ""){
+            $item++;
+            $vcard .= "item$item.TEL;TYPE=INTERNET:" . $vcard_sip . "\r\n";
+            $vcard .= "item$item.X-ABLabel:SIP" . "\r\n";
+        }
+        if ($vcard_w_fax != ""){
+            $vcard .= "TEL;TYPE=FAX,WORK:" . $vcard_w_fax . "\r\n";
+        }
+        if ($vcard_w_phon != ""){          
+                    $vcard .= "TEL;TYPE=VOICE,WORK:" . $vcard_w_phon . "\r\n";         
+            }
+        if ($vcard_uri != ""){
+            $vcard .= "URL:" . $vcard_uri . "\r\n";
+        }
+        if ($vcard_addr != ""){
+            $vcard .= "ADR;TYPE=HOME,POSTAL,PARCEL:" . $vcard_addr . "\r\n";
+        }
+        if ($vcard_labl != ""){
+            $vcard .= "LABEL;TYPE=DOM,HOME,POSTAL,PARCEL:" . $vcard_labl . "\r\n";
+        }
+        $vcard_addr = "";
+        $vcard_labl = "";
+        if ($vcard_w_addr != ""){
+                    $vcard_addr = ";;" . $vcard_w_addr;
+                    $vcard_labl = $vcard_w_addr;
+            }
+        if ($vcard_w_city != ""){
+                    if ($vcard_addr != ""){
+                            $vcard_addr .= ";" . $vcard_w_city;  
+                    }
+                    else{ 
+                            $vcard_addr .= ";;;" . $vcard_w_city;
+                    }
+                    if ($vcard_labl != ""){
+                            $vcard_labl .= "\\r\\n" . $vcard_w_city;
+                    }
+                    else {
+                            $vcard_labl = $vcard_w_city;
+                    }
+            }
+        if ($vcard_w_state != ""){
+                    if ($vcard_addr != ""){
+                            $vcard_addr .= ";" . $vcard_w_state;
+                    }
+                    else{ 
+                            $vcard_addr .= ";;;" . $vcard_w_state;
+                    }
+                    if ($vcard_labl != ""){
+                            $vcard_labl .= "\\r\\n" . $vcard_w_state;
+                    }
+                    else {
+                            $vcard_labl = $vcard_w_state;
+                    }
+            }
+        if ($vcard_w_zip != ""){
+                    if ($vcard_addr != ""){
+                            $vcard_addr .= ";" . $vcard_w_zip;
+                    }
+                    else{
+                            $vcard_addr .= ";;;;" . $vcard_w_zip;
+                    }
+                    if ($vcard_labl != ""){
+                            $vcard_labl .= "\\r\\n" . $vcard_w_zip;
+                    }
+                    else {  
+                            $vcard_labl = $vcard_w_zip;
+                    }
+            }
+        if ($vcard_w_coun != ""){
+                    if ($vcard_addr != ""){
+                            $vcard_addr .= ";" . $vcard_w_coun;
+                    }
+                    else{
+                            $vcard_addr .= ";;;;;" . $vcard_w_coun;
+                    }
+                    if ($vcard_labl != ""){
+                            $vcard_labl .= "\\r\\n" . $vcard_w_coun;
+                    }
+                    else {
+                            $vcard_labl = $vcard_w_coun;
+                    }
+            }
+        if ($vcard_addr != ""){
+                    $vcard .= "ADR;TYPE=WORK,POSTAL,PARCEL:" . $vcard_addr . "\r\n";
+            }
+            if ($vcard_labl != ""){
+                    $vcard .= "LABEL;TYPE=DOM,WORK,POSTAL,PARCEL:" . $vcard_labl . "\r\n";
+            }
+        if ($vcard_categ != ""){
+            $vcard .= "CATEGORY:" . $vcard_categ . "\r\n";
+        }
+    
+        $vcard .= "END:VCARD\n";
+        return $vcard;
     }
 }
 
