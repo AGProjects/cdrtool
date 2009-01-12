@@ -2,20 +2,18 @@
 CDRTool installation
 --------------------
 
-Obtain the software from http://cdrtool.ag-projects.com. The software is
-available as a tar archive or as a debian package. 
+Download
+--------
 
-Installing from the tar archive:
+You can install CDRTool in the following ways:
 
-Change directory to your web root (/var/www on Debian systems)
+a. As a Debian package
+b. From a tar archive
+c. From the version control repository
 
-tar zxvf cdrtool*.tgz 
+a. Debian installation (stable version)
 
-You must create /etc/cdrtool config directory unless you have installed the
-debian package.
-
-For people running Debian testing or unstable is a public repository
-provided by AG Projects. To use it, add these lines to /etc/apt/sources.list
+Add these lines to /etc/apt/sources.list
 
 # AG Projects software
 deb	http://ag-projects.com/debian unstable main
@@ -31,6 +29,31 @@ After that, run:
 apt-get update
 apt-get install cdrtool
 
+b. Installing from the tar archive (stable version)
+
+The software can be downloaded as a tar archive from:
+
+http://download.ag-projects.com/CDRTool/
+
+Extract it using tar xzvf cdrtool-version.tar.gz and copy the directory
+under the your web root directory/CDRTool (/var/www/CDRTool on Debian
+systems).
+
+c. Installing from the version control repository (development branch)
+
+The source code is managed using darcs version control tool. The darcs
+repository can be fetched with:
+
+darcs get http://devel.ag-projects.com/repositories/cdrtool
+
+To obtain the incremental changes after the initial get:
+
+cd cdrtool
+darcs pull -a
+
+
+Configuration
+-------------
 
 Create CDRTool database
 -----------------------
@@ -55,11 +78,12 @@ The script performs the following:
 4. It populates the cdrtool database with initial values
 
 
-PHP setup and Apache setup
---------------------------
+Apache and PHP setup
+--------------------
 
-Install PHP and its dependencies. If you have chosen to install the debian
-package, the dependencies will be resolved during installation.
+Install PHP apache modele and command line with its dependencies. If you
+have chosen to install the debian package, the dependencies will be resolved
+during installation.
 
 Configure php both the command line and apache module to support mysql.
 
@@ -98,8 +122,8 @@ You must change at least the following settings:
 - The mediaDispatcher address
 
  
-Enable rating engine
---------------------
+Rating engine setup
+-------------------
 
 The rating engine is used by the prepaid application and as price calculator
 for postpaid traffic.
