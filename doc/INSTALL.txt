@@ -413,6 +413,22 @@ Replace the hostname with the real IP or hostname of the mediaproxy
 dispatcher.
 
 
+Login accounts
+--------------
+
+To login to the web interface you must create login accounts. During the
+initial database the username 'admin' with the password 'admin' has been
+automatically created. You should change this password after the first time
+you login. Click on the 'Login' link to add or change existing login
+accounts. Each account has a set of Permissions that grant the login account
+with certain right. Also you must specify which datasource may be accessed
+by a login account. You can experiment with the set of Permissions, their
+name should be self explanatory. Beware that the 'admin' right simply mean
+that you can create other login accounts. You still need to select the
+appropriate permissions for the admin account in order to have access to
+various functionality controlled by the Permissions system.
+
+
 Asterisk setup
 --------------
 
