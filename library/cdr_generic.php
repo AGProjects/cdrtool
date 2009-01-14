@@ -569,7 +569,7 @@ class CDRS {
             (date,login,ip,url,results,rerun,reedit,datasource)
             values
             (NOW(),'$loginname','$REMOTE_ADDR','$this->url','$this->rows','$this->url_run','$this->url_edit','$this->cdr_source')";
-            
+
             if ($this->cdrtool->query($log_query)) {
                 $this->cdrtool->query("select LAST_INSERT_ID() as lid");
                 $this->cdrtool->next_record();
