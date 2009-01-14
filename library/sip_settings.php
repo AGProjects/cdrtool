@@ -5675,10 +5675,7 @@ class SipSettings {
         }
 
         $this->billingProfiles=$result;
-        //dprint_r($this->billingProfiles);
-
     }
-
 
     function showBillingProfiles() {
         if ($this->login_type != 'reseller' && $this->login_type != 'admin') {
@@ -5696,18 +5693,22 @@ class SipSettings {
 
         print "
         <tr>
-          <td class=border>";
+          <td class=border valign=top>";
             print _("Profiles");
             printf ("
           </td>
           <td class=border align=left>
             Weekday:
-            <input type=text size=10 maxsize=64 name=profileWeekday value='%s'>
+            <input type=text size=15 maxsize=64 name=profileWeekday value='%s'>/
+            <input type=text size=15 maxsize=64 name=profileWeekdayAlt value='%s'>
             Weekend:
-            <input type=text size=10 maxsize=64 name=profileWeekend value='%s'>
+            <input type=text size=15 maxsize=64 name=profileWeekend value='%s'>/
+            <input type=text size=15 maxsize=64 name=profileWeekendAlt value='%s'>
             ",
             $this->billingProfiles->profileWeekday,
-            $this->billingProfiles->profileWeekend
+            $this->billingProfiles->profileWeekdayAlt,
+            $this->billingProfiles->profileWeekend,
+            $this->billingProfiles->profileWeekendAlt
             );
 
             if ($this->billingProfiles->timezone) {
@@ -5716,6 +5717,7 @@ class SipSettings {
                 $_timezone=$this->resellerProperties['timezone'];
             }
 
+            print "<br>Timezone: ";
             $this->showTimezones('profileTimezone',$_timezone);
 
             print "
@@ -5748,13 +5750,15 @@ class SipSettings {
 
         $this->billingProfiles=$result;
 
-        $profiles=array("entity"         =>'subscriber://'.$this->account ,
-                        "profileWeekday" => trim($_REQUEST['profileWeekday']),
-                        "profileWeekend" => trim($_REQUEST['profileWeekend']),
-                        "timezone"       => trim($_REQUEST['profileTimezone'])
+        $profiles=array("entity"            =>'subscriber://'.$this->account ,
+                        "profileWeekday"    => trim($_REQUEST['profileWeekday']),
+                        "profileWeekdayAlt" => trim($_REQUEST['profileWeekdayAlt']),
+                        "profileWeekend"    => trim($_REQUEST['profileWeekend']),
+                        "profileWeekendAlt" => trim($_REQUEST['profileWeekendAlt']),
+                        "timezone"          => trim($_REQUEST['profileTimezone'])
                         );
 
-        //dprint_r($profiles);
+        //print_r($profiles);
 
         $this->RatingPort->addHeader($this->SoapAuth);
         if ($this->billingProfiles->profileWeekday && !$profiles['profileWeekday']) {
@@ -5774,6 +5778,7 @@ class SipSettings {
             // update profile
 
             $result     = $this->RatingPort->setEntityProfiles($profiles);
+
             if (PEAR::isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
@@ -5783,9 +5788,6 @@ class SipSettings {
                     return false;
                 }
             }
-
-        } else {
-            // do nothing
         }
     }
 

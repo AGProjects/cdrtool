@@ -2668,6 +2668,7 @@ class CDR_opensips extends CDR {
             }
         } else {
             print "<td valign=top align=right>$this->durationPrint</td>";
+
             if ($this->CDRS->rating) {
                 if ($this->price == "0.0000" && !$this->rate) {
                     $this->pricePrint="";
@@ -2680,6 +2681,9 @@ class CDR_opensips extends CDR {
                 }
     
                 print "<td valign=top align=right>$this->pricePrint</td>";
+
+            } else {
+            	print "<td valign=top></td>";
             }
 
             print "
