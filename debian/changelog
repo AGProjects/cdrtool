@@ -1,3 +1,28 @@
+cdrtool (6.7.2) unstable; urgency=low
+
+  * Fixed number of columns in cdr when rating is disabled
+  * Improve installation and rating documentation
+  * Print errors when configuration items are missing from global.inc
+  * Clean up call search page
+  * Removed MediaProxy 1.0 sessions
+  * Renamed in global.inc SourceIPRealmTranslation to domainTranslation_SourceIP
+  * Print stream duration instead of stop time in media trace
+  * Display a limited view of network topology for non-admin accounts
+  * Fix login name used for logging
+
+  [ NGNPro related changes ]
+  * Added screen for sip login reminder
+  * Added section about login account setup
+  * Improve download instructions
+  * Added falback billing profiles in sip settings page
+  * Added vcard function
+  * Do not use  reseller in the sip settings page link if account belongs to
+    another reseller.
+  * Added https key mapping
+  * Display both sip_proxy and media_relay roles in SIP Thor circle
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 18 Jan 2009 13:11:58 +0100
+
 cdrtool (6.7.1) unstable; urgency=low
 
   * Simplified the sample configuration file global.inc.simple.sample
