@@ -38,12 +38,14 @@ $RECORDS    = new $_class(&$SoapEngine);
 
 $login_credentials['sip_engine'] = $RECORDS->SoapEngine->sip_engine;
 
-$RECORDS->showPasswordReminderForm();
-
 if ($_REQUEST['email_filter']) {
 	sleep(2);
-	$accounts=$RECORDS->getAccountsForPasswordReminder(1);
+	$accounts=$RECORDS->getAccountsForPasswordReminder(5);
+}
 
+$RECORDS->showPasswordReminderForm($accounts);
+
+if ($_REQUEST['email_filter']) {
     if (count($accounts)) {
     	printf ("<p>Found %d accounts having email address set to '%s'",count($accounts),trim($_REQUEST['email_filter']));
     }
@@ -52,6 +54,7 @@ if ($_REQUEST['email_filter']) {
 		$account=$_account['username'].'@'.$_account['domain'];
     	$SipSettings = new SipSettings($account,$login_credentials,$soapEngines);
         $SipSettings->sendEmail();
+        flush();
         sleep(1);
     }
 }
