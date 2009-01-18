@@ -1,0 +1,64 @@
+<?
+
+/*
+    Copyright (c) 2009 AG Projects
+    http://ag-projects.com
+    Author Adrian Georgescu
+
+    This page provides the functions for managing SIP accounts,
+    ENUM ranges, ENUM numbers, Trusted Peers, LCR, Rating plans
+    on a remote NGN-Pro server
+*/
+
+require("/etc/cdrtool/global.inc");
+
+if (is_readable("/etc/cdrtool/local/header.phtml")) {
+    include("/etc/cdrtool/local/header.phtml");
+} else {
+    include("header.phtml");
+}
+
+require_once("ngnpro_soap_library.php");
+require_once("ngnpro_client.php");
+require_once('sip_settings.php');
+
+if (file_exists("/etc/cdrtool/ngnpro_engines.inc")) {
+    require("/etc/cdrtool/ngnpro_engines.inc");
+} else {
+    page_close();
+    printf ("Error: you must copy setup/ngnpro_engines.inc.sample to /etc/cdrtool/ngnpro_engines.inc and edit it before trying again");
+    exit;
+}
+
+$login_credentials=array('login_type' => 'admin');
+
+$SoapEngine = new SoapEngine('sip_accounts',$soapEngines,$login_credentials);
+$_class     = $SoapEngine->records_class;
+$RECORDS    = new $_class(&$SoapEngine);
+
+$login_credentials['sip_engine'] = $RECORDS->SoapEngine->sip_engine;
+
+$RECORDS->showPasswordReminderForm();
+
+if ($_REQUEST['email_filter']) {
+	$accounts=$RECORDS->getAccountsForPasswordReminder();
+
+    if (count($accounts)) {
+    	printf ("<p>Found %d accounts having email address set to '%s'",count($accounts),trim($_REQUEST['email_filter']));
+    }
+
+    foreach ($accounts as $_account) {
+		$account=$_account['username'].'@'.$_account['domain'];
+    	$SipSettings = new SipSettings($account,$login_credentials,$soapEngines);
+        $SipSettings->sendEmail();
+    }
+}
+
+print "<p><a href=sip_settings.phtml><u>Back</u></a> to SIP settings page";
+
+print "
+</body>
+</html>
+";
+
+?>

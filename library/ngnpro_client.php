@@ -2908,6 +2908,59 @@ class SipAccounts extends Records {
             }
         }
     }
+
+    function showPasswordReminderForm() {
+        printf ("
+        <form method=post>
+    	<h2>Password reminder</h2>
+        <p>Fill in the e-mail address used during the registration of the SIP account:
+        <p>
+        <input type=text size=35 name='email_filter' value='%s'>
+        <input type=submit value='Submit'>
+        </form>
+        ",
+        $this->filters['email']);
+    }
+
+    function getAccountsForPasswordReminder($maximum_accounts=3) {
+
+		$accounts=array();
+
+    	$filter  = array('email' => $this->filters['email']);
+
+        $range   = array('start' => 0,
+                         'count' => $maximum_accounts);
+
+        $orderBy = array('attribute' => 'changeDate',
+                         'direction' => 'DESC');
+
+        $Query   = array('filter'  => $filter,
+                         'orderBy' => $orderBy,
+                         'range'   => $range);
+        
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $result  = $this->SoapEngine->soapclient->getAccounts($Query);
+        
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+        } else {
+            $i=0;
+
+            while ($i < $result->total)  {
+            	if (!$result->accounts[$i]) break;
+                $account = $result->accounts[$i];
+                $accounts[]=array('username'=> $account->id->username,
+                                  'domain'  => $account->id->domain
+                                  );
+            	$i++;
+            }
+        }
+
+        return $accounts;
+    }
 }
 
 class SipAliases extends Records {

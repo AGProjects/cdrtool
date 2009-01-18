@@ -320,8 +320,6 @@ class SIP_Subscriber_Auth extends Auth {
   var $classname      = "SIP_Subscriber_Auth";
   var $lifetime       =  0;
   var $magic          = "d66mmmg111dsgzz";  ## Challenge seed
-  var $database_class = "DB_subscribers";
-  var $database_table = "subscriber";
 
   function auth_loginform() {
 
@@ -369,13 +367,10 @@ class SIP_Subscriber_Auth extends Auth {
 
         if ($domainFilters[$domain]['sip_engine']) {
             $SIP['engine']   = $domainFilters[$domain]['sip_engine'];
-            $SIP['customer'] = $domainFilters[$domain]['customer'];
-            $SIP['reseller'] = $domainFilters[$domain]['reseller'];
- 
         } else if ($domainFilters['default']['sip_engine']) {
             $SIP['engine']=$domainFilters['default']['sip_engine'];
         } else {
-            print "Error: no domainFilter available in ngnpro_engines.inc";
+            print "Error: cannot authenticate SIP subscriber, no domainFilter defined in ngnpro_engines.inc";
             return false;
         }
 
@@ -389,18 +384,12 @@ class SIP_Subscriber_Auth extends Auth {
 
         $this->SipPort  = new WebService_NGNPro_SipPort($soapEngines[$SIP['engine']]['url']);
 
-        $log=sprintf ("Forward authorization to %s",$soapEngines[$SIP['engine']]['url']);
-
-        dprint($log);
-
         $this->SipPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
         $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
         $this->SipPort->addHeader($this->SoapAuth);
 
         $result     = $this->SipPort->getAccount(array("username" =>$a[0],"domain"   =>$domain));
-
-        //dprint_r($result);
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -413,6 +402,9 @@ class SIP_Subscriber_Auth extends Auth {
         $pass_md5  	       = md5($result->password);
         $expected_response = md5("$username:$pass_md5:$challenge");
 
+        $SIP['customer'] = $result->customer;
+        $SIP['reseller'] = $result->reseller;
+
         if ($expected_response == $response) {
             return true;
        } else {
@@ -420,6 +412,7 @@ class SIP_Subscriber_Auth extends Auth {
        }
     }
 }
+
 function otp_sms($tel,$message,$hideoutput) {
     $tel=preg_replace("/[^0-9]/","",$tel);
     $tel="+".$tel;
