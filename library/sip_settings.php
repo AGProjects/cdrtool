@@ -5133,6 +5133,13 @@ class SipSettings {
 
         $tpl = $this->getEmailTemplate($this->reseller, $this->Preferences['language']);
 
+	    if (!$tpl) {
+            print "<p><font color=red>";
+        	print _("Error: no email template found");
+            print "</font>";
+            return false;
+        }
+
         if (in_array("free-pstn",$this->groups)) $this->allowPSTN=1; // used by smarty
 
         define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
@@ -5641,7 +5648,7 @@ class SipSettings {
         $file = "sip_settings_email_$language.tpl";
         $file2 = "sip_settings_email.tpl";
 
-        dprint("templates_path = $this->templates_path");
+        //print("templates_path = $this->templates_path");
 
         if (file_exists("$this->templates_path/$this->reseller/$file")) {
             return "$this->templates_path/$this->reseller/$file";

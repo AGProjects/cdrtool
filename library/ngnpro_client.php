@@ -2909,24 +2909,56 @@ class SipAccounts extends Records {
         }
     }
 
-    function showPasswordReminderForm() {
+    function showPasswordReminderForm($accounts=array()) {
+
         printf ("
         <form method=post>
-    	<h2>Password reminder</h2>
-        <p>Fill in the e-mail address used during the registration of the SIP account:
+    	<h2>");
+
+        print _("Login account reminder");
+        print "</h2>
+        <p>";
+
+        print _("Fill in the e-mail address used during the registration of the SIP account:");
+        printf ("
         <p>
         <input type=text size=35 name='email_filter' value='%s'>
-        <input type=submit value='Submit'>
-        </form>
         ",
         $this->filters['email']);
+
+        if (count($accounts) > 1 || $_REQUEST['sip_filter']) {
+            printf ("
+            <p>");
+            print _("More than one accounts use this email address. If you wish to receive the password for a particular account fill in the SIP account below:");
+
+            printf ("
+            <p>
+            <input type=text size=35 name='sip_filter' value='%s'>
+            ",
+            $_REQUEST['sip_filter']);
+        }
+
+        printf ("
+        <input type=submit value='Submit'>
+        </form>
+        ");
+
     }
 
-    function getAccountsForPasswordReminder($maximum_accounts=3) {
+    function getAccountsForPasswordReminder($maximum_accounts=5) {
 
 		$accounts=array();
 
     	$filter  = array('email' => $this->filters['email']);
+
+		if ($_REQUEST['sip_filter']) {
+            list($username,$domain)=explode('@',trim($_REQUEST['sip_filter']));
+            if ($username && $domain) {
+    			$filter  = array('username' => $username,
+                                 'domain'   => $domain
+                                 );
+            }
+        }
 
         $range   = array('start' => 0,
                          'count' => $maximum_accounts);
