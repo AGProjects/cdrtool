@@ -357,11 +357,11 @@ class SIP_Subscriber_Auth extends Auth {
         $domain= $a[1];
         if (count($a) !=2 ) return false;
 
-	global $domainFilters, $resellerFilters, $soapEngines ;
+	    global $domainFilters, $resellerFilters, $soapEngines ;
 
         require_once('SOAP/Client.php');
       	require("/etc/cdrtool/ngnpro_engines.inc");
-	require_once("ngnpro_soap_library.php");
+	    require_once("ngnpro_soap_library.php");
 
         $SIP['account']    = $username;
 
@@ -373,6 +373,8 @@ class SIP_Subscriber_Auth extends Auth {
             print "Error: cannot authenticate SIP subscriber, no domainFilter defined in ngnpro_engines.inc";
             return false;
         }
+
+        printf ("Engine=%s",$SIP['engine']);
 
         $this->SOAPlogin=array(
                                "username" => $soapEngines[$SIP['engine']]['username'],
@@ -395,7 +397,7 @@ class SIP_Subscriber_Auth extends Auth {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error from %s (SipPort): %s (%s): %s</font>",$soapEngines[$SIP['engine']]['url'],$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         }
 

@@ -218,10 +218,20 @@ class SipThorNetworkImage {
     var $imgsize      = 630;
     var $nodes        = array();
 	var $node_statistics = array();
+    var $display_options = array();
+    var $accounts_item   = 'online_accounts';
 
-    function SipThorNetworkImage($engineId,$allowedDomains=array()) {
+    function SipThorNetworkImage($engineId,$allowedDomains=array(),$display_options=array()) {
 
         if (!strlen($engineId)) return false;
+
+        if (is_array($display_options)) {
+        	$this->display_options=$display_options;
+        }
+
+        if ($this->display_options['accounts_item']) {
+        	$this->accounts_item=$this->display_options['accounts_item'];
+        }
 
         $this->soapEngineId=$engineId;
         $NetworkStatistics=new NetworkStatistics($engineId,$allowedDomains);
@@ -234,12 +244,14 @@ class SipThorNetworkImage {
         $this->thor_mangers    = $NetworkStatistics->thor_managers;
         $this->node_statistics = $NetworkStatistics->node_statistics;
 
-        require_once("media_sessions.php");
-        $MediaSessions = new MediaSessionsNGNPro($engineId);
-        $MediaSessions->getSummary();
-
-        foreach ($MediaSessions->summary as $_relay) {
-        	$this->node_statistics[$_relay['ip']]['sessions']=$_relay['session_count'];
+        if (!$this->display_options['hide_sessions']) {
+            require_once("media_sessions.php");
+            $MediaSessions = new MediaSessionsNGNPro($engineId);
+            $MediaSessions->getSummary();
+    
+            foreach ($MediaSessions->summary as $_relay) {
+                $this->node_statistics[$_relay['ip']]['sessions']=$_relay['session_count'];
+            }
         }
     }
 
@@ -267,8 +279,10 @@ class SipThorNetworkImage {
         // Sip Thor title rectangle image
         $sip_thor_background_img = @imagecreatefrompng('SipThorNetworkBackground.png');
         list($tw, $th) = getimagesize('SipThorNetworkBackground.png');
-    
-        imagecopy ($img,$sip_thor_background_img, $this->imgsize/2-$tw/2, $this->imgsize/2-$th/2, 0, 0, $tw, $th);
+
+        if (!$this->display_options['hide_frame']) {
+        	imagecopy ($img,$sip_thor_background_img, $this->imgsize/2-$tw/2, $this->imgsize/2-$th/2, 0, 0, $tw, $th);
+        }
         imagecopy ($img,$cloud_img, $this->imgsize/2-$cw/2, $this->imgsize/2-$ch/2, 0, 0, $cw, $ch);
 
         $dash=false;
@@ -306,6 +320,12 @@ class SipThorNetworkImage {
             	$h1=$h1+50;
 
             }
+
+            $v1=100;
+            foreach (array_keys($this->dns_managers) as $_ip) {
+            	imagestring ($img, 3, $this->imgsize-125, $v1, $_ip, $black);
+                $v1=$v1+10;
+            }
         }
 
         if (count($this->node_statistics)) {
@@ -325,13 +345,22 @@ class SipThorNetworkImage {
               $py=$y;
 
               if (strlen($this->node_statistics[$text]['online_accounts']) && strlen($this->node_statistics[$text]['sessions'])) {
-              	$extra_text1=intval($this->node_statistics[$text]['online_accounts']). ' accounts';
-               	$extra_text2=intval($this->node_statistics[$text]['sessions']). ' sessions';
+                if (!$this->display_options['hide_accounts']) {
+              		$extra_text1=intval($this->node_statistics[$text][$this->accounts_item]). ' accounts';
+                }
+                if (!$this->display_options['hide_sessions']) {
+               		$extra_text2=intval($this->node_statistics[$text]['sessions']). ' sessions';
+                }
               } else if (strlen($this->node_statistics[$text]['online_accounts'])) {
-              	$extra_text1=intval($this->node_statistics[$text]['online_accounts']). ' accounts';
+                if (!$this->display_options['hide_accounts']) {
+              		$extra_text1=intval($this->node_statistics[$text][$this->accounts_item]). ' accounts';
+                }
+
                	$extra_text2="";
               } else if (strlen($this->node_statistics[$text]['sessions'])) {
-               	$extra_text1=intval($this->node_statistics[$text]['sessions']). ' sessions';
+                if (!$this->display_options['hide_sessions']) {
+               		$extra_text1=intval($this->node_statistics[$text]['sessions']). ' sessions';
+                }
               	$extra_text2="";
               }
          

@@ -5706,11 +5706,11 @@ class SipSettings {
           </td>
           <td class=border align=left>
             Weekday:
-            <input type=text size=15 maxsize=64 name=profileWeekday value='%s'>/
-            <input type=text size=15 maxsize=64 name=profileWeekdayAlt value='%s'>
+            <input type=text size=10 maxsize=64 name=profileWeekday value='%s'>/
+            <input type=text size=10 maxsize=64 name=profileWeekdayAlt value='%s'>
             Weekend:
-            <input type=text size=15 maxsize=64 name=profileWeekend value='%s'>/
-            <input type=text size=15 maxsize=64 name=profileWeekendAlt value='%s'>
+            <input type=text size=10 maxsize=64 name=profileWeekend value='%s'>/
+            <input type=text size=10 maxsize=64 name=profileWeekendAlt value='%s'>
             ",
             $this->billingProfiles->profileWeekday,
             $this->billingProfiles->profileWeekdayAlt,

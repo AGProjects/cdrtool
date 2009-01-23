@@ -1376,23 +1376,25 @@ class Records {
             } else {
                 $customer = $this->login_credentials['customer'];
             }
-            if (!$customer) $customer = $reseller;
+
         } else {
             if ($dictionary['reseller']) {
                 $reseller = $dictionary['reseller'];
             } else {
                 $reseller = trim($_REQUEST['reseller']);
             }
+
             if ($dictionary['customer']) {
                 $customer = $dictionary['customer'];
             } else {
                 $customer = trim($_REQUEST['customer']);
             }
-
-            if (!$customer) $customer = $reseller;
         }
 
+        if (!$customer) $customer = $reseller;
+
         return array(intval($customer),intval($reseller));
+
     }
 
     function getLoginProperties() {
