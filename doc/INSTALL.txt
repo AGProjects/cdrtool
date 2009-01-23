@@ -7,11 +7,12 @@ Download
 
 You can install CDRTool in the following ways:
 
-a. As a Debian package
-b. From a tar archive
-c. From the version control repository
+a. As a debian package from ag-projects repository
+b. Generating the debian package
+c. Installing from the tar archive
+d. From the version control repository
 
-a. Debian installation (stable version)
+a. As a debian package from ag-projects repository (stable version)
 
 Add these lines to /etc/apt/sources.list
 
@@ -29,7 +30,24 @@ After that, run:
 apt-get update
 apt-get install cdrtool
 
-b. Installing from the tar archive (stable version)
+b. Generating the debian package
+
+The software can be downloaded as a tar archive from:
+
+http://download.ag-projects.com/CDRTool/
+
+Extract it using tar xzvf cdrtool-version.tar.gz
+
+cd CDRTool
+debuild
+
+Assuming you have all the dependencies satisfied (if you are compiling opensips
+from source you'll have them), it will generate a file called
+cdrtool_version_all.deb
+
+You can install it with dpkg -i cdrtool_version_all.deb
+
+c. Installing from the tar archive (stable version)
 
 The software can be downloaded as a tar archive from:
 
@@ -39,7 +57,7 @@ Extract it using tar xzvf cdrtool-version.tar.gz and copy the directory
 under the your web root directory/CDRTool (/var/www/CDRTool on Debian
 systems).
 
-c. Installing from the version control repository (development branch)
+d. Installing from the version control repository (development branch)
 
 The source code is managed using darcs version control tool. The darcs
 repository can be fetched with:
