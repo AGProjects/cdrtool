@@ -306,9 +306,12 @@ Configure OpenSIPS for MySQL storage of subscribers and Radius accounting.
 For SIP tracing you need to configure the OpenSIPS to enable the siptrace
 module. 
 
+You will also need a valid client.conf, you can copy the one in
+/etc/radiusclient-ng/radiusclient.conf and adapt it to suit your needs
+
 To enable quota you must add one extra column in the subscriber table:
 
-alter table opensips.subscriber add column quota int not null;
+ALTER TABLE opensips.subscriber ADD COLUMN quota int NOT NULL;
 
 Entries required in opensips.cfg:
 
