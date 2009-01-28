@@ -40,7 +40,7 @@ if ($example_domain) {
  <tr valign=middle align=left>
 <?
 print "<td>";
-  print _("Username");
+  print _("SIP address");
   print ":</td>";
 ?>
   <td><input type="text" name="username"  
@@ -69,7 +69,7 @@ print "
 	<br>
 	<input onClick="doChallengeResponse(); return false;" type="submit" name="submitbtn" value="Login now">
 
-<p>Password or username forgotten? Click <a href=sip_login_reminder.phtml><u>here</u></a> to receive a reminder.
+<p>SIP account or password or forgotten? Click <a href=sip_login_reminder.phtml><u>here</u></a> to receive a reminder.
 
 <?
 ?>
@@ -97,7 +97,7 @@ if ($username) {
 	print "
    	<font color=red>
 	";
-    print _("Either your username or your password are invalid");
+    print _("Either your SIP account or password are invalid");
 
 	print "<br>
     </font>
