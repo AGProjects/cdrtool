@@ -212,20 +212,6 @@ failed SIP sessions.
 The patches and instructions for how to apply them are found in
 setup/radius/FreeRadius/ and contrib/freeradius-brandinger/.
 
-Secondly, to use the MySQL procedures to create a table automatically for
-each calendar month radacctYYYYMM, your must use MySQL 5 and Freeradius
-server mysql module must be compiled to support CLIENT_MULTI_RESULTS mysql
-connection flag in src/modules/rlm_sql/drivers/rlm_sql_mysql/sql_mysql.c:
-
-if (!(mysql_sock->sock = mysql_real_connect(&(mysql_sock->conn),
-                                            config->sql_server,
-                                            config->sql_login,
-                                            config->sql_password,
-                                            config->sql_db,
-                                            atoi(config->sql_port), NULL,
-                                            CLIENT_FOUND_ROWS|CLIENT_MULTI_RESULTS
-                                            ))) {
-
 Install the server from Debian package or your own compiled version after
 your applied the patches:
 
