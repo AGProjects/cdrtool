@@ -1896,6 +1896,9 @@ class CDRS_opensips extends CDRS {
     }
 
     function getQuota($account) {
+
+        if (!$this->quotaEnabled) return true;
+
         if (!$account) return;
 
         if (!is_object($this->AccountsDB)) {
@@ -1946,7 +1949,10 @@ class CDRS_opensips extends CDRS {
 
     function getBlockedByQuotaStatus($account) {
 
+        if (!$this->quotaEnabled) return true;
+
         if (!$account) return 0;
+
         if (!is_object($this->AccountsDB)) {
             $log=printf("Error: AccountsDB is not a valid database object");
             print $log;

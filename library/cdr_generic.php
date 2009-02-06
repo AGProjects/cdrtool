@@ -20,6 +20,7 @@ class CDRS {
 	var $localDomains        = array();
 	var $maxCDRsNormalizeWeb = 500;
     var $E164_class          = 'E164_Europe';
+    var $quotaEnabled        = false;
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
@@ -101,6 +102,12 @@ class CDRS {
             if ($this->DATASOURCES[$this->cdr_source]['showRate'])   $this->showRate    = $this->DATASOURCES[$this->cdr_source]['showRate'];
             if ($this->DATASOURCES[$this->cdr_source]['rateField'])  $this->rateField   = $this->DATASOURCES[$this->cdr_source]['rateField'];
             if ($this->DATASOURCES[$this->cdr_source]['priceField']) $this->priceField   = $this->DATASOURCES[$this->cdr_source]['priceField'];
+        }
+
+        if ($this->DATASOURCES[$this->cdr_source]['UserQuotaClass']) {
+        	$this->quotaEnabled     = 1;
+            $this->quota_init_flag  = $this->cdr_source.':quotaCheckInit';
+            $this->quota_reset_flag = $this->cdr_source.':reset_quota_for';
         }
 
         // connect to the CDR database(s)
@@ -246,9 +253,6 @@ class CDRS {
                 $this->maxrowsperpage = "25";
             }
         }
-
-        $this->quota_init_flag   = $this->cdr_source.':quotaCheckInit';
-        $this->quota_reset_flag  = $this->cdr_source.':reset_quota_for';
 
         $this->LoadDisconnectCodes();
         $this->LoadDestinations();
@@ -1553,6 +1557,9 @@ class CDRS {
     }
 
     function cacheMonthlyUsage($accounts=array()) {
+
+    	if (!$this->quotaEnabled) return true;
+
         $saved_keys=0;
         $failed_keys=0;
 
@@ -1687,6 +1694,8 @@ class CDRS {
     }
 
     function resetQuota($accounts=array()) {
+
+    	if (!$this->quotaEnabled) return true;
 
         $_reset_array=array_unique($accounts);
 
