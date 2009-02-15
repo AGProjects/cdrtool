@@ -370,9 +370,9 @@ class SipThorNetworkImage {
                 imagestring ($img, 3, $cx+$px-70, $cy+$py-62, $extra_text1, $black);
                 imagestring ($img, 3, $cx+$px-70, $cy+$py-52, $extra_text2, $black);
               } else {
-                imagestring ($img, 3, $cx+$px-110, $cy+$py-30, $text, $black);
-                imagestring ($img, 3, $cx+$px-110, $cy+$py-20, $extra_text1, $black);
-                imagestring ($img, 3, $cx+$px-110, $cy+$py-10, $extra_text2, $black);
+                imagestring ($img, 3, $cx+$px-130, $cy+$py-30, $text, $black);
+                imagestring ($img, 3, $cx+$px-130, $cy+$py-20, $extra_text1, $black);
+                imagestring ($img, 3, $cx+$px-130, $cy+$py-10, $extra_text2, $black);
               }
               imagecopy ($img,$sip_thor_node_img, $cx+$px-$nw/2+7, $cy+$py-$nh/2+5, 0, 0, $nw-20, $nh-20);
               $j++;
