@@ -244,6 +244,7 @@ class SipThorNetworkImage {
         $this->thor_mangers    = $NetworkStatistics->thor_managers;
         $this->node_statistics = $NetworkStatistics->node_statistics;
 
+        /*
         if (!$this->display_options['hide_sessions']) {
             require_once("media_sessions.php");
             $MediaSessions = new MediaSessionsNGNPro($engineId);
@@ -253,6 +254,7 @@ class SipThorNetworkImage {
                 $this->node_statistics[$_relay['ip']]['sessions']=$_relay['session_count'];
             }
         }
+        */
     }
 
     function buildImage() {
