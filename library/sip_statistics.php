@@ -68,19 +68,17 @@ class NetworkStatistics {
             return false;
         }
 
-        $statistics=json_decode($result,true);
+        $this->statistics=json_decode($result,true);;
 
-        $this->statistics=$statistics;
-
-        foreach (array_keys($statistics) as $_ip) {
+        foreach (array_keys($this->statistics) as $_ip) {
         	if ($_ip == 'summary') {
-                foreach (array_keys($statistics[$_ip]) as $_role) {
+                foreach (array_keys($this->statistics[$_ip]) as $_role) {
                     if ($_role == 'sip_proxy') {
-                        foreach (array_keys($statistics[$_ip][$_role]) as $_section) {
-                            foreach (array_keys($statistics[$_ip][$_role][$_section]) as $_domain) {
+                        foreach (array_keys($this->statistics[$_ip][$_role]) as $_section) {
+                            foreach (array_keys($this->statistics[$_ip][$_role][$_section]) as $_domain) {
                                 if (count($this->allowedDomains) && !in_array($_domain,$this->allowedDomains)) continue;
                                 if (count($this->allowedDomains) && !in_array($_section,$this->allowedSummary)) continue;
-                                $this->sip_summary[$_section]=$this->sip_summary[$_section]+$statistics[$_ip][$_role][$_section][$_domain];
+                                $this->sip_summary[$_section]=$this->sip_summary[$_section]+$this->statistics[$_ip][$_role][$_section][$_domain];
                             }
                         }
                     }
@@ -90,14 +88,15 @@ class NetworkStatistics {
 
             }
 
-            foreach (array_keys($statistics[$_ip]) as $_role) {
+            foreach (array_keys($this->statistics[$_ip]) as $_role) {
                 if ($_role == 'sip_proxy') {
-					foreach (array_keys($statistics[$_ip][$_role]) as $_section) {
-                        foreach (array_keys($statistics[$_ip][$_role][$_section]) as $_domain) {
+                  	$this->node_statistics[$_ip]['sip_proxy']=true;
+					foreach (array_keys($this->statistics[$_ip][$_role]) as $_section) {
+                        foreach (array_keys($this->statistics[$_ip][$_role][$_section]) as $_domain) {
                             if (count($this->allowedDomains) && !in_array($_domain,$this->allowedDomains)) continue;
-                            $this->domain_statistics[$_domain][$_section] = $this->domain_statistics[$_domain][$_section] + $statistics[$_ip][$_role][$_section][$_domain];
-                            $this->domain_statistics['total'][$_section]  = $this->domain_statistics['total'][$_section]  + $statistics[$_ip][$_role][$_section][$_domain];
-                    		$this->node_statistics[$_ip][$_section]       = $this->node_statistics[$_ip][$_section]       + $statistics[$_ip][$_role][$_section][$_domain];
+                            $this->domain_statistics[$_domain][$_section] = $this->domain_statistics[$_domain][$_section] + $this->statistics[$_ip][$_role][$_section][$_domain];
+                            $this->domain_statistics['total'][$_section]  = $this->domain_statistics['total'][$_section]  + $this->statistics[$_ip][$_role][$_section][$_domain];
+                    		$this->node_statistics[$_ip][$_section]       = $this->node_statistics[$_ip][$_section]       + $this->statistics[$_ip][$_role][$_section][$_domain];
                         }
                     }
                 }
