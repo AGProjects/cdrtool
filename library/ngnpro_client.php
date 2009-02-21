@@ -12522,12 +12522,12 @@ class Customers extends Records {
 
         $body=
         sprintf("Dear %s,\n\n",$customer['firstName']).
-        sprintf("This e-mail message is for your record. You, or someone in your behalf has registered an account on %s as follows:\n\n",$url).
+        sprintf("This e-mail message is for your record. You have registered a login account at %s as follows:\n\n",$url).
         sprintf("Username: %s\n",$customer['username']).
         sprintf("Password: %s\n",$customer['password']).
         "\n".
 
-        sprintf("The notification has been sent based on a request from IP address %s.",$_SERVER['REMOTE_ADDR']).
+        sprintf("The registration has been performed from the IP address %s.",$_SERVER['REMOTE_ADDR']).
         "\n".
         "\n".
 

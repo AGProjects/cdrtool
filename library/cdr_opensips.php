@@ -156,15 +156,13 @@ class CDRS_opensips extends CDRS {
         <td><b>Start time</b></td>
         <td><b>Sip Proxy</b></td>
         <td><b>SIP caller</b></td>
-        <td><b>In</b></td>
         <td><b>SIP destination</b></td>
-        <td><b>Out</b></td>
         <td><b>Dur</b></td>
         <td><b>Price</b></td>
         <td align=right><b>KBIn</b></td>
         <td align=right><b>KBOut</b></td>
         <td align=right><b>Status</b></td>
-        <td align=right><b>Codec</b></td>
+        <td align=right><b>Codecs</b></td>
         </tr>
         ";
     }
@@ -180,19 +178,22 @@ class CDRS_opensips extends CDRS {
                 From $begin_datetime to $end_datetime
                 ";
             }
+
             print  "
             <table border=1 cellspacing=2 width=100% align=center>
             <tr>
             <td>
             <table border=0 cellspacing=2 width=100%>
             <tr bgcolor=lightgrey>
-            <td>
+        	<td>Id</td>
             <td><b>Date and time</b>
-            <td><b>From</b></td>
-            <td><b>To</b></td>
-            <td><b>Destination</b></td>
-            <td><b>Dur</b></td>
+            <td><b>Sip Proxy</b></td>
+            <td><b>SIP caller</b></td>
+            <td><b>SIP destination</b></td>
+            <td><b>Duration</b></td>
             <td><b>Price</b></td>
+            <td align=right><b>KBIn</b></td>
+            <td align=right><b>KBOut</b></td>
             </tr>
             ";
         } else {
@@ -1786,7 +1787,7 @@ class CDRS_opensips extends CDRS {
                  }
         
             } else {
-                if (!$this->export && !$this->CDRTool['filter']['aNumber']) {
+                if (!$this->export) {
                     printf ("For more information about each call click on its Id column. ");
                 }
 
@@ -2274,6 +2275,299 @@ class CDR_opensips extends CDR {
         //$this->isCalleeLocal();
         $this->isCallerLocal();
 
+        $this->buildCDRdetail();
+    }
+
+    function buildCDRdetail() {
+        global $perm;
+        global $found;
+
+        $this->cdr_details="
+        <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
+        <tr>
+        <td valign=top>
+        <table border=0 cellpadding=0 cellspacing=0>
+        <tr>
+            <td colspan=3><b>Signalling information</b></td>
+        </tr>
+        ";
+
+        $this->cdr_details.= sprintf("
+        <tr>
+            <td width=10></td>
+            <td colspan=2><a href=%s&call_id=%s><font color=orange>Click here to show only this call id</font></a></td>
+        </tr>
+        ",
+        $this->CDRS->url_run,
+        urlencode($this->callId)
+        );
+
+        if ($this->CDRS->sipTrace) {
+            $trace_datasource = $this->CDRS->sipTrace;
+            $callid_enc       = urlencode($this->callId);
+            $fromtag_enc      = urlencode($this->SipFromTag);
+            $totag_enc        = urlencode($this->SipToTag);
+
+            $this->traceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
+            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red>Click here to see the SIP trace for this call</font></a> &nbsp;";
+
+            $this->cdr_details.= "
+            <tr>
+                <td width=10></td>
+                <td>Call id: </td>
+                <td>$this->callId</td>
+            </tr>
+            ";
+        }
+
+        $this->cdr_details.= sprintf("
+        <tr>
+            <td width=10></td>
+            <td colspan=2>%s</td>
+        </tr>
+        ", $this->traceLink);
+
+        $this->cdr_details.= "
+        <tr>
+            <td width=10></td>
+            <td>From/to tags: </td>
+            <td>$this->SipFromTag/$this->SipToTag</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>Start time: </td>
+            <td>$this->startTime $providerTimezone</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>Stop time: </td>
+            <td>$this->stopTime</td>
+        </tr>
+        ";
+
+        $this->cdr_details.= "
+        <tr>
+            <td></td>
+            <td>Method:</td>
+            <td>$this->SipMethod from <i>$this->SourceIP:$this->SourcePort</i>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>From:</td>
+            <td>$this->aNumberPrint</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>Domain:</td>
+            <td>$this->domain</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>To (dialed URI):</td>
+            <td>$this->cNumberPrint</td>
+        </tr>
+        ";
+
+        if ($this->CanonicalURI) {
+        $this->cdr_details.= sprintf("
+        <tr>
+            <td></td>
+            <td>Canonical URI:   </td>
+            <td>%s</td>
+        </tr>
+        ",htmlentities($this->CanonicalURI));
+        }
+
+        $this->cdr_details.= sprintf("
+        <tr>
+            <td></td>
+            <td>Next hop URI:</td>
+            <td>%s</td>
+        </tr>
+        ",htmlentities($this->RemoteAddress));
+
+        if ($this->DestinationId) {
+            $this->cdr_details.= "
+            <tr>
+                <td></td>
+                <td>Destination: </td>
+                <td>$this->destinationName ($this->DestinationId)</td>
+            </tr>
+            ";
+        }
+
+        if ($this->ENUMtld && $this->ENUMtld != 'none' && $this->ENUMtld != 'N/A') {
+            $this->cdr_details.= "
+            <tr>
+                <td></td>
+                <td>ENUM TLD: </td>
+                <td>$this->ENUMtld</td>
+            </tr>
+            ";
+        }
+
+        if ($this->SipRPID && $this->SipRPID!='n/a') {
+            $this->cdr_details .= "
+            <tr>
+            <td></td>
+            <td>Caller ID:  </td>
+            <td>$this->SipRPIDPrint</td>
+            </tr>
+            ";
+        }
+
+        $this->cdr_details.= "
+        <tr>
+            <td></td>
+            <td>Billing Party:</td>
+            <td><font color=brown>$this->BillingPartyIdPrint</font></td>
+        </tr>
+        </table>
+        </td>
+        <td width=30>
+        <td valign=top>
+        ";
+
+
+        if ($this->SipCodec) {
+            $this->SipCodec   = quoted_printable_decode($this->SipCodec);
+
+            $this->cdr_details.= "
+            <table border=0 cellpadding=0 cellspacing=0>
+
+            <tr>
+                <td colspan=3><b>Media information</b></td>
+            </tr>
+            ";
+            if ($this->CDRS->mediaTrace) {
+                $media_trace_datasource = $this->CDRS->mediaTrace;
+
+                $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
+                'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here to see the media information for this call</a> &nbsp;";
+
+                $this->cdr_details.= sprintf("
+                <tr>
+                    <td width=10></td>
+                    <td colspan=2>%s</td>
+                </tr>
+                ", $this->mediaTraceLink);
+
+            }
+
+            $this->cdr_details.= "
+            <tr>
+                <td></td>
+                <td>Application: </td>
+                <td>$this->applicationType</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Codecs: </td>
+                <td>$this->SipCodec</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Caller RTP: </td>
+                <td>$this->inputTrafficPrint KB</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Called RTP: </td>
+                <td>$this->outputTrafficPrint KB</td>
+            </tr>
+            ";
+
+            if ($this->MediaTimeout) {
+                $this->cdr_details.= "
+                <tr>
+                <td></td>
+                <td>Media info:</td>
+                <td><font color=red>$this->MediaTimeout</font></td>
+                </tr>
+                ";
+            }
+
+            if ($this->SipUserAgents) {
+                $this->SipUserAgents   = quoted_printable_decode($this->SipUserAgents);
+
+                $callerAgents=explode("+",$this->SipUserAgents);
+                $callerUA=htmlentities($callerAgents[0]);
+                $calledUA=htmlentities($callerAgents[1]);
+
+                $this->cdr_details.= "
+                <tr>
+                    <td></td>
+                    <td>Caller SIP UA: </td>
+                    <td>$callerUA</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>Called SIP UA: </td>
+                    <td>$calledUA</td>
+                </tr>
+                ";
+            }
+
+            if (is_array($this->QoS)) {
+                foreach (array_keys($this->QoS) as $_key) {
+                    if ($this->QoSParameters[$_key]) {
+                        $_desc=$this->QoSParameters[$_key];
+                    } else {
+                        $_desc=$_key;
+                    }
+                    $this->cdr_details.=
+                    sprintf ("<tr><td></td><td>%s</td><td>%s</td></tr>\n",
+                    $_desc,$this->QoS[$_key]);
+                }
+            }
+
+            $this->cdr_details.= "
+            </table>";
+        }
+
+        $this->cdr_details.=  "
+        </td>
+        <td width=30></td>
+        <td valign=top>
+        ";
+
+        if ($perm->have_perm("showPrice") && $this->normalized) {
+            $this->cdr_details.= "
+            <table border=0 cellpadding=0 cellspacing=0>
+    
+                <tr>
+                    <td colspan=3><b>Rating information</b></td>
+    
+                </tr>
+            ";
+
+            if ($this->price > 0 || $this->rate) {
+                $this->cdr_details.= "
+                <tr>
+                <td></td>
+                <td colspan=2>$this->ratePrint</td>
+                </tr>
+                ";
+
+            } else {
+                $this->cdr_details.= "
+                <tr>
+                <td></td>
+                <td colspan=2>Free call</td>
+                </tr>
+                ";
+            }
+
+            $this->cdr_details.= "
+            </table>
+            ";
+        }
+
+        $this->cdr_details.=  "
+        </td>
+        </tr>
+        </table>";
     }
 
     function traceIn () {
@@ -2359,300 +2653,17 @@ class CDR_opensips extends CDR {
 
         $providerTimezone=$this->CDRS->CDRTool['provider']['timezone'];
 
-        $CallInfoVerbose="
-        <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
-        <tr>
-        <td valign=top>
-        <table border=0 cellpadding=0 cellspacing=0>
-        <tr>
-            <td colspan=3><b>Signalling information</b></td>
-        </tr>
-        ";
-
-        $CallInfoVerbose.= sprintf("
-        <tr>
-            <td width=10></td>
-            <td colspan=2><a href=%s&call_id=%s><font color=orange>Click here to show only this call id</font></a></td>
-        </tr>
-        ",
-        $this->CDRS->url_run,
-        urlencode($this->callId)
-        );
-
-        if ($this->CDRS->sipTrace) {
-            $trace_datasource = $this->CDRS->sipTrace;
-            $callid_enc       = urlencode($this->callId);
-            $fromtag_enc      = urlencode($this->SipFromTag);
-            $totag_enc        = urlencode($this->SipToTag);
-
-            $this->traceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
-            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red>Click here to see the SIP trace for this call</font></a> &nbsp;";
-
-            $CallInfoVerbose.= "
-            <tr>
-                <td width=10></td>
-                <td>Call id: </td>
-                <td>$this->callId</td>
-            </tr>
-            ";
-        }
-
-        $CallInfoVerbose.= sprintf("
-        <tr>
-            <td width=10></td>
-            <td colspan=2>%s</td>
-        </tr>
-        ", $this->traceLink);
-
-        $CallInfoVerbose.= "
-        <tr>
-            <td width=10></td>
-            <td>From/to tags: </td>
-            <td>$this->SipFromTag/$this->SipToTag</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>Start time: </td>
-            <td>$this->startTime $providerTimezone</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>Stop time: </td>
-            <td>$this->stopTime</td>
-        </tr>
-        ";
-
-        $CallInfoVerbose.= "
-        <tr>
-            <td></td>
-            <td>Method:</td>
-            <td>$this->SipMethod from <i>$this->SourceIP:$this->SourcePort</i>
-            </td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>From:</td>
-            <td>$this->aNumberPrint</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>Domain:</td>
-            <td>$this->domain</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>To (dialed URI):</td>
-            <td>$this->cNumberPrint</td>
-        </tr>
-        ";
-
-        if ($this->CanonicalURI) {
-        $CallInfoVerbose.= sprintf("
-        <tr>
-            <td></td>
-            <td>Canonical URI:   </td>
-            <td>%s</td>
-        </tr>
-        ",htmlentities($this->CanonicalURI));
-        }
-
-        $CallInfoVerbose.= sprintf("
-        <tr>
-            <td></td>
-            <td>Next hop URI:</td>
-            <td>%s</td>
-        </tr>
-        ",htmlentities($this->RemoteAddress));
-
-        if ($this->DestinationId) {
-            $CallInfoVerbose.= "
-            <tr>
-                <td></td>
-                <td>Destination: </td>
-                <td>$this->destinationName ($this->DestinationId)</td>
-            </tr>
-            ";
-        }
-
-        if ($this->ENUMtld && $this->ENUMtld != 'none' && $this->ENUMtld != 'N/A') {
-            $CallInfoVerbose.= "
-            <tr>
-                <td></td>
-                <td>ENUM TLD: </td>
-                <td>$this->ENUMtld</td>
-            </tr>
-            ";
-        }
-
-        if ($this->SipRPID && $this->SipRPID!='n/a') {
-            $CallInfoVerbose .= "
-            <tr>
-            <td></td>
-            <td>Caller ID:  </td>
-            <td>$this->SipRPIDPrint</td>
-            </tr>
-            ";
-        }
-
-        $CallInfoVerbose.= "
-        <tr>
-            <td></td>
-            <td>Billing Party:</td>
-            <td><font color=brown>$this->BillingPartyIdPrint</font></td>
-        </tr>
-        </table>
-        </td>
-        <td width=30>
-        <td valign=top>
-        ";
-
-
-        if ($this->SipCodec) {
-            $this->SipCodec   = quoted_printable_decode($this->SipCodec);
-
-            $CallInfoVerbose.= "
-            <table border=0 cellpadding=0 cellspacing=0>
-
-            <tr>
-                <td colspan=3><b>Media information</b></td>
-            </tr>
-            ";
-            if ($this->CDRS->mediaTrace) {
-                $media_trace_datasource = $this->CDRS->mediaTrace;
-
-                $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
-                'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here to see the media information for this call</a> &nbsp;";
-
-                $CallInfoVerbose.= sprintf("
-                <tr>
-                    <td width=10></td>
-                    <td colspan=2>%s</td>
-                </tr>
-                ", $this->mediaTraceLink);
-
-            }
-
-            $CallInfoVerbose.= "
-            <tr>
-                <td></td>
-                <td>Application: </td>
-                <td>$this->applicationType</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>Codecs: </td>
-                <td>$this->SipCodec</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>Caller RTP: </td>
-                <td>$this->inputTrafficPrint KB</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>Called RTP: </td>
-                <td>$this->outputTrafficPrint KB</td>
-            </tr>
-            ";
-
-            if ($this->MediaTimeout) {
-                $CallInfoVerbose.= "
-                <tr>
-                <td></td>
-                <td>Media info:</td>
-                <td><font color=red>$this->MediaTimeout</font></td>
-                </tr>
-                ";
-            }
-
-            if ($this->SipUserAgents) {
-                $this->SipUserAgents   = quoted_printable_decode($this->SipUserAgents);
-
-                $callerAgents=explode("+",$this->SipUserAgents);
-                $callerUA=htmlentities($callerAgents[0]);
-                $calledUA=htmlentities($callerAgents[1]);
-
-                $CallInfoVerbose.= "
-                <tr>
-                    <td></td>
-                    <td>Caller SIP UA: </td>
-                    <td>$callerUA</td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>Called SIP UA: </td>
-                    <td>$calledUA</td>
-                </tr>
-                ";
-            }
-
-            if (is_array($this->QoS)) {
-                foreach (array_keys($this->QoS) as $_key) {
-                    if ($this->QoSParameters[$_key]) {
-                        $_desc=$this->QoSParameters[$_key];
-                    } else {
-                        $_desc=$_key;
-                    }
-                    $CallInfoVerbose.=
-                    sprintf ("<tr><td></td><td>%s</td><td>%s</td></tr>\n",
-                    $_desc,$this->QoS[$_key]);
-                }
-            }
-
-            $CallInfoVerbose.= "
-            </table>";
-        }
-
-        $CallInfoVerbose.=  "
-        </td>
-        <td width=30></td>
-        <td valign=top>
-        ";
-
-        if ($perm->have_perm("showPrice") && $this->normalized) {
-            $CallInfoVerbose.= "
-            <table border=0 cellpadding=0 cellspacing=0>
-    
-                <tr>
-                    <td colspan=3><b>Rating information</b></td>
-    
-                </tr>
-            ";
-
-            if ($this->price > 0 || $this->rate) {
-                $CallInfoVerbose.= "
-                <tr>
-                <td></td>
-                <td colspan=2>$this->ratePrint</td>
-                </tr>
-                ";
-
-            } else {
-                $CallInfoVerbose.= "
-                <tr>
-                <td></td>
-                <td colspan=2>Free call</td>
-                </tr>
-                ";
-            }
-
-            $CallInfoVerbose.= "
-            </table>
-            ";
-        }
-
-        $CallInfoVerbose.=  "
-        </td>
-        </tr>
-        </table>";
-
         print "
         <tr bgcolor=$inout_color>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime</nobr></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->aNumberPrint</td>
-        <td valign=top>$this->traceIn</td>
+        ";
+
+        //print "<td valign=top>$this->traceIn</td>";
+
+        print "
         <td valign=top><nobr>$this->destinationPrint</nobr>";
 
         if ($this->DestinationId) {
@@ -2664,7 +2675,7 @@ class CDR_opensips extends CDR {
         }
 
         print "</td>";
-        print "<td valign=top>$this->traceOut</td>";
+        //print "<td valign=top>$this->traceOut</td>";
 
         if (!$this->normalized){
         	if ($this->duration > 0 ) {
@@ -2720,7 +2731,7 @@ class CDR_opensips extends CDR {
         </tr>
         <tr>
         <td></td>
-        <td colspan=11>$CallInfoVerbose</td>
+        <td colspan=11>$this->cdr_details</td>
         </tr>
 
         ";
@@ -2775,19 +2786,32 @@ class CDR_opensips extends CDR {
         if (!$this->CDRS->export) {
             $timezone_print=$this->CDRS->CDRTool['provider']['timezone'];
 
+            $found_print=$found;
+    
+            if ($this->normalized) $found_print.='N';
+
             print "
             <tr bgcolor=$inout_color>
-            <td valign=top>$found</td>
-            <td valign=top>$this->startTime $timezone_print</td>
+            <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
+            <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime $timezone_print</nobr></td>
+            <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
             <td valign=top><nobr>$this->aNumberPrint</nobr></td>
-            <td valign=top><nobr>$this->cNumberPrint</nobr></td>
             <td valign=top><nobr>$this->destinationPrint $this->destinationName</td>
             <td valign=top align=right>$this->durationPrint</td>
+            <td valign=top align=right>$this->inputTrafficPrint </td>
+            <td valign=top align=right>$this->outputTrafficPrint</td>
             ";
             if ($this->CDRS->rating) print "<td valign=top align=right>$this->price</td>";
             print "
             </tr>
             ";
+            print "
+            <tr>
+            <td></td>
+            <td colspan=11>$this->cdr_details</td>
+            </tr>
+            ";
+
         } else {
             $disconnectName=$this->CDRS->disconnectCodesDescription[$this->disconnect];
             $UserAgents=explode("+",$this->SipUserAgents);
