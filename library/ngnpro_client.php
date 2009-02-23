@@ -619,7 +619,7 @@ class SoapEngine {
 }
 
 class Records {
-    var $maxrowsperpage     = '15';
+    var $maxrowsperpage     = '20';
     var $sip_settings_page  = 'sip_settings.phtml';
     var $allowedDomains     = array();
     var $selectionActive    = false;
