@@ -3,6 +3,22 @@ Patch for
 - Added MySQL stored procedures support
 - Removed Cisco hack that causes errors in radius.log if acctsessiontime= 0
 
+Updated Feb 23, 2009 by Norm Brandinger norm@goes.com
+	
+	Reworked patch to apply cleanly with the current CVS FreeRADIUS sources.  To apply:
+
+	The procedures listed below should still continue to work.  
+	The patch was generated with the "cvs diff" command so to replace the patch from within the radius subdirectory use the following:
+
+	patch -p0 < ../freeradius-20090223.patch
+
+	If you're using the apt-get method to obtain the sources, the commands to apply the patch would be similar to the following.
+	This patch was generated with a "diff -r -u" command.
+
+	cd freeradius-2.0.4+dfsg
+	patch -p1 < ../freeradius-2.0.4+dfsg.patch
+
+
 Updated Jan 3, 2008 by Norm Brandinger norm@goes.com
     
     Reworked patch to apply cleanly with the current CVS FreeRADIUS sources. To apply:
