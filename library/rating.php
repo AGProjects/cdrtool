@@ -5573,7 +5573,7 @@ class RatingEngine {
             syslog(LOG_NOTICE,$log);
         }
 
-        if ($d > 0 ) syslog(LOG_NOTICE, "Loaded rating tables in $d seconds");
+        if ($d > 0 ) syslog(LOG_NOTICE, "Reloaded rating tables in $d seconds");
 
         $this->db->query("update settings set var_value = '' where var_name = 'reloadRating'");
         return 1;

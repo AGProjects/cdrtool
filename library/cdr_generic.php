@@ -291,6 +291,7 @@ class CDRS {
         $this->destinations_sip_count = 0;
 
         $query=sprintf("select `value` from memcache where `key` = 'destinations'");
+
         if (!$this->cdrtool->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
             print $log;
@@ -514,6 +515,9 @@ class CDRS {
         }
 
 		$c=$this->destinations_count + $this->destinations_sip_count;
+        $log=sprintf("Loaded %d PSTN and %d SIP destinations",$this->destinations_count,$this->destinations_sip_count);
+        syslog(LOG_NOTICE, $log);
+
         return $c;
     }
 
