@@ -1,3 +1,23 @@
+cdrtool (6.7.3) unstable; urgency=low
+
+  * Logging text improvements
+  * Fixed bug with accessing $perm object when is not defined
+  * Removed cached destinations on engine startup
+  * Update Radius patches from Norm Brandinger norm@goes.com
+  * Allow end-users to see more CDR details
+  * Move ip address of sip proxy a bit to the left
+  * Add sip_proxy to the statistics array even if no accounts are online
+  * Added php5-gd to dependencies
+  * Disable unnecessary mysql queries when quota is disabled
+  * Better html text in sip login page
+  * Added info about radius clients.conf (patch from aseques@gmail.com)
+  * Removed pacth already applied to freeradius main tree
+  * HTML changes in provisioning screens
+  * Added information about how to generate debian package
+  * Correct mysql upgrade queries
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 14 Mar 2009 23:50:44 +0100
+
 cdrtool (6.7.2) unstable; urgency=low
 
   * Fixed number of columns in cdr when rating is disabled
