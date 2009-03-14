@@ -22,6 +22,14 @@ if (!is_array($DATASOURCES[$RatingEngine['cdr_source']])) {
     die ($log);
 }
 
+$db = new DB_CDRTool;
+$query=sprintf("delete from memcache where `key` = 'destinations_sip' or `key` = 'destinations'");
+if (!$db->query($query)) {
+    $log=sprintf ("Database error: %s (%s)",$db->Error,$db->Errno);
+    print $log;
+    syslog(LOG_NOTICE,$log);
+}
+
 // Init CDRS
 $CDR_class  = $DATASOURCES[$RatingEngine['cdr_source']]["class"];
 $CDRS       = new $CDR_class($RatingEngine['cdr_source']);
