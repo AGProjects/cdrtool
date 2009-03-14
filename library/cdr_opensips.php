@@ -2275,12 +2275,13 @@ class CDR_opensips extends CDR {
         //$this->isCalleeLocal();
         $this->isCallerLocal();
 
-        $this->buildCDRdetail();
     }
 
     function buildCDRdetail() {
         global $perm;
         global $found;
+
+        if (!$perm) return;
 
         $this->cdr_details="
         <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
@@ -2627,6 +2628,8 @@ class CDR_opensips extends CDR {
     }
 
     function show() {
+        $this->buildCDRdetail();
+
         global $found;
         global $perm;
 
@@ -2679,7 +2682,7 @@ class CDR_opensips extends CDR {
 
         if (!$this->normalized){
         	if ($this->duration > 0 ) {
-             	print "<td valign=top align=left colspan=4><font color=red>$this->duration(s) but in progress?</a></td>";
+             	print "<td valign=top align=left colspan=4><font color=red>$this->duration(s)</a></td>";
             } else {
             	print "<td valign=top align=left colspan=4><font color=red>in progress</a></td>";
             }
@@ -2772,6 +2775,7 @@ class CDR_opensips extends CDR {
     }
 
     function showSubscriber() {
+        $this->buildCDRdetail();
         global $found;
 
         $rr=floor($found/2);
