@@ -2736,6 +2736,7 @@ class RatingTables {
     }
 
     function LoadRatingTables () {
+
         $log=sprintf("Memory usage: %0.2fMB, memory limit: %sB",memory_get_usage()/1024/1024,ini_get('memory_limit'));
         syslog(LOG_NOTICE, $log);
 
@@ -2745,12 +2746,12 @@ class RatingTables {
         $loaded['enumTlds']     = $this->LoadENUMtldsTable();
 
         foreach(array_keys($loaded) as $_load) {
-            syslog(LOG_NOTICE, "Loaded $loaded[$_load] $_load");
+            syslog(LOG_NOTICE, "Loaded $loaded[$_load] $_load into memory");
         }
 
         $log=sprintf("Memory usage: %0.2fMB, memory limit: %sB",memory_get_usage()/1024/1024,ini_get('memory_limit'));
-
         syslog(LOG_NOTICE, $log);
+
         return $loaded;
     }
 

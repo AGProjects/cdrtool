@@ -515,8 +515,8 @@ class CDRS {
         }
 
 		$c=$this->destinations_count + $this->destinations_sip_count;
-        $log=sprintf("Loaded %d PSTN and %d SIP destinations",$this->destinations_count,$this->destinations_sip_count);
-        syslog(LOG_NOTICE, $log);
+        //$log=sprintf("Loaded %d PSTN and %d SIP destinations into memory",$this->destinations_count,$this->destinations_sip_count);
+        //syslog(LOG_NOTICE, $log);
 
         return $c;
     }
