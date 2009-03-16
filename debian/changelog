@@ -1,3 +1,9 @@
+cdrtool (6.7.4) unstable; urgency=low
+
+  * Fixed reload of rating engine (thanks to Dan Bogos)
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 16 Mar 2009 18:49:11 +0100
+
 cdrtool (6.7.3) unstable; urgency=low
 
   * Logging text improvements

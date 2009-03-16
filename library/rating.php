@@ -5574,6 +5574,9 @@ class RatingEngine {
             syslog(LOG_NOTICE,$log);
         }
 
+		$this->CDRS->RatingTables->LoadRatingTables();
+        $this->CDRS->LoadDestinations();
+
         if ($d > 0 ) syslog(LOG_NOTICE, "Reloaded rating tables in $d seconds");
 
         $this->db->query("update settings set var_value = '' where var_name = 'reloadRating'");

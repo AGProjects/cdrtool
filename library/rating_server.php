@@ -568,7 +568,7 @@ class ratingEngineClient extends socketServerClient {
             $e=microtime(true);
             $d=$e-$b;
             if ($d >= $this->ratingEngineSettings['log_delay']) {
-                 $log=sprintf("Warning: %s request took %.4f seconds",$this->ratingEngine->method,$d);
+                 $log=sprintf("%s request took %.4f seconds",$this->ratingEngine->method,$d);
                  syslog(LOG_NOTICE,$log);
             }
         }
