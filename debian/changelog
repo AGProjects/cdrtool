@@ -1,3 +1,9 @@
+cdrtool (6.7.5) unstable; urgency=low
+
+  * Fixed display of rating info
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 26 Mar 2009 14:31:06 +0100
+
 cdrtool (6.7.4) unstable; urgency=low
 
   * Fixed reload of rating engine (thanks to Dan Bogos)

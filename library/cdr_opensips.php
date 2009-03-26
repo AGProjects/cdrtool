@@ -1457,7 +1457,7 @@ class CDRS_opensips extends CDRS {
             from $cdr_table where ".$where;
         }
 
-
+        //print $query;
         if ($this->CDRdb->query($query)) {
              $this->CDRdb->next_record();
              if ($group_by) {
@@ -2544,6 +2544,7 @@ class CDR_opensips extends CDR {
             ";
 
             if ($this->price > 0 || $this->rate) {
+            	$this->ratePrint=nl2br($this->rate);
                 $this->cdr_details.= "
                 <tr>
                 <td></td>
