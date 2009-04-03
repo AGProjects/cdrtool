@@ -1,3 +1,9 @@
+cdrtool (6.7.6) unstable; urgency=low
+
+  * Removed obsolete prepaid_lock feature
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 03 Apr 2009 22:51:19 +0200
+
 cdrtool (6.7.5) unstable; urgency=low
 
   * Fixed display of rating info
