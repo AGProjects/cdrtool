@@ -37,7 +37,6 @@ $CDRTool['provider']['sampleLoginDomain']       = "317100001@subdomain.example.c
 $RatingEngine=array("socketIP"               => "IP.address.of.the.private.interface.of.cdrtool.example.com",
                     "socketPort"             => "9024",
                     "cdr_source"             => "opensips_radius", // points to a defined DATASOURCE
-                    "prepaid_lock"           => true,              // maximum one parallel prepaid session per subscribe
                     "log_delay"              => 0.05,
                     "split_rating_table"     => false, // when true individual rating tables are automatically created for each rate id 
                     "csv_delimiter"          => ",",   // when importin CSV files

@@ -5529,20 +5529,13 @@ class OpenSIPSQuota {
 }
 
 class RatingEngine {
-    // set in global.inc $RatingEngine['prepaid_lock'] = 0;
-    // to enable concurent calls for prepaid accounts
 
-    var $prepaid_lock = 1;
     var $method = '';
     var $log_runtime = false;
 
     function RatingEngine (&$CDRS) {
     	global $RatingEngine;   // set in global.inc
         $this->settings = $RatingEngine;
-
-        if ($this->settings['prepaid_lock'] == false || $this->settings['prepaid_lock'] == 0) {
-            $this->prepaid_lock=0;
-        }
 
         if ($this->settings['log_runtime']) {
             $this->log_runtime=true;
@@ -6210,15 +6203,6 @@ class RatingEngine {
                 return "none";
             }
 
-            if ($this->prepaid_lock && $session_counter) {
-                $log = sprintf ("Account locked by another call");
-                syslog(LOG_NOTICE, $log);
-                $this->logRuntime();
-                return "locked";
-            }
-
-            $this->runtime['check_lock']=microtime_float();
-
             if (!preg_match("/^0/",$CDR->CanonicalURINormalized)) {
             	/*
                 $log = sprintf ("Call to %s, no limit imposed",$CDR->CanonicalURINormalized);
@@ -6358,50 +6342,24 @@ class RatingEngine {
             syslog(LOG_NOTICE, $log);
 
 			if ($maxduration > 0) {
-                if ($NetFields['lock'] && $this->prepaid_lock) {
-    
-                    // mark the account that is locked during call
-                    $query=sprintf("update %s set
-                    active_sessions  = '%s',
-                    call_in_progress = NOW(),
-                    maxsessiontime   = '%d',
-                    session_counter  = '%s',
-                    destination      = '%s'
-                    where account    = '%s'",
-                    addslashes($this->prepaid_table),
-                    addslashes(json_encode($active_sessions)),
-                    $maxduration,
-                    count($active_sessions),
-                    addslashes($CDR->destinationPrint),
-                    addslashes($CDR->BillingPartyId));
-    
-                    if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                        syslog(LOG_NOTICE,$log);
-                        $log=sprintf ("error: database error %s (%s)",$this->db->Error,$this->db->Errno);
-                        return $log;
-                    }
-    
-                } else {
-                    $query=sprintf("update %s
-                    set
-                    active_sessions = '%s',
-                    session_counter  = '%s',
-                    call_in_progress = NOW(),
-                    maxsessiontime = '%d'
-                    where account  = '%s'",
-                    addslashes($this->prepaid_table),
-                    addslashes(json_encode($active_sessions)),
-                    count($active_sessions),
-                    $maxduration,
-                    addslashes($CDR->BillingPartyId));
-    
-                    if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                        syslog(LOG_NOTICE,$log);
-                        $log=sprintf ("error: database error %s (%s)",$this->db->Error,$this->db->Errno);
-                        return $log;
-                    }
+                $query=sprintf("update %s
+                set
+                active_sessions = '%s',
+                session_counter  = '%s',
+                call_in_progress = NOW(),
+                maxsessiontime = '%d'
+                where account  = '%s'",
+                addslashes($this->prepaid_table),
+                addslashes(json_encode($active_sessions)),
+                count($active_sessions),
+                $maxduration,
+                addslashes($CDR->BillingPartyId));
+
+                if (!$this->db->query($query)) {
+                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    syslog(LOG_NOTICE,$log);
+                    $log=sprintf ("error: database error %s (%s)",$this->db->Error,$this->db->Errno);
+                    return $log;
                 }
             }
 
