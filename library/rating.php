@@ -1229,7 +1229,7 @@ class RatingTables {
                            "prepaid"=>array("name"=>"Prepaid accounts",
                                                  "keys"=>array("id"),
                                                  "size"=>15,
-                                                 "exceptions" =>array('change_date','active_sessions','call_in_progress','call_lock','domain'),
+                                                 "exceptions" =>array('change_date','active_sessions','call_in_progress','domain'),
                                                  "domainFilterColumn"=>"domain",
                                                  "order"=>"change_date DESC",
                                                  "fields"=>array("account"=>array("size"=>35,

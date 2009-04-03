@@ -540,3 +540,6 @@ alter table prepaid_history add index session_idx(session);
 alter table prepaid add column duration bigint(20) unsigned not null after destination;
 alter table prepaid add column domain varchar(128) not null after account;
 update prepaid set domain = SUBSTRING_INDEX(account, '@',-1);
+
+6.7.6
+alter table prepaid drop column call_lock;
