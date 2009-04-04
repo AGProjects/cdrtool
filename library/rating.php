@@ -6129,7 +6129,7 @@ class RatingEngine {
                               $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
                               $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
                               $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
-                              $this->CDRS->CDRFields['duration']       => $NetFields['duration'],
+                              $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
                               $this->CDRS->CDRFields['timestamp']      => time()
                               );
 
@@ -6415,7 +6415,7 @@ class RatingEngine {
                               $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
                               $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
                               $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
-                              $this->CDRS->CDRFields['duration']       => $NetFields['duration'],
+                              $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
                               $this->CDRS->CDRFields['timestamp']      => time()
                               );
 
@@ -6549,7 +6549,7 @@ class RatingEngine {
                               $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
                               $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
                               $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
-                              $this->CDRS->CDRFields['duration']       => $NetFields['duration'],
+                              $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
                               $this->CDRS->CDRFields['timestamp']      => time()
                               );
 

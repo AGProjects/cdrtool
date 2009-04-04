@@ -2,8 +2,10 @@ cdrtool (6.7.6) unstable; urgency=low
 
   * Removed obsolete prepaid_lock feature
   * Apply the changes from setup/mysql/alter_tables.mysql
+  * Floor the call duration to make the prepaid DebitBalance use the same
+    duration as ShowPrice used by normalization process
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 03 Apr 2009 22:56:50 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 04 Apr 2009 16:31:21 +0200
 
 cdrtool (6.7.5) unstable; urgency=low
 
