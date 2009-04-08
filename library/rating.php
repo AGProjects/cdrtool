@@ -6415,9 +6415,11 @@ class RatingEngine {
                               $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
                               $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
                               $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
+                              $this->CDRS->CDRFields['ENUMtld']        => $NetFields['enumtld'],
                               $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
                               $this->CDRS->CDRFields['timestamp']      => time()
                               );
+
 
             // Init CDR
             $CDR = new $this->CDRS->CDR_class($this->CDRS, $CDRStructure);
@@ -6433,8 +6435,8 @@ class RatingEngine {
                                   'DestinationId'   => $CDR->DestinationId,
                                   'domain'          => $CDR->domain,
                                   'gateway'         => $CDR->gateway,
-                                  'traffic'         => $CDR->traffic,
                                   'BillingPartyId'  => $CDR->BillingPartyId,
+                                  'ENUMtld'         => $CDR->ENUMtld,
                                   'RatingTables'    => &$this->CDRS->RatingTables
                                   );
 
@@ -6545,10 +6547,18 @@ class RatingEngine {
                 $timestamp=time();
             }
 
+            if (!$NetFields['gateway']) {
+                $log=sprintf ("error: missing gateway parameter");
+                syslog(LOG_NOTICE, $log);
+                return $log;
+            }
+
             $CDRStructure=array (
                               $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
                               $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
                               $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
+                              $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
+                              $this->CDRS->CDRFields['ENUMtld']        => $NetFields['enumtld'],
                               $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
                               $this->CDRS->CDRFields['timestamp']      => time()
                               );
@@ -6559,11 +6569,12 @@ class RatingEngine {
             $Rate    = new Rate($this->settings, $this->db);
 
             $RateDictionary=array(
-                                  'duration'        => $CDR->duration,
                                   'callId'          => $CDR->callId,
                                   'timestamp'       => $CDR->timestamp,
+                                  'duration'        => $CDR->duration,
                                   'DestinationId'   => $CDR->DestinationId,
                                   'domain'          => $CDR->domain,
+                                  'gateway'         => $CDR->gateway,
                                   'BillingPartyId'  => $CDR->BillingPartyId,
                                   'ENUMtld'         => $CDR->ENUMtld,
                                   'RatingTables'    => &$this->CDRS->RatingTables
