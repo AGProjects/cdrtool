@@ -2742,7 +2742,7 @@ class SipAccounts extends Records {
         } else if (strlen(trim($_REQUEST['password']))) {
             $password=trim($_REQUEST['password']);
         } else {
-            $password=$this->RandomPassword(6);
+            $password=$this->RandomPassword(10);
         }
 
         $groups=array();
