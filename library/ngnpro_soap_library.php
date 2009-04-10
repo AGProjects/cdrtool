@@ -724,6 +724,52 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                                     'use' => 'encoded'));
         return $result;
     }
+    function &addGatewayRule($rule)
+    {
+        // rule is a ComplexType GatewayRule,
+        // refer to wsdl for more info
+        $rule = new SOAP_Value('rule', '{urn:AGProjects:NGNPro}GatewayRule', $rule);
+        $result = $this->call('addGatewayRule',
+                              $v = array('rule' => $rule),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &updateGatewayRule($rule)
+    {
+        // rule is a ComplexType GatewayRule,
+        // refer to wsdl for more info
+        $rule = new SOAP_Value('rule', '{urn:AGProjects:NGNPro}GatewayRule', $rule);
+        $result = $this->call('updateGatewayRule',
+                              $v = array('rule' => $rule),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &deleteGatewayRule($id)
+    {
+        $result = $this->call('deleteGatewayRule',
+                              $v = array('id' => $id),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getGatewayRules($query)
+    {
+        $result = $this->call('getGatewayRules',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
     function &addCarrier($carrier)
     {
         // carrier is a ComplexType Carrier,
