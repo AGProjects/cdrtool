@@ -8622,7 +8622,7 @@ class Carriers extends Records {
                     urlencode($carrier->reseller)
                     );
 
-                    $_gateways_url = $this->url.sprintf("&service=pstn_gateways@%s&name_filter=%s&reseller_filter=%s",
+                    $_gateways_url = $this->url.sprintf("&service=pstn_gateways@%s&group_filter=%s&reseller_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
                     urlencode($carrier->name),
                     urlencode($carrier->reseller)
@@ -9627,12 +9627,13 @@ class GatewayRules extends Records {
                               );
 
     var $Fields=array(
+                              'id'        => array('type'=>'integer','readonly' => true),
                               'gateway'   => array('type'=>'string'),
                               'carrier'   => array('type'=>'string'),
                               'prefix'    => array('type'=>'string'),
                               'strip'     => array('type'=>'integer'),
                               'prepend'   => array('type'=>'string'),
-                              'maxLength' => array('type'=>'integer'),
+                              'minLength' => array('type'=>'integer'),
                               'maxLength' => array('type'=>'integer')
                               );
 
@@ -9816,7 +9817,7 @@ class GatewayRules extends Records {
                     $gateway_rule->prefix,
                     $gateway_rule->strip,
                     $gateway_rule->prepend,
-                    $gateway_rule->maxLength,
+                    $gateway_rule->minLength,
                     $gateway_rule->maxLength,
                     $gateway_rule->changeDate,
                     $_url,
@@ -9883,7 +9884,7 @@ class GatewayRules extends Records {
             printf (" Prefix <input type=text size=10 name=prefix>");
             printf (" Strip <input type=text size=10 name=strip>");
             printf (" Prepend <input type=text size=10 name=prepend>");
-            printf (" Min length <input type=text size=10 name=maxLength>");
+            printf (" Min length <input type=text size=10 name=minLength>");
             printf (" Max length <input type=text size=10 name=maxLength>");
 
             print "
@@ -9928,10 +9929,10 @@ class GatewayRules extends Records {
             $prepend   = trim($_REQUEST['prepend']);
         }
 
-        if ($dictionary['maxLength']) {
-            $maxLength   = $dictionary['maxLength'];
+        if ($dictionary['minLength']) {
+            $minLength   = $dictionary['minLength'];
         } else {
-            $maxLength   = trim($_REQUEST['maxLength']);
+            $minLength   = trim($_REQUEST['minLength']);
         }
 
         if ($dictionary['maxLength']) {
@@ -9951,7 +9952,7 @@ class GatewayRules extends Records {
                      'prefix'    => $prefix,
                      'prepend'   => $prepend,
                      'strip'     => intval($strip),
-                     'maxLength' => intval($maxLength),
+                     'minLength' => intval($minLength),
                      'maxLength' => intval($maxLength)
                     );
 
@@ -10068,7 +10069,6 @@ class GatewayRules extends Records {
 
         }
 
-        printf ("<input type=hidden name=name_filter value='%s'",$rule->name);
         printf ("<input type=hidden name=reseller_filter value='%s'",$rule->reseller);
 
         $this->printFiltersToForm();
@@ -10097,9 +10097,11 @@ class GatewayRules extends Records {
     function updateRecord () {
         //print "<p>Updating rule ...";
 
-        if (!$_REQUEST['id_filter'] || !strlen($_REQUEST['reseller_filter'])) return;
+        if (!$_REQUEST['id_form'] || !strlen($_REQUEST['reseller_filter'])) {
+        	return;
+        }
 
-        if (!$rule = $this->getRecord($_REQUEST['id_filter'])) {
+        if (!$rule = $this->getRecord($_REQUEST['id_form'])) {
             return false;
         }
 
@@ -10114,7 +10116,7 @@ class GatewayRules extends Records {
 
         $function=array('commit'   => array('name'       => 'updateGatewayRule',
                                             'parameters' => array($rule),
-                                            'logs'       => array('success' => sprintf('Rule %d has been updated',$_REQUEST['id_filter'])))
+                                            'logs'       => array('success' => sprintf('Rule %d has been updated',$_REQUEST['id_form'])))
                         );
 
         $result = $this->SoapEngine->execute($function,$this->html);

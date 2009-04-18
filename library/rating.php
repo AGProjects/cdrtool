@@ -580,7 +580,6 @@ class Rate {
                 }
 
             }
-
         }
 
         $profileValuesAlt        = $this->RatingTables->profiles[$this->profileNameAlt];
