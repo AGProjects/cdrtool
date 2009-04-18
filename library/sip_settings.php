@@ -3305,35 +3305,38 @@ class SipSettings {
             </tr>
             ";
     
-            $chapter=sprintf(_("Increase balance"));
-            $this->showChapter($chapter);
-    
-            print "
-            <tr>
-            <form action=$this->pageURL method=post>
-            <input type=hidden name=tab value=prepaid>
-            <input type=hidden name=task value=Add>
-            <td class=h align=left><nobr>
-            ";
-            print _("Prepaid card");
-            print "
-            <input type=text size=20 name=prepaidCard>
-            ";
-            print "Id:
-            <input type=text size=10 name=prepaidId>
-            <input type=submit value=";
-            print _("Add");
-            print "></nobr>
-            </td>
-            </form>
-            </tr>
-            ";
-    
-            flush();
-    
+            $this->showIncreaseBalance();
             $this->showBalanceHistory();
         }
 
+    }
+
+    function showIncreaseBalance () {
+
+        $chapter=sprintf(_("Increase balance"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr>
+        <form action=$this->pageURL method=post>
+        <input type=hidden name=tab value=prepaid>
+        <input type=hidden name=task value=Add>
+        <td class=h align=left><nobr>
+        ";
+
+        print _("Prepaid card");
+        print "
+        <input type=text size=20 name=prepaidCard>
+        ";
+        print "Id:
+        <input type=text size=10 name=prepaidId>
+        <input type=submit value=";
+        print _("Add");
+        print "></nobr>
+        </td>
+        </form>
+        </tr>
+        ";
     }
 
     function GetPrepaidAccountInfo() {
