@@ -10323,7 +10323,7 @@ class Routes extends Records {
                     urlencode($route->carrier)
                     );
 
-                    $_gateways_url = $this->url.sprintf("&service=pstn_gateways@%s&carrier_filter=%s&reseller_filter=%s",
+                    $_gateways_url = $this->url.sprintf("&service=pstn_gateways@%s&group_filter=%s&reseller_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
                     urlencode($route->carrier),
                     urlencode($route->reseller)
