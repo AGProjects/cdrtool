@@ -1,3 +1,13 @@
+cdrtool (6.7.8) unstable; urgency=low
+
+  * Updated NGNPro client to work with server version 4.1.0
+  * Added functions for managing gateway rules
+  * Fixed LCR provisioning bugs
+  * Fixed gateway links from Carriers page
+  * Make stronger random passwords for SIP accounts
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 20 Apr 2009 11:53:33 +0200
+
 cdrtool (6.7.7) unstable; urgency=low
 
   * Fixed missing ENUMtld and Gateway in ShowPrice function
