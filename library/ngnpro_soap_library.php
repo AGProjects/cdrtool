@@ -475,16 +475,18 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                             'style'=>'rpc',
                             'use'=>'encoded' ));
     }
-    function &getCreditHistory($sipId) {
+    function &getCreditHistory($sipId, $count)
+    {
         // sipId is a ComplexType SipId,
-        //refer to wsdl for more info
-        $sipId =& new SOAP_Value('sipId','{urn:AGProjects:NGNPro}SipId',$sipId);
-        return $this->call("getCreditHistory", 
-                        $v = array("sipId"=>$sipId), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('getCreditHistory',
+                              $v = array('sipId' => $sipId, 'count' => $count),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
     function &addPhonebookEntry($sipId, $entry) {
         // entry is a ComplexType PhonebookEntry,

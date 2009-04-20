@@ -716,8 +716,8 @@ class pageLayout {
         }
         if ($perm->have_perm("rates")) {
             print " | <a href=rating_tables.phtml>Rating</a>";
-            print " | <a href=rating_tables.phtml?table=prepaid&search_session_counter=&gt;0>Prepaid</a>";
-            print " | <a href=rating_tables.phtml?table=quota_usage&search_blocked=1>Quota</a>";
+            print " | <a href=rating_tables.phtml?table=prepaid>Prepaid</a>";
+            print " | <a href=rating_tables.phtml?table=quota_usage>Quota</a>";
         }
 
         if ($perm->have_perm("provisioning")) {

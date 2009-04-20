@@ -3424,7 +3424,8 @@ class SipSettings {
 
         dprint("showBalanceHistory");
         $this->SipPort->addHeader($this->SoapAuth);
-        $result     = $this->SipPort->getCreditHistory($this->sipId);
+
+        $result     = $this->SipPort->getCreditHistory($this->sipId,20);
  
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -3434,9 +3435,9 @@ class SipSettings {
                 printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             }
         }
- 
-        if (is_array($result)) {
-            foreach ($result as $_line) {
+
+        if (is_array($result->entries)) {
+            foreach ($result->entries as $_line) {
                 $found++;
                 print "
                 <tr bgcolor=white>
