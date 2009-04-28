@@ -28,9 +28,6 @@ if (strlen($_REQUEST['reseller'])) {
 require("/etc/cdrtool/ngnpro_engines.inc");
 require('sip_settings.php');
 
-$action  = $_REQUEST['action'];
-$export  = $_REQUEST['export'];
-
 $_class='SipSettings';
 $_reseller_class=$_class.$_REQUEST['reseller'];
 
@@ -56,7 +53,7 @@ if ($resellerFilters[$login_credentials['reseller']]['sip_engine']) {
 
 $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
 
-if (!$export) {
+if (!$_REQUEST['export']) {
     $title  = "SIP settings of $account";
     $header = $SipSettings->headerFile;
     $css    = $SipSettings->cssFile;
@@ -73,7 +70,7 @@ if (!$export) {
     if (file_exists($css)) include($css);
 }
 
-if ($action=="Save settings") {
+if ($_REQUEST['action']=="Save settings") {
     if ($SipSettings->checkSettings()) {
         $SipSettings->saveSettings();
         unset($SipSettings);
@@ -87,23 +84,25 @@ if ($action=="Save settings") {
         printf (_("Error: %s"),$SipSettings->error);
         print "</font>";
     }
-} else if ($action=="set barring prefixes") {
+} else if ($_REQUEST['action']=="set barring prefixes") {
     $SipSettings->setBarringPrefixes();
-} else if ($action=="set presence") {
+} else if ($_REQUEST['action']=="set presence") {
     $SipSettings->setPresence();
-} else if ($action=="set reject members") {
+} else if ($_REQUEST['action']=="set reject members") {
     $SipSettings->setRejectMembers();
-} else if ($action=="set accept rules") {
+} else if ($_REQUEST['action']=="set accept rules") {
     $SipSettings->setAcceptRules();
-} else if ($action=="set aliases") {
+} else if ($_REQUEST['action']=="set aliases") {
     $SipSettings->setAliases();
-} else if ($action=="Send settings") {
+} else if ($_REQUEST['action']=="Send settings") {
     $SipSettings->sendEmail();
-} else if ($tab=="phonebook" && $export) {
+} else if ($_REQUEST['tab']=="phonebook" && $_REQUEST['export']) {
     $SipSettings->exportPhonebook($userAgent);
+} else if ($_REQUEST['tab']=="prepaid" && $_REQUEST['export']) {
+    $SIPSettings->exportBalanceHistory();
 }
 
-if (!$export) {
+if (!$_REQUEST['export']) {
 	$SipSettings->showAccount();
     print "
     </body>

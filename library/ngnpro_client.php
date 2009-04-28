@@ -6841,11 +6841,11 @@ class DnsZones extends Records {
 }
 
 class DnsRecords extends Records {
-    var $remote_engine_name='dns_engine_remote';
+    var $remote_engine_name  = 'dns_engine_remote';
 	var $max_zones_selection = 50;
-	var $typeFilter  = false;
-    var $default_ttl = 3600;
-    var $fancy = false;
+	var $typeFilter          = false;
+    var $default_ttl         = 3600;
+    var $fancy               = false;
 
     var $sortElements=array('changeDate' => 'Change date',
                             'type'       => 'Type',
@@ -7073,11 +7073,15 @@ class DnsRecords extends Records {
 
         dprint("init DnsRecords");
 
+		$_name=trim($_REQUEST['name_filter']);
+
+        if (strlen($_name) && !strstr($_name,'.') && !strstr($_name,'%')) $_name.='%';
+
 		if ($this->typeFilter) {
             $this->filters   = array(
                                      'id'           => trim($_REQUEST['id_filter']),
                                      'zone'         => trim($_REQUEST['zone_filter']),
-                                     'name'         => trim($_REQUEST['name_filter']),
+                                     'name'         => $_name,
                                      'type'         => $this->typeFilter,
                                      'value'        => trim($_REQUEST['value_filter']),
                                      'owner'        => trim($_REQUEST['owner_filter'])
@@ -7086,7 +7090,7 @@ class DnsRecords extends Records {
             $this->filters   = array(
                                      'id'           => trim($_REQUEST['id_filter']),
                                      'zone'         => trim($_REQUEST['zone_filter']),
-                                     'name'         => trim($_REQUEST['name_filter']),
+                                     'name'         => $_name,
                                      'type'         => trim($_REQUEST['type_filter']),
                                      'value'        => trim($_REQUEST['value_filter']),
                                      'owner'        => trim($_REQUEST['owner_filter'])
@@ -10328,7 +10332,6 @@ class Routes extends Records {
                     urlencode($route->carrier),
                     urlencode($route->reseller)
                     );
-
 
                     printf("
                     <tr bgcolor=%s>

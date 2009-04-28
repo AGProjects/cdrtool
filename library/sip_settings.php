@@ -131,6 +131,7 @@ class SipSettings {
     var $presenceWatchers    = array();
     var $SipUAImagesPath     = "images";
     var $SipUAImagesFile     = "phone_images.php";
+    var $balance_history     = array();
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
         $this->soapEngines        = $soapEngines;
@@ -742,7 +743,9 @@ class SipSettings {
         <td colspan=2>
         ";
 
+    	$this->showAboveTabs();
         $this->showTabs();
+    	$this->showUnderTabs();
 
         print "
         </td>
@@ -1494,6 +1497,9 @@ class SipSettings {
                    "description"  => "Voicemail");
     }
 
+    function showAboveTabs() {
+    }
+
     function showTabs() {
         print "
         <table class=border2 border=0 cellspacing=0 cellpadding=0 align=right>
@@ -1519,6 +1525,10 @@ class SipSettings {
         </table>
         ";
     }
+
+    function showUnderTabs() {
+    }
+
 
     function showSummary() {
         $this->getVoicemail();
@@ -3391,7 +3401,26 @@ class SipSettings {
         }
     }
 
+    function getBalanceHistory() {
+        $this->SipPort->addHeader($this->SoapAuth);
+
+        $result     = $this->SipPort->getCreditHistory($this->sipId,20);
+ 
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            if ($error_fault->detail->exception->errorcode != "2000") {
+                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            }
+        }
+
+        $this->balance_history=$result->entries;
+    }
+
     function showBalanceHistory() {
+    	$this->getBalanceHistory();
+
         $chapter=sprintf(_("Balance history"));
         $this->showChapter($chapter);
 
@@ -3422,10 +3451,9 @@ class SipSettings {
         print "</td>";
         print "</tr>";
 
-        dprint("showBalanceHistory");
         $this->SipPort->addHeader($this->SoapAuth);
 
-        $result     = $this->SipPort->getCreditHistory($this->sipId,20);
+        $result     = $this->SipPort->getCreditHistory($this->sipId,50);
  
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -3436,20 +3464,19 @@ class SipSettings {
             }
         }
 
-        if (is_array($result->entries)) {
-            foreach ($result->entries as $_line) {
-                $found++;
-                print "
-                <tr bgcolor=white>
-                <td>$found</td>
-                <td>$_line->date</td>
-                <td>$_line->action</td>
-                <td>$_line->number</td>
-                <td align=right>$_line->value</td>
-                <td align=right>$_line->balance</td>
-                </tr>
-                ";
-            }
+        foreach ($this->balance_history as $_line) {
+            if (!$_line->value) continue;
+            $found++;
+            print "
+            <tr bgcolor=white>
+            <td>$found</td>
+            <td>$_line->date</td>
+            <td>$_line->action</td>
+            <td>$_line->number</td>
+            <td align=right>$_line->value</td>
+            <td align=right>$_line->balance</td>
+            </tr>
+            ";
         }
 
         print "
@@ -3458,7 +3485,36 @@ class SipSettings {
         </table>
         ";
 
+        print "<p><a href=$this->pageURL&tab=prepaid&export=1 target=_new><font color=$fontcolor>Export history to CSV file</font>";
         print "</td></tr>";
+    }
+
+    function exportBalanceHistory() {
+        Header("Content-type: text/csv");
+    	$h=sprintf("Content-Disposition: inline; filename=%s-prepaid-history.csv",$this->account);
+    	Header($h);
+
+    	$this->getBalanceHistory();
+
+        $this->SipPort->addHeader($this->SoapAuth);
+
+        $result     = $this->SipPort->getCreditHistory($this->sipId,100);
+ 
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            if ($error_fault->detail->exception->errorcode != "2000") {
+                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            }
+        }
+
+        printf ("Id,Account,Date,Action,Description,Transaction value,Final balance\n");
+        foreach ($this->balance_history as $_line) {
+            if (!$_line->value) continue;
+            $found++;
+            printf ("%s,%s,%s,%s,%s,%s,%s\n",$found,$this->account,$_line->date,$_line->action,$_line->number,$_line->value,$_line->balance);
+        }
     }
 
     function showDiversions($conditions=array()) {
