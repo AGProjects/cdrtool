@@ -946,8 +946,8 @@ class RatingTables {
     var $mustReload = false;
     var $web_elements=array('table',
                             'export',
-                            'action',
-                            'subaction',
+                            'web_task',
+                            'subweb_task',
                             'confirmDelete',
                             'confirmCopy',
                             'next',
@@ -1299,6 +1299,39 @@ class RatingTables {
                                                                                  )
 
                                                                   )
+                                                   ),
+                           "prepaid_history"=>array("name"=>"Prepaid history",
+                                                 "order"=>"id DESC",
+                                                 "skip_math"=> true,
+                                                 "keys"=>array("id"),
+                                                 "size"=>15,
+                                                 "exceptions" =>array('session','destination'),
+                                                 "domainFilterColumn"=>"domain",
+                                                 "fields"=>array("username"=>array("size"=>15,
+                                                                                ),
+                                                                 "domain"=>array("size"=>15,
+                                                                                 ),
+                                                                 "action"=>array("size"=>15
+                                                                                 ),
+                                                                 "duration"=>array("size"=>5,
+                                                                                 "readonly"=>1
+                                                                                 ),
+                                                                 "destination"=>array("size"=>15
+                                                                                 ),
+                                                                 "session"=>array("size"=>30,
+                                                                                 "readonly"=>1
+                                                                                 ),
+                                                                 "number"=>array("size"=>30,
+                                                                                  "name"=>"Description"
+                                                                                 ),
+                                                                 "value"=>array("size"=>10
+                                                                                 ),
+                                                                 "balance"=>array("size"=>10
+                                                                                 ),
+                                                                 "date"=>array("size"=>18,
+                                                                                 ))
+
+
                                                    ),
                            "quota_usage"=>array("name"=>"Quota usage",
                                                  "keys"=>array("id"),
@@ -3116,7 +3149,9 @@ class RatingTables {
 
         if (!$table) return false;
 
-        if ($this->readonly) return true;
+        if ($this->readonly) {
+        	return true;
+        }
 
         // Init table structure
         if (!is_array($this->tables[$table]['exceptions'])) $this->tables[$table]['exceptions']=array();
@@ -3125,10 +3160,10 @@ class RatingTables {
         $metadata  = $this->db->metadata($table="$table");
         $cc        = count($metadata);
         // end init table structure
-        
-        if ($action =="update") {
+
+        if ($web_task =="update") {
             $affected_rows=0;
-            if ($subaction == "Update") {
+            if ($subweb_task == "Update") {
                 if ($this->checkValues($table,$_REQUEST)) {
                     $update_set='';
                     $k=0;
@@ -3157,7 +3192,7 @@ class RatingTables {
                             $comma = "";
                         }
 
-                        if (preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
+                        if (!$this->tables[$table]['skip_math'] && preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
                             $update_set .= $comma.$Fname."= ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
                         } else {
                             $update_set .= $comma.$Fname."='".$value."'";
@@ -3278,7 +3313,7 @@ class RatingTables {
                 } else {
                     print "<p>Correct the values and try again.";
                 }
-            } elseif ($subaction == "Update selection") {
+            } elseif ($subweb_task == "Update selection") {
                 $k=0;
                 $kkk=0;
                 $update_set='';
@@ -3402,7 +3437,7 @@ class RatingTables {
                         printf ("<font color=red>Database error: %s</font>",$this->db->Error);
                     }
                 }
-            } elseif ($subaction == "Delete selection") {
+            } elseif ($subweb_task == "Delete selection") {
                 if ($confirmDelete) {
                     // reconstruct where clause to apply all changes to selection
                     // build where clause
@@ -3492,7 +3527,7 @@ class RatingTables {
                     print "</font>";
                     print "<input type=hidden name=confirmDelete value=1>";
                 }
-            } elseif ($subaction == "Copy rate" && strlen($fromRate) && strlen($toRate)) {
+            } elseif ($subweb_task == "Copy rate" && strlen($fromRate) && strlen($toRate)) {
                 if ($confirmCopy) {
                     if ($toRate == 'history') {
                         $values=sprintf("
@@ -3619,7 +3654,7 @@ class RatingTables {
                     print "</font>";
                 }
         
-            } elseif ($subaction == "Insert") {
+            } elseif ($subweb_task == "Insert") {
                 //print "<h3>Insert</h3>";
                 if ($this->checkValues($table,$_REQUEST)) {
                     $query="insert into $table ( ";
@@ -3711,7 +3746,7 @@ class RatingTables {
                 } else {
                     print "<p>Correct the values and try again.";
                 }
-            } elseif ($subaction == "Delete") {
+            } elseif ($subweb_task == "Delete") {
                 if ($confirmDelete) {
                     $query="delete from $table where id = '$id' and $this->whereDomainFilter";
                     if ($this->db->query($query)) {
@@ -3733,7 +3768,7 @@ class RatingTables {
                     print "</font>";
                     print "<input type=hidden name=confirmDelete value=1>";
                 }
-            } elseif ($subaction == "Delete session" && $sessionId && $table=='prepaid') {
+            } elseif ($subweb_task == "Delete session" && $sessionId && $table=='prepaid') {
 
                 $query=sprintf("select active_sessions from %s where id  = %d",$table,$id);
                 if (!$this->db->query($query)) {
@@ -3787,7 +3822,7 @@ class RatingTables {
                 addslashes($loginname),
                 addslashes($_SERVER['REMOTE_ADDR']),
                 addslashes($affected_rows),
-                addslashes($subaction),
+                addslashes($subweb_task),
                 addslashes($table),
                 addslashes($log_entity)
                 );
@@ -4004,7 +4039,7 @@ class RatingTables {
             // Search form
             print "
             <form action=$PHP_SELF method=post name=rating>
-            <input type=hidden name=action value=Search>
+            <input type=hidden name=web_task value=Search>
             <tr>
             <td>&nbsp; </td>";
             $j=0;
@@ -4072,7 +4107,7 @@ class RatingTables {
             }
             print "
             </select>
-            <input type=submit name=subaction value=Search>
+            <input type=submit name=subweb_task value=Search>
             </form>
             <form action=$PHP_SELF method=post target=export>
             <input type=hidden name=export value=1>
@@ -4120,7 +4155,7 @@ class RatingTables {
             
                 print "
                 <form action=$PHP_SELF method=post>
-                <input type=hidden name=action value=update>
+                <input type=hidden name=web_task value=update>
                 <input type=hidden name=next value=$next>
                 <tr>
                     <td>&nbsp;</td>";
@@ -4171,26 +4206,26 @@ class RatingTables {
                     $j++;    
                 }
         
-                if ($subaction=="Delete selection" && !$confirmDelete) {
+                if ($subweb_task=="Delete selection" && !$confirmDelete) {
                     print "<td bgcolor=lightgrey>";
                     print "<input type=hidden name=confirmDelete value=1>";
-                    print "<input type=submit name=subaction value=\"Delete selection\">";
+                    print "<input type=submit name=subweb_task value=\"Delete selection\">";
                     print " ($rows records)";
                 } else if (!$this->tables[$this->table]['readonly']){
         
                     if ($this->table == "billing_rates" && strlen($_REQUEST['search_name'])) {
-                        if ($subaction=="Copy rate" && !$confirmCopy) {
+                        if ($subweb_task=="Copy rate" && !$confirmCopy) {
                         print "<td bgcolor=lightgrey>";
                             print "<input type=hidden name=confirmCopy value=1>";
                         } else {
                             print "<td>";
                             print "
-                            <input type=submit name=subaction value=\"Update selection\">
-                            <input type=submit name=subaction value=\"Delete selection\">
+                            <input type=submit name=subweb_task value=\"Update selection\">
+                            <input type=submit name=subweb_task value=\"Delete selection\">
                             <br>";
                         }
                         print "
-                        <input type=submit name=subaction value=\"Copy rate\">";
+                        <input type=submit name=subweb_task value=\"Copy rate\">";
                         printf (" id %s to",$_REQUEST['search_name']);
         
                         $query=sprintf("select distinct(name) as name
@@ -4224,8 +4259,8 @@ class RatingTables {
                     } else {
                         print "<td>";
                         print "
-                        <input type=submit name=subaction value=\"Update selection\">
-                        <input type=submit name=subaction value=\"Delete selection\">
+                        <input type=submit name=subweb_task value=\"Update selection\">
+                        <input type=submit name=subweb_task value=\"Delete selection\">
                         <br>";
         
                     }
@@ -4245,7 +4280,7 @@ class RatingTables {
                 $j=0;
                 print "
                 <form action=$PHP_SELF method=post>
-                <input type=hidden name=action value=update>
+                <input type=hidden name=web_task value=update>
                 <input type=hidden name=next value=$next>
                 <tr>
                 <td>&nbsp; </td>
@@ -4300,7 +4335,7 @@ class RatingTables {
                     <td class=border>
                     <input type=hidden name=table value=\"$this->table\">
                     <input type=hidden name=search_text value=\"$search_text\">
-                    <input type=submit name=subaction value=Insert>
+                    <input type=submit name=subweb_task value=Insert>
                     </td>
                 </tr>
                 </form>
@@ -4324,7 +4359,7 @@ class RatingTables {
             if (!$export) {
                 print "
                 <form action=$PHP_SELF method=post>
-                <input type=hidden name=action value=update>
+                <input type=hidden name=web_task value=update>
                 <input type=hidden name=next value=$next>
                 <input type=hidden name=id value=$id>
                 <tr>
@@ -4339,7 +4374,7 @@ class RatingTables {
                     $extraInfo="
                     <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
                     <form action=$PHP_SELF method=post>
-                    <input type=hidden name=action value=update>
+                    <input type=hidden name=web_task value=update>
                     <input type=hidden name=next value=$next>
                     <input type=hidden name=id value=$id>
                     <tr>
@@ -4362,7 +4397,7 @@ class RatingTables {
                         }
                         if ($maxsessiontime < $duration ) {
                             $extraInfo.= sprintf ("<tr><td class=border colspan=2><font color=red><b>Session expired since %d s</b></font></td></tr>",$duration-$maxsessiontime);
-                    		$extraInfo.= sprintf("<tr><td colspan=2><input type=submit name=subaction value='Delete session'></td></tr>");
+                    		$extraInfo.= sprintf("<tr><td colspan=2><input type=submit name=subweb_task value='Delete session'></td></tr>");
                         }
                         //if (!$this->readonly) {
                         //}
@@ -4487,15 +4522,15 @@ class RatingTables {
         
             if (!$export) {
             	if (!$this->tables[$this->table]['readonly']) {
-                    if ($subaction=="Delete" && $idForDeletion == $id && !$confirmDelete) {
+                    if ($subweb_task=="Delete" && $idForDeletion == $id && !$confirmDelete) {
                         print "<td class=border bgcolor=lightgrey>";
                         print "<input type=hidden name=confirmDelete value=1>";
-                        print "<input type=submit name=subaction value=Delete>";
+                        print "<input type=submit name=subweb_task value=Delete>";
                     } else {
                         print "
                         <td class=border>
-                        <input type=submit name=subaction value=Update>
-                        <input type=submit name=subaction value=Delete>
+                        <input type=submit name=subweb_task value=Update>
+                        <input type=submit name=subweb_task value=Delete>
                         ";
                         print "<input type=hidden name=confirmDelete value=1>";
                     }
@@ -4550,7 +4585,7 @@ class RatingTables {
                 print "
                 <input type=hidden name=maxrowsperpage value=$this->maxrowsperpage>
                 <input type=hidden name=next           value=$mod_show_next>
-                <input type=hidden name=action         value=Search>
+                <input type=hidden name=web_task         value=Search>
                 <input type=hidden name=table          value=$this->table>
                 <input type=hidden name=search_text    value=\"$search_text\">
                 ";
@@ -4587,7 +4622,7 @@ class RatingTables {
                 <input type=hidden name=maxrowsperpage value=$this->maxrowsperpage>
                 <input type=hidden name=next           value=$show_next>
                 <input type=hidden name=table           value=$this->table>
-                <input type=hidden name=action           value=Search>
+                <input type=hidden name=web_task           value=Search>
                 ";
                 $j=0;
                 while ($j < $cc ) {
