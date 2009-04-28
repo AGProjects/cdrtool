@@ -3285,19 +3285,20 @@ class SIP_trace {
             }
 
             print "
-            <td align=left width=50% bgcolor=$color2>
+            <td align=left bgcolor=$color2>
 
-            Trace is visible
+            This SIP trace is visible
 
             <select name=toggleVisibility onChange=\"document.visibility.submit.disabled = true; location.href = '$basicURL&action=toggleVisibility&toggleVisibility=' + this.options[this.selectedIndex].value\">
             <option $selected_toggleVisibility[public] value=1>without authorization
-            <option $selected_toggleVisibility[private] value=0>only for authorized users
+            <option $selected_toggleVisibility[private] value=0>only to authorized users
             </select>
             <input type=hidden name=action value=toggleVisibility>
             ";
-            print "<a href=$fullURL>URL for this trace</a></td>";
+            
+            print "URLs for this trace: <a href=$fullURL>HTML</a> | <a href=$fullURL&format=text>TEXT</a></td>";
         } else {
-            print "<td align=left width=50%>";
+            print "<td align=left>";
         }
 
         if ($this->mediaTrace) {
@@ -3313,7 +3314,7 @@ class SIP_trace {
 
         print "</td>
         </form>
-        <td align=right width=50%>
+        <td align=right>
         Click on each trace entry to see the full message.
         $this->mediaTraceLink
 
@@ -3661,6 +3662,32 @@ class SIP_trace {
         print "
         </table>
         ";
+    }
+
+    function showText($proxyIP,$callid,$fromtag,$totag) {
+
+        $this->getTrace($proxyIP,$callid,$fromtag,$totag);
+        print "<pre>";
+
+        if (!count($this->trace_array)) {
+            print "SIP trace for session id $callid is not available.";
+            return false;
+        }
+
+        printf ("SIP trace on proxy %s for session %s\n--\n\n",$proxyIP,$callid);
+
+        foreach (array_keys($this->trace_array) as $key) {
+            $i++;
+            printf ("Packet %d at %s from %s to %s (%s)\n",
+            $i,
+            $this->trace_array[$key]['date'],
+            $this->trace_array[$key]['fromip'],
+            $this->trace_array[$key]['toip'],
+            $this->trace_array[$key]['direction']);
+            printf ("\n%s\n",$this->trace_array[$key]['msg']);
+            print "---\n";
+        }
+        print "</pre>";
     }
 
     function togglePublicVisibility($callid,$fromtag,$public='0') {
