@@ -966,6 +966,7 @@ class RatingTables {
 
     var $tables=array(
                            "destinations"=>array("name"=>"Destinations",
+                                                 "skip_math"=> true,
                                                  "keys"=>array("id"),
                                                  "exceptions" =>array(),
                                                  "order"=>"dest_id ASC",
@@ -993,6 +994,7 @@ class RatingTables {
                                                                  )
                                                  ),
                            "billing_customers"=>array("name"=>"Customers",
+                                                 "skip_math"=> true,
                                                  "keys"=>array("id"),
                                                  "domainFilterColumn"=>"domain",
                                                  "exceptions" =>array('country_code'),
@@ -1039,6 +1041,7 @@ class RatingTables {
 
                                                  ),
                            "billing_profiles"=>array("name"=>"Profiles",
+                                                 "skip_math"=> true,
                                                  "keys"=>array("id"),
                                                  "exceptions" =>array(),
                                                  "size"=>6,
@@ -1190,6 +1193,7 @@ class RatingTables {
                                                                   )
                                                    ),
                            "billing_enum_tlds"=>array("name"=>"ENUM TLDs",
+                                                 "skip_math"=> true,
                                                  "keys"=>array("id"),
                                                  "exceptions" =>array(),
                                                  "size"=>6,
