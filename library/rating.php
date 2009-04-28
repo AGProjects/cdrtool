@@ -1325,8 +1325,7 @@ class RatingTables {
                                                                  "session"=>array("size"=>30,
                                                                                  "readonly"=>1
                                                                                  ),
-                                                                 "number"=>array("size"=>30,
-                                                                                  "name"=>"Description"
+                                                                 "description"=>array("size"=>30
                                                                                  ),
                                                                  "value"=>array("size"=>10
                                                                                  ),
@@ -3262,9 +3261,9 @@ class RatingTables {
             
                                 if (floatval($balance) != floatval($old_balance))  {
                                     $query=sprintf("insert into prepaid_history
-                                    (username,domain,action,number,value,balance,date)
+                                    (username,domain,action,description,value,balance,date)
                                     values
-                                    ('%s','%s','Set balance','Update by administrator','%s','%s',NOW())",
+                                    ('%s','%s','Set balance','Manual update','%s','%s',NOW())",
                                     addslashes($username),
                                     addslashes($domain),
                                     addslashes($value),
@@ -5666,11 +5665,11 @@ class RatingEngine {
         }
 
         while ($this->db->next_record()) {
-            $history[]=array('account' =>$account,
-                             'action'  =>$this->db->f('action'),
-                             'number'  =>$this->db->f('number'),
-                             'value'   =>$this->db->f('value'),
-                             'balance' =>$this->db->f('balance')
+            $history[]=array('account'     => $account,
+                             'action'      => $this->db->f('action'),
+                             'description' => $this->db->f('description'),
+                             'value'       => $this->db->f('value'),
+                             'balance'     => $this->db->f('balance')
                             );
         }
 
@@ -5788,24 +5787,26 @@ class RatingEngine {
 
         list($prepaidUser,$prepaidDomain)=explode("@",$account);
 
-        $query=sprintf("insert into prepaid_history
-        (username,domain,action,number,value,balance,date,session,duration,destination)
-        values 
-        ('%s','%s','Debit balance','Session to %s for %ds','%s','%s',NOW(),'%s','%d','%s')",
-        addslashes($prepaidUser),
-        addslashes($prepaidDomain),
-        addslashes($destination),
-        $duration,
-        $balance,
-        $next_balance,
-        addslashes($session_id),
-        $duration,
-        addslashes($destination)
-        );
-
-        if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-            syslog(LOG_NOTICE, $log);
+        if ($balance > 0) {
+            $query=sprintf("insert into prepaid_history
+            (username,domain,action,description,value,balance,date,session,duration,destination)
+            values 
+            ('%s','%s','Debit balance','Session to %s for %ds','%s','%s',NOW(),'%s','%d','%s')",
+            addslashes($prepaidUser),
+            addslashes($prepaidDomain),
+            addslashes($destination),
+            $duration,
+            $balance,
+            $next_balance,
+            addslashes($session_id),
+            $duration,
+            addslashes($destination)
+            );
+    
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                syslog(LOG_NOTICE, $log);
+            }
         }
 
         return $maxsessiontime;
@@ -5865,9 +5866,9 @@ class RatingEngine {
 
                 // log to prepaid_history
                 $query=sprintf("insert into prepaid_history
-                (username,domain,action,number,value,balance,date)
+                (username,domain,action,description,value,balance,date)
                 values 
-                ('%s','%s','Set balance','manual update','%s','%s',NOW())",
+                ('%s','%s','Set balance','Manual update','%s','%s',NOW())",
                 addslashes($prepaidUser),
                 addslashes($prepaidDomain),
                 $balance,
@@ -5902,9 +5903,9 @@ class RatingEngine {
 
                 // log to prepaid_history
                 $query=sprintf("insert into prepaid_history 
-                (username,domain,action,number,value,balance,date) 
+                (username,domain,action,description,value,balance,date)
                 values 
-                ('%s','%s','Set balance','manual update','%s','%s',NOW())",
+                ('%s','%s','Set balance','Manual update','%s','%s',NOW())",
                 addslashes($prepaidUser),
                 addslashes($prepaidDomain),
                 $balance,

@@ -742,11 +742,26 @@ class SipSettings {
         <tr>
         <td colspan=2>
         ";
-
     	$this->showAboveTabs();
-        $this->showTabs();
-    	$this->showUnderTabs();
+        print "
+        </td>
+        </tr>
+        ";
 
+        print "
+        <tr>
+        <td colspan=2>
+        ";
+        $this->showTabs();
+        print "
+        </td>
+        </tr>
+        ";
+        print "
+        <tr>
+        <td colspan=2>
+        ";
+    	$this->showUnderTabs();
         print "
         </td>
         </tr>
@@ -3281,12 +3296,13 @@ class SipSettings {
             $description = $_REQUEST['description'];
             $value       = $_REQUEST['value'];
 
-            if (strlen($value) && $result = $this->addBalanceReseller($value,$description)) {
+            if (strlen($value) && $this->addBalanceReseller($value,$description)) {
+
                 print "<p><font color=green>";
-                printf (_("Added %s to the account balance. "),$value);
+                printf (_("Added %s to the account balance. "),floatval($value));
 
                 if ($_REQUEST['notify']) {
-                    $subject=sprintf ("SIP account %s balance update",$this->account,floatval($value));
+                    $subject=sprintf ("SIP account %s balance update",$this->account);
             
                     $body="Your SIP account balance has been updated. ".
                     "To see the transaction value and details go to $this->sip_settings_page?tab=prepaid";
@@ -3448,7 +3464,7 @@ class SipSettings {
         dprint("addBalanceSubscriberLocal($prepaidCard,$prepaidId)");
 
         $this->SipPort->addHeader($this->SoapAuth);
-        $result     = $this->SipPort->addBalanceFromVoucher($this->sipId,$card);
+        $result = $this->SipPort->addBalanceFromVoucher($this->sipId,$card);
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -3465,7 +3481,6 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->addBalance($this->sipId,floatval($value),$description);
 
-
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
@@ -3473,7 +3488,6 @@ class SipSettings {
             printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
-
         	return true;
         }
     }
@@ -3530,7 +3544,7 @@ class SipSettings {
 
         $this->SipPort->addHeader($this->SoapAuth);
 
-        $result     = $this->SipPort->getCreditHistory($this->sipId,50);
+        $result     = $this->SipPort->getCreditHistory($this->sipId,200);
  
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -3542,12 +3556,17 @@ class SipSettings {
         }
 
         foreach ($this->balance_history as $_line) {
-            if (!$_line->value) continue;
 
-            if ($this->cdrtool_address && strstr($_line->description,'Session')) {
-                $description=sprintf("<a href=%s/callsearch.phtml?action=search&call_id=%s target=cdrtool>$_line->description</a>",$this->cdrtool_address,urlencode($_line->session));
+			if (strstr($_line->description,'Session')) {
+            	if (!$_line->value) continue;
+
+                if ($this->cdrtool_address) {
+                    $description=sprintf("<a href=%s/callsearch.phtml?action=search&call_id=%s target=cdrtool>$_line->description</a>",$this->cdrtool_address,urlencode($_line->session));
+                } else {
+                    $description=$_line->description;
+                }
             } else {
-            	$description=$_line->description;
+                $description=$_line->description;
             }
 
             $found++;
@@ -3584,7 +3603,7 @@ class SipSettings {
 
         $this->SipPort->addHeader($this->SoapAuth);
 
-        $result     = $this->SipPort->getCreditHistory($this->sipId,100);
+        $result     = $this->SipPort->getCreditHistory($this->sipId,200);
  
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -3597,7 +3616,7 @@ class SipSettings {
 
         printf ("Id,Account,Date,Action,Description,Transaction value,Final balance\n");
         foreach ($this->balance_history as $_line) {
-            if (!$_line->value) continue;
+			if (strstr($_line->description,'Session') && !$_line->value) continue;
             $found++;
             printf ("%s,%s,%s,%s,%s,%s,%s\n",
             $found,
