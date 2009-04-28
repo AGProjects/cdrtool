@@ -3256,9 +3256,8 @@ class SipSettings {
     }
 
     function showPrepaidForm() {
-        $task = $_REQUEST['task'];
-        $prepaidCard = $_REQUEST['prepaidCard'];
-        $prepaidId   = $_REQUEST['prepaidId'];
+        $task        = $_REQUEST['task'];
+        $issuer      = $_REQUEST['issuer'];
 
         print "
         <tr>
@@ -3267,20 +3266,47 @@ class SipSettings {
         <input type=hidden name=task value=Add>
         <td class=h colspan=2 align=left> ";
 
-        dprint("prepaidCard=$prepaidCard && prepaidId=$prepaidId");
+        if ($issuer=='subscriber'){
+            $prepaidCard = $_REQUEST['prepaidCard'];
+            $prepaidId   = $_REQUEST['prepaidId'];
 
-        if ($prepaidCard && $prepaidId && $result = $this->AddPrepaidBalance($prepaidCard,$prepaidId)) {
-            print "<p><font color=green>";
-            printf (_("Added %d to your account balance. "),$result);
-            print "</font>";
+            if ($prepaidCard && $prepaidId && $result = $this->addBalanceSubscriber($issuer,$prepaidCard,$prepaidId)) {
+                print "<p><font color=green>";
+                printf (_("Added %d to your account balance. "),$result);
+                print "</font>";
+            }
         }
+
+        if ($issuer=='admin'){
+            $description = $_REQUEST['description'];
+            $value       = $_REQUEST['value'];
+
+            if (strlen($value) && $result = $this->addBalanceReseller($value,$description)) {
+                print "<p><font color=green>";
+                printf (_("Added %s to the account balance. "),$value);
+
+                if ($_REQUEST['notify']) {
+                    $subject=sprintf ("SIP account %s balance update",$this->account,floatval($value));
+            
+                    $body="Your SIP account balance has been updated. ".
+                    "To see the transaction value and details go to $this->sip_settings_page?tab=prepaid";
+            
+                    if (mail($this->email, $subject, $body, "From: $this->support_email")) {
+                        printf (_("Subscriber has been notified to %s."), $this->email);
+                    }
+                }
+
+                print "</font>";
+            }
+        }
+
 
         print "
         </td>
         </tr>
         ";
 
-        $prepaidAccount=$this->GetPrepaidAccountInfo();
+        $prepaidAccount=$this->getPrepaidStatus();
 
         if ($prepaidAccount) {
             $chapter=sprintf(_("Current balance"));
@@ -3315,13 +3341,54 @@ class SipSettings {
             </tr>
             ";
     
-            $this->showIncreaseBalance();
+            $this->showIncreaseBalanceAdmin();
+            $this->showIncreaseBalanceReseller();
+            $this->showIncreaseBalanceSubscriber();
             $this->showBalanceHistory();
         }
 
     }
 
-    function showIncreaseBalance () {
+    function showIncreaseBalanceAdmin () {
+    	if ($this->login_type != 'admin') return true;
+
+        $chapter=sprintf(_("Add balance"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr>
+        <form action=$this->pageURL method=post>
+        <input type=hidden name=tab value=prepaid>
+        <input type=hidden name=issuer value=admin>
+        <input type=hidden name=task value=Add>
+        <td class=h align=left><nobr>
+        ";
+
+        print _("Value");
+        print "
+        <input type=text size=10 name=value>
+        ";
+        print _("Description");
+
+        print "
+        <input type=text size=30 name=description>
+        Notify
+        <input type=checkbox name=notify value=1>
+
+        <input type=submit value=";
+        print _("Add");
+        print ">
+        </td>
+        </form>
+        </tr>
+        ";
+
+    }
+
+    function showIncreaseBalanceReseller () {
+    }
+
+    function showIncreaseBalanceSubscriber () {
 
         $chapter=sprintf(_("Increase balance"));
         $this->showChapter($chapter);
@@ -3330,6 +3397,7 @@ class SipSettings {
         <tr>
         <form action=$this->pageURL method=post>
         <input type=hidden name=tab value=prepaid>
+        <input type=hidden name=issuer value=subscriber>
         <input type=hidden name=task value=Add>
         <td class=h align=left><nobr>
         ";
@@ -3349,14 +3417,10 @@ class SipSettings {
         ";
     }
 
-    function GetPrepaidAccountInfo() {
-        dprint("GetPrepaidAccountInfo()");
+    function getPrepaidStatus() {
+        dprint("getPrepaidStatus()");
         $this->SipPort->addHeader($this->SoapAuth);
-        if ($this->SOAPversion > 1) {
-            $result     = $this->SipPort->getPrepaidStatusNew(array($this->sipId));
-        } else {
-            $result     = $this->SipPort->getPrepaidStatus($this->sipId);
-        }
+        $result     = $this->SipPort->getPrepaidStatus(array($this->sipId));
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -3365,16 +3429,12 @@ class SipSettings {
             printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         }  else {
-            if ($this->SOAPversion > 1) {
-                return $result[0];
-            } else {
-                return $result;
-            }
+        	return $result[0];
         }
     }
 
-    function AddPrepaidBalance($prepaidCard,$prepaidId) {
-        dprint("AddPrepaidBalance($prepaidCard,$prepaidId)");
+    function addBalanceSubscriber($prepaidCard,$prepaidId) {
+        dprint("addBalanceSubscriber($prepaidCard,$prepaidId)");
         if ($this->SOAPversion > 1) {
             $card      = array('id'     => intval($prepaidId),
                              'number' => $prepaidCard
@@ -3385,7 +3445,7 @@ class SipSettings {
                              );
         }
 
-        dprint("AddPrepaidBalanceLocal($prepaidCard,$prepaidId)");
+        dprint("addBalanceSubscriberLocal($prepaidCard,$prepaidId)");
 
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->addBalanceFromVoucher($this->sipId,$card);
@@ -3398,6 +3458,23 @@ class SipSettings {
             return false;
         }  else {
             return $result;
+        }
+    }
+
+    function addBalanceReseller($value=0,$description='') {
+        $this->SipPort->addHeader($this->SoapAuth);
+        $result     = $this->SipPort->addBalance($this->sipId,floatval($value),$description);
+
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+
+        	return true;
         }
     }
 
@@ -3441,7 +3518,7 @@ class SipSettings {
         print _("Action");
         print "</td>";
         print "<td class=h>";
-        print _("Info");
+        print _("Description");
         print "</td>";
         print "<td class=h align=right>";
         print _("Value");
@@ -3466,13 +3543,20 @@ class SipSettings {
 
         foreach ($this->balance_history as $_line) {
             if (!$_line->value) continue;
+
+            if ($this->cdrtool_address && strstr($_line->description,'Session')) {
+                $description=sprintf("<a href=%s/callsearch.phtml?action=search&call_id=%s target=cdrtool>$_line->description</a>",$this->cdrtool_address,urlencode($_line->session));
+            } else {
+            	$description=$_line->description;
+            }
+
             $found++;
             print "
             <tr bgcolor=white>
             <td>$found</td>
             <td>$_line->date</td>
             <td>$_line->action</td>
-            <td>$_line->number</td>
+            <td>$description</td>
             <td align=right>$_line->value</td>
             <td align=right>$_line->balance</td>
             </tr>
@@ -3485,7 +3569,9 @@ class SipSettings {
         </table>
         ";
 
-        print "<p><a href=$this->pageURL&tab=prepaid&export=1 target=_new><font color=$fontcolor>Export history to CSV file</font>";
+		if ($found) {
+        	print "<p><a href=$this->pageURL&tab=prepaid&export=1 target=_new><font color=$fontcolor>Export history to CSV file</font>";
+        }
         print "</td></tr>";
     }
 
@@ -3513,7 +3599,14 @@ class SipSettings {
         foreach ($this->balance_history as $_line) {
             if (!$_line->value) continue;
             $found++;
-            printf ("%s,%s,%s,%s,%s,%s,%s\n",$found,$this->account,$_line->date,$_line->action,$_line->number,$_line->value,$_line->balance);
+            printf ("%s,%s,%s,%s,%s,%s,%s\n",
+            $found,
+            $this->account,
+            $_line->date,
+            $_line->action,
+            $_line->description,
+            $_line->value,
+            $_line->balance);
         }
     }
 

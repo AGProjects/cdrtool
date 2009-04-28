@@ -434,13 +434,18 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                             'style'=>'rpc',
                             'use'=>'encoded' ));
     }
-    function &addBalance($sipId, $value) {
-        return $this->call("addBalance", 
-                        $v = array("sipId"=>$sipId, "value"=>$value), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+    function &addBalance($sipId, $value, $description)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('addBalance',
+                              $v = array('sipId' => $sipId, 'value' => $value, 'description' => $description),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
     function &addBalanceFromVoucher($sipId, $card) {
         // card is a ComplexType PrepaidCard,
@@ -453,23 +458,12 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                             'style'=>'rpc',
                             'use'=>'encoded' ));
     }
-    function &getPrepaidStatusNew($sipIds) {
+    function &getPrepaidStatus($sipIds) {
         // sipIds is a ComplexType SipIdArray,
         //refer to wsdl for more info
         $sipIds =& new SOAP_Value('sipIds','{urn:AGProjects:NGNPro}SipIdArray',$sipIds);
         return $this->call("getPrepaidStatus", 
                         $v = array("sipIds"=>$sipIds), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getPrepaidStatus($sipId) {
-        // sipId is a ComplexType SipId,
-        //refer to wsdl for more info
-        $sipId =& new SOAP_Value('sipId','{urn:AGProjects:NGNPro}SipId',$sipId);
-        return $this->call("getPrepaidStatus", 
-                        $v = array("sipId"=>$sipId), 
                         array('namespace'=>'urn:AGProjects:NGNPro:Sip',
                             'soapaction'=>'',
                             'style'=>'rpc',
