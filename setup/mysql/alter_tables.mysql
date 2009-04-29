@@ -546,4 +546,8 @@ alter table prepaid drop column call_lock;
 
 6.7.9
 alter table prepaid_history change column `number` `description` varchar(255) not null;
+alter table billing_rates add column increment smallint unsigned not null;
+alter table billing_rates add column min_duration smallint unsigned not null;
+alter table billing_rates_history add column increment smallint unsigned not null after durationRateIn;
+alter table billing_rates_history add column min_duration smallint unsigned not null after increment; 
 
