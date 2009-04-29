@@ -1726,8 +1726,8 @@ class RatingTables {
                     connectCost     = '%s',
                     durationRate    = '%s',
                     connectCostIn   = '%s',
-                    durationRateIn  = '%s'
-                    increment       = '%s'
+                    durationRateIn  = '%s',
+                    increment       = '%s',
                     min_duration    = '%s'
                     where name      = '%s'
                     and destination = '%s'
@@ -1768,8 +1768,8 @@ class RatingTables {
                             connectCost     = '%s',
                             durationRate    = '%s',
                             connectCostIn   = '%s',
-                            durationRateIn  = '%s'
-                            increment       = '%s'
+                            durationRateIn  = '%s',
+                            increment       = '%s',
                             min_duration    = '%s'
                             where name      = '%s'
                             and destination = '%s'
