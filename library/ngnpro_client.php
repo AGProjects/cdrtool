@@ -8388,7 +8388,7 @@ class TrustedPeers extends Records {
     }
 
     function showAddForm() {
-        if ($this->selectionActive) return;
+        //if ($this->selectionActive) return;
 
         print "
         <p>
@@ -8684,7 +8684,7 @@ class Carriers extends Records {
     }
 
     function showAddForm() {
-        if ($this->selectionActive) return;
+        //if ($this->selectionActive) return;
         print "
         <p>
         <table border=0 class=border width=100% bgcolor=lightblue>
@@ -8956,7 +8956,7 @@ class GatewayGroups extends Records {
     }
 
     function showAddForm() {
-        if ($this->selectionActive) return;
+        //if ($this->selectionActive) return;
         print "
         <p>
         <table border=0 class=border width=100% bgcolor=lightblue>
@@ -9278,7 +9278,7 @@ class Gateways extends Records {
     }
 
     function showAddForm() {
-        if ($this->selectionActive) return;
+        //if ($this->selectionActive) return;
 
         $this->getGatewayGroups();
 
@@ -9851,7 +9851,7 @@ class GatewayRules extends Records {
     }
 
     function showAddForm() {
-        if ($this->selectionActive) return;
+        //if ($this->selectionActive) return;
 
         $this->getGatewayGroups();
 
@@ -10378,7 +10378,7 @@ class Routes extends Records {
     }
 
     function showAddForm() {
-        if ($this->selectionActive) return;
+        //if ($this->selectionActive) return;
 
         if (!count($this->carriers)) {
             print "<p>Create a carrier first";

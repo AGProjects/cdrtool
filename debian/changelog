@@ -1,3 +1,22 @@
+cdrtool (6.7.9) unstable; urgency=low
+
+  * On upgrade apply the changes from setup/mysql/alter_tables.mysql
+  * Added increment and min_duration per rate, CSV format for rates and
+    rates_history tables have been changed to acomodate these new columns
+  * Replaced prepaid_history.number with prepaid_history.description
+  * Show SIP trace also in text format
+  * Do not log zero priced calls in prepaid_history table
+  * Improved SIP prepaid provisioning screens
+  * Skip math calculation for some rating tables
+  * Added export balance history from SIP prepaid page
+  * Added prepaid_history table to rating table management
+  * Updated ngnpro client to work with server version 4.1.1
+  * Make stronger random passwords for SIP accounts
+  * Updated LCR functionality
+  * Added gateway rules to LCR provisioning
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 29 Apr 2009 15:05:25 +0200
+
 cdrtool (6.7.8) unstable; urgency=low
 
   * Updated NGNPro client to work with server version 4.1.0
