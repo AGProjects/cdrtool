@@ -1,4 +1,4 @@
-Ops,Trusted peer,Domain,Subscriber,Rate Id,Destination,App,Connect,Price,Connect in,Price in
+Ops,Trusted peer,Domain,Subscriber,Rate Id,Destination,App,Connect,Price,Connect in,Price in,Incr,Minim
 2,,,,441,1,audio,0,200,1,200
 2,,,,441,1201,audio,0,200,,
 2,,,,441,1202,audio,0,200,,

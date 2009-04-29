@@ -129,6 +129,7 @@ class Rate {
 
         $this->trafficKB=number_format($this->traffic/1024,0,"","");
 
+        // check min_duration and increment per customer
         if ($this->increment >= 1) {
             // increase the billed duration to the next increment
             $this->duration = $this->increment * ceil($this->duration / $this->increment);
@@ -139,6 +140,16 @@ class Rate {
         }
 
         if ($this->duration) {
+            if ($this->increment >= 1) {
+                $this->rateInfo .= 
+                "    Increment: $this->increment s\n";
+            }
+    
+            if ($this->min_duration >= 1) {
+                $this->rateInfo .= 
+                " Min duration: $this->min_duration s\n";
+            }
+
             unset($IntervalsForPricing);
 
             $this->rateInfo .= 
@@ -153,16 +164,6 @@ class Rate {
     
                 "    ENUM tld: $this->ENUMtld\n".
                 "    ENUM discount: $this->ENUMdiscount%\n";
-            }
-
-            if ($this->increment > 1) {
-                $this->rateInfo .= 
-                "    Increment: $this->increment s\n";
-            }
-    
-            if ($this->min_duration > 1) {
-                $this->rateInfo .= 
-                " Min duration: $this->min_duration s\n";
             }
 
             $i=0;
@@ -293,6 +294,10 @@ class Rate {
             $this->rateInfo .= 
             "        Span: $span\n".
             "    Duration: $durationForRating s\n";
+
+
+			if ($thisRate['values']['increment'])    $this->rateInfo .= sprintf("   Increment: %s\n",$thisRate['values']['increment']);
+            if ($thisRate['values']['min_duration']) $this->rateInfo .= sprintf("Min duration: %s\n",$thisRate['values']['min_duration']);
 
             $this->rateSyslog .= sprintf("CallId=%s Span=%s Duration=%s DestId=%s %s",$this->callId,$span,$durationForRating,$this->DestinationId,$thisRate['customer']);
 
@@ -559,7 +564,14 @@ class Rate {
                             if ($_idx['endDate'] > $this->timestamp) {
                                 // found historical rate
                                 $found_history=true;
+
                                 $this->rateValues=$_idx;
+                                if ($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId]['increment']) {
+                                    $this->increment=$this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId]['increment'];
+                                }
+                                if ($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId]['min_duration']) {
+                                    $this->min_duration=$this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId]['min_duration'];
+                                }
                                 break;
                             } else {
                                 $_log=sprintf("Interval missmatch %s < %s",$_idx['endDate'],$this->timestamp);
@@ -668,6 +680,16 @@ class Rate {
                     $timestampNextProfile=$timestampNextProfile-3600;
                 }
             }
+        }
+
+        // see if we have minimum duration or increment
+        if ($this->rateValues['increment']) {
+            // increase the billed duration to the next increment
+            $this->duration = $this->rateValues['increment'] * ceil($this->duration / $this->rateValues['increment']);
+        }
+
+        if ($this->rateValues['min_duration']) {
+            $this->minimumDurationCharged = $this->rateValues['min_duration'];
         }
 
         $durationToRate=$this->duration-$durationRatedAlready;
@@ -908,8 +930,11 @@ class Rate {
                         "connectCost"     => $this->db->Record['connectCost'],
                         "durationRate"    => $this->db->Record['durationRate'],
                         "connectCostIn"   => $this->db->Record['connectCostIn'],
-                        "durationRateIn"  => $this->db->Record['durationRateIn']
+                        "durationRateIn"  => $this->db->Record['durationRateIn'],
+                        "increment"       => $this->db->Record['increment'],
+                        "min_duration"    => $this->db->Record['min_duration']
                        );
+
             // cache values
             $this->rateValuesCache[$rateName][$DestinationId][$applicationType]=$values;
             return $values;
@@ -1136,8 +1161,15 @@ class RatingTables {
                                                                  "durationRateIn"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
                                                                                   "name"=>"Price in"
+                                                                                 ),
+                                                                 "increment"     =>array("size"=>3,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Incr"
+                                                                                 ),
+                                                                 "min_duration"  =>array("size"=>3,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Minim"
                                                                                  )
-
                                                                   )
                                                    ),
                            "billing_rates_history"=>array("name"=>"Rates history",
@@ -1182,6 +1214,14 @@ class RatingTables {
                                                                  "durationRateIn"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
                                                                                   "name"=>"Price in"
+                                                                                 ),
+                                                                 "increment"     =>array("size"=>3,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Incr"
+                                                                                 ),
+                                                                 "min_duration"  =>array("size"=>3,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Minim"
                                                                                  ),
                                                                  "startDate"=>array("size"=>11,
                                                                                   "name"=>"Start Date"
@@ -1317,8 +1357,7 @@ class RatingTables {
                                                                                  ),
                                                                  "action"=>array("size"=>15
                                                                                  ),
-                                                                 "duration"=>array("size"=>5,
-                                                                                 "readonly"=>1
+                                                                 "duration"=>array("size"=>5
                                                                                  ),
                                                                  "destination"=>array("size"=>15
                                                                                  ),
@@ -1477,6 +1516,8 @@ class RatingTables {
             $durationRate   = trim($p[8]);
             $connectCostIn  = trim($p[9]);
             $durationRateIn = trim($p[10]);
+            $increment      = trim($p[11]);
+            $min_duration   = trim($p[12]);
 
             if (!$application) $application='audio';
 
@@ -1493,8 +1534,12 @@ class RatingTables {
                 connectCost,
                 durationRate,
                 connectCostIn,
-                durationRateIn
+                durationRateIn,
+                increment,
+                min_duration
                 ) values (
+                '%s',
+                '%s',
                 '%s',
                 '%s',
                 '%s',
@@ -1515,7 +1560,9 @@ class RatingTables {
                 addslashes($connectCost),
                 addslashes($durationRate),
                 addslashes($connectCostIn),
-                addslashes($durationRateIn)
+                addslashes($durationRateIn),
+                addslashes($increment),
+                addslashes($min_duration)
                 );
 
                 if (!$this->db->query($query)) {
@@ -1546,9 +1593,13 @@ class RatingTables {
                             connectCost,
                             durationRate,
                             connectCostIn,
-                            durationRateIn
+                            durationRateIn,
+                            increment,
+                            min_duration
                             ) values (
                             LAST_INSERT_ID(),
+                            '%s',
+                            '%s',
                             '%s',
                             '%s',
                             '%s',
@@ -1571,7 +1622,9 @@ class RatingTables {
                             addslashes($connectCost),
                             addslashes($durationRate),
                             addslashes($connectCostIn),
-                            addslashes($durationRateIn)
+                            addslashes($durationRateIn),
+                            addslashes($increment),
+                            addslashes($min_duration)
                             );
             
                             if (!$this->db->query($query)) {
@@ -1674,6 +1727,8 @@ class RatingTables {
                     durationRate    = '%s',
                     connectCostIn   = '%s',
                     durationRateIn  = '%s'
+                    increment       = '%s'
+                    min_duration    = '%s'
                     where name      = '%s'
                     and destination = '%s'
                     and gateway     = '%s'
@@ -1685,6 +1740,8 @@ class RatingTables {
                     addslashes($durationRate),
                     addslashes($connectCostIn),
                     addslashes($durationRateIn),
+                    addslashes($increment),
+                    addslashes($min_duration),
                     addslashes($name),
                     addslashes($destination),
                     addslashes($gateway),
@@ -1712,6 +1769,8 @@ class RatingTables {
                             durationRate    = '%s',
                             connectCostIn   = '%s',
                             durationRateIn  = '%s'
+                            increment       = '%s'
+                            min_duration    = '%s'
                             where name      = '%s'
                             and destination = '%s'
                             and gateway     = '%s'
@@ -1724,6 +1783,8 @@ class RatingTables {
                             addslashes($durationRate),
                             addslashes($connectCostIn),
                             addslashes($durationRateIn),
+                            addslashes($increment),
+                            addslashes($min_duration),
                             addslashes($name),
                             addslashes($destination),
                             addslashes($gateway),
@@ -1753,8 +1814,12 @@ class RatingTables {
                     connectCost,
                     durationRate,
                     connectCostIn,
-                    durationRateIn
+                    durationRateIn,
+                    increment,
+                    min_duration
                     ) values (
+                    '%s',
+                    '%s',
                     '%s',
                     '%s',
                     '%s',
@@ -1775,7 +1840,9 @@ class RatingTables {
                     addslashes($connectCost),
                     addslashes($durationRate),
                     addslashes($connectCostIn),
-                    addslashes($durationRateIn)
+                    addslashes($durationRateIn),
+                    addslashes($increment),
+                    addslashes($min_duration)
                     );
 
                     if (!$this->db->query($query)) {
@@ -1806,7 +1873,9 @@ class RatingTables {
                                connectCost,
                                durationRate,
                                connectCostIn,
-                               durationRateIn
+                               durationRateIn,
+                               increment,
+                               min_duration
                                ) values (
                                LAST_INSERT_ID(),
                                '%s',
@@ -1830,7 +1899,9 @@ class RatingTables {
                                addslashes($connectCost),
                                addslashes($durationRate),
                                addslashes($connectCostIn),
-                               addslashes($durationRateIn)
+                               addslashes($durationRateIn),
+                               addslashes($increment),
+                               addslashes($min_duration)
                                );
 
                                if (!$this->db->query($query)) {
@@ -1894,8 +1965,10 @@ class RatingTables {
             $durationRate   = trim($p[8]);
             $connectCostIn  = trim($p[9]);
             $durationRateIn = trim($p[10]);
-            $startDate      = trim($p[11]);
-            $endDate        = trim($p[12]);
+            $increment      = trim($p[11]);
+            $min_duration   = trim($p[12]);
+            $startDate      = trim($p[13]);
+            $endDate        = trim($p[14]);
 
             if ($ops=="1") {
 
@@ -1911,9 +1984,13 @@ class RatingTables {
                 durationRate,
                 connectCostIn,
                 durationRateIn,
+                increment,
+                min_duration,
                 startDate,
                 endDate
                 ) values (
+                '%s',
+                '%s',
                 '%s',
                 '%s',
                 '%s',
@@ -1937,6 +2014,8 @@ class RatingTables {
                 addslashes($durationRate),
                 addslashes($connectCostIn),
                 addslashes($durationRateIn),
+                addslashes($increment),
+                addslashes($min_duration),
                 addslashes($startDate),
                 addslashes($endDate)
                 );
@@ -2013,7 +2092,9 @@ class RatingTables {
                     connectCost     = '%s',
                     durationRate    = '%s',
                     connectCostIn   = '%s',
-                    durationRateIn  = '%s'
+                    connectCostIn   = '%s',
+                    increment       = '%s',
+                    min_duration    = '%s'
                     where name      = '%s'
                     and destination = '%s'
                     and gateway     = '%s'
@@ -2027,6 +2108,8 @@ class RatingTables {
                     addslashes($durationRate),
                     addslashes($connectCostIn),
                     addslashes($durationRateIn),
+                    addslashes($increment),
+                    addslashes($min_duration),
                     addslashes($name),
                     addslashes($destination),
                     addslashes($gateway),
@@ -2060,9 +2143,13 @@ class RatingTables {
                     durationRate,
                     connectCostIn,
                     durationRateIn,
+                    increment,
+                    min_duration,
                     startDate,
                     endDate
                     ) values (
+                    '%s',
+                    '%s',
                     '%s',
                     '%s',
                     '%s',
@@ -2086,6 +2173,8 @@ class RatingTables {
                     addslashes($durationRate),
                     addslashes($connectCostIn),
                     addslashes($durationRateIn),
+                    addslashes($increment),
+                    addslashes($min_duration),
                     addslashes($startDate),
                     addslashes($endDate)
                     );
@@ -2848,6 +2937,8 @@ class RatingTables {
                      "durationRate"   => $this->db->Record['durationRate'],
                      "connectCostIn"  => $this->db->Record['connectCostIn'],
                      "durationRateIn" => $this->db->Record['durationRateIn'],
+                     "increment"      => $this->db->Record['increment'],
+                     "min_duration"   => $this->db->Record['min_duration'],
                      "startDate"      => $this->db->Record['startDateTimestamp'],
                      "endDate"        => $this->db->Record['endDateTimestamp']
                 );
@@ -6019,7 +6110,7 @@ class RatingEngine {
                             'profileWeekendAlt' => $this->db->f('profile_name2_alt'),
                             'timezone'          => $this->db->f('timezone'),
                             'increment'         => $this->db->f('increment'),
-                            'minDuration'       => $this->db->f('min_duration'),
+                            'min_duration'      => $this->db->f('min_duration'),
                             'countryCode'       => $this->db->f('country_code')
                             );
         }
