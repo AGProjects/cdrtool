@@ -422,6 +422,8 @@ billing_rates
 | durationRate    |
 | connectCostIn   |
 | durationRateIn  |
+| increment       |
+| min_duration    |
 +-----------------+
 
 billing_rates_history
@@ -439,6 +441,8 @@ billing_rates_history
 | durationRate    |
 | connectCostIn   |
 | durationRateIn  |
+| increment       |
+| min_duration    |
 | startDate       |
 | endDate         |
 +-----------------+
