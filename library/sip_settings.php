@@ -3292,7 +3292,7 @@ class SipSettings {
             }
         }
 
-        if ($issuer=='admin'){
+        if ($issuer=='admin') {
             $description = $_REQUEST['description'];
             $value       = $_REQUEST['value'];
 
@@ -3315,7 +3315,6 @@ class SipSettings {
                 print "</font>";
             }
         }
-
 
         print "
         </td>
@@ -3368,7 +3367,7 @@ class SipSettings {
     function showIncreaseBalanceAdmin () {
     	if ($this->login_type != 'admin') return true;
 
-        $chapter=sprintf(_("Add balance"));
+        $chapter=sprintf(_("Add balance (admin)"));
         $this->showChapter($chapter);
 
         print "
@@ -3402,6 +3401,39 @@ class SipSettings {
     }
 
     function showIncreaseBalanceReseller () {
+    	if ($this->login_type != 'reseller') return true;
+
+        $chapter=sprintf(_("Add balance (reseller)"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr>
+        <form action=$this->pageURL method=post>
+        <input type=hidden name=tab value=prepaid>
+        <input type=hidden name=issuer value=reseller>
+        <input type=hidden name=task value=Add>
+        <td class=h align=left><nobr>
+        ";
+
+        print _("Value");
+        print "
+        <input type=text size=10 name=value>
+        ";
+        print _("Description");
+
+        print "
+        <input type=text size=30 name=description>
+        Notify
+        <input type=checkbox name=notify value=1>
+
+        <input type=submit value=";
+        print _("Add");
+        print ">
+        </td>
+        </form>
+        </tr>
+        ";
+
     }
 
     function showIncreaseBalanceSubscriber () {
