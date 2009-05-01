@@ -180,6 +180,7 @@ $DATASOURCES=array(
                     "mediaTrace"         => "media_trace",  // which datasource is used for display of media trace
                     "UserQuotaClass"     => "OpenSIPSQuota",
                     "UserQuotaNotify"    => "1",	    // send e-mail notifications when quota is exceeded
+                    "notifyLastSessions"   => true,         // send e-mail notifications with sessions received in the last 24 hours
                     "soapEngineId"       => '',             // used by Multimedia Service Platform
                     "domainTranslation_SourceIP"  => array(
                                                   "10.0.0.1"      => "gateway.example.com" // translate Realm for sessions originating from IP address 10.0.0.1

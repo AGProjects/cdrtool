@@ -2737,7 +2737,12 @@ class SipAccounts extends Records {
             $password=$this->RandomPassword(10);
         }
 
-        $groups=array();
+        if (is_array($dictionary['groups'])) {
+            $groups=$dictionary['groups'];
+        } else {
+        	$groups=array();
+        }
+
         if($dictionary['pstn'] || $_REQUEST['pstn']) {
             $_pstn=1;
             $groups[]='free-pstn';

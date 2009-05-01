@@ -3285,7 +3285,7 @@ class SipSettings {
             $prepaidCard = $_REQUEST['prepaidCard'];
             $prepaidId   = $_REQUEST['prepaidId'];
 
-            if ($prepaidCard && $prepaidId && $result = $this->addBalanceSubscriber($issuer,$prepaidCard,$prepaidId)) {
+            if ($prepaidCard && $prepaidId && $result = $this->addBalanceSubscriber($prepaidCard,$prepaidId)) {
                 print "<p><font color=green>";
                 printf (_("Added %d to your account balance. "),$result);
                 print "</font>";
@@ -3482,18 +3482,11 @@ class SipSettings {
     }
 
     function addBalanceSubscriber($prepaidCard,$prepaidId) {
-        dprint("addBalanceSubscriber($prepaidCard,$prepaidId)");
-        if ($this->SOAPversion > 1) {
-            $card      = array('id'     => intval($prepaidId),
-                             'number' => $prepaidCard
-                             );
-        } else {
-            $card      = array('id'     => intval($prepaidId),
-                             'number' => $prepaidCard
-                             );
-        }
-
         dprint("addBalanceSubscriberLocal($prepaidCard,$prepaidId)");
+
+        $card      = array('id'     => intval($prepaidId),
+                             'number' => $prepaidCard
+                             );
 
         $this->SipPort->addHeader($this->SoapAuth);
         $result = $this->SipPort->addBalanceFromVoucher($this->sipId,$card);

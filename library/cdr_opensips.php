@@ -7,6 +7,7 @@ class CDRS_opensips extends CDRS {
     var $maxCDRsNormalizeWeb   = 500;
     var $sipTrace              = 'sip_trace';
     var $mediaTrace            = 'media_trace';
+	var $missed_calls_group    = 'missed_calls';
 
     var $CDRFields=array('id'              => 'RadAcctId',
                          'callId'          => 'AcctSessionId',
@@ -2003,6 +2004,238 @@ class CDRS_opensips extends CDRS {
         }
 
         return 0;
+    }
+
+    function notifyLastSessions($count='200') {
+        // send emails with last missed and received sessions to subscribers in group $this->missed_calls_group
+
+    	$this->notifySubcribers=array();
+
+        require_once('Mail.php');
+        require_once('Mail/mime.php');
+
+        if ($this->enableThor) {
+            $query=sprintf("select * from sip_accounts");
+    
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+            	while ($this->AccountsDB->next_record()) {
+                    $_profile=json_decode(trim($this->AccountsDB->f('profile')));
+                    if (in_array($this->missed_calls_group,$_profile->groups)) {
+                        $this->notifySubcribers[$this->AccountsDB->f('username').'@'.$this->AccountsDB->f('domain')]=array('email'=>$this->AccountsDB->f('email'));
+                    }
+                }
+            } else {
+                return 0;
+            }
+        } else {
+            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",$this->missed_calls_group);
+    
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+            	while ($this->AccountsDB->next_record()) {
+                	$this->notifySubcribers[$this->AccountsDB->f('account')]=array('email'=>$this->AccountsDB->f('email'));
+                }
+            } else {
+                return 0;
+            }
+        }
+
+        if (!count($this->notifySubcribers)) return 0;
+
+        foreach (array_keys($this->notifySubcribers) as $_subscriber) {
+        	$_last_sessions=array();
+			unset($textBody);
+            unset($htmlBody);
+
+        	$query = sprintf("SELECT * FROM %s where %s = '%s' and %s > DATE_ADD(NOW(), INTERVAL -1 day) order by %s desc limit 200",
+            $this->table,
+            $this->CanonicalURIField,
+            $_subscriber,
+            $this->startTimeField,
+            $this->startTimeField);
+
+            if (!$this->CDRdb->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRdb->Error,$this->CDRdb->Errno);
+                syslog(LOG_NOTICE,$log);
+            	print $log;
+                return 0;
+            }
+
+            if (Date('d')== 1) {
+                while ($this->CDRdb->next_record()) {
+                    $_last_sessions[]=array('duration' => $this->CDRdb->f($this->durationField),
+                                            'from'     => $this->CDRdb->f($this->aNumberField),
+                                            'to'       => $this->CDRdb->f($this->cNumberField),
+                                            'remote'   => $this->CDRdb->f($this->RemoteAddressField),
+                                            'date'     => $this->CDRdb->f($this->startTimeField)
+                                          );
+                }
+
+            	if (preg_match("/^(\w+)(\d{4})(\d{2})$/",$this->table,$m))  {
+                    $previousTable=$m[1].date('Ym', mktime(0, 0, 0, $m[3]-1, "01", $m[2]));
+                    $query = sprintf("SELECT * FROM %s where %s = '%s' and %s > DATE_ADD(NOW(), INTERVAL -1 day) order by %s desc limit 200",
+                    $previousTable,
+                    $this->CanonicalURIField,
+                    $_subscriber,
+                    $this->startTimeField,
+                    $this->startTimeField);
+
+                    if (!$this->CDRdb->query($query)) {
+                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRdb->Error,$this->CDRdb->Errno);
+                        syslog(LOG_NOTICE,$log);
+                        print $log;
+                        return 0;
+                    }
+                    while ($this->CDRdb->next_record()) {
+                        $_last_sessions[]=array('duration' => $this->CDRdb->f($this->durationField),
+                                              'from'       => $this->CDRdb->f($this->aNumberField),
+                                              'to'         => $this->CDRdb->f($this->cNumberField),
+                                              'remote'     => $this->CDRdb->f($this->RemoteAddressField),
+                                              'date'       => $this->CDRdb->f($this->startTimeField)
+                                              );
+                    }
+                }
+
+            } else {
+                while ($this->CDRdb->next_record()) {
+                    $_last_sessions[]=array('duration' => $this->CDRdb->f($this->durationField),
+                                            'from'     => $this->CDRdb->f($this->aNumberField),
+                                            'to'       => $this->CDRdb->f($this->cNumberField),
+                                            'remote'   => $this->CDRdb->f($this->RemoteAddressField),
+                                            'date'     => $this->CDRdb->f($this->startTimeField)
+                                          );
+                }
+            }
+
+            if (!count($_last_sessions)) continue;
+
+            // missed sessions
+            $textBody .= sprintf ("Missed sessions\n\n
+            Id,Date,From,To,Duration\n
+            ");
+
+			$htmlBody .= sprintf ("<h2>Missed sessions</h2>
+            <p>
+            <table border=1>
+            <tr>
+            <th>
+            </th>
+            <th>Date and time
+            </th>
+            <th>Caller address
+            </th>
+            <th>Called address
+            </th>
+            </tr>
+            ");
+
+            $i=1;
+            foreach ($_last_sessions as $_session) {
+                if ($_session['duration']) continue;
+
+                if ($i >= $count) break;
+
+                $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td></tr>",
+                $i,
+                $_session['date'],
+                $_session['from'],
+                $_session['from'],
+                $_session['to']
+                );
+
+
+                $txtBody.=sprintf ("%s,%s,%s,%s,%s\n",
+                $i,
+                $_session['date'],
+                $_session['from'],
+                $_session['to']
+                );
+
+                $i++;
+
+            }
+
+
+            $htmlBody.="</table>";
+
+            // received sessions
+            $textBody .= sprintf ("Received sessions\n\n
+            Id,Date,From,To,Duration\n");
+
+			$htmlBody .= sprintf ("<h2>Received sessions</h2>
+            <p>
+            <table border=1>
+            <tr>
+            <th>
+            </th>
+            <th>Date and time
+            </th>
+            <th>Caller address
+            </th>
+            <th>Called address
+            </th>
+            <th>Duration
+            </th>
+            </tr>
+            ");
+
+            $i=1;
+            foreach ($_last_sessions as $_session) {
+                if (!$_session['duration']) continue;
+
+                if ($i >= $count) break;
+
+                $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td><td>%s</td></tr>",
+                $i,
+                $_session['date'],
+                $_session['from'],
+                $_session['from'],
+                $_session['to'],
+                $_session['duration']
+                );
+
+
+                $txtBody.=sprintf ("%s,%s,%s,%s,%s\n",
+                $i,
+                $_session['date'],
+                $_session['from'],
+                $_session['to'],
+                $_session['duration']
+                );
+
+                $i++;
+            }
+
+            $htmlBody.="</table>";
+
+            $crlf = "\n";
+           	$hdrs = array(
+                     'From'=> $this->CDRTool['provider']['fromEmail'],
+                     'Subject' => sprintf("SIP sessions for %s in the last dayh",$_subscriber)
+                     );
+
+            $mime = new Mail_mime($crlf);
+            $mime->setTXTBody($textBody);
+            $mime->setHTMLBody($htmlBody);
+
+            $body = $mime->get();     
+            $hdrs = $mime->headers($hdrs);
+
+            $mail =& Mail::factory('mail');
+            $mail->send($this->notifySubcribers[$_subscriber]['email'], $hdrs, $body);
+
+        }
     }
 }
 

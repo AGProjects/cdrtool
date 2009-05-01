@@ -14,8 +14,12 @@ cdrtool (6.7.9) unstable; urgency=low
   * Make stronger random passwords for SIP accounts
   * Updated LCR functionality
   * Added gateway rules to LCR provisioning
+  * Added scripts/OpenSIPS/notifyLastSessions.php to send email
+    notifications containing the last sessions recived in the last 24 hours.
+    You must set notifyLastSessions per data source to tru to enable this
+    feature and put the susbcriber into missed_calls group
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 29 Apr 2009 15:05:25 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 01 May 2009 12:02:02 +0200
 
 cdrtool (6.7.8) unstable; urgency=low
 
