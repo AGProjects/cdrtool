@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?
 // send email to subscribers with the last sessions received in the last 24 hours
-// to notify susbcriber add him to missed_calls group
+// to notify a susbcriber add him to the missed_calls group
 
 set_time_limit(0);
 

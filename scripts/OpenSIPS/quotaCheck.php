@@ -19,7 +19,7 @@ require("rating.php");
 
 $b=time();
 
-$lockFile=sprintf("/var/lock/CDRTool_QuotaCheck.lock",$cdr_source);
+$lockFile=sprintf("/var/lock/CDRTool_QuotaCheck.lock");
 
 $abort_text="Another check is in progress. Try again later.\n";
 

@@ -19,7 +19,7 @@ require("rating.php");
 
 $b=time();
 
-$lockFile=sprintf("/var/lock/CDRTool_QuotaDeblock.lock",$cdr_source);
+$lockFile=sprintf("/var/lock/CDRTool_QuotaDeblock.lock");
 
 $abort_text="Another deblock process is in progress. Try again later.\n";
 
