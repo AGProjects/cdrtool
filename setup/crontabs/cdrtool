@@ -15,3 +15,6 @@
 # Next two jobs are only used when using a central radacct table:
 #  0  3 1 * * root php /var/www/CDRTool/scripts/OpenSIPS/rotateTables.php >/dev/null 
 #  0  4 * * * root php /var/www/CDRTool/scripts/purgeTables.php      >/dev/null
+
+# Send email with last missed calls to SIP subscribers
+15 2 * * * root /var/www/CDRTool/scripts/OpenSIPS/notifyLastSessions.php >/dev/null 
