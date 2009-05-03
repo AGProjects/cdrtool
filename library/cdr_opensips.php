@@ -7,7 +7,7 @@ class CDRS_opensips extends CDRS {
     var $maxCDRsNormalizeWeb   = 500;
     var $sipTrace              = 'sip_trace';
     var $mediaTrace            = 'media_trace';
-	var $missed_calls_group    = 'missed_calls';
+	var $missed_calls_group    = 'missed-calls';
 
     var $CDRFields=array('id'              => 'RadAcctId',
                          'callId'          => 'AcctSessionId',
@@ -2009,6 +2009,25 @@ class CDRS_opensips extends CDRS {
     function notifyLastSessions($count='200') {
         // send emails with last missed and received sessions to subscribers in group $this->missed_calls_group
 
+        $lockName=sprintf("%s:notifySessions",$this->cdr_source);
+
+        if (!$this->getNormalizeLock($lockName)) {
+            return true;
+        }
+
+        $query=sprintf("select * from memcache where `key` = '%s'",'notifySessionsLastRun');
+        $this->cdrtool->query($query);
+        if ($this->cdrtool->num_rows()) {
+        	$this->cdrtool->next_record();
+            $lastRun=$this->cdrtool->f('value');
+            if (Date('Y-m-d') == $lastRun) {
+                $log=sprintf("Notify sessions script already run for date %s\n",$lastRun);
+                print $log;
+                syslog(LOG_NOTICE,$log);
+            	return true;
+            }
+        }
+
     	$this->notifySubcribers=array();
 
         require_once('Mail.php');
@@ -2140,8 +2159,9 @@ class CDRS_opensips extends CDRS {
             </tr>
             ");
 
-            $i=1;
+            $i=0;
             foreach ($_last_sessions as $_session) {
+                $i++;
                 if ($_session['duration']) continue;
 
                 if ($i >= $count) break;
@@ -2161,11 +2181,7 @@ class CDRS_opensips extends CDRS {
                 $_session['from'],
                 $_session['to']
                 );
-
-                $i++;
-
             }
-
 
             $htmlBody.="</table>";
 
@@ -2235,6 +2251,32 @@ class CDRS_opensips extends CDRS {
             $mail =& Mail::factory('mail');
             $mail->send($this->notifySubcribers[$_subscriber]['email'], $hdrs, $body);
 
+            $log=sprintf("Notify %s at %s with last %d sessions\n",
+            $_subscriber,
+            $this->notifySubcribers[$_subscriber]['email'],
+            count($_last_sessions));
+            print $log;
+            syslog(LOG_NOTICE,$log);
+
+        }
+
+        $query=sprintf("update memcache set `value` = '%s' where `key` = '%s'",Date('Y-m-d'),'notifySessionsLastRun');
+
+        if (!$this->cdrtool->query($query)) {
+            $log=sprintf("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
+        if (!$this->cdrtool->affected_rows()) {
+        	$query=sprintf("insert into memcache (`value`,`key`) values ('%s','%s')",Date('Y-m-d'),'notifySessionsLastRun');
+            if (!$this->cdrtool->query($query)) {
+                $log=sprintf("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+                print $log;
+                syslog(LOG_NOTICE,$log);
+                return false;
+            }
         }
     }
 }
