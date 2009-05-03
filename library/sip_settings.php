@@ -638,7 +638,7 @@ class SipSettings {
             return false;
         }
 
-        //dprint_r($result);
+        //print_r($result);
 
         $this->owner     = $result->owner;
 
@@ -668,6 +668,7 @@ class SipSettings {
         $this->timezone  = $result->timezone;
         $this->email     = $result->email;
         $this->groups    = $result->groups;
+        $this->createDate= $result->createDate;
 
         if ($this->SOAPversion > 1) {
             $this->quickdial = $result->quickdialPrefix;
@@ -1550,11 +1551,6 @@ class SipSettings {
         $this->getENUMmappings();
         $this->getAliases();
 
-        print "
-        </td>
-        </tr>
-        ";
-
         $chapter=sprintf(_("SIP account"));
         $this->showChapter($chapter);
 
@@ -1757,7 +1753,7 @@ class SipSettings {
         if ($this->sip_settings_page && $this->login_type != 'subscriber') {
             print "<p>";
             printf (_("Subscriber may login using the SIP credentials at:
-            <p><a href=%s>%s</a>"),$this->sip_settings_page,$this->sip_settings_page);
+            <a href=%s>%s</a>"),$this->sip_settings_page,$this->sip_settings_page);
         }
 
         print "
@@ -1774,6 +1770,9 @@ class SipSettings {
         </form>
         ";
 
+        if ($this->login_type == 'admin' && $this->Preferences['ip']) {
+        	printf ("<tr><td colspan=3><u>SIP account registered from %s at %s</u></td></tr>",$this->Preferences['ip'],$this->createDate);
+        }
     }
 
     function showSettings() {
@@ -3536,6 +3535,19 @@ class SipSettings {
 
     function showBalanceHistory() {
     	$this->getBalanceHistory();
+ 
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            if ($error_fault->detail->exception->errorcode != "2000") {
+                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            }
+        }
+
+        if (!count($this->balance_history)) {
+            return;
+        }
 
         $chapter=sprintf(_("Balance history"));
         $this->showChapter($chapter);
@@ -3543,9 +3555,11 @@ class SipSettings {
         print "
         <tr>
         <td colspan=2>
-        <p>
-        <table width=100% cellpadding=1 cellspacing=1 border=0 bgcolor=lightgrey> ";
+        ";
 
+        print "
+        <p>
+        <table width=100% cellpadding=1 cellspacing=1 border=0 bgcolor=lightgrey>";
         print "<tr bgcolor=#CCCCCC>";
         print "<td class=h>";
         print _("Id");
@@ -3567,23 +3581,11 @@ class SipSettings {
         print "</td>";
         print "</tr>";
 
-        $this->SipPort->addHeader($this->SoapAuth);
-
-        $result     = $this->SipPort->getCreditHistory($this->sipId,200);
- 
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            if ($error_fault->detail->exception->errorcode != "2000") {
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            }
-        }
-
         foreach ($this->balance_history as $_line) {
 
 			if (strstr($_line->description,'Session')) {
             	if (!$_line->value) continue;
+                $value=-$_line->value;
 
                 if ($this->cdrtool_address) {
                     $description=sprintf("<a href=%s/callsearch.phtml?action=search&call_id=%s target=cdrtool>$_line->description</a>",$this->cdrtool_address,urlencode($_line->session));
@@ -3592,6 +3594,14 @@ class SipSettings {
                 }
             } else {
                 $description=$_line->description;
+                $value=$_line->value;
+            }
+
+            if ($value <0) {
+                $total_debit+=$value;
+            }
+            if ($value >0) {
+                $total_credit+=$value;
             }
 
             $found++;
@@ -3601,7 +3611,7 @@ class SipSettings {
             <td>$_line->date</td>
             <td>$_line->action</td>
             <td>$description</td>
-            <td align=right>$_line->value</td>
+            <td align=right>$value</td>
             <td align=right>$_line->balance</td>
             </tr>
             ";
@@ -3610,6 +3620,36 @@ class SipSettings {
         print "
         </td>
         </tr>
+        ";
+
+        if (strlen($total_credit)) {
+
+        print "
+            <tr bgcolor=white>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>Total credit</td>
+            <td align=right>$total_credit</td>
+            <td align=right></td>
+            </tr>
+            ";
+        }
+
+        if ($total_debit) {
+        print "
+            <tr bgcolor=white>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>Total debit</td>
+            <td align=right>$total_debit</td>
+            <td align=right></td>
+            </tr>
+            ";
+        }
+
+        print "
         </table>
         ";
 

@@ -5882,7 +5882,7 @@ class RatingEngine {
             $query=sprintf("insert into prepaid_history
             (username,domain,action,description,value,balance,date,session,duration,destination)
             values 
-            ('%s','%s','Debit balance','Session to %s for %ds','%s','%s',NOW(),'%s','%d','%s')",
+            ('%s','%s','Debit balance','Session to %s for %ds','-%s','%s',NOW(),'%s','%d','%s')",
             addslashes($prepaidUser),
             addslashes($prepaidDomain),
             addslashes($destination),

@@ -2824,8 +2824,8 @@ class SipAccounts extends Records {
             $this->setLoginProperties($_p);
         }
 
-		if (is_array($dictionary['$properties'])) {
-        	$properties=$dictionary['$properties'];
+		if (is_array($dictionary['properties'])) {
+        	$properties=$dictionary['properties'];
         } else {
         	$properties=array();
         }
