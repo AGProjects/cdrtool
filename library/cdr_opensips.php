@@ -2235,6 +2235,9 @@ class CDRS_opensips extends CDRS {
 
             $htmlBody.="</table>";
 
+		    $htmlBody.="<p>This is an automatically generated message, do not reply.";
+            $txtBody.="\nThis is an automatically generated message, do not reply.\n";
+
             $crlf = "\n";
            	$hdrs = array(
                      'From'=> $this->CDRTool['provider']['fromEmail'],

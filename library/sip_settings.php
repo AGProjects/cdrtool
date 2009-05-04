@@ -736,37 +736,14 @@ class SipSettings {
         </SCRIPT>
         ";
 
-        $this->logoTableStart();
+        $this->showHeader();
+
         $this->chapterTableStart();
 
-        print "
-        <tr>
-        <td colspan=2>
-        ";
     	$this->showAboveTabs();
-        print "
-        </td>
-        </tr>
-        ";
-
-        print "
-        <tr>
-        <td colspan=2>
-        ";
         $this->showTabs();
-        print "
-        </td>
-        </tr>
-        ";
-        print "
-        <tr>
-        <td colspan=2>
-        ";
     	$this->showUnderTabs();
-        print "
-        </td>
-        </tr>
-        ";
+
         $this->showTitleBar();
 
         if (!array_key_exists($this->tab,$this->tabs)) $this->tab="settings";
@@ -783,24 +760,9 @@ class SipSettings {
         if ($this->tab=="accept")    $this->showAcceptRules();
         if ($this->tab=="presence")  $this->showPresence();
 
-        print "
-        <tr>
-          <td height=30 colspan=2 align=right valign=bottom>";
+        $this->showFooter();
 
-        if ($this->footerFile) {
-            include ("$this->footerFile");
-        } else {
-            print "<a href=http://ag-projects.com target=agprojects><img src=images/PoweredbyAGProjects.gif border=0></a>";
-        }
-
-        print "</td>
-        </tr>
-        ";
-
-        print "
-        </table>
-        <p>
-        ";
+    	$this->chapterTableStop();
     }
 
     function getDomainOwner ($domain='') {
@@ -1514,9 +1476,24 @@ class SipSettings {
     }
 
     function showAboveTabs() {
+        print "
+        <tr>
+        <td colspan=2>
+        ";
+
+        print "
+        </td>
+        </tr>
+        ";
+
     }
 
     function showTabs() {
+        print "
+        <tr>
+        <td colspan=2>
+        ";
+
         print "
         <table class=border2 border=0 cellspacing=0 cellpadding=0 align=right>
         <tr>
@@ -1540,11 +1517,23 @@ class SipSettings {
         </tr>
         </table>
         ";
+        print "
+        </td>
+        </tr>
+        ";
+
     }
 
     function showUnderTabs() {
+        print "
+        <tr>
+        <td colspan=2>
+        ";
+        print "
+        </td>
+        </tr>
+        ";
     }
-
 
     function showSummary() {
         $this->getVoicemail();
@@ -1770,9 +1759,23 @@ class SipSettings {
         </form>
         ";
 
-        if ($this->login_type == 'admin' && $this->Preferences['ip']) {
-        	printf ("<tr><td colspan=3><u>SIP account registered from %s at %s</u></td></tr>",$this->Preferences['ip'],$this->createDate);
+    }
+
+    function showFooter() {
+        print "
+        <tr>
+          <td height=30 colspan=2 align=right valign=bottom>";
+
+        if ($this->footerFile) {
+            include ("$this->footerFile");
+        } else {
+            print "<a href=http://ag-projects.com target=agprojects><img src=images/PoweredbyAGProjects.gif border=0></a>";
         }
+
+        print "</td>
+        </tr>
+        ";
+
     }
 
     function showSettings() {
@@ -3860,7 +3863,7 @@ class SipSettings {
 
     }
 
-    function logoTableStart() {
+    function showHeader() {
         print "
         <table class=settings border=0 width=650>
         <tr>
@@ -3883,6 +3886,14 @@ class SipSettings {
         <table class=settings border=0 width=650>
         ";
     }
+
+    function chapterTableStop() {
+        print "
+        </table>
+        ";
+    }
+
+
 
     function getENUMmappings () {
         dprint("getENUMmappings(engine=$this->enum_engine)");

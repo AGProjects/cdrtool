@@ -5660,6 +5660,7 @@ class RatingEngine {
 
     var $method = '';
     var $log_runtime = false;
+    var $ts = false;
 
     function RatingEngine (&$CDRS) {
     	global $RatingEngine;   // set in global.inc
