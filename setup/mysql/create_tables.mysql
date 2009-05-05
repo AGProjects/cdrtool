@@ -121,6 +121,7 @@ CREATE TABLE `auth_user` (
 DROP TABLE IF EXISTS `billing_customers`;
 CREATE TABLE `billing_customers` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
+  `reseller_id` int(10) unsigned not NULL,
   `gateway` varchar(15) NOT NULL default '',
   `domain` varchar(64) NOT NULL default '',
   `subscriber` varchar(128) NOT NULL default '',
@@ -131,8 +132,8 @@ CREATE TABLE `billing_customers` (
   `timezone` varchar(128) NOT NULL default '',
   `increment` smallint(5) unsigned NOT NULL,
   `min_duration` smallint(5) unsigned NOT NULL,
-  `country_code` varchar(8) NOT NULL,
   PRIMARY KEY  (`id`),
+  KEY `reseller_idx` (`reseller_id`),
   UNIQUE KEY `cust_idx` (`gateway`,`domain`,`subscriber`),
   KEY `subsc_idx` (`gateway`,`domain`,`subscriber`),
   KEY `gatedom_idx` (`gateway`,`domain`),
@@ -157,9 +158,7 @@ CREATE TABLE `billing_holidays` (
 DROP TABLE IF EXISTS `billing_profiles`;
 CREATE TABLE `billing_profiles` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(15) NOT NULL default '',
-  `domain` varchar(64) NOT NULL default '',
-  `subscriber` varchar(128) NOT NULL default '',
+  `reseller_id` int(10) unsigned not NULL,
   `name` varchar(25) NOT NULL,
   `rate_name1` varchar(25) NOT NULL default '',
   `hour1` smallint(5) unsigned NOT NULL default '0',
@@ -170,7 +169,7 @@ CREATE TABLE `billing_profiles` (
   `rate_name4` varchar(25) NOT NULL default '',
   `hour4` smallint(5) unsigned NOT NULL default '0',
   PRIMARY KEY  (`id`),
-  UNIQUE KEY `profile_idx` (`gateway`,`domain`,`subscriber`,`name`),
+  KEY `reseller_idx` (`reseller_id`),
   KEY `name_idx` (`name`)
 )  DEFAULT CHARSET=latin1;
 
@@ -178,6 +177,7 @@ CREATE TABLE `billing_profiles` (
 DROP TABLE IF EXISTS `billing_enum_tlds`;
 CREATE TABLE `billing_enum_tlds` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
+  `reseller_id` int(10) unsigned not NULL,
   `gateway` varchar(15) NOT NULL default '',
   `domain` varchar(64) NOT NULL default '',
   `subscriber` varchar(128) NOT NULL default '',
@@ -185,26 +185,9 @@ CREATE TABLE `billing_enum_tlds` (
   `e164_regexp` varchar(100) NOT NULL,
   `discount` varchar(25) NOT NULL default '',
   PRIMARY KEY  (`id`),
+  KEY `reseller_idx` (`reseller_id`),
   UNIQUE KEY `enum_idx` (`gateway`,`domain`,`subscriber`,`enum_tld`),
   KEY `tld_idx` (`enum_tld`)
-)  DEFAULT CHARSET=latin1;
-
---
--- Table structure for table `billing_profilesNGN`
---
-
-DROP TABLE IF EXISTS `billing_profilesNGN`;
-CREATE TABLE `billing_profilesNGN` (
-  `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(15) NOT NULL default '',
-  `domain` varchar(64) NOT NULL default '',
-  `subscriber` varchar(128) NOT NULL default '',
-  `name` varchar(25) NOT NULL default '',
-  `rate` varchar(25) NOT NULL default '',
-  `application` varchar(255) NOT NULL default '',
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `profile_idx` (`gateway`,`domain`,`subscriber`,`name`),
-  KEY `name_idx` (`name`)
 )  DEFAULT CHARSET=latin1;
 
 --
@@ -214,9 +197,7 @@ CREATE TABLE `billing_profilesNGN` (
 DROP TABLE IF EXISTS `billing_rates`;
 CREATE TABLE `billing_rates` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(15) NOT NULL default '',
-  `domain` varchar(64) NOT NULL default '',
-  `subscriber` varchar(128) NOT NULL default '',
+  `reseller_id` int(10) unsigned not NULL,
   `name` varchar(25) NOT NULL,
   `destination` varchar(100) NOT NULL,
   `application` varchar(25) NOT NULL default 'audio',
@@ -227,27 +208,10 @@ CREATE TABLE `billing_rates` (
   `increment` smallint(5) unsigned NOT NULL,
   `min_duration` smallint(5) unsigned NOT NULL,
   PRIMARY KEY  (`id`),
-  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`,`application`),
+  KEY `reseller_idx` (`reseller_id`),
+  UNIQUE KEY `rate_idx` (`name`,`destination`,`application`),
   KEY `name_idx` (`name`),
   KEY `dest_idx` (`destination`)
-)  DEFAULT CHARSET=latin1;
-
---
--- Table structure for table `billing_ratesNGN`
---
-
-DROP TABLE IF EXISTS `billing_ratesNGN`;
-CREATE TABLE `billing_ratesNGN` (
-  `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(15) NOT NULL default '',
-  `domain` varchar(64) NOT NULL default '',
-  `subscriber` varchar(128) NOT NULL default '',
-  `name` varchar(25) NOT NULL default '',
-  `TrafficRate` varchar(25) NOT NULL default '',
-  `ConnectCost` varchar(255) NOT NULL default '',
-  PRIMARY KEY  (`id`),
-  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`),
-  KEY `name_idx` (`name`)
 )  DEFAULT CHARSET=latin1;
 
 --
@@ -257,9 +221,7 @@ CREATE TABLE `billing_ratesNGN` (
 DROP TABLE IF EXISTS `billing_rates_history`;
 CREATE TABLE `billing_rates_history` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `gateway` varchar(15) NOT NULL default '',
-  `domain` varchar(64) NOT NULL default '',
-  `subscriber` varchar(128) NOT NULL default '',
+  `reseller_id` int(10) unsigned not NULL,
   `name` varchar(25) NOT NULL default '',
   `destination` varchar(100) NOT NULL default '',
   `application` varchar(25) NOT NULL default 'audio',
@@ -272,7 +234,8 @@ CREATE TABLE `billing_rates_history` (
   `startDate` date NOT NULL,
   `endDate` date NOT NULL,
   PRIMARY KEY  (`id`),
-  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`name`,`destination`,`startDate`,`endDate`,`application`),
+  KEY `reseller_idx` (`reseller_id`),
+  UNIQUE KEY `rate_idx` (`name`,`destination`,`startDate`,`endDate`,`application`),
   KEY `name_idx` (`name`),
   KEY `dest_idx` (`destination`)
 )  DEFAULT CHARSET=latin1;
@@ -295,12 +258,14 @@ CREATE TABLE `db_sequence` (
 DROP TABLE IF EXISTS `destinations`;
 CREATE TABLE `destinations` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
+  `reseller_id` int(10) unsigned not NULL,
   `gateway` varchar(15) NOT NULL default '',
   `domain` varchar(64) NOT NULL default '',
   `subscriber` varchar(128) NOT NULL default '',
   `dest_id` varchar(100) NOT NULL,
   `dest_name` varchar(255) NOT NULL default '',
   PRIMARY KEY  (`id`),
+  KEY `reseller_idx` (`reseller_id`),
   UNIQUE KEY `cust_dest_idx` (`gateway`,`domain`,`subscriber`,`dest_id`),
   KEY `dest_idx` (`dest_id`)
 )  DEFAULT CHARSET=latin1;

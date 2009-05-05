@@ -552,13 +552,49 @@ alter table billing_rates_history add column increment smallint unsigned not nul
 alter table billing_rates_history add column min_duration smallint unsigned not null after increment; 
 
 alter table prepaid drop column call_lock;
-
 alter table prepaid add column reseller_id  int(10) unsigned not NULL after id;
-alter table prepaid_cards add column reseller_id  int(10) unsigned not NULL after id;
-alter table prepaid_history add column reseller_id  int(10) unsigned not NULL after id;
-alter table quota_usage add column reseller_id  int(10) unsigned not NULL after id;
-
-alter table quota_usage add key reseller_idx (reseller_id);
 alter table prepaid add key reseller_idx (reseller_id);
+
+alter table prepaid_cards add column reseller_id  int(10) unsigned not NULL after id;
 alter table prepaid_cards add key reseller_idx (reseller_id);
+
+alter table prepaid_history add column reseller_id  int(10) unsigned not NULL after id;
 alter table prepaid_history add key reseller_idx (reseller_id);
+
+alter table quota_usage add column reseller_id  int(10) unsigned not NULL after id;
+alter table quota_usage add key reseller_idx (reseller_id);
+
+alter table billing_customers add column reseller_id  int(10) unsigned not NULL after id;
+alter table billing_customers add key reseller_idx (reseller_id);
+alter table billing_customers drop column country_code;
+
+alter table billing_profiles add column reseller_id  int(10) unsigned not NULL after id;
+alter table billing_profiles add key reseller_idx (reseller_id);
+
+alter table billing_rates add column reseller_id  int(10) unsigned not NULL after id;
+alter table billing_rates add key reseller_idx (reseller_id);
+
+alter table billing_rates_history add column reseller_id  int(10) unsigned not NULL after id;
+alter table billing_rates_history add key reseller_idx (reseller_id);
+
+alter table billing_enum_tlds add column reseller_id  int(10) unsigned not NULL after id;
+alter table billing_enum_tlds add key reseller_idx (reseller_id);
+
+alter table destinations add column reseller_id  int(10) unsigned not NULL after id;
+alter table destinations add key reseller_idx (reseller_id);
+
+alter table billing_profiles drop column gateway;
+alter table billing_profiles drop column subscriber;
+alter table billing_profiles drop column domain;
+
+alter table billing_rates drop column gateway;
+alter table billing_rates drop column subscriber;
+alter table billing_rates drop column domain;
+
+alter table billing_rates_history drop column gateway;
+alter table billing_rates_history drop column subscriber;
+alter table billing_rates_history drop column domain;
+
+drop table billing_profilesNGN;
+drop table billing_ratesNGN;
+
