@@ -1238,7 +1238,7 @@ class RatingTables {
                            "prepaid"=>array("name"=>"Prepaid accounts",
                                                  "keys"=>array("id"),
                                                  "size"=>15,
-                                                 "exceptions" =>array('change_date','active_sessions','call_in_progress','domain'),
+                                                 "exceptions" =>array('change_date','active_sessions','domain'),
                                                  "order"=>"change_date DESC",
                                                  "fields"=>array("account"=>array("size"=>35,
                                                                                "name"=>"SIP account",
@@ -3889,7 +3889,6 @@ class RatingTables {
             if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                 $f_name="search_".$Fname;
                 $value=$_REQUEST[$f_name];
-                #print "$Fname $size $t  $nrsf $f_name ${$f_name}<br>";
                 if (preg_match("/^([<|>]+)(.*)$/",$value,$likes)) {
                     $like=$likes[1];
                     $likewhat=$likes[2];
@@ -3898,9 +3897,10 @@ class RatingTables {
                     $like="like";
                     $likewhat=$value;
                     $quotes="'";
-                }                
+                }
+
                 if (strlen($value)) {
-                    $where.=sprintf(" and $Fname $like $quotes".$likewhat."$quotes");
+                    $where.=" and $Fname $like $quotes".$likewhat."$quotes";
                     $t++;
                 }
                 
@@ -3910,7 +3910,7 @@ class RatingTables {
         }
             
         $query .= $where;
-        
+
         $this->db->query($query);
         $this->db->next_record();
         $rows=$this->db->Record[0];
@@ -3991,6 +3991,7 @@ class RatingTables {
         $this->maxrowsperpage
         );
 
+        //print $query;
         $this->db->query($query);
         $num_fields=$this->db->num_fields();
         $k=0;
