@@ -1041,13 +1041,13 @@ class RatingTables {
                                                                                   "name"=>"Subscriber",
                                                                                  ),
                                                                  "profile_name1"=>array("size"=>10,
-                                                                                  "name"=>"WeekDay"
+                                                                                  "name"=>"Profile WD"
                                                                                  ),
                                                                  "profile_name1_alt"=>array("size"=>8,
                                                                                   "name"=>"Fallback"
                                                                                  ),
                                                                  "profile_name2"=>array("size"=>10,
-                                                                                  "name"=>"WeekEnd"
+                                                                                  "name"=>"Profile WE"
                                                                                  ),
                                                                  "profile_name2_alt"=>array("size"=>8,
                                                                                   "name"=>"Fallback"
@@ -1078,31 +1078,31 @@ class RatingTables {
                                                                                   "name"=>"Reseller"
                                                                                  ),
                                                                   "name"=>array("size"=>12,
-                                                                                  "name"=>"Profile Id"
+                                                                                  "name"=>"Profile"
                                                                                 ),
                                                                  "rate_name1"=>array("size"=>12,
-                                                                                  "name"=>"Rate Id1"
+                                                                                  "name"=>"Rate 1"
                                                                                  ),
                                                                  "hour1"=>array("size"=>3,
                                                                                "checkType"=>'numeric',
                                                                                   "name"=>"00-H1"
                                                                                  ),
                                                                  "rate_name2"=>array("size"=>12,
-                                                                                  "name"=>"Rate Id2"
+                                                                                  "name"=>"Rate 2"
                                                                                  ),
                                                                  "hour2"=>array("size"=>3,
                                                                                "checkType"=>'numeric',
                                                                                   "name"=>"H1-H2"
                                                                                  ),
                                                                  "rate_name3"=>array("size"=>12,
-                                                                                  "name"=>"Rate Id3"
+                                                                                  "name"=>"Rate 3"
                                                                                  ),
                                                                  "hour3"=>array("size"=>3,
                                                                                "checkType"=>'numeric',
                                                                                   "name"=>"H2-H3"
                                                                                  ),
                                                                  "rate_name4"=>array("size"=>12,
-                                                                                  "name"=>"Rate Id4"
+                                                                                  "name"=>"Rate 4"
                                                                                  ),
                                                                  "hour4"=>array("size"=>3,
                                                                                "checkType"=>'numeric',
@@ -1122,7 +1122,7 @@ class RatingTables {
                                                                                   "name"=>"Reseller"
                                                                                  ),
                                                                  "name"=>array("size"=>12,
-                                                                               "name"=>"Rate Id"
+                                                                               "name"=>"Rate"
                                                                                 ),
                                                                  "destination"=>array("size"=>12,
                                                                                   "name"=>"Destination"
@@ -1166,7 +1166,7 @@ class RatingTables {
                                                                                   "name"=>"Reseller"
                                                                                  ),
                                                                  "name"=>array("size"=>10,
-                                                                               "name"=>"Rate Id"
+                                                                               "name"=>"Rate"
                                                                                 ),
                                                                  "destination"=>array("size"=>12,
                                                                                   "name"=>"Destination"
