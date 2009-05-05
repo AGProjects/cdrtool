@@ -250,7 +250,7 @@ class CDRTool_Auth extends Auth {
             } else if (preg_match("/^(\d+)$/",$this->db->f('impersonate'),$m)) {
             	$CDRTool['filter']['reseller']  = $m[1];
             } else {
-                $CDRTool['filter']['reseller']  = 'invalid';
+            	$CDRTool['filter']['reseller']  = '';
             }
 
             $CDRTool['impersonate']          = $this->db->f('impersonate');

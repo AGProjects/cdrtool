@@ -1241,7 +1241,7 @@ class RatingTables {
                                                  "exceptions" =>array('change_date','active_sessions','domain'),
                                                  "order"=>"change_date DESC",
                                                  "fields"=>array("account"=>array("size"=>35,
-                                                                               "name"=>"SIP account",
+                                                                               "name"=>"Account",
                                                                                "checkType"=>'sip_account',
                                                                                "mustExist"=>true
                                                                                 ),
@@ -1419,9 +1419,13 @@ class RatingTables {
             $this->delimiter=$this->settings['csv_delimiter'];
         }
 
-        if ($this->CDRTool['filter']['reseller'] && $this->tables[$this->table]['fields']['reseller_id']) {
-        	$this->whereResellerFilter = sprintf ("reseller_id = %d",$this->CDRTool['filter']['reseller']);
-            $this->tables[$this->table]['fields']['reseller_id']['readonly']=true;
+		if (!strlen($this->CDRTool['filter']['reseller'])) {
+        	$this->whereResellerFilter = sprintf ("reseller_id = %d",'99999999');
+        } else {
+            if ($this->CDRTool['filter']['reseller'] && $this->tables[$this->table]['fields']['reseller_id']) {
+                $this->whereResellerFilter = sprintf ("reseller_id = %d",$this->CDRTool['filter']['reseller']);
+                $this->tables[$this->table]['fields']['reseller_id']['readonly']=true;
+            }
         }
 
         if ($this->settings['split_rating_table']) {
