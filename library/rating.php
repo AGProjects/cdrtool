@@ -944,7 +944,6 @@ class Rate {
 }
 
 class RatingTables {
-	var $checkDomainForTables =array('destinations','billing_customers','billing_profiles','billing_rates','billing_rates_history','billing_enum_tlds');
     var $table_to_csv_name=array(
                            "destinations"          => "destinations.csv",
                            "billing_customers"     => "customers.csv",
@@ -986,7 +985,6 @@ class RatingTables {
                             );
 
     var $requireReload       = array('destinations');
-    var $whereDomainFilter   = " (1=1) ";
     var $whereResellerFilter = " (1=1) ";
 
     var $tables=array(
@@ -1419,22 +1417,6 @@ class RatingTables {
 
         if ($this->settings['csv_delimiter']) {
             $this->delimiter=$this->settings['csv_delimiter'];
-        }
-
-        if ($this->CDRTool['filter']['domain']) {
-            $Realms      = explode(" ",$this->CDRTool['filter']['domain']);
-        
-            if ($this->tables[$this->table]['domainFilterColumn']) {
-                $this->whereDomainFilter .= " and ".$this->tables[$this->table]['domainFilterColumn']." in (" ;
-                $rr=0;
-                foreach ($Realms as $realm) {
-                    if ($rr) $this->whereDomainFilter .= ",";
-                    $this->whereDomainFilter .= "'".addslashes($realm)."'";
-                    $this->insertDomainOption[]=$realm;
-                    $rr++;
-                }
-                $this->whereDomainFilter .= ") ";
-            }
         }
 
         if ($this->CDRTool['filter']['reseller'] && $this->tables[$this->table]['fields']['reseller_id']) {
@@ -3225,7 +3207,7 @@ class RatingTables {
     
                     $log_entity=" id = $id ";
             
-                    $where = " id = '".$id."' and $this->whereDomainFilter and $this->whereResellerFilter";
+                    $where = " id = '".$id."' and $this->whereResellerFilter";
     
                     if ($table == "billing_rates") {
                         if ($this->settings['split_rating_table']) {
@@ -3372,7 +3354,7 @@ class RatingTables {
                     $kkk++;
                 }
         
-                $where = $this->whereDomainFilter . ' and ' . $this->whereResellerFilter;
+                $where = $this->whereResellerFilter;
 
                 if ($kkk) {
                     // reconstruct where clause to apply all changes to selection
@@ -3463,7 +3445,7 @@ class RatingTables {
                     // build where clause
                     // Search build for each field
 
-	                $where = $this->whereDomainFilter. ' and ' . $this->whereResellerFilter;
+	                $where = $this->whereResellerFilter;
 
                     $j=0;
                     while ($j < $cc ) {
@@ -3588,7 +3570,7 @@ class RatingTables {
                         $toRate);
                     }
 
-	                $where = $this->whereDomainFilter. ' and ' . $this->whereResellerFilter;
+	                $where = $this->whereResellerFilter;
 
                     $j=0;
                     while ($j < $cc ) {
@@ -3773,7 +3755,7 @@ class RatingTables {
                 }
             } elseif ($subweb_task == "Delete") {
                 if ($confirmDelete) {
-                    $query="delete from $table where id = '$id' and $this->whereDomainFilter and $this->whereResellerFilter ";
+                    $query="delete from $table where id = '$id' and $this->whereResellerFilter ";
                     if ($this->db->query($query)) {
                         $affected_rows=$this->db->affected_rows();
                         if ($affected_rows && in_array($table,$this->requireReload)) {
@@ -3895,9 +3877,8 @@ class RatingTables {
             $delimiter=",";
         }
 
-        $query=sprintf("select count(*) as c from %s where %s and %s",
+        $query=sprintf("select count(*) as c from %s where %s",
         $this->table,
-        $this->whereDomainFilter,
         $this->whereResellerFilter);
         
         $t=0;
@@ -4001,10 +3982,9 @@ class RatingTables {
         	$order=sprintf(" order by %s  ",$this->tables[$this->table]['order']);
         }
         
-        $query=sprintf("select * from %s where (1=1) %s and %s and %s %s limit %s, %s",
+        $query=sprintf("select * from %s where (1=1) %s and %s %s limit %s, %s",
         $this->table,
         $where,
-        $this->whereDomainFilter,
         $this->whereResellerFilter,
         $order,
         $i,
@@ -4092,20 +4072,7 @@ class RatingTables {
                     }
             
                     if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
-                        if ($Fname=="domain" && count($this->insertDomainOption)) {
-                            print "<td><select name=search_$Fname>";
-                            $selected_domain[$value]="selected";
-                            print "<option>";
-                            foreach ($this->insertDomainOption as $_option) {
-                                print "<option $selected_domain[$_option]>$_option";
-                            }
-                            print "
-                            </select>
-                            </td>";
-        
-                        } else {
-                            print "<td><input type=text size=$field_size maxlength=$maxlength name=search_$Fname value=\"$value\"></td>";
-                        }
+                    	print "<td><input type=text size=$field_size maxlength=$maxlength name=search_$Fname value=\"$value\"></td>";
         
                     } else {
                         print "<td></td>";
@@ -4201,19 +4168,7 @@ class RatingTables {
             
                     if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
-                            if ($Fname=="domain" && count($this->insertDomainOption)) {
-                                print "<td><select name=$Fname>";
-                                foreach ($this->insertDomainOption as $_option) {
-                                    print "<option $selected_domain[$_option]>$_option";
-                                }
-                                print "
-                                </select>
-                                </td>";
-            
-                            } else {
-                                print "<td><input type=text size=$field_size maxlength=$size name=$Fname></td>";
-                            }
-        
+                        	print "<td><input type=text size=$field_size maxlength=$size name=$Fname></td>";
                         } else {
                             print "<td></td>";
                         }
@@ -4327,18 +4282,7 @@ class RatingTables {
             
                     if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
-                            if ($Fname=="domain" && count($this->insertDomainOption)) {
-                                print "<td><select  name=$Fname>";
-                                foreach ($this->insertDomainOption as $_option) {
-                                    print "<option>$_option";
-                                }
-                                print "
-                                </select>
-                                </td>";
-        
-                            } else {
-                                print "<td><input type=text size=$field_size maxlength=$size name=$Fname></td>";
-                            }
+                        	print "<td><input type=text size=$field_size maxlength=$size name=$Fname></td>";
                         } else {
                             print "<td></td>";
                 
@@ -4473,32 +4417,19 @@ class RatingTables {
                 if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                     if (!$export) {
                         if (!in_array($Fname,$this->tables[$this->table]['keys']) && !$this->readonly) {
-                            if ($Fname=="domain" && count($this->insertDomainOption)) {
-                                print "<td><select name=$Fname>";
-                                $selected_domain[$value]="selected";
-                                foreach ($this->insertDomainOption as $_option) {
-                                    print "<option $selected_domain[$_option]>$_option";
-                                }
-                                print "
-                                </select>
-                                </td>";
-            
-                            } else {
-                				if ($this->table == 'prepaid' && $Fname == 'session_counter' && $value) {
-                                    if (count($active_sessions) > 1) {
-                                		$session_counter_txt=sprintf("%d sessions",$value);
-                                    } else {
-                                		$session_counter_txt=sprintf("%d session",$value);
-                                    }
-
-                                    printf("<td onClick=\"return toggleVisibility('row%s')\"><a href=#>%s</td>",$found,$session_counter_txt);
-
+                            if ($this->table == 'prepaid' && $Fname == 'session_counter' && $value) {
+                                if (count($active_sessions) > 1) {
+                                    $session_counter_txt=sprintf("%d sessions",$value);
                                 } else {
-                                    print "<td>
-                                    <input type=text bgcolor=grey size=$field_size maxlength=$size name=$Fname value=\"$value\" $extra_form_els>
-                                    </td>";
+                                    $session_counter_txt=sprintf("%d session",$value);
                                 }
 
+                                printf("<td onClick=\"return toggleVisibility('row%s')\"><a href=#>%s</td>",$found,$session_counter_txt);
+
+                            } else {
+                                print "<td>
+                                <input type=text bgcolor=grey size=$field_size maxlength=$size name=$Fname value=\"$value\" $extra_form_els>
+                                </td>";
                             }
         
                         } else {
@@ -4693,13 +4624,6 @@ class RatingTables {
         $metadata  = $this->db->metadata($table);
 
         if (!is_array($metadata)) return false;
-
-        if (in_array($table,$this->checkDomainForTables)) {
-            if (count($this->insertDomainOption) && !in_array($_REQUEST['domain'],$this->insertDomainOption)) {
-                printf ("<p><font color=red>Error: Invalid domain %s</font>",$domain);
-                return false;
-            }
-        }
 
         $k=1;
         while ($k < count($metadata)) {
