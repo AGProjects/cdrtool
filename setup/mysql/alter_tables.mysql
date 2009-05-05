@@ -595,6 +595,10 @@ alter table billing_rates_history drop column gateway;
 alter table billing_rates_history drop column subscriber;
 alter table billing_rates_history drop column domain;
 
+alter table billing_enum_tlds drop column gateway;
+alter table billing_enum_tlds drop column subscriber;
+alter table billing_enum_tlds drop column domain;
+
 drop table billing_profilesNGN;
 drop table billing_ratesNGN;
 

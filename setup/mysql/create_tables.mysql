@@ -178,9 +178,6 @@ DROP TABLE IF EXISTS `billing_enum_tlds`;
 CREATE TABLE `billing_enum_tlds` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
   `reseller_id` int(10) unsigned not NULL,
-  `gateway` varchar(15) NOT NULL default '',
-  `domain` varchar(64) NOT NULL default '',
-  `subscriber` varchar(128) NOT NULL default '',
   `enum_tld` varchar(100) NOT NULL,
   `e164_regexp` varchar(100) NOT NULL,
   `discount` varchar(25) NOT NULL default '',

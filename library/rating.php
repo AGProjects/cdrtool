@@ -1042,13 +1042,13 @@ class RatingTables {
                                                                                "checkType"=>'sip_account',
                                                                                   "name"=>"Subscriber",
                                                                                  ),
-                                                                 "profile_name1"=>array("size"=>8,
+                                                                 "profile_name1"=>array("size"=>10,
                                                                                   "name"=>"WeekDay"
                                                                                  ),
                                                                  "profile_name1_alt"=>array("size"=>8,
                                                                                   "name"=>"Fallback"
                                                                                  ),
-                                                                 "profile_name2"=>array("size"=>8,
+                                                                 "profile_name2"=>array("size"=>10,
                                                                                   "name"=>"WeekEnd"
                                                                                  ),
                                                                  "profile_name2_alt"=>array("size"=>8,
@@ -1214,23 +1214,10 @@ class RatingTables {
                                                  "keys"=>array("id"),
                                                  "exceptions" =>array(),
                                                  "size"=>6,
-                                                 "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
                                                                  "reseller_id"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
                                                                                   "name"=>"Reseller"
-                                                                                 ),
-                                                                  "gateway"=>array("size"=>15,
-                                                                                  "checkType"=>'ip',
-                                                                                  "name"=>"Trusted peer"
-                                                                                ),
-                                                                 "domain"=>array("size"=>15,
-                                                                                  "checkType"=>'domain',
-                                                                                  "name"=>"Domain"
-                                                                                 ),
-                                                                 "subscriber"=>array("size"=>25,
-                                                                               "checkType"=>'sip_account',
-                                                                                  "name"=>"Subscriber"
                                                                                  ),
                                                                   "enum_tld"=>array("size"=>35,
                                                                                "mustExist"=>true,
@@ -1506,18 +1493,16 @@ class RatingTables {
             $p = explode($this->delimiter, $buffer);
 
             $ops            = trim($p[0]);
-            $gateway        = trim($p[1]);
-            $domain         = trim($p[2]);
-            $subscriber     = trim($p[3]);
-            $name           = trim($p[4]);
-            $destination    = trim($p[5]);
-            $application    = trim($p[6]);
-            $connectCost    = trim($p[7]);
-            $durationRate   = trim($p[8]);
-            $connectCostIn  = trim($p[9]);
-            $durationRateIn = trim($p[10]);
-            $increment      = trim($p[11]);
-            $min_duration   = trim($p[12]);
+            $reseller_id    = trim($p[1]);
+            $name           = trim($p[2]);
+            $destination    = trim($p[3]);
+            $application    = trim($p[4]);
+            $connectCost    = trim($p[5]);
+            $durationRate   = trim($p[6]);
+            $connectCostIn  = trim($p[7]);
+            $durationRateIn = trim($p[8]);
+            $increment      = trim($p[9]);
+            $min_duration   = trim($p[10]);
 
             if (!$application) $application='audio';
 
@@ -1525,9 +1510,7 @@ class RatingTables {
 
                 $query=sprintf("insert into billing_rates
                 (
-                gateway,
-                domain,
-                subscriber,
+                reseller_id,
                 name,
                 destination,
                 application,
@@ -1547,13 +1530,9 @@ class RatingTables {
                 '%s',
                 '%s',
                 '%s',
-                '%s',
-                '%s',
                 '%s'
                 )",
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber),
+                addslashes($reseller_id),
                 addslashes($name),
                 addslashes($destination),
                 addslashes($application),
@@ -1584,9 +1563,7 @@ class RatingTables {
                             $query=sprintf("insert into %s
                             (
                             id,
-                            gateway,
-                            domain,
-                            subscriber,
+                            reseller_id,
                             name,
                             destination,
                             application,
@@ -1608,14 +1585,10 @@ class RatingTables {
                             '%s',
                             '%s',
                             '%s',
-                            '%s',
-                            '%s',
                             '%s'
                             )",
                             addslashes($_table),
-                            addslashes($gateway),
-                            addslashes($domain),
-                            addslashes($subscriber),
+                            addslashes($reseller_id),
                             addslashes($name),
                             addslashes($destination),
                             addslashes($application),
@@ -1643,15 +1616,12 @@ class RatingTables {
 
             } else if ($ops=="3") {
                 $query=sprintf("delete from billing_rates
-                where gateway      = '%s'
-                and domain         = '%s'
-                and subscriber     = '%s'
+                where
+                reseller_id           = '%s'
                 and name           = '%s'
                 and destination    = '%s'
                 and application    = '%s'",
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber),
+                addslashes($reseller_id),
                 addslashes($name),
                 addslashes($destination),
                 addslashes($application)
@@ -1673,16 +1643,12 @@ class RatingTables {
                         }
 
                         $query=sprintf("delete from %s
-                        where gateway      = '%s'
-                        and domain         = '%s'
-                        and subscriber     = '%s'
+                        where reseller_id     = '%s'
                         and name           = '%s'
                         and destination    = '%s'
                         and application    = '%s'",
                         addslashes($_table),
-                        addslashes($gateway),
-                        addslashes($domain),
-                        addslashes($subscriber),
+                        addslashes($reseller_id),
                         addslashes($name),
                         addslashes($destination),
                         addslashes($application)
@@ -1701,16 +1667,12 @@ class RatingTables {
                 $query=sprintf("select * from billing_rates
                 where name       = '%s'
                 and destination  = '%s'
-                and gateway      = '%s'
-                and domain       = '%s'
-                and subscriber   = '%s'
+                and reseller_id     = '%s'
                 and application  = '%s'
                 ",
                 addslashes($name),
                 addslashes($destination),
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber),
+                addslashes($reseller_id),
                 addslashes($application)
                 );
 
@@ -1731,9 +1693,7 @@ class RatingTables {
                     min_duration    = '%s'
                     where name      = '%s'
                     and destination = '%s'
-                    and gateway     = '%s'
-                    and domain      = '%s'
-                    and subscriber  = '%s'
+                    and reseller_id    = '%s'
                     and application = '%s'
                     ",
                     addslashes($connectCost),
@@ -1744,9 +1704,7 @@ class RatingTables {
                     addslashes($min_duration),
                     addslashes($name),
                     addslashes($destination),
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($subscriber),
+                    addslashes($reseller_id),
                     addslashes($application)
                     );
 
@@ -1773,9 +1731,7 @@ class RatingTables {
                             min_duration    = '%s'
                             where name      = '%s'
                             and destination = '%s'
-                            and gateway     = '%s'
-                            and domain      = '%s'
-                            and subscriber  = '%s'
+                            and reseller_id    = '%s'
                             and application = '%s'
                             ",
                             addslashes($_table),
@@ -1787,9 +1743,7 @@ class RatingTables {
                             addslashes($min_duration),
                             addslashes($name),
                             addslashes($destination),
-                            addslashes($gateway),
-                            addslashes($domain),
-                            addslashes($subscriber),
+                            addslashes($reseller_id),
                             addslashes($application)
                             );
         
@@ -1805,9 +1759,7 @@ class RatingTables {
                 } else {
                     $query=sprintf("insert into billing_rates
                     (
-                    gateway,
-                    domain,
-                    subscriber,
+                    reseller_id,
                     name,
                     destination,
                     application,
@@ -1827,13 +1779,9 @@ class RatingTables {
                     '%s',
                     '%s',
                     '%s',
-                    '%s',
-                    '%s',
                     '%s'
                     )",
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($subscriber),
+                    addslashes($reseller_id),
                     addslashes($name),
                     addslashes($destination),
                     addslashes($application),
@@ -1864,9 +1812,7 @@ class RatingTables {
                                $query=sprintf("insert into %s
                                (
                                id,
-                               gateway,
-                               domain,
-                               subscriber,
+                               reseller_id,
                                name,
                                destination,
                                application
@@ -1885,14 +1831,10 @@ class RatingTables {
                                '%s',
                                '%s',
                                '%s',
-                               '%s',
-                               '%s',
                                '%s'
                                )",
                                addslashes($_table),
-                               addslashes($gateway),
-                               addslashes($domain),
-                               addslashes($subscriber),
+                               addslashes($reseller_id),
                                addslashes($name),
                                addslashes($destination),
                                addslashes($application),
@@ -1955,28 +1897,24 @@ class RatingTables {
             $p = explode($this->delimiter, $buffer);
 
             $ops            = trim($p[0]);
-            $gateway        = trim($p[1]);
-            $domain         = trim($p[2]);
-            $subscriber     = trim($p[3]);
-            $name           = trim($p[4]);
-            $destination    = trim($p[5]);
-            $application    = trim($p[6]);
-            $connectCost    = trim($p[7]);
-            $durationRate   = trim($p[8]);
-            $connectCostIn  = trim($p[9]);
-            $durationRateIn = trim($p[10]);
-            $increment      = trim($p[11]);
-            $min_duration   = trim($p[12]);
-            $startDate      = trim($p[13]);
-            $endDate        = trim($p[14]);
+            $reseller_id    = trim($p[1]);
+            $name           = trim($p[2]);
+            $destination    = trim($p[3]);
+            $application    = trim($p[4]);
+            $connectCost    = trim($p[5]);
+            $durationRate   = trim($p[6]);
+            $connectCostIn  = trim($p[7]);
+            $durationRateIn = trim($p[8]);
+            $increment      = trim($p[9]);
+            $min_duration   = trim($p[10]);
+            $startDate      = trim($p[11]);
+            $endDate        = trim($p[12]);
 
             if ($ops=="1") {
 
                 $query=sprintf("insert into billing_rates_history
                 (
-                gateway,
-                domain,
-                subscriber,
+                reseller_id,
                 name,
                 destination,
                 application,
@@ -2000,13 +1938,9 @@ class RatingTables {
                 '%s',
                 '%s',
                 '%s',
-                '%s',
-                '%s',
                 '%s'
                 )",
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber),
+                addslashes($reseller_id),
                 addslashes($name),
                 addslashes($destination),
                 addslashes($application),
@@ -2034,16 +1968,12 @@ class RatingTables {
                 }
             } else if ($ops=="3") {
                 $query=sprintf("delete from billing_rates_history
-                where gateway      = '%s'
-                and domain         = '%s'
-                and subscriber     = '%s'
+                where reseller_id      = '%s'
                 and name           = '%s'
                 and destination    = '%s'
                 and startDate      = '%s'
                 and endDate        = '%s'",
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber),
+                addslashes($reseller_id),
                 addslashes($name),
                 addslashes($destination),
                 addslashes($startDate),
@@ -2064,17 +1994,13 @@ class RatingTables {
                 $query=sprintf("select * from billing_rates_history
                 where name       = '%s'
                 and destination  = '%s'
-                and gateway      = '%s'
-                and domain       = '%s'
-                and subscriber   = '%s'
+                and reseller_id      = '%s'
                 and startDate    = '%s'
                 and endDate      = '%s'
                 ",
                 addslashes($name),
                 addslashes($destination),
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber),
+                addslashes($reseller_id),
                 addslashes($startDate),
                 addslashes($endDate)
                 );
@@ -2097,9 +2023,7 @@ class RatingTables {
                     min_duration    = '%s'
                     where name      = '%s'
                     and destination = '%s'
-                    and gateway     = '%s'
-                    and domain      = '%s'
-                    and subscriber  = '%s'
+                    and reseller_id = '%s'
                     and startDate   = '%s'
                     and endDate     = '%s'
                     ",
@@ -2112,9 +2036,7 @@ class RatingTables {
                     addslashes($min_duration),
                     addslashes($name),
                     addslashes($destination),
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($subscriber),
+                    addslashes($reseller_id),
                     addslashes($startDate),
                     addslashes($endDate)
                     );
@@ -2133,9 +2055,7 @@ class RatingTables {
                 } else {
                     $query=sprintf("insert into billing_rates_history
                     (
-                    gateway,
-                    domain,
-                    subscriber,
+                    reseller_id,
                     name,
                     destination,
                     application,
@@ -2159,13 +2079,9 @@ class RatingTables {
                     '%s',
                     '%s',
                     '%s',
-                    '%s',
-                    '%s',
                     '%s'
                     )",
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($subscriber),
+                    addslashes($reseller_id),
                     addslashes($name),
                     addslashes($destination),
                     addslashes($application),
@@ -2236,20 +2152,22 @@ class RatingTables {
             $p = explode($this->delimiter, $buffer);
 
             $ops               = trim($p[0]);
-            $gateway           = trim($p[1]);
-            $domain            = trim($p[2]);
-            $subscriber        = trim($p[3]);
-            $profile_name1     = trim($p[4]);
-            $profile_name1_alt = trim($p[5]);
-            $profile_name2     = trim($p[6]);
-            $profile_name2_alt = trim($p[7]);
-            $timezone          = trim($p[8]);
-            $increment         = trim($p[9]);
-            $min_duration      = trim($p[10]);
+            $reseller_id       = trim($p[1]);
+            $gateway           = trim($p[2]);
+            $domain            = trim($p[3]);
+            $subscriber        = trim($p[4]);
+            $profile_name1     = trim($p[5]);
+            $profile_name1_alt = trim($p[6]);
+            $profile_name2     = trim($p[7]);
+            $profile_name2_alt = trim($p[8]);
+            $timezone          = trim($p[9]);
+            $increment         = trim($p[10]);
+            $min_duration      = trim($p[11]);
 
             if ($ops=="1") {
                 $query=sprintf("insert into billing_customers
                 (
+                reseller_id,
                 gateway,
                 domain,
                 subscriber,
@@ -2270,8 +2188,10 @@ class RatingTables {
                 '%s',
                 '%s',
                 '%s',
+                '%s',
                 '%s'
                 )",
+                addslashes($reseller_id),
                 addslashes($gateway),
                 addslashes($domain),
                 addslashes($subscriber),
@@ -2299,10 +2219,12 @@ class RatingTables {
             } else if ($ops=="3") {
                 $query=sprintf("delete from billing_customers
                 where gateway      = '%s'
+                and reseller_id    = '%s'
                 and domain         = '%s'
                 and subscriber     = '%s'
                 ",
                 addslashes($gateway),
+                addslashes($reseller_id),
                 addslashes($domain),
                 addslashes($subscriber)
                 );
@@ -2319,10 +2241,12 @@ class RatingTables {
             } else if ($ops=="2") {
                 $query=sprintf("select * from billing_customers
                 where gateway      = '%s'
+                and reseller_id    = '%s'
                 and domain         = '%s'
                 and subscriber     = '%s'
                 ",
                 addslashes($gateway),
+                addslashes($reseller_id),
                 addslashes($domain),
                 addslashes($subscriber)
                 );
@@ -2345,6 +2269,7 @@ class RatingTables {
                     min_duration      = '%s'
                     where gateway     = '%s'
                     and domain        = '%s'
+                    and reseller_id   = '%s'
                     and subscriber    = '%s'\n",
                     addslashes($profile_name1),
                     addslashes($profile_name2),
@@ -2355,6 +2280,7 @@ class RatingTables {
                     addslashes($min_duration),
                     addslashes($gateway),
                     addslashes($domain),
+                    addslashes($reseller_id),
                     addslashes($subscriber)
                     );
 
@@ -2372,6 +2298,7 @@ class RatingTables {
                 } else {
                     $query=sprintf("insert into billing_customers
                     (
+                    reseller_id,
                     gateway,
                     domain,
                     subscriber,
@@ -2392,8 +2319,10 @@ class RatingTables {
                     '%s',
                     '%s',
                     '%s',
+                    '%s',
                     '%s'
                     )",
+                    addslashes($reseller_id),
                     addslashes($gateway),
                     addslashes($domain),
                     addslashes($subscriber),
@@ -2452,15 +2381,17 @@ class RatingTables {
             $p = explode($this->delimiter, $buffer);
 
             $ops             = trim($p[0]);
-            $gateway         = trim($p[1]);
-            $domain          = trim($p[2]);
-            $subscriber      = trim($p[3]);
-            $dest_id         = trim($p[4]);
-            $dest_name       = trim($p[5]);
+            $reseller_id     = trim($p[1]);
+            $gateway         = trim($p[2]);
+            $domain          = trim($p[3]);
+            $subscriber      = trim($p[4]);
+            $dest_id         = trim($p[5]);
+            $dest_name       = trim($p[6]);
 
             if ($ops=="1") {
                 $query=sprintf("insert into destinations
                 (
+                reseller_id,
                 gateway,
                 domain,
                 subscriber,
@@ -2471,8 +2402,10 @@ class RatingTables {
                 '%s',
                 '%s',
                 '%s',
+                '%s',
                 '%s'
                 )",
+                addslashes($reseller_id),
                 addslashes($gateway),
                 addslashes($domain),
                 addslashes($subscriber),
@@ -2494,11 +2427,13 @@ class RatingTables {
             } elseif ($ops=="3") {
                 $query=sprintf("delete from destinations
                 where gateway      = '%s'
+                and reseller_id    = '%s'
                 and domain         = '%s'
                 and subscriber     = '%s'
                 and dest_id        = '%s'
                 ",
                 addslashes($gateway),
+                addslashes($reseller_id),
                 addslashes($domain),
                 addslashes($subscriber),
                 addslashes($dest_id)
@@ -2516,11 +2451,13 @@ class RatingTables {
             } elseif ($ops=="2") {
                 $query=sprintf("select * from destinations
                 where gateway      = '%s'
+                and reseller_id    = '%s'
                 and domain         = '%s'
                 and subscriber     = '%s'
                 and dest_id        = '%s'
                 ",
                 addslashes($gateway),
+                addslashes($reseller_id),
                 addslashes($domain),
                 addslashes($subscriber),
                 addslashes($dest_id)
@@ -2537,12 +2474,14 @@ class RatingTables {
                     $query=sprintf("update destinations set
                     dest_name      = '%s'
                     where gateway      = '%s'
+	                and reseller_id    = '%s'
                     and domain         = '%s'
                     and subscriber     = '%s'
                     and dest_id        = '%s'
                     ",
                     addslashes($dest_name),
                     addslashes($gateway),
+	                addslashes($reseller_id),
                     addslashes($domain),
                     addslashes($subscriber),
                     addslashes($dest_id)
@@ -2560,6 +2499,7 @@ class RatingTables {
                  } else {
                     $query=sprintf("insert into destinations
                     (
+                    reseller_id,
                     gateway,
                     domain,
                     subscriber,
@@ -2570,8 +2510,10 @@ class RatingTables {
                     '%s',
                     '%s',
                     '%s',
+                    '%s',
                     '%s'
                     )",
+                    addslashes($reseller_id),
                     addslashes($gateway),
                     addslashes($domain),
                     addslashes($subscriber),
@@ -2627,18 +2569,16 @@ class RatingTables {
             $p = explode($this->delimiter, $buffer);
 
             $ops        = trim($p[0]);
-            $gateway    = trim($p[1]);
-            $domain     = trim($p[2]);
-            $subscriber = trim($p[3]);
-            $profile    = trim($p[4]);
-            $rate1      = trim($p[5]);
-            $hour1      = trim($p[6]);
-            $rate2      = trim($p[7]);
-            $hour2      = trim($p[8]);
-            $rate3      = trim($p[9]);
-            $hour3      = trim($p[10]);
-            $rate4      = trim($p[11]);
-            $hour4      = trim($p[12]);
+            $reseller_id= trim($p[1]);
+            $profile    = trim($p[2]);
+            $rate1      = trim($p[3]);
+            $hour1      = trim($p[4]);
+            $rate2      = trim($p[5]);
+            $hour2      = trim($p[6]);
+            $rate3      = trim($p[7]);
+            $hour3      = trim($p[8]);
+            $rate4      = trim($p[9]);
+            $hour4      = trim($p[10]);
 
             if (!$hour1) $hour1=0;
             if (!$hour2) $hour2=0;
@@ -2648,9 +2588,7 @@ class RatingTables {
             if ($ops=="1") {
                 $query=sprintf("insert into billing_profiles
                 (
-                gateway,
-                domain,
-                subscriber,
+                reseller_id,
                 name,
                 rate_name1,
                 hour1,
@@ -2670,13 +2608,9 @@ class RatingTables {
                 '%s',
                 '%s',
                 '%s',
-                '%s',
-                '%s',
                 '%s'
                 )",
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber),
+                addslashes($reseller_id),
                 addslashes($profile),
                 addslashes($rate1),
                 addslashes($hour1),
@@ -2702,11 +2636,13 @@ class RatingTables {
             } else if ($ops=="3") {
                 $query=sprintf("delete from billing_profiles
                 where name     = '%s'
+                and reseller_id= '%s'
                 and gateway    = '%s'
                 and domain     = '%s'
                 and subscriber = '%s'
                 ",
                 addslashes($profile),
+                addslashes($reseller_id),
                 addslashes($gateway),
                 addslashes($domain),
                 addslashes($subscriber)
@@ -2725,10 +2661,12 @@ class RatingTables {
             } else if ($ops=="2") {
                 $query=sprintf("select * from billing_profiles
                 where name     = '%s'
+                and reseller_id= '%s'
                 and gateway    = '%s'
                 and domain     = '%s'
                 and subscriber = '%s'\n",
                 addslashes($profile),
+                addslashes($reseller_id),
                 addslashes($gateway),
                 addslashes($domain),
                 addslashes($subscriber)
@@ -2752,9 +2690,8 @@ class RatingTables {
                     hour3          = '%s',
                     hour4          = '%s'
                     where name     = '%s'
-                    and gateway    = '%s'
-                    and domain     = '%s'
-                    and subscriber = '%s'\n",
+                    and reseller_id= '%s'
+                    \n",
                     addslashes($rate1),
                     addslashes($rate2),
                     addslashes($rate3),
@@ -2764,9 +2701,7 @@ class RatingTables {
                     addslashes($hour3),
                     addslashes($hour4),
                     addslashes($profile),
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($subscriber)
+                    addslashes($reseller_id)
                     );
                     if (!$this->db->query($query)) {
                         $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -2781,9 +2716,7 @@ class RatingTables {
                 } else {
                     $query=sprintf("insert into billing_profiles
                     (
-                    gateway,
-                    domain,
-                    subscriber,
+                    reseller_id,
                     name,
                     rate_name1,
                     hour1,
@@ -2803,13 +2736,9 @@ class RatingTables {
                     '%s',
                     '%s',
                     '%s',
-                    '%s',
-                    '%s',
                     '%s'
                     )",
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($subscriber),
+                    addslashes($reseller_id),
                     addslashes($profile),
                     addslashes($rate1),
                     addslashes($hour1),
