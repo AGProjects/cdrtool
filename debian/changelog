@@ -3,21 +3,21 @@ cdrtool (6.8.0) unstable; urgency=low
   * You must apply the changes from setup/mysql/alter_tables.mysql
   * Added reseller fiels to all database tables to allow different login
     accounts to access their own data based on the impersonate field
+  * Added prepaid_history table to rating table management
   * Added increment and min_duration per rate
   * Removed gateway, domain and subscriber columns from billing_profiles table
   * Removed gateway, domain and subscriber columns from billing_rates table
   * Removed gateway, domain and subscriber columns from billing_rates_history table
   * CSV formats for billing_rates and billing_profiles changed to support the above
-  * Removed obsolete prepaid.call_lock column
+  * Removed obsolete prepaid.call_lock and prepaid.call_in_progress columns
   * Removed obsolete customers.country_code column
-  * Removed obsolete tables
-  * Replaced prepaid_history.number with prepaid_history.description
-  * Show SIP trace also in text format
+  * Removed obsolete tables ratesNGN and profilesNGN
+  * Renamed colummn prepaid_history.number with prepaid_history.description
+  * Show SIP trace also in text only format
   * Do not log zero priced calls in prepaid_history table
   * Improved SIP prepaid provisioning screens
   * Skip math calculation for some rating tables
   * Added export balance history from SIP prepaid page
-  * Added prepaid_history table to rating table management
   * Updated ngnpro client to work with server version 4.1.1
   * Make stronger random passwords for SIP accounts
   * Improved NGNPro LCR functionality
