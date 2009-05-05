@@ -441,8 +441,7 @@ class Rate {
                                         "profile2_alt" => $this->db->Record['profile_name2_alt'],
                                         "timezone"     => $this->db->Record['timezone'],
                                         "increment"    => $this->db->Record['increment'],
-                                        "min_duration" => $this->db->Record['min_duration'],
-                                        "country_code" => $this->db->Record['country_code']
+                                        "min_duration" => $this->db->Record['min_duration']
                                     );
 
             $this->increment       = $this->db->Record['increment'];
@@ -1002,6 +1001,10 @@ class RatingTables {
                                                                                   "checkType"=>'ip',
                                                                                   "name"=>"Trusted peer"
                                                                                 ),
+                                                                 "reseller_id"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Reseller"
+                                                                                 ),
                                                                  "domain"=>array("size"=>15,
                                                                                   "name"=>"Domain",
                                                                                   "checkType"=>'domain'
@@ -1023,11 +1026,14 @@ class RatingTables {
                                                  "skip_math"=> true,
                                                  "keys"=>array("id"),
                                                  "domainFilterColumn"=>"domain",
-                                                 "exceptions" =>array('country_code'),
                                                  "fields"=>array("gateway"=>array("size"=>15,
                                                                                   "checkType"=>'ip',
                                                                                   "name"=>"Trusted peer"
                                                                                 ),
+                                                                 "reseller_id"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Reseller"
+                                                                                 ),
                                                                  "domain"=>array("size"=>15,
                                                                                   "checkType"=>'domain',
                                                                                   "name"=>"Domain"
@@ -1058,9 +1064,6 @@ class RatingTables {
                                                                  "min_duration"  =>array("size"=>3,
                                                                                "checkType"=>'numeric',
                                                                                   "name"=>"Minim"
-                                                                                 ),
-                                                                 "country_code"  =>array("size"=>3,
-                                                                                  "name"=>"CC"
                                                                                  )
 
                                                                  )
@@ -1071,19 +1074,10 @@ class RatingTables {
                                                  "keys"=>array("id"),
                                                  "exceptions" =>array(),
                                                  "size"=>6,
-                                                 "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
-                                                                  "gateway"=>array("size"=>15,
-                                                                                  "checkType"=>'ip',
-                                                                                  "name"=>"Trusted peer"
-                                                                                ),
-                                                                 "domain"=>array("size"=>15,
-                                                                                  "checkType"=>'domain',
-                                                                                  "name"=>"Domain"
-                                                                                 ),
-                                                                 "subscriber"=>array("size"=>25,
-                                                                               "checkType"=>'sip_account',
-                                                                                  "name"=>"Subscriber"
+                                                                 "reseller_id"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Reseller"
                                                                                  ),
                                                                   "name"=>array("size"=>12,
                                                                                   "name"=>"Profile Id"
@@ -1124,19 +1118,10 @@ class RatingTables {
                                                  "keys"=>array("id"),
                                                  "size"=>10,
                                                  "order"=>"destination ASC, name ASC",
-                                                 "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
-                                                                  "gateway"=>array("size"=>15,
-                                                                                  "checkType"=>'ip',
-                                                                                  "name"=>"Trusted peer"
-                                                                                ),
-                                                                 "domain"=>array("size"=>15,
-                                                                                  "checkType"=>'domain',
-                                                                                  "name"=>"Domain"
-                                                                                 ),
-                                                                 "subscriber"=>array("size"=>25,
-                                                                               "checkType"=>'sip_account',
-                                                                                  "name"=>"Subscriber"
+                                                                 "reseller_id"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Reseller"
                                                                                  ),
                                                                  "name"=>array("size"=>12,
                                                                                "name"=>"Rate Id"
@@ -1177,19 +1162,10 @@ class RatingTables {
                                                  "keys"=>array("id"),
                                                  "size"=>10,
                                                  "order"=>"destination ASC, name ASC",
-                                                 "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
-                                                                 "gateway"=>array("size"=>15,
-                                                                                  "checkType"=>'ip',
-                                                                                  "name"=>"Trusted peer"
-                                                                                 ),
-                                                                 "domain"=>array("size"=>15,
-                                                                                  "checkType"=>'domain',
-                                                                                  "name"=>"Domain"
-                                                                                 ),
-                                                                 "subscriber"=>array("size"=>20,
-                                                                               "checkType"=>'sip_account',
-                                                                                  "name"=>"Subscriber"
+                                                                 "reseller_id"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Reseller"
                                                                                  ),
                                                                  "name"=>array("size"=>10,
                                                                                "name"=>"Rate Id"
@@ -1240,6 +1216,10 @@ class RatingTables {
                                                  "size"=>6,
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array(
+                                                                 "reseller_id"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Reseller"
+                                                                                 ),
                                                                   "gateway"=>array("size"=>15,
                                                                                   "checkType"=>'ip',
                                                                                   "name"=>"Trusted peer"
@@ -1396,7 +1376,8 @@ class RatingTables {
                                                                                 ),
                                                                  "reseller_id"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
-                                                                                  "name"=>"Reseller"
+                                                                                  "name"=>"Reseller",
+                                                                                  "readonly" => true
                                                                                  ),
                                                                  "account"=>array("size"=>30,
                                                                                "readonly"=>1
@@ -2265,7 +2246,6 @@ class RatingTables {
             $timezone          = trim($p[8]);
             $increment         = trim($p[9]);
             $min_duration      = trim($p[10]);
-            $country_code      = trim($p[11]);
 
             if ($ops=="1") {
                 $query=sprintf("insert into billing_customers
@@ -2279,10 +2259,8 @@ class RatingTables {
                 profile_name1_alt,
                 profile_name2_alt,
                 increment,
-                min_duration,
-                country_code
+                min_duration
                 ) values (
-                '%s',
                 '%s',
                 '%s',
                 '%s',
@@ -2303,9 +2281,7 @@ class RatingTables {
                 addslashes($profile_name1_alt),
                 addslashes($profile_name2_alt),
                 addslashes($increment),
-                addslashes($min_duration),
-                addslashes($country_code)
-
+                addslashes($min_duration)
                 );
 
                 if (!$this->db->query($query)) {
@@ -2366,8 +2342,7 @@ class RatingTables {
                     profile_name2_alt = '%s',
                     timezone          = '%s',
                     increment         = '%s',
-                    min_duration      = '%s',
-                    country_code      = '%s'
+                    min_duration      = '%s'
                     where gateway     = '%s'
                     and domain        = '%s'
                     and subscriber    = '%s'\n",
@@ -2378,7 +2353,6 @@ class RatingTables {
                     addslashes($timezone),
                     addslashes($increment),
                     addslashes($min_duration),
-                    addslashes($country_code),
                     addslashes($gateway),
                     addslashes($domain),
                     addslashes($subscriber)
@@ -2407,10 +2381,8 @@ class RatingTables {
                     profile_name1_alt,
                     profile_name2_alt,
                     increment,
-                    min_duration,
-                    country_code
+                    min_duration
                     ) values (
-                    '%s',
                     '%s',
                     '%s',
                     '%s',
@@ -2431,8 +2403,7 @@ class RatingTables {
                     addslashes($profile_name1_alt),
                     addslashes($profile_name2_alt),
                     addslashes($increment),
-                    addslashes($min_duration),
-                    addslashes($country_code)
+                    addslashes($min_duration)
                     );
 
                     if (!$this->db->query($query)) {
@@ -3270,6 +3241,7 @@ class RatingTables {
         if (!is_array($this->tables[$table]['exceptions'])) $this->tables[$table]['exceptions']=array();
         if (!is_array($this->tables[$table]['keys']))       $this->tables[$table]['keys']=array();
         if (!is_array($this->tables[$table]['fields']))     $this->tables[$table]['fields']=array();
+
         $metadata  = $this->db->metadata($table="$table");
         $cc        = count($metadata);
         // end init table structure
@@ -3879,6 +3851,7 @@ class RatingTables {
                         
                             $this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
                         }
+
                         $log_entity=sprintf("id=%s",$id);
         
                     } else {
@@ -3894,7 +3867,7 @@ class RatingTables {
                 }
             } elseif ($subweb_task == "Delete session" && $sessionId && $table=='prepaid') {
 
-                $query=sprintf("select active_sessions from %s where id  = %d",$table,$id);
+                $query=sprintf("select active_sessions from %s where id  = %d and %s",$table,$id,$this->whereResellerFilter);
                 if (!$this->db->query($query)) {
                     $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     print $log;
@@ -3953,7 +3926,6 @@ class RatingTables {
                 
                 $this->db->query($log_query);
             }
-        
         } 
     }
 
@@ -5911,13 +5883,35 @@ class RatingEngine {
             return 0;
         }
 
-        list($prepaidUser,$prepaidDomain)=explode("@",$account);
-
         if ($balance > 0) {
+            list($prepaidUser,$prepaidDomain)=explode("@",$account);
+
+			if ($this->enableThor) {
+                $this->domain_table          = "sip_domains";
+            } else {
+                $this->domain_table          = "domain";
+            }
+    
+            $query=sprintf("select * from %s where domain = '%s'",$this->domain_table,$prepaidDomain);
+
+                syslog(LOG_NOTICE,$query);
+
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error: %s (%d) %s\n",$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
+                syslog(LOG_NOTICE,$log);
+            }
+    
+            if ($this->AccountsDB->num_rows()){
+            	$this->AccountsDB->next_record();
+            	$_reseller=$this->AccountsDB->f('reseller_id');
+            } else {
+            	$_reseller=0;
+            }
+
             $query=sprintf("insert into prepaid_history
-            (username,domain,action,description,value,balance,date,session,duration,destination)
+            (username,domain,action,description,value,balance,date,session,duration,destination,reseller_id)
             values 
-            ('%s','%s','Debit balance','Session to %s for %ds','-%s','%s',NOW(),'%s','%d','%s')",
+            ('%s','%s','Debit balance','Session to %s for %ds','-%s','%s',NOW(),'%s','%d','%s',%d)",
             addslashes($prepaidUser),
             addslashes($prepaidDomain),
             addslashes($destination),
@@ -5926,7 +5920,8 @@ class RatingEngine {
             $next_balance,
             addslashes($session_id),
             $duration,
-            addslashes($destination)
+            addslashes($destination),
+            $_reseller
             );
     
             if (!$this->db->query($query)) {
@@ -6145,8 +6140,7 @@ class RatingEngine {
                             'profileWeekendAlt' => $this->db->f('profile_name2_alt'),
                             'timezone'          => $this->db->f('timezone'),
                             'increment'         => $this->db->f('increment'),
-                            'min_duration'      => $this->db->f('min_duration'),
-                            'countryCode'       => $this->db->f('country_code')
+                            'min_duration'      => $this->db->f('min_duration')
                             );
         }
 
