@@ -1,3 +1,2 @@
-Ops,Gateway,Domain,Subscriber,Profile Id,Rate Id1,00-H1,Rate Id2,H1-H2,Rate Id3,H2-H3,Rate Id4,H3-24
-2,,,,441,442,8,441,19,442,24,,0
-2,,,,442,442,24,,0,,0,,0
+Ops,Reseller,Profile Id,Rate Id1,00-H1,Rate Id2,H1-H2,Rate Id3,H2-H3,Rate Id4,H3-24
+2,0,grn_premium,grn_premium,24,,0,,0,,0
