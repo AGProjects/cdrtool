@@ -333,9 +333,9 @@ The updates are performed based on a unique key present in each table:
 
 billing_customers     - cust_idx      (gateway,domain,subscriber)
 destinations          - cust_dest_idx (gateway,domain,subscriber,dest_id)
-billing_profiles      - profile_idx   (gateway,domain,subscriber,name)
-billing_rates         - rate_idx      (gateway,domain,subscriber,name,destination,application)
-billing_rates_history - rate_idx      (gateway,domain,subscriber,name,destination,application,startDate,endDate)
+billing_profiles      - profile_idx   (name)
+billing_rates         - rate_idx      (name,destination,application)
+billing_rates_history - rate_idx      (name,destination,application,startDate,endDate)
 
 The content of the rating tables can be exported in the Rating tables page.
 
@@ -393,9 +393,7 @@ billing_profiles
 | Field      |
 +------------+
 | id         |
-| gateway    |
-| domain     |
-| subscriber |
+| reseller_id|
 | name       |
 | rate_name1 |
 | hour1      |
@@ -412,9 +410,7 @@ billing_rates
 | Field           |
 +-----------------+
 | id              |
-| gateway         |
-| domain          |
-| subscriber      |
+| reseller_id     |
 | name            |
 | destination     |
 | application     |
@@ -431,9 +427,7 @@ billing_rates_history
 | Field           |
 +-----------------+
 | id              |
-| gateway         |
-| domain          |
-| subscriber      |
+| reseller_id     |
 | name            |
 | destination     |
 | application     |
@@ -452,6 +446,7 @@ destinations
 | Field      |
 +------------+
 | id         |
+| reseller_id|
 | gateway    |
 | domain     |
 | subscriber |
@@ -472,10 +467,10 @@ prepaid
 | Field            |
 +------------------+
 | id               |
+| reseller_id      |
 | account          |
 | balance          |
 | change_date      |
-| call_lock        |
 | last_call_price  |
 | destination      |
 | active_sessions  |
@@ -485,24 +480,26 @@ prepaid
 +------------------+
 
 prepaid_history
-+----------+
-| Field    |
-+----------+
-| id       | 
-| username | 
-| domain   | 
-| action   | 
-| number   | 
-| value    | 
-| balance  | 
-| date     | 
-+----------+
++-------------+
+| Field       |
++-------------+
+| id          | 
+| reseller_id |
+| username    | 
+| domain      | 
+| action      | 
+| number      | 
+| value       | 
+| balance     | 
+| date        | 
++-------------+
 
 billing_enum_tlds
 +-------------+
 | Field       |
 +-------------+
 | id          | 
+| reseller_id |
 | gateway     | 
 | domain      | 
 | subscriber  | 
