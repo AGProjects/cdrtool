@@ -375,6 +375,7 @@ CREATE TABLE `normalize_lock` (
 DROP TABLE IF EXISTS `prepaid`;
 CREATE TABLE `prepaid` (
   `id` int(10) unsigned NOT NULL auto_increment,
+  `reseller_id` int(10) unsigned not NULL,
   `account` varchar(255) NOT NULL default '',
   `balance` decimal(10,4) NOT NULL default '0.0000',
   `change_date` datetime NOT NULL default '0000-00-00 00:00:00',
@@ -386,6 +387,7 @@ CREATE TABLE `prepaid` (
   `call_in_progress` datetime NOT NULL default '0000-00-00 00:00:00',
   `session_counter` int(10) unsigned NOT NULL,
   PRIMARY KEY  (`id`),
+  KEY `reseller_idx` (`reseller_id`),
   UNIQUE KEY `acc_id` (`account`)
 )  DEFAULT CHARSET=latin1;
 
@@ -396,6 +398,7 @@ CREATE TABLE `prepaid` (
 DROP TABLE IF EXISTS `prepaid_cards`;
 CREATE TABLE `prepaid_cards` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
+  `reseller_id` int(10) unsigned not NULL,
   `batch` varchar(255) NOT NULL default '',
   `number` bigint(20) unsigned NOT NULL default '0',
   `value` smallint(5) unsigned NOT NULL default '0',
@@ -404,6 +407,7 @@ CREATE TABLE `prepaid_cards` (
   `date_batch` date NOT NULL default '0000-00-00',
   `service` varchar(255) NOT NULL default 'sip',
   PRIMARY KEY  (`id`),
+  KEY `reseller_idx` (`reseller_id`),
   UNIQUE KEY `card_idx` (`number`),
   KEY `nr_id` (`number`)
 )  DEFAULT CHARSET=latin1;
@@ -415,6 +419,7 @@ CREATE TABLE `prepaid_cards` (
 DROP TABLE IF EXISTS `prepaid_history`;
 CREATE TABLE `prepaid_history` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
+  `reseller_id` int(10) unsigned not NULL,
   `username` varchar(64) NOT NULL default '',
   `domain` varchar(64) NOT NULL default '',
   `action` varchar(255) NOT NULL default '',
@@ -426,6 +431,7 @@ CREATE TABLE `prepaid_history` (
   `balance` decimal(10,4)  not null,
   `date` datetime default NULL,
   PRIMARY KEY  (`id`),
+  KEY `reseller_idx` (`reseller_id`),
   KEY `acct_id` (`username`,`domain`),
   index session_idx(session) 
 ) DEFAULT CHARSET=latin1;
@@ -477,6 +483,7 @@ CREATE TABLE `spam` (
 DROP TABLE IF EXISTS `quota_usage`;
 CREATE TABLE `quota_usage` (                    
   `id` int(10) unsigned NOT NULL auto_increment,
+  `reseller_id` int(10) unsigned not NULL,
   `datasource` varchar(50) NOT NULL,
   `account` varchar(128) NOT NULL default '',  
   `domain` varchar(64) default NULL,
@@ -489,5 +496,6 @@ CREATE TABLE `quota_usage` (
   `traffic` varchar(50) NOT NULL,
   `change_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),
+  KEY `reseller_idx` (`reseller_id`),
   UNIQUE KEY `account_idx` (`datasource`,`account`)
 );
