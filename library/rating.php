@@ -3082,7 +3082,8 @@ class RatingTables {
             if (!$name) $name='default';
 
             $table="billing_rates_".$name;
-            $query=sprintf("drop table if exists %s",$table);
+
+            $query=sprintf("drop table if exists %s",addslashes($table));
 
             if (!$this->db->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -3535,14 +3536,13 @@ class RatingTables {
                     print "<input type=hidden name=confirmDelete value=1>";
                 }
             } elseif ($subweb_task == "Copy rate" && strlen($fromRate) && strlen($toRate)) {
+                $toRate=preg_replace("/%/","",$toRate);
                 if ($confirmCopy) {
                     if ($toRate == 'history') {
                         $values=sprintf("
-                        (gateway,domain,subscriber,name,destination,application,connectCost,durationRate,connectCostIn,durationRateIn,startDate,endDate)
+                        (reseller_id,name,destination,application,connectCost,durationRate,connectCostIn,durationRateIn,startDate,endDate)
                         select
-                        billing_rates.gateway,
-                        billing_rates.domain,
-                        billing_rates.subscriber,
+                        billing_rates.reseller_id,
                         '%s',
                         billing_rates.destination,
                         billing_rates.application,
@@ -3558,11 +3558,9 @@ class RatingTables {
                     } else {
         
                         $values=sprintf("
-                        (gateway,domain,subscriber,name,destination,application,connectCost,durationRate,connectCostIn,durationRateIn)
+                        (reseller_id,name,destination,application,connectCost,durationRate,connectCostIn,durationRateIn)
                         select
-                        billing_rates.gateway,
-                        billing_rates.domain,
-                        billing_rates.subscriber,
+                        billing_rates.reseller_id,
                         '%s',
                         billing_rates.destination,
                         billing_rates.application,
@@ -4226,7 +4224,9 @@ class RatingTables {
                         $this->db1->query($query);
                         $this->db1->next_record();
                         $_rateName=$this->db1->f('name');
-        
+
+        		        $_rateName=preg_replace("/%/","",$_rateName);
+
                         if (preg_match("/^(.*)_(\d+)$/",$_rateName,$m)) {
                             $_idx=$m[2]+1;
                             $newRateName=$m[1]."_".$_idx;
