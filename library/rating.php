@@ -1209,7 +1209,7 @@ class RatingTables {
 
                                                                   )
                                                    ),
-                           "billing_enum_tlds"=>array("name"=>"ENUM TLDs",
+                           "billing_enum_tlds"=>array("name"=>"ENUM discounts",
                                                  "skip_math"=> true,
                                                  "keys"=>array("id"),
                                                  "exceptions" =>array(),

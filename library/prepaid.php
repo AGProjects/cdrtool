@@ -260,7 +260,7 @@ class PrepaidCards {
 
     function showBatches () {
 
-        $query=sprintf("select count(*) as c,batch,date_batch
+        $query=sprintf("select count(*) as c,batch,reseller_id,date_batch
         from prepaid_cards
         where %s
         group by batch
@@ -271,6 +271,7 @@ class PrepaidCards {
         print "<table border=1 cellpadding=4>";
 
         print "<tr bgcolor=lightgrey>
+        <td>Reseller</td>
         <td>Cards</td>
         <td>Date</td>
         <td>Batch</td>
@@ -282,6 +283,7 @@ class PrepaidCards {
         while ($this->db->next_record()) {
             $date=$this->db->f('date_batch');
             $c=$this->db->f('c');
+            $reseller_id=$this->db->f('reseller_id');
             $batch=$this->db->f('batch');
             $batch_enc=urlencode($batch);
 
@@ -304,6 +306,7 @@ class PrepaidCards {
 
             print "
             <tr>
+            <td>$reseller_id</td>
             <td>$c</td>
             <td>$date</td>
             <td>$batch</td>
