@@ -346,7 +346,6 @@ CREATE TABLE `prepaid` (
   `duration` bigint unsigned not null,
   `active_sessions` text NOT NULL,
   `maxsessiontime` bigint(20) unsigned NOT NULL,
-  `call_in_progress` datetime NOT NULL default '0000-00-00 00:00:00',
   `session_counter` int(10) unsigned NOT NULL,
   PRIMARY KEY  (`id`),
   KEY `reseller_idx` (`reseller_id`),

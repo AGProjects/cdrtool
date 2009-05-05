@@ -552,6 +552,7 @@ alter table billing_rates_history add column increment smallint unsigned not nul
 alter table billing_rates_history add column min_duration smallint unsigned not null after increment; 
 
 alter table prepaid drop column call_lock;
+alter table prepaid drop column  call_in_progress;
 alter table prepaid add column reseller_id  int(10) unsigned not NULL after id;
 alter table prepaid add key reseller_idx (reseller_id);
 

@@ -6363,7 +6363,6 @@ class RatingEngine {
                 set
                 active_sessions = '%s',
                 session_counter  = '%s',
-                call_in_progress = NOW(),
                 maxsessiontime = '%d'
                 where account  = '%s'",
                 addslashes($this->prepaid_table),
