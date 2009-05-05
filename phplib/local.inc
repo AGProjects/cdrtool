@@ -244,6 +244,13 @@ class CDRTool_Auth extends Auth {
             $CDRTool['filter']['gateway']    = $this->db->f('gatewayFilter');
             $CDRTool['filter']['compid']     = $this->db->f('compidFilter');
             $CDRTool['filter']['cscode']     = $this->db->f('cscodeFilter');
+
+            if (preg_match("/^(\d+)\.(\d+)$/",$this->db->f('impersonate'),$m)) {
+            	$CDRTool['filter']['reseller']  = $m[2];
+            } else if (preg_match("/^(\d+)$/",$this->db->f('impersonate'),$m)) {
+            	$CDRTool['filter']['reseller']  = $m[1];
+            }
+
             $CDRTool['impersonate']          = $this->db->f('impersonate');
             
             if ($this->db->f('only_after_date') && $this->db->f('only_after_date') != "0000-00-00") {

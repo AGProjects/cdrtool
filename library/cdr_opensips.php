@@ -1871,7 +1871,7 @@ class CDRS_opensips extends CDRS {
             $this->domain_table          = "domain";
         }
 
-        $query=sprintf("select domain from %s",$this->domain_table);
+        $query=sprintf("select * from %s",$this->domain_table);
 
         if ($this->CDRTool['filter']['aNumber']) {
             $els=explode("@",$this->CDRTool['filter']['aNumber']);
@@ -1890,7 +1890,9 @@ class CDRS_opensips extends CDRS {
 
         while($this->AccountsDB->next_record()) {
             if ($this->AccountsDB->f('domain')) {
-                $this->localDomains[]=$this->AccountsDB->f('domain');
+                $this->localDomains[$this->AccountsDB->f('domain')]=array('name'     => $this->AccountsDB->f('domain'),
+                                                                          'reseller' => intval($this->AccountsDB->f('reseller_id'))
+                                                                          );
             }
         }
 
@@ -2275,10 +2277,12 @@ class CDRS_opensips extends CDRS {
         if (!$this->cdrtool->affected_rows()) {
         	$query=sprintf("insert into memcache (`value`,`key`) values ('%s','%s')",Date('Y-m-d'),'notifySessionsLastRun');
             if (!$this->cdrtool->query($query)) {
-                $log=sprintf("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
-                print $log;
-                syslog(LOG_NOTICE,$log);
-                return false;
+                if ($this->cdrtool->Errno != 1062) {
+                    $log=sprintf("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE,$log);
+                    return false;
+                }
             }
         }
     }
@@ -3106,7 +3110,7 @@ class CDR_opensips extends CDR {
 
     function isCallerLocal() {
         // used by quota
-        if (in_array($this->aNumberDomain,$this->CDRS->localDomains)) {
+        if (in_array($this->aNumberDomain,array_keys($this->CDRS->localDomains))) {
             $this->CallerIsLocal=1;
             return true;
         }
@@ -3115,7 +3119,7 @@ class CDR_opensips extends CDR {
 
     function isCalleeLocal() {
         if ($this->CanonicalURIUsername == $this->RemoteAddressUsername &&
-            in_array($this->CanonicalURIDomain,$this->CDRS->localDomains) &&
+            in_array($this->CanonicalURIDomain,array_keys($this->CDRS->localDomains)) &&
             !preg_match("/^0/",$this->CanonicalURIUsername)) {
             $this->CalleeIsLocal=1;
         }

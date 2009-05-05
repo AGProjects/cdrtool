@@ -1607,20 +1607,23 @@ class CDRS {
 				$quota=$this->getQuota($_key);
 				$blocked=$this->getBlockedByQuotaStatus($_key);
 
+				list($_u,$_d)=explode("@",$_key);
+
                 $query=sprintf("insert into quota_usage
-                (datasource,account,domain,quota,calls,duration,cost,traffic,blocked)
+                (datasource,account,domain,quota,calls,duration,cost,traffic,blocked,reseller_id)
                 values
-                ('%s','%s',SUBSTRING_INDEX('%s', '@',-1),%d,%d,'%s','%s','%s','%s')
+                ('%s','%s','%s',%d,%d,'%s','%s','%s','%s',%d)
                 ",
                 $this->cdr_source,
                 $_key,
-                $_key,
+                $_d,
                 $quota,
                 $accounts[$_key]['usage']['calls'],
                 $accounts[$_key]['usage']['duration'],
                 $accounts[$_key]['usage']['cost'],
                 $accounts[$_key]['usage']['traffic'],
-                intval($blocked)
+                intval($blocked),
+                $this->localDomains[$_d]['reseller']
                 );
 
                 if (!$this->cdrtool->query($query)){

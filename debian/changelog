@@ -18,8 +18,9 @@ cdrtool (6.7.9) unstable; urgency=low
     notifications containing the last sessions recived in the last 24 hours.
     You must set notifyLastSessions per data source to tru to enable this
     feature and put the susbcriber into missed_calls group
+  * Filter prepaid* and quota_usage per reseller set in login impersonate field
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 01 May 2009 12:02:02 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 05 May 2009 13:40:03 +0200
 
 cdrtool (6.7.8) unstable; urgency=low
 

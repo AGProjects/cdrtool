@@ -1,10 +1,18 @@
 <?
 class PrepaidCards {
+	var $whereResellerFilter= " (1=1) ";
+
     function PrepaidCards () {
         global $auth;
+        global $CDRTool;
         $this->loginname = $auth->auth["uname"];
+        $this->CDRTool   = $CDRTool;
 		$this->db        = new DB_CDRTool;
 		$this->db1       = new DB_CDRTool;
+
+        if ($this->CDRTool['filter']['reseller']) {
+        	$this->whereResellerFilter = sprintf ("reseller_id = %d",$this->CDRTool['filter']['reseller']);
+        }
     }
 
     function showGenerateForm() {
@@ -87,7 +95,6 @@ class PrepaidCards {
         $random_len  = $card_len-strlen($start);
         $initial_len = strlen($start);
 
-
         while ($generated < $nr_cards) {
             $j++;
 
@@ -111,12 +118,13 @@ class PrepaidCards {
             }
     
             $query=sprintf("insert into prepaid_cards
-            (number,value,date_batch,batch,service)
-            values ('%s','%s',NOW(),'%s','sip')",
+            (number,value,date_batch,batch,service,reseller_id)
+            values ('%s','%s',NOW(),'%s','sip',%d)",
 
             addslashes($card),
             addslashes($value),
-            addslashes($batch_name)
+            addslashes($batch_name),
+            $this->CDRTool['filter']['reseller']
             );
 
             dprint($query);
@@ -152,7 +160,7 @@ class PrepaidCards {
 
 		$available  = $_REQUEST['available'];
 
-    	$query = sprintf("select * from prepaid_cards where batch = '%s'",addslashes($batch));
+    	$query = sprintf("select * from prepaid_cards where batch = '%s' and %s",addslashes($batch),$this->whereResellerFilter);
 
         if ($available == "yes") {
             $query .= " and value  > 0";
@@ -211,7 +219,7 @@ class PrepaidCards {
             return;
         }
 
-    	$query=sprintf("delete from prepaid_cards where batch = '%s'",addslashes($batch));
+    	$query=sprintf("delete from prepaid_cards where batch = '%s' and %s",addslashes($batch),$this->whereResellerFilter);
         $this->db->query($query);
 
         if ($this->db->affected_rows()) {
@@ -238,7 +246,7 @@ class PrepaidCards {
 
         if (!$batch) return false;
 
-    	$query=sprintf("update prepaid_cards set blocked = '1' where batch = '%s'",addslashes($batch));
+    	$query=sprintf("update prepaid_cards set blocked = '1' where batch = '%s' and %s",addslashes($batch),$this->whereResellerFilter);
         $this->db->query($query);
     }
 
@@ -246,16 +254,17 @@ class PrepaidCards {
 
         if (!$batch) return false;
 
-    	$query=sprintf("update prepaid_cards set blocked = '0' where batch = '%s'",addslashes($batch));
+    	$query=sprintf("update prepaid_cards set blocked = '0' where batch = '%s' and %s",addslashes($batch),$this->whereResellerFilter);
         $this->db->query($query);
     }
 
     function showBatches () {
 
-        $query="select count(*) as c,batch,date_batch
+        $query=sprintf("select count(*) as c,batch,date_batch
         from prepaid_cards
+        where %s
         group by batch
-        order by date_batch DESC";
+        order by date_batch DESC",$this->whereResellerFilter);
         dprint($query);
 
         $this->db->query($query);
@@ -277,7 +286,7 @@ class PrepaidCards {
             $batch_enc=urlencode($batch);
 
             $query=sprintf("select count(*) as c from prepaid_cards
-            where batch = '%s' and value = '0'",addslashes($batch));
+            where batch = '%s' and value = '0' and %s",addslashes($batch),$this->whereResellerFilter);
             dprint($query);
 
             $this->db1->query($query);
@@ -285,7 +294,7 @@ class PrepaidCards {
             $used=$this->db1->f('c');
     
             $query=sprintf("select count(*) as c from prepaid_cards
-            where batch = '%s' and value <> '0'",addslashes($batch));
+            where batch = '%s' and value <> '0' and %s",addslashes($batch),$this->whereResellerFilter);
             dprint($query);
 
             $this->db1->query($query);

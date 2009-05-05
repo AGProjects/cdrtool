@@ -986,8 +986,9 @@ class RatingTables {
                             'sessionId'
                             );
 
-    var $requireReload  = array('destinations');
-    var $whereDomainFilter = " (1=1) ";
+    var $requireReload       = array('destinations');
+    var $whereDomainFilter   = " (1=1) ";
+    var $whereResellerFilter = " (1=1) ";
 
     var $tables=array(
                            "destinations"=>array("name"=>"Destinations",
@@ -1273,13 +1274,16 @@ class RatingTables {
                                                  "keys"=>array("id"),
                                                  "size"=>15,
                                                  "exceptions" =>array('change_date','active_sessions','call_in_progress','domain'),
-                                                 "domainFilterColumn"=>"domain",
                                                  "order"=>"change_date DESC",
                                                  "fields"=>array("account"=>array("size"=>35,
-                                                                               "name"=>"SIP prepaid account",
+                                                                               "name"=>"SIP account",
                                                                                "checkType"=>'sip_account',
                                                                                "mustExist"=>true
                                                                                 ),
+                                                                 "reseller_id"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Reseller"
+                                                                                 ),
                                                                  "balance"=>array("size"=>10,
                                                                                   "name"=>"Balance"
                                                                                  ),
@@ -1313,11 +1317,14 @@ class RatingTables {
                                                  "keys"=>array("id"),
                                                  "size"=>15,
                                                  "exceptions" =>array('service'),
-                                                 "domainFilterColumn"=>"domain",
                                                  "fields"=>array("batch"=>array("size"=>40,
                                                                                "name"=>"Batch name",
                                                                                "readonly"=>1
                                                                                 ),
+                                                                 "reseller_id"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Reseller"
+                                                                                 ),
                                                                  "date_batch"=>array("size"=>11,
                                                                                   "name"=>"Batch date"
                                                                                  ),
@@ -1350,10 +1357,13 @@ class RatingTables {
                                                  "keys"=>array("id"),
                                                  "size"=>15,
                                                  "exceptions" =>array('session','destination'),
-                                                 "domainFilterColumn"=>"domain",
                                                  "fields"=>array("username"=>array("size"=>15,
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
+                                                                                 ),
+                                                                 "reseller_id"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Reseller"
                                                                                  ),
                                                                  "action"=>array("size"=>15
                                                                                  ),
@@ -1384,6 +1394,10 @@ class RatingTables {
                                                  "fields"=>array("datasource"=>array("size"=>15,
                                                                                "readonly"=>1
                                                                                 ),
+                                                                 "reseller_id"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Reseller"
+                                                                                 ),
                                                                  "account"=>array("size"=>30,
                                                                                "readonly"=>1
                                                                                  ),
@@ -1453,6 +1467,11 @@ class RatingTables {
                 }
                 $this->whereDomainFilter .= ") ";
             }
+        }
+
+        if ($this->CDRTool['filter']['reseller'] && $this->tables[$this->table]['fields']['reseller_id']) {
+        	$this->whereResellerFilter = sprintf ("reseller_id = %d",$this->CDRTool['filter']['reseller']);
+            $this->tables[$this->table]['fields']['reseller_id']['readonly']=true;
         }
 
         if ($this->settings['split_rating_table']) {
@@ -3305,7 +3324,7 @@ class RatingTables {
     
                     $log_entity=" id = $id ";
             
-                    $where = " id = '".$id."' and $this->whereDomainFilter";
+                    $where = " id = '".$id."' and $this->whereDomainFilter and $this->whereResellerFilter";
     
                     if ($table == "billing_rates") {
                         if ($this->settings['split_rating_table']) {
@@ -3352,15 +3371,21 @@ class RatingTables {
             
                                 if (floatval($balance) != floatval($old_balance))  {
                                     $query=sprintf("insert into prepaid_history
-                                    (username,domain,action,description,value,balance,date)
+                                    (username,domain,action,description,value,balance,date,reseller_id)
                                     values
-                                    ('%s','%s','Set balance','Manual update','%s','%s',NOW())",
+                                    ('%s','%s','Set balance','Manual update','%s','%s',NOW(),%d)",
                                     addslashes($username),
                                     addslashes($domain),
                                     addslashes($value),
-                                    addslashes($balance)
+                                    addslashes($balance),
+                                    $this->CDRTool['filter']['reseller']
                                     );
-                                    $this->db->query($query);
+
+                                    if (!$this->db->query($query)) {
+                                    	$log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                        print $log;
+                                        syslog(LOG_NOTICE, $log);
+                                    }
             
                                     $log_query=sprintf("insert into log
                                     (date,login,ip,datasource,results,description)
@@ -3446,7 +3471,7 @@ class RatingTables {
                     $kkk++;
                 }
         
-                $where = $this->whereDomainFilter;
+                $where = $this->whereDomainFilter . ' and ' . $this->whereResellerFilter;
 
                 if ($kkk) {
                     // reconstruct where clause to apply all changes to selection
@@ -3537,7 +3562,8 @@ class RatingTables {
                     // build where clause
                     // Search build for each field
 
-                    $where = $this->whereDomainFilter;
+	                $where = $this->whereDomainFilter. ' and ' . $this->whereResellerFilter;
+
                     $j=0;
                     while ($j < $cc ) {
             
@@ -3661,7 +3687,7 @@ class RatingTables {
                         $toRate);
                     }
 
-                    $where=$this->whereDomainFilter;
+	                $where = $this->whereDomainFilter. ' and ' . $this->whereResellerFilter;
 
                     $j=0;
                     while ($j < $cc ) {
@@ -3786,7 +3812,11 @@ class RatingTables {
                             } else {
                                 $comma="";
                             }
-                            $query .= $comma."'".$value."'";
+                            if ($Fname == 'reseller_id' && $this->CDRTool['filter']['reseller']) {
+                            	$query .= $comma."'".$this->CDRTool['filter']['reseller']."'";
+                            } else {
+                            	$query .= $comma."'".$value."'";
+                            }
                             $kkk++;
                         }
                         $k++;
@@ -3813,8 +3843,8 @@ class RatingTables {
                         $k++;
                     }
 
+
                     if (!$empty_insert) {
-                        //print $query;
                         if ($this->db->query($query)) {
                         	$affected_rows=$this->db->affected_rows();
                         	if ($affected_rows) {
@@ -3842,7 +3872,7 @@ class RatingTables {
                 }
             } elseif ($subweb_task == "Delete") {
                 if ($confirmDelete) {
-                    $query="delete from $table where id = '$id' and $this->whereDomainFilter";
+                    $query="delete from $table where id = '$id' and $this->whereDomainFilter and $this->whereResellerFilter ";
                     if ($this->db->query($query)) {
                         $affected_rows=$this->db->affected_rows();
                         if ($affected_rows && in_array($table,$this->requireReload)) {
@@ -3964,7 +3994,10 @@ class RatingTables {
             $delimiter=",";
         }
 
-        $query="select count(*) as c from $this->table where $this->whereDomainFilter";
+        $query=sprintf("select count(*) as c from %s where %s and %s",
+        $this->table,
+        $this->whereDomainFilter,
+        $this->whereResellerFilter);
         
         $t=0;
         $j=0;
@@ -3985,7 +4018,7 @@ class RatingTables {
                     $quotes="'";
                 }                
                 if (strlen($value)) {
-                    $where=$where." and $Fname $like $quotes".$likewhat."$quotes";
+                    $where.=sprintf(" and $Fname $like $quotes".$likewhat."$quotes");
                     $t++;
                 }
                 
@@ -4067,10 +4100,11 @@ class RatingTables {
         	$order=sprintf(" order by %s  ",$this->tables[$this->table]['order']);
         }
         
-        $query=sprintf("select * from %s where (1=1) %s and %s %s limit %s, %s",
+        $query=sprintf("select * from %s where (1=1) %s and %s and %s %s limit %s, %s",
         $this->table,
         $where,
         $this->whereDomainFilter,
+        $this->whereResellerFilter,
         $order,
         $i,
         $this->maxrowsperpage
@@ -5111,7 +5145,7 @@ class OpenSIPSQuota {
             if (count($this->localDomains)) {
                 $domain_filter="and Realm in (";
                 $t=0;
-                foreach ($this->localDomains as $_domain) {
+                foreach (array_keys($this->localDomains) as $_domain) {
                     if (!$_domain) continue;
                     if ($t) $domain_filter .= ",";
                     $domain_filter .= sprintf("'%s'",$_domain);
