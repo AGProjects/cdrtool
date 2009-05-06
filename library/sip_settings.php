@@ -3294,6 +3294,30 @@ class SipSettings {
             }
         }
 
+        if ($issuer=='reseller') {
+            $description = $_REQUEST['description'];
+            $value       = $_REQUEST['value'];
+
+            if (strlen($value) && $this->addBalanceReseller($value,$description)) {
+
+                print "<p><font color=green>";
+                printf (_("Added %s to the account balance. "),floatval($value));
+
+                if ($_REQUEST['notify']) {
+                    $subject=sprintf ("SIP account %s balance update",$this->account);
+            
+                    $body="Your SIP account balance has been updated. ".
+                    "To see the transaction value and details go to $this->sip_settings_page?tab=prepaid";
+            
+                    if (mail($this->email, $subject, $body, "From: $this->support_email")) {
+                        printf (_("Subscriber has been notified to %s."), $this->email);
+                    }
+                }
+
+                print "</font>";
+            }
+        }
+
         if ($issuer=='admin') {
             $description = $_REQUEST['description'];
             $value       = $_REQUEST['value'];
@@ -3358,7 +3382,6 @@ class SipSettings {
             </tr>
             ";
     
-            $this->showIncreaseBalanceAdmin();
             $this->showIncreaseBalanceReseller();
             $this->showIncreaseBalanceSubscriber();
             $this->showBalanceHistory();
@@ -3366,46 +3389,10 @@ class SipSettings {
 
     }
 
-    function showIncreaseBalanceAdmin () {
-    	if ($this->login_type != 'admin') return true;
+    function showIncreaseBalanceReseller () {
+    	if ($this->login_type != 'reseller' && $this->login_type != 'admin') return true;
 
         $chapter=sprintf(_("Add balance (admin)"));
-        $this->showChapter($chapter);
-
-        print "
-        <tr>
-        <form action=$this->pageURL method=post>
-        <input type=hidden name=tab value=prepaid>
-        <input type=hidden name=issuer value=admin>
-        <input type=hidden name=task value=Add>
-        <td class=h align=left><nobr>
-        ";
-
-        print _("Value");
-        print "
-        <input type=text size=10 name=value>
-        ";
-        print _("Description");
-
-        print "
-        <input type=text size=30 name=description>
-        Notify
-        <input type=checkbox name=notify value=1>
-
-        <input type=submit value=";
-        print _("Add");
-        print ">
-        </td>
-        </form>
-        </tr>
-        ";
-
-    }
-
-    function showIncreaseBalanceReseller () {
-    	if ($this->login_type != 'reseller') return true;
-
-        $chapter=sprintf(_("Add balance (reseller)"));
         $this->showChapter($chapter);
 
         print "
@@ -3440,7 +3427,7 @@ class SipSettings {
 
     function showIncreaseBalanceSubscriber () {
 
-        $chapter=sprintf(_("Increase balance"));
+        $chapter=sprintf(_("Add balance"));
         $this->showChapter($chapter);
 
         print "
@@ -3452,12 +3439,14 @@ class SipSettings {
         <td class=h align=left><nobr>
         ";
 
-        print _("Prepaid card");
+        print _("Card id");
         print "
+        <input type=text size=10 name=prepaidId>
+        ";
+        print "Number
         <input type=text size=20 name=prepaidCard>
         ";
-        print "Id:
-        <input type=text size=10 name=prepaidId>
+        print "
         <input type=submit value=";
         print _("Add");
         print "></nobr>
