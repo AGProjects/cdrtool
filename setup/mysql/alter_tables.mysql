@@ -603,3 +603,5 @@ alter table billing_enum_tlds drop column domain;
 drop table billing_profilesNGN;
 drop table billing_ratesNGN;
 
+alter table log add column reseller_id  int(10) unsigned not NULL after id;
+alter table log add key reseller_idx (reseller_id);

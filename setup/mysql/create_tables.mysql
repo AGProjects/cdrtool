@@ -296,6 +296,7 @@ CREATE TABLE `lastquery` (
 DROP TABLE IF EXISTS `log`;
 CREATE TABLE `log` (
   `id` int(10) unsigned NOT NULL auto_increment,
+  `reseller_id` int(10) unsigned not NULL,
   `date` datetime NOT NULL default '0000-00-00 00:00:00',
   `login` varchar(32) NOT NULL default '',
   `ip` varchar(32) NOT NULL default '',
@@ -306,6 +307,7 @@ CREATE TABLE `log` (
   `description` text,
   `datasource` varchar(255) NOT NULL default '',
   PRIMARY KEY  (`id`),
+  KEY `reseller_idx` (`reseller_id`),
   KEY `log_date` (`date`),
   KEY `login_idx` (`login`)
 )  DEFAULT CHARSET=latin1;
