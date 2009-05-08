@@ -2243,7 +2243,7 @@ class CDRS_opensips extends CDRS {
             $crlf = "\n";
            	$hdrs = array(
                      'From'=> $this->CDRTool['provider']['fromEmail'],
-                     'Subject' => sprintf("SIP sessions for %s in the last dayh",$_subscriber)
+                     'Subject' => sprintf("%s: received calls in the last 24 hours",$_subscriber)
                      );
 
             $mime = new Mail_mime($crlf);
@@ -2262,7 +2262,6 @@ class CDRS_opensips extends CDRS {
             count($_last_sessions));
             print $log;
             syslog(LOG_NOTICE,$log);
-
         }
 
         $query=sprintf("update memcache set `value` = '%s' where `key` = '%s'",Date('Y-m-d'),'notifySessionsLastRun');
