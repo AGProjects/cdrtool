@@ -1,14 +1,17 @@
 cdrtool (6.8.0) unstable; urgency=low
 
-  * You must apply the changes from setup/mysql/alter_tables.mysql
   * Added reseller fiels to all database tables to allow different login
     accounts to access their own data based on the impersonate field
-  * Added prepaid_history table to rating table management
-  * Added increment and min_duration per rate
+  * Allow import of CSV files from subdirectories (read updated 'Data
+    partitioning for multiple resellers' section from RATING.txt)
+  * Added prepaid_history table to rating table web management
+  * Added increment and min_duration for each rate
   * Removed gateway, domain and subscriber columns from billing_profiles table
   * Removed gateway, domain and subscriber columns from billing_rates table
   * Removed gateway, domain and subscriber columns from billing_rates_history table
-  * CSV formats for billing_rates and billing_profiles changed to support the above
+  * Updated CSV format for all rating tables to support the above changes,
+    see setup/csv for updated examples of CSV files or export your live data
+    from CDRTool rating tables page to see the new fields
   * Removed obsolete prepaid.call_lock and prepaid.call_in_progress columns
   * Removed obsolete customers.country_code column
   * Removed obsolete tables ratesNGN and profilesNGN
@@ -25,8 +28,9 @@ cdrtool (6.8.0) unstable; urgency=low
     notifications containing the last sessions recived in the last 24 hours.
     You must set notifyLastSessions per data source to tru to enable this
     feature and put the susbcriber into missed_calls group
+  * You must apply the changes from setup/mysql/alter_tables.mysql
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 05 May 2009 15:46:53 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 08 May 2009 14:44:21 +0200
 
 cdrtool (6.7.8) unstable; urgency=low
 
