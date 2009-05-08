@@ -18,3 +18,6 @@
 
 # Send email with last missed calls to SIP subscribers
 15 2 * * * root /var/www/CDRTool/scripts/OpenSIPS/notifyLastSessions.php >/dev/null 
+
+# Import rating tables
+15 5 * * * root /var/www/CDRTool/scripts/importRatingTables.php >/dev/null
