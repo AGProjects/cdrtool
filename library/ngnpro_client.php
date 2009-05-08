@@ -460,6 +460,10 @@ class SoapEngine {
                 $this->timeout=intval($this->soapEngines[$this->soapEngine]['timeout']);
             }
 
+            if (strlen($this->soapEngines[$this->soapEngine]['store_clear_text_passwords'])) {
+                $this->store_clear_text_passwords=$this->soapEngines[$this->soapEngine]['store_clear_text_passwords'];
+            }
+			
             if (strlen($this->login_credentials['record_generator'])) {
                 $this->record_generator=$this->login_credentials['record_generator'];
             } else if (strlen($this->soapEngines[$this->soapEngine]['record_generator'])) {
@@ -2149,8 +2153,11 @@ class SipAccounts extends Records {
                             'domain'     => 'Domain'
                             );
 
+    var $store_clear_text_passwords=true;
+
     function SipAccounts(&$SoapEngine) {
         dprint("init SipAccounts");
+
 
         $this->filters = array('username' => strtolower(trim($_REQUEST['username_filter'])),
                                'domain'   => strtolower(trim($_REQUEST['domain_filter'])),
@@ -2163,6 +2170,10 @@ class SipAccounts extends Records {
                               );
 
         $this->Records(&$SoapEngine);
+
+		if (strlen($this->SoapEngine->store_clear_text_passwords)) {
+        	$this->store_clear_text_passwords=$this->SoapEngine->store_clear_text_passwords;
+        }
     }
 
     function getRecordKeys() {
@@ -2830,13 +2841,33 @@ class SipAccounts extends Records {
         	$properties=array();
         }
 
+        if ($this->SoapEngine->login_credentials['reseller']) {
+            if (strlen($this->SoapEngine->login_credentials['reseller_filters'][$this->SoapEngine->login_credentials['reseller']]['store_clear_text_passwords'])) {
+                $this->store_clear_text_passwords=$this->SoapEngine->login_credentials['reseller_filters'][$this->SoapEngine->login_credentials['reseller']]['store_clear_text_passwords'];
+            }
+        } else {
+            $_reseller=$this->getResellerForDomain(strtolower($domain));
+    
+            if ($_reseller && strlen($this->SoapEngine->login_credentials['reseller_filters'][$_reseller]['store_clear_text_passwords'])) {
+                $this->store_clear_text_passwords=$this->SoapEngine->login_credentials['reseller_filters'][$_reseller]['store_clear_text_passwords'];
+            }
+        }
+
+        if ($this->store_clear_text_passwords || $username == '<autoincrement>') {
+            $password_final=$password;
+        } else {
+            $md1=strtolower($username).':'.strtolower($domain).':'.$password;
+            $md2=strtolower($username).'@'.strtolower($domain).':'.strtolower($domain).':'.$password;
+            $password_final=md5($md1).':'.md5($md2);
+        }
+
         $account=array(
                      'id'     => array('username' => strtolower($username),
                                        'domain'   => strtolower($domain)
                                        ),
                      'firstName'  => $firstName,
                      'lastName'   => $lastName,
-                     'password'   => $password,
+                     'password'   => $password_final,
                      'timezone'   => $timezone,
                      'email'      => strtolower($email),
                      'owner'      => $owner,
@@ -3006,6 +3037,48 @@ class SipAccounts extends Records {
         }
 
         return $accounts;
+    }
+
+    function getResellerForDomain($domain='') {
+        // Filter
+        $filter=array(
+                      'domain'    => $domain
+                      );
+
+        // Range
+        $range=array('start' => 0,
+                     'count' => 1
+                     );
+
+        $orderBy = array('attribute' => 'changeDate',
+                         'direction' => 'DESC'
+                         );
+
+        // Compose query
+        $Query=array('filter'     => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        // Insert credetials
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+
+        // Call function
+        $result     = $this->SoapEngine->soapclient->getDomains($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            if ($result->domains[0]){
+                return $result->domains[0]->reseller;
+            } else {
+                return false;
+            }
+        }
     }
 }
 

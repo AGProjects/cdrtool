@@ -21,6 +21,7 @@ class SipSettings {
     var $soapClassCustomerPort     = 'WebService_NGNPro_CustomerPort';
     var $soapClassPresencePort     = 'WebService_SoapSIMPLEProxy_PresencePort';
     var $showSoapConnectionInfo    = false;
+	var $store_clear_text_passwords=true;
 
     // these variables can be overwritten per soap engine
     // and subsequently by reseller properties
@@ -477,6 +478,10 @@ class SipSettings {
 
         if (strlen($this->soapEngines[$this->sip_engine]['timeout'])) {
             $this->soapTimeout=intval($this->soapEngines[$this->sip_engine]['timeout']);
+        }
+
+        if (strlen($this->soapEngines[$this->sip_engine]['store_clear_text_passwords'])) {
+            $this->store_clear_text_passwords=$this->soapEngines[$this->sip_engine]['store_clear_text_passwords'];
         }
 
         if (strlen($this->soapEngines[$this->sip_engine]['disable_extra_groups'])) {
@@ -1383,10 +1388,7 @@ class SipSettings {
                                                 "SubscriberMaySeeIt"  => 1
                                                 );
         }
-
-
     }
-
 
     function getDiversions() {
         dprint("getDiversions()");
@@ -2821,7 +2823,14 @@ class SipSettings {
         }
 
         if ($sip_password) {
-            $result->password=$sip_password;
+        	if ($this->store_clear_text_passwords) {
+            	$result->password=$sip_password;
+            } else {
+                $md1=strtolower($this->username).':'.strtolower($this->domain).':'.$sip_password;
+                $md2=strtolower($this->username).'@'.strtolower($this->domain).':'.strtolower($this->domain).':'.$sip_password;
+                $result->password=md5($md1).':'.md5($md2);
+            }
+
             $this->somethingChanged=1;
         }
 
