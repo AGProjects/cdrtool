@@ -1449,21 +1449,21 @@ class RatingTables {
         $this->scanFilesForImport($dir);
 
 		$results=0;
-        foreach ($this->filesToImport as $file) {
-            $importFunction="Import".ucfirst($file['type']);
+        foreach (array_keys($this->filesToImport) as $file) {
+            $importFunction="Import".ucfirst($this->filesToImport[$file]['type']);
 
-            printf("Reading file %s\n",$file['path']);
+            printf("Reading file %s\n",$this->filesToImport[$file]['path']);
 
-            $results = $results + $this->$importFunction($file['path']);
+            $results = $results + $this->$importFunction($this->filesToImport[$file]['path'],$this->filesToImport[$file]['reseller']);
 
-            $this->logImport($dir,$file['name'],$file['watermark'],$results);
+            $this->logImport($dir,$this->filesToImport[$file]['path'],$this->filesToImport[$file]['watermark'],$results);
 
         }
 
         return $results;
     }
 
-    function ImportRates($file) {
+    function ImportRates($file,$reseller=0) {
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
         $i=0;
@@ -1471,7 +1471,7 @@ class RatingTables {
         $updated  = 0;
         $deleted  = 0;
 
-        print "Importing Rates:\n";
+        printf ("Importing rates from %s for reseller %s:\n",$file,$reseller);
 
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
@@ -1479,7 +1479,6 @@ class RatingTables {
             $p = explode($this->delimiter, $buffer);
 
             $ops            = trim($p[0]);
-            $reseller_id    = trim($p[1]);
             $name           = trim($p[2]);
             $destination    = trim($p[3]);
             $application    = trim($p[4]);
@@ -1489,6 +1488,12 @@ class RatingTables {
             $durationRateIn = trim($p[8]);
             $increment      = trim($p[9]);
             $min_duration   = trim($p[10]);
+
+            if ($reseller) {
+            	$reseller_id    = $reseller;
+            } else {
+                $reseller_id    = trim($p[1]);
+            }
 
             if (!$application) $application='audio';
 
@@ -1864,7 +1869,7 @@ class RatingTables {
 
     }
 
-    function ImportRatesHistory($file) {
+    function ImportRatesHistory($file,$reseller=0) {
 
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
@@ -1875,7 +1880,7 @@ class RatingTables {
         $updated  = 0;
         $deleted  = 0;
 
-        print "Importing Rates history:\n";
+        printf ("Importing rates history from %s for reseller %s:\n",$file,$reseller);
 
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
@@ -1883,7 +1888,6 @@ class RatingTables {
             $p = explode($this->delimiter, $buffer);
 
             $ops            = trim($p[0]);
-            $reseller_id    = trim($p[1]);
             $name           = trim($p[2]);
             $destination    = trim($p[3]);
             $application    = trim($p[4]);
@@ -1895,6 +1899,12 @@ class RatingTables {
             $min_duration   = trim($p[10]);
             $startDate      = trim($p[11]);
             $endDate        = trim($p[12]);
+
+            if ($reseller) {
+            	$reseller_id    = $reseller;
+            } else {
+                $reseller_id    = trim($p[1]);
+            }
 
             if ($ops=="1") {
 
@@ -2119,7 +2129,7 @@ class RatingTables {
 
     }
 
-    function ImportCustomers($file) {
+    function ImportCustomers($file,$reseller=0) {
 
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
@@ -2130,7 +2140,7 @@ class RatingTables {
         $updated  = 0;
         $deleted  = 0;
 
-        print "Importing Customers:\n";
+        printf ("Importing customers from %s for reseller %s:\n",$file,$reseller);
 
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
@@ -2138,7 +2148,6 @@ class RatingTables {
             $p = explode($this->delimiter, $buffer);
 
             $ops               = trim($p[0]);
-            $reseller_id       = trim($p[1]);
             $gateway           = trim($p[2]);
             $domain            = trim($p[3]);
             $subscriber        = trim($p[4]);
@@ -2149,6 +2158,12 @@ class RatingTables {
             $timezone          = trim($p[9]);
             $increment         = trim($p[10]);
             $min_duration      = trim($p[11]);
+
+            if ($reseller) {
+            	$reseller_id    = $reseller;
+            } else {
+                $reseller_id    = trim($p[1]);
+            }
 
             if ($ops=="1") {
                 $query=sprintf("insert into billing_customers
@@ -2348,7 +2363,7 @@ class RatingTables {
         return $results;
     }
 
-    function ImportDestinations($file) {
+    function ImportDestinations($file,$reseller=0) {
 
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
@@ -2359,7 +2374,7 @@ class RatingTables {
         $updated  = 0;
         $deleted  = 0;
 
-        print "Importing Destinations:\n";
+        printf ("Importing destinations from %s for reseller %s:\n",$file,$reseller);
 
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
@@ -2367,12 +2382,17 @@ class RatingTables {
             $p = explode($this->delimiter, $buffer);
 
             $ops             = trim($p[0]);
-            $reseller_id     = trim($p[1]);
             $gateway         = trim($p[2]);
             $domain          = trim($p[3]);
             $subscriber      = trim($p[4]);
             $dest_id         = trim($p[5]);
             $dest_name       = trim($p[6]);
+
+            if ($reseller) {
+            	$reseller_id    = $reseller;
+            } else {
+                $reseller_id    = trim($p[1]);
+            }
 
             if ($ops=="1") {
                 $query=sprintf("insert into destinations
@@ -2537,7 +2557,7 @@ class RatingTables {
         return $results;
     }
 
-    function ImportProfiles($file) {
+    function ImportProfiles($file,$reseller=0) {
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
         $this->mustReload=true;
@@ -2555,7 +2575,6 @@ class RatingTables {
             $p = explode($this->delimiter, $buffer);
 
             $ops        = trim($p[0]);
-            $reseller_id= trim($p[1]);
             $profile    = trim($p[2]);
             $rate1      = trim($p[3]);
             $hour1      = trim($p[4]);
@@ -2565,6 +2584,12 @@ class RatingTables {
             $hour3      = trim($p[8]);
             $rate4      = trim($p[9]);
             $hour4      = trim($p[10]);
+
+            if ($reseller) {
+            	$reseller_id    = $reseller;
+            } else {
+                $reseller_id    = trim($p[1]);
+            }
 
             if (!$hour1) $hour1=0;
             if (!$hour2) $hour2=0;
@@ -2950,24 +2975,45 @@ class RatingTables {
     function scanFilesForImport($dir) {
         if (!$dir) $dir="/var/spool/cdrtool";
 
+		$import_dirs[$dir]=array('path'=>$dir,
+                                 'reseller' => 0
+                                 );
+
         if ($handle = opendir($dir)) {
             while (false !== ($filename = readdir($handle))) {
-                if ($filename != "." && $filename != "..") {
-                    foreach ($this->importFilesPatterns as $_pattern) {
-                        if (strstr($filename,$_pattern) && preg_match("/\.csv$/",$filename)) {
-                            $fullPath=$dir."/".$filename;
-                            if ($content=file_get_contents($fullPath)) {
-                                $watermark=$filename."-".md5($content);
-                                if ($this->hasFileBeenImported($filename,$watermark)) break;
+                $reseller=0;
+                if ($filename == "." || $filename == "..") continue;
+                $fullPath=$dir."/".$filename;
+                if (is_dir($fullPath) && is_numeric($filename)) {
+                    $reseller=$filename;
+                    $import_dirs[$fullPath]=array('path'    => $fullPath,
+                                                  'reseller'=> $reseller
+                                                  );
+                }
+            }
+        }
 
-                                $this->filesToImport[]=array( 'name'      => $filename,
-                                                              'watermark' => $watermark,
-                                                              'type'      => $_pattern,
-                                                              'path'      => $fullPath
-                                                              );
+        foreach (array_keys($import_dirs) as $_dir) {
+            if ($handle = opendir($_dir)) {
+                while (false !== ($filename = readdir($handle))) {
+                    if ($filename != "." && $filename != "..") {
+                        foreach ($this->importFilesPatterns as $_pattern) {
+                            if (strstr($filename,$_pattern) && preg_match("/\.csv$/",$filename)) {
+                                $fullPath=$_dir."/".$filename;
+                                if ($content=file_get_contents($fullPath)) {
+                                    $watermark=$filename."-".md5($content);
+                                    if ($this->hasFileBeenImported($filename,$watermark)) break;
+    
+                                    $this->filesToImport[$filename]=array( 'name'      => $filename,
+                                                                           'watermark' => $watermark,
+                                                                           'type'      => $_pattern,
+                                                                           'path'      => $fullPath,
+                                                                           'reseller'  => $import_dirs[$_dir]['reseller']
+                                                                         );
+                                }
+    
+                                break;
                             }
-
-                            break;
                         }
                     }
                 }
