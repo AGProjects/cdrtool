@@ -174,6 +174,7 @@ if  ($rows>0)  {
            <tr bgcolor=lightgrey>
            <td class=cdr> </td>
            <td class=cdr> <b>Log id</td>
+           <td class=cdr> <b>Reseller</td>
            <td class=cdr> <b>Date and time</td>
            <td class=cdr> <b>Account</td>
            <td class=cdr> <b>IP address</td>
@@ -190,6 +191,7 @@ if  ($rows>0)  {
         $db->next_record();											
 
         $current_log    =$db->f('id');
+        $reseller_id    =$db->f('reseller_id');
        	$log_date		=$db->f('date');
        	$login		    =$db->f('login');
        	$ip	         	=$db->f('ip');
@@ -240,6 +242,7 @@ if  ($rows>0)  {
 		<tr bgcolor = $bgcolor>
 		<td class=cdr><b>$found.</b></td>
 		<td class=cdr>$current_log</td>
+        <td class=cdr>$reseller_id</td>
         <td class=cdr>$log_date</td>
 		<td class=cdr>$login</td>
 		<td class=cdr>$ip</td>

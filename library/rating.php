@@ -3042,9 +3042,9 @@ class RatingTables {
     }
 
     function logImport($dir,$filename,$watermark,$results=0) {
-        $query=sprintf("insert into log (date,login,ip,url,results,description,datasource)
-        values (NOW(),'ImportScript','localhost','%s','%s','Imported %s','%s')",
-        $watermark,$results,$filename,$dir
+        $query=sprintf("insert into log (date,login,ip,url,results,description,datasource,reseller_id)
+        values (NOW(),'ImportScript','localhost','%s','%s','Imported %s','%s',%d)",
+        $watermark,$results,$filename,$dir,$this->CDRTool['filter']['reseller']
         );
 
         $log=sprintf ("Imported file %s, %d records have been affected\n",$filename,$results);
@@ -3320,20 +3320,6 @@ class RatingTables {
                                         print $log;
                                         syslog(LOG_NOTICE, $log);
                                     }
-            
-                                    $log_query=sprintf("insert into log
-                                    (date,login,ip,datasource,results,description)
-                                    values
-                                    (NOW(),'%s','%s','Rating tables','%d','Prepaid balance for %s@%s set to %s')",
-                                    addslashes($loginname),
-                                    addslashes($_SERVER['REMOTE_ADDR']),
-                                    addslashes($affected_rows),
-                                    addslashes($username),
-                                    addslashes($domain),
-                                    addslashes($balance)
-                                    );
-            
-                                    $this->db->query($log_query);
                                 }
             
                             } else if ($table=='billing_rates') {
@@ -3873,14 +3859,15 @@ class RatingTables {
         
             if ($affected_rows && $table!="prepaid") {
                 $log_query=sprintf("insert into log
-                (date,login,ip,datasource,results,description)
-                values (NOW(),'%s','%s','Rating','%d','%s in table %s %s')",
+                (date,login,ip,datasource,results,description,reseller_id)
+                values (NOW(),'%s','%s','Rating','%d','%s in table %s %s',%d)",
                 addslashes($loginname),
                 addslashes($_SERVER['REMOTE_ADDR']),
                 addslashes($affected_rows),
                 addslashes($subweb_task),
                 addslashes($table),
-                addslashes($log_entity)
+                addslashes($log_entity),
+                $this->CDRTool['filter']['reseller']
                 );
                 
                 $this->db->query($log_query);
@@ -4768,6 +4755,7 @@ class OpenSIPSQuota {
             print("Info: No database defined for SIP accounts $this->cdr_source.\n");
             return false;
         }
+
         $this->AccountsDB       = new $this->db_susbcribers;
         $this->enableThor       = $parent->enableThor;
 
@@ -5142,13 +5130,34 @@ class OpenSIPSQuota {
                     $email_body = $email_body.$line;
                     print $line;
 
+                    if ($this->enableThor) {
+                        $this->domain_table          = "sip_domains";
+                    } else {
+                        $this->domain_table          = "domain";
+                    }
+            
+                    $query=sprintf("select * from %s where domain = '%s'",$this->domain_table,$prepaidDomain);
+        
+                    if (!$this->AccountsDB->query($query)) {
+                        $log=sprintf ("Database error: %s (%d) %s\n",$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
+                        syslog(LOG_NOTICE,$log);
+                    }
+            
+                    if ($this->AccountsDB->num_rows()){
+                        $this->AccountsDB->next_record();
+                        $_reseller=$this->AccountsDB->f('reseller_id');
+                    } else {
+                        $_reseller=0;
+                    }
+
                     $log=sprintf("Monthly quota exceeded for %s (%s > %s)",$account,$this->db->f('cost'), $this->db->f('quota'));
                       syslog(LOG_NOTICE, $log);
 
                     $log_query=sprintf("insert into log
-                    (date,login,ip,datasource,results,description)
-                    values (NOW(),'quotacheck','localhost','QuotaCheck','1','%s')",
-                    addslashes($log)
+                    (date,login,ip,datasource,results,description,reseller_id)
+                    values (NOW(),'quotacheck','localhost','QuotaCheck','1','%s',%d)",
+                    addslashes($log),
+                    $_reseller
                     );
             
                     if (!$this->db1->query($log_query)) {
@@ -5797,8 +5806,6 @@ class RatingEngine {
             }
     
             $query=sprintf("select * from %s where domain = '%s'",$this->domain_table,$prepaidDomain);
-
-                syslog(LOG_NOTICE,$query);
 
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error: %s (%d) %s\n",$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
