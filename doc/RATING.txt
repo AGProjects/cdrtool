@@ -310,19 +310,29 @@ Importing and exporting of rating files
 ---------------------------------------
 
 There are different data files needed for rating. The data files are
-imported into their corresponding MySQL tables. The files must be uploaded
-to /var/spool/cdrtool directory. To load the files into the database run the
-following command:
+imported into their corresponding MySQL tables. 
+
+The files must be uploaded to /var/spool/cdrtool directory. To load the
+files into the database run the following command:
 
 /var/www/CDRTool/scripts/importRatingTables.php
 
+Data partitioning for multiple resellers
+
+The reseller_id column present in all rating tables is used to filter access
+based on Login account impersonate field.
+
+You may create numerical sub-directories under /var/spool/cdrtool directory.
+When importing a file from such numerical directory, the reseller_id field
+in all imported records is set to the directory name.
+
 The import script knows to import the files only once so you may dump
-several files there and safely run the import script from cron. The import
-script detects whether each file have been imported by building a unique key
-out of the filename and the hash of the file content. So you may use the
-same filenames as long as the content differs and viceversa. If the import
-file has changed any records, the rating engine is automatically instructed
-to reload the changes.
+several files over time with the same name and safely run the import script
+from cron. The import script detects whether each file have been imported by
+building a unique key out of the filename and the hash of the file content.
+So you may use the same filenames as long as the content differs and
+viceversa. If the import file has changed any records, the rating engine is
+automatically instructed to reload the changes.
 
 Sample csv files are found in the setup directory. The CSV field order is
 described in setup/*.csv sample files. The first element on each line
@@ -331,11 +341,11 @@ operation can be 2 (update/insert), 1 (insert) or 3 (delete).
 
 The updates are performed based on a unique key present in each table:
 
-billing_customers     - cust_idx      (gateway,domain,subscriber)
-destinations          - cust_dest_idx (gateway,domain,subscriber,dest_id)
-billing_profiles      - profile_idx   (name)
-billing_rates         - rate_idx      (name,destination,application)
-billing_rates_history - rate_idx      (name,destination,application,startDate,endDate)
+billing_customers     - cust_idx      (reseller,gateway,domain,subscriber)
+destinations          - cust_dest_idx (reseller,gateway,domain,subscriber,dest_id)
+billing_profiles      - profile_idx   (reseller,name)
+billing_rates         - rate_idx      (reseller,name,destination,application)
+billing_rates_history - rate_idx      (reseller,name,destination,application,startDate,endDate)
 
 The content of the rating tables can be exported in the Rating tables page.
 
@@ -375,6 +385,7 @@ billing_customers
 | Field             |
 +-------------------+
 | id                |
+| reseller_id       |
 | gateway           |
 | domain            |
 | subscriber        |
