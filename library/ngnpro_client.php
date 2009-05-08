@@ -703,7 +703,7 @@ class Records {
         $this->url
         );
 
-        $pstn_access=$this->getLoginProperty('pstn_access');
+        $pstn_access=$this->getCustomerProperty('pstn_access');
 
         printf("<select name='service' onChange=\"jumpMenu('this.form')\">\n");
 
@@ -1159,7 +1159,6 @@ class Records {
             $this->loginAccount=$result->accounts[0];
             $this->loginProperties=$this->loginAccount->properties;
         }
-
     }
 
     function showCustomerForm($name='customer_filter') {
@@ -1408,8 +1407,10 @@ class Records {
 
     }
 
-    function getLoginProperties() {
-        $log=sprintf("getLoginProperties(%s,engine=%s)",$this->customer,$this->SoapEngine->customer_engine);
+    function getCustomerProperties($customer='') {
+        if (!$customer) $customer=$this->customer;
+
+        $log=sprintf("getCustomerProperties(%s,engine=%s)",$customer,$this->SoapEngine->customer_engine);
         dprint($log);
 
         if (!$this->SoapEngine->customer_engine) {
@@ -1417,13 +1418,13 @@ class Records {
             return true;
         }
 
-        if (!$this->customer) {
+        if (!$customer) {
             dprint ("No customer available");
             return true;
         }
 
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
-        $result     = $this->SoapEngine->soapclientCustomers->getProperties(intval($this->customer));
+        $result     = $this->SoapEngine->soapclientCustomers->getProperties(intval($customer));
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -1444,8 +1445,10 @@ class Records {
         return true;
     }
 
-    function setLoginProperties($properties) {
-        $log=sprintf("setLoginProperties(%s,engine=%s)",$this->customer,$this->SoapEngine->customer_engine);
+    function setCustomerProperties($properties,$customer='') {
+        if (!$customer) $customer=$this->customer;
+
+        $log=sprintf("setCustomerProperties(%s,engine=%s)",$customer,$this->SoapEngine->customer_engine);
         dprint($log);
 
         if (!$this->SoapEngine->customer_engine) {
@@ -1453,10 +1456,10 @@ class Records {
             return true;
         }
 
-        if (!is_array($properties) || !$this->customer) return true;
+        if (!is_array($properties) || !$customer) return true;
 
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
-        $result     = $this->SoapEngine->soapclientCustomers->setProperties(intval($this->customer),$properties);
+        $result     = $this->SoapEngine->soapclientCustomers->setProperties(intval($customer),$properties);
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
@@ -1469,7 +1472,7 @@ class Records {
         return true;
     }
 
-    function getLoginProperty($name='') {
+    function getCustomerProperty($name='') {
         if (!count($this->loginProperties)) return false;
 
         foreach ($this->loginProperties as $_property) {
@@ -2604,7 +2607,7 @@ class SipAccounts extends Records {
         if ($_REQUEST['account']) {
             $_account=$_REQUEST['account'];
         } else {
-            $_account=$this->getLoginProperty('sip_accounts_last_username');
+            $_account=$this->getCustomerProperty('sip_accounts_last_username');
         }
 
         printf ("User<input type=text size=15 name=account value='%s'>",$_account);
@@ -2615,7 +2618,7 @@ class SipAccounts extends Records {
         } else if ($this->filters['domain']) {
             $_domain=$this->filters['domain'];
             $selected_domain[$this->filters['domain']]='selected';
-        } else if ($_domain=$this->getLoginProperty('sip_accounts_last_domain')) {
+        } else if ($_domain=$this->getCustomerProperty('sip_accounts_last_domain')) {
             $selected_domain[$_domain]='selected';
         }
 
@@ -2633,18 +2636,18 @@ class SipAccounts extends Records {
         if ($_REQUEST['quota']) {
             $_quota=$_REQUEST['quota'];
         } else {
-            $_quota=$this->getLoginProperty('sip_accounts_last_quota');
+            $_quota=$this->getCustomerProperty('sip_accounts_last_quota');
         }
 
         if (!$_quota) $_quota='';
 
-        if ($_prepaid=$this->getLoginProperty('sip_accounts_last_prepaid')) {
+        if ($_prepaid=$this->getCustomerProperty('sip_accounts_last_prepaid')) {
             $checked_prepaid='checked';
         } else {
             $checked_prepaid='';
         }
 
-        if ($_pstn=$this->getLoginProperty('sip_accounts_last_pstn')) {
+        if ($_pstn=$this->getCustomerProperty('sip_accounts_last_pstn')) {
             $checked_pstn='checked';
         } else {
             $checked_pstn='';
@@ -2832,7 +2835,7 @@ class SipAccounts extends Records {
                            )
                       );
     
-            $this->setLoginProperties($_p);
+            $this->setCustomerProperties($_p);
         }
 
 		if (is_array($dictionary['properties'])) {
@@ -2842,14 +2845,21 @@ class SipAccounts extends Records {
         }
 
         if ($this->SoapEngine->login_credentials['reseller']) {
-            if (strlen($this->SoapEngine->login_credentials['reseller_filters'][$this->SoapEngine->login_credentials['reseller']]['store_clear_text_passwords'])) {
-                $this->store_clear_text_passwords=$this->SoapEngine->login_credentials['reseller_filters'][$this->SoapEngine->login_credentials['reseller']]['store_clear_text_passwords'];
+            $reseller_properties=$this->getResellerProperties($this->SoapEngine->login_credentials['reseller'],'store_clear_text_passwords');
+
+            if (strlen($reseller_properties['store_clear_text_passwords'])) {
+                $this->store_clear_text_passwords=$reseller_properties['store_clear_text_passwords'];
             }
+
         } else {
             $_reseller=$this->getResellerForDomain(strtolower($domain));
-    
-            if ($_reseller && strlen($this->SoapEngine->login_credentials['reseller_filters'][$_reseller]['store_clear_text_passwords'])) {
-                $this->store_clear_text_passwords=$this->SoapEngine->login_credentials['reseller_filters'][$_reseller]['store_clear_text_passwords'];
+
+            if ($_reseller) {
+    			$reseller_properties=$this->getResellerProperties($_reseller,'store_clear_text_passwords');
+
+            	if (strlen($reseller_properties['store_clear_text_passwords'])) {
+                	$this->store_clear_text_passwords=$reseller_properties['store_clear_text_passwords'];
+                }
             }
         }
 
@@ -3080,6 +3090,47 @@ class SipAccounts extends Records {
             }
         }
     }
+
+    function getResellerProperties($reseller='',$property='') {
+
+        $properties=array();
+
+        if (!$this->SoapEngine->customer_engine) {
+            dprint ("No customer_engine available");
+            return true;
+        }
+
+        if (!$reseller) {
+            dprint ("No customer provided");
+            return true;
+        }
+
+        if (!$property) {
+            dprint ("No property provided");
+            return true;
+        }
+
+        $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
+        $result     = $this->SoapEngine->soapclientCustomers->getProperties(intval($reseller));
+
+        dprint_r($result);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        foreach ($result as $_property) {
+        	$properties[$_property->name]=$_property->value;
+        }
+
+        return $properties;
+
+    }
+
 }
 
 class SipAliases extends Records {
@@ -3399,7 +3450,7 @@ class SipAliases extends Records {
                                );
 
             print_r($_properties);
-            $this->setLoginProperties($_properties);
+            $this->setCustomerProperties($_properties);
             */
 
             return true;
@@ -3502,7 +3553,7 @@ class SipAliases extends Records {
             if ($_REQUEST['domain']) {
                 $_domain=$_REQUEST['domain'];
                 $selected_domain[$_REQUEST['domain']]='selected';
-            } else if ($_domain=$this->getLoginProperty('sip_aliases_last_domain')) {
+            } else if ($_domain=$this->getCustomerProperty('sip_aliases_last_domain')) {
                 $selected_domain[$_domain]='selected';
             }
     
@@ -3597,7 +3648,7 @@ class SipAliases extends Records {
                            )
                       );
     
-            $this->setLoginProperties($_p);
+            $this->setCustomerProperties($_p);
         }
 
         $alias=array(
@@ -4098,7 +4149,7 @@ class EnumRanges extends Records {
                 printf ("<input type=text size=15 name=tld value='%s'>",$_REQUEST['tld']);
             } else if ($this->filters['tld']) {
                 printf ("<input type=text size=15 name=tld value='%s'>",$this->filters['tld']);
-            } else if ($_tld=$this->getLoginProperty('enum_ranges_last_tld')) {
+            } else if ($_tld=$this->getCustomerProperty('enum_ranges_last_tld')) {
                 printf ("<input type=text size=15 name=tld value='%s'>",$_tld);
             } else {
                 printf ("<input type=text size=15 name=tld>");
@@ -4187,7 +4238,7 @@ class EnumRanges extends Records {
                        )
                   );
 
-        $this->setLoginProperties($_p);
+        $this->setCustomerProperties($_p);
 
         $function=array('commit'   => array('name'       => 'addRange',
                                             'parameters' => array($range),
@@ -5412,7 +5463,7 @@ class EnumMappings extends Records {
 
         if ($_REQUEST['range']) {
             $selected_range[$_REQUEST['range']]='selected';
-        } else if ($_range=$this->getLoginProperty('enum_numbers_last_range')) {
+        } else if ($_range=$this->getCustomerProperty('enum_numbers_last_range')) {
             $selected_range[$_range]='selected';
         }
 
@@ -5425,7 +5476,7 @@ class EnumMappings extends Records {
 
         if ($_REQUEST['number']) {
             printf ("<input type=text size=15 name=number value='%s'>",$_REQUEST['number']);
-        } else if ($_number=$this->getLoginProperty('enum_numbers_last_number')) {
+        } else if ($_number=$this->getCustomerProperty('enum_numbers_last_number')) {
             $_prefix=$_range['prefix'];
             preg_match("/^$_prefix(.*)/",$_number,$m);
             printf ("<input type=text size=15 name=number value='%s'>",$m[1]);
@@ -5438,7 +5489,7 @@ class EnumMappings extends Records {
 
         if ($_REQUEST['type']) {
             $selected_naptr_service[$_REQUEST['type']]='selected';
-        } else if ($_type=$this->getLoginProperty('enum_numbers_last_type')) {
+        } else if ($_type=$this->getCustomerProperty('enum_numbers_last_type')) {
             $selected_naptr_service[$_type]='selected';
         }
 
@@ -5453,7 +5504,7 @@ class EnumMappings extends Records {
         ";
         if ($_REQUEST['type']) {
             $selected_naptr_service[$_REQUEST['type']]='selected';
-        } else if ($_type=$this->getLoginProperty('enum_numbers_last_type')) {
+        } else if ($_type=$this->getCustomerProperty('enum_numbers_last_type')) {
             $selected_naptr_service[$_type]='selected';
         }
 
@@ -5462,7 +5513,7 @@ class EnumMappings extends Records {
         print" TTL";
         if ($_REQUEST['ttl']) {
             printf ("<input type=text size=5 name=ttl value='%s'>",$_REQUEST['ttl']);
-        } else if ($_ttl=$this->getLoginProperty('enum_numbers_last_ttl')) {
+        } else if ($_ttl=$this->getCustomerProperty('enum_numbers_last_ttl')) {
             printf ("<input type=text size=5 name=ttl value='%s'>",$_ttl);
         } else {
             printf ("<input type=text size=5 name=ttl value='3600'>");
@@ -5698,7 +5749,7 @@ class EnumMappings extends Records {
                            )
                       );
     
-            $this->setLoginProperties($_p);
+            $this->setCustomerProperties($_p);
         }
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -7577,7 +7628,7 @@ class DnsRecords extends Records {
                 $selected_zone[$_REQUEST['zone']]='selected';
             } else if ($this->filters['zone']) {
                 $selected_zone[$this->filters['zone']]='selected';
-            } else if ($_zone=$this->getLoginProperty('dns_records_last_zone')) {
+            } else if ($_zone=$this->getCustomerProperty('dns_records_last_zone')) {
                 $selected_zone[$_zone]='selected';
             }
     
@@ -7591,7 +7642,7 @@ class DnsRecords extends Records {
                 $_zone_selected=$_REQUEST['zone'];
             } else if ($this->filters['zone']) {
             	$_zone_selected=$this->filters['zone'];
-            } else if ($_zone=$this->getLoginProperty('dns_records_last_zone')) {
+            } else if ($_zone=$this->getCustomerProperty('dns_records_last_zone')) {
                 $_zone_selected=$_zone;
             }
         	printf (" Zone <input type=text size=20 name=zone value='%s'>",$_zone_selected);
@@ -7605,7 +7656,7 @@ class DnsRecords extends Records {
     
             if ($_REQUEST['type']) {
                 $selected_type[$_REQUEST['type']]='selected';
-            } else if ($_type=$this->getLoginProperty('dns_records_last_type')) {
+            } else if ($_type=$this->getCustomerProperty('dns_records_last_type')) {
                 $selected_type[$_type]='selected';
             }
     
@@ -7801,7 +7852,7 @@ class DnsRecords extends Records {
                                )
                           );
         
-                $this->setLoginProperties($_p);
+                $this->setCustomerProperties($_p);
             }
      
             $function=array('commit'   => array('name'       => $this->addRecordFunction,
@@ -7848,9 +7899,9 @@ class DnsRecords extends Records {
                 if (strlen($_records['value'])) {
                 	if (preg_match("/^_sip/",$_records['name'])) {
                         if (!$value) {
-                            $value=$this->getLoginProperty('dns_records_last_sip_server');
+                            $value=$this->getCustomerProperty('dns_records_last_sip_server');
                             if (!$value)  {
-                            	$value=$this->getLoginProperty('sip_proxy');
+                            	$value=$this->getCustomerProperty('sip_proxy');
                             }
                             $save_new_value=false;
                         } else {
@@ -7883,7 +7934,7 @@ class DnsRecords extends Records {
                                        )
                                   );
                 
-                        $this->setLoginProperties($_p);
+                        $this->setCustomerProperties($_p);
                     }
                 }
 
@@ -10682,6 +10733,10 @@ class Customers extends Records {
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
+                                 'store_clear_text_passwords' => array('name'      => 'Store clear text passwords',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'customer'
+                                                               ),
                                  'xcap_root'           => array('name'      => 'XCAP Root URL',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
@@ -13235,7 +13290,7 @@ class recordGenerator extends SoapEngine {
         /*
         if ($_REQUEST['range']) {
             $selected_range[$_REQUEST['range']]='selected';
-        } else if ($_last_range=$this->enumRecords->getLoginProperty('enum_generator_range')) {
+        } else if ($_last_range=$this->enumRecords->getCustomerProperty('enum_generator_range')) {
             $selected_range[$_last_range] = 'selected';
         }
 
@@ -13272,7 +13327,7 @@ class recordGenerator extends SoapEngine {
         if ($_REQUEST['add_prefix']) {
             $add_prefix=$_REQUEST['add_prefix'];
         } else {
-            $add_prefix = $this->sipRecords->getLoginProperty('enum_generator_add_prefix');
+            $add_prefix = $this->sipRecords->getCustomerProperty('enum_generator_add_prefix');
         }
 
         print "
@@ -13291,7 +13346,7 @@ class recordGenerator extends SoapEngine {
         if ($_REQUEST['number_length']) {
             $number_length=$_REQUEST['number_length'];
         } else {
-            $number_length = $this->sipRecords->getLoginProperty('enum_generator_number_length');
+            $number_length = $this->sipRecords->getCustomerProperty('enum_generator_number_length');
         }
 
         print "
@@ -13313,7 +13368,7 @@ class recordGenerator extends SoapEngine {
         if (count($this->sipRecords->allowedDomains) > 0) {
             if ($_REQUEST['domain']) {
                 $selected_domain[$_REQUEST['domain']]='selected';
-            } else if ($_last_domain=$this->sipRecords->getLoginProperty('enum_generator_sip_domain')) {
+            } else if ($_last_domain=$this->sipRecords->getCustomerProperty('enum_generator_sip_domain')) {
                 $selected_domain[$_last_domain] = 'selected';
             }
 
@@ -13340,7 +13395,7 @@ class recordGenerator extends SoapEngine {
 
         if ($_REQUEST['strip_digits']) {
             $strip_digits=$_REQUEST['strip_digits'];
-        } else if ($strip_digits = $this->sipRecords->getLoginProperty('enum_generator_strip_digits')) {
+        } else if ($strip_digits = $this->sipRecords->getCustomerProperty('enum_generator_strip_digits')) {
         } else {
             $strip_digits=0;
         }
@@ -13445,7 +13500,7 @@ class recordGenerator extends SoapEngine {
 
             if ($_REQUEST['rpid_strip_digits']) {
                 $rpid_strip_digits=$_REQUEST['rpid_strip_digits'];
-            } else if ($rpid_strip_digits = $this->sipRecords->getLoginProperty('enum_generator_rpid_strip_digits')) {
+            } else if ($rpid_strip_digits = $this->sipRecords->getCustomerProperty('enum_generator_rpid_strip_digits')) {
             } else {
                 $rpid_strip_digits=0;
             }
@@ -13675,7 +13730,7 @@ class recordGenerator extends SoapEngine {
                        )
                   );
 
-        $this->enumRecords->setLoginProperties($_p);
+        $this->enumRecords->setCustomerProperties($_p);
 
         if ($this->template['owner']) {
             if ($customer = $this->customerRecords->getRecord($this->template['owner'])) {

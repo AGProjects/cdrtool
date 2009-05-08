@@ -1323,6 +1323,10 @@ class SipSettings {
             $this->sip_proxy             = $this->resellerProperties['sip_proxy'];
         }
 
+        if ($this->resellerProperties['store_clear_text_passwords']) {
+            $this->store_clear_text_passwords = $this->resellerProperties['store_clear_text_passwords'];
+        }
+
         if ($this->resellerProperties['support_company']) {
             $this->support_company    = $this->resellerProperties['support_company'];
         }
