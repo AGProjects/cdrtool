@@ -29,8 +29,10 @@ cdrtool (6.8.0) unstable; urgency=low
     You must set notifyLastSessions per data source to tru to enable this
     feature and put the susbcriber into missed_calls group
   * You must apply the changes from setup/mysql/alter_tables.mysql
+  * You must add an integer `reseller_id` column to opensips.trusted and
+    opensips.domain tables
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 08 May 2009 14:44:21 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 09 May 2009 14:19:46 +0200
 
 cdrtool (6.7.8) unstable; urgency=low
 

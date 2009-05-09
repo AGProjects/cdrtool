@@ -1456,7 +1456,7 @@ class RatingTables {
 
             $results = $results + $this->$importFunction($this->filesToImport[$file]['path'],$this->filesToImport[$file]['reseller']);
 
-            $this->logImport($dir,$this->filesToImport[$file]['path'],$this->filesToImport[$file]['watermark'],$results);
+            $this->logImport($dir,$this->filesToImport[$file]['path'],$this->filesToImport[$file]['watermark'],$results,$this->filesToImport[$file]['reseller']);
 
         }
 
@@ -3041,11 +3041,10 @@ class RatingTables {
         }
     }
 
-    function logImport($dir,$filename,$watermark,$results=0) {
+    function logImport($dir,$filename,$watermark,$results=0,$reseller=0) {
         $query=sprintf("insert into log (date,login,ip,url,results,description,datasource,reseller_id)
         values (NOW(),'ImportScript','localhost','%s','%s','Imported %s','%s',%d)",
-        $watermark,$results,$filename,$dir,$this->CDRTool['filter']['reseller']
-        );
+        $watermark,$results,$filename,$dir,$reseller);
 
         $log=sprintf ("Imported file %s, %d records have been affected\n",$filename,$results);
         syslog(LOG_NOTICE, $log);
@@ -3058,7 +3057,7 @@ class RatingTables {
         }
     }
 
-    function showImportProgress ($filename='unspecified',$increment=10000) {
+    function showImportProgress ($filename='unspecified',$increment=5000) {
         $this->importIndex++;
     
         if ($this->importIndex == $increment) {
