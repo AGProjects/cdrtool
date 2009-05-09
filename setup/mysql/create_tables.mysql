@@ -263,7 +263,7 @@ CREATE TABLE `destinations` (
   `dest_name` varchar(255) NOT NULL default '',
   PRIMARY KEY  (`id`),
   KEY `reseller_idx` (`reseller_id`),
-  UNIQUE KEY `cust_dest_idx` (`gateway`,`domain`,`subscriber`,`dest_id`),
+  UNIQUE KEY `cust_dest_idx` (`reseller_idx`,`gateway`,`domain`,`subscriber`,`dest_id`),
   KEY `dest_idx` (`dest_id`)
 )  DEFAULT CHARSET=latin1;
 

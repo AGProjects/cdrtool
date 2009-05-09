@@ -40,7 +40,7 @@ class CDRS_opensips extends CDRS {
                          'rate'            => 'Rate',
                          'price'           => 'Price',
                          'DestinationId'   => 'DestinationId',
-                         'BillingId'       => 'BillingId',
+                         'ResellerId'      => 'BillingId',
                          'MediaTimeout'    => 'MediaInfo',
                          'RTPStatistics'   => 'RTPStatistics',
                          'ENUMtld'         => 'ENUMtld'
@@ -64,6 +64,7 @@ class CDRS_opensips extends CDRS {
                                       'SipMethod'       => 'SipMethod',
                                       'applicationType' => 'SipApplicationType',
                                       'BillingPartyId'  => 'UserName',
+                                      'ResellerId'      => 'BillingId',
                                       'price'           => 'Price',
                                       'DestinationId'   => 'DestinationId',
                                       'ENUMtld'         => 'ENUMtld'
@@ -1899,6 +1900,48 @@ class CDRS_opensips extends CDRS {
         return count($this->localDomains);
     }
 
+    function LoadTrustedPeers() {
+
+        if (!$this->db_susbcribers) {
+            $log=printf("Error: Cannot load trusted peers because db_susbcribers is not defined in datasource %s",$this->cdr_source);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
+        if (!is_object($this->AccountsDB)) {
+            $log=printf("Error: AccountsDB is not a valid database object");
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
+        if (strlen($this->DATASOURCES[$this->cdr_source]['enableThor'])) {
+            $this->trusted_table          = "sip_trusted";
+        } else {
+            $this->trusted_table          = "trusted";
+        }
+
+        $query=sprintf("select * from %s",$this->trusted_table);
+
+        if (!$this->AccountsDB->query($query)) {
+            $log=sprintf ("Database %s error: %s (%d) %s\n",$this->db_susbcribers,$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
+            print $log;
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
+        while($this->AccountsDB->next_record()) {
+            if ($this->AccountsDB->f('src_ip')) {
+                $this->trustedPeers[$this->AccountsDB->f('src_ip')]=array('ip'     => $this->AccountsDB->f('src_ip'),
+                                                                          'reseller' => intval($this->AccountsDB->f('reseller_id'))
+                                                                          );
+            }
+        }
+
+        return count($this->trustedPeers);
+    }
+
     function getQuota($account) {
 
         if (!$this->quotaEnabled) return true;
@@ -2373,6 +2416,24 @@ class CDR_opensips extends CDR {
             $this->aNumberDomain     = $NormalizedNumber['domain'];
         }
 
+        if (!$this->BillingPartyId || $this->BillingPartyId == 'n/a') {
+            $this->BillingPartyId=$this->aNumberPrint;
+        }
+
+        // calculate reseller either from trusted ip or domain
+        $_els=explode("@",$this->BillingPartyId);
+
+        if (count($_els)==2) {
+        	if (!$this->domain) $this->domain=$_els[1];
+        	$this->ResellerId=$this->CDRS->localDomains[$_els[1]]['reseller'];
+        } else if (count($_els)==1) {
+        	$this->ResellerId=$this->CDRS->trustedPeers[$_els[0]]['reseller'];
+        }
+
+        $this->BillingPartyId=strtolower($this->BillingPartyId);
+
+        $this->BillingPartyIdPrint=$this->BillingPartyId;
+
         $this->domainNormalized = $this->domain;
 
 		if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation_SourceIP']) &&
@@ -2389,22 +2450,9 @@ class CDR_opensips extends CDR {
      
         $this->domainNormalized=strtolower($this->domainNormalized);
 
-        if (!$this->BillingPartyId || $this->BillingPartyId == 'n/a') {
-            $this->BillingPartyId=$this->aNumberPrint;
-        }
-
-        $this->BillingPartyId=strtolower($this->BillingPartyId);
-
-        $this->BillingPartyIdPrint=$this->BillingPartyId;
-
         $this->RemoteAddressPrint=$this->RemoteAddress;
 
         $this->SipRPIDPrint=$this->SipRPID;
-
-        if (!$this->domain) {
-            $_els=explode("@",$this->BillingPartyId);
-            if (count($_els)==2) $this->domain=$_els[1];
-        }
 
         $_timestamp_stop=$this->timestamp+$this->duration;
 
@@ -2432,7 +2480,7 @@ class CDR_opensips extends CDR {
 
         if ($this->CanonicalURI) {
             $this->CanonicalURIPrint            = $this->CanonicalURI;
-            $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->CanonicalURI,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
+            $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->CanonicalURI,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld,$this->ResellerId);
             $this->CanonicalURINormalized       = $NormalizedNumber['Normalized'];
             $this->CanonicalURIUsername         = $NormalizedNumber['username'];
             $this->CanonicalURIDomain           = $NormalizedNumber['domain'];
@@ -2445,7 +2493,7 @@ class CDR_opensips extends CDR {
         }
 
         if ($this->cNumber) {
-            $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->cNumber,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
+            $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->cNumber,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld,$this->ResellerId);
             $this->cNumberNormalized            = $NormalizedNumber['Normalized'];
             $this->cNumberUsername              = $NormalizedNumber['username'];
             $this->cNumberDomain                = $NormalizedNumber['domain'];
@@ -2455,7 +2503,7 @@ class CDR_opensips extends CDR {
 
         if ($this->RemoteAddress) {
             // Next hop is the real destination after all lookups including DNS
-            $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->RemoteAddress,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld);
+            $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->RemoteAddress,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld,$this->ResellerId);
             $this->RemoteAddressPrint           = $NormalizedNumber['NumberPrint'];
             $this->RemoteAddressNormalized      = $NormalizedNumber['Normalized'];
             $this->RemoteAddressDestinationId   = $NormalizedNumber['DestinationId'];
@@ -2545,7 +2593,8 @@ class CDR_opensips extends CDR {
                                   'Domain'          => $this->domain,
                                   'Gateway'         => $this->gateway,
                                   'Application'     => $this->applicationType,
-                                  'ENUMtld'         => $this->ENUMtld
+                                  'ENUMtld'         => $this->ENUMtld,
+                                  'ResellerId'      => $this->ResellerId
                                   );
 
         $this->traceIn();
@@ -2705,12 +2754,16 @@ class CDR_opensips extends CDR {
             <td>Billing Party:</td>
             <td><font color=brown>$this->BillingPartyIdPrint</font></td>
         </tr>
+        <tr>
+            <td></td>
+            <td>Reseller:</td>
+            <td><font color=brown>$this->ResellerId</font></td>
+        </tr>
         </table>
         </td>
         <td width=30>
         <td valign=top>
         ";
-
 
         if ($this->SipCodec) {
             $this->SipCodec   = quoted_printable_decode($this->SipCodec);

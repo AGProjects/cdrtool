@@ -605,3 +605,6 @@ drop table billing_ratesNGN;
 
 alter table log add column reseller_id  int(10) unsigned not NULL after id;
 alter table log add key reseller_idx (reseller_id);
+
+alter table destinations drop KEY `cust_dest_idx`;
+alter table destinations add KEY `cust_dest_idx` (`reseller_id`,`gateway`,`domain`,`subscriber`,`dest_id`);
