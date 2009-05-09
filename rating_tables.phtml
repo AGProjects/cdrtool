@@ -31,6 +31,10 @@ if (!$_REQUEST['export']) {
     Header($h);
 }
 
+if ($_REQUEST['import'] && $_REQUEST['table']) {
+	$RatingTables->importTable($_REQUEST['table']);
+}
+
 $RatingTables->updateTable();
 $RatingTables->showTable();
 

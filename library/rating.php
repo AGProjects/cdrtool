@@ -954,6 +954,13 @@ class RatingTables {
                            "billing_enum_tlds"     => "enumtld.csv",
                            "quota_usage"           => "quotausage.csv"
                            );
+    var $csv_import=array(
+                           "destinations"          => "destinations.csv",
+                           "billing_customers"     => "customers.csv",
+                           "billing_profiles"      => "profiles.csv",
+                           "billing_rates"         => "rates.csv",
+                           "billing_rates_history" => "ratesHistory.csv"
+                           );
 
     var $maxrowsperpage=15;
 	var $insertDomainOption=array();
@@ -986,6 +993,8 @@ class RatingTables {
 
     var $requireReload       = array('destinations');
     var $whereResellerFilter = " (1=1) ";
+
+    var $cvs_import_dir      = "/var/spool/cdrtool";
 
     var $tables=array(
                            "destinations"=>array("name"=>"Destinations",
@@ -2973,17 +2982,15 @@ class RatingTables {
     }
 
     function scanFilesForImport($dir) {
-        if (!$dir) $dir="/var/spool/cdrtool";
-
-		$import_dirs[$dir]=array('path'=>$dir,
+		$import_dirs[$this->cvs_import_dir]=array('path'=>$this->cvs_import_dir,
                                  'reseller' => 0
                                  );
 
-        if ($handle = opendir($dir)) {
+        if ($handle = opendir($this->cvs_import_dir)) {
             while (false !== ($filename = readdir($handle))) {
                 $reseller=0;
                 if ($filename == "." || $filename == "..") continue;
-                $fullPath=$dir."/".$filename;
+                $fullPath=$this->cvs_import_dir."/".$filename;
                 if (is_dir($fullPath) && is_numeric($filename)) {
                     $reseller=$filename;
                     $import_dirs[$fullPath]=array('path'    => $fullPath,
@@ -4140,6 +4147,7 @@ class RatingTables {
             </select>
             <input type=submit name=subweb_task value=Search>
             </form>
+
             <form action=$PHP_SELF method=post target=export>
             <input type=hidden name=export value=1>
             ";
@@ -4159,13 +4167,35 @@ class RatingTables {
             if ($this->table!=='prepaid_cards' ) {
                 printf ("
                 <input type=hidden name=table value=%s>
-                <input type=submit value=\"Export %s\">
-                ",$this->table,$this->table_to_csv_name[$this->table]);
+                <input type=submit value=\"Export\">
+                ",$this->table);
             }
         
-            print "</td>
-            </tr>
+            print "
             </form>
+            ";
+
+            if ($this->csv_import[$this->table]) {
+                print "
+                <form action=$PHP_SELF method='post' enctype='multipart/form-data'>
+                <input type=hidden name=import value=1>
+                ";
+                printf ("
+                <input type='hidden' name=table value=%s>
+                <input type='submit' value=\"Import\">
+                <input type='hidden' name='MAX_FILE_SIZE' value=1024000>
+			    <input type='file'   name='%s'>
+                ",$this->table,$this->table
+                );
+            
+                print "
+                </form>
+                ";
+            }
+
+            print "
+            </td>
+            </tr>
             ";
             
             print "
@@ -4730,6 +4760,39 @@ class RatingTables {
         }
 
         return true;
+    }
+
+    function importTable($table='') {
+    	if (!is_array($_FILES[$table]) || $_FILES[$table]['size'] == 0) return false;
+
+        foreach ($this->importFilesPatterns as $_pattern) {
+            if (strstr($_FILES[$table]['name'],$_pattern) && preg_match("/\.csv$/",$_FILES[$table]['name'])) {
+
+                if ($this->CDRTool['filters']['reseller']) {
+                	$dir=$this->cvs_import_dir.'/'.$this->CDRTool['filters']['reseller'];
+                    if (!is_dir($dir)) {
+                        if (!mkdir($dir)) {
+                            printf ("Error: cannot create directory %s",$dir);
+                            return false;
+                        }
+                    }
+                	$fullPath=$this->cvs_import_dir.'/'.$this->CDRTool['filters']['reseller'].'/'.$_FILES[$table]['name'];
+                } else {
+                	$fullPath=$this->cvs_import_dir.'/'.$_FILES[$table]['name'];
+                }
+
+        		if ($fp = fopen($fullPath, "w")) {
+                    $content=fread(fopen($_FILES[$table]['tmp_name'], "r"), $_FILES[$table]['size']);
+                    fwrite($fp,$content);
+                    fclose($fp);
+                    printf ("<p>Imported %s",$fullPath);
+                } else {
+                    printf ("Error: cannot write file %s",$fullPath);
+                    return false;
+                }
+                break;
+            }
+        }
     }
 }
 
