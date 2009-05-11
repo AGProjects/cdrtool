@@ -576,8 +576,6 @@ class CDRS {
     function showResultsMenu($hide_rows="") {
         global $loginname;
 
-        $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
-
         if (!$this->export) {
             print "
             <form action=log.phtml method=post>
@@ -588,10 +586,19 @@ class CDRS {
             </td>
             ";
 
-            $log_query="insert into log
-            (date,login,ip,url,results,rerun,reedit,datasource)
+            $log_query=sprintf("insert into log
+            (date,login,ip,url,results,rerun,reedit,datasource,reseller_id)
             values
-            (NOW(),'$loginname','$REMOTE_ADDR','$this->url','$this->rows','$this->url_run','$this->url_edit','$this->cdr_source')";
+            (NOW(),'%s','%s','%s','%s','%s','%s','%s',%d)",
+            addslashes($loginname),
+            $_SERVER["REMOTE_ADDR"],
+            $this->url,
+            $this->rows,
+            $this->url_run,
+            $this->url_edit,
+            $this->cdr_source,
+            $this->CDRTool['filter']['reseller']
+            );
 
             if ($this->cdrtool->query($log_query)) {
                 $this->cdrtool->query("select LAST_INSERT_ID() as lid");
@@ -641,8 +648,6 @@ class CDRS {
     function showResultsMenuSubscriber($hide_rows="") {
         global $loginname;
 
-        $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
-
         if (!$this->export) {
             print "
             <form action=log.phtml method=post>
@@ -654,11 +659,21 @@ class CDRS {
             | <a href=\"$this->url_run\">Refresh</a>
             </td>
             ";
-            $log_query="insert into log
-            (date,login,ip,url,results,rerun,reedit,datasource)
+
+            $log_query=sprintf("insert into log
+            (date,login,ip,url,results,rerun,reedit,datasource,reseller_id)
             values
-            (NOW(),'$loginname','$REMOTE_ADDR','$this->url','$this->rows','$this->url_run','$this->url_edit','$this->cdr_source')";
-            
+            (NOW(),'%s','%s','%s','%s','%s','%s','%s',%d)",
+            addslashes($loginname),
+            $_SERVER["REMOTE_ADDR"],
+            $this->url,
+            $this->rows,
+            $this->url_run,
+            $this->url_edit,
+            $this->cdr_source,
+            0
+            );
+
             if ($this->cdrtool->query($log_query)) {
                 $this->cdrtool->query("select LAST_INSERT_ID() as lid");
                 $this->cdrtool->next_record();

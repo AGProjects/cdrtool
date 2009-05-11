@@ -54,6 +54,14 @@ This month:
 </form>
 ";
 
+$where = " (1=1) ";
+
+if ($CDRTool['filter']['reseller']) {
+	$where .= sprintf (' and reseller_id = %s',$CDRTool['filter']['reseller']);
+} else if (!$perm->have_perm("admin")) {
+    $where.=sprintf(" and login = '%s'",addslashes($auth->auth["uname"]));
+}
+
 if ($perm->have_perm(admin)) {
 	$query="select * from auth_user where perms like '%admin%'";
     $db->query($query);
@@ -73,21 +81,15 @@ if ($perm->have_perm(admin)) {
 if ($current_log ) {
     if ($task == "edit") {
     
-        $query=sprintf("update log set description = '%s' where id = %d",
-        addslashes($log_description),$current_log);
-
-		if (!$perm->have_perm("admin")) {
-    		$query.=sprintf(" and login = '%s' ",addslashes($auth->auth["uname"]));
-		}
+        $query=sprintf("update log set description = '%s' where %s and id = %d",
+        addslashes($log_description),
+        $where,
+        $current_log);
 
         $db->query($query);
 
     } else if ($task == "mailLog" && $recipient) {
-        $query=sprintf("select * from log where id = %d",$current_log);
-
-        if (!$perm->have_perm("admin")) {
-    		$query.=sprintf(" and login = '%s' ",addslashes($auth->auth["uname"]));
-		}
+        $query=sprintf("select * from log where %s and id = %d",$where,$current_log);
 
         $db->query($query);
         $db->next_record();
@@ -116,12 +118,6 @@ if ($current_log ) {
     }
 }
 
-$where = " (1=1) ";
-
-if (!$perm->have_perm("admin")) {
-    $where.=sprintf(" and login = '%s'",addslashes($auth->auth["uname"]));
-}
-
 if ($search_text) {
     $where.= sprintf(" and (description like '%s%s%s' or url like '%s' or id = '%s')",
     "%",$search_text,"%",$search_text,$search_text);
@@ -134,7 +130,7 @@ if ($thisMonth) {
     $url_log .= "&thisMonth=1";
 }
 
-$query = "select count(*) as records from log where ". $where;
+$query = sprintf("select count(*) as records from log where %s ",$where);
 
 if ($db->query($query)) {
     $db->next_record();
@@ -163,8 +159,7 @@ if  ($rows>0)  {
         $maxrows=$rows;
     }
 
-    $query = "select * from log where ".
-    $where. " order by id desc limit $i,$maxrowsperpage";
+    $query = sprintf("select * from log where %s order by id desc limit %d, %d",$where,$i,$maxrowsperpage);
 
     $db->query($query);
 
@@ -201,6 +196,7 @@ if  ($rows>0)  {
        	$results        =$db->f('results');
 	    $description    =$db->f('description');
         $datasource     =$db->f('datasource');
+
         if ($rerun && $DATASOURCES[$datasource]['name']) {
         	$datasource_print=$DATASOURCES[$datasource]['name'];
         } else {

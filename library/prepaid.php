@@ -140,13 +140,14 @@ class PrepaidCards {
             print "<p><font color=blue>Generated $generated cards</font>";
 
             $log_query=sprintf("insert into log
-            (date,login,ip,datasource,results,description)
+            (date,login,ip,datasource,results,description,reseller_id)
             values
-            (NOW(),'%s','%s','Prepaid generator','%d','Batch %s created')",
+            (NOW(),'%s','%s','Prepaid generator','%d','Batch %s created',%d)",
             addslashes($this->loginname),
             addslashes($_SERVER['REMOTE_ADDR']),
             addslashes($generated),
-            addslashes($batch_name)
+            addslashes($batch_name),
+            $this->CDRTool['filter']['reseller']
             );
  
             dprint($log_query);
@@ -191,13 +192,14 @@ class PrepaidCards {
         }
 
         $log_query=sprintf("insert into log
-        (date,login,ip,datasource,results,description)
+        (date,login,ip,datasource,results,description,reseller_id)
         values
-        (NOW(),'%s','%s','Prepaid generator','%d','Batch %s exported')",
+        (NOW(),'%s','%s','Prepaid generator','%d','Batch %s exported',%d)",
         addslashes($this->loginname),
         addslashes($_SERVER['REMOTE_ADDR']),
         addslashes($rows),
-        addslashes($batch)
+        addslashes($batch),
+        $this->CDRTool['filter']['reseller']
         );
 
         dprint($log_query);
@@ -224,13 +226,14 @@ class PrepaidCards {
 
         if ($this->db->affected_rows()) {
             $log_query=sprintf("insert into log
-            (date,login,ip,datasource,results,description)
+            (date,login,ip,datasource,results,description,reseller_id)
             values
-            (NOW(),'%s','%s','Prepaid generator','%d','Batch %s deleted')",
+            (NOW(),'%s','%s','Prepaid generator','%d','Batch %s deleted',%d)",
             addslashes($this->loginname),
             addslashes($_SERVER['REMOTE_ADDR']),
             addslashes($this->db->affected_rows()),
-            addslashes($batch)
+            addslashes($batch),
+            $this->CDRTool['filter']['reseller']
             );
     
             dprint($log_query);

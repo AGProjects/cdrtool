@@ -944,7 +944,7 @@ class Rate {
 }
 
 class RatingTables {
-    var $table_to_csv_name=array(
+    var $csv_export=array(
                            "destinations"          => "destinations.csv",
                            "billing_customers"     => "customers.csv",
                            "billing_profiles"      => "profiles.csv",
@@ -4143,6 +4143,7 @@ class RatingTables {
                 $sel_name=$this->tables[$tb]['name'];
                 print "<option value=$tb $selected_table[$tb]>$sel_name";
             }
+
             print "
             </select>
             <input type=submit name=subweb_task value=Search>
@@ -4167,8 +4168,8 @@ class RatingTables {
             if ($this->table!=='prepaid_cards' ) {
                 printf ("
                 <input type=hidden name=table value=%s>
-                <input type=submit value=\"Export\">
-                ",$this->table);
+                <input type=submit value=\"Export %s\">
+                ",$this->table,$this->csv_export[$this->table]);
             }
         
             print "
