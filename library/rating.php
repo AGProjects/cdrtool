@@ -4764,6 +4764,7 @@ class RatingTables {
     }
 
     function importTable($table='') {
+        // import a table from web
     	if (!is_array($_FILES[$table]) || $_FILES[$table]['size'] == 0) return false;
 
         foreach ($this->importFilesPatterns as $_pattern) {
@@ -4773,7 +4774,7 @@ class RatingTables {
                 	$dir=$this->cvs_import_dir.'/'.$this->CDRTool['filters']['reseller'];
                     if (!is_dir($dir)) {
                         if (!mkdir($dir)) {
-                            printf ("Error: cannot create directory %s",$dir);
+                            printf ("<font color=red>Error: cannot create directory %s</font>",$dir);
                             return false;
                         }
                     }
@@ -4782,15 +4783,38 @@ class RatingTables {
                 	$fullPath=$this->cvs_import_dir.'/'.$_FILES[$table]['name'];
                 }
 
-        		if ($fp = fopen($fullPath, "w")) {
-                    $content=fread(fopen($_FILES[$table]['tmp_name'], "r"), $_FILES[$table]['size']);
-                    fwrite($fp,$content);
-                    fclose($fp);
-                    printf ("<p>Imported %s",$fullPath);
+                if (!is_file($fullPath)) {
+                    if ($fp = fopen($fullPath, "w")) {
+                    } else {
+                        printf ("<font color=red>Error: cannot open file %s for writing</font>",$fullPath);
+                        return false;
+                    }
                 } else {
-                    printf ("Error: cannot write file %s",$fullPath);
-                    return false;
+                	list($basename,$extension)=explode('.',$_FILES[$table]['name']);
+                    $j=0;
+                    while (1) {
+                        $j++;
+                        if ($this->CDRTool['filters']['reseller']) {
+                    		$fullPath=$this->cvs_import_dir.'/'.$this->CDRTool['filters']['reseller'].'/'.$basename.'-'.$j.'.'.$extension;
+                        } else {
+                    		$fullPath=$this->cvs_import_dir.'/'.$basename.'-'.$j.'.'.$extension;
+                        }
+
+                        if (is_file($fullPath)) continue;
+
+                        if ($fp = fopen($fullPath, "w")) {
+                            break;
+                        } else {
+                            printf ("<font color=red>Error: cannot open file %s for writing</font>",$fullPath);
+                            return false;
+                        }
+                    }
                 }
+
+                $content=fread(fopen($_FILES[$table]['tmp_name'], "r"), $_FILES[$table]['size']);
+                fwrite($fp,$content);
+                fclose($fp);
+                printf ("<p><font color=green>Imported %s bytes into %s</font>",$_FILES[$table]['size'],$fullPath);
                 break;
             }
         }

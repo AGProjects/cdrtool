@@ -26,8 +26,9 @@ if (!$_REQUEST['export']) {
 	$layout->showTopMenu($title);
 
 } else {
-    Header("Content-type: text/plain");
-    $h=sprintf("Content-Disposition: inline; filename=%s",$RatingTables->table_to_csv_name[$_REQUEST['table']]);
+    print $RatingTables->table_to_csv_name[$_REQUEST['table']];
+    Header("Content-type: text/csv");
+    $h=sprintf("Content-Disposition: inline; filename=%s",$RatingTables->csv_export[$_REQUEST['table']]);
     Header($h);
 }
 
