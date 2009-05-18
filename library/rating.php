@@ -1312,7 +1312,8 @@ class RatingTables {
                                                                                "mustExist"=>true,
                                                                                   "name"=>"Card id"
                                                                                  ),
-                                                                 "value"=>array("size"=>6,
+                                                                 "value"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
                                                                                "mustExist"=>true,
                                                                                   "name"=>"Card value"
                                                                                  ),
