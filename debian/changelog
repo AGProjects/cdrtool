@@ -1,11 +1,11 @@
 cdrtool (6.8.0) unstable; urgency=low
 
-  * Added reseller fiels to all database tables to allow different login
-    accounts to access their own data based on the impersonate field
+  * Added reseller fields to all database tables to allow different login
+    accounts to access their own data based on the account impersonate field
   * Allow import of CSV files from subdirectories (read updated 'Data
     partitioning for multiple resellers' section from RATING.txt)
   * Added prepaid_history table to rating table web management
-  * Added increment and min_duration for each rate
+  * Added increment and min_duration for each rate entry
   * Removed gateway, domain and subscriber columns from billing_profiles table
   * Removed gateway, domain and subscriber columns from billing_rates table
   * Removed gateway, domain and subscriber columns from billing_rates_history table
@@ -31,8 +31,9 @@ cdrtool (6.8.0) unstable; urgency=low
   * You must apply the changes from setup/mysql/alter_tables.mysql
   * You must add an integer `reseller_id` column to opensips.trusted and
     opensips.domain tables
+  * Changed column prepaid_cards.value to decimal
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 09 May 2009 14:19:46 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 19 May 2009 03:49:13 +0200
 
 cdrtool (6.7.8) unstable; urgency=low
 
