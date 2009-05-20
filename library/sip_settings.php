@@ -3372,24 +3372,7 @@ class SipSettings {
             dprint_r($prepaidAccount);
             print _("Balance");
             print ": $prepaidAccount->balance $this->currency";
-            print "</td><td align=right><nobr>";
-    
-            if ($prepaidAccount->callInProgress) {
-                $remain=$prepaidAccount->maxSessionTime-$prepaidAccount->sessionTime;
-
-                print "<font color=blue>";
-                print _("Call in progress");
-                print "</font>";
-                $sessionTime=normalizeTime($prepaidAccount->sessionTime);
-                printf (": %s (%s)",$sessionTime,$prepaidAccount->destination);
-            } else {
-                if ($prepaidAccount->lastCallPrice) {
-                    print _("Last call price");
-                    printf (": %s (%s)",$prepaidAccount->lastCallPrice,$prepaidAccount->destination);
-                }
-            }
-    
-            print "</nobr>
+            print "</td><td align=right>
             </td>
             </form>
             </tr>
