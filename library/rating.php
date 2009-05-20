@@ -962,6 +962,7 @@ class RatingTables {
                            "billing_rates_history" => "ratesHistory.csv"
                            );
 
+    var $previously_imported_files=0;
     var $maxrowsperpage=15;
 	var $insertDomainOption=array();
     var $delimiter=",";
@@ -1442,6 +1443,10 @@ class RatingTables {
         if (!$dir) $dir="/var/spool/cdrtool";
 
         $this->scanFilesForImport($dir);
+
+		if ($this->previously_imported_files) {
+            printf("Skipping %d previously imported files\n",$this->previously_imported_files);
+        }
 
 		$results=0;
         foreach (array_keys($this->filesToImport) as $file) {
@@ -2984,6 +2989,7 @@ class RatingTables {
                                                   );
                 }
             }
+
         }
 
         foreach (array_keys($import_dirs) as $_dir) {
@@ -2995,7 +3001,11 @@ class RatingTables {
                                 $fullPath=$_dir."/".$filename;
                                 if ($content=file_get_contents($fullPath)) {
                                     $watermark=$filename."-".md5($content);
-                                    if ($this->hasFileBeenImported($filename,$watermark)) break;
+                                    if ($this->hasFileBeenImported($filename,$watermark)) {
+						                $this->previously_imported_files++;
+
+                                    	break;
+                                    }
     
                                     $this->filesToImport[$filename]=array( 'name'      => $filename,
                                                                            'watermark' => $watermark,
@@ -3019,9 +3029,11 @@ class RatingTables {
         if ($this->db->query($query)) {
             if ($this->db->num_rows()) {
                 $this->db->next_record();
+                /*
                 $log=sprintf ("File %s has already been imported at %s.\n",$filename,$this->db->f('date'));
                 syslog(LOG_NOTICE, $log);
                 print $log;
+                */
                 return true;
             } else {
                 return false;
