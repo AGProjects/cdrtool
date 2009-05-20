@@ -32,8 +32,9 @@ cdrtool (6.8.0) unstable; urgency=low
   * You must add an integer `reseller_id` column to opensips.trusted and
     opensips.domain tables
   * Changed column prepaid_cards.value to decimal
+  * Droped unused columns from prepaid table
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 19 May 2009 03:49:13 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 20 May 2009 06:10:57 +0200
 
 cdrtool (6.7.8) unstable; urgency=low
 

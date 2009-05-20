@@ -1269,22 +1269,6 @@ class RatingTables {
                                                                  "session_counter"=>array("size"=>3,
                                                                                   "name"=>"Sessions",
                                                                                  "readonly"=>1
-                                                                                 ),
-                                                                 "last_call_price"=>array("size"=>10,
-                                                                                  "name"=>"Last price",
-                                                                                 "readonly"=>1
-                                                                                 ),
-                                                                 "maxsessiontime"=>array("size"=>10,
-                                                                                  "name"=>"Max session time",
-                                                                                 "readonly"=>1
-                                                                                 ),
-                                                                 "duration"=>array("size"=>10,
-                                                                                  "name"=>"Duration",
-                                                                                 "readonly"=>1
-                                                                                 ),
-                                                                 "destination"=>array("size"=>15,
-                                                                                  "name"=>"Last destination",
-                                                                                 "readonly"=>1
                                                                                  )
                                                                   )
                                                    ),
@@ -4412,7 +4396,6 @@ class RatingTables {
                     $active_sessions = json_decode($this->db->f('active_sessions'),true);
 
                     $account=$this->db->f('account');
-                    $maxsessiontime=$this->db->f('maxsessiontime');
 
                     $extraInfo="
                     <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
@@ -4428,6 +4411,8 @@ class RatingTables {
                     $t=0;
                     foreach (array_keys($active_sessions) as $_session) {
                         $t++;
+                    	$maxsessiontime=$active_sessions[$_session]['MaxSessionTime'];
+
                         $extraInfo.=sprintf ("<tr bgcolor=lightgrey><td class=border>%d. Session id</td><td>%s</td></tr>",$t,$_session);
                         $duration=time()-$active_sessions[$_session]['timestamp'];
                         foreach (array_keys($active_sessions[$_session]) as $key) {
@@ -5861,21 +5846,13 @@ class RatingEngine {
         $query=sprintf("update %s
         set balance          = balance - '%s',
         change_date          = NOW(),
-        last_call_price      = '%s',
         active_sessions      = '%s',
-        destination          = '%s',
-        duration             = '%s',
-        session_counter      = '%s',
-        maxsessiontime       = %s
+        session_counter      = '%s'
         where account        = '%s'",
         $this->prepaid_table,
         $balance,
-        $balance,
         addslashes(json_encode($active_sessions)),
-        $destination,
-        $duration,
         count($active_sessions),
-        $maxsessiontime,
         addslashes($account)
         );
 
@@ -6314,7 +6291,6 @@ class RatingEngine {
 
             $this->db->next_record();
             $Balance             = $this->db->f('balance');
-            $maxsessiontime_last = $this->db->f('maxsessiontime');
             $session_counter     = $this->db->f('session_counter');
 
             if (strlen($this->db->f('active_sessions'))) {
@@ -6504,13 +6480,11 @@ class RatingEngine {
                 $query=sprintf("update %s
                 set
                 active_sessions = '%s',
-                session_counter  = '%s',
-                maxsessiontime = '%d'
+                session_counter  = '%s'
                 where account  = '%s'",
                 addslashes($this->prepaid_table),
                 addslashes(json_encode($active_sessions)),
                 count($active_sessions),
-                $maxduration,
                 addslashes($CDR->BillingPartyId));
 
                 if (!$this->db->query($query)) {
