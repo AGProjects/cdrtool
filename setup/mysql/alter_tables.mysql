@@ -609,3 +609,5 @@ alter table log add key reseller_idx (reseller_id);
 alter table destinations drop KEY `cust_dest_idx`;
 alter table destinations add KEY `cust_dest_idx` (`reseller_id`,`gateway`,`domain`,`subscriber`,`dest_id`);
 alter table prepaid_cards change column `value` `value` decimal(10,4) default 0;
+alter table billing_rates add column  `maxPrice` varchar(25) NOT NULL default '';
+

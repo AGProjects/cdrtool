@@ -1124,6 +1124,7 @@ class RatingTables {
                            "billing_rates"=>array("name"=>"Rates",
                                                  "keys"=>array("id"),
                                                  "size"=>10,
+                                                 "exceptions"=>array('maxPrice'),               
                                                  "order"=>"destination ASC, name ASC",
                                                  "fields"=>array(
                                                                  "reseller_id"=>array("size"=>8,

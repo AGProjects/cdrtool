@@ -204,6 +204,7 @@ CREATE TABLE `billing_rates` (
   `durationRateIn` varchar(25) NOT NULL default '',
   `increment` smallint(5) unsigned NOT NULL,
   `min_duration` smallint(5) unsigned NOT NULL,
+  `maxPrice` varchar(25) NOT NULL default '',
   PRIMARY KEY  (`id`),
   KEY `reseller_idx` (`reseller_id`),
   UNIQUE KEY `rate_idx` (`name`,`destination`,`application`),
