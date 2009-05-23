@@ -4018,7 +4018,7 @@ class SIP_trace {
             $this->trace_array[$key]['fromip'],
             $this->trace_array[$key]['toip'],
             $this->trace_array[$key]['direction']);
-            printf ("\n%s\n",$this->trace_array[$key]['msg']);
+            printf ("\n%s\n",htmlspecialchars($this->trace_array[$key]['msg']));
             print "---\n";
         }
         print "</pre>";
