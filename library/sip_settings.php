@@ -3593,16 +3593,23 @@ class SipSettings {
             }
 
             $found++;
-            print "
+
+            printf ("
             <tr bgcolor=white>
-            <td>$found</td>
-            <td>$_line->date</td>
-            <td>$_line->action</td>
-            <td>$description</td>
-            <td align=right>$value</td>
-            <td align=right>$_line->balance</td>
+            <td>%d</td>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+            <td align=right>%s</td>
+            <td align=right>%s</td>
             </tr>
-            ";
+            ",$found,
+            $_line->date,
+            $_line->action,
+            $description,
+            number_format($value,4),
+            number_format($_line->balance,4)
+            );
         }
 
         print "
@@ -3612,29 +3619,29 @@ class SipSettings {
 
         if (strlen($total_credit)) {
 
-        print "
+        printf ("
             <tr bgcolor=white>
             <td></td>
             <td></td>
             <td></td>
             <td>Total credit</td>
-            <td align=right>$total_credit</td>
+            <td align=right>%s</td>
             <td align=right></td>
             </tr>
-            ";
+            ",number_format($total_credit,4));
         }
 
         if ($total_debit) {
-        print "
+        printf ("
             <tr bgcolor=white>
             <td></td>
             <td></td>
             <td></td>
             <td>Total debit</td>
-            <td align=right>$total_debit</td>
+            <td align=right>%s</td>
             <td align=right></td>
             </tr>
-            ";
+            ",number_format($total_debit,4));
         }
 
         print "
