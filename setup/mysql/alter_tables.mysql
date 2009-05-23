@@ -544,7 +544,7 @@ update prepaid set domain = SUBSTRING_INDEX(account, '@',-1);
 6.7.6
 alter table prepaid drop column call_lock;
 
-6.7.9
+6.8.0
 alter table prepaid_history change column `number` `description` varchar(255) not null;
 alter table billing_rates add column increment smallint unsigned not null;
 alter table billing_rates add column min_duration smallint unsigned not null;
@@ -609,7 +609,7 @@ alter table log add key reseller_idx (reseller_id);
 alter table destinations drop KEY `cust_dest_idx`;
 alter table destinations add KEY `cust_dest_idx` (`reseller_id`,`gateway`,`domain`,`subscriber`,`dest_id`);
 alter table prepaid_cards change column `value` `value` decimal(10,4) default 0;
-alter table billing_rates add column  `maxPrice` varchar(25) NOT NULL default '';
+alter table billing_rates add column `maxPrice` varchar(25) NOT NULL default '';
 
 alter table prepaid drop column last_call_price;
 alter table prepaid drop column destination;
