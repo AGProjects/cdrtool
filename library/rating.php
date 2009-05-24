@@ -7065,4 +7065,40 @@ function reloadRatingEngineTables () {
     return false;
 }
 
+function testRatingTables () {
+    global $RatingEngine;
+    if (!strlen($RatingEngine['socketIP']) || !$RatingEngine['socketPort']) {
+        return false;
+    }
+
+    if ($RatingEngine['socketIP']=='0.0.0.0' || $RatingEngine['socketIP'] == '0') {
+        $RatingEngine['socketIPforClients']= '127.0.0.1';
+    } else {
+        $RatingEngine['socketIPforClients']=$RatingEngine['socketIP'];
+    }
+
+    $i=0;
+    $b=time();
+
+    while ($i < 1000) {
+        if (!$fp = fsockopen ($RatingEngine['socketIPforClients'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
+            print "Error connecting to rating engine\n";
+            break;
+        }
+
+        $i++;
+        $number='00'.RandomNumber(1,true).RandomNumber(12).'@example.com';
+        $duration=RandomNumber(3,true);
+        $command=sprintf("ShowPrice From=sip:123@example.com To=sip:%s Gateway=10.0.0.1 Duration=%d\n",$number,$duration);
+        fputs($fp, $command,strlen($command));
+        $response = fgets($fp, 8192);
+    	fclose($fp);
+    }
+
+    $e=time();
+    $d=$e-$b;
+    if ($d) printf("Commands=%d, Time=%s seconds, Speed=%s cps\n",$i,$d,number_format($i/$d,1));
+
+}
+
 ?>
