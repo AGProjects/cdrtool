@@ -1235,7 +1235,7 @@ class Records {
     function showRecord () {
     }
 
-    function RandomPassword($len=11) {
+    function RandomString($len=11) {
         $alf=array("a","b","c","d","e","f",
                "h","i","j","k","l","m",
                "n","p","r","s","t","w",
@@ -2748,7 +2748,7 @@ class SipAccounts extends Records {
         } else if (strlen(trim($_REQUEST['password']))) {
             $password=trim($_REQUEST['password']);
         } else {
-            $password=$this->RandomPassword(10);
+            $password=$this->RandomString(10);
         }
 
         if (is_array($dictionary['groups'])) {
@@ -12190,7 +12190,7 @@ class Customers extends Records {
         $customer->fax  = preg_replace("/[^\+0-9]/","",$customer->fax);
         $customer->enum = preg_replace("/[^\+0-9]/","",$customer->enum);
 
-        if (!strlen($_REQUEST['password_form'])) $customer->password = $this->RandomPassword(6);
+        if (!strlen($_REQUEST['password_form'])) $customer->password = $this->RandomString(6);
 
         if (!strlen($_REQUEST['state_form']))    $customer->state    = 'N/A';
         if (!strlen($_REQUEST['country_form']))  $customer->country  = 'N/A';
@@ -12630,7 +12630,7 @@ class Customers extends Records {
             }
         }
 
-        if (!strlen($customer['password'])) $customer['password'] = $this->RandomPassword(6);
+        if (!strlen($customer['password'])) $customer['password'] = $this->RandomString(6);
 
         if (is_array($dictionary['properties'])) {
             $customer['properties']=$dictionary['properties'];

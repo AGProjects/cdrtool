@@ -929,6 +929,22 @@ function RandomString($len=11) {
     return $string;
 }
 
+function RandomNumber($len=5,$skipzero=false) {
+	
+    $alf=array("1","2","3","4","5",
+               "9","8","7","6");
+    if (!$skipzero) $alf[]="0";
+    
+    $i=0;
+    while($i < $len) {
+        srand((double)microtime()*1000000);
+        $randval = rand(0,9);
+        $string="$string"."$alf[$randval]";
+        $i++;
+    }          
+    return $string;
+}
+
 function microtime_float() {
     list($usec, $sec) = explode(" ", microtime());
     return ((float)$usec + (float)$sec);
