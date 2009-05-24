@@ -3288,6 +3288,7 @@ class SipSettings {
     function showPrepaidForm() {
         $task        = $_REQUEST['task'];
         $issuer      = $_REQUEST['issuer'];
+        $_done       = false;
 
         print "
         <tr>
@@ -3300,57 +3301,38 @@ class SipSettings {
             $prepaidCard = $_REQUEST['prepaidCard'];
             $prepaidId   = $_REQUEST['prepaidId'];
 
-            if ($prepaidCard && $prepaidId && $result = $this->addBalanceSubscriber($prepaidCard,$prepaidId)) {
-                print "<p><font color=green>";
-                printf (_("Added %d to your account balance. "),$result);
-                print "</font>";
+            if ($prepaidCard && $prepaidId) {
+            	if ($result = $this->addBalanceSubscriber($prepaidCard,$prepaidId)) {
+                    print "<p><font color=green>";
+                	printf (_("Old balance was %s, new balance is %s. "),$result->old_balance, $result->new_balance);
+                    print "</font>";
+                    $_done=true;
+                }
             }
         }
 
-        if ($issuer=='reseller') {
+        if ($issuer=='reseller' || $issuer=='admin') {
             $description = $_REQUEST['description'];
             $value       = $_REQUEST['value'];
 
-            if (strlen($value) && $this->addBalanceReseller($value,$description)) {
+            if (strlen($value) && $result = $this->addBalanceReseller($value,$description)) {
 
                 print "<p><font color=green>";
-                printf (_("Added %s to the account balance. "),floatval($value));
-
-                if ($_REQUEST['notify']) {
-                    $subject=sprintf ("SIP account %s balance update",$this->account);
-            
-                    $body="Your SIP account balance has been updated. ".
-                    "To see the transaction value and details go to $this->sip_settings_page?tab=prepaid";
-            
-                    if (mail($this->email, $subject, $body, "From: $this->support_email")) {
-                        printf (_("Subscriber has been notified to %s."), $this->email);
-                    }
-                }
-
+                printf (_("Old balance was %s, new balance is %s. "),$result->old_balance, $result->new_balance);
                 print "</font>";
+                $_done=true;
             }
         }
 
-        if ($issuer=='admin') {
-            $description = $_REQUEST['description'];
-            $value       = $_REQUEST['value'];
-
-            if (strlen($value) && $this->addBalanceReseller($value,$description)) {
-
-                print "<p><font color=green>";
-                printf (_("Added %s to the account balance. "),floatval($value));
-
-                if ($_REQUEST['notify']) {
-                    $subject=sprintf ("SIP account %s balance update",$this->account);
-            
-                    $body="Your SIP account balance has been updated. ".
-                    "To see the transaction value and details go to $this->sip_settings_page?tab=prepaid";
-            
-                    if (mail($this->email, $subject, $body, "From: $this->support_email")) {
-                        printf (_("Subscriber has been notified to %s."), $this->email);
-                    }
-                }
-
+        if ($_done && $_REQUEST['notify']) {
+            $subject=sprintf ("SIP account %s balance update",$this->account);
+    
+            $body="Your SIP account balance has been updated. ".
+            "For more details go to $this->sip_settings_page?tab=prepaid";
+    
+            if (mail($this->email, $subject, $body, "From: $this->support_email")) {
+                print "<p><font color=orange>";
+                printf (_("Subscriber has been notified to %s."), $this->email);
                 print "</font>";
             }
         }
@@ -3382,7 +3364,6 @@ class SipSettings {
             $this->showIncreaseBalanceSubscriber();
             $this->showBalanceHistory();
         }
-
     }
 
     function showIncreaseBalanceReseller () {
@@ -3442,6 +3423,14 @@ class SipSettings {
         print "Number
         <input type=text size=20 name=prepaidCard>
         ";
+
+        if ($this->login_type != 'subscriber') {
+            print "
+            Notify
+            <input type=checkbox name=notify value=1>
+            ";
+        }
+
         print "
         <input type=submit value=";
         print _("Add");
@@ -3472,8 +3461,8 @@ class SipSettings {
         dprint("addBalanceSubscriberLocal($prepaidCard,$prepaidId)");
 
         $card      = array('id'     => intval($prepaidId),
-                             'number' => $prepaidCard
-                             );
+                           'number' => $prepaidCard
+                           );
 
         $this->SipPort->addHeader($this->SoapAuth);
         $result = $this->SipPort->addBalanceFromVoucher($this->sipId,$card);
@@ -3500,7 +3489,7 @@ class SipSettings {
             printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
-        	return true;
+        	return $result;
         }
     }
 
@@ -3573,7 +3562,7 @@ class SipSettings {
 
 			if (strstr($_line->description,'Session')) {
             	if (!$_line->value) continue;
-                $value=-$_line->value;
+                $value=$_line->value;
 
                 if ($this->cdrtool_address) {
                     $description=sprintf("<a href=%s/callsearch.phtml?action=search&call_id=%s target=cdrtool>$_line->description</a>",$this->cdrtool_address,urlencode($_line->session));
@@ -3631,7 +3620,7 @@ class SipSettings {
             ",number_format($total_credit,4));
         }
 
-        if ($total_debit) {
+        if (strlen($total_debit)) {
         printf ("
             <tr bgcolor=white>
             <td></td>
