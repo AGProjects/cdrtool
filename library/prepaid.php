@@ -49,6 +49,9 @@ class PrepaidCards {
         <tr><td>Value:</td>
             <td><input type=text size=6 name=value value=10></td>
         </tr>
+        <tr><td>Reseller:</td>
+            <td><input type=text size=6 name=reseller value=></td>
+        </tr>
         <tr>
         <td colspan=2><input type=submit value=Generate>
         </td>
@@ -65,6 +68,12 @@ class PrepaidCards {
         $digits   = $_REQUEST['digits'];
         $batch    = $_REQUEST['batch'];
         $value    = $_REQUEST['value'];
+
+        if ($this->CDRTool['filter']['reseller']) {
+            $reseller=$this->CDRTool['filter']['reseller'];
+        } else {
+        	$reseller = $_REQUEST['reseller'];
+        }
 
         if (!$digits) {
             print "<p>Error: No digits specified!";
@@ -116,7 +125,7 @@ class PrepaidCards {
                 $card=$card.$alf[$randval];
                 $i++;
             }
-    
+
             $query=sprintf("insert into prepaid_cards
             (number,value,date_batch,batch,service,reseller_id)
             values ('%s','%s',NOW(),'%s','sip',%d)",
@@ -124,7 +133,7 @@ class PrepaidCards {
             addslashes($card),
             addslashes($value),
             addslashes($batch_name),
-            $this->CDRTool['filter']['reseller']
+            intval($reseller)
             );
 
             dprint($query);
@@ -147,7 +156,7 @@ class PrepaidCards {
             addslashes($_SERVER['REMOTE_ADDR']),
             addslashes($generated),
             addslashes($batch_name),
-            $this->CDRTool['filter']['reseller']
+            intval($reseller)
             );
  
             dprint($log_query);
