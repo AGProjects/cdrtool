@@ -1983,7 +1983,7 @@ class CDRS_opensips extends CDRS {
         return 0;
     }
 
-    function notifyLastSessions($count='200') {
+    function notifyLastSessions($count='200',$account='') {
         // send emails with last missed and received sessions to subscribers in group $this->missed_calls_group
 
         $lockName=sprintf("%s:notifySessions",$this->cdr_source);
@@ -1992,16 +1992,21 @@ class CDRS_opensips extends CDRS {
             return true;
         }
 
-        $query=sprintf("select * from memcache where `key` = '%s'",'notifySessionsLastRun');
-        $this->cdrtool->query($query);
-        if ($this->cdrtool->num_rows()) {
-        	$this->cdrtool->next_record();
-            $lastRun=$this->cdrtool->f('value');
-            if (Date('Y-m-d') == $lastRun) {
-                $log=sprintf("Notify sessions script already run for date %s\n",$lastRun);
-                print $log;
-                syslog(LOG_NOTICE,$log);
-            	return true;
+        if (strlen($account)) {
+            list($username,$domain)=explode('@',$account);
+            if (!strlen($username) || !strlen($domain)) return false;
+        } else {
+            $query=sprintf("select * from memcache where `key` = '%s'",'notifySessionsLastRun');
+            $this->cdrtool->query($query);
+            if ($this->cdrtool->num_rows()) {
+                $this->cdrtool->next_record();
+                $lastRun=$this->cdrtool->f('value');
+                if (Date('Y-m-d') == $lastRun) {
+                    $log=sprintf("Notify sessions script already run for date %s\n",$lastRun);
+                    print $log;
+                    syslog(LOG_NOTICE,$log);
+                    return true;
+                }
             }
         }
 
@@ -2012,6 +2017,9 @@ class CDRS_opensips extends CDRS {
 
         if ($this->enableThor) {
             $query=sprintf("select * from sip_accounts");
+        	if (strlen($account)) {
+                $query.= sprintf (" where username = '%s' and domain = '%s' ",$username,$domain);
+            }
     
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -2029,8 +2037,12 @@ class CDRS_opensips extends CDRS {
             } else {
                 return 0;
             }
+
         } else {
             $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",$this->missed_calls_group);
+        	if (strlen($account)) {
+                $query.= sprintf (" and username = '%s' and domain = '%s' ",$username,$domain);
+            }
     
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -2049,13 +2061,17 @@ class CDRS_opensips extends CDRS {
 
         if (!count($this->notifySubcribers)) return 0;
 
+        $j=0;
         foreach (array_keys($this->notifySubcribers) as $_subscriber) {
+            $j++;
         	$_last_sessions=array();
 			unset($textBody);
             unset($htmlBody);
 
-        	$query = sprintf("SELECT * FROM %s where %s = '%s' and %s > DATE_ADD(NOW(), INTERVAL -1 day) order by %s desc limit 200",
+        	$query = sprintf("SELECT * FROM %s where (%s = '%s' or %s = '%s') and %s > DATE_ADD(NOW(), INTERVAL -2 day) order by %s desc limit 200",
             $this->table,
+            $this->usernameField,
+            $_subscriber,
             $this->CanonicalURIField,
             $_subscriber,
             $this->startTimeField,
@@ -2070,11 +2086,12 @@ class CDRS_opensips extends CDRS {
 
             if (Date('d')== 1) {
                 while ($this->CDRdb->next_record()) {
-                    $_last_sessions[]=array('duration' => $this->CDRdb->f($this->durationField),
-                                            'from'     => $this->CDRdb->f($this->aNumberField),
-                                            'to'       => $this->CDRdb->f($this->cNumberField),
-                                            'remote'   => $this->CDRdb->f($this->RemoteAddressField),
-                                            'date'     => $this->CDRdb->f($this->startTimeField)
+                    $_last_sessions[]=array('duration'  => $this->CDRdb->f($this->durationField),
+                                            'from'      => $this->CDRdb->f($this->aNumberField),
+                                            'to'        => $this->CDRdb->f($this->cNumberField),
+                                            'username'  => $this->CDRdb->f($this->usernameField),
+                                            'canonical' => $this->CDRdb->f($this->CanonicalURIField),
+                                            'date'      => $this->CDRdb->f($this->startTimeField)
                                           );
                 }
 
@@ -2094,27 +2111,53 @@ class CDRS_opensips extends CDRS {
                         return 0;
                     }
                     while ($this->CDRdb->next_record()) {
-                        $_last_sessions[]=array('duration' => $this->CDRdb->f($this->durationField),
-                                              'from'       => $this->CDRdb->f($this->aNumberField),
-                                              'to'         => $this->CDRdb->f($this->cNumberField),
-                                              'remote'     => $this->CDRdb->f($this->RemoteAddressField),
-                                              'date'       => $this->CDRdb->f($this->startTimeField)
+                        $_last_sessions[]=array('duration'   => $this->CDRdb->f($this->durationField),
+                                                'from'       => $this->CDRdb->f($this->aNumberField),
+                                                'to'         => $this->CDRdb->f($this->cNumberField),
+                                                'username'   => $this->CDRdb->f($this->usernameField),
+                                                'canonical'  => $this->CDRdb->f($this->CanonicalURIField),
+                                                'date'       => $this->CDRdb->f($this->startTimeField)
                                               );
                     }
                 }
 
             } else {
                 while ($this->CDRdb->next_record()) {
-                    $_last_sessions[]=array('duration' => $this->CDRdb->f($this->durationField),
-                                            'from'     => $this->CDRdb->f($this->aNumberField),
-                                            'to'       => $this->CDRdb->f($this->cNumberField),
-                                            'remote'   => $this->CDRdb->f($this->RemoteAddressField),
-                                            'date'     => $this->CDRdb->f($this->startTimeField)
+                    $_last_sessions[]=array('duration'  => $this->CDRdb->f($this->durationField),
+                                            'from'      => $this->CDRdb->f($this->aNumberField),
+                                            'to'        => $this->CDRdb->f($this->cNumberField),
+                                            'username'  => $this->CDRdb->f($this->usernameField),
+                                            'canonical' => $this->CDRdb->f($this->CanonicalURIField),
+                                            'date'      => $this->CDRdb->f($this->startTimeField)
                                           );
                 }
             }
 
             if (!count($_last_sessions)) continue;
+
+			$sessions=array('missed'   => array(),
+                            'received' => array(),
+                            'diverted' => array()
+                            );
+
+            foreach ($_last_sessions as $_s) {
+                if ($_s['duration'] == 0 && $_s['canonical'] == $_subscriber) {
+                    $sessions['missed'][]=$_s;
+                    continue;
+                }
+
+                if ($_s['duration'] > 0 && $_s['canonical'] == $_subscriber) {
+                    $sessions['received'][]=$_s;
+                    continue;
+                }
+
+                if ($_s['from'] != $_subscriber && $_s['canonical'] != $_subscriber) {
+                    $sessions['diverted'][]=$_s;
+                    continue;
+                }
+            }
+
+            //return;
 
             // missed sessions
             $textBody .= sprintf ("Missed sessions\n\n
@@ -2137,10 +2180,8 @@ class CDRS_opensips extends CDRS {
             ");
 
             $i=0;
-            foreach ($_last_sessions as $_session) {
+            foreach ($sessions['missed'] as $_session) {
                 $i++;
-                if ($_session['duration']) continue;
-
                 if ($i >= $count) break;
 
                 $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td></tr>",
@@ -2157,6 +2198,53 @@ class CDRS_opensips extends CDRS {
                 $_session['date'],
                 $_session['from'],
                 $_session['to']
+                );
+            }
+
+            $htmlBody.="</table>";
+
+            // diverted sessions
+            $textBody .= sprintf ("Diverted sessions\n\n
+            Id,Date,From,To,Diverted to\n
+            ");
+
+			$htmlBody .= sprintf ("<h2>Diverted sessions</h2>
+            <p>
+            <table border=1>
+            <tr>
+            <th>
+            </th>
+            <th>Date and time
+            </th>
+            <th>Caller address
+            </th>
+            <th>Called address
+            </th>
+            <th>Diverted to
+            </th>
+            </tr>
+            ");
+
+            $i=0;
+            foreach ($sessions['diverted'] as $_session) {
+                $i++;
+                if ($i >= $count) break;
+
+                $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td><td>%s</td></tr>",
+                $i,
+                $_session['date'],
+                $_session['from'],
+                $_session['from'],
+                $_session['to'],
+                $_session['canonical']
+                );
+
+                $txtBody.=sprintf ("%s,%s,%s,%s,%s,%s\n",
+                $i,
+                $_session['date'],
+                $_session['from'],
+                $_session['to'],
+                $_session['canonical']
                 );
             }
 
@@ -2184,8 +2272,7 @@ class CDRS_opensips extends CDRS {
             ");
 
             $i=1;
-            foreach ($_last_sessions as $_session) {
-                if (!$_session['duration']) continue;
+            foreach ($sessions['received'] as $_session) {
 
                 if ($i >= $count) break;
 

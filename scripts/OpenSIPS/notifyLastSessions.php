@@ -14,7 +14,7 @@ while (list($k,$v) = each($DATASOURCES)) {
 
         unset($CDRS);
         $CDRS = new $class_name($k);
-        $CDRS->notifyLastSessions();
+        $CDRS->notifyLastSessions(200);
     }
 }
 
