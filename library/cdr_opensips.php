@@ -100,7 +100,7 @@ class CDRS_opensips extends CDRS {
         "call_id","sip_proxy",
         "a_number","a_number_comp","UserName","UserName_comp","BillingId",
         "c_number","c_number_comp","DestinationId","ExcludeDestinations",
-        "NASPortId","Realm","Realms","UserNameS",
+        "NASPortId","Realm","Realms",
         "SipMethod","SipCodec","SipRPID","SipUserAgents",
         "application","SipStatus","SipStatusClass","SipProxyServer","gateway",
         "duration","action","MONTHYEAR",
@@ -255,10 +255,7 @@ class CDRS_opensips extends CDRS {
         }
 
         if ($this->CDRTool['filter']['aNumber']) {
-            $UserNameS    = explode(" ",$this->CDRTool['filter']['aNumber']);
-            if (count($UserNameS) == 1) {
-                $UserName=$this->CDRTool['filter']['aNumber'];
-            }
+        	$UserName=$this->CDRTool['filter']['aNumber'];
         }
 
         if ($this->CDRTool['filter']['domain']) {
@@ -458,37 +455,11 @@ class CDRS_opensips extends CDRS {
                                 "maxlength"=>"100"
                     ));
 
-        if ($this->CDRTool['filter']['aNumber']) {
-            $UserNameS    = explode(" ",$this->CDRTool['filter']['aNumber']);
-            $c=count($UserNameS);
-            if ($c > 1) {
-                $UserNameS_els[]=array("label"=>"All $c numbers","value"=>"");
-                foreach ($UserNameS as $_el) {
-                    $UserNameS_els[]=array("label"=>$_el,"value"=>$_el);
-                }
-    
-                $this->f->add_element(array(    "name"=>"UserName",
-                                        "type"=>"select",
-                                        "options"=>$UserNameS_els,
-                                        "size"=>"1"
-                            ));
-            } else {
-                $this->f->add_element(array(    "name"=>"UserName",
-                                        "type"=>"text",
-                                        "size"=>"25",
-                                        "maxlength"=>"255"
-                            ));
-
-            }
-
-         } else {
-
-            $this->f->add_element(array(    "name"=>"UserName",
-                                    "type"=>"text",
-                                    "size"=>"25",
-                                    "maxlength"=>"255"
-                        ));
-        }
+        $this->f->add_element(array(    "name"=>"UserName",
+                                "type"=>"text",
+                                "size"=>"25",
+                                "maxlength"=>"255"
+                    ));
 
         $this->f->add_element(array(    "name"=>"a_number",
                                 "type"=>"text",
@@ -922,10 +893,7 @@ class CDRS_opensips extends CDRS {
 
         // freeze some form els
         if ($this->CDRTool['filter']['aNumber']) {
-            $UserNameS    = explode(" ",$this->CDRTool['filter']['aNumber']);
-            if (count($UserNameS) == 1) {
-                $ff[]="UserName";
-            }
+        	$ff[]="UserName";
         }
 
         if ($this->CDRTool['filter']['domain']) {
@@ -1057,7 +1025,7 @@ class CDRS_opensips extends CDRS {
 
         // overwrite some elements based on user rights
         if ($this->CDRTool['filter']['gateway']) {
-            $gateway  =$this->CDRTool['filter']['gateway'];
+            $gateway =$this->CDRTool['filter']['gateway'];
         }
 
         if (!$this->export) {
@@ -1101,11 +1069,7 @@ class CDRS_opensips extends CDRS {
         }
 
         if ($this->CDRTool['filter']['aNumber']) {
-            $this->url   = $this->url."&UserNameS=".urlencode($this->CDRTool['filter']['aNumber']);
-            $UserNameS    = explode(" ",$this->CDRTool['filter']['aNumber']);
-        } else if ($UserNameS) {
-            $this->url   = $this->url."&UserNameS=".urlencode($UserNameS);
-            $UserNameS    = explode(" ",$UserNameS);
+            $this->url   = $this->url."&UserName=".urlencode($this->CDRTool['filter']['aNumber']);
         }
 
         if ($order_by) {
@@ -1128,36 +1092,14 @@ class CDRS_opensips extends CDRS {
         }
 
         if ($this->CDRTool['filter']['aNumber']) {
-            $UserName_comp="equal";
             // force user to see only CDRS with his a_numbers
-             $where .= "
-            and $this->usernameField in (" ;
-            $rr=0;
-            foreach ($UserNameS as $_el) {
-                $_el=trim($_el);
-                if (strlen($_el)) {
-                    if ($rr) $where .= ", ";
-                    $where .= " '$_el'";
-                    $rr++;
-                }
-            }
-            $where .= ") ";
-
-        } else if ($UserNameS)  {
-            $UserName_comp="equal";
-             $where .= "
-            and $this->usernameField in (" ;
-            $rr=0;
-            foreach ($UserNameS as $_el) {
-                $_el=trim($_el);
-                if (strlen($_el)) {
-                    if ($rr) $where .= ", ";
-                    $where .= " '$_el' ";
-                    $rr++;
-                }
-            }
-            $where .= ") ";
-
+             $where .= sprintf("
+            and ( %s = '%s' or %s = '%s') ",
+            $this->usernameField,
+            addslashes($this->CDRTool['filter']['aNumber']),
+            $this->CanonicalURIField,
+            addslashes($this->CDRTool['filter']['aNumber'])
+            );
         }
 
         if ($UserName_comp != "empty") {
@@ -1200,15 +1142,7 @@ class CDRS_opensips extends CDRS {
                 $where .= " and ($this->aNumberField = '".addslashes($a_number)."'";
                 $s=1;
             }
-
-            if ($this->CDRTool['filter']['aNumber']) {
-                $where .= " or $this->CanonicalURIField like '".addslashes($a_number)."%') ";
-            } else {
-                if ($s) $where .= ")";
-            }
-
             $this->url.="&a_number_comp=$a_number_comp";
-
         }
 
         $Realm=trim($Realm);
@@ -1218,11 +1152,8 @@ class CDRS_opensips extends CDRS {
             and (" ;
             $rr=0;
             foreach ($Realms as $realm) {
-                if ($rr) {
-                    $where .= " or ";
-                }
+                if ($rr) $where .= " or ";
                 $where .= " $this->domainField like '".addslashes($realm)."%' ";
-
                 $rr++;
             }
             $where .= " ) ";
@@ -1459,7 +1390,8 @@ class CDRS_opensips extends CDRS {
             from $cdr_table where ".$where;
         }
 
-        //print $query;
+        //dprint($query);
+
         if ($this->CDRdb->query($query)) {
              $this->CDRdb->next_record();
              if ($group_by) {
@@ -2605,13 +2537,21 @@ class CDR_opensips extends CDR {
         //$this->isCalleeLocal();
         $this->isCallerLocal();
 
+        if ($this->CDRS->rating) {
+        	global $perm;
+            if (is_object($perm) && $perm->have_perm("showPrice")) {
+                $this->pricePrint=$this->price;
+            } else {
+                $this->pricePrint='x.xxx';
+            }
+        }
     }
 
     function buildCDRdetail() {
         global $perm;
         global $found;
 
-        if (!$perm) return;
+        if (!is_object($perm)) return;
 
         $this->cdr_details="
         <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
@@ -2997,12 +2937,8 @@ class CDR_opensips extends CDR {
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime</nobr></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->aNumberPrint</td>
+        <td valign=top><nobr>$this->destinationPrint</nobr>
         ";
-
-        //print "<td valign=top>$this->traceIn</td>";
-
-        print "
-        <td valign=top><nobr>$this->destinationPrint</nobr>";
 
         if ($this->DestinationId) {
             if ($this->DestinationId != $this->CanonicalURI) {
@@ -3013,7 +2949,6 @@ class CDR_opensips extends CDR {
         }
 
         print "</td>";
-        //print "<td valign=top>$this->traceOut</td>";
 
         if (!$this->normalized){
         	if ($this->duration > 0 ) {
@@ -3022,26 +2957,9 @@ class CDR_opensips extends CDR {
             	print "<td valign=top align=left colspan=4><font color=red>in progress</a></td>";
             }
         } else {
-            print "<td valign=top align=right>$this->durationPrint</td>";
-
-            if ($this->CDRS->rating) {
-                if ($this->price == "0.0000" && !$this->rate) {
-                    $this->pricePrint="";
-                } else {
-                    if ($perm->have_perm("showPrice")) {
-                        $this->pricePrint=$this->price;
-                    } else {
-                        $this->pricePrint='x.xxx';
-                    }
-                }
-    
-                print "<td valign=top align=right>$this->pricePrint</td>";
-
-            } else {
-            	print "<td valign=top></td>";
-            }
-
             print "
+            <td valign=top align=right>$this->durationPrint</td>
+            <td valign=top align=right>$this->pricePrint</td>
             <td valign=top align=right>$this->inputTrafficPrint </td>
             <td valign=top align=right>$this->outputTrafficPrint</td>
             ";
@@ -3137,11 +3055,15 @@ class CDR_opensips extends CDR {
             <td valign=top><nobr>$this->aNumberPrint</nobr></td>
             <td valign=top><nobr>$this->destinationPrint $this->destinationName</td>
             <td valign=top align=right>$this->durationPrint</td>
+            ";
+
+            if ($this->CDRS->rating) {
+            	print "<td valign=top align=right>$this->pricePrint</td>";
+            }
+
+            print "
             <td valign=top align=right>$this->inputTrafficPrint </td>
             <td valign=top align=right>$this->outputTrafficPrint</td>
-            ";
-            if ($this->CDRS->rating) print "<td valign=top align=right>$this->price</td>";
-            print "
             </tr>
             ";
             print "
