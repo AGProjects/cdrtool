@@ -1100,11 +1100,12 @@ class CDRS_opensips extends CDRS {
             $this->CanonicalURIField,
             addslashes($this->CDRTool['filter']['aNumber'])
             );
+            $UserName_comp='equal';
+            $UserName=$this->CDRTool['filter']['aNumber'];
         }
 
         if ($UserName_comp != "empty") {
             $UserName=trim($UserName);
-            if ($UserName) {
                 $UserName_encoded=urlencode($UserName);
                 if ($UserName_comp=="begin") {
                     $where .= " and $this->usernameField like '".addslashes($UserName)."%'";
@@ -1114,8 +1115,6 @@ class CDRS_opensips extends CDRS {
                     $where .= " and $this->usernameField = '".addslashes($UserName)."'";
                 }
                 $this->url.="&UserName=$UserName_encoded&UserName_comp=$UserName_comp";
-            }
-
         } else {
             $where .= " and $this->usernameField = ''";
             $this->url.="&UserName_comp=$UserName_comp";
