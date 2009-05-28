@@ -2156,147 +2156,153 @@ class CDRS_opensips extends CDRS {
                 }
             }
 
-            //return;
-
-            // missed sessions
-            $textBody .= sprintf ("Missed sessions\n\n
-            Id,Date,From,To,Duration\n
-            ");
-
-			$htmlBody .= sprintf ("<h2>Missed sessions</h2>
-            <p>
-            <table border=1>
-            <tr>
-            <th>
-            </th>
-            <th>Date and time
-            </th>
-            <th>Caller address
-            </th>
-            <th>Called address
-            </th>
-            </tr>
-            ");
-
-            $i=0;
-            foreach ($sessions['missed'] as $_session) {
-                $i++;
-                if ($i >= $count) break;
-
-                $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td></tr>",
-                $i,
-                $_session['date'],
-                $_session['from'],
-                $_session['from'],
-                $_session['to']
-                );
-
-
-                $txtBody.=sprintf ("%s,%s,%s,%s,%s\n",
-                $i,
-                $_session['date'],
-                $_session['from'],
-                $_session['to']
-                );
+            if (count($sessions['missed'])) {
+                // missed sessions
+                $textBody .= sprintf ("Missed sessions\n\n
+                Id,Date,From,To,Duration\n
+                ");
+    
+                $htmlBody .= sprintf ("<h2>Missed sessions</h2>
+                <p>
+                <table border=1>
+                <tr>
+                <th>
+                </th>
+                <th>Date and time
+                </th>
+                <th>Caller address
+                </th>
+                <th>Called address
+                </th>
+                </tr>
+                ");
+    
+                $i=0;
+                foreach ($sessions['missed'] as $_session) {
+                    $i++;
+                    if ($i >= $count) break;
+    
+                    $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td></tr>",
+                    $i,
+                    $_session['date'],
+                    $_session['from'],
+                    $_session['from'],
+                    $_session['to']
+                    );
+    
+    
+                    $txtBody.=sprintf ("%s,%s,%s,%s,%s\n",
+                    $i,
+                    $_session['date'],
+                    $_session['from'],
+                    $_session['to']
+                    );
+                }
+    
+                $htmlBody.="</table>";
             }
 
-            $htmlBody.="</table>";
+            if (count($sessions['diverted'])) {
 
-            // diverted sessions
-            $textBody .= sprintf ("Diverted sessions\n\n
-            Id,Date,From,To,Diverted to\n
-            ");
-
-			$htmlBody .= sprintf ("<h2>Diverted sessions</h2>
-            <p>
-            <table border=1>
-            <tr>
-            <th>
-            </th>
-            <th>Date and time
-            </th>
-            <th>Caller address
-            </th>
-            <th>Called address
-            </th>
-            <th>Diverted to
-            </th>
-            </tr>
-            ");
-
-            $i=0;
-            foreach ($sessions['diverted'] as $_session) {
-                $i++;
-                if ($i >= $count) break;
-
-                $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td><td>%s</td></tr>",
-                $i,
-                $_session['date'],
-                $_session['from'],
-                $_session['from'],
-                $_session['to'],
-                $_session['canonical']
-                );
-
-                $txtBody.=sprintf ("%s,%s,%s,%s,%s,%s\n",
-                $i,
-                $_session['date'],
-                $_session['from'],
-                $_session['to'],
-                $_session['canonical']
-                );
+                // diverted sessions
+                $textBody .= sprintf ("Diverted sessions\n\n
+                Id,Date,From,To,Diverted to\n
+                ");
+    
+                $htmlBody .= sprintf ("<h2>Diverted sessions</h2>
+                <p>
+                <table border=1>
+                <tr>
+                <th>
+                </th>
+                <th>Date and time
+                </th>
+                <th>Caller address
+                </th>
+                <th>Called address
+                </th>
+                <th>Diverted to
+                </th>
+                </tr>
+                ");
+    
+                $i=0;
+                foreach ($sessions['diverted'] as $_session) {
+                    $i++;
+                    if ($i >= $count) break;
+    
+                    $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td><td>%s</td></tr>",
+                    $i,
+                    $_session['date'],
+                    $_session['from'],
+                    $_session['from'],
+                    $_session['to'],
+                    $_session['canonical']
+                    );
+    
+                    $txtBody.=sprintf ("%s,%s,%s,%s,%s,%s\n",
+                    $i,
+                    $_session['date'],
+                    $_session['from'],
+                    $_session['to'],
+                    $_session['canonical']
+                    );
+                }
+    
+                $htmlBody.="</table>";
             }
 
-            $htmlBody.="</table>";
+            if (count($sessions['received'])) {
 
-            // received sessions
-            $textBody .= sprintf ("Received sessions\n\n
-            Id,Date,From,To,Duration\n");
-
-			$htmlBody .= sprintf ("<h2>Received sessions</h2>
-            <p>
-            <table border=1>
-            <tr>
-            <th>
-            </th>
-            <th>Date and time
-            </th>
-            <th>Caller address
-            </th>
-            <th>Called address
-            </th>
-            <th>Duration
-            </th>
-            </tr>
-            ");
-
-            $i=1;
-            foreach ($sessions['received'] as $_session) {
-
-                if ($i >= $count) break;
-
-                $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td><td>%s</td></tr>",
-                $i,
-                $_session['date'],
-                $_session['from'],
-                $_session['from'],
-                $_session['to'],
-                $_session['duration']
-                );
-
-
-                $txtBody.=sprintf ("%s,%s,%s,%s,%s\n",
-                $i,
-                $_session['date'],
-                $_session['from'],
-                $_session['to'],
-                $_session['duration']
-                );
-
-                $i++;
+                // received sessions
+                $textBody .= sprintf ("Received sessions\n\n
+                Id,Date,From,To,Duration\n");
+    
+                $htmlBody .= sprintf ("<h2>Received sessions</h2>
+                <p>
+                <table border=1>
+                <tr>
+                <th>
+                </th>
+                <th>Date and time
+                </th>
+                <th>Caller address
+                </th>
+                <th>Called address
+                </th>
+                <th>Duration
+                </th>
+                </tr>
+                ");
+    
+                $i=1;
+                foreach ($sessions['received'] as $_session) {
+    
+                    if ($i >= $count) break;
+    
+                    $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td><td>%s</td></tr>",
+                    $i,
+                    $_session['date'],
+                    $_session['from'],
+                    $_session['from'],
+                    $_session['to'],
+                    $_session['duration']
+                    );
+    
+    
+                    $txtBody.=sprintf ("%s,%s,%s,%s,%s\n",
+                    $i,
+                    $_session['date'],
+                    $_session['from'],
+                    $_session['to'],
+                    $_session['duration']
+                    );
+    
+                    $i++;
+                }
+    
+                $htmlBody.="</table>";
             }
-
-            $htmlBody.="</table>";
 
 		    $htmlBody.="<p>This is an automatically generated message, do not reply.";
             $txtBody.="\nThis is an automatically generated message, do not reply.\n";
@@ -2304,7 +2310,7 @@ class CDRS_opensips extends CDRS {
             $crlf = "\n";
            	$hdrs = array(
                      'From'=> $this->CDRTool['provider']['fromEmail'],
-                     'Subject' => sprintf("%s: received calls in the last 24 hours",$_subscriber)
+                     'Subject' => sprintf("%s: incoming sessions in the last 24 hours",$_subscriber)
                      );
 
             $mime = new Mail_mime($crlf);
