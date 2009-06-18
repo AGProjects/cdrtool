@@ -2063,7 +2063,7 @@ class CDRS_opensips extends CDRS {
 			unset($textBody);
             unset($htmlBody);
 
-        	$query = sprintf("SELECT * FROM %s where (%s = '%s' or %s = '%s') and %s > DATE_ADD(NOW(), INTERVAL -2 day) order by %s desc limit 200",
+        	$query = sprintf("SELECT * FROM %s where (%s = '%s' or %s = '%s') and %s > DATE_ADD(NOW(), INTERVAL -1 day) order by %s desc limit 200",
             $this->table,
             $this->usernameField,
             $_subscriber,
@@ -2135,22 +2135,29 @@ class CDRS_opensips extends CDRS {
                             'diverted' => array()
                             );
 
+            $have_sessions=0;
+
             foreach ($_last_sessions as $_s) {
                 if ($_s['duration'] == 0 && $_s['canonical'] == $_subscriber) {
                     $sessions['missed'][]=$_s;
+                    $have_sessions++;
                     continue;
                 }
 
                 if ($_s['duration'] > 0 && $_s['canonical'] == $_subscriber) {
                     $sessions['received'][]=$_s;
+                    $have_sessions++;
                     continue;
                 }
 
                 if ($_s['from'] != $_subscriber && $_s['canonical'] != $_subscriber) {
                     $sessions['diverted'][]=$_s;
+                    $have_sessions++;
                     continue;
                 }
             }
+
+            if (!$have_sessions) continue;;
 
             if (count($sessions['missed'])) {
                 // missed sessions
@@ -2306,7 +2313,7 @@ class CDRS_opensips extends CDRS {
             $crlf = "\n";
            	$hdrs = array(
                      'From'=> $this->CDRTool['provider']['fromEmail'],
-                     'Subject' => sprintf("%s: incoming sessions in the last 24 hours",$_subscriber)
+                     'Subject' => sprintf("%s: incoming SIP sessions on %s",$_subscriber,date('Y-m-d'))
                      );
 
             $mime = new Mail_mime($crlf);
