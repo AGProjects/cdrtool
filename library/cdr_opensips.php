@@ -1104,20 +1104,19 @@ class CDRS_opensips extends CDRS {
             $UserName=$this->CDRTool['filter']['aNumber'];
         }
 
-        if ($UserName_comp != "empty") {
-            $UserName=trim($UserName);
-                $UserName_encoded=urlencode($UserName);
-                if ($UserName_comp=="begin") {
-                    $where .= " and $this->usernameField like '".addslashes($UserName)."%'";
-                } elseif ($UserName_comp=="contain") {
-                    $where .= " and $this->usernameField like '%".addslashes($UserName)."%'";
-                } elseif ($UserName_comp=="equal") {
-                    $where .= " and $this->usernameField = '".addslashes($UserName)."'";
-                }
-                $this->url.="&UserName=$UserName_encoded&UserName_comp=$UserName_comp";
-        } else {
-            $where .= " and $this->usernameField = ''";
-            $this->url.="&UserName_comp=$UserName_comp";
+        if ($UserName) {
+        	if (!$UserName_comp) $UserName_comp='begin';
+            if ($UserName_comp=="begin") {
+                $where .= " and $this->usernameField like '".addslashes($UserName)."%'";
+            } elseif ($UserName_comp=="contain") {
+                $where .= " and $this->usernameField like '%".addslashes($UserName)."%'";
+            } elseif ($UserName_comp=="equal") {
+                $where .= " and $this->usernameField = '".addslashes($UserName)."'";
+            } else {
+                $where .= " and $this->usernameField = '' ";
+            }
+            $UserName_encoded=urlencode($UserName);
+            $this->url.="&UserName=$UserName_encoded&UserName_comp=$UserName_comp";
         }
 
         $a_number=trim($a_number);
@@ -1132,13 +1131,13 @@ class CDRS_opensips extends CDRS {
             $this->url.="&a_number=$a_number_encoded";
 
             if ($a_number_comp=="begin") {
-                $where .= " and ($this->aNumberField like '".addslashes($a_number)."%'";
+                $where .= " and $this->aNumberField like '".addslashes($a_number)."%'";
                 $s=1;
             } elseif ($a_number_comp=="contain") {
-                $where .= " and ($this->aNumberField like '%".addslashes($a_number)."%'";
+                $where .= " and $this->aNumberField like '%".addslashes($a_number)."%'";
                 $s=1;
             } elseif ($a_number_comp=="equal") {
-                $where .= " and ($this->aNumberField = '".addslashes($a_number)."'";
+                $where .= " and $this->aNumberField = '".addslashes($a_number)."'";
                 $s=1;
             }
             $this->url.="&a_number_comp=$a_number_comp";
@@ -1292,13 +1291,10 @@ class CDRS_opensips extends CDRS {
             $c_number=urldecode($c_number);
 
             if (!$c_number_comp || $c_number_comp=="begin") {
-                // $where .= " and ($this->CanonicalURIField like '".addslashes($c_number)."%' or $this->RemoteAddressField like '".addslashes($c_number)."%')";
                 $where .= " and $this->CanonicalURIField like '".addslashes($c_number)."%'";
             } elseif ($c_number_comp=="equal") {
-                // $where .= " and ($this->CanonicalURIField = '".addslashes($c_number)."' or $this->RemoteAddressField like '".addslashes($c_number)."%') ";
                 $where .= " and $this->CanonicalURIField = '".addslashes($c_number)."'";
             } elseif ($c_number_comp=="contain") {
-                // $where .= " and ($this->CanonicalURIField like '%".addslashes($c_number)."%' or $this->RemoteAddressField like '%".addslashes($c_number)."%') ";
                 $where .= " and $this->CanonicalURIField like '%".addslashes($c_number)."%'";
             }
             $c_number_encoded=urlencode($c_number);
@@ -1337,16 +1333,16 @@ class CDRS_opensips extends CDRS {
             $this->url.="&group_by=$group_by";
         }
 
-        $this->url_edit        = $this->scriptFile.$this->url."&action=edit";
-        $this->url_run        = $this->scriptFile.$this->url."&action=search";
-        $this->url_export    = $_SERVER["PHP_SELF"].$this->url."&action=search&export=1";
+        $this->url_edit   = $this->scriptFile.$this->url."&action=edit";
+        $this->url_run    = $this->scriptFile.$this->url."&action=search";
+        $this->url_export = $_SERVER["PHP_SELF"].$this->url."&action=search&export=1";
 
         if ($duration == "unnormalized") {
-            $where .=  " and $this->normalizedField = '0' ";
+            $where .= " and $this->normalizedField = '0' ";
         }
 
         if ($duration == "unnormalized_duration") {
-            $where .=  " and $this->normalizedField = '0' and $this->durationField > 0 ";
+            $where .= " and $this->normalizedField = '0' and $this->durationField > 0 ";
         }
 
         if ($group_by) {
@@ -1389,7 +1385,7 @@ class CDRS_opensips extends CDRS {
             from $cdr_table where ".$where;
         }
 
-        //dprint($query);
+        dprint($query);
 
         if ($this->CDRdb->query($query)) {
              $this->CDRdb->next_record();
