@@ -2648,15 +2648,9 @@ class RatingTables {
                 $query=sprintf("delete from billing_profiles
                 where name     = '%s'
                 and reseller_id= '%s'
-                and gateway    = '%s'
-                and domain     = '%s'
-                and subscriber = '%s'
                 ",
                 addslashes($profile),
-                addslashes($reseller_id),
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber)
+                addslashes($reseller_id)
                 );
                 if (!$this->db->query($query)) {
                     $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -2673,14 +2667,9 @@ class RatingTables {
                 $query=sprintf("select * from billing_profiles
                 where name     = '%s'
                 and reseller_id= '%s'
-                and gateway    = '%s'
-                and domain     = '%s'
-                and subscriber = '%s'\n",
+                ",
                 addslashes($profile),
-                addslashes($reseller_id),
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber)
+                addslashes($reseller_id)
                 );
 
                 if (!$this->db->query($query)) {
