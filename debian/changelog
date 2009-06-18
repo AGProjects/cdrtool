@@ -1,3 +1,14 @@
+cdrtool (6.8.1) unstable; urgency=low
+
+  * Do  not send emails if no missed calls
+  * Fixed search by username
+  * Fixed import of billing_profiles
+  * Notify also diverted sessions
+  * Fix display of CDRs when logged in as SIP account, also show incoming
+    calls
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 18 Jun 2009 08:49:20 +0200
+
 cdrtool (6.8.0) unstable; urgency=low
 
   * Added reseller fields to all database tables to allow different login
