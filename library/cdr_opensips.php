@@ -2422,11 +2422,9 @@ class CDR_opensips extends CDR {
 
         $this->applicationType=strtolower($this->applicationType);
 
-        if (strstr($this->applicationType,'video')) {
-            // we rate calls containing video same as audio
-            // is not possible to determine that a session is
-            // video from start to end as SIP allows streams to
-            // be added and substracted on the fly
+		$this->applicationType_print=$this->applicationType;
+
+        if (strstr($this->applicationType,'audio')) {
             $this->applicationType='audio';
         }
 
@@ -2434,7 +2432,7 @@ class CDR_opensips extends CDR {
             $this->applicationType = $this->defaultApplicationType;
         }
 
-        $this->applicationTypeNormalized=$this->applicationType;
+        //$this->applicationTypeNormalized=$this->applicationType;
 
         if ($this->aNumber) {
             $NormalizedNumber        = $this->CDRS->NormalizeNumber($this->aNumber,"source");
@@ -2829,7 +2827,7 @@ class CDR_opensips extends CDR {
             <tr>
                 <td></td>
                 <td>Application: </td>
-                <td>$this->applicationType</td>
+                <td>$this->applicationType_print</td>
             </tr>
             <tr>
                 <td></td>
