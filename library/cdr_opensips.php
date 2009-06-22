@@ -2422,7 +2422,7 @@ class CDR_opensips extends CDR {
 
         $this->applicationType=strtolower($this->applicationType);
 
-		$this->applicationType_print=$this->applicationType;
+		$this->applicationType_print=quoted_printable_decode($this->applicationType);
 
         if (strstr($this->applicationType,'audio')) {
             $this->applicationType='audio';
