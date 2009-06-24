@@ -179,19 +179,19 @@ class CDRS {
         	$this->natAccessCode  = $this->DATASOURCES[$this->cdr_source]['natAccessCode'];
         }
 
-        if ($this->DATASOURCES[$this->cdr_source]['db_susbcribers']) {
-        	if (class_exists($this->DATASOURCES[$this->cdr_source]['db_susbcribers'])) {
-            	$this->AccountsDB       = new $this->DATASOURCES[$this->cdr_source]['db_susbcribers'];
-            	$this->db_susbcribers  = $this->DATASOURCES[$this->cdr_source]['db_susbcribers'];
+        if ($this->DATASOURCES[$this->cdr_source]['db_subscribers']) {
+        	if (class_exists($this->DATASOURCES[$this->cdr_source]['db_subscribers'])) {
+            	$this->AccountsDB       = new $this->DATASOURCES[$this->cdr_source]['db_subscribers'];
+            	$this->db_subscribers  = $this->DATASOURCES[$this->cdr_source]['db_subscribers'];
             } else {
-            	$log=sprintf("Error: susbcribers database class %s is not defined",$this->DATASOURCES[$this->cdr_source]['db_susbcribers']);
+            	$log=sprintf("Error: susbcribers database class %s is not defined",$this->DATASOURCES[$this->cdr_source]['db_subscribers']);
             	print $log;
             	syslog(LOG_NOTICE, $log);
             	return 0;
             }
         } else if (class_exists('DB_opensips')) {
             $this->AccountsDB      = new DB_opensips();
-            $this->db_susbcribers  = 'DB_opensips';
+            $this->db_subscribers  = 'DB_opensips';
         } else {
         	$log=sprintf("Error: subscribers database is not defined, please define 'db_subscribers' in datasource '%s'",$this->cdr_source);
             print $log;
