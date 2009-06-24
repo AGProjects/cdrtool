@@ -2005,7 +2005,7 @@ class CDRS_opensips extends CDRS {
             }
         }
 
-    	$this->notifySubcribers=array();
+    	$this->notifySubscribers=array();
 
         require_once('Mail.php');
         require_once('Mail/mime.php');
@@ -2026,7 +2026,7 @@ class CDRS_opensips extends CDRS {
             	while ($this->AccountsDB->next_record()) {
                     $_profile=json_decode(trim($this->AccountsDB->f('profile')));
                     if (in_array($this->missed_calls_group,$_profile->groups)) {
-                        $this->notifySubcribers[$this->AccountsDB->f('username').'@'.$this->AccountsDB->f('domain')]=array('email'=>$this->AccountsDB->f('email'));
+                        $this->notifySubscribers[$this->AccountsDB->f('username').'@'.$this->AccountsDB->f('domain')]=array('email'=>$this->AccountsDB->f('email'));
                     }
                 }
             } else {
@@ -2047,17 +2047,17 @@ class CDRS_opensips extends CDRS {
 
             if ($this->AccountsDB->num_rows()) {
             	while ($this->AccountsDB->next_record()) {
-                	$this->notifySubcribers[$this->AccountsDB->f('account')]=array('email'=>$this->AccountsDB->f('email'));
+                	$this->notifySubscribers[$this->AccountsDB->f('account')]=array('email'=>$this->AccountsDB->f('email'));
                 }
             } else {
                 return 0;
             }
         }
 
-        if (!count($this->notifySubcribers)) return 0;
+        if (!count($this->notifySubscribers)) return 0;
 
         $j=0;
-        foreach (array_keys($this->notifySubcribers) as $_subscriber) {
+        foreach (array_keys($this->notifySubscribers) as $_subscriber) {
             $j++;
         	$_last_sessions=array();
 			unset($textBody);
@@ -2324,11 +2324,11 @@ class CDRS_opensips extends CDRS {
             $hdrs = $mime->headers($hdrs);
 
             $mail =& Mail::factory('mail');
-            $mail->send($this->notifySubcribers[$_subscriber]['email'], $hdrs, $body);
+            $mail->send($this->notifySubscribers[$_subscriber]['email'], $hdrs, $body);
 
             $log=sprintf("Notify %s at %s with last %d sessions\n",
             $_subscriber,
-            $this->notifySubcribers[$_subscriber]['email'],
+            $this->notifySubscribers[$_subscriber]['email'],
             count($_last_sessions));
             print $log;
             syslog(LOG_NOTICE,$log);

@@ -193,7 +193,7 @@ class CDRS {
             $this->AccountsDB      = new DB_opensips();
             $this->db_susbcribers  = 'DB_opensips';
         } else {
-        	$log=sprintf("Error: subcribers database is not defined, please define 'db_subcribers' in datasource '%s'",$this->cdr_source);
+        	$log=sprintf("Error: subscribers database is not defined, please define 'db_subscribers' in datasource '%s'",$this->cdr_source);
             print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
