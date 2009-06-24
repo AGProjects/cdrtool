@@ -4825,13 +4825,13 @@ class OpenSIPSQuota {
 
         $this->path=$this->CDRTool['Path'];
 
-        $this->db_susbcribers = &$parent->db_susbcribers;
-        if (!class_exists($this->db_susbcribers)) {
+        $this->db_subscribers = &$parent->db_subscribers;
+        if (!class_exists($this->db_subscribers)) {
             print("Info: No database defined for SIP accounts $this->cdr_source.\n");
             return false;
         }
 
-        $this->AccountsDB       = new $this->db_susbcribers;
+        $this->AccountsDB       = new $this->db_subscribers;
         $this->enableThor       = $parent->enableThor;
 
         $parent->LoadDomains();
@@ -4946,7 +4946,7 @@ class OpenSIPSQuota {
     function deblockAccounts($reset_quota_for=array()) {
         // deblock users blocked by quota
 
-        if (!$this->db_susbcribers) {
+        if (!$this->db_subscribers) {
             print("Info: No database defined for SIP accounts.\n");
             return false;
         }
@@ -5668,14 +5668,14 @@ class RatingEngine {
         $this->db            = new DB_CDRTool;
         $this->prepaid_table = "prepaid";
 
-        $this->db_susbcribers = &$this->CDRS->db_susbcribers;
+        $this->db_subscribers = &$this->CDRS->db_subscribers;
 
-        if (!class_exists($this->db_susbcribers)) {
+        if (!class_exists($this->db_subscribers)) {
             syslog(LOG_NOTICE,"Error: No database defined for SIP accounts $this->cdr_source");
             return false;
         }
 
-        $this->AccountsDB       = new $this->db_susbcribers;
+        $this->AccountsDB       = new $this->db_subscribers;
         $this->enableThor       = $this->CDRS->enableThor;
 
     }

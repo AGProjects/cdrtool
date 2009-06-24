@@ -1779,8 +1779,8 @@ class CDRS_opensips extends CDRS {
 
     function LoadDomains() {
 
-        if (!$this->db_susbcribers) {
-            $log=printf("Error: Cannot load domains because db_susbcribers is not defined in datasource %s",$this->cdr_source);
+        if (!$this->db_subscribers) {
+            $log=printf("Error: Cannot load domains because db_subscribers is not defined in datasource %s",$this->cdr_source);
             print $log;
             syslog(LOG_NOTICE,$log);
             return false;
@@ -1810,7 +1810,7 @@ class CDRS_opensips extends CDRS {
         }
 
         if (!$this->AccountsDB->query($query)) {
-            $log=sprintf ("Database %s error: %s (%d) %s\n",$this->db_susbcribers,$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
+            $log=sprintf ("Database %s error: %s (%d) %s\n",$this->db_subscribers,$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
             print $log;
             syslog(LOG_NOTICE,$log);
             return false;
@@ -1829,8 +1829,8 @@ class CDRS_opensips extends CDRS {
 
     function LoadTrustedPeers() {
 
-        if (!$this->db_susbcribers) {
-            $log=printf("Error: Cannot load trusted peers because db_susbcribers is not defined in datasource %s",$this->cdr_source);
+        if (!$this->db_subscribers) {
+            $log=printf("Error: Cannot load trusted peers because db_subscribers is not defined in datasource %s",$this->cdr_source);
             print $log;
             syslog(LOG_NOTICE,$log);
             return false;
@@ -1852,7 +1852,7 @@ class CDRS_opensips extends CDRS {
         $query=sprintf("select * from %s",$this->trusted_table);
 
         if (!$this->AccountsDB->query($query)) {
-            $log=sprintf ("Database %s error: %s (%d) %s\n",$this->db_susbcribers,$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
+            $log=sprintf ("Database %s error: %s (%d) %s\n",$this->db_subscribers,$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
             print $log;
             syslog(LOG_NOTICE,$log);
             return false;
