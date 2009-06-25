@@ -1454,7 +1454,7 @@ class RatingTables {
 
             printf("Reading file %s\n",$this->filesToImport[$file]['path']);
 
-            $results = $results + $this->$importFunction($this->filesToImport[$file]['path'],$this->filesToImport[$file]['reseller']);
+            $results = $this->$importFunction($this->filesToImport[$file]['path'],$this->filesToImport[$file]['reseller']);
 
             $this->logImport($dir,$this->filesToImport[$file]['path'],$this->filesToImport[$file]['watermark'],$results,$this->filesToImport[$file]['reseller']);
 

@@ -1,8 +1,9 @@
 cdrtool (6.8.2) unstable; urgency=low
 
   * Spellcheck some variable names that did not match the configuration
+  * Fixed logging of imported rows from csv files
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 24 Jun 2009 16:46:31 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 25 Jun 2009 12:59:08 +0200
 
 cdrtool (6.8.1) unstable; urgency=low
 
