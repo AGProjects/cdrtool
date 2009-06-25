@@ -9198,7 +9198,8 @@ class Gateways extends Records {
                                                    'readonly' => true),
                               'carrier'   => array('type'=>'string'),
                               'transport' => array('type'=>'string'),
-                              'ip'        => array('type'=>'string'),
+                              'ip'        => array('name'=>'IP or hostname',
+                                                   'type'=>'string'),
                               'port'      => array('type'=>'integer')
                               );
 
@@ -9504,6 +9505,8 @@ class Gateways extends Records {
             $ip   = $address_els[0];
             $port = $address_els[1];
         }
+
+        if (!$port) $port = 5060;
 
         if (!in_array($transport,$this->transports)) {
         	$transport=$this->transports[0];
