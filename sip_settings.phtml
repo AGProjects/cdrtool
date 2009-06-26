@@ -99,7 +99,7 @@ if ($_REQUEST['action']=="Save settings") {
 } else if ($_REQUEST['tab']=="phonebook" && $_REQUEST['export']) {
     $SipSettings->exportPhonebook($userAgent);
 } else if ($_REQUEST['tab']=="prepaid" && $_REQUEST['export']) {
-    $SIPSettings->exportBalanceHistory();
+    $SipSettings->exportBalanceHistory();
 }
 
 if (!$_REQUEST['export']) {
