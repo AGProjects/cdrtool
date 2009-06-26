@@ -144,8 +144,10 @@ $replicated_databases=array('cluster1'=>array(
                  );
                  
 
-# To allow users to login using a custom procedure. See DomainAuth from phplib/local.inc as example
-class DomainAuthLocal extends DomainAuth {
+# To allow subscribers to login and access their own CDRs. See
+# OpenSIPS_DomainAuth from phplib/local.inc as example
+
+class DomainAuthLocal extends OpenSIPS_DomainAuth {
 }
 
 class PageLayoutLocal extends PageLayout {

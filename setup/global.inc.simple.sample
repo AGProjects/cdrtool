@@ -88,7 +88,8 @@ class DB_mediaproxy extends DB_Sql {
   var $Halt_On_Error ="yes";
 }
 
-class DomainAuthLocal extends DomainAuth {	// defined in phplib/local.inc
+// Subscriber login
+class DomainAuthLocal extends OpenSIPS_DomainAuth {	// defined in phplib/local.inc
 }
 
 class PageLayoutLocal extends PageLayout {      // defined in phplib/local.inc

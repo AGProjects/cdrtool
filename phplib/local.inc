@@ -492,11 +492,11 @@ function checkEmail($email) {
     return 1;
 }
 
-class DomainAuth {
+class OpenSIPS_DomainAuth {
 
-    function DomainAuth () {
+    function OpenSIPS_DomainAuth () {
         $this->userDB   = new DB_opensips;
-        $this->allowedDataSourcesSubscriber = array('opensips_radius');
+        $this->allowedDataSourcesSubscriber = array('opensips_radius','sip_trace','media_trace');
     }
 
     function validate ($user, $domain, $password) {
@@ -518,6 +518,38 @@ class DomainAuth {
             $uid = $this->userDB->f('username');
             if ($uid) {
                 return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
+            }
+        }
+    }
+}
+
+class SipThor_DomainAuth {
+
+    function SipThor_DomainAuth () {
+        $this->userDB   = new DB_sipthor;
+        $this->allowedDataSourcesSubscriber = array('sipthor','sip_trace_thor','media_trace_thor');
+    }
+
+    function validate ($user, $domain, $password) {
+    	$query = sprintf("SELECT * FROM sip_accounts
+                  WHERE username = '%s'
+                  AND     domain = '%s'
+                  ",
+                  addslashes($user),
+                  addslashes($domain)
+                  );
+        
+        if ($this->userDB->query($query)) {
+            $this->userDB->next_record();
+
+            $profile=json_decode($this->userDB->f('profile'),'true');
+
+            if ($profile['password'] == $password) {
+    
+                $uid = $this->userDB->f('username');
+                if ($uid) {
+                    return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
+                }
             }
         }
     }
