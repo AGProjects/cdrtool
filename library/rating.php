@@ -6277,10 +6277,10 @@ class RatingEngine {
 
             $query=sprintf("select * from %s where account = '%s'",addslashes($this->prepaid_table),addslashes($CDR->BillingPartyId));
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log=sprintf ("Database error for query '%s': %s (%s), link_id =%s, query_id =%s",$query,$this->db->Error,$this->db->Errno,$this->db->Link_ID,$this->db->Query_ID);
                 syslog(LOG_NOTICE,$log);
                 $this->logRuntime();
-                $log=sprintf("error: database error %s (%s)",$this->db->Error,$this->db->Errno);
+                $log=sprintf("Error: database error for query '%s': %s (%s)",$query,$this->db->Error,$this->db->Errno);
                 return $log;
             }
 

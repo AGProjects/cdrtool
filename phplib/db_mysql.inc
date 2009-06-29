@@ -38,7 +38,6 @@ class DB_Sql {
   /* private: link and query handles */
   var $Link_ID  = 0;
   var $Query_ID = 0;
-  
 
 
   /* public: constructor */
@@ -72,11 +71,14 @@ class DB_Sql {
     
       $this->Link_ID=mysql_pconnect($Host, $User, $Password);
       if (!$this->Link_ID) {
+    	syslog(LOG_NOTICE, "Error in connect(): pconnect as $User to $Host failed");
+
         $this->halt("pconnect as $User to $Host failed.");
         return 0;
       }
 
       if (!@mysql_select_db($Database,$this->Link_ID)) {
+    	syslog(LOG_NOTICE, "Error in connect(): cannot use database");
         $this->halt("cannot use database ".$this->Database);
         return 0;
       }
