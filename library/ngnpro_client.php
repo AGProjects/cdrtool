@@ -12229,18 +12229,46 @@ class Customers extends Records {
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
 
-                    // roll back local changes
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    if ($error_fault->detail->exception->errorcode == 5000) {
+                        // try add the missing customer
+                        $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
+                        $result     = $this->SoapEngineRemote->addAccount($customer);
 
-                    $function=array('commit'   => array('name'       => 'updateAccount',
-                                                        'parameters' => array($customer_old),
-                                                        'logs'       => array('success' => sprintf('Customer id %s has been rolled back',$customer->id))
-                                                        )
-                                    );
-                 
-                    $this->SoapEngine->execute($function,$this->html);
+                        if (PEAR::isError($result)) {
+                            $error_msg  = $result->getMessage();
+                            $error_fault= $result->getFault();
+                            $error_code = $result->getCode();
+                            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
 
-                    return false;
+        		            // roll back local changes
+
+                            $function=array('commit'   => array('name'       => 'updateAccount',
+                                                                'parameters' => array($customer_old),
+                                                                'logs'       => array('success' => sprintf('Customer id %s has been rolled back',$customer->id))
+                                                                )
+                                            );
+                         
+                            $this->SoapEngine->execute($function,$this->html);
+                    		return false;
+
+                        } else {
+                    		return true;
+                        }
+
+                    } else {
+                    	// roll back local changes
+                        printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+    
+                        $function=array('commit'   => array('name'       => 'updateAccount',
+                                                            'parameters' => array($customer_old),
+                                                            'logs'       => array('success' => sprintf('Customer id %s has been rolled back',$customer->id))
+                                                            )
+                                        );
+                     
+                        $this->SoapEngine->execute($function,$this->html);
+                    	return false;
+                    }
+
                 } else {
                     return true;
                 }
