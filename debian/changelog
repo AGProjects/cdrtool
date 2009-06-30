@@ -4,8 +4,9 @@ cdrtool (6.8.2) unstable; urgency=low
   * Fixed logging of imported rows from csv files
   * Created two standard profiles (OpenSIPS and SipThor) for subscriber login
     See class DomainAuthLocal extends OpenSIPS_DomainAuth in global.inc
+  * Fixed export of CSV with prepaid history
 
- -- Adrian Georgescu <ag@ag-projects.com>  Fri, 26 Jun 2009 10:43:16 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 26 Jun 2009 11:51:53 +0200
 
 cdrtool (6.8.1) unstable; urgency=low
 
