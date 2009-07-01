@@ -1272,64 +1272,31 @@ class Records {
         return true;
     }
 
-    function getGatewayGroups () {
+    function getCarriers () {
         if (count($this->carriers)) return true;
 
-        if ($this->version > 3 ) {
-            $Query=array('filter'  => array('name'=>''),
-                         'orderBy' => array('attribute' => 'name',
-                                            'direction' => 'ASC'
-                                      ),
-                         'range'   => array('start' => 0,
-                                            'count' => 1000)
-                         );
-    
-            $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
-            $result     = $this->SoapEngine->soapclient->getCarriers($Query);
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-                foreach ($result->carriers as $_carrier){
-                	$this->carriers[]=$_carrier->name;
-                }
-            }
+        $Query=array('filter'  => array('name'=>''),
+                     'orderBy' => array('attribute' => 'name',
+                                        'direction' => 'ASC'
+                                  ),
+                     'range'   => array('start' => 0,
+                                        'count' => 1000)
+                     );
 
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $result     = $this->SoapEngine->soapclient->getCarriers($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
         } else {
-            $Query=array('filter'  => array('name'=>''),
-                         'orderBy' => array('attribute' => 'name',
-                                            'direction' => 'ASC'
-                                      ),
-                         'range'   => array('start' => 0,
-                                            'count' => 1000)
-                         );
-    
-            $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
-            $result     = $this->SoapEngine->soapclient->getGatewayGroups($Query);
-    
-            if (PEAR::isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                return false;
-            } else {
-                if ($this->version > 1) {
-                    foreach ($result->groups as $_grp){
-                        $this->carriers[]=$_grp->name;
-                    }
-                } else {
-                    if (is_array($result->groups)) {
-                        $this->carriers=$result->groups;
-                    }
-                }
+            foreach ($result->carriers as $_carrier) {
+                $this->carriers[$_carrier->id]=$_carrier->name;
             }
         }
-
     }
 
     function updateBefore () {
@@ -8646,7 +8613,8 @@ class Carriers extends Records {
                             );
 
     function Carriers(&$SoapEngine) {
-        $this->filters   = array('name'   => trim($_REQUEST['name_filter'])
+        $this->filters   = array('id'   => trim($_REQUEST['id_filter']),
+                                 'name' => trim($_REQUEST['name_filter'])
                                  );
 
         $this->Records(&$SoapEngine);
@@ -8665,7 +8633,9 @@ class Carriers extends Records {
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
         // Filter
-        $filter=array('name'     => $this->filters['name'],
+        $filter=array(
+                      'id'       => intval($this->filters['id']),
+                      'name'     => $this->filters['name'],
                       'reseller' => intval($this->filters['reseller'])
                       );
 
@@ -8712,8 +8682,9 @@ class Carriers extends Records {
             print "
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
-                <td><b>Reseller</b></td>
                 <td><b>Carrier</b></th>
+                <td><b>Reseller</b></td>
+                <td><b>Name</b></th>
                 <td><b>Gateways</b></th>
                 <td><b>Change date</b></td>
                 <td><b>Actions</b></td>
@@ -8749,21 +8720,19 @@ class Carriers extends Records {
                         $bgcolor="white";
                     }
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s&reseller_filter=%s",
+                    $_url = $this->url.sprintf("&service=%s&action=Delete&id_filter=%s",
                     urlencode($this->SoapEngine->service),
-                    urlencode($carrier->name),
-                    urlencode($carrier->reseller)
+                    urlencode($carrier->id)
                     );
 
-                    $_gateways_url = $this->url.sprintf("&service=pstn_gateways@%s&group_filter=%s&reseller_filter=%s",
+                    $_gateways_url = $this->url.sprintf("&service=pstn_gateways@%s&carrier_id_filter=%d&reseller_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
-                    urlencode($carrier->name),
+                    urlencode($carrier->id),
                     urlencode($carrier->reseller)
                     );
 
                     if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['name_filter'] == $carrier->name &&
-                        $_REQUEST['reseller_filter'] == $carrier->reseller) {
+                        $_REQUEST['id_filter'] == $carrier->id) {
                         $_url .= "&confirm=1";
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
@@ -8778,6 +8747,7 @@ class Carriers extends Records {
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
+                    <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     <td>%s</td>
                     <td><a href=%s>Gateways</a></td>
@@ -8786,6 +8756,7 @@ class Carriers extends Records {
                     </tr>",
                     $bgcolor,
                     $index,
+                    $carrier->id,
                     $_customers_url,
                     $carrier->reseller,
                     $carrier->name,
@@ -8830,7 +8801,7 @@ class Carriers extends Records {
 
             $this->showCustomerTextBox();
 
-            printf (" Carrier <input type=text size=20 name=name>");
+            printf (" Name <input type=text size=20 name=name>");
 
             print "
             </td>
@@ -8883,20 +8854,20 @@ class Carriers extends Records {
             return true;
         }
 
-        if ($dictionary['name']) {
-            $name   = $dictionary['name'];
+        if ($dictionary['id']) {
+            $id   = $dictionary['id'];
         } else {
-            $name   = trim($this->filters['name']);
+            $id   = trim($this->filters['id']);
         }
 
-        if (!strlen($name)) {
-            print "<p><font color=red>Error: missing gateway group name </font>";
+        if (!strlen($id)) {
+            print "<p><font color=red>Error: missing carrier id </font>";
             return false;
         }
 
         $function=array('commit'   => array('name'       => 'deleteCarrier',
-                                            'parameters' => array($name),
-                                            'logs'       => array('success' => sprintf('Carrier %s has been deleted',$name)))
+                                            'parameters' => array(intval($id)),
+                                            'logs'       => array('success' => sprintf('Carrier %d has been deleted',$id)))
                         );
      
         unset($this->filters);
@@ -8904,282 +8875,13 @@ class Carriers extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Carrier <input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
+        printf (" Carrier <input type=text size=10 name=id_filter value='%s'>",$this->filters['id']);
+        printf (" Name <input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
     }
 
     function showCustomerForm() {
     }
 
-    function showTextBeforeCustomerSelection() {
-        print "Reseller";
-    }
-
-}
-
-class GatewayGroups extends Records {
-    var $gatewayGroups=array();
-
-    var $sortElements=array(
-                            'name'   => 'Name'
-                            );
-
-    function GatewayGroups(&$SoapEngine) {
-        $this->filters   = array('name'   => trim($_REQUEST['name_filter'])
-                                 );
-
-        $this->Records(&$SoapEngine);
-    }
-
-    function listRecords() {
-
-        $this->showSeachForm();
-
-        // Insert credetials
-        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
-
-        // Filter
-        $filter=array('name'     => $this->filters['name'],
-                      'customer' => intval($this->filters['customer']),
-                      'reseller' => intval($this->filters['reseller'])
-                      );
-
-        // Range
-        $range=array('start' => intval($this->next),
-                     'count' => intval($this->maxrowsperpage)
-                     );
-
-        // Order
-        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'name';
-        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'ASC';
-
-        $orderBy = array('attribute' => $this->sorting['sortBy'],
-                         'direction' => $this->sorting['sortOrder']
-                         );
-
-        // Compose query
-        $Query=array('filter'  => $filter,
-                     'orderBy' => $orderBy,
-                     'range'   => $range
-                     );
-
-        // Call function
-        $result     = $this->SoapEngine->soapclient->getGatewayGroups($Query);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-
-            $this->rows = $result->total;
-
-            print "
-            <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
-            </table>
-            <p>
-            <table border=0 cellpadding=2 width=100%>
-            ";
-
-            print "
-            <tr bgcolor=lightgrey>
-                <td><b>Id</b></th>
-                <td><b>Customer</b></td>
-                <td><b>Name</b></th>
-                <td><b>Change date</b></td>
-                <td><b>Actions</b></td>
-            </tr>
-            ";
-
-            if (!$this->next)  $this->next=0;
-
-            if ($this->rows > $this->maxrowsperpage)  {
-                $maxrows = $this->maxrowsperpage + $this->next;
-                if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
-            } else {
-                $maxrows=$this->rows;
-            }
-
-            $i=0;
-
-            if ($this->rows) {
-                while ($i < $maxrows)  {
-    
-                    if (!$result->groups[$i]) break;
-    
-                    $group = $result->groups[$i];
-    
-                    $index=$this->next+$i+1;
-
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="lightgrey";
-                    } else {
-                        $bgcolor="white";
-                    }
-
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($group->name)
-                    );
-
-                    $_group_url = $this->url.sprintf("&service=pstn_gateways@%s&group_filter=%s",
-                    urlencode($this->SoapEngine->soapEngine),
-                    urlencode($group->name)
-                    );
-
-
-                    if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['name_filter'] == $group->name) {
-                        $_url .= "&confirm=1";
-                        $actionText = "<font color=red>Confirm</font>";
-                    } else {
-                        $actionText = "Delete";
-                    }
-
-                    $_customers_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    urlencode($this->SoapEngine->customer_engine),
-                    urlencode($group->customer)
-                    );
-
-                    printf("
-                    <tr bgcolor=%s>
-                    <td>%s</td>
-                    <td><a href=%s>%s.%s</a></td>
-                    <td><a href=%s>%s</a></td>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    </tr>",
-                    $bgcolor,
-                    $index,
-                    $_customers_url,
-                    $group->customer,
-                    $group->reseller,
-                    $_group_url,
-                    $group->name,
-                    $group->changeDate,
-                    $_url,
-                    $actionText
-                    );
-
-                    printf("
-                    </tr>
-                    ");
-
-                    $i++;
-    
-                }
-    
-            }
-
-            print "</table>";
-
-            $this->showPagination($maxrows);
-
-            return true;
-        }
-    }
-
-    function showAddForm() {
-        //if ($this->selectionActive) return;
-        print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightblue>
-        <tr>
-            ";
-            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-            print "
-            <td align=left>
-            ";
-
-            print "
-            <input type=submit name=action value=Add>
-            ";
-
-            $this->showCustomerTextBox();
-
-            printf (" Name<input type=text size=20 name=name>");
-
-            print "
-            </td>
-            <td align=right>
-            ";
-
-            print "
-            </td>
-            ";
-            $this->printHiddenFormElements();
-
-            print "
-            </form>
-        </tr>
-        </table>
-        ";
-    }
-
-    function addRecord($dictionary=array()) {
-        if ($dictionary['name']) {
-            $name=$dictionary['name'];
-        } else {
-            $name = trim($_REQUEST['name']);
-        }
-
-        list($customer,$reseller)=$this->customerFromLogin($dictionary);
-
-        $structure=array('name'     => $name,
-                         'customer' => intval($customer),
-                         'reseller' => intval($reseller)
-                         );
-
-        if (!strlen($name)) {
-            printf ("<p><font color=red>Error: Missing name. </font>");
-            return false;
-        }
-
-        $function=array('commit'   => array('name'       => 'addGatewayGroup',
-                                            'parameters' => array($structure),
-                                            'logs'       => array('success' => sprintf('Gateway group %s has been added',$name)))
-                        );
-     
-        return $this->SoapEngine->execute($function,$this->html);
-    }
-
-    function deleteRecord($dictionary=array()) {
-        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
-            print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
-            return true;
-        }
-
-        if ($dictionary['name']) {
-            $name   = $dictionary['name'];
-        } else {
-            $name   = trim($this->filters['name']);
-        }
-
-        if (!strlen($name)) {
-            print "<p><font color=red>Error: missing gateway group name </font>";
-            return false;
-        }
-
-        $function=array('commit'   => array('name'       => 'deleteGatewayGroup',
-                                            'parameters' => array($name),
-                                            'logs'       => array('success' => sprintf('Gateway group %s has been deleted',$name)))
-                        );
-     
-        unset($this->filters);
-        return $this->SoapEngine->execute($function,$this->html);
-    }
-
-    function showSeachFormCustom() {
-        printf (" Name<input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
-    }
-
-    function showCustomerForm() {
-    }
     function showTextBeforeCustomerSelection() {
         print "Reseller";
     }
@@ -9194,35 +8896,38 @@ class Gateways extends Records {
                               );
 
     var $Fields=array(
-                              'name'      => array('type'=>'string',
+                              'id'         => array('type'=>'integer',
                                                    'readonly' => true),
-                              'carrier'   => array('type'=>'string'),
-                              'transport' => array('type'=>'string'),
-                              'ip'        => array('name'=>'IP or hostname',
+                              'name'       => array('type'=>'string'),
+                              'carrier_id' => array('type'=>'integer'),
+                              'transport'  => array('type'=>'string'),
+                              'ip'         => array('name'=>'IP or hostname',
                                                    'type'=>'string'),
-                              'port'      => array('type'=>'integer')
+                              'port'       => array('type'=>'integer')
                               );
 
     //var $transports=array('udp','tcp','tls');
     var $transports=array('udp');
 
     function Gateways(&$SoapEngine) {
-        $this->filters   = array('name'   => trim($_REQUEST['name_filter']),
-                                 'group'  => trim($_REQUEST['group_filter'])
+        $this->filters   = array(
+                                 'id'         => trim($_REQUEST['id_filter']),
+                                 'name'       => trim($_REQUEST['name_filter']),
+                                 'carrier_id' => trim($_REQUEST['carrier_id_filter'])
                                  );
 
         $this->sortElements=array(
-                            'changeDate' => 'Change date',
-                            'name'       => 'Gateway',
-                            'group'      => 'Carrier',
-                            'ip'         => 'IP address'
+                            'changeDate'  => 'Change date',
+                            'name'        => 'Gateway',
+                            'carrier_id'  => 'Carrier',
+                            'ip'          => 'Address'
                             );
 
         $this->Records(&$SoapEngine);
     }
 
     function listRecords() {
-    	$this->getGatewayGroups();
+    	$this->getCarriers();
 
         $this->showSeachForm();
 
@@ -9230,10 +8935,11 @@ class Gateways extends Records {
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
         // Filter
-        $filter=array('name'     => $this->filters['name'],
-                      'carrier'  => $this->filters['group'],
-                      'customer' => intval($this->filters['customer']),
-                      'reseller' => intval($this->filters['reseller'])
+        $filter=array('id'        => intval($this->filters['id']),
+                      'name'      => $this->filters['name'],
+                      'carrier_id'=> intval($this->filters['carrier_id']),
+                      'customer'  => intval($this->filters['customer']),
+                      'reseller'  => intval($this->filters['reseller'])
                       );
 
         // Range
@@ -9279,9 +8985,10 @@ class Gateways extends Records {
             print "
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
+                <td><b>Gateway</b></th>
                 <td><b>Reseller</b></td>
                 <td><b>Carrier</b></td>
-                <td><b>Gateway</b></th>
+                <td><b>Name</b></th>
                 <td><b>Address</b></td>
                 <td><b>Rules</b></td>
                 <td><b>Change date</b></td>
@@ -9318,15 +9025,13 @@ class Gateways extends Records {
                         $bgcolor="white";
                     }
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s&reseller_filter=%s",
+                    $_url = $this->url.sprintf("&service=%s&action=Delete&id_filter=%s",
                     urlencode($this->SoapEngine->service),
-                    urlencode($gateway->name),
-                    urlencode($gateway->reseller)
+                    urlencode($gateway->id)
                     );
 
                     if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['name_filter'] == $gateway->name &&
-                        $_REQUEST['reseller_filter'] == $gateway->reseller) {
+                        $_REQUEST['id_filter'] == $gateway->id) {
                         $_url .= "&confirm=1";
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
@@ -9338,22 +9043,19 @@ class Gateways extends Records {
                     urlencode($gateway->reseller)
                     );
 
-                    $_carriers_url = $this->url.sprintf("&service=pstn_gateways@%s&carrier_filter=%s&reseller_filter=%s",
+                    $_carriers_url = $this->url.sprintf("&service=pstn_carriers@%s&id_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
-                    urlencode($gateway->name),
-                    urlencode($gateway->reseller)
+                    urlencode($gateway->carrier_id)
                     );
 
-                    $_rules_url = $this->url.sprintf("&service=gateway_rules@%s&gateway_filter=%s&reseller_filter=%s",
+                    $_rules_url = $this->url.sprintf("&service=gateway_rules@%s&gateway_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
-                    urlencode($gateway->name),
-                    urlencode($gateway->reseller)
+                    urlencode($gateway->id)
                     );
 
-                    $name_link = $this->url.sprintf("&service=%s&name_filter=%s&reseller_filter=%s",
+                    $gateway_link = $this->url.sprintf("&service=%s&id_filter=%s",
                     urlencode($this->SoapEngine->service),
-                    urlencode($gateway->name),
-                    urlencode($gateway->reseller)
+                    urlencode($gateway->id)
                     );
 
                     $_r=0;
@@ -9362,8 +9064,9 @@ class Gateways extends Records {
                     <tr bgcolor=%s>
                     <td valign=top>%s</td>
                     <td valign=top><a href=%s>%s</a></td>
-                    <td valign=top>%s</td>
                     <td valign=top><a href=%s>%s</a></td>
+                    <td valign=top>%s</td>
+                    <td valign=top>%s</td>
                     <td valign=top>%s:%s:%s</td>
                     <td valign=top><a href=%s>Rules</a></td>
                     <td valign=top>%s</td>
@@ -9371,10 +9074,11 @@ class Gateways extends Records {
                     </tr>",
                     $bgcolor,
                     $index,
+                    $gateway_link,
+                    $gateway->id,
                     $_customers_url,
                     $gateway->reseller,
                     $gateway->carrier,
-                    $name_link,
                     $gateway->name,
                     $gateway->transport,
                     $gateway->ip,
@@ -9410,7 +9114,7 @@ class Gateways extends Records {
     function showAddForm() {
         //if ($this->selectionActive) return;
 
-        $this->getGatewayGroups();
+        $this->getCarriers();
 
         if (!count($this->carriers)) {
             print "<p>Create a carrier first";
@@ -9433,13 +9137,13 @@ class Gateways extends Records {
 
             printf (" Carrier: ");
 
-            print "<select name=group> ";
-            foreach ($this->carriers as $_grp) {
-                printf ("<option value='%s'>%s",$_grp,$_grp);
+            print "<select name=carrier_id> ";
+            foreach (array_keys($this->carriers) as $_carrier) {
+                printf ("<option value='%s'>%s",$_carrier,$this->carriers[$_carrier]);
             }
             printf (" </select>");
 
-            printf (" Gateway <input type=text size=20 name=name>");
+            printf (" Name <input type=text size=20 name=name>");
 
             printf (" Transport: ");
 
@@ -9475,10 +9179,10 @@ class Gateways extends Records {
         } else {
             $name   = trim($_REQUEST['name']);
         }
-        if ($dictionary['group']) {
-            $group   = $dictionary['group'];
+        if ($dictionary['carrier_id']) {
+            $carrier_id   = $dictionary['carrier_id'];
         } else {
-            $group   = trim($_REQUEST['group']);
+            $carrier_id   = trim($_REQUEST['carrier_id']);
         }
         if ($dictionary['address']) {
             $address   = $dictionary['address'];
@@ -9491,8 +9195,8 @@ class Gateways extends Records {
             $transport   = trim($_REQUEST['transport']);
         }
 
-        if (!strlen($name) || !strlen($group) || !strlen($address)) {
-            printf ("<p><font color=red>Error: Missing gateway name, group or address</font>");
+        if (!strlen($name) || !strlen($carrier_id) || !strlen($address)) {
+            printf ("<p><font color=red>Error: Missing gateway name, carrier_id or address</font>");
             return false;
         }
 
@@ -9513,16 +9217,16 @@ class Gateways extends Records {
         }
 
         $gateway=array(
-                     'name'      => $name,
-                     'carrier'   => $group,
-                     'ip'        => $ip,
-                     'port'      => intval($port),
-                     'transport' => $transport
+                     'name'       => $name,
+                     'carrier_id' => intval($carrier_id),
+                     'ip'         => $ip,
+                     'port'       => intval($port),
+                     'transport'  => $transport
                     );
 
         $function=array('commit'   => array('name'       => 'addGateway',
                                             'parameters' => array($gateway),
-                                            'logs'       => array('success' => sprintf('Gateway %s has been added',$address)))
+                                            'logs'       => array('success' => sprintf('Gateway %s has been added',$name)))
                         );
      
         unset($this->filters);
@@ -9535,20 +9239,20 @@ class Gateways extends Records {
             return true;
         }
 
-        if ($dictionary['name']) {
-            $name   = $dictionary['name'];
+        if ($dictionary['id']) {
+            $id   = $dictionary['id'];
         } else {
-            $name   = trim($this->filters['name']);
+            $id   = trim($this->filters['id']);
         }
 
-        if (!strlen($name)) {
-            print "<p><font color=red>Error: missing gateway name. </font>";
+        if (!strlen($id)) {
+            print "<p><font color=red>Error: missing gateway id. </font>";
             return false;
         }
 
         $function=array('commit'   => array('name'       => 'deleteGateway',
-                                            'parameters' => array($name),
-                                            'logs'       => array('success' => sprintf('Gateway %s has been deleted',$name)))
+                                            'parameters' => array(intval($id)),
+                                            'logs'       => array('success' => sprintf('Gateway %d has been deleted',$id)))
                         );
         unset($this->filters);
         return $this->SoapEngine->execute($function,$this->html);
@@ -9557,19 +9261,24 @@ class Gateways extends Records {
 
     function showSeachFormCustom() {
         print "
-        <select name=group_filter>
+        <select name=carrier_id_filter>
         <option value=''>Carrier";
-        $selected_group[$this->filters['group']]='selected';
-        foreach ($this->carriers as $_grp) {
-            printf ("<option value='%s' %s>%s",$_grp,$selected_group[$_grp],$_grp);
+
+        $selected_carrier[$this->filters['carrier_id']]='selected';
+
+        foreach (array_keys($this->carriers) as $_carrier) {
+            printf ("<option value='%s' %s>%s",$_carrier,$selected_carrier[$_carrier],$this->carriers[$_carrier]);
         }
+
         printf (" </select>");
-        printf (" Gateway <input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
+        printf (" Gateway <input type=text size=10 name=id_filter value='%s'>",$this->filters['id']);
+        printf (" Name <input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
 
     }
 
     function showCustomerForm() {
     }
+
     function showTextBeforeCustomerSelection() {
         print "Reseller";
     }
@@ -9611,15 +9320,14 @@ class Gateways extends Records {
                 $gateway->$item
                 );
             } else {
-                if ($item == 'carrier') {
+                if ($item == 'carrier_id') {
                     printf ("<select name=%s_form>",$item);
                     $selected_carrier[$gateway->$item]='selected';
-                    foreach ($this->carriers as $_grp) {
-                        printf ("<option value='%s' %s>%s",$_grp,$selected_carrier[$_grp],$_grp);
+                    foreach (array_keys($this->carriers) as $_carrier) {
+                        printf ("<option value='%s' %s>%s",$_carrier,$selected_carrier[$_carrier],$this->carriers[$_carrier]);
                     }
-    
-                    print "</select>";
-    
+                    printf (" </select>");
+
                 } else if ($item == 'transport') {
                     printf ("<select name=%s_form>",$item);
                     $selected_transport[$gateway->$item]='selected';
@@ -9642,8 +9350,7 @@ class Gateways extends Records {
 
         }
 
-        printf ("<input type=hidden name=name_filter value='%s'",$gateway->name);
-        printf ("<input type=hidden name=reseller_filter value='%s'",$gateway->reseller);
+        printf ("<input type=hidden name=id_filter value='%s'",$gateway->id);
 
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
@@ -9670,9 +9377,9 @@ class Gateways extends Records {
     function updateRecord () {
         //print "<p>Updating gateway ...";
 
-        if (!$_REQUEST['name_filter'] || !strlen($_REQUEST['reseller_filter'])) return;
+        if (!$_REQUEST['id_filter']) return;
 
-        if (!$gateway = $this->getRecord($_REQUEST['name_filter'])) {
+        if (!$gateway = $this->getRecord($_REQUEST['id_filter'])) {
             return false;
         }
 
@@ -9710,12 +9417,12 @@ class Gateways extends Records {
         }
     }
 
-    function getRecord($name) {
+    function getRecord($id) {
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
         // Filter
-        $filter=array('name'  => $name);
+        $filter=array('id'  => intval($id));
 
         // Range
         $range=array('start' => 0,
@@ -9765,7 +9472,7 @@ class GatewayRules extends Records {
     var $Fields=array(
                               'id'        => array('type'=>'integer','readonly' => true),
                               'gateway'   => array('type'=>'string'),
-                              'carrier'   => array('type'=>'string'),
+                              'carrier_id'=> array('type'=>'integer', 'name' => 'Carrier'),
                               'prefix'    => array('type'=>'string'),
                               'strip'     => array('type'=>'integer'),
                               'prepend'   => array('type'=>'string'),
@@ -9774,23 +9481,23 @@ class GatewayRules extends Records {
                               );
 
     function GatewayRules(&$SoapEngine) {
-        $this->filters   = array('id'       => trim($_REQUEST['id_filter']),
-                                 'gateway'  => trim($_REQUEST['gateway_filter']),
-                                 'carrier'  => trim($_REQUEST['carrier_filter']),
-                                 'prefix'   => trim($_REQUEST['prefix_filter']),
+        $this->filters   = array('id'         => trim($_REQUEST['id_filter']),
+                                 'gateway'    => trim($_REQUEST['gateway_filter']),
+                                 'carrier_id' => trim($_REQUEST['carrier_id_filter']),
+                                 'prefix'     => trim($_REQUEST['prefix_filter']),
                                  );
 
         $this->sortElements=array(
                             'changeDate' => 'Change date',
                             'gateway'    => 'Gateway',
-                            'carrier'    => 'Carrier',
+                            'carrier_id' => 'Carrier',
                             'prefix'     => 'Prefix'
                             );
         $this->Records(&$SoapEngine);
     }
 
     function listRecords() {
-    	$this->getGatewayGroups();
+    	$this->getCarriers();
 
         $this->showSeachForm();
 
@@ -9798,12 +9505,12 @@ class GatewayRules extends Records {
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
         // Filter
-        $filter=array('id'       => intval($this->filters['id']),
-                      'gateway'  => $this->filters['gateway'],
-                      'carrier'  => $this->filters['carrier'],
-                      'prefix'   => $this->filters['prefix'],
-                      'customer' => intval($this->filters['customer']),
-                      'reseller' => intval($this->filters['reseller'])
+        $filter=array('id'        => intval($this->filters['id']),
+                      'gateway'   => $this->filters['gateway'],
+                      'carrier_id'=> intval($this->filters['carrier_id']),
+                      'prefix'    => $this->filters['prefix'],
+                      'customer'  => intval($this->filters['customer']),
+                      'reseller'  => intval($this->filters['reseller'])
                       );
 
         // Range
@@ -9917,15 +9624,15 @@ class GatewayRules extends Records {
                     urlencode($gateway_rule->reseller)
                     );
 
-                    $_carriers_url = $this->url.sprintf("&service=pstn_carriers@%s&name_filter=%s&reseller_filter=%s",
+                    $_carriers_url = $this->url.sprintf("&service=pstn_carriers@%s&id_filter=%s&reseller_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
-                    urlencode($gateway_rule->carrier),
+                    urlencode($gateway_rule->carrier_id),
                     urlencode($gateway_rule->reseller)
                     );
 
-                    $_gateways_url = $this->url.sprintf("&service=pstn_gateways@%s&name_filter=%s&reseller_filter=%s",
+                    $_gateways_url = $this->url.sprintf("&service=pstn_gateways@%s&id_filter=%s&reseller_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
-                    urlencode($gateway_rule->gateway),
+                    urlencode($gateway_rule->gateway_id),
                     urlencode($gateway_rule->reseller)
                     );
 
@@ -9985,7 +9692,7 @@ class GatewayRules extends Records {
     function showAddForm() {
         //if ($this->selectionActive) return;
 
-        $this->getGatewayGroups();
+        $this->getCarriers();
 
         if (!count($this->carriers)) {
             print "<p>Create a carrier first";
@@ -10041,10 +9748,10 @@ class GatewayRules extends Records {
         } else {
             $gateway   = trim($_REQUEST['gateway']);
         }
-        if ($dictionary['carrier']) {
-            $carrier   = $dictionary['carrier'];
+        if ($dictionary['carrier_id']) {
+            $carrier_id   = $dictionary['carrier_id'];
         } else {
-            $carrier   = trim($_REQUEST['carrier']);
+            $carrier_id   = trim($_REQUEST['carrier_id']);
         }
 
         if ($dictionary['prefix']) {
@@ -10083,13 +9790,13 @@ class GatewayRules extends Records {
         }
 
         $rule=array(
-                     'gateway'   => $gateway,
-                     'carrier'   => $carrier,
-                     'prefix'    => $prefix,
-                     'prepend'   => $prepend,
-                     'strip'     => intval($strip),
-                     'minLength' => intval($minLength),
-                     'maxLength' => intval($maxLength)
+                     'gateway'    => $gateway,
+                     'carrier_id' => intval($carrier_id),
+                     'prefix'     => $prefix,
+                     'prepend'    => $prepend,
+                     'strip'      => intval($strip),
+                     'minLength'  => intval($minLength),
+                     'maxLength'  => intval($maxLength)
                     );
 
         $function=array('commit'   => array('name'       => 'addGatewayRule',
@@ -10131,12 +9838,14 @@ class GatewayRules extends Records {
         printf (" Rule <input type=text size=15 name=id_filter value='%s'>",$this->filters['id']);
         printf (" Gateway <input type=text size=15 name=gateway_filter value='%s'>",$this->filters['gateway']);
         print "
-        <select name=carrier_filter>
+        <select name=carrier_id_filter>
         <option value=''>Carrier";
-        $selected_carrier[$this->filters['carrier']]='selected';
-        foreach ($this->carriers as $_grp) {
-            printf ("<option value='%s' %s>%s",$_grp,$selected_carrier[$_grp],$_grp);
+        $selected_carrier[$this->filters['carrier_id']]='selected';
+
+        foreach (array_keys($this->carriers) as $_carrier) {
+            printf ("<option value='%s' %s>%s",$_carrier,$selected_carrier[$_carrier],$this->carriers[$_carrier]);
         }
+
         printf (" </select>");
     }
 
@@ -10183,7 +9892,7 @@ class GatewayRules extends Records {
                 $rule->$item
                 );
             } else {
-                if ($item == 'carrier') {
+                if ($item == 'carrier_id') {
                     printf ("<select name=%s_form>",$item);
                     $selected_carrier[$rule->$item]='selected';
                     foreach ($this->carriers as $_grp) {
@@ -10325,20 +10034,20 @@ class Routes extends Records {
                             );
 
     function Routes(&$SoapEngine) {
-        $this->filters   = array('prefix'   => trim($_REQUEST['prefix_filter']),
-                                 'priority' => trim($_REQUEST['priority_filter']),
-                                 'group'    => trim($_REQUEST['group_filter']),
-                                 'reseller' => trim($_REQUEST['reseller_filter']),
-                                 'id'       => trim($_REQUEST['id_filter'])
+        $this->filters   = array('prefix'    => trim($_REQUEST['prefix_filter']),
+                                 'priority'  => trim($_REQUEST['priority_filter']),
+                                 'carrier_id'=> trim($_REQUEST['carrier_id_filter']),
+                                 'reseller'  => trim($_REQUEST['reseller_filter']),
+                                 'id'        => trim($_REQUEST['id_filter'])
                                  );
 
         $this->Records(&$SoapEngine);
     }
 
     function listRecords() {
-        $this->getGatewayGroups();
+        $this->getCarriers();
 
-        // Get gateway groups
+        // Get gateway carriers
 
         $this->showSeachForm();
 
@@ -10347,7 +10056,7 @@ class Routes extends Records {
 
         // Filter
         $filter=array('prefix'       => $this->filters['prefix'],
-                      'carrier'      => $this->filters['group'],
+                      'carrier_id'   => intval($this->filters['carrier_id']),
                       'reseller'     => intval($this->filters['reseller']),
                       'id'           => intval($this->filters['id'])
                       );
@@ -10396,6 +10105,7 @@ class Routes extends Records {
             print "
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
+                <td><b>Route</b></th>
                 <td><b>Reseller</b></td>
                 <td><b>Carrier</b></td>
                 <td><b>Gateways</b></td>
@@ -10454,19 +10164,20 @@ class Routes extends Records {
                     urlencode($route->reseller)
                     );
 
-                    $_carriers_url = $this->url.sprintf("&service=pstn_carriers@%s&name_filter=%s",
+                    $_carriers_url = $this->url.sprintf("&service=pstn_carriers@%s&id_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
-                    urlencode($route->carrier)
+                    urlencode($route->carrier_id)
                     );
 
-                    $_gateways_url = $this->url.sprintf("&service=pstn_gateways@%s&group_filter=%s&reseller_filter=%s",
+                    $_gateways_url = $this->url.sprintf("&service=pstn_gateways@%s&carrier_id_filter=%s&reseller_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
-                    urlencode($route->carrier),
+                    urlencode($route->carrier_id),
                     urlencode($route->reseller)
                     );
 
                     printf("
                     <tr bgcolor=%s>
+                    <td>%s</td>
                     <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     <td><a href=%s>%s</a></td>
@@ -10479,6 +10190,7 @@ class Routes extends Records {
                     </tr>",
                     $bgcolor,
                     $index,
+                    $route->id,
                     $_customers_url,
                     $route->reseller,
                     $_carriers_url,
@@ -10533,16 +10245,15 @@ class Routes extends Records {
 
         printf (" Carrier: ");
 
-        print "<select name=group> ";
-        foreach ($this->carriers as $_grp) {
-            printf ("<option value='%s'>%s",$_grp,$_grp);
+        print "<select name=carrier_id> ";
+        foreach (array_keys($this->carriers) as $_carrier) {
+            printf ("<option value='%s'>%s",$_carrier,$this->carriers[$_carrier]);
         }
-
         printf (" </select>");
 
-        printf (" Prefix<input type=text size=20 name=prefix>");
-        printf (" Originator<input type=text size=20 name=originator>");
-        printf (" Priority<input type=text size=5 name=priority>");
+        printf (" Prefix <input type=text size=20 name=prefix>");
+        printf (" Originator <input type=text size=20 name=originator>");
+        printf (" Priority <input type=text size=5 name=priority>");
 
         print "
         </td>
@@ -10567,31 +10278,34 @@ class Routes extends Records {
         } else {
             $prefix   = trim($_REQUEST['prefix']);
         }
-        if ($dictionary['group']) {
-            $group   = $dictionary['group'];
+
+        if ($dictionary['carrier_id']) {
+            $carrier_id   = $dictionary['carrier_id'];
         } else {
-            $group   = trim($_REQUEST['group']);
+            $carrier_id   = trim($_REQUEST['carrier_id']);
         }
+
         if ($dictionary['originator']) {
             $originator   = $dictionary['originator'];
         } else {
             $originator   = trim($_REQUEST['originator']);
         }
+
         if ($dictionary['priority']) {
             $priority   = $dictionary['priority'];
         } else {
             $priority   = trim($_REQUEST['priority']);
         }
 
-        if (!strlen($group)) {
-            printf ("<p><font color=red>Error: Missing carrier. </font>");
+        if (!strlen($carrier_id)) {
+            printf ("<p><font color=red>Error: Missing carrier id. </font>");
             return false;
         }
  
         $route=array(
                      'prefix'       => $prefix,
                      'originator'   => $originator,
-                     'carrier'      => $group,
+                     'carrier_id'   => intval($carrier_id),
                      'priority'     => intval($priority)
                      );
 
@@ -10640,13 +10354,15 @@ class Routes extends Records {
     function showSeachFormCustom() {
 
         print "
-        <select name=gatewayGroup_filter>
+        <select name=carrier_id_filter>
         <option value=''>Carrier";
-        $selected_carriers[$this->filters['gatewayGroup']]='selected';
-        foreach ($this->carriers as $_grp) {
-            printf ("<option value='%s' %s>%s",$_grp,$selected_carriers[$_grp],$_grp);
+
+        $selected_carrier[$this->filters['carrier_id']]='selected';
+
+        foreach (array_keys($this->carriers) as $_carrier) {
+            printf ("<option value='%s' %s>%s",$_carrier,$selected_carrier[$_carrier],$this->carriers[$_carrier]);
         }
-        printf (" </select>");
+
         printf (" Prefix<input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
 
     }

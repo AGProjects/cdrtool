@@ -1,5 +1,7 @@
-cdrtool (6.8.2) unstable; urgency=low
+cdrtool (6.9.0) unstable; urgency=low
 
+  * Refactored the provisioning of PSTN routing via NGNPro, you must upgrade
+    to ngnpro >= 4.1.5
   * Spellcheck some variable names that did not match the configuration
   * Fixed logging of imported rows from csv files
   * Created two standard profiles (OpenSIPS and SipThor) for subscriber login

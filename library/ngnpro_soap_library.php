@@ -697,10 +697,10 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                                     'use' => 'encoded'));
         return $result;
     }
-    function &deleteGateway($name)
+    function &deleteGateway($id)
     {
         $result = $this->call('deleteGateway',
-                              $v = array('name' => $name),
+                              $v = array('id' => $id),
                               array('namespace' => 'urn:AGProjects:NGNPro:Sip',
                                     'soapaction' => '',
                                     'style' => 'rpc',
@@ -779,10 +779,10 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                                     'use' => 'encoded'));
         return $result;
     }
-    function &deleteCarrier($name)
+    function &deleteCarrier($id)
     {
         $result = $this->call('deleteCarrier',
-                              $v = array('name' => $name),
+                              $v = array('id' => $id),
                               array('namespace' => 'urn:AGProjects:NGNPro:Sip',
                                     'soapaction' => '',
                                     'style' => 'rpc',
