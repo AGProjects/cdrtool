@@ -173,14 +173,14 @@ class SoapEngine {
                                            'name'          => 'ENUM numbers',
                                            'soap_class'    => 'WebService_NGNPro_EnumPort',
                                            'category'      => 'dns',
-                                           'description'   => 'Manage phone numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use _ or % to match one or more characters. '
+                                           'description'   => 'Manage E164 numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use _ or % to match one or more characters. '
                                            ),
                          'enum_ranges'    => array(
                                            'records_class' => 'EnumRanges',
                                            'name'          => 'ENUM ranges',
                                            'soap_class'    => 'WebService_NGNPro_EnumPort',
                                            'category'      => 'dns',
-                                           'description'   => 'Manage phone number ranges that hold individual phone numbers. Use _ or % to match one or more characters. '
+                                           'description'   => 'Manage E164 number ranges that hold individual phone numbers. Use _ or % to match one or more characters. '
                                            ),
                          'dns_zones'      => array(
                                            'records_class' => 'DnsZones',
@@ -224,7 +224,7 @@ class SoapEngine {
                                            'name'          => 'PSTN carriers',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'pstn',
-                                           'description'   => 'Manage carriers for outbound PSTN traffic. ',
+                                           'description'   => 'Manage outbound carriers for PSTN traffic. Click on Carier to edit its attributes. ',
                                            'resellers_only'=> true
                                            ),
                          'pstn_gateways'  => array(
@@ -232,7 +232,7 @@ class SoapEngine {
                                            'name'          => 'PSTN gateways',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'pstn',
-                                           'description'   => 'Manage outbound PSTN gateways. Click on gateway to edit its attributes. ',
+                                           'description'   => 'Manage outbound PSTN gateways. Click on Gateway to edit its attributes. ',
                                            'resellers_only'=> true
                                            ),
                          'pstn_routes'    => array(
@@ -240,7 +240,7 @@ class SoapEngine {
                                            'name'          => 'PSTN routes',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'pstn',
-                                           'description'   => 'Managed PSTN via carriers. Use _ or % to match one or more characters. ',
+                                           'description'   => 'Manage outbound PSTN routes. A prefix must be formated as 00+E164, an empty prefix matches all routes. ',
                                            'resellers_only'=> true
                                            ),
                          'gateway_rules'  => array(
@@ -248,7 +248,7 @@ class SoapEngine {
                                            'name'          => 'PSTN rules',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'pstn',
-                                           'description'   => 'Manage rules for outbound PSTN gateways. Click on rule to edit its attributes.',
+                                           'description'   => 'Manage translation rules for PSTN gateways. Rules are applied against 00+E164 prefix. Click on Rule to edit its attributes. ',
                                            'resellers_only'=> true
                                            )
 
@@ -1295,6 +1295,33 @@ class Records {
         } else {
             foreach ($result->carriers as $_carrier) {
                 $this->carriers[$_carrier->id]=$_carrier->name;
+            }
+        }
+    }
+
+    function getGateways () {
+        if (count($this->gateways)) return true;
+
+        $Query=array('filter'  => array('name'=>''),
+                     'orderBy' => array('attribute' => 'name',
+                                        'direction' => 'ASC'
+                                  ),
+                     'range'   => array('start' => 0,
+                                        'count' => 1000)
+                     );
+
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $result     = $this->SoapEngine->soapclient->getGateways($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            foreach ($result->gateways as $_gateway) {
+                $this->gateways[$_gateway->id]=sprintf("%s, Carrier %s",$_gateway->name,$_gateway->carrier);
             }
         }
     }
@@ -8714,7 +8741,7 @@ class Carriers extends Records {
                     if (!$result->carriers[$i]) break;
     
                     $carrier = $result->carriers[$i];
-    
+
                     $index=$this->next+$i+1;
 
                     $rr=floor($index/2);
@@ -8739,7 +8766,6 @@ class Carriers extends Records {
                         $actionText = "Delete";
                     }
 
-
                     $_url = $this->url.sprintf("&service=%s&id_filter=%s&reseller_filter=%s",
                     urlencode($this->SoapEngine->service),
                     urlencode($carrier->id),
@@ -8760,7 +8786,7 @@ class Carriers extends Records {
                     printf("
                     <tr bgcolor=%s>
                     <td>%s</td>
-                    <td valign=top><a href=%s>%s</a></td>
+                    <td><a href=%s>%s</a></td>
                     <td><a href=%s>%s</a></td>
                     <td>%s</td>
                     <td><a href=%s>Gateways</a></td>
@@ -9224,7 +9250,7 @@ class Gateways extends Records {
                     urlencode($carrier->reseller)
                     );
 
-                    $_rules_url = $this->url.sprintf("&service=gateway_rules@%s&gateway_filter=%s&reseller_filter=%s",
+                    $_rules_url = $this->url.sprintf("&service=gateway_rules@%s&gateway_id_filter=%s&reseller_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
                     urlencode($gateway->id),
                     urlencode($carrier->reseller)
@@ -9308,7 +9334,7 @@ class Gateways extends Records {
             <input type=submit name=action value=Add>
             ";
 
-            printf (" Carrier: ");
+            printf (" Carrier ");
 
             print "<select name=carrier_id> ";
             foreach (array_keys($this->carriers) as $_carrier) {
@@ -9318,7 +9344,7 @@ class Gateways extends Records {
 
             printf (" Name <input type=text size=20 name=name>");
 
-            printf (" Transport: ");
+            printf (" Transport ");
 
             print "<select name=transport> ";
 
@@ -9352,16 +9378,19 @@ class Gateways extends Records {
         } else {
             $name   = trim($_REQUEST['name']);
         }
+
         if ($dictionary['carrier_id']) {
             $carrier_id   = $dictionary['carrier_id'];
         } else {
             $carrier_id   = trim($_REQUEST['carrier_id']);
         }
+
         if ($dictionary['address']) {
             $address   = $dictionary['address'];
         } else {
             $address   = trim($_REQUEST['address']);
         }
+
         if ($dictionary['transport']) {
             $transport   = $dictionary['transport'];
         } else {
@@ -9644,19 +9673,18 @@ class GatewayRules extends Records {
                               );
 
     var $Fields=array(
-                              'id'        => array('type'=>'integer','readonly' => true),
-                              'gateway'   => array('type'=>'string'),
-                              'carrier_id'=> array('type'=>'integer', 'name' => 'Carrier'),
-                              'prefix'    => array('type'=>'string'),
-                              'strip'     => array('type'=>'integer'),
-                              'prepend'   => array('type'=>'string'),
-                              'minLength' => array('type'=>'integer'),
-                              'maxLength' => array('type'=>'integer')
+                              'id'         => array('type'=>'integer','readonly' => true),
+                              'gateway_id' => array('type'=>'integer','name' => 'Gateway'),
+                              'prefix'     => array('type'=>'string'),
+                              'strip'      => array('type'=>'integer'),
+                              'prepend'    => array('type'=>'string'),
+                              'minLength'  => array('type'=>'integer'),
+                              'maxLength'  => array('type'=>'integer')
                               );
 
     function GatewayRules(&$SoapEngine) {
         $this->filters   = array('id'         => trim($_REQUEST['id_filter']),
-                                 'gateway'    => trim($_REQUEST['gateway_filter']),
+                                 'gateway_id' => trim($_REQUEST['gateway_id_filter']),
                                  'carrier_id' => trim($_REQUEST['carrier_id_filter']),
                                  'prefix'     => trim($_REQUEST['prefix_filter']),
                                  );
@@ -9664,7 +9692,7 @@ class GatewayRules extends Records {
         $this->sortElements=array(
                             'changeDate' => 'Change date',
                             'gateway'    => 'Gateway',
-                            'carrier_id' => 'Carrier',
+                            'carrier'    => 'Carrier',
                             'prefix'     => 'Prefix'
                             );
         $this->Records(&$SoapEngine);
@@ -9679,12 +9707,12 @@ class GatewayRules extends Records {
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
         // Filter
-        $filter=array('id'        => intval($this->filters['id']),
-                      'gateway'   => $this->filters['gateway'],
-                      'carrier_id'=> intval($this->filters['carrier_id']),
-                      'prefix'    => $this->filters['prefix'],
-                      'customer'  => intval($this->filters['customer']),
-                      'reseller'  => intval($this->filters['reseller'])
+        $filter=array('id'         => intval($this->filters['id']),
+                      'gateway_id' => intval($this->filters['gateway_id']),
+                      'carrier_id' => intval($this->filters['carrier_id']),
+                      'prefix'     => $this->filters['prefix'],
+                      'customer'   => intval($this->filters['customer']),
+                      'reseller'   => intval($this->filters['reseller'])
                       );
 
         // Range
@@ -9729,8 +9757,8 @@ class GatewayRules extends Records {
             print "
             <tr bgcolor=lightgrey>
                 <td><b></b></th>
-                <td><b>Rule</b></th>
                 <td><b>Reseller</b></td>
+                <td><b>Rule</b></th>
                 <td><b>Carrier</b></td>
                 <td><b>Gateway</b></td>
                 <td><b>Prefix</b></td>
@@ -9814,8 +9842,8 @@ class GatewayRules extends Records {
                     <td valign=top>%s</td>
                     <td valign=top><a href=%s>%s</a></td>
                     <td valign=top><a href=%s>%s</a></td>
-                    <td valign=top><a href=%s>%s</a></td>
-                    <td valign=top><a href=%s>%s</a></td>
+                    <td valign=top><a href=%s>%s</a> (%d)</td>
+                    <td valign=top><a href=%s>%s (%d)</a></td>
                     <td valign=top>%s</td>
                     <td valign=top>%s</td>
                     <td valign=top>%s</td>
@@ -9826,10 +9854,10 @@ class GatewayRules extends Records {
                     </tr>",
                     $bgcolor,
                     $index,
-                    $_url,     $gateway_rule->id,
                     $_customer_url, $gateway_rule->reseller,
-                    $_carrier_url, $gateway_rule->carrier,
-                    $_gateway_url, $gateway_rule->gateway,
+                    $_url,     $gateway_rule->id,
+                    $_carrier_url, $gateway_rule->carrier,$gateway_rule->carrier_id,
+                    $_gateway_url, $gateway_rule->gateway,$gateway_rule->gateway_id,
                     $gateway_rule->prefix,
                     $gateway_rule->strip,
                     $gateway_rule->prepend,
@@ -9865,10 +9893,10 @@ class GatewayRules extends Records {
     function showAddForm() {
         //if ($this->selectionActive) return;
 
-        $this->getCarriers();
+        $this->getGateways();
 
-        if (!count($this->carriers)) {
-            print "<p>Create a carrier first";
+        if (!count($this->gateways)) {
+            print "<p>Create a gateway first";
             return false;
         }
 
@@ -9887,21 +9915,17 @@ class GatewayRules extends Records {
             <input type=hidden name=sortBy value=changeDate>
             ";
 
-            printf (" Gateway <input type=text size=20 name=gateway>");
-
-            printf (" Carrier: ");
-
-            print "<select name=carrier> ";
-            foreach ($this->carriers as $_grp) {
-                printf ("<option value='%s'>%s",$_grp,$_grp);
+            print "Gateway <select name=gateway_id> ";
+            foreach (array_keys($this->gateways) as $_gateway) {
+                printf ("<option value='%s'>%s",$_gateway,$this->gateways[$_gateway]);
             }
             printf (" </select>");
 
-            printf (" Prefix <input type=text size=10 name=prefix>");
-            printf (" Strip <input type=text size=10 name=strip>");
-            printf (" Prepend <input type=text size=10 name=prepend>");
-            printf (" Min length <input type=text size=10 name=minLength>");
-            printf (" Max length <input type=text size=10 name=maxLength>");
+            printf (" Prefix <input type=text size=15 name=prefix>");
+            printf (" Strip <input type=text size=5 name=strip>");
+            printf (" Prepend <input type=text size=15 name=prepend>");
+            printf (" Min length <input type=text size=5 name=minLength>");
+            printf (" Max length <input type=text size=5 name=maxLength>");
 
             print "
             </td>
@@ -9916,15 +9940,10 @@ class GatewayRules extends Records {
     }
 
     function addRecord($dictionary=array()) {
-        if ($dictionary['gateway']) {
-            $gateway   = $dictionary['gateway'];
+        if ($dictionary['gateway_id']) {
+            $gateway_id   = $dictionary['gateway_id'];
         } else {
-            $gateway   = trim($_REQUEST['gateway']);
-        }
-        if ($dictionary['carrier_id']) {
-            $carrier_id   = $dictionary['carrier_id'];
-        } else {
-            $carrier_id   = trim($_REQUEST['carrier_id']);
+            $gateway_id = trim($_REQUEST['gateway_id']);
         }
 
         if ($dictionary['prefix']) {
@@ -9957,14 +9976,13 @@ class GatewayRules extends Records {
             $maxLength   = trim($_REQUEST['maxLength']);
         }
 
-        if (!strlen($gateway) || !strlen($carrier)) {
-            printf ("<p><font color=red>Error: Missing gateway or carrier</font>");
+        if (!strlen($gateway_id)) {
+            printf ("<p><font color=red>Error: Missing gateway id</font>");
             return false;
         }
 
         $rule=array(
-                     'gateway'    => $gateway,
-                     'carrier_id' => intval($carrier_id),
+                     'gateway_id' => intval($gateway_id),
                      'prefix'     => $prefix,
                      'prepend'    => $prepend,
                      'strip'      => intval($strip),
@@ -10009,10 +10027,10 @@ class GatewayRules extends Records {
 
     function showSeachFormCustom() {
         printf (" Rule <input type=text size=15 name=id_filter value='%s'>",$this->filters['id']);
-        printf (" Gateway <input type=text size=15 name=gateway_filter value='%s'>",$this->filters['gateway']);
         print "
         <select name=carrier_id_filter>
         <option value=''>Carrier";
+
         $selected_carrier[$this->filters['carrier_id']]='selected';
 
         foreach (array_keys($this->carriers) as $_carrier) {
@@ -10020,6 +10038,8 @@ class GatewayRules extends Records {
         }
 
         printf (" </select>");
+        printf (" Gateway <input type=text size=15 name=gateway_id_filter value='%s'>",$this->filters['gateway_id']);
+        printf (" Prefix <input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
     }
 
     function showCustomerForm() {
@@ -10065,13 +10085,14 @@ class GatewayRules extends Records {
                 $rule->$item
                 );
             } else {
-                if ($item == 'carrier_id') {
+                if ($item == 'gateway_id') {
                     printf ("<select name=%s_form>",$item);
-                    $selected_carrier[$rule->$item]='selected';
-                    foreach ($this->carriers as $_grp) {
-                        printf ("<option value='%s' %s>%s",$_grp,$selected_carrier[$_grp],$_grp);
+                    $selected_gateway[$rule->$item]='selected';
+
+                    foreach (array_keys($this->gateways) as $_gateway) {
+                        printf ("<option value='%s'>%s",$_gateway,$this->gateways[$_gateway]);
                     }
-    
+
                     print "</select>";
     
                 } else {
