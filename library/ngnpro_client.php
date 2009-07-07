@@ -2305,11 +2305,10 @@ class SipAccounts extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>Account</b></td>
-                <td><b>Name</b></td>
+                <td><b>Full name</b></td>
                 <td><b>Email</b></td>
-                <td><b>Caller Id</b></td>
-                <td><b>Quota</b></td>
-                <td><b>Groups</b></td>
+                <td><b>Timezone</b></td>
+                <td><b>Rights</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Change date</b></td>
                 <td><b>Actions</b></td>
@@ -2434,8 +2433,7 @@ class SipAccounts extends Records {
                         <td>%s</td>
                         <td>%s %s</td>
                         <td><a href=mailto:%s>%s</a></td>
-                        <td>%s</td>
-                        <td>%s</td>
+                        <td align=right>%s</td>
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
@@ -2449,8 +2447,7 @@ class SipAccounts extends Records {
                         $account->lastName,
                         $account->email,
                         $account->email,
-                        $account->rpid,
-                        $account->quota,
+                        $account->timezone,
                         $groups,
                         $_owner_url,
                         $account->changeDate,
