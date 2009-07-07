@@ -2162,7 +2162,7 @@ class CDRS_opensips extends CDRS {
             if (count($sessions['missed'])) {
                 // missed sessions
                 $textBody .= sprintf ("Missed sessions\n\n
-                Id,Date,From,To,Duration\n
+                Id,Date,From,Duration\n
                 ");
     
                 $htmlBody .= sprintf ("<h2>Missed sessions</h2>
@@ -2175,8 +2175,6 @@ class CDRS_opensips extends CDRS {
                 </th>
                 <th>Caller address
                 </th>
-                <th>Called address
-                </th>
                 </tr>
                 ");
     
@@ -2185,12 +2183,11 @@ class CDRS_opensips extends CDRS {
                     $i++;
                     if ($i >= $count) break;
     
-                    $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td></tr>",
+                    $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td></tr>",
                     $i,
                     $_session['date'],
                     $_session['from'],
-                    $_session['from'],
-                    $_session['to']
+                    $_session['from']
                     );
     
     
@@ -2209,7 +2206,7 @@ class CDRS_opensips extends CDRS {
 
                 // diverted sessions
                 $textBody .= sprintf ("Diverted sessions\n\n
-                Id,Date,From,To,Diverted to\n
+                Id,Date,From,Diverted to\n
                 ");
     
                 $htmlBody .= sprintf ("<h2>Diverted sessions</h2>
@@ -2222,8 +2219,6 @@ class CDRS_opensips extends CDRS {
                 </th>
                 <th>Caller address
                 </th>
-                <th>Called address
-                </th>
                 <th>Diverted to
                 </th>
                 </tr>
@@ -2234,20 +2229,18 @@ class CDRS_opensips extends CDRS {
                     $i++;
                     if ($i >= $count) break;
     
-                    $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td><td>%s</td></tr>",
+                    $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td></tr>",
                     $i,
                     $_session['date'],
                     $_session['from'],
                     $_session['from'],
-                    $_session['to'],
                     $_session['canonical']
                     );
     
-                    $txtBody.=sprintf ("%s,%s,%s,%s,%s,%s\n",
+                    $txtBody.=sprintf ("%s,%s,%s,%s\n",
                     $i,
                     $_session['date'],
                     $_session['from'],
-                    $_session['to'],
                     $_session['canonical']
                     );
                 }
@@ -2259,7 +2252,7 @@ class CDRS_opensips extends CDRS {
 
                 // received sessions
                 $textBody .= sprintf ("Received sessions\n\n
-                Id,Date,From,To,Duration\n");
+                Id,Date,From,Duration\n");
     
                 $htmlBody .= sprintf ("<h2>Received sessions</h2>
                 <p>
@@ -2271,8 +2264,6 @@ class CDRS_opensips extends CDRS {
                 </th>
                 <th>Caller address
                 </th>
-                <th>Called address
-                </th>
                 <th>Duration
                 </th>
                 </tr>
@@ -2283,21 +2274,19 @@ class CDRS_opensips extends CDRS {
     
                     if ($i >= $count) break;
     
-                    $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td><td>%s</td></tr>",
+                    $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td></tr>",
                     $i,
                     $_session['date'],
                     $_session['from'],
                     $_session['from'],
-                    $_session['to'],
                     $_session['duration']
                     );
     
     
-                    $txtBody.=sprintf ("%s,%s,%s,%s,%s\n",
+                    $txtBody.=sprintf ("%s,%s,%s,%s\n",
                     $i,
                     $_session['date'],
                     $_session['from'],
-                    $_session['to'],
                     $_session['duration']
                     );
     
