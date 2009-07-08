@@ -3282,11 +3282,13 @@ class CDR_opensips extends CDR {
 }
 
 class SIP_trace {
-    var $enableThor           = false;
-    var $trace_array          = array();
-    var $traced_ip            = array();
-    var $SIPProxies           = array();
-    var $mediaTrace = false;
+    var $enableThor  = false;
+    var $trace_array = array();
+    var $traced_ip   = array();
+    var $SIPProxies  = array();
+    var $mediaTrace  = false;
+    var $thor_nodes  = array();
+
 
     function SIP_trace ($cdr_source) {
         global $DATASOURCES, $auth;
@@ -3360,6 +3362,7 @@ class SIP_trace {
 
     function isProxy($ip,$sip_proxy='') {
         if (!$ip) return false;
+
         if (!$this->enableThor) {
             if (!is_array($this->SIPProxies)) {
                 return false;
@@ -3369,7 +3372,16 @@ class SIP_trace {
                 return true;
             }
         } else if ($sip_proxy) {
-            return isThorNode($ip,$sip_proxy);
+            if ($this->thor_nodes[$ip]) {
+                return true;
+            } else {
+            	if (isThorNode($ip,$sip_proxy)) {
+            		$this->thor_nodes[$ip]=1;
+                    return true;
+            	} else {
+                    return false;
+                }
+            }
         }
 
         return false;
