@@ -138,6 +138,8 @@ class SoapEngine {
     var $exception     = array();
     var $result        = false;
     var $extraFormElements = array();
+    var $default_enum_tld  =  'e164.arpa';
+    var $default_timezone  =  'Europe/Amsterdam';
 
     var $ports=array(
                          'sip_accounts'   => array(
@@ -434,7 +436,13 @@ class SoapEngine {
 
             $this->impersonate  = intval($this->soapEngines[$this->soapEngine]['impersonate']);
 
-            $this->default_enum_tld  = $this->soapEngines[$this->soapEngine]['default_enum_tld'];
+			if ($this->soapEngines[$this->soapEngine]['default_enum_tld']) {
+            	$this->default_enum_tld  = $this->soapEngines[$this->soapEngine]['default_enum_tld'];
+            }
+
+            if ($this->soapEngines[$this->soapEngine]['default_timezone']) {
+            	$this->default_timezone  = $this->soapEngines[$this->soapEngine]['default_timezone'];
+            }
 
             if (strlen($this->soapEngines[$this->soapEngine]['sip_engine'])) {
                 $this->sip_engine=$this->soapEngines[$this->soapEngine]['sip_engine'];
@@ -2730,6 +2738,8 @@ class SipAccounts extends Records {
             $timezone=$dictionary['timezone'];
         } else if (strlen(trim($_REQUEST['timezone']))) {
             $timezone=trim($_REQUEST['timezone']);
+        } else if ($this->SoapEngine->default_timezone) {
+            $timezone=$this->SoapEngine->default_timezone;
         } else {
             $timezone='Europe/Amsterdam';
         }
@@ -4177,11 +4187,7 @@ class EnumRanges extends Records {
         $info   = trim($_REQUEST['info']);
 
         if (!strlen($tld)) {
-            if (strlen($this->SoapEngine->default_enum_tld)) {
-                $tld=$this->SoapEngine->default_enum_tld;
-            } else {
-                $tld='e164.arpa';
-            }
+        	$tld=$this->SoapEngine->default_enum_tld;
         }
 
         if (!strlen($tld) || !strlen($prefix) || !is_numeric($prefix)) {
@@ -4353,7 +4359,7 @@ class EnumRanges extends Records {
                 }
             }
 
-            if (strlen($this->SoapEngine->default_enum_tld) && !$seen[$this->SoapEngine->default_enum_tld]) {
+            if (!$seen[$this->SoapEngine->default_enum_tld]) {
                 $this->allowedDomains[]=$this->SoapEngine->default_enum_tld;
             }
         }
@@ -5590,7 +5596,7 @@ class EnumMappings extends Records {
                     $seen[$range->id->tld]++;
                 }
             }
-            if (strlen($this->SoapEngine->default_enum_tld) && !$seen[$this->SoapEngine->default_enum_tld]) {
+            if (!$seen[$this->SoapEngine->default_enum_tld]) {
                 $this->allowedDomains[]=$this->SoapEngine->default_enum_tld;
             }
         }
@@ -5618,11 +5624,7 @@ class EnumMappings extends Records {
         $number=$prefix.$number;
 
         if (!strlen($tld)) {
-            if (strlen($this->SoapEngine->default_enum_tld)) {
-                $tld=$this->SoapEngine->default_enum_tld;
-            } else {
-                $tld='e164.arpa';
-            }
+        	$tld=$this->SoapEngine->default_enum_tld;
         }
 
         if (!strlen($tld) || !strlen($number) || !is_numeric($number)) {
