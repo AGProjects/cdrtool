@@ -2317,6 +2317,7 @@ class SipAccounts extends Records {
                 <td><b>Email</b></td>
                 <td><b>Timezone</b></td>
                 <td><b>Rights</b></td>
+                <td><b>Quota</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Change date</b></td>
                 <td><b>Actions</b></td>
@@ -2445,6 +2446,7 @@ class SipAccounts extends Records {
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
+                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>
                         ",
@@ -2457,6 +2459,7 @@ class SipAccounts extends Records {
                         $account->email,
                         $account->timezone,
                         $groups,
+                        $account->quota,
                         $_owner_url,
                         $account->changeDate,
                         $_url,
@@ -2484,9 +2487,9 @@ class SipAccounts extends Records {
                         $account->lastName,
                         $account->email,
                         $account->email,
-                        $account->rpid,
-                        $account->quota,
+                        $account->timezone,
                         $groups,
+                        $account->quota,
                         $account->owner,
                         $account->changeDate,
                         $_url,
