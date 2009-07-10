@@ -72,7 +72,7 @@ if (!$_REQUEST['export']) {
 
 if ($_REQUEST['action']=="Save settings") {
     if ($SipSettings->checkSettings()) {
-        $SipSettings->saveSettings();
+        $SipSettings->update();
         unset($SipSettings);
         if (in_array($domain,$freeDomains)) {
             $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);

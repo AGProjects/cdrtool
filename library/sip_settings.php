@@ -1964,71 +1964,68 @@ class SipSettings {
                 $td_class="border";
             }
 
-             if (!$this->prepaid) {
+            if ($this->pstn_changes_allowed) {
+
+                print "
+                <tr>
+                <td class=border>";
+                print _("Quota");
+                print "
+                </td>
+                <td class=$td_class>
+                <table cellspacing=0 cellpadding=0 width=100%>
+                <tr>
+                <td>";
+    
+                printf ("<input type=text size=6 maxsize=6 name=quota value='%s'> %s",$this->quota,$this->currency);
+     
+                if ($this->quota || in_array("quota",$this->groups)) {
+                    $this->getCallStatistics();
+                    if ($this->thisMonth['price']) {
+                        print "&nbsp;&nbsp;&nbsp;";
+                        printf (_("This month usage: %.2f %s"),$this->thisMonth['price'], $this->currency);
+                        printf (" / %d ",$this->thisMonth['calls']);
+                        print _("Calls");
+                    }
+                }
+     
+                print "
+                </td>
+                <td align=right>
+                ";
 
                 if ($this->pstn_changes_allowed) {
-
+                    print _("Reset");
                     print "
-                    <tr>
-                    <td class=border>";
-                    print _("Quota");
-                    print "
-                    </td>
-                    <td class=$td_class>
-                    <table cellspacing=0 cellpadding=0 width=100%>
-                    <tr>
-                    <td>";
-        
-                    printf ("<input type=text size=6 maxsize=6 name=quota value='%s'> %s",$this->quota,$this->currency);
-         
-                    if ($this->quota || in_array("quota",$this->groups)) {
-                        $this->getCallStatistics();
-                        if ($this->thisMonth['price']) {
-                            print "&nbsp;&nbsp;&nbsp;";
-                            printf (_("This month usage: %.2f %s"),$this->thisMonth['price'], $this->currency);
-                            printf (" / %d ",$this->thisMonth['calls']);
-                            print _("Calls");
-                        }
-                    }
-         
-                    print "
-                    </td>
-                    <td align=right>
-                    ";
-    
-                    if ($this->pstn_changes_allowed) {
-                        print _("Reset");
-                        print "
-                        <input type=checkbox name=quota_reset value=1>
-                        ";
-                    }
-        
-                    print "</td>
-                    </tr>
-                    </table>
-                    </td>
-                    </tr>
-                    ";
-
-                } else if ($this->quota) {
-                    print "
-                    <tr>
-                    <td class=border>";
-                    print _("Quota");
-                    print "
-                    </td>
-                    <td class=$td_class>
-                    <table cellspacing=0 cellpadding=0 width=100%>
-                    <tr>
-                    <td>";
-                    printf ("%s %s",$this->quota,$this->currency);
-                    print "</td>
-                    </tr>
-                    </table>
-                    </td>
-                    </tr>
+                    <input type=checkbox name=quota_reset value=1>
                     ";
                 }
+    
+                print "</td>
+                </tr>
+                </table>
+                </td>
+                </tr>
+                ";
+
+            } else if ($this->quota) {
+                print "
+                <tr>
+                <td class=border>";
+                print _("Quota");
+                print "
+                </td>
+                <td class=$td_class>
+                <table cellspacing=0 cellpadding=0 width=100%>
+                <tr>
+                <td>";
+                printf ("%s %s",$this->quota,$this->currency);
+                print "</td>
+                </tr>
+                </table>
+                </td>
+                </tr>
+                ";
             }
         }
 
@@ -2597,8 +2594,8 @@ class SipSettings {
         ";
     }
 
-    function saveSettings() {
-        dprint("saveSettings()");
+    function update() {
+        dprint("update()");
 
         $this->getVoicemail();
         $this->getENUMmappings();
@@ -2699,8 +2696,6 @@ class SipSettings {
         if ($this->prepaid_changes_allowed) {
             if(!$result->prepaid && $_REQUEST['prepaid']){
                 if ($result->quota) {
-                    $result->quota=0;
-                    $quota=0;
                     $this->somethingChanged=1;
                 }
                 $this->somethingChanged=1;
@@ -2890,9 +2885,9 @@ class SipSettings {
 
         if ($this->somethingChanged) {
 
-               $result->properties=$this->properties;
+        	$result->properties=$this->properties;
 
-            if (!$result->quota) $result->quota=0;
+        	if (!$result->quota) $result->quota=0;
 
              //dprint_r($result);
 
