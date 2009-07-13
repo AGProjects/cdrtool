@@ -2316,7 +2316,7 @@ class SipAccounts extends Records {
                 <td><b>Full name</b></td>
                 <td><b>Email</b></td>
                 <td><b>Timezone</b></td>
-                <td><b>Rights</b></td>
+                <td><b>Features</b></td>
                 <td align=right><b>Quota</b></td>
                 <td align=right><b>Balance</b></td>
                 <td><b>Owner</b></td>
