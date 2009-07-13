@@ -2317,7 +2317,8 @@ class SipAccounts extends Records {
                 <td><b>Email</b></td>
                 <td><b>Timezone</b></td>
                 <td><b>Rights</b></td>
-                <td><b>Quota</b></td>
+                <td align=right><b>Quota</b></td>
+                <td align=right><b>Balance</b></td>
                 <td><b>Owner</b></td>
                 <td><b>Change date</b></td>
                 <td><b>Actions</b></td>
@@ -2333,9 +2334,44 @@ class SipAccounts extends Records {
                 $maxrows=$this->rows;
             }
 
-            $i=0;
 
             if ($this->rows) {
+            	$i=0;
+
+                if ($this->version > 1) {
+
+                    $_prepaid_accounts=array();
+                    while ($i < $maxrows)  {
+                        if (!$result->accounts[$i]) break;
+                        $account = $result->accounts[$i];
+                        if ($account->prepaid) {
+                            $_prepaid_accounts[]=array("username" => $account->id->username,
+                                                       "domain" => $account->id->domain
+                                                      );
+                        }
+                        $i++;
+                    }
+    
+                    if (count($_prepaid_accounts)) {
+                        // Insert credetials
+                        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                
+                        // Call function
+                        $result1     = $this->SoapEngine->soapclient->getPrepaidStatus($_prepaid_accounts);
+                        if (!PEAR::isError($result1)) {
+                            $j=0;
+    
+                            foreach ($result1 as $_account) {
+                                $_sip_account=sprintf("%s@%s",$_prepaid_accounts[$j]['username'],$_prepaid_accounts[$j]['domain']);
+                                $_prepaid_balance[$_sip_account]=$_account->balance;
+                                $j++;
+                            }
+                        }
+                    }
+                }
+
+            	$i=0;
+
                 while ($i < $maxrows)  {
     
                     if (!$result->accounts[$i]) break;
@@ -2435,6 +2471,7 @@ class SipAccounts extends Records {
                         } else {
                             $_owner_url='';
                         }          
+                        $prepaid_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
 
                         printf("
                         <tr bgcolor=%s>
@@ -2444,7 +2481,8 @@ class SipAccounts extends Records {
                         <td><a href=mailto:%s>%s</a></td>
                         <td align=right>%s</td>
                         <td>%s</td>
-                        <td>%s</td>
+                        <td align=right>%s</td>
+                        <td align=right>%s</td>
                         <td>%s</td>
                         <td>%s</td>
                         <td><a href=%s>%s</a></td>
@@ -2460,6 +2498,7 @@ class SipAccounts extends Records {
                         $account->timezone,
                         $groups,
                         $account->quota,
+                        $_prepaid_balance[$prepaid_account],
                         $_owner_url,
                         $account->changeDate,
                         $_url,
@@ -2475,6 +2514,7 @@ class SipAccounts extends Records {
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
+                        <td></td>
                         <td>%s</td>
                         <td>%s</td>
                         <td><a href=%s>%s</a></td>
