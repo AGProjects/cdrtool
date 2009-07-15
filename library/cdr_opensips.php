@@ -155,9 +155,10 @@ class CDRS_opensips extends CDRS {
         <table border=0 cellspacing=2 width=100%>
         <tr bgcolor=lightgrey>
         <td>Id</td>
-        <td><b>Start time</b></td>
-        <td><b>Sip Proxy</b></td>
+        <td><b>Session start time</b></td>
         <td><b>SIP caller</b></td>
+        <td><b>Location</b></td>
+        <td><b>Sip Proxy</b></td>
         <td><b>SIP destination</b></td>
         <td><b>Dur</b></td>
         <td><b>Price</b></td>
@@ -188,9 +189,10 @@ class CDRS_opensips extends CDRS {
             <table border=0 cellspacing=2 width=100%>
             <tr bgcolor=lightgrey>
         	<td>Id</td>
-            <td><b>Date and time</b>
-            <td><b>Sip Proxy</b></td>
+            <td><b>Session start time</b>
             <td><b>SIP caller</b></td>
+            <td><b>Location</b></td>
+            <td><b>Sip Proxy</b></td>
             <td><b>SIP destination</b></td>
             <td><b>Duration</b></td>
             <td><b>Price</b></td>
@@ -2635,6 +2637,10 @@ class CDR_opensips extends CDR {
 
         if (!is_object($perm)) return;
 
+        require_once "library/GeoIP.php";
+        $geoip = Net_GeoIP::getInstance("library/geoip.dat");
+        $this->country=$geoip->lookupCountryName($this->SourceIP);
+
         $this->cdr_details="
         <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
         <tr>
@@ -2697,6 +2703,15 @@ class CDR_opensips extends CDR {
             <td>$this->stopTime</td>
         </tr>
         ";
+
+        $this->cdr_details.= sprintf("
+        <tr>
+            <td></td>
+            <td>Country:</td>
+            <td>%s</i>
+            </td>
+        </tr>
+        ",$this->country);
 
         $this->cdr_details.= "
         <tr>
@@ -3017,8 +3032,9 @@ class CDR_opensips extends CDR {
         <tr bgcolor=$inout_color>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime</nobr></td>
-        <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->aNumberPrint</td>
+        <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->country ($this->SourceIP)</td>
+        <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
         <td valign=top><nobr>$this->destinationPrint</nobr>
         ";
 
@@ -3133,8 +3149,9 @@ class CDR_opensips extends CDR {
             <tr bgcolor=$inout_color>
             <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
             <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime $timezone_print</nobr></td>
-            <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
             <td valign=top><nobr>$this->aNumberPrint</nobr></td>
+        	<td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->country ($this->SourceIP)</td>
+            <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
             <td valign=top><nobr>$this->destinationPrint $this->destinationName</td>
             <td valign=top align=right>$this->durationPrint</td>
             ";

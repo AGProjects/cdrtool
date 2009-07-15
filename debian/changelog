@@ -1,5 +1,6 @@
 cdrtool (6.9.0) unstable; urgency=low
 
+  * Display geographic location using geo ip
   * Spellcheck some variable names that did not match the config
   * Fixed logging of imported rows from csv files
   * Created two standard profiles (OpenSIPS and SipThor) for subscriber
@@ -14,8 +15,7 @@ cdrtool (6.9.0) unstable; urgency=low
   * Specify a default timezone per ngnpro engine
   * Cache returns from lookup sip_proxy from Thor network
 
-
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 13 Jul 2009 16:47:20 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 15 Jul 2009 15:22:04 +0200
 
 cdrtool (6.8.1) unstable; urgency=low
 
