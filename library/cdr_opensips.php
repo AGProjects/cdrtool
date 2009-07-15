@@ -3033,7 +3033,7 @@ class CDR_opensips extends CDR {
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime</nobr></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->aNumberPrint</td>
-        <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->country ($this->SourceIP)</td>
+        <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->country</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
         <td valign=top><nobr>$this->destinationPrint</nobr>
         ";
@@ -3150,7 +3150,7 @@ class CDR_opensips extends CDR {
             <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
             <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime $timezone_print</nobr></td>
             <td valign=top><nobr>$this->aNumberPrint</nobr></td>
-        	<td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->country ($this->SourceIP)</td>
+        	<td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->country</td>
             <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
             <td valign=top><nobr>$this->destinationPrint $this->destinationName</td>
             <td valign=top align=right>$this->durationPrint</td>

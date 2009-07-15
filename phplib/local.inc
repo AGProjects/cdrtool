@@ -755,16 +755,13 @@ class pageLayout {
         if ($perm->have_perm("callsearch")) {  
             print " <a href=callsearch.phtml>CDRs</a> ";
         }
+        
         if ($perm->have_perm("rates")) {
             print " | <a href=rating_tables.phtml>Rating</a>";
             print " | <a href=rating_tables.phtml?table=prepaid>Prepaid</a>";
             print " | <a href=rating_tables.phtml?table=quota_usage>Quota</a>";
         }
 
-        if ($perm->have_perm("provisioning")) {
-            print " | <a href=provisioning.phtml>Accounts</a>";
-        }
-        
         if ($perm->have_perm("statistics")) {
             print " | <a href=network_status.phtml>Network</a>";
             print " | <a href=media_sessions.phtml>Sessions</a>";
@@ -775,8 +772,12 @@ class pageLayout {
             print " | <a href=mysql_replication_status.phtml>Replication</a>";
         }
 
+        if ($perm->have_perm("provisioning")) {
+            print " | <a href=provisioning.phtml>Provisioning</a>";
+        }
+        
+        print " | <a href=accounts.phtml>Accounts</a>";
         print " | <a href=log.phtml>Logs</a>";
-        print " | <a href=accounts.phtml>Login</a>";
         
         $now_print=Date("Y-m-d H:i:s",time());
         $tz=$CDRTool['provider']['timezone'];
