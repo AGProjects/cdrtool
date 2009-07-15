@@ -1,21 +1,21 @@
 cdrtool (6.9.0) unstable; urgency=low
 
   * Display geographic location using geo ip
-  * Spellcheck some variable names that did not match the config
+  * Fixed variable names that did not match the config
   * Fixed logging of imported rows from csv files
   * Created two standard profiles (OpenSIPS and SipThor) for subscriber
-    login See class DomainAuthLocal extends OpenSIPS_DomainAuth in
+    login, see class DomainAuthLocal extends OpenSIPS_DomainAuth in
     global.inc
   * Fixed export of CSV with prepaid history
   * Hide called address in missed session list
-  * Refactored PSTN provisioning, ngnpro >= 4.1.5 is required
-  * Show timezone in sip accounts list
-  * Display balance of prepaid accounts
-  * Do not change quota when toggle prepaid flag
-  * Specify a default timezone per ngnpro engine
+  * Refactored PSTN provisioning, NGNPro >= 4.1.5 is required
+  * Show timezone in SIP accounts list
+  * Display prepaid balance in SIP accounts list
+  * Do not change quota when toggle the prepaid flag
+  * Specify a default timezone per engine
   * Cache returns from lookup sip_proxy from Thor network
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 15 Jul 2009 15:22:04 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 15 Jul 2009 23:45:32 +0200
 
 cdrtool (6.8.1) unstable; urgency=low
 
