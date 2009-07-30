@@ -3,6 +3,28 @@ Patch for
 - Added MySQL stored procedures support
 - Removed Cisco hack that causes errors in radius.log if acctsessiontime= 0
 
+Update July 22, 2009 by Norm Brandinger norm@goes.com
+
+    Reworked patch to apply cleanly with the current CVS FreeRADIUS sources.  To apply:
+
+    Download the latest FreeRADIUS sources, for example:
+
+        cvs -d :pserver:anoncvs@cvs.freeradius.org:/source login
+        cvs -d :pserver:anoncvs@cvs.freeradius.org:/source checkout radiusd
+
+    Change to the FreeRADIUS sources, for example:
+
+        cd radiusd
+
+    Apply the patch:
+
+        patch -p0 < ../CDRTool/contrib/freeradius-brandinger/freeradius-20090722.patch
+
+    Configure and Make as usual, for example:
+
+    ./configure
+    make
+
 Updated Feb 23, 2009 by Norm Brandinger norm@goes.com
 	
 	Reworked patch to apply cleanly with the current CVS FreeRADIUS sources.  To apply:
