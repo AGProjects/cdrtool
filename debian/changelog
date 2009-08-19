@@ -1,3 +1,11 @@
+cdrtool (6.9.1) unstable; urgency=low
+
+  * Added labbels for SIP Thor nodes
+  * Updated freeradius pacthes from Norman Brandinger
+  * Export X509 certificate associated with the SIP account
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 19 Aug 2009 16:13:21 +0200
+
 cdrtool (6.9.0) unstable; urgency=low
 
   * Display geographic location using geo ip
