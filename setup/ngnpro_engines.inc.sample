@@ -31,7 +31,8 @@ $soapEngines=array(
                                          'pstn_access'         => false,
                                          'welcome_message'     => '<h1>NGNPro provisioning client</h1>',
                                          'currency'            => '&euro',
-                                         'timeout'             => 5
+                                         'timeout'             => 5,
+                                         'hostnames'           => array ('10.10.0.1'=>'node01.example.com')
                                          ),
                            'vm' => array('name'=> 'Voicemail server',
                                          'username'=> 'admin',

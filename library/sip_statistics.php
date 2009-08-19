@@ -51,6 +51,12 @@ class NetworkStatistics {
         $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
+        if (is_array($soapEngines[$this->soapEngineId]['hostnames'])) {
+            $this->hostnames=$soapEngines[$this->soapEngineId]['hostnames'];
+        } else {
+            $this->hostnames=array();
+        }
+
     }
 
     function getStatistics() {
@@ -242,6 +248,7 @@ class SipThorNetworkImage {
         $this->dns_managers    = $NetworkStatistics->dns_managers;
         $this->thor_mangers    = $NetworkStatistics->thor_managers;
         $this->node_statistics = $NetworkStatistics->node_statistics;
+        $this->hostnames       = $NetworkStatistics->hostnames;
 
         /*
         if (!$this->display_options['hide_sessions']) {
@@ -340,27 +347,32 @@ class SipThorNetworkImage {
          
               $x = ($radius * cos(deg2rad($angle)));
               $y = ($radius * sin(deg2rad($angle)));
-              
-              $text = $node_names[$j];
+
+              if ($this->hostnames[$node_names[$j]]) {
+              	$text = $this->hostnames[$node_names[$j]];
+              	//$text = $node_names[$j];
+              } else {
+              	$text = $node_names[$j];
+              }
               $px=$x; 
               $py=$y;
 
-              if (strlen($this->node_statistics[$text]['online_accounts']) && strlen($this->node_statistics[$text]['sessions'])) {
+              if (strlen($this->node_statistics[$node_names[$j]]['online_accounts']) && strlen($this->node_statistics[$node_names[$j]]['sessions'])) {
                 if (!$this->display_options['hide_accounts']) {
-              		$extra_text1=intval($this->node_statistics[$text][$this->accounts_item]). ' accounts';
+              		$extra_text1=intval($this->node_statistics[$node_names[$j]][$this->accounts_item]). ' accounts';
                 }
                 if (!$this->display_options['hide_sessions']) {
-               		$extra_text2=intval($this->node_statistics[$text]['sessions']). ' sessions';
+               		$extra_text2=intval($this->node_statistics[$node_names[$j]]['sessions']). ' sessions';
                 }
-              } else if (strlen($this->node_statistics[$text]['online_accounts'])) {
+              } else if (strlen($this->node_statistics[$node_names[$j]]['online_accounts'])) {
                 if (!$this->display_options['hide_accounts']) {
-              		$extra_text1=intval($this->node_statistics[$text][$this->accounts_item]). ' accounts';
+              		$extra_text1=intval($this->node_statistics[$node_names[$j]][$this->accounts_item]). ' accounts';
                 }
 
                	$extra_text2="";
-              } else if (strlen($this->node_statistics[$text]['sessions'])) {
+              } else if (strlen($this->node_statistics[$node_names[$j]]['sessions'])) {
                 if (!$this->display_options['hide_sessions']) {
-               		$extra_text1=intval($this->node_statistics[$text]['sessions']). ' sessions';
+               		$extra_text1=intval($this->node_statistics[$node_names[$j]]['sessions']). ' sessions';
                 }
               	$extra_text2="";
               }
