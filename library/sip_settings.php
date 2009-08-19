@@ -207,8 +207,12 @@ class SipSettings {
             ";
 
         } else {
-
-            $this->pageURL=$this->settingsPage."?account=$this->account";
+        	$this->pageURL=$this->settingsPage;
+			if (!$_SERVER[SSL_CLIENT_CERT]) {
+            	$this->pageURL.="?account=$this->account";
+            } else {
+            	$this->pageURL.="?1=1";
+            }
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
             <input type=hidden name=sip_engine value=$this->sip_engine>
@@ -1091,7 +1095,7 @@ class SipSettings {
         <td align=right valign=top>
         ";
     
-        if ($this->login_type == 'subscriber') {
+        if ($this->login_type == 'subscriber' && !$_SERVER[SSL_CLIENT_CERT]) {
             print "<a href=sip_logout.phtml>";
             print _("Logout");
             print "</a>";
@@ -6065,6 +6069,106 @@ class SipSettings {
         </tr>
         ";
     }
+
+    function generateCertificate() {
+
+		global $enrollment;
+		require_once("/etc/cdrtool/enrollment/config.ini");
+        $this->enrollment=$enrollment;
+
+    	$config = array(
+    		'config'           => $this->enrollment['ca_conf'],
+    		'digest_alg'       => 'md5',
+    		'private_key_bits' => 1024,
+    		'private_key_type' => OPENSSL_KEYTYPE_RSA,
+    		'encrypt_key'      => false,
+    	);
+
+		$dn = array(
+    		"countryName"            => "NL",
+	    	"stateOrProvinceName"    => "NH",
+    		"localityName"           => "Amsterdam",
+    		"organizationName"       => "AG Projects",
+    		"organizationalUnitName" => "SIP certificate",
+    		"commonName"             => $this->account,
+    		"emailAddress"           => $this->email
+		);
+
+		$this->key = openssl_pkey_new($config);
+        if ($this->key==FALSE) {
+			while (($e = openssl_error_string()) !== false) {
+				echo $e . "\n";
+				print "<br><br>";
+			}
+            return false;
+		}
+
+		$this->csr = openssl_csr_new($dn, $this->key);
+
+        if (!$this->csr) {
+			while (($e = openssl_error_string()) !== false) {
+				echo $e . "\n";
+				print "<br><br>";
+			}
+            return false;
+		}
+
+		$ca="file://".$this->enrollment['ca_crt'];
+
+		$this->crt = openssl_csr_sign($this->csr, $ca, $this->enrollment['ca_key'], 3650, $config);
+
+		if ($this->crt==FALSE) {
+			while (($e = openssl_error_string()) !== false) {
+				echo $e . "\n";
+				print "<br><br>";
+			}
+            return false;
+		}
+
+        openssl_csr_export    ($this->csr, $this->csr_out);
+        openssl_pkey_export   ($this->key, $this->key_out, $this->password, $config);
+        openssl_x509_export   ($this->crt, $this->crt_out);
+        openssl_pkcs12_export ($this->crt, $this->p12_out, $this->key, $this->password);
+
+        $ret=array(  'csr' => $this->csr_out,
+                     'crt' => $this->crt_out,
+                     'key' => $this->key_out,
+                     'pkey'=> $public_key,
+                     'p12' => $this->p12_out,
+                     'ca'  => file_get_contents($this->enrollment['ca_crt'])
+                     );
+        return $ret;
+
+    }
+
+    function exportCertificateKey() {
+        $cert=$this->generateCertificate();
+        Header("Content-type: application/x-key");
+		Header("Content-Disposition: inline; filename=blink.pkey");
+        print $cert['key'];
+    }
+
+    function exportCertificateCsr() {
+        Header("Content-type: application/x-csr");
+		Header("Content-Disposition: inline; filename=blink.csr");
+        $cert=$this->generateCertificate();
+        print $cert['csr'];
+    }
+
+    function exportCertificateCrt() {
+        Header("Content-type: application/x-crt");
+		Header("Content-Disposition: inline; filename=blink.crt");
+        $cert=$this->generateCertificate();
+        print $cert['crt'];
+    }
+
+    function exportCertificateP12() {
+        $cert=$this->generateCertificate();
+        Header("Content-type: application/x-p12");
+		Header("Content-Disposition: inline; filename=blink.p12");
+        print $cert['p12'];
+    }
+
 }
 
 function normalizeURI($uri) {
