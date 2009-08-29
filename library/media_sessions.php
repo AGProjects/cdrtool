@@ -338,7 +338,7 @@ class MediaSessions {
             }
 
         	if (count($this->allowedDomains)) {
-
+                
                 printf ("
                   <tr class=border align=right>
                     <td class=border>%d</td>
@@ -354,7 +354,7 @@ class MediaSessions {
                     <td class=bordertb>%s</td>
                   </tr>",
                   $i,
-                  $relay['ip'],
+                  $this->ip2host($relay['ip']),
                   $this->normalizeTraffic($relay['bps_relayed']),
                   $relay['session_count'],
                   $streams,
@@ -380,7 +380,7 @@ class MediaSessions {
                     <td class=bordertb>%s</td>
                   </tr>",
                   $i,
-                  $relay['ip'],
+                  $this->ip2host($relay['ip']),
                   $relay['version'],
                   $this->normalizeTime($relay['uptime']),
                   $this->normalizeTraffic($relay['bps_relayed']),
@@ -563,6 +563,10 @@ class MediaSessions {
     
         return "unknown.png";
     }
+
+    function ip2host($ip) {
+        return $ip;
+    }
 }
 
 class MediaSessionsNGNPro extends MediaSessions {
@@ -602,6 +606,11 @@ class MediaSessionsNGNPro extends MediaSessions {
         $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
+        if (is_array($soapEngines[$this->soapEngineId]['hostnames'])) {
+            $this->hostnames=$soapEngines[$this->soapEngineId]['hostnames'];
+        } else {
+            $this->hostnames=array();
+        }
     }
 
     function fetchSessionFromNetwork() {
@@ -640,5 +649,14 @@ class MediaSessionsNGNPro extends MediaSessions {
     
         return json_decode($result,true);
 	}
+
+    function ip2host($ip) {
+		if ($this->hostnames[$ip]) {
+            return $this->hostnames[$ip];
+        } else {
+        	return $ip;
+        }
+    }
+
 }
 ?>

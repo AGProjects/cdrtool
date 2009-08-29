@@ -169,8 +169,9 @@ class NetworkStatistics {
                 }
 
             	if (count($this->allowedDomains)) {
+
             		printf ("<tr><td><b>%s</b></td><td class=border>%s</td><td class=border>%s</td></tr>",
-            		ucfirst($_role_print),$_entity['ip'],$_entity['version']);
+            		ucfirst($_role_print),$this->ip2host($_entity['ip']),$_entity['version']);
 				} else {
                 	$a_print='';
 
@@ -188,7 +189,7 @@ class NetworkStatistics {
                     }
 
             		printf ("<tr><td><b>%s</b></td><td class=border>%s</td><td class=border>%s</td><td class=border>%s</td></tr>",
-            		ucfirst($_role_print),$_entity['ip'],$_entity['version'],$a_print);
+            		ucfirst($_role_print),$this->ip2host($_entity['ip']),$_entity['version'],$a_print);
                 }
                 $print_role[$_role]++;
             }
@@ -215,6 +216,14 @@ class NetworkStatistics {
         print "<table>";
 
 	}
+
+    function ip2host($ip) {
+		if ($this->hostnames[$ip]) {
+            return $this->hostnames[$ip];
+        } else {
+        	return $ip;
+        }
+    }
 }
 
 class SipThorNetworkImage {
