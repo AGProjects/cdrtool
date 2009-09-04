@@ -9286,16 +9286,16 @@ class Gateways extends Records {
                     urlencode($gateway->reseller)
                     );
 
-                    $_carrier_url = $this->url.sprintf("&service=pstn_carriers@%s&id_filter=%s&reseller_filter=%s,",
+                    $_carrier_url = $this->url.sprintf("&service=pstn_carriers@%s&id_filter=%s&reseller_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
                     urlencode($gateway->carrier_id),
-                    urlencode($carrier->reseller)
+                    urlencode($gateway->reseller)
                     );
 
                     $_rules_url = $this->url.sprintf("&service=gateway_rules@%s&gateway_id_filter=%s&reseller_filter=%s",
                     urlencode($this->SoapEngine->soapEngine),
                     urlencode($gateway->id),
-                    urlencode($carrier->reseller)
+                    urlencode($gateway->reseller)
                     );
 
                     $_r=0;
