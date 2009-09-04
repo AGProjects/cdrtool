@@ -4088,7 +4088,7 @@ class SIP_trace {
 
         $beforeDate=Date("Y-m-d", time()-$this->purgeRecordsAfter*3600*24);
 
-        $query=sprintf("select id as min, date from %s order by id ASC limit 1",
+        $query=sprintf("select id as min, time_stamp from %s order by id ASC limit 1",
                        $this->table);
         
 
@@ -4111,7 +4111,7 @@ class SIP_trace {
             return false;
         }
 
-        $query=sprintf("select id as max from %s where date < '%s' order by id DESC limit 1",
+        $query=sprintf("select id as max from %s where time_stamp < '%s' order by id DESC limit 1",
                 $this->table,$beforeDate);
 
 
@@ -4180,7 +4180,6 @@ class SIP_trace {
 
         return true;
     }
-
 }
 
 class Media_trace {
