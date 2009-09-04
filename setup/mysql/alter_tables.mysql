@@ -615,3 +615,8 @@ alter table prepaid drop column last_call_price;
 alter table prepaid drop column destination;
 alter table prepaid drop column duration;
 alter table prepaid drop column maxsessiontime;
+
+
+6.9.3
+alter table prepaid drop column domain;
+

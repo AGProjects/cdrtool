@@ -3705,10 +3705,6 @@ class RatingTables {
                         $k++;
                     }
 
-                    if ($table=="prepaid") {
-                    	$query .= $comma.'domain';
-                    }
-
                     $query .= ") values ( ";
                     $k=1;
                     $kkk=0;
@@ -3731,10 +3727,6 @@ class RatingTables {
                         }
                         $k++;
                         
-                    }
-
-                    if ($table=="prepaid") {
-                    	$query .= $comma."SUBSTRING_INDEX(account, '@',-1)";
                     }
 
                     $query .= ") ";
