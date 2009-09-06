@@ -2663,9 +2663,9 @@ class CDR_opensips extends CDR {
 
         if ($this->CDRS->sipTrace) {
             $trace_datasource = $this->CDRS->sipTrace;
-            $callid_enc       = urlencode($this->callId);
-            $fromtag_enc      = urlencode($this->SipFromTag);
-            $totag_enc        = urlencode($this->SipToTag);
+            $callid_enc       = urlencode(quoted_printable_decode($this->callId));
+            $fromtag_enc      = urlencode(quoted_printable_decode($this->SipFromTag));
+            $totag_enc        = urlencode(quoted_printable_decode($this->SipToTag));
 
             $this->traceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
             'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red>Click here to see the SIP trace for this call</font></a> &nbsp;";
@@ -4091,7 +4091,6 @@ class SIP_trace {
         $query=sprintf("select id as min, time_stamp from %s order by id ASC limit 1",
                        $this->table);
         
-
         if ($this->db->query($query)) {
             if ($this->db->num_rows()) {
                 $this->db->next_record();

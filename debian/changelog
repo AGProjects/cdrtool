@@ -3,8 +3,9 @@ cdrtool (6.9.3) unstable; urgency=low
   * Fixed insert into prepaid table
   * Fixed url in PSTN gateways
   * Fixed column name in sip_trace table when purging
+  * Fixed encoding of html links to sip and media trace
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 05 Sep 2009 00:26:31 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 06 Sep 2009 17:01:16 +0200
 
 cdrtool (6.9.2) unstable; urgency=low
 
