@@ -5341,7 +5341,7 @@ class SipSettings {
 
     }
 
-    function sendEmail() {
+    function sendEmail($skip_html=False) {
         dprint ("SipSettings->sendEmail($this->email)");
 
         $this->getVoicemail();
@@ -5350,7 +5350,7 @@ class SipSettings {
 
         $this->countAliases=count($this->aliases);
 
-        if (!$this->email) {
+        if (!$this->email && !$skip_html) {
             print "<p><font color=blue>";
             print _("Please fill in the e-mail address.");
             print "</font>";
@@ -5361,7 +5361,7 @@ class SipSettings {
 
         $tpl = $this->getEmailTemplate($this->reseller, $this->Preferences['language']);
 
-	    if (!$tpl) {
+	    if (!$tpl && !$skip_html) {
             print "<p><font color=red>";
         	print _("Error: no email template found");
             print "</font>";
@@ -5382,8 +5382,8 @@ class SipSettings {
         $smarty->assign('client', $this);
         $body = $smarty->fetch($tpl);
 
-        if (mail($this->email, $subject, $body, "From: $this->support_email")) {
-            print "<p>";
+        if (mail($this->email, $subject, $body, "From: $this->support_email") && !$skip_html) {
+            prinqt "<p>";
             printf (_("SIP settings have been sent to %s"), $this->email);
         }
     }
