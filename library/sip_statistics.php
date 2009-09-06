@@ -534,6 +534,8 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
     function getOnlineAccountsFromMySQL($class) {
 
 		$domains=array();
+        $online_devices=0;
+        $online_accounts=0;
 
         if (!class_exists($class)) return array();
 
@@ -551,8 +553,29 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         if (!$db->num_rows()) return array();
 
         while ($db->next_record()) {
-            $domains[$db->f('domain')]=array('online_accounts'=>intval($db->f('c')));
+            $domains[$db->f('domain')]['online_devices'] = intval($db->f('c'));
+            $online_devices = $online_devices + intval($db->f('c'));
         }
+
+        $query="select count(distinct(concat(username,domain))) as c, domain from location group by domain";
+        dprint($query);
+
+        if (!$db->query($query))  {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+        	return array();
+        }
+
+        if (!$db->num_rows()) return array();
+
+        while ($db->next_record()) {
+            $domains[$db->f('domain')]['online_accounts'] = intval($db->f('c'));
+            $online_accounts=$online_accounts+intval($db->f('c'));
+        }
+
+		$domains['total']['online_devices']=$online_devices;
+        $domains['total']['online_accounts']=$online_accounts;
 
         return $domains;
 	}
