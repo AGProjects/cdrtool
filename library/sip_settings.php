@@ -5383,7 +5383,7 @@ class SipSettings {
         $body = $smarty->fetch($tpl);
 
         if (mail($this->email, $subject, $body, "From: $this->support_email") && !$skip_html) {
-            prinqt "<p>";
+            print "<p>";
             printf (_("SIP settings have been sent to %s"), $this->email);
         }
     }
