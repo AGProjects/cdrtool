@@ -8,6 +8,14 @@ require("rating.php");
 
 $lockFile="/var/lock/CDRTool_normalize.lock";
 
+if ($argv[1]) {
+	if (preg_match("/^\d{4}\d{2}$/",$argv[1],$m)) {
+    	$table='radacct'.$argv[1];
+    } else {
+    	die ("Error: Month must be in YYYYMM format\n");
+    }
+}
+
 $f=fopen($lockFile,"w");
 if (flock($f, LOCK_EX + LOCK_NB, $w)) {
     if ($w) {
@@ -35,6 +43,8 @@ while (list($k,$v) = each($DATASOURCES)) {
         	$db_class=$CDRS->db_class;
         }
 
+		if ($table) $CDRS->table=$table;
+
         $log=sprintf("Normalize datasource %s, database %s, table %s\n",$k,$db_class,$CDRS->table);
         print $log;
         syslog(LOG_NOTICE,$log);
@@ -52,7 +62,7 @@ while (list($k,$v) = each($DATASOURCES)) {
         	syslog(LOG_NOTICE,$log);
         }
 
-        if (preg_match("/^(\w+)\d{6}$/",$CDRS->table,$m)) {
+        if (!$table && preg_match("/^(\w+)\d{6}$/",$CDRS->table,$m)) {
         	$lastMonthTable=$m[1].date('Ym', mktime(0, 0, 0, date("m")-1, "01", date("Y")));
 
             $log=sprintf("Normalize datasource %s, database %s, table %s\n",$k,$db_class,$lastMonthTable);
