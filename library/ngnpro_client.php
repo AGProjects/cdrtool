@@ -721,7 +721,6 @@ class Records {
             if ($j > 1) printf ("<option value=''>--------\n");
             foreach (array_keys($this->SoapEngine->ports) as $_port) {
                 $idx=$_port.'@'.$_engine;
-
                 if (is_array($this->SoapEngine->skip_ports[$_engine]) && in_array($_port,$this->SoapEngine->skip_ports[$_engine])) continue;
 
                 if ($this->login_credentials['login_type'] !='admin') {
@@ -735,7 +734,7 @@ class Records {
                 if ($this->version < 4 && ($_port == 'gateway_rules' || $_port == 'pstn_gateways' || $_port == 'pstn_routes' || $_port == 'pstn_carriers' || $_port == 'gateway_groups')) continue;
 
                 if ($this->SoapEngine->ports[$_port]['resellers_only']) {
-                    if ($this->login_credentials['login_type']=='admin' || $this->loginAccount->resellerActive ) {
+                    if ($this->login_credentials['login_type']=='admin' || $this->loginAccount->resellerActive) {
                         printf ("<option value=\"%s@%s\"%s>%s@%s\n",$_port,$_engine,$selected_soapEngine[$idx],$this->SoapEngine->ports[$_port]['name'],$this->SoapEngine->soapEngines[$_engine]['name']);
                     }
                 } else {
@@ -1129,7 +1128,7 @@ class Records {
         }
 
         if (!$this->customer) {
-            //dprint ("No customer available");
+            //print ("No customer available");
             return true;
         }
 
@@ -3774,6 +3773,7 @@ class SipAliases extends Records {
 class EnumRanges extends Records {
     var $selectionActiveExceptions=array('tld');
     var $remote_engine_name='enum_engine_remote';
+	var $record_generator='';
 
     // only admin can add prefixes below
     var $deniedPrefixes=array('1','20','210','211','212','213','214','215','216','217','218','219','220','221','222','223','224','225','226','227','228','229','230','231','232','233','234','235','236','237','238','239','240','241','242','243','244','245','246','247','248','249','250','251','252','253','254','255','256','257','258','259','260','261','262','263','264','265','266','267','268','269','27','280','281','282','283','284','285','286','287','288','289','290','291','292','293','294','295','296','297','298','299','30','31','32','33','34','350','351','352','353','354','355','356','357','358','359','36','370','371','372','373','374','375','376','377','378','379','380','381','382','383','384','385','386','387','388','389','39','40','41','420','421','422','423','424','425','426','427','428','429','43','44','45','46','47','48','49','500','501','502','503','504','505','506','507','508','509','51','52','53','54','55','56','57','58','590','591','592','593','594','595','596','597','598','599','60','61','62','63','64','65','66','670','671','672','673','674','675','676','677','678','679','680','681','682','683','684','685','686','687','688','689','690','691','692','693','694','695','696','697','698','699','7','800','801','802','803','804','805','806','807','808','809','81','82','830','831','832','833','834','835','836','837','838','839','84','850','851','852','853','854','855','856','857','858','859','86','870','871','872','873','874','875','876','877','878','879','880','881','882','883','884','885','886','887','888','889','890','891','892','893','894','895','896','897','898','899','90','91','92','93','94','95','960','961','962','963','964','965','966','967','968','969','970','971','972','973','974','975','976','977','978','979','98','990','991','992','993','994','995','996','997','998','999');
@@ -3830,6 +3830,19 @@ class EnumRanges extends Records {
 
         }
 
+        if ($this->login_credentials['reseller_filters'][$this->reseller]['record_generator']) {
+            printf ("Engine: %s",$this->SoapEngine->soapEngine);
+            if (is_array($this->login_credentials['reseller_filters'][$this->reseller]['record_generator'])) {
+                $_rg=$this->login_credentials['reseller_filters'][$this->reseller]['record_generator'];
+                if ($_rg[$this->SoapEngine->soapEngine]) {
+					$this->record_generator=$_rg[$this->SoapEngine->soapEngine];
+                }
+            } else {
+				$this->record_generator=$this->login_credentials['reseller_filters'][$this->reseller]['record_generator'];
+            }
+        } else  if (strlen($this->SoapEngine->record_generator)) {
+            $this->record_generator=$this->SoapEngine->record_generator;
+        }
     }
 
     function listRecords() {
@@ -3984,20 +3997,16 @@ class EnumRanges extends Records {
                     }
 
                     if ($this->adminonly) {
-                        if ($this->login_credentials['reseller_filters'][$range->reseller]['record_generator']) {
-                            $generator_url=sprintf('<a href=%s&generatorId=%s&range=%s@%s&number_length=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->login_credentials['reseller_filters'][$range->reseller]['record_generator'],$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
-                        } else  if (strlen($this->SoapEngine->record_generator)) {
-                            $generator_url=sprintf('<a href=%s&generatorId=%s&range=%s@%s&number_length=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->SoapEngine->record_generator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
-                        }
                         $range_url=sprintf('<a href=%s&service=%s&reseller_filter=%s&prefix_filter=%s&tld_filter=%s>%s</a>',$this->url,$this->SoapEngine->service,$range->reseller,$range->id->prefix,$range->id->tld,$range->id->prefix);
 
                     } else {
-                        if (strlen($this->SoapEngine->record_generator)) {
-                            $generator_url=sprintf('<a href=%s&generatorId=%s&range=%s@%s&number_length=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->SoapEngine->record_generator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
-                        } else {
-                            $generator_url='';
-                        }
                         $range_url=sprintf('<a href=%s&&service=%s&prefix_filter=%s&tld_filter=%s>%s</a>',$this->url,$this->SoapEngine->service,$range->id->prefix,$range->id->tld,$range->id->prefix);
+                    }
+
+                    if ($this->record_generator) {
+                        $generator_url=sprintf('<a href=%s&generatorId=%s&range=%s@%s&number_length=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->record_generator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
+                    } else {
+                        $generator_url='';
                     }
 
                     if ($range->size) {
