@@ -1,3 +1,12 @@
+cdrtool (6.9.5) unstable; urgency=low
+
+  * Normalize.php script can chose a differet month
+  * Allow argument to normalize.php script to chose a different month
+  * Allow set of enum_generator for a reseller depending on ngnpro engine
+  * Fix typo in sip_settings.php page
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 16 Sep 2009 15:36:32 +0200
+
 cdrtool (6.9.4) unstable; urgency=low
 
   * Allow argument to normalize.php script to chose a differet month
