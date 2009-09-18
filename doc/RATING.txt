@@ -492,13 +492,10 @@ prepaid
 | id               |
 | reseller_id      |
 | account          |
+| domain	   |    
 | balance          |
 | change_date      |
-| last_call_price  |
-| destination      |
 | active_sessions  |
-| maxsessiontime   |
-| call_in_progress |
 | session_counter  |
 +------------------+
 
