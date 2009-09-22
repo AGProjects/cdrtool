@@ -168,6 +168,9 @@ class SipSettings {
 
         if (strlen($loginCredentials['sip_engine'])) {
             $this->sip_engine=$loginCredentials['sip_engine'];
+        } else {
+            print "Error: missing sip_engine in login credentials";
+            return false;
         }
 
         //dprint("Using engine: $this->sip_engine");
@@ -6428,4 +6431,210 @@ function renderUI($SipSettings) {
     }
 }
 
+class AccountEnrollment {
+    var $init=false;
+
+    function AccountEnrollment() {
+
+    	require_once('SOAP/Client.php');
+        require_once("ngnpro_soap_library.php");
+        require_once("ngnpro_client.php");
+
+        include("/etc/cdrtool/enrollment/config.ini");
+        include("/etc/cdrtool/ngnpro_engines.inc");
+
+    	$this->soapEngines  = $soapEngines;
+        $this->enrollment   = $enrollment;
+
+        $this->sipDomain    = $this->enrollment['sip_domain'];
+		$this->sipEngine    = $this->enrollment['sip_engine'];
+		$this->reseller     = $this->enrollment['reseller'];
+
+        if ($this->enrollment['sip_class']) {
+        	$this->sipClass = $this->enrollment['sip_class'];
+        } else {
+        	$this->sipClass = 'SipSettings';
+        }
+
+        if (!$this->sipEngine) {
+            $return=array('success'       => false,
+                          'error_message' => 'Missing sip engine'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        if (!$this->sipDomain) {
+            $return=array('success'       => false,
+                          'error_message' => 'Missing sip domain'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+		$this->sipLoginCredentials = array(
+                                           'reseller'       => intval($this->reseller),
+                                           'sip_engine'     => $this->sipEngine,
+                                           'login_type'     => 'admin'
+                                           );
+
+        $this->init=true;
+    }
+
+    function add() {
+
+        if (!$this->init) return false;
+
+        if (!$_REQUEST['email']) {
+            $return=array('success'       => false,
+                          'error_message' => 'Missing email address'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        if (!$this->checkEmail($_REQUEST['email'])) {
+            $return=array('success'       => false,
+                          'error_message' => 'Invalid email address'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+        
+        if (!$_REQUEST['password']) {
+            $return=array('success'       => false,
+                          'error_message' => 'Missing password'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        if (!$_REQUEST['display_name']) {
+            $return=array('success'       => false,
+                          'error_message' => 'Missing display name'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        $sipEngine           = 'sip_accounts@'.$this->sipEngine;
+
+        $this->SipSoapEngine = new SoapEngine($sipEngine,$this->soapEngines,$this->sipLoginCredentials);
+        $_sip_class          = $this->SipSoapEngine->records_class;
+        $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
+
+        $sip_properties[]=array('name'  => 'ip',
+                                'value' => $_SERVER['REMOTE_ADDR']);
+
+        $sipAccount = array('account'   => strtolower('<autoincrement>@'.$this->sipDomain),
+                            'fullname'  => $_REQUEST['display_name'],
+                            'email'     => $_REQUEST['email'],
+                            'password'  => $_REQUEST['password'],
+                            'pstn'      => 1,
+                            'prepaid'   => 1,
+                            'quota'     => 50,
+                            'groups'    => array('missed-calls'),
+                            'properties'=> $sip_properties
+                            );
+
+        if (!$result = $this->sipRecords->addRecord($sipAccount,'skiphtml')) {
+            $return=array('success'       => false,
+                          'error_message' => 'failed to create sip account'
+                          );
+            print (json_encode($return));
+            return false;
+        } else {
+            $sip_address=$result->id->username.'@'.$result->id->domain;
+
+        	if (!$identity = $this->generateCertificate($sip_address,$_REQUEST['email'],$_REQUEST['password'])) {
+                $return=array('success'       => false,
+                              'error_message' => 'failed to generate certificate'
+                              );
+                print (json_encode($return));
+                return false;
+            }
+
+            // Generic code for all sip settings pages
+            
+            if ($SipSettings = new $this->sipClass($sip_address,$this->sipLoginCredentials,$this->soapEngines)) {
+
+                // Add voicemail account
+                $SipSettings->addVoicemail();
+                $SipSettings->setVoicemailDiversions();
+                // Sent account settings by email
+                $SipSettings->sendEmail('hideHtml');
+            }
+
+
+            $return=array('success'       => true,
+                          'sip_address'   => $sip_address,
+                          'email'         => $result->email,
+                          'passport'      => $identity
+                          );
+
+            print (json_encode($return));
+
+            return true;
+        }
+    }
+
+    function generateCertificate($sip_address,$email,$password) {
+        if (!$this->init) return false;
+
+    	$config = array(
+    		'config'           => $this->enrollment['ca_conf'],
+    		'digest_alg'       => 'md5',
+    		'private_key_bits' => 1024,
+    		'private_key_type' => OPENSSL_KEYTYPE_RSA,
+    		'encrypt_key'      => false,
+    	);
+
+		$dn = array(
+    		"countryName"            => $this->enrollment['countryName'],
+	    	"stateOrProvinceName"    => $this->enrollment['stateOrProvinceName'],
+    		"localityName"           => $this->enrollment['localityName'],
+    		"organizationName"       => $this->enrollment['organizationName'],
+    		"organizationalUnitName" => $this->enrollment['organizationalUnitName'],
+    		"commonName"             => $sip_address,
+    		"emailAddress"           => $email
+		);
+
+		$this->key = openssl_pkey_new($config);
+		$this->csr = openssl_csr_new($dn, $this->key);
+
+        openssl_csr_export($this->csr, $this->csr_out);
+        openssl_pkey_export($this->key, $this->key_out, $password, $config);
+
+		$ca="file://".$this->enrollment['ca_crt'];
+
+        $this->crt = openssl_csr_sign($this->csr, $ca, $this->enrollment['ca_key'], 3650, $config);
+
+		if ($this->crt==FALSE) {
+			while (($e = openssl_error_string()) !== false) {
+				echo $e . "\n";
+				print "<br><br>";
+			}
+            return false;
+		}
+
+        openssl_x509_export   ($this->crt, $this->crt_out);
+        openssl_pkcs12_export ($this->crt, $this->pk12_out, $this->key, $password);
+
+        return array(
+                     'crt' => $this->crt_out,
+                     'key' => $this->key_out,
+                     'ca'  => file_get_contents($this->enrollment['ca_crt'])
+                     );
+    }
+
+    function checkEmail($email) {
+        dprint ("checkEmail($email)");
+        $regexp = "/^([a-z0-9][a-z0-9_.-]*)@([a-z0-9][a-z0-9-]*\.)+([a-z]{2,})$/i";
+        if (stristr($email,"-.") ||
+            !preg_match($regexp, $email)) {
+            return false;
+        }
+        return true;
+    }
+}
 ?>
