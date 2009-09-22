@@ -1,0 +1,35 @@
+
+This document describes how to configure NGNPro client to use client side
+X.509 certificates for SIP client authentication.
+
+1. Add to .htaccess
+
+SSLRequireSSL
+SSLVerifyDepth 1
+
+SSLOptions +StdEnvVars
+SSLOptions +ExportCertData
+<Files settings.phtml>
+SSLVerifyClient require
+</Files>
+
+2. Add to virtual host:
+
+    SSLEngine           On
+    SSLCertificateFile /etc/tls/server.crt
+    SSLCertificateKeyFile /etc/tls/server.key
+    SSLCACertificateFile /etc/cdrtool/enrollment/rootCA.crt
+
+3. Replace the page_open section from sip_settinghs.phtml page with:
+
+if ($credentials=getSipAccountFromX509Certificate()) {
+    $account     = $credentials['account'];
+    $sip_engine  = $credentials['engine'];
+
+    $reseller    = $credentials['reseller'];
+    $customer    = $credentials['customer'];
+    $login_type  = "subscriber";
+} else {
+    die('X.509 Credentials error');
+}
+
