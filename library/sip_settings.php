@@ -843,7 +843,6 @@ class SipSettings {
         changeLanguage($lang);
     }
 
-
     function getOwnerSettings($owner='') {
         dprint("getOwnerSettings($owner, engine=$this->customer_engine)");
         if (!$owner) {
@@ -851,7 +850,6 @@ class SipSettings {
         }
 
         $this->CustomerPort->addHeader($this->SoapAuthCustomer);
-        //dprint_r($this->CustomerPort);
         $result     = $this->CustomerPort->getAccount($owner);
  
         if (PEAR::isError($result)) {
@@ -1429,10 +1427,10 @@ class SipSettings {
                 $uri=$m[2];
             }
 
-            $this->CallPrefDbURI[$condition]=$uri;
+            $this->diversions[$condition]=$uri;
         }
 
-        //dprint_r($this->CallPrefDbURI);
+        //dprint_r($this->diversions);
     }
 
     function getDeviceLocations() {
@@ -1743,7 +1741,7 @@ class SipSettings {
         if ($this->email)  {
             printf (_("Email account information to %s"),$this->email);
             print "
-            <input type=hidden name=action value=\"Send settings\">
+            <input type=hidden name=action value=\"send settings\">
             <input type=submit value=";
             print _("Send");
             print ">";
@@ -2253,7 +2251,7 @@ class SipSettings {
         print "
         <tr>
           <td align=left>
-            <input type=hidden name=action value=\"Save settings\">
+            <input type=hidden name=action value=\"save settings\">
         ";
 
         print "
@@ -2973,7 +2971,7 @@ class SipSettings {
                 $uri_description='Disabled';
             }
 
-            if ($this->CallPrefDbURI[$condition]) {
+            if ($this->diversions[$condition]) {
 
                 if ($uri_description=='Disabled' && $this->CallPrefUriType[$condition]!='Disabled') {
                     $diversions[$condition]="";
@@ -2982,15 +2980,15 @@ class SipSettings {
                         if ($this->CallPrefUriType[$condition]=='Disabled') {
                             $diversions[$condition]="";
                         } else {
-                            if ($this->CallPrefDbURI[$condition] != $uri) {
+                            if ($this->diversions[$condition] != $uri) {
                                 $diversions[$condition]=$uri;
                             } else {
-                                $diversions[$condition]=$this->CallPrefDbURI[$condition];
+                                $diversions[$condition]=$this->diversions[$condition];
                             }
                         }
 
                     } else {
-                           $diversions[$condition]=$this->CallPrefDbURI[$condition];
+                           $diversions[$condition]=$this->diversions[$condition];
                         dprint("Failed to check address $selectedURI");
                     }
                 }
@@ -2999,7 +2997,7 @@ class SipSettings {
                     $diversions[$condition]=$uri;
                    } else {
                        dprint("Failed to check address $condition=\"$selectedURI\"");
-                       $diversions[$condition]=$this->CallPrefDbURI[$condition];
+                       $diversions[$condition]=$this->diversions[$condition];
                    }
             }
 
@@ -3018,9 +3016,9 @@ class SipSettings {
             }
         }
 
-        foreach(array_keys($this->CallPrefDbURI) as $key) {
-            if ($this->CallPrefDbURI[$key] != $diversions[$key]) {
-                //$log=sprintf("Diversion %s changed from %s to %s",$key,htmlentities($this->CallPrefDbURI[$key]),htmlentities($diversions[$key]));
+        foreach(array_keys($this->diversions) as $key) {
+            if ($this->diversions[$key] != $diversions[$key]) {
+                //$log=sprintf("Diversion %s changed from %s to %s",$key,htmlentities($this->diversions[$key]),htmlentities($diversions[$key]));
                 dprint($log);
                 $divert_changed=1;
             }
@@ -3126,10 +3124,10 @@ class SipSettings {
             }
 
             //if (!$uri) $uri=NULL;
-            $this->CallPrefDbURI[$condition]=$uri;
+            $this->diversions[$condition]=$uri;
         }
 
-        dprint_r($this->CallPrefDbURI);
+        dprint_r($this->diversions);
 
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->setCallDiversions($this->sipId,$result);
@@ -3341,16 +3339,15 @@ class SipSettings {
         </tr>
         ";
 
-        $prepaidAccount=$this->getPrepaidStatus();
+        $this->getPrepaidStatus();
 
-        if ($prepaidAccount) {
+        if ($this->prepaidAccount) {
             $chapter=sprintf(_("Current balance"));
             $this->showChapter($chapter);
     
             print "
             <tr>
             <td class=h align=left>";
-            dprint_r($prepaidAccount);
             print _("Balance");
             print ": $prepaidAccount->balance $this->currency";
             print "</td><td align=right>
@@ -3450,9 +3447,11 @@ class SipSettings {
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
             printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            unset($this->prepaidAccount);
             return false;
         }  else {
-        	return $result[0];
+        	$this->prepaidAccount=$result[0];
+        	return true;
         }
     }
 
@@ -3695,7 +3694,7 @@ class SipSettings {
             $mod=$found-$rr*2;
 
             $pref_name  = $conditions[$condition];
-            $pref_value = $this->CallPrefDbURI[$condition];
+            $pref_value = $this->diversions[$condition];
 
             $select_name=$condition."_select";
 
@@ -3750,7 +3749,7 @@ class SipSettings {
 
             print "<select name=$select_name onChange=$set_uri_java(this)>\n";
 
-            if ($this->CallPrefDbURI[$condition]) {
+            if ($this->diversions[$condition]) {
                 $this->CallPrefUriType[$condition]=='Other';
             } else {
                 $this->CallPrefUriType[$condition]=='Disabled';
@@ -3781,7 +3780,7 @@ class SipSettings {
                     $value = $phone['value'];
 
                 if (!$foundSelected &&
-                    ($this->CallPrefDbURI[$condition]==$phone['value'] || $idx==$nr_targets-1)) {
+                    ($this->diversions[$condition]==$phone['value'] || $idx==$nr_targets-1)) {
                     print "<option value=\"$idx\" selected>$name</option>\n";
                     $pref_value = $value;
                     $this->CallPrefUriType[$condition]=$phone['description'];
@@ -3801,7 +3800,7 @@ class SipSettings {
             else
                 $style = "hidden";
 
-            $pref_value=$this->CallPrefDbURI[$condition];
+            $pref_value=$this->diversions[$condition];
 
             print "
                 <span>
@@ -4206,6 +4205,10 @@ class SipSettings {
                                     "date"     => getLocalTime($this->timezone,$callStructure->startTime)
                                      );         
         }
+
+        $this->call_history=array('placed'=>$this->calls_placed,
+                                  'received'=>$this->calls_received
+                                  );
 
     }
 
@@ -4991,11 +4994,11 @@ class SipSettings {
 
         foreach ($this->divertTargets as $idx => $phone) {
             //dprint_r($phone);
-            if ($this->CallPrefDbURI['FUNV'] == "<voice-mailbox>") {
-                $this->CallPrefDbURI['FUNV'] = $this->voicemail['Account'];
+            if ($this->diversions['FUNV'] == "<voice-mailbox>") {
+                $this->diversions['FUNV'] = $this->voicemail['Account'];
             }
 
-            if ($this->CallPrefDbURI['FUNV']==$phone['value']) {
+            if ($this->diversions['FUNV']==$phone['value']) {
                 printf ($phone['name']);
                 break;
             }
@@ -6074,10 +6077,14 @@ class SipSettings {
 
 		global $enrollment;
 		require_once("/etc/cdrtool/enrollment/config.ini");
-        $this->enrollment=$enrollment;
+
+        if (!is_array($enrollment)) {
+            print "Error: missing enrollment settings";
+            return false;
+        }
 
     	$config = array(
-    		'config'           => $this->enrollment['ca_conf'],
+    		'config'           => $enrollment['ca_conf'],
     		'digest_alg'       => 'md5',
     		'private_key_bits' => 1024,
     		'private_key_type' => OPENSSL_KEYTYPE_RSA,
@@ -6086,10 +6093,10 @@ class SipSettings {
 
 		$dn = array(
     		"countryName"            => "NL",
-	    	"stateOrProvinceName"    => "NH",
-    		"localityName"           => "Amsterdam",
+	    	"stateOrProvinceName"    => "Noord Holland",
+    		"localityName"           => "Haarlem",
     		"organizationName"       => "AG Projects",
-    		"organizationalUnitName" => "SIP certificate",
+    		"organizationalUnitName" => "Blink",
     		"commonName"             => $this->account,
     		"emailAddress"           => $this->email
 		);
@@ -6113,9 +6120,9 @@ class SipSettings {
             return false;
 		}
 
-		$ca="file://".$this->enrollment['ca_crt'];
+		$ca="file://".$enrollment['ca_crt'];
 
-		$this->crt = openssl_csr_sign($this->csr, $ca, $this->enrollment['ca_key'], 3650, $config);
+		$this->crt = openssl_csr_sign($this->csr, $ca, $enrollment['ca_key'], 3650, $config);
 
 		if ($this->crt==FALSE) {
 			while (($e = openssl_error_string()) !== false) {
@@ -6135,40 +6142,35 @@ class SipSettings {
                      'key' => $this->key_out,
                      'pkey'=> $public_key,
                      'p12' => $this->p12_out,
-                     'ca'  => file_get_contents($this->enrollment['ca_crt'])
+                     'ca'  => file_get_contents($enrollment['ca_crt'])
                      );
         return $ret;
-
-    }
-
-    function exportCertificateKey() {
-        $cert=$this->generateCertificate();
-        Header("Content-type: application/x-key");
-		Header("Content-Disposition: inline; filename=blink.pkey");
-        print $cert['key'];
     }
 
     function exportCertificateCsr() {
         Header("Content-type: application/x-csr");
-		Header("Content-Disposition: inline; filename=blink.csr");
+        $header=sprintf("Content-Disposition: inline; filename=%s.csr",$this->account);
+		Header($header);
         $cert=$this->generateCertificate();
         print $cert['csr'];
     }
 
     function exportCertificateCrt() {
         Header("Content-type: application/x-crt");
-		Header("Content-Disposition: inline; filename=blink.crt");
+        $header=sprintf("Content-Disposition: inline; filename=%s.crt",$this->account);
+		Header($header);
         $cert=$this->generateCertificate();
-        print $cert['crt'];
+        $crt=$cert['crt'].$cert['key'];
+        print $crt;
     }
 
     function exportCertificateP12() {
         $cert=$this->generateCertificate();
         Header("Content-type: application/x-p12");
-		Header("Content-Disposition: inline; filename=blink.p12");
+        $header=sprintf("Content-Disposition: inline; filename=%s.p12",$this->account);
+		Header($header);
         print $cert['p12'];
     }
-
 }
 
 function normalizeURI($uri) {
@@ -6259,6 +6261,153 @@ function getSipThorHomeNode ($account,$sip_proxy) {
     }
     fclose($socket);
     return $ret;
+}
+
+function getSipAccountFromX509Certificate() {
+
+     if (!$_SERVER[SSL_CLIENT_CERT]) {
+     	print "Error: No X.509 Client Certificate provided\n";
+        return false;
+     }
+
+     if (!$cert=openssl_x509_parse($_SERVER[SSL_CLIENT_CERT])) {
+     	print "Error: Failed to Parse Client Certificate\n";
+        return false;
+     }
+
+     $username    = $cert['subject']['CN'];
+
+     $a=explode("@",$username);
+     $domain= $a[1];
+
+     if (count($a) !=2 ) {
+         print "No SIP address available";
+         return false;
+     }
+
+     require_once('SOAP/Client.php');
+     require_once("ngnpro_soap_library.php");
+     require("/etc/cdrtool/ngnpro_engines.inc");
+
+     global $domainFilters, $resellerFilters, $soapEngines ;
+
+     $credentials['account']    = $username;
+
+     if ($domainFilters[$domain]['sip_engine']) {
+         $credentials['engine']   = $domainFilters[$domain]['sip_engine'];
+         $credentials['customer'] = $domainFilters[$domain]['customer'];
+         $credentials['reseller'] = $domainFilters[$domain]['reseller'];
+
+     } else if ($domainFilters['default']['sip_engine']) {
+         $credentials['engine']=$domainFilters['default']['sip_engine'];
+     } else {
+         print "Error: no domainFilter available in ngnpro_engines.inc";
+         return false;
+     }
+
+     $SOAPlogin=array(
+                            "username" => $soapEngines[$credentials['engine']]['username'],
+                            "password" => $soapEngines[$credentials['engine']]['password'],
+                            "admin"    => true
+     );
+
+     $SoapAuth = array('auth', $SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+
+     $SipPort  = new WebService_NGNPro_SipPort($soapEngines[$credentials['engine']]['url']);
+
+     $log=sprintf ("Forward authorization to %s",$soapEngines[$credentials['engine']]['url']);
+
+     $SipPort->_options['timeout'] = 5;
+     $SipPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+     $SipPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+     $SipPort->addHeader($SoapAuth);
+
+     $result     = $SipPort->getAccount(array("username" =>$a[0],"domain"   =>$domain));
+
+     if (PEAR::isError($result)) {
+         $error_msg  = $result->getMessage();
+         $error_fault= $result->getFault();
+         $error_code = $result->getCode();
+         printf ("<p><font color=red>Error from %s (SipPort): %s (%s): %s</font>",$soapEngines[$credentials['engine']]['url'],$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+         return false;
+     }
+
+     $credentials['customer'] = $result->customer;
+     $credentials['reseller'] = $result->reseller;
+
+     return $credentials;
+}
+
+function renderUI($SipSettings) {
+	// Generic code for all sip settings pages
+
+    if (!$_REQUEST['export']) {
+        $title  = "SIP settings of $account";
+        $header = $SipSettings->headerFile;
+        $css    = $SipSettings->cssFile;
+        include($header);
+        include($css);
+    
+        if ($_REQUEST['action']=="save settings") {
+            if ($SipSettings->checkSettings()) {
+                $SipSettings->update();
+                unset($SipSettings);
+                if (in_array($domain,$freeDomains)) {
+                    $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
+                } else {
+                    $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
+                }
+            } else {
+                print "<font color=red>";
+                printf (_("Error: %s"),$SipSettings->error);
+                print "</font>";
+            }
+        } else if ($_REQUEST['action']=="set barring prefixes") {
+            $SipSettings->setBarringPrefixes();
+        } else if ($_REQUEST['action']=="set presence") {
+            $SipSettings->setPresence();
+        } else if ($_REQUEST['action']=="set reject members") {
+            $SipSettings->setRejectMembers();
+        } else if ($_REQUEST['action']=="set accept rules") {
+            $SipSettings->setAcceptRules();
+        } else if ($_REQUEST['action']=="set aliases") {
+            $SipSettings->setAliases();
+        } else if ($_REQUEST['action']=="send settings") {
+            $SipSettings->sendEmail();
+        }
+    
+        $SipSettings->showAccount();
+        print "
+        </body>
+        </html>
+        ";
+    
+    } else {
+        if ($_REQUEST['action']=="crt") {
+            $SipSettings->exportCertificateCrt();
+        } else if ($_REQUEST['action']=="p12") {
+            $SipSettings->exportCertificateP12();
+        } else if ($_REQUEST['tab']=="prepaid") {
+            $SipSettings->exportBalanceHistory();
+        } else if ($_REQUEST['action'] == 'diversions') {
+            $SipSettings->getDiversions();
+            print json_encode($SipSettings->diversions);
+        } else if ($_REQUEST['action'] == 'prepaid') {
+            $SipSettings->getPrepaidStatus();
+            print json_encode($SipSettings->prepaidAccount);
+        } else if ($_REQUEST['action'] == 'balance_history') {
+            $SipSettings->getBalanceHistory();
+            print json_encode($SipSettings->balance_history);
+        } else if ($_REQUEST['action'] == 'accept'){
+            $SipSettings->getAcceptRules();
+            print json_encode($SipSettings->acceptRules);
+        } else if ($_REQUEST['action'] == 'calls'){
+            $SipSettings->getCalls();
+            print json_encode($SipSettings->call_history);
+        } else {
+            print "Error: invalid action";
+        }
+    }
 }
 
 ?>
