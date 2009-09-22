@@ -1,32 +1,30 @@
 <?
 require("/etc/cdrtool/global.inc");
+require('sip_settings.php');
 
 if (strlen($_REQUEST['reseller'])) {
-	page_open(
+    page_open(
             array("sess" => "CDRTool_Session",
                   "auth" => "CDRTool_Auth",
                   "perm" => "CDRTool_Perm"));
 
-	$account     = $_REQUEST['account'];
+    $account     = $_REQUEST['account'];
     $login_type  = "admin";
-	$sip_engine  = $_REQUEST['sip_engine'];
+    $sip_engine  = $_REQUEST['sip_engine'];
 
-	$perm->check("provisioning");
+    $perm->check("provisioning");
 
 
 } else {
-	page_open(array("sess" => "SIP_Subscriber_Session",
+    page_open(array("sess" => "SIP_Subscriber_Session",
                     "auth" => "SIP_Subscriber_Auth")
              );
     $account	 = $SIP['account'];
-	$reseller  	 = $SIP['reseller'];
+    $reseller  	 = $SIP['reseller'];
     $customer  	 = $SIP['customer'];
     $sip_engine  = $SIP['engine'];
     $login_type  = "subscriber";
 }
-
-require("/etc/cdrtool/ngnpro_engines.inc");
-require('sip_settings.php');
 
 $_class='SipSettings';
 $_reseller_class=$_class.$_REQUEST['reseller'];
@@ -53,62 +51,9 @@ if ($resellerFilters[$login_credentials['reseller']]['sip_engine']) {
 
 $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
 
-if (!$_REQUEST['export']) {
-    $title  = "SIP settings of $account";
-    $header = $SipSettings->headerFile;
-    $css    = $SipSettings->cssFile;
-    if (file_exists($header)) {
-    	include($header);
-    } else {
-        if (is_readable("/etc/cdrtool/local/header.phtml")) {
-        	include("/etc/cdrtool/local/header.phtml");
-    	} else {
-        	include("header.phtml");
-    	}
-    }
+renderUI($SipSettings) ;
 
-    if (file_exists($css)) include($css);
+if (!$_SERVER[SSL_CLIENT_CERT]) {
+	page_close();
 }
-
-if ($_REQUEST['action']=="Save settings") {
-    if ($SipSettings->checkSettings()) {
-        $SipSettings->update();
-        unset($SipSettings);
-        if (in_array($domain,$freeDomains)) {
-            $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
-        } else {
-            $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
-        }
-    } else {
-        print "<font color=red>";
-        printf (_("Error: %s"),$SipSettings->error);
-        print "</font>";
-    }
-} else if ($_REQUEST['action']=="set barring prefixes") {
-    $SipSettings->setBarringPrefixes();
-} else if ($_REQUEST['action']=="set presence") {
-    $SipSettings->setPresence();
-} else if ($_REQUEST['action']=="set reject members") {
-    $SipSettings->setRejectMembers();
-} else if ($_REQUEST['action']=="set accept rules") {
-    $SipSettings->setAcceptRules();
-} else if ($_REQUEST['action']=="set aliases") {
-    $SipSettings->setAliases();
-} else if ($_REQUEST['action']=="Send settings") {
-    $SipSettings->sendEmail();
-} else if ($_REQUEST['tab']=="phonebook" && $_REQUEST['export']) {
-    $SipSettings->exportPhonebook($userAgent);
-} else if ($_REQUEST['tab']=="prepaid" && $_REQUEST['export']) {
-    $SipSettings->exportBalanceHistory();
-}
-
-if (!$_REQUEST['export']) {
-	$SipSettings->showAccount();
-    print "
-    </body>
-    </html>
-    ";
-}
-
-page_close();
 ?>
