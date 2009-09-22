@@ -1545,7 +1545,7 @@ class SipSettings {
 
     function showSummary() {
         $this->getVoicemail();
-        $this->getENUMmappings();
+        $this->getEnumMappings();
         $this->getAliases();
 
         $chapter=sprintf(_("SIP account"));
@@ -1789,7 +1789,7 @@ class SipSettings {
     function showSettings() {
 
         $this->getVoicemail();
-        $this->getENUMmappings();
+        $this->getEnumMappings();
 
         $this->getDivertTargets();
         $this->getDiversions();
@@ -2600,7 +2600,7 @@ class SipSettings {
         dprint("update()");
 
         $this->getVoicemail();
-        $this->getENUMmappings();
+        $this->getEnumMappings();
 
         $this->getDivertTargets();
         $this->getDiversions();
@@ -3873,9 +3873,8 @@ class SipSettings {
     }
 
 
-
-    function getENUMmappings () {
-        dprint("getENUMmappings(engine=$this->enum_engine)");
+    function getEnumMappings () {
+        dprint("getEnumMappings(engine=$this->enum_engine)");
 
 		$this->enums=array();
 
@@ -5348,7 +5347,7 @@ class SipSettings {
         dprint ("SipSettings->sendEmail($this->email)");
 
         $this->getVoicemail();
-        $this->getENUMmappings();
+        $this->getEnumMappings();
         $this->getAliases();
 
         $this->countAliases=count($this->aliases);
@@ -6147,14 +6146,6 @@ class SipSettings {
         return $ret;
     }
 
-    function exportCertificateCsr() {
-        Header("Content-type: application/x-csr");
-        $header=sprintf("Content-Disposition: inline; filename=%s.csr",$this->account);
-		Header($header);
-        $cert=$this->generateCertificate();
-        print $cert['csr'];
-    }
-
     function exportCertificateCrt() {
         Header("Content-type: application/x-crt");
         $header=sprintf("Content-Disposition: inline; filename=%s.crt",$this->account);
@@ -6395,15 +6386,42 @@ function renderUI($SipSettings) {
         } else if ($_REQUEST['action'] == 'prepaid') {
             $SipSettings->getPrepaidStatus();
             print json_encode($SipSettings->prepaidAccount);
+        } else if ($_REQUEST['action'] == 'monthly_usage') {
+            $SipSettings->getCallStatistics();
+            print json_encode($SipSettings->thisMonth);
         } else if ($_REQUEST['action'] == 'balance_history') {
             $SipSettings->getBalanceHistory();
             print json_encode($SipSettings->balance_history);
         } else if ($_REQUEST['action'] == 'accept'){
             $SipSettings->getAcceptRules();
             print json_encode($SipSettings->acceptRules);
+        } else if ($_REQUEST['action'] == 'reject'){
+            $SipSettings->getRejectMembers();
+            print json_encode($SipSettings->rejectMembers);
         } else if ($_REQUEST['action'] == 'calls'){
             $SipSettings->getCalls();
             print json_encode($SipSettings->call_history);
+        } else if ($_REQUEST['action'] == 'voicemail'){
+            $SipSettings->getVoicemail();
+            print json_encode($SipSettings->voicemail);
+        } else if ($_REQUEST['action'] == 'aliases'){
+            $SipSettings->getAliases();
+            print json_encode($SipSettings->aliases);
+        } else if ($_REQUEST['action'] == 'enum'){
+            $SipSettings->getEnumMappings();
+            print json_encode($SipSettings->enums);
+        } else if ($_REQUEST['action'] == 'account'){
+            $account=array('email'         => $SipSettings->email,
+                           'first'         => $SipSettings->firstName,
+                           'lastname'      => $SipSettings->lastName,
+                           'mobile_number' => $SipSettings->mobile_number,
+                           'pstn_access'   => $SipSettings->pstn_access,
+                           'prepaid'       => $SipSettings->prepaid,
+                           'quota'         => $SipSettings->quota,
+                           'timezone'      => $SipSettings->timezone,
+                           'groups'        => $SipSettings->groups
+                           );
+            print json_encode($account);
         } else {
             print "Error: invalid action";
         }
