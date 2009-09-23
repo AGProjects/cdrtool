@@ -50,9 +50,7 @@ if ($resellerFilters[$login_credentials['reseller']]['sip_engine']) {
 	$login_credentials['sip_engine']      = $resellerFilters['default']['sip_engine'];
 }
 
-$SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
-
-renderUI($SipSettings) ;
+renderUI($SipSettings_class,$account,$login_credentials,$soapEngines);
 
 if (!$_SERVER[SSL_CLIENT_CERT]) {
 	page_close();

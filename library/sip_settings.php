@@ -41,7 +41,6 @@ class SipSettings {
     var $voicemail_server          = "vm.example.com";
     var $absolute_voicemail_uri    = false; // use <voice-mailbox>
     var $enable_thor               = false;
-    var $sip_accounts_lite         = false;  // show basic settings by default, and advanced if property advanced is set to 1
     var $currency                  = "&euro";
     // access numbers
 
@@ -183,7 +182,7 @@ class SipSettings {
         $this->getAccount($account);
 
         if ($this->login_type == "admin") {
-            $this->pageURL=$this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&sip_engine=$this->sip_engine";
+            $this->url=$this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&sip_engine=$this->sip_engine";
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
             <input type=hidden name=reseller value=$this->reseller>
@@ -193,7 +192,7 @@ class SipSettings {
 
         } else if ($this->login_type == "reseller") {
 
-            $this->pageURL=$this->settingsPage."?account=$this->account&reseller=$this->reseller&sip_engine=$this->sip_engine";
+            $this->url=$this->settingsPage."?account=$this->account&reseller=$this->reseller&sip_engine=$this->sip_engine";
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
             <input type=hidden name=reseller value=$this->reseller>
@@ -202,7 +201,7 @@ class SipSettings {
 
         } else if ($this->login_type == "customer") {
 
-            $this->pageURL=$this->settingsPage."?account=$this->account&reseller=$this->reseller&sip_engine=$this->sip_engine";
+            $this->url=$this->settingsPage."?account=$this->account&reseller=$this->reseller&sip_engine=$this->sip_engine";
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
             <input type=hidden name=reseller value=$this->reseller>
@@ -210,11 +209,11 @@ class SipSettings {
             ";
 
         } else {
-        	$this->pageURL=$this->settingsPage;
+        	$this->url=$this->settingsPage;
 			if (!$_SERVER[SSL_CLIENT_CERT]) {
-            	$this->pageURL.="?account=$this->account";
+            	$this->url.="?account=$this->account";
             } else {
-            	$this->pageURL.="?1=1";
+            	$this->url.="?1=1";
             }
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
@@ -238,39 +237,36 @@ class SipSettings {
         $this->getResellerSettings();
         $this->getCustomerSettings();
 
-        if ($this->Preferences['advanced']) {
-
-            if ($this->change_privacy_access_number) {
-                $_comment=sprintf(_("Dial %s to change"),$this->change_privacy_access_number);
-            } else {
-                $_comment='';
-            }
-            $this->availableGroups['anonymous']=array("Group"=>"anonymous",
-                                        "WEBName" =>sprintf (_("Privacy")),
-                                        "WEBComment"=>$_comment,
-                                        "SubscriberMaySeeIt"=>1,
-                                        "SubscriberMayEditIt"=>1
-                                        );
-            if ($this->change_privacy_access_number) {
-                $_comment=sprintf(_("Dial %s to change"),$this->reject_anonymous_access_number);
-            } else {
-                $_comment='';
-            }
-
-            $this->availableGroups['anonymous-reject']=array("Group"=>$this->anonymous-reject,
-                                        "WEBName" =>sprintf (_("Reject anonymous")),
-                                        "WEBComment"=>$_comment,
-                                        "SubscriberMaySeeIt"=>1,
-                                        "SubscriberMayEditIt"=>1
-                                        );
-
+        if ($this->change_privacy_access_number) {
+            $_comment=sprintf(_("Dial %s to change"),$this->change_privacy_access_number);
+        } else {
+            $_comment='';
         }
+        $this->availableGroups['anonymous']=array("Group"=>"anonymous",
+                                    "WEBName" =>sprintf (_("Privacy")),
+                                    "WEBComment"=>$_comment,
+                                    "SubscriberMaySeeIt"=>1,
+                                    "SubscriberMayEditIt"=>1
+                                    );
+        if ($this->change_privacy_access_number) {
+            $_comment=sprintf(_("Dial %s to change"),$this->reject_anonymous_access_number);
+        } else {
+            $_comment='';
+        }
+ 
+        $this->availableGroups['anonymous-reject']=array("Group"=>$this->anonymous-reject,
+                                    "WEBName" =>sprintf (_("Reject anonymous")),
+                                    "WEBComment"=>$_comment,
+                                    "SubscriberMaySeeIt"=>1,
+                                    "SubscriberMayEditIt"=>1
+                                    );
 
         $this->pstnChangesAllowed();
         $this->prepaidChangesAllowed();
 
-        $this->tabs=array('summary'=>_('Info'),
+        $this->tabs=array('info'=>_('Info'),
                           'settings'=>_('Settings'),
+                          'diversions'=>_('Diversions'),
                           'locations'=>_('Devices'),
                           'calls'=>_('Calls')
                           );
@@ -295,7 +291,7 @@ class SipSettings {
         "family"    =>sprintf(_("Family"))
         );
 
-        $this->CallPrefDictionary=array(
+        $this->diversionType=array(
         "FUNC"=>sprintf(_("All calls")),
         "FNOL"=>sprintf(_("If Not-Online")),
         "FBUS"=>sprintf(_("If Busy")),
@@ -303,26 +299,23 @@ class SipSettings {
         "FUNV"=>sprintf(_("If Unavailable"))
         );
 
-        $this->CallPrefDictionaryUNV=array(
+        $this->diversionTypeUNV=array(
         "FUNV"=>sprintf(_("If Unavailable"))
         );
 
-        $this->VoicemailCallPrefDictionary=array(
+        $this->VoicemaildiversionType=array(
         "FNOL"=>sprintf(_("If Not-Online")),
         "FBUS"=>sprintf(_("If Busy")),
         "FNOA"=>sprintf(_("If No-Answer")),
         "FUNV"=>sprintf(_("If Unavailable"))
         );
 
-        if ($this->Preferences['advanced']) {
-            // Advanced accounts has access to call control and Phonebook
-            $this->tabs['phonebook']=_("Contacts");
-            $this->tabs['accept'] =_("Accept");
-            $this->tabs['reject'] =_("Reject");
+        // Advanced accounts has access to call control and Phonebook
+        $this->tabs['phonebook']=_("Contacts");
+        $this->tabs['accept'] =_("Accept");
 
-            if (in_array("free-pstn",$this->groups)) {
-                $this->tabs['barring']=_("Barring");
-            }
+        if (in_array("free-pstn",$this->groups)) {
+            $this->tabs['barring']=_("Barring");
         }
 
         if ($this->presence_engine) {
@@ -662,9 +655,6 @@ class SipSettings {
         }
 
         dprint_r($this->Preferences);
-        if (!$this->sip_accounts_lite) {
-            $this->Preferences['advanced']=1;
-        }
 
         if (!$this->Preferences['language']) {
             $this->Preferences['language'] ='en';
@@ -760,17 +750,17 @@ class SipSettings {
 
         if (!array_key_exists($this->tab,$this->tabs)) $this->tab="settings";
 
-        if ($this->tab=="summary")   $this->showSummary();
-        if ($this->tab=="settings")  $this->showSettings();
-        if ($this->tab=="locations") $this->showDeviceLocations();
-        if ($this->tab=="calls")     $this->showLastCalls();
-        if ($this->tab=="phonebook") $this->showPhonebook();
-        if ($this->tab=="prepaid")   $this->showPrepaidForm();
-        if ($this->tab=="upgrade")   $this->showUpgrade();
-        if ($this->tab=="barring")   $this->showBarringPrefixes();
-        if ($this->tab=="reject")    $this->showRejectMembers();
-        if ($this->tab=="accept")    $this->showAcceptRules();
-        if ($this->tab=="presence")  $this->showPresence();
+        if ($this->tab=="info")      $this->showInfoTab();
+        if ($this->tab=="settings")  $this->showSettingsTab();
+        if ($this->tab=="diversions")$this->showDiversionsTab();
+        if ($this->tab=="locations") $this->showLocationsTab();
+        if ($this->tab=="calls")     $this->showCallsTab();
+        if ($this->tab=="phonebook") $this->showPhonebookTab();
+        if ($this->tab=="prepaid")   $this->showPrepaidTab();
+        if ($this->tab=="upgrade")   $this->showUpgradeTab();
+        if ($this->tab=="barring")   $this->showBarringTab();
+        if ($this->tab=="accept")    $this->showAcceptTab();
+        if ($this->tab=="presence")  $this->showPresenceTab();
 
         $this->showFooter();
 
@@ -1123,10 +1113,6 @@ class SipSettings {
     function getDivertTargets () {
         dprint("getDivertTargets()");
 
-        if (!$this->Preferences['advanced']) {
-            return true;
-        }
-
         $this->divertTargets[] = array("name"          => _("No diversion"),
                                        "value"         => "",
                                        "description"   => "Disabled"
@@ -1401,10 +1387,6 @@ class SipSettings {
 
     function getDiversions() {
         dprint("getDiversions()");
-        if (!$this->Preferences['advanced']) {
-            return true;
-        }
-
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getCallDiversions($this->sipId);
 
@@ -1416,10 +1398,10 @@ class SipSettings {
             return false;
         }
 
-        //dprint_r($result);
+    	//print_r($result);
 
-        reset($this->CallPrefDictionary);
-        foreach(array_keys($this->CallPrefDictionary) as $condition) {
+        reset($this->diversionType);
+        foreach(array_keys($this->diversionType) as $condition) {
             $uri=$result->$condition;
 
             if ($uri == "<voice-mailbox>" && $this->absolute_voicemail_uri) {
@@ -1433,12 +1415,14 @@ class SipSettings {
             $this->diversions[$condition]=$uri;
         }
 
-        //dprint_r($this->diversions);
+        //print_r($this->diversions);
     }
 
     function getDeviceLocations() {
         dprint("getDeviceLocations()");
-        require($this->SipUAImagesFile);
+
+        require_once($this->SipUAImagesFile);
+
         $this->userAgentImages = $userAgentImages;
 
         $this->SipPort->addHeader($this->SoapAuth);
@@ -1521,7 +1505,7 @@ class SipSettings {
                 $fontcolor="white";
             }
             print "<td class=border2 bgcolor=$tabcolor>&nbsp;";
-            print "<a class=b href=$this->pageURL&tab=$k><font color=$fontcolor>$v</font>";
+            print "<a class=b href=$this->url&tab=$k><font color=$fontcolor>$v</font>";
             print "&nbsp;</td>";
         }
         print "
@@ -1546,8 +1530,7 @@ class SipSettings {
         ";
     }
 
-    function showSummary() {
-        $this->getVoicemail();
+    function showInfoTab() {
         $this->getEnumMappings();
         $this->getAliases();
 
@@ -1606,6 +1589,37 @@ class SipSettings {
           <td height=3 colspan=2></td>
         </tr>
         ";
+
+		include("/etc/cdrtool/enrollment/config.ini");
+
+        if (is_array($enrollment)) {
+            $chapter=sprintf(_("Client certificates"));
+            $this->showChapter($chapter);
+            print "
+            <tr>
+            <td class=border>";
+            print _("X.509 PEM format");
+            printf ("
+            </td>
+            <td class=border><a href=%s&action=crt&export=1>%s.crt</a>
+            </td>
+            </tr>
+            <tr>
+              <td height=3 colspan=2></td>
+            </tr>",$this->url, $this->account);
+            print "
+            <tr>
+            <td class=border>";
+            print _("PKCS#12 store format");
+            printf ("
+            </td>
+            <td class=border><a href=%s&action=p12&export=1>%s.p12</a>
+            </td>
+            </tr>
+            <tr>
+              <td height=3 colspan=2></td>
+            </tr>",$this->url, $this->account);
+        }
 
         if ($this->presence_engine) {
             $chapter=sprintf(_("Presence settings"));
@@ -1744,7 +1758,7 @@ class SipSettings {
         if ($this->email)  {
             printf (_("Email account information to %s"),$this->email);
             print "
-            <input type=hidden name=action value=\"send settings\">
+            <input type=hidden name=action value=\"send email\">
             <input type=submit value=";
             print _("Send");
             print ">";
@@ -1789,13 +1803,15 @@ class SipSettings {
 
     }
 
-    function showSettings() {
+    function showSettingsTab() {
 
         $this->getVoicemail();
-        $this->getEnumMappings();
 
+        /*
+        $this->getEnumMappings();
         $this->getDivertTargets();
         $this->getDiversions();
+        */
 
         print "
         <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
@@ -2200,36 +2216,13 @@ class SipSettings {
 
         $this->showOwner();
 
-        if ($this->Preferences['advanced']) {
-            $this->showQuickDial();
-            $this->showMobileNumber();
-            $this->showVoicemail();
-        }
+        $this->showQuickDial();
+
+        $this->showMobileNumber();
+
+        $this->showVoicemail();
 
         $this->showBillingProfiles();
-
-        if (!$this->Preferences['advanced']) {
-            print "
-            <tr>
-            <td class=border>";
-            print _("Advanced options");
-            print "
-            </td>
-            <td class=ag1>";
-            print "<input type=checkbox name=advanced value=1> ";
-            print _("Check this box and click save to enable advanced options");
-            print "
-            </td>
-            </tr>
-            ";
-        }
-
-        if ($this->Preferences['advanced']) {
-            $chapter=sprintf(_("Call diversion"));
-            $this->showChapter($chapter);
-
-            $this->showDiversions();
-        }
 
         $chapter=sprintf(_("Notifications address"));
         $this->showChapter($chapter);
@@ -2255,6 +2248,48 @@ class SipSettings {
         <tr>
           <td align=left>
             <input type=hidden name=action value=\"save settings\">
+        ";
+
+        print "
+        <input type=submit value=\"";
+        print _("Save");
+        print "\"
+               onClick=saveHandler(this)>
+        ";
+        print "
+          </td>
+          <td align=right>
+          </td>
+        </tr>
+        ";
+
+        print $this->hiddenElements;
+
+        print "
+        </form>
+        ";
+
+    }
+
+    function showDiversionsTab () {
+
+        $this->getVoicemail();
+        $this->getDivertTargets();
+        $this->getDiversions();
+
+        print "
+        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        ";
+
+        $chapter=sprintf(_("Call diversions"));
+        $this->showChapter($chapter);
+
+        $this->showDiversions();
+
+        print "
+        <tr>
+          <td align=left>
+            <input type=hidden name=action value=\"set diversions\">
         ";
 
         print "
@@ -2404,7 +2439,7 @@ class SipSettings {
         }
     }
 
-    function showDeviceLocations() {
+    function showLocationsTab() {
         $this->getDeviceLocations();
 
         if (count($this->locations)) {
@@ -2450,7 +2485,7 @@ class SipSettings {
                 print "<td class=border align=center>";
                 if (preg_match("/(unidata|snom|eyebeam|csco)/i",$user_agent,$m)) {
                     $_ua=strtolower($m[1]);
-                    print "<a href=$this->pageURL&tab=phonebook&export=1&userAgent=$_ua target=export>";
+                    print "<a href=$this->url&tab=phonebook&export=1&userAgent=$_ua target=export>";
                     printf("<img src='%s/30/%s' border=0>",$this->SipUAImagesPath,$UAImage);
                     print "</a>";
                 } else {
@@ -2527,7 +2562,7 @@ class SipSettings {
         }
     }
 
-    function showBarringPrefixes() {
+    function showBarringTab() {
         $chapter=sprintf(_("Blocked destinations"));
         $this->showChapter($chapter);
 
@@ -2575,7 +2610,7 @@ class SipSettings {
         print "
         <tr>
           <td align=left>
-            <input type=hidden name=action value=\"set barring prefixes\">
+            <input type=hidden name=action value=\"set barring\">
         ";
 
         print "
@@ -2599,14 +2634,15 @@ class SipSettings {
         ";
     }
 
-    function update() {
-        dprint("update()");
+    function saveSettings() {
 
         $this->getVoicemail();
-        $this->getEnumMappings();
 
+        /*
+        $this->getEnumMappings();
         $this->getDivertTargets();
         $this->getDiversions();
+        */
 
         foreach ($this->WEBdictionary as $el) {
             ${$el} = $_REQUEST[$el];
@@ -2643,19 +2679,11 @@ class SipSettings {
 
         $this->properties=$result->properties;
 
-        if ($advanced) {
-            if (!$this->Preferences['advanced']) {
-                $this->setPreference("advanced","1");
-                $this->somethingChanged=1;
-            }
-
-            $voicemail=1;
-            $this->availableGroups['voicemail']=array("Group"=>"voicemail",
-                                        "WEBName" =>sprintf (_("Voice mailbox")),
-                                        "SubscriberMayEditIt"=>"1",
-                                        "SubscriberMaySeeIt"=>0
-                                        );
-        }
+        $this->availableGroups['voicemail']=array("Group"=>"voicemail",
+                                    "WEBName" =>sprintf (_("Voice mailbox")),
+                                    "SubscriberMayEditIt"=>"1",
+                                    "SubscriberMaySeeIt"=>0
+                                    );
 
         if (!$this->voicemail['Account'] && $voicemail) {
             if ($this->addVoicemail()) {
@@ -2850,35 +2878,33 @@ class SipSettings {
             $this->somethingChanged=1;
         }
 
-        if ($this->Preferences['advanced']) {
-    
-            if (strcmp($quickdial,$this->quickdial) != 0) {
-                if ($this->SOAPversion > 1) {
-                    $result->quickdialPrefix=$quickdial;
-                } else {
-                    $result->quickdial=$quickdial;
-                }
-
-                $this->somethingChanged=1;
+        if (strcmp($quickdial,$this->quickdial) != 0) {
+            if ($this->SOAPversion > 1) {
+                $result->quickdialPrefix=$quickdial;
+            } else {
+                $result->quickdial=$quickdial;
             }
 
-            $mobile_number  = preg_replace("/[^\+0-9]/","",$mobile_number);
-            if ($this->Preferences['mobile_number'] != $mobile_number) {
-                $this->setPreference('mobile_number',$mobile_number);
-                $this->somethingChanged=1;
-            }
+            $this->somethingChanged=1;
+        }
 
-            if (!$this->createdVoicemailnow) {
-                $this->setDiversions();
-            }
+        $mobile_number  = preg_replace("/[^\+0-9]/","",$mobile_number);
+        if ($this->Preferences['mobile_number'] != $mobile_number) {
+            $this->setPreference('mobile_number',$mobile_number);
+            $this->somethingChanged=1;
+        }
 
-            if ($this->timeoutWasNotSet || $timeout != $this->timeout) {
-                $this->somethingChanged=1;
-                if ($this->SOAPversion > 1) {
-                    $result->timeout=intval($timeout);
-                } else {
-                    $result->answerTimeout=intval($timeout);
-                }
+        if (!$this->createdVoicemailnow) {
+            // moved to its own tab
+            //$this->setDiversions();
+        }
+
+        if ($this->timeoutWasNotSet || $timeout != $this->timeout) {
+            $this->somethingChanged=1;
+            if ($this->SOAPversion > 1) {
+                $result->timeout=intval($timeout);
+            } else {
+                $result->answerTimeout=intval($timeout);
             }
         }
 
@@ -2942,11 +2968,13 @@ class SipSettings {
     function setDiversions() {
         dprint ("setDiversions()");
 
-        if (!$this->Preferences['advanced']) {
-            return true;
-        }
+        $this->getVoicemail();
+        $this->getEnumMappings();
 
-        foreach (array_keys($this->CallPrefDictionary) as $condition) {
+        $this->getDivertTargets();
+        $this->getDiversions();
+
+        foreach (array_keys($this->diversionType) as $condition) {
             $select_name = $condition."_select";
             $selectedIdx = $_REQUEST[$select_name];
             $textboxURI  = $_REQUEST[$condition];
@@ -3056,6 +3084,8 @@ class SipSettings {
                 $error_code = $result->getCode();
                 printf ("<p><font color=red>Error2 (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
+            } else {
+            	$this->diversions=$diversions;
             }
         }
     }
@@ -3114,8 +3144,8 @@ class SipSettings {
             $uri=NULL;
         }
 
-        reset($this->CallPrefDictionary);
-        foreach(array_keys($this->CallPrefDictionary) as $_condition) {
+        reset($this->diversionType);
+        foreach(array_keys($this->diversionType) as $_condition) {
             $uri=$result->$_condition;
 
             if ($this->absolute_voicemail_uri && $uri == "<voice-mailbox>") {
@@ -3159,8 +3189,6 @@ class SipSettings {
                 $diversions['FNOA']="sip:".$this->voicemail['Account'];
                 $diversions['FNOL']="sip:".$this->voicemail['Account'];
             }
-
-            dprint("setDiversions");
 
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->setCallDiversions($this->sipId,$diversions);
@@ -3285,14 +3313,14 @@ class SipSettings {
         //dprint_r($this->properties);
     }
 
-    function showPrepaidForm() {
+    function showPrepaidTab() {
         $task        = $_REQUEST['task'];
         $issuer      = $_REQUEST['issuer'];
         $_done       = false;
 
         print "
         <tr>
-        <form action=$this->pageURL method=post>
+        <form action=$this->url method=post>
         <input type=hidden name=tab value=prepaid>
         <input type=hidden name=task value=Add>
         <td class=h colspan=2 align=left> ";
@@ -3373,7 +3401,7 @@ class SipSettings {
 
         print "
         <tr>
-        <form action=$this->pageURL method=post>
+        <form action=$this->url method=post>
         <input type=hidden name=tab value=prepaid>
         <input type=hidden name=issuer value=reseller>
         <input type=hidden name=task value=Add>
@@ -3408,7 +3436,7 @@ class SipSettings {
 
         print "
         <tr>
-        <form action=$this->pageURL method=post>
+        <form action=$this->url method=post>
         <input type=hidden name=tab value=prepaid>
         <input type=hidden name=issuer value=subscriber>
         <input type=hidden name=task value=Add>
@@ -3639,7 +3667,7 @@ class SipSettings {
         ";
 
 		if ($found) {
-        	print "<p><a href=$this->pageURL&tab=prepaid&export=1 target=_new><font color=$fontcolor>Export history to CSV file</font>";
+        	print "<p><a href=$this->url&tab=prepaid&export=1 target=_new><font color=$fontcolor>Export history to CSV file</font>";
         }
         print "</td></tr>";
     }
@@ -3681,13 +3709,13 @@ class SipSettings {
 
     function showDiversions($conditions=array()) {
         // for busy not online or unconditional
-        foreach (array_keys($this->CallPrefDictionary) as $condition) {
+        foreach (array_keys($this->diversionType) as $condition) {
             $_prefName = $condition."_lastOther";
             $this->CallPrefLastOther[$condition]= $this->Preferences[$_prefName];
         }
 
         if (!count($conditions)) {
-            $conditions=$this->CallPrefDictionary;
+            $conditions=$this->diversionType;
         }
 
         foreach (array_keys($conditions) as $condition) {
@@ -4018,7 +4046,7 @@ class SipSettings {
 
     }
 
-    function showLastCalls() {
+    function showCallsTab() {
 
         $this->getCalls();
 
@@ -4091,9 +4119,7 @@ class SipSettings {
                 <td align=right width=10></td>
                 <td align=left><nobr>$htmlURI</nobr></td>
                 ";
-                if ($this->Preferences['advanced']) {
-                    print "<td align=right><a href=$this->pageURL&tab=phonebook&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
-                }
+                print "<td align=right><a href=$this->url&tab=phonebook&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
                 print "
                 </tr>
                 </table>";
@@ -4143,9 +4169,7 @@ class SipSettings {
                 <td align=left><nobr>$htmlURI $price_print</nobr></td>
                 ";
 
-                if ($this->Preferences['advanced']) {
-                    print "<td align=right><a href=$this->pageURL&tab=phonebook&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
-                }
+                print "<td align=right><a href=$this->url&tab=phonebook&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
                 print "
                 </tr>
                 </table>";
@@ -4375,15 +4399,11 @@ class SipSettings {
         //dprint_r($this->PhonebookEntries);
     }
 
-    function showPhonebook() {
+    function showPhonebookTab() {
         dprint("showPhonebook()");
 
         $chapter=sprintf(_("Contacts"));
         $this->showChapter($chapter);
-
-        if (!$this->Preferences['advanced']) {
-            return ;
-        }
 
         print "
         <tr>
@@ -4448,13 +4468,13 @@ class SipSettings {
         $this->getPhoneBookEntries();
         $maxrowsperpage=250;
     
-        $url_string=$this->pageURL."&tab=phonebook";
+        $url_string=$this->url."&tab=phonebook";
 
         print "
         <p>
         <table width=100% cellpadding=1 cellspacing=1 border=0>
         <tr>
-        <form action=$this->pageURL method=post>
+        <form action=$this->url method=post>
         <input type=hidden name=tab value=phonebook>
         <input type=hidden name=task value=add>
         <td class=h align=left valign=top>
@@ -4467,7 +4487,7 @@ class SipSettings {
         print "
         </td>
         </form>
-        <form action=$this->pageURL method=post>
+        <form action=$this->url method=post>
         <input type=hidden name=tab value=phonebook>
         <td class=h align=right valign=top>
         <input type=text size=20 name=search_text value=\"$search_text\">
@@ -4489,7 +4509,7 @@ class SipSettings {
         print _("Search");
         print ">";
         print "
-        <a href=$this->pageURL&tab=phonebook&export=1 target=export>";
+        <a href=$this->url&tab=phonebook&export=1 target=export>";
         print _("Export");
         print "</a>
         </td>
@@ -4527,7 +4547,7 @@ class SipSettings {
     
                 print "
                 <tr bgcolor=white valign=top>
-                <form name=\"Entry$found\" action=\"$this->pageURL&tab=$this->tab\">
+                <form name=\"Entry$found\" action=\"$this->url&tab=$this->tab\">
                 $this->hiddenElements
                 <input type=hidden name=tab value=\"$this->tab\">
                 <input type=hidden name=task value=\"update\">
@@ -4764,72 +4784,6 @@ class SipSettings {
         }
     }
 
-    function showRejectMembers() {
-        $chapter=sprintf(_("Rejected callers"));
-        $this->showChapter($chapter);
-
-        print "
-        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
-        ";
-        print "
-        <tr>
-        <td class=border colspan=2 align=left>";
-        print _("Use %Number@% to match PSTN callers and user@domain to match SIP callers");
-        print "
-        </td>
-        </tr>
-        ";
-
-        print "<tr>";
-        print "<td class=border align=left>";
-        print _("SIP caller");
-        print "</td>";
-        print "<td class=border align=left>
-        <input type=text size=35 name=rejectMembers[]>
-        </td>";
-        print "<tr>";
-
-        if ($this->getRejectMembers()) {
-            foreach ($this->rejectMembers as $_member) {
-                print "<tr>";
-                print "<td class=border align=left>";
-                print _("SIP caller");
-                print "</td>";
-                print "<td class=border align=left>
-                <input type=text size=35 name=rejectMembers[] value=\"$_member\">
-                </td>";
-                print "<tr>";
-            }
-        }
-
-        print "
-        <tr>
-          <td align=left>
-            <input type=hidden name=action value=\"set reject members\">
-        ";
-
-        print "
-        <input type=submit value=\"";
-        print _("Save");
-        print "\"
-               onClick=saveHandler(this)>
-        ";
-
-        print "
-          </td>
-          <td align=right>
-          </td>
-        </tr>
-        ";
-
-        print $this->hiddenElements;
-
-        print "
-        </form>
-        ";
-
-    }
-
     function getAcceptRules() {
 
         dprint("getAcceptRules()");
@@ -4955,7 +4909,7 @@ class SipSettings {
 
     }
 
-    function showAcceptRules() {
+    function showAcceptTab() {
         $chapter=sprintf(_("Accept rules"));
         $this->showChapter($chapter);
 
@@ -5344,6 +5298,70 @@ class SipSettings {
         </form>
         ";
 
+        $chapter=sprintf(_("Rejected callers"));
+        $this->showChapter($chapter);
+
+        print "
+        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        ";
+        print "
+        <tr>
+        <td class=border colspan=2 align=left>";
+        print _("Use %Number@% to match PSTN callers and user@domain to match SIP callers");
+        print "
+        </td>
+        </tr>
+        ";
+
+        print "<tr>";
+        print "<td class=border align=left>";
+        print _("SIP caller");
+        print "</td>";
+        print "<td class=border align=left>
+        <input type=text size=35 name=rejectMembers[]>
+        </td>";
+        print "<tr>";
+
+        if ($this->getRejectMembers()) {
+            foreach ($this->rejectMembers as $_member) {
+                print "<tr>";
+                print "<td class=border align=left>";
+                print _("SIP caller");
+                print "</td>";
+                print "<td class=border align=left>
+                <input type=text size=35 name=rejectMembers[] value=\"$_member\">
+                </td>";
+                print "<tr>";
+            }
+        }
+
+        print "
+        <tr>
+          <td align=left>
+            <input type=hidden name=action value=\"set reject\">
+        ";
+
+        print "
+        <input type=submit value=\"";
+        print _("Save");
+        print "\"
+               onClick=saveHandler(this)>
+        ";
+
+        print "
+          </td>
+          <td align=right>
+          </td>
+        </tr>
+        ";
+
+        print $this->hiddenElements;
+
+        print "
+        </form>
+        ";
+
+
     }
 
     function sendEmail($skip_html=False) {
@@ -5450,7 +5468,7 @@ class SipSettings {
         return urlencode($uri);
     }
     
-    function showUpgrade () {
+    function showUpgradeTab () {
     }
 
     function PhoneDialURL($uri) {
@@ -5515,7 +5533,7 @@ class SipSettings {
         return true;
     }
 
-    function showPresence() {
+    function showPresenceTab() {
 
         $this->getPresenceWatchers();
         $this->getPresenceRules();
@@ -6078,7 +6096,7 @@ class SipSettings {
     function generateCertificate() {
 
 		global $enrollment;
-		require_once("/etc/cdrtool/enrollment/config.ini");
+		include("/etc/cdrtool/enrollment/config.ini");
 
         if (!is_array($enrollment)) {
             print "Error: missing enrollment settings";
@@ -6149,7 +6167,7 @@ class SipSettings {
         return $ret;
     }
 
-    function exportCertificateCrt() {
+    function exportCertificateX509() {
         Header("Content-type: application/x-crt");
         $header=sprintf("Content-Disposition: inline; filename=%s.crt",$this->account);
 		Header($header);
@@ -6260,12 +6278,12 @@ function getSipThorHomeNode ($account,$sip_proxy) {
 function getSipAccountFromX509Certificate() {
 
      if (!$_SERVER[SSL_CLIENT_CERT]) {
-     	print "Error: No X.509 Client Certificate provided\n";
+     	print "Error: No X.509 client certificate provided\n";
         return false;
      }
 
      if (!$cert=openssl_x509_parse($_SERVER[SSL_CLIENT_CERT])) {
-     	print "Error: Failed to Parse Client Certificate\n";
+     	print "Error: Failed to parse X.509 client certificate\n";
         return false;
      }
 
@@ -6332,7 +6350,9 @@ function getSipAccountFromX509Certificate() {
      return $credentials;
 }
 
-function renderUI($SipSettings) {
+function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
+
+	$SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
 	// Generic code for all sip settings pages
 
     if (!$_REQUEST['export']) {
@@ -6344,33 +6364,35 @@ function renderUI($SipSettings) {
     
         if ($_REQUEST['action']=="save settings") {
             if ($SipSettings->checkSettings()) {
-                $SipSettings->update();
+                $SipSettings->saveSettings();
                 unset($SipSettings);
-                if (in_array($domain,$freeDomains)) {
-                    $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
-                } else {
-                    $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
-                }
+                $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
+
             } else {
                 print "<font color=red>";
                 printf (_("Error: %s"),$SipSettings->error);
                 print "</font>";
             }
-        } else if ($_REQUEST['action']=="set barring prefixes") {
+        } else if ($_REQUEST['action']=="set diversions") {
+            $SipSettings->setDiversions();
+            unset($SipSettings);
+            $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
+        } else if ($_REQUEST['action']=="set barring") {
             $SipSettings->setBarringPrefixes();
         } else if ($_REQUEST['action']=="set presence") {
             $SipSettings->setPresence();
-        } else if ($_REQUEST['action']=="set reject members") {
+        } else if ($_REQUEST['action']=="set reject") {
             $SipSettings->setRejectMembers();
         } else if ($_REQUEST['action']=="set accept rules") {
             $SipSettings->setAcceptRules();
         } else if ($_REQUEST['action']=="set aliases") {
             $SipSettings->setAliases();
-        } else if ($_REQUEST['action']=="send settings") {
+        } else if ($_REQUEST['action']=="send email") {
             $SipSettings->sendEmail();
         }
     
         $SipSettings->showAccount();
+
         print "
         </body>
         </html>
@@ -6378,7 +6400,7 @@ function renderUI($SipSettings) {
     
     } else {
         if ($_REQUEST['action']=="crt") {
-            $SipSettings->exportCertificateCrt();
+            $SipSettings->exportCertificateX509();
         } else if ($_REQUEST['action']=="p12") {
             $SipSettings->exportCertificateP12();
         } else if ($_REQUEST['tab']=="prepaid") {
@@ -6446,6 +6468,22 @@ class AccountEnrollment {
     	$this->soapEngines  = $soapEngines;
         $this->enrollment   = $enrollment;
 
+        if (!is_array($this->soapEngines)) {
+            $return=array('success'       => false,
+                          'error_message' => 'Error: Missing soap engines configuration'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        if (!is_array($this->enrollment)) {
+            $return=array('success'       => false,
+                          'error_message' => 'Error: Missing enrollment configuration'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
         $this->sipDomain    = $this->enrollment['sip_domain'];
 		$this->sipEngine    = $this->enrollment['sip_engine'];
 		$this->reseller     = $this->enrollment['reseller'];
@@ -6458,7 +6496,7 @@ class AccountEnrollment {
 
         if (!$this->sipEngine) {
             $return=array('success'       => false,
-                          'error_message' => 'Missing sip engine'
+                          'error_message' => 'Error: Missing sip engine'
                           );
             print (json_encode($return));
             return false;
@@ -6466,7 +6504,7 @@ class AccountEnrollment {
 
         if (!$this->sipDomain) {
             $return=array('success'       => false,
-                          'error_message' => 'Missing sip domain'
+                          'error_message' => 'Error: Missing sip domain'
                           );
             print (json_encode($return));
             return false;
@@ -6487,7 +6525,7 @@ class AccountEnrollment {
 
         if (!$_REQUEST['email']) {
             $return=array('success'       => false,
-                          'error_message' => 'Missing email address'
+                          'error_message' => 'Error: Missing email address'
                           );
             print (json_encode($return));
             return false;
@@ -6495,7 +6533,7 @@ class AccountEnrollment {
 
         if (!$this->checkEmail($_REQUEST['email'])) {
             $return=array('success'       => false,
-                          'error_message' => 'Invalid email address'
+                          'error_message' => 'Error: Invalid email address'
                           );
             print (json_encode($return));
             return false;
@@ -6503,7 +6541,7 @@ class AccountEnrollment {
         
         if (!$_REQUEST['password']) {
             $return=array('success'       => false,
-                          'error_message' => 'Missing password'
+                          'error_message' => 'Error: Missing password'
                           );
             print (json_encode($return));
             return false;
@@ -6511,7 +6549,7 @@ class AccountEnrollment {
 
         if (!$_REQUEST['display_name']) {
             $return=array('success'       => false,
-                          'error_message' => 'Missing display name'
+                          'error_message' => 'Error: Missing display name'
                           );
             print (json_encode($return));
             return false;
@@ -6524,7 +6562,9 @@ class AccountEnrollment {
         $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
 
         $sip_properties[]=array('name'  => 'ip',
-                                'value' => $_SERVER['REMOTE_ADDR']);
+                                'value' => $_SERVER['REMOTE_ADDR'],
+                                'registration_email' => $_REQUEST['email']
+                                );
 
         $sipAccount = array('account'   => strtolower('<autoincrement>@'.$this->sipDomain),
                             'fullname'  => $_REQUEST['display_name'],
