@@ -32,6 +32,8 @@ $soapEngines=array(
                                          'welcome_message'     => '<h1>NGNPro provisioning client</h1>',
                                          'currency'            => '&euro',
                                          'timeout'             => 5,
+                                         'enrollment_url'      => 'https://enrollment.example.com/',
+                                         'sip_settings_api_url'=> 'https://wiki.example.com',
                                          'hostnames'           => array ('10.10.0.1'=>'node01.example.com')
                                          ),
                            'vm' => array('name'=> 'Voicemail server',

@@ -132,6 +132,8 @@ class SipSettings {
     var $SipUAImagesPath     = "images";
     var $SipUAImagesFile     = "phone_images.php";
     var $balance_history     = array();
+    var $enrollment_url      = false;
+    var $sip_settings_api_url= false;
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
         $this->soapEngines        = $soapEngines;
@@ -343,6 +345,14 @@ class SipSettings {
         $this->SOAPurl=$this->soapEngines[$this->sip_engine]['url'];
 
         $this->SOAPversion=$this->soapEngines[$this->sip_engine]['version'];
+
+        if ($this->soapEngines[$this->sip_engine]['enrollment_url']) {
+        	$this->enrollment_url =$this->soapEngines[$this->sip_engine]['enrollment_url'];
+        }
+
+        if ($this->soapEngines[$this->sip_engine]['sip_settings_api_url']) {
+        	$this->sip_settings_api_url =$this->soapEngines[$this->sip_engine]['sip_settings_api_url'];
+        }
 
         if (strlen($this->loginCredentials['soapUsername'])) {
             $this->SOAPlogin = array(
@@ -1490,7 +1500,7 @@ class SipSettings {
         ";
 
         print "
-        <table class=border2 border=0 cellspacing=0 cellpadding=0 align=right>
+        <table border=0 cellspacing=0 cellpadding=0 align=right>
         <tr>
         ";
     
@@ -1590,36 +1600,51 @@ class SipSettings {
         </tr>
         ";
 
-		include("/etc/cdrtool/enrollment/config.ini");
+		if ($this->enrollment_url) {
+            include("/etc/cdrtool/enrollment/config.ini");
+    
+            if (is_array($enrollment)) {
+                $chapter=sprintf(_("Client certificates"));
+                $this->showChapter($chapter);
+                if ($this->sip_settings_api_url) {
+                    print "
+                    <tr>
+                    <td class=border colspan=2>";
+                    printf (_("You can use the certificate for changing settings using <a href=%s target=sip_api>SIP Settings API</a>"),$this->sip_settings_api_url);
+                    printf ("
+                    </td>
+                    </tr>
+                    ");
+                
+                }
 
-        if (is_array($enrollment)) {
-            $chapter=sprintf(_("Client certificates"));
-            $this->showChapter($chapter);
-            print "
-            <tr>
-            <td class=border>";
-            print _("X.509 PEM format");
-            printf ("
-            </td>
-            <td class=border><a href=%s&action=crt&export=1>%s.crt</a>
-            </td>
-            </tr>
-            <tr>
-              <td height=3 colspan=2></td>
-            </tr>",$this->url, $this->account);
-            print "
-            <tr>
-            <td class=border>";
-            print _("PKCS#12 store format");
-            printf ("
-            </td>
-            <td class=border><a href=%s&action=p12&export=1>%s.p12</a>
-            </td>
-            </tr>
-            <tr>
-              <td height=3 colspan=2></td>
-            </tr>",$this->url, $this->account);
+                print "
+                <tr>
+                <td class=border>";
+                print _("X.509 PEM format");
+                printf ("
+                </td>
+                <td class=border><a href=%s&action=crt>%s.crt</a>
+                </td>
+                </tr>
+                <tr>
+                  <td height=3 colspan=2></td>
+                </tr>",$this->url, $this->account);
+                print "
+                <tr>
+                <td class=border>";
+                print _("PKCS#12 store format");
+                printf ("
+                </td>
+                <td class=border><a href=%s&action=p12>%s.p12</a>
+                </td>
+                </tr>
+                <tr>
+                  <td height=3 colspan=2></td>
+                </tr>",$this->url, $this->account);
+            }
         }
+
 
         if ($this->presence_engine) {
             $chapter=sprintf(_("Presence settings"));
@@ -3380,7 +3405,7 @@ class SipSettings {
             <tr>
             <td class=h align=left>";
             print _("Balance");
-            print ": $prepaidAccount->balance $this->currency";
+            printf (": %.2f %s ",$prepaidAccount->balance,$this->currency);
             print "</td><td align=right>
             </td>
             </form>
@@ -6351,9 +6376,9 @@ function getSipAccountFromX509Certificate() {
 }
 
 function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
+    // Generic code for all sip settings pages
 
 	$SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
-	// Generic code for all sip settings pages
 
     if (!$_REQUEST['export']) {
         $title  = "SIP settings of $account";
@@ -6361,102 +6386,339 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $css    = $SipSettings->cssFile;
         include($header);
         include($css);
-    
-        if ($_REQUEST['action']=="save settings") {
-            if ($SipSettings->checkSettings()) {
-                $SipSettings->saveSettings();
-                unset($SipSettings);
-                $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
+    }
 
-            } else {
-                print "<font color=red>";
-                printf (_("Error: %s"),$SipSettings->error);
-                print "</font>";
-            }
-        } else if ($_REQUEST['action']=="set diversions") {
-            $SipSettings->setDiversions();
+    if ($_REQUEST['action']=="save settings") {
+        if ($SipSettings->checkSettings()) {
+            $SipSettings->saveSettings();
             unset($SipSettings);
             $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
-        } else if ($_REQUEST['action']=="set barring") {
-            $SipSettings->setBarringPrefixes();
-        } else if ($_REQUEST['action']=="set presence") {
-            $SipSettings->setPresence();
-        } else if ($_REQUEST['action']=="set reject") {
-            $SipSettings->setRejectMembers();
-        } else if ($_REQUEST['action']=="set accept rules") {
-            $SipSettings->setAcceptRules();
-        } else if ($_REQUEST['action']=="set aliases") {
-            $SipSettings->setAliases();
-        } else if ($_REQUEST['action']=="send email") {
-            $SipSettings->sendEmail();
-        }
-    
-        $SipSettings->showAccount();
 
+        } else {
+            print "<font color=red>";
+            printf (_("Error: %s"),$SipSettings->error);
+            print "</font>";
+        }
+    } else if ($_REQUEST['action']=="set diversions") {
+        $SipSettings->setDiversions();
+        unset($SipSettings);
+        $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
+    } else if ($_REQUEST['action']=="set barring") {
+        $SipSettings->setBarringPrefixes();
+    } else if ($_REQUEST['action']=="set presence") {
+        $SipSettings->setPresence();
+    } else if ($_REQUEST['action']=="set reject") {
+        $SipSettings->setRejectMembers();
+    } else if ($_REQUEST['action']=="set accept rules") {
+        $SipSettings->setAcceptRules();
+    } else if ($_REQUEST['action']=="set aliases") {
+        $SipSettings->setAliases();
+    } else if ($_REQUEST['action']=="send email") {
+        $SipSettings->sendEmail();
+    } else if ($_REQUEST['action']=="crt") {
+        $SipSettings->exportCertificateX509();
+        return true;
+    } else if ($_REQUEST['action']=="p12") {
+        $SipSettings->exportCertificateP12();
+        return true;
+    } else if ($_REQUEST['action']=="prepaid") {
+        $SipSettings->exportBalanceHistory();
+        return true;
+    } else if ($_REQUEST['action'] == 'diversions') {
+        $SipSettings->getDiversions();
+        print json_encode($SipSettings->diversions);
+        return true;
+    } else if ($_REQUEST['action'] == 'prepaid') {
+        $SipSettings->getPrepaidStatus();
+        print json_encode($SipSettings->prepaidAccount);
+        return true;
+    } else if ($_REQUEST['action'] == 'monthly_usage') {
+        $SipSettings->getCallStatistics();
+        print json_encode($SipSettings->thisMonth);
+        return true;
+    } else if ($_REQUEST['action'] == 'balance_history') {
+        $SipSettings->getBalanceHistory();
+        print json_encode($SipSettings->balance_history);
+        return true;
+    } else if ($_REQUEST['action'] == 'accept'){
+        $SipSettings->getAcceptRules();
+        print json_encode($SipSettings->acceptRules);
+        return true;
+    } else if ($_REQUEST['action'] == 'reject'){
+        $SipSettings->getRejectMembers();
+        print json_encode($SipSettings->rejectMembers);
+        return true;
+    } else if ($_REQUEST['action'] == 'calls'){
+        $SipSettings->getCalls();
+        print json_encode($SipSettings->call_history);
+        return true;
+    } else if ($_REQUEST['action'] == 'voicemail'){
+        $SipSettings->getVoicemail();
+        print json_encode($SipSettings->voicemail);
+        return true;
+    } else if ($_REQUEST['action'] == 'aliases'){
+        $SipSettings->getAliases();
+        print json_encode($SipSettings->aliases);
+        return true;
+    } else if ($_REQUEST['action'] == 'enum'){
+        $SipSettings->getEnumMappings();
+        print json_encode($SipSettings->enums);
+        return true;
+    } else if ($_REQUEST['action'] == 'account'){
+        $account=array('email'         => $SipSettings->email,
+                       'first'         => $SipSettings->firstName,
+                       'lastname'      => $SipSettings->lastName,
+                       'mobile_number' => $SipSettings->mobile_number,
+                       'pstn_access'   => $SipSettings->pstn_access,
+                       'prepaid'       => $SipSettings->prepaid,
+                       'quota'         => $SipSettings->quota,
+                       'timezone'      => $SipSettings->timezone,
+                       'groups'        => $SipSettings->groups
+                       );
+        print json_encode($account);
+        return true;
+    } else if ($_REQUEST['action'] == 'dnd_on'){
+        $SipSettings->getAcceptRules();
+        $SipSettings->acceptRules['temporary']=array('groups'   =>array('nobody'),
+                                                     'duration' =>intval($_REQUEST['duration'])
+                                                     );
+        $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+        $result     = $SipSettings->SipPort->setAcceptRules($SipSettings->sipId,$SipSettings->acceptRules);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            $_msg=sprintf ("Error (SipPort): %s (%s): %s",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $_ret=false;
+        } else {
+            $_ret=true;
+            if (intval($_REQUEST['duration'] > 0)) {
+                $_msg=sprintf('Do not disturb has been enabled for %d minutes',intval($_REQUEST['duration']));
+            } else {
+                $_msg=sprintf('Do not disturb has been enabled');
+            }
+        }
+
+        $return=array('success'       => $_ret,
+                      'error_message' => $_msg
+                      );
+        print (json_encode($return));
+        return true;
+    } else if ($_REQUEST['action'] == 'dnd_off'){
+        $SipSettings->getAcceptRules();
+        $SipSettings->acceptRules['temporary']=array('groups'   =>array('everybody'),
+                                                     'duration' =>0
+                                                     );
+        $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+        $result     = $SipSettings->SipPort->setAcceptRules($SipSettings->sipId,$SipSettings->acceptRules);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            $_msg=sprintf ("Error (SipPort): %s (%s): %s",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $_ret=false;
+        } else {
+            $_ret=true;
+            $_msg=sprintf('Do not disturb has been disabled');
+        }
+
+        $return=array('success'       => $_ret,
+                      'error_message' => $_msg
+                      );
+        print (json_encode($return));
+        return true;
+    } else if ($_REQUEST['action'] == 'privacy_on'){
+        $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+        $result     = $SipSettings->SipPort->addToGroup(array("username" => $SipSettings->username,"domain"=> $SipSettings->domain),"anonymous");
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            $_msg=sprintf ("Error (SipPort): %s (%s): %s",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $_ret=false;
+        } else {
+            $_ret=true;
+            $_msg=sprintf('Caller Id is now hidden for outgoing calls');
+        }
+
+        $return=array('success'       => $_ret,
+                      'error_message' => $_msg
+                      );
+        print (json_encode($return));
+        return true;
+    } else if ($_REQUEST['action'] == 'privacy_off'){
+        $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+        $result     = $SipSettings->SipPort->removeFromGroup(array("username" => $SipSettings->username,"domain"=> $SipSettings->domain),"anonymous");
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            if ($error_fault->detail->exception->errorcode == 1031) {
+                $_ret=true;
+                $_msg=sprintf('Caller Id is now visible for outgoing calls');
+            } else {
+                $_msg=sprintf ("Error (SipPort): %s (%s): %s",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                $_ret=false;
+            }
+        } else {
+            $_ret=true;
+            $_msg=sprintf('Caller Id is now visible for outgoing calls');
+        }
+
+        $return=array('success'       => $_ret,
+                      'error_message' => $_msg
+                      );
+        print (json_encode($return));
+        return true;
+    } else if ($_REQUEST['action'] == 'add_alias'){
+        $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+
+        $username=trim($_REQUEST['username']);
+
+        if (!strlen($username)) {
+            $return=array('success'       => false,
+                          'error_message' => 'Error: missing username'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        $_aliasObject=array("id"=>array("username"=>strtolower($username),
+                                        "domain"=>$SipSettings->domain
+                                        ),
+                            "owner" => intval($SipSettings->owner),
+                            "target"=> array("username" => $SipSettings->username,"domain"=> $SipSettings->domain)
+                            )
+                            ;
+
+        $result     = $SipSettings->SipPort->addAlias($_aliasObject);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            $_msg=sprintf ("Error (SipPort): %s (%s): %s",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $_ret=false;
+        } else {
+            $_ret=true;
+            $_msg=sprintf('Added alias %s',strtolower($username));
+        }
+
+        $return=array('success'       => $_ret,
+                      'error_message' => $_msg
+                      );
+        print (json_encode($return));
+        return true;
+    } else if ($_REQUEST['action'] == 'set_diversions') {
+        $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+        $result     = $SipSettings->SipPort->getCallDiversions($SipSettings->sipId);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            $_msg=sprintf ("Error (SipPort): %s (%s): %s",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $_ret=false;
+            $return=array('success'       => $_ret,
+                          'error_message' => $_msg
+                          );
+            print (json_encode($return));
+            return true;
+
+        }
+
+        $SipSettings->getVoicemail();
+
+        foreach(array_keys($SipSettings->diversionType) as $condition) {
+            $old_diversions[$condition]=$result->$condition;
+        }
+
+		$_log='';
+        foreach(array_keys($old_diversions) as $key) {
+
+            if (isset($_REQUEST[$key])) {
+	        	$textboxURI=$_REQUEST[$key];
+				
+                if ($textboxURI && $textboxURI != "<voice-mailbox>" && !preg_match("/@/",$textboxURI)) {
+                    $textboxURI=$textboxURI."@".$SipSettings->domain;
+                }
+    
+                if (preg_match("/^([\+|0].*)@/",$textboxURI,$m))  {
+                    $textboxURI=$m[1]."@".$SipSettings->domain;
+                }
+
+                if (strlen($textboxURI) && !preg_match("/^sip:/",$textboxURI))  {
+                    $textboxURI='sip:'.$textboxURI;
+                }
+
+                if ($textboxURI) {
+                    $new_diversions[$key]=$textboxURI;
+                }
+
+                $_log.=sprintf("%s=%s ",$key,$textboxURI);
+                $divert_changed=true;
+
+            } else {
+                if ($old_diversions[$key]) {
+            		$new_diversions[$key]=$old_diversions[$key];
+                }
+            }
+        }
+
+        if ($divert_changed) {
+            $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+            $result     = $SipSettings->SipPort->setCallDiversions($SipSettings->sipId,$new_diversions);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                $_msg=sprintf ("Error (SipPort): %s (%s): %s",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                $_ret=false;
+            } else {
+                $_ret=true;
+                $_msg=sprintf('Changed diversions %s',$_log);
+            }
+
+            $return=array('success'       => $_ret,
+                          'error_message' => $_msg
+                          );
+            print (json_encode($return));
+            return true;
+        } else {
+            $return=array('success'       => true,
+                          'error_message' => 'Diversions remained the same'
+                          );
+            print (json_encode($return));
+            return true;
+        }
+
+    } else if ($_REQUEST['action']) {
+        $return=array('success'       => false,
+                      'error_message' => "Error: invalid action"
+                      );
+        print (json_encode($return));
+        return false;
+    }
+
+    if (!$_REQUEST['export']) {
+        $SipSettings->showAccount();
+    
         print "
         </body>
         </html>
         ";
-    
-    } else {
-        if ($_REQUEST['action']=="crt") {
-            $SipSettings->exportCertificateX509();
-        } else if ($_REQUEST['action']=="p12") {
-            $SipSettings->exportCertificateP12();
-        } else if ($_REQUEST['tab']=="prepaid") {
-            $SipSettings->exportBalanceHistory();
-        } else if ($_REQUEST['action'] == 'diversions') {
-            $SipSettings->getDiversions();
-            print json_encode($SipSettings->diversions);
-        } else if ($_REQUEST['action'] == 'prepaid') {
-            $SipSettings->getPrepaidStatus();
-            print json_encode($SipSettings->prepaidAccount);
-        } else if ($_REQUEST['action'] == 'monthly_usage') {
-            $SipSettings->getCallStatistics();
-            print json_encode($SipSettings->thisMonth);
-        } else if ($_REQUEST['action'] == 'balance_history') {
-            $SipSettings->getBalanceHistory();
-            print json_encode($SipSettings->balance_history);
-        } else if ($_REQUEST['action'] == 'accept'){
-            $SipSettings->getAcceptRules();
-            print json_encode($SipSettings->acceptRules);
-        } else if ($_REQUEST['action'] == 'reject'){
-            $SipSettings->getRejectMembers();
-            print json_encode($SipSettings->rejectMembers);
-        } else if ($_REQUEST['action'] == 'calls'){
-            $SipSettings->getCalls();
-            print json_encode($SipSettings->call_history);
-        } else if ($_REQUEST['action'] == 'voicemail'){
-            $SipSettings->getVoicemail();
-            print json_encode($SipSettings->voicemail);
-        } else if ($_REQUEST['action'] == 'aliases'){
-            $SipSettings->getAliases();
-            print json_encode($SipSettings->aliases);
-        } else if ($_REQUEST['action'] == 'enum'){
-            $SipSettings->getEnumMappings();
-            print json_encode($SipSettings->enums);
-        } else if ($_REQUEST['action'] == 'account'){
-            $account=array('email'         => $SipSettings->email,
-                           'first'         => $SipSettings->firstName,
-                           'lastname'      => $SipSettings->lastName,
-                           'mobile_number' => $SipSettings->mobile_number,
-                           'pstn_access'   => $SipSettings->pstn_access,
-                           'prepaid'       => $SipSettings->prepaid,
-                           'quota'         => $SipSettings->quota,
-                           'timezone'      => $SipSettings->timezone,
-                           'groups'        => $SipSettings->groups
-                           );
-            print json_encode($account);
-        } else {
-            print "Error: invalid action";
-        }
     }
 }
 
-class AccountEnrollment {
+class Enrollment {
     var $init=false;
 
-    function AccountEnrollment() {
+    function Enrollment() {
 
     	require_once('SOAP/Client.php');
         require_once("ngnpro_soap_library.php");
@@ -6484,9 +6746,12 @@ class AccountEnrollment {
             return false;
         }
 
-        $this->sipDomain    = $this->enrollment['sip_domain'];
-		$this->sipEngine    = $this->enrollment['sip_engine'];
-		$this->reseller     = $this->enrollment['reseller'];
+        $this->sipDomain      = $this->enrollment['sip_domain'];
+		$this->sipEngine      = $this->enrollment['sip_engine'];
+		$this->reseller       = $this->enrollment['reseller'];
+
+        $this->outbound_proxy = $this->enrollment['outbound_proxy'];
+        $this->xcap_root      = $this->enrollment['xcap_root'];
 
         if ($this->enrollment['sip_class']) {
         	$this->sipClass = $this->enrollment['sip_class'];
@@ -6519,7 +6784,7 @@ class AccountEnrollment {
         $this->init=true;
     }
 
-    function add() {
+    function createAccount() {
 
         if (!$this->init) return false;
 
@@ -6586,7 +6851,7 @@ class AccountEnrollment {
         } else {
             $sip_address=$result->id->username.'@'.$result->id->domain;
 
-        	if (!$identity = $this->generateCertificate($sip_address,$_REQUEST['email'],$_REQUEST['password'])) {
+        	if (!$passport = $this->generateCertificate($sip_address,$_REQUEST['email'],$_REQUEST['password'])) {
                 $return=array('success'       => false,
                               'error_message' => 'failed to generate certificate'
                               );
@@ -6605,11 +6870,12 @@ class AccountEnrollment {
                 $SipSettings->sendEmail('hideHtml');
             }
 
-
-            $return=array('success'       => true,
-                          'sip_address'   => $sip_address,
-                          'email'         => $result->email,
-                          'passport'      => $identity
+            $return=array('success'        => true,
+                          'sip_address'    => $sip_address,
+                          'email'          => $result->email,
+                          'passport'       => $passport,
+                          'outbound_proxy' => $this->outbound_proxy,
+                          'xcap_root'      => $this->xcap_root
                           );
 
             print (json_encode($return));

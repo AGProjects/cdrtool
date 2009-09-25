@@ -235,4 +235,8 @@ td.white {
 
 .border	        { border: 1px solid #cccccc; }
 .orange	        { background-color: orange; }
-.border2     	{ border: 1px solid #000000; border-collapse: collapse }
+.border2     	{ border: 1px solid #000000; 
+                  border-collapse: collapse; 
+                  padding: 1px, 1px, 1px, 1px;
+                  -webkit-border-radius: 3px;
+                  }
