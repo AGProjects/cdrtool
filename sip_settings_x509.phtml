@@ -11,6 +11,23 @@
 
 */
 
+/*
+To require the TLS client certificate add to .htaccess:
+
+SSLRequireSSL
+SSLVerifyDepth 1
+
+SSLOptions +StdEnvVars
+SSLOptions +ExportCertData
+<Files sip_settings_x509.phtml>
+SSLVerifyClient require
+</Files>
+
+and to apache virtual hosts settings:
+
+SSLCACertificateFile  /etc/cdrtool/enrollment/rootCA.crt
+*/
+
 require("/etc/cdrtool/global.inc");
 require("/etc/cdrtool/ngnpro_engines.inc");
 require('sip_settings.php');
