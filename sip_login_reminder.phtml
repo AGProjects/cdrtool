@@ -1,15 +1,5 @@
 <?
 
-/*
-    Copyright (c) 2009 AG Projects
-    http://ag-projects.com
-    Author Adrian Georgescu
-
-    This page provides the functions for managing SIP accounts,
-    ENUM ranges, ENUM numbers, Trusted Peers, LCR, Rating plans
-    on a remote NGN-Pro server
-*/
-
 require("/etc/cdrtool/global.inc");
 
 if (is_readable("/etc/cdrtool/local/header.phtml")) {
@@ -22,13 +12,7 @@ require_once("ngnpro_soap_library.php");
 require_once("ngnpro_client.php");
 require_once('sip_settings.php');
 
-if (file_exists("/etc/cdrtool/ngnpro_engines.inc")) {
-    require("/etc/cdrtool/ngnpro_engines.inc");
-} else {
-    page_close();
-    printf ("Error: you must copy setup/ngnpro_engines.inc.sample to /etc/cdrtool/ngnpro_engines.inc and edit it before trying again");
-    exit;
-}
+require("/etc/cdrtool/ngnpro_engines.inc");
 
 $login_credentials=array('login_type' => 'admin');
 
