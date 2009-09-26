@@ -10,6 +10,8 @@
 
 */
 
+require_once("ngnpro_client.php");
+
 class SipSettings {
 
     var $soapTimeout               = 5;
@@ -337,9 +339,6 @@ class SipSettings {
 
     function initSoapClient() {
         dprint("initSoapClient()");
-
-        require_once('SOAP/Client.php');
-        require_once("ngnpro_soap_library.php");
 
         // Sip, Voicemail and Customer ports share same login
         $this->SOAPurl=$this->soapEngines[$this->sip_engine]['url'];
@@ -6322,8 +6321,6 @@ function getSipAccountFromX509Certificate() {
          return false;
      }
 
-     require_once('SOAP/Client.php');
-     require_once("ngnpro_soap_library.php");
      require("/etc/cdrtool/ngnpro_engines.inc");
 
      global $domainFilters, $resellerFilters, $soapEngines ;
@@ -6465,15 +6462,13 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         print json_encode($SipSettings->enums);
         return true;
     } else if ($_REQUEST['action'] == 'account'){
-        $account=array('email'         => $SipSettings->email,
-                       'first'         => $SipSettings->firstName,
-                       'lastname'      => $SipSettings->lastName,
-                       'mobile_number' => $SipSettings->mobile_number,
-                       'pstn_access'   => $SipSettings->pstn_access,
-                       'prepaid'       => $SipSettings->prepaid,
-                       'quota'         => $SipSettings->quota,
-                       'timezone'      => $SipSettings->timezone,
-                       'groups'        => $SipSettings->groups
+        $account=array('email'             => $SipSettings->email,
+                       'first'             => $SipSettings->firstName,
+                       'lastname'          => $SipSettings->lastName,
+                       'mobile_number'     => $SipSettings->mobile_number,
+                       'timezone'          => $SipSettings->timezone,
+                       'groups'            => $SipSettings->groups,
+                       'no_answer_timeout' => $SipSettings->timeout
                        );
         print json_encode($account);
         return true;
@@ -6641,17 +6636,23 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         foreach(array_keys($old_diversions) as $key) {
 
             if (isset($_REQUEST[$key])) {
+                printf ("Key $key changed %s",$_REQUEST[$key]);
 	        	$textboxURI=$_REQUEST[$key];
-				
+
+				if ($textboxURI == "<mobile-number>" && strlen($SipSettings->mobile_number)) {
+                	$textboxURI = $SipSettings->mobile_number;
+                }
+
                 if ($textboxURI && $textboxURI != "<voice-mailbox>" && !preg_match("/@/",$textboxURI)) {
                     $textboxURI=$textboxURI."@".$SipSettings->domain;
                 }
-    
+
+
                 if (preg_match("/^([\+|0].*)@/",$textboxURI,$m))  {
                     $textboxURI=$m[1]."@".$SipSettings->domain;
                 }
 
-                if (strlen($textboxURI) && !preg_match("/^sip:/",$textboxURI))  {
+                if (strlen($textboxURI) && $textboxURI != "<voice-mailbox>" && !preg_match("/^sip:/",$textboxURI))  {
                     $textboxURI='sip:'.$textboxURI;
                 }
 
@@ -6719,10 +6720,6 @@ class Enrollment {
     var $init=false;
 
     function Enrollment() {
-
-    	require_once('SOAP/Client.php');
-        require_once("ngnpro_soap_library.php");
-        require_once("ngnpro_client.php");
 
         include("/etc/cdrtool/enrollment/config.ini");
         include("/etc/cdrtool/ngnpro_engines.inc");

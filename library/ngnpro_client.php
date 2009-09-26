@@ -1,4 +1,6 @@
 <?
+require_once('ngnpro_soap_library.php');
+
 /*
     Copyright (c) 2007 AG Projects
     http://ag-projects.com
@@ -43,8 +45,7 @@
                                            );
 
     
-    require_once("ngnpro_soap_library.php");
-    require_once("ngnpro_client_lib.phtml");
+    require_once("ngnpro_client.phtml");
     require("/etc/cdrtool/ngnpro_engines.inc");
 
     $extraFormElements=array();

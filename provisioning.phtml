@@ -10,6 +10,8 @@
 */
 
 require("/etc/cdrtool/global.inc");
+require("ngnpro_client.php");
+
 set_time_limit(600);
 
 page_open(
@@ -68,9 +70,6 @@ if ($CDRTool['impersonate']) {
     printf ("Please define impersonate field for login account <b>%s</b>",$auth->auth["uname"]);
     exit;
 }
-
-require_once("ngnpro_soap_library.php");
-require_once("ngnpro_client.php");
 
 if (file_exists("/etc/cdrtool/ngnpro_engines.inc")) {
     require("/etc/cdrtool/ngnpro_engines.inc");

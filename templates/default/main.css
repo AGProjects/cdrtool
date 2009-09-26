@@ -184,8 +184,12 @@ table.settings {
 
 .orange		    { background-color: orange; }
 .border		    { border: 1px solid #cccccc; padding: 1; margin: 0; background-color: white; }
-.border2     	{ border: 1px solid #000000; border-collapse: collapse }
 
+.border2     	{ border: 1px solid #000000; 
+                  border-color: #A9A9A9; 
+                  border-collapse: collapse; 
+                  -webkit-border-radius: 5px; 
+                  padding: 1px 1px 1px 1px; }
 td.ag1 {color: #FF1493;font-size: 7.5pt; border: 1px solid #cccccc;}
 
 -->
