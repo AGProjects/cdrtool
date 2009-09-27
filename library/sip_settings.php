@@ -6465,16 +6465,52 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         print json_encode($SipSettings->enums);
         return true;
     } else if ($_REQUEST['action'] == 'account'){
-        $account=array('email'             => $SipSettings->email,
+        $account=array('sip_address'       => $SipSettings->account,
+                       'email'             => $SipSettings->email,
                        'first'             => $SipSettings->firstName,
                        'lastname'          => $SipSettings->lastName,
                        'mobile_number'     => $SipSettings->mobile_number,
                        'timezone'          => $SipSettings->timezone,
-                       'groups'            => $SipSettings->groups,
-                       'no_answer_timeout' => $SipSettings->timeout
+                       'no_answer_timeout' => $SipSettings->timeout,
+                       'quick_dial'        => $SipSettings->quickdial
                        );
         print json_encode($account);
         return true;
+    } else if ($_REQUEST['action'] == 'devices'){
+        $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+        $result     = $SipSettings->SipPort->getSipDeviceLocations(array($SipSettings->sipId));
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            $_msg=sprintf ("Error (SipPort): %s (%s): %s",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $_ret=false;
+            $return=array('success'       => $_ret,
+                          'error_message' => $_msg
+                          );
+            print (json_encode($return));
+            return false;
+        }  else {
+            foreach ($result[0]->locations as $locationStructure) {
+                $contact=$locationStructure->address.":".$locationStructure->port;
+                if ($locationStructure->publicAddress) {
+                    $publicContact=$locationStructure->publicAddress.":".$locationStructure->publicPort;
+                } else {
+                    $publicContact=$contact;
+                }
+                $locations[]=array("contact"       => $contact,
+                                         "publicContact" => $publicContact,
+                                         "expires"       => $locationStructure->expires,
+                                         "user_agent"    => $locationStructure->userAgent,
+                                         "transport"     => $locationStructure->transport
+                                     );
+            }
+        }
+
+        print (json_encode($locations));
+        return true;
+
     } else if ($_REQUEST['action'] == 'dnd_on'){
         $SipSettings->getAcceptRules();
         $SipSettings->acceptRules['temporary']=array('groups'   =>array('nobody'),
