@@ -2507,14 +2507,7 @@ class SipSettings {
 
                 print "<tr>";
                 print "<td class=border align=center>";
-                if (preg_match("/(unidata|snom|eyebeam|csco)/i",$user_agent,$m)) {
-                    $_ua=strtolower($m[1]);
-                    print "<a href=$this->url&tab=phonebook&export=1&userAgent=$_ua target=export>";
-                    printf("<img src='%s/30/%s' border=0>",$this->SipUAImagesPath,$UAImage);
-                    print "</a>";
-                } else {
-                    printf ("<img src='%s/30/%s' border=0>",$this->SipUAImagesPath,$UAImage);
-                }
+                printf ("<img src='%s/30/%s' border=0>",$this->SipUAImagesPath,$UAImage);
                 print "</td>";
                 print "<td class=border align=left>";
                     print "<table border=0 width=100%>";
@@ -2530,9 +2523,19 @@ class SipSettings {
                         print ": ";
                         if (strlen($transport)) print "$transport:";
                         print "$contact ";
+
                         if ($publicContact != $contact) {
-                            print " ($publicContact)";
+                            print " ($publicContact) ";
                         }
+
+                        if ($publicContact) {
+                            //$_els=explode(":",$publicContact);
+                            $_els=explode(":",$contact);
+                            require_once "GeoIP.php";
+                            $geoip = Net_GeoIP::getInstance("geoip.dat");
+                            printf ("%s",$geoip->lookupCountryName($_els[0]));
+                        }
+
                         print "</td>";
                         print "<td align=right>$expires</td>";
                     print "</tr>";
