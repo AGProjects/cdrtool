@@ -2637,8 +2637,8 @@ class CDR_opensips extends CDR {
 
         if (!is_object($perm)) return;
 
-        require_once "library/GeoIP.php";
-        $geoip = Net_GeoIP::getInstance("library/geoip.dat");
+        require_once "GeoIP.php";
+        $geoip = Net_GeoIP::getInstance("geoip.dat");
         $this->country=$geoip->lookupCountryName($this->SourceIP);
 
         $this->cdr_details="
