@@ -6861,10 +6861,8 @@ class Enrollment {
         $_sip_class          = $this->SipSoapEngine->records_class;
         $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
 
-        $sip_properties[]=array('name'  => 'ip',
-                                'value' => $_SERVER['REMOTE_ADDR'],
-                                'registration_email' => $_REQUEST['email']
-                                );
+        $sip_properties[]=array('name'=> 'ip',                 'value' => $_SERVER['REMOTE_ADDR']);
+        $sip_properties[]=array('name'=> 'registration_email', 'value' => $_REQUEST['email']);
 
         $sipAccount = array('account'   => strtolower('<autoincrement>@'.$this->sipDomain),
                             'fullname'  => $_REQUEST['display_name'],
