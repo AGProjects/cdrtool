@@ -3406,7 +3406,7 @@ class SipSettings {
             <tr>
             <td class=h align=left>";
             print _("Balance");
-            printf (": %.2f %s ",$prepaidAccount->balance,$this->currency);
+            printf (": %.2f %s ",$this->prepaidAccount->balance,$this->currency);
             print "</td><td align=right>
             </td>
             </form>
