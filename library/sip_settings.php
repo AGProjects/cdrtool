@@ -6414,56 +6414,56 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings->setAliases();
     } else if ($_REQUEST['action']=="send email") {
         $SipSettings->sendEmail();
-    } else if ($_REQUEST['action']=="crt") {
+    } else if ($_REQUEST['action']=="get_crt") {
         $SipSettings->exportCertificateX509();
         return true;
-    } else if ($_REQUEST['action']=="p12") {
+    } else if ($_REQUEST['action']=="get_p12") {
         $SipSettings->exportCertificateP12();
         return true;
-    } else if ($_REQUEST['action']=="prepaid") {
+    } else if ($_REQUEST['action']=="export_balance_history") {
         $SipSettings->exportBalanceHistory();
         return true;
-    } else if ($_REQUEST['action'] == 'diversions') {
+    } else if ($_REQUEST['action'] == 'get_diversions') {
         $SipSettings->getDiversions();
         print json_encode($SipSettings->diversions);
         return true;
-    } else if ($_REQUEST['action'] == 'prepaid') {
+    } else if ($_REQUEST['action'] == 'get_prepaid') {
         $SipSettings->getPrepaidStatus();
         print json_encode($SipSettings->prepaidAccount);
         return true;
-    } else if ($_REQUEST['action'] == 'monthly_usage') {
+    } else if ($_REQUEST['action'] == 'get_monthly_usage') {
         $SipSettings->getCallStatistics();
         print json_encode($SipSettings->thisMonth);
         return true;
-    } else if ($_REQUEST['action'] == 'balance_history') {
+    } else if ($_REQUEST['action'] == 'get_balance_history') {
         $SipSettings->getBalanceHistory();
         print json_encode($SipSettings->balance_history);
         return true;
-    } else if ($_REQUEST['action'] == 'accept'){
+    } else if ($_REQUEST['action'] == 'get_accept'){
         $SipSettings->getAcceptRules();
         print json_encode($SipSettings->acceptRules);
         return true;
-    } else if ($_REQUEST['action'] == 'reject'){
+    } else if ($_REQUEST['action'] == 'get_reject'){
         $SipSettings->getRejectMembers();
         print json_encode($SipSettings->rejectMembers);
         return true;
-    } else if ($_REQUEST['action'] == 'calls'){
+    } else if ($_REQUEST['action'] == 'get_calls'){
         $SipSettings->getCalls();
         print json_encode($SipSettings->call_history);
         return true;
-    } else if ($_REQUEST['action'] == 'voicemail'){
+    } else if ($_REQUEST['action'] == 'get_voicemail'){
         $SipSettings->getVoicemail();
         print json_encode($SipSettings->voicemail);
         return true;
-    } else if ($_REQUEST['action'] == 'aliases'){
+    } else if ($_REQUEST['action'] == 'get_aliases'){
         $SipSettings->getAliases();
         print json_encode($SipSettings->aliases);
         return true;
-    } else if ($_REQUEST['action'] == 'enum'){
+    } else if ($_REQUEST['action'] == 'get_enum'){
         $SipSettings->getEnumMappings();
         print json_encode($SipSettings->enums);
         return true;
-    } else if ($_REQUEST['action'] == 'account'){
+    } else if ($_REQUEST['action'] == 'get_account'){
         $account=array('sip_address'       => $SipSettings->account,
                        'email'             => $SipSettings->email,
                        'first'             => $SipSettings->firstName,
@@ -6475,7 +6475,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
                        );
         print json_encode($account);
         return true;
-    } else if ($_REQUEST['action'] == 'devices'){
+    } else if ($_REQUEST['action'] == 'get_devices'){
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->getSipDeviceLocations(array($SipSettings->sipId));
 
@@ -6510,7 +6510,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         print (json_encode($locations));
         return true;
 
-    } else if ($_REQUEST['action'] == 'dnd_on'){
+    } else if ($_REQUEST['action'] == 'set_dnd_on'){
         $SipSettings->getAcceptRules();
         $SipSettings->acceptRules['temporary']=array('groups'   =>array('nobody'),
                                                      'duration' =>intval($_REQUEST['duration'])
@@ -6538,7 +6538,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
                       );
         print (json_encode($return));
         return true;
-    } else if ($_REQUEST['action'] == 'dnd_off'){
+    } else if ($_REQUEST['action'] == 'set_dnd_off'){
         $SipSettings->getAcceptRules();
         $SipSettings->acceptRules['temporary']=array('groups'   =>array('everybody'),
                                                      'duration' =>0
@@ -6562,7 +6562,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
                       );
         print (json_encode($return));
         return true;
-    } else if ($_REQUEST['action'] == 'privacy_on'){
+    } else if ($_REQUEST['action'] == 'set_privacy_on'){
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->addToGroup(array("username" => $SipSettings->username,"domain"=> $SipSettings->domain),"anonymous");
 
@@ -6582,7 +6582,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
                       );
         print (json_encode($return));
         return true;
-    } else if ($_REQUEST['action'] == 'privacy_off'){
+    } else if ($_REQUEST['action'] == 'set_privacy_off'){
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->removeFromGroup(array("username" => $SipSettings->username,"domain"=> $SipSettings->domain),"anonymous");
 
