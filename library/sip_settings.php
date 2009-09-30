@@ -2529,8 +2529,7 @@ class SipSettings {
                         }
 
                         if ($publicContact) {
-                            //$_els=explode(":",$publicContact);
-                            $_els=explode(":",$contact);
+                            $_els=explode(":",$publicContact);
                             require_once "GeoIP.php";
                             $geoip = Net_GeoIP::getInstance("geoip.dat");
                             printf ("%s",$geoip->lookupCountryName($_els[0]));
