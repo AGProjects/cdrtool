@@ -239,7 +239,7 @@ class SipSettings {
         $this->availableGroups['blocked']  = array("Group"=>"blocked",
                                         "WEBName" =>sprintf(_("Status")),
                                         "SubscriberMayEditIt"=>0,
-                                        "SubscriberMaySeeIt"=>1
+                                        "SubscriberMaySeeIt"=>0
                                         );
 
         $this->getResellerSettings();
@@ -251,7 +251,7 @@ class SipSettings {
             $_comment='';
         }
         $this->availableGroups['anonymous']=array("Group"=>"anonymous",
-                                    "WEBName" =>sprintf (_("Privacy")),
+                                    "WEBName" =>sprintf (_("PSTN Privacy")),
                                     "WEBComment"=>$_comment,
                                     "SubscriberMaySeeIt"=>1,
                                     "SubscriberMayEditIt"=>1
@@ -1293,7 +1293,7 @@ class SipSettings {
         if (!$this->reseller) {
             if ($this->pstn_access) {
                 $this->availableGroups['free-pstn'] = array("Group"=>"free-pstn",
-                                                    "WEBName" =>   sprintf(_("PSTN")),
+                                                    "WEBName" =>   sprintf(_("Access to PSTN")),
                                                     "WEBComment"=> sprintf(_("Caller-ID")),
                                                     "SubscriberMayEditIt" => "0",
                                                     "SubscriberMaySeeIt"  => 1
@@ -1391,7 +1391,7 @@ class SipSettings {
 
         if ($this->pstn_access) {
             $this->availableGroups['free-pstn'] = array("Group"=>"free-pstn",
-                                                "WEBName" =>   sprintf(_("PSTN")),
+                                                "WEBName" =>   sprintf(_("Access to PSTN")),
                                                 "WEBComment"=> sprintf(_("Caller-ID")),
                                                 "SubscriberMayEditIt" => "0",
                                                 "SubscriberMaySeeIt"  => 1
@@ -1648,7 +1648,7 @@ class SipSettings {
 
         }
 
-        $chapter=sprintf(_("SIP Aliases"));
+        $chapter=sprintf(_("Aliases"));
         $this->showChapter($chapter);
 
         $t=0;
@@ -1687,7 +1687,7 @@ class SipSettings {
             print "
             <tr>
               <td class=border>";
-                print _("Alias");
+                print _("SIP address");
                 print "
               </td>
               <td class=border> <input type=text size=35 name=aliases[] value=\"$a\"></td>
@@ -1698,7 +1698,7 @@ class SipSettings {
         print "
         <tr>
           <td class=border>";
-            print _("New Alias");
+            print _("New SIP Address");
             print "
           </td>
           <td class=border> <input type=text size=35 name=aliases[]></td>
@@ -1846,6 +1846,7 @@ class SipSettings {
         $chapter=sprintf(_("SIP Account"));
         $this->showChapter($chapter);
 
+        /*
         if ($this->login_type != "admin" && $this->login_type != "reseller") {
     
             print "
@@ -1896,6 +1897,7 @@ class SipSettings {
             ";
 
         }
+        */
 
         print "
         <tr>
@@ -1908,6 +1910,7 @@ class SipSettings {
         print "<input type=text size=15 name=sip_password>";
         printf ("\n\n<!-- \nSIP account password: %s\n -->\n\n",$this->password);
 
+        /*
         print _("Language");
         print "
         <select name=language>
@@ -1927,6 +1930,7 @@ class SipSettings {
         print "
         </select>
         ";
+        */
 
         print "
         </td>
@@ -2345,7 +2349,7 @@ class SipSettings {
             $checked_voicemail="checked";
         }
 
-        $chapter=sprintf(_("Voicemail"));
+        $chapter=sprintf(_("Voice Mailbox"));
         $this->showChapter($chapter);
 
         print "
@@ -2389,7 +2393,7 @@ class SipSettings {
 
             if (!$this->voicemail['DisableOptions']) {
                 print "<select name=delete_voicemail>";
-                $_text=sprintf("Send messages by e-mail to %s",$this->email);
+                $_text=sprintf("Send voice messages by e-mail to %s",$this->email);
                 printf ("<option value=1 %s>%s",$selected_store_voicemail['email'],$_text);
                 printf ("<option value=0 %s>%s",$selected_store_voicemail['server'],_("Send messages by e-mail and store messages on the server"));
                 print "</select>";
@@ -2435,6 +2439,7 @@ class SipSettings {
     }
 
     function showOwner() {
+        if ($this->login_type == 'subscriber') return true;
 
         if ($this->pstn_changes_allowed) {
             print "
@@ -2481,7 +2486,7 @@ class SipSettings {
                 <td align=left>
                 ";
                 print "<b>";
-                print _("Devices");
+                print _("Registered SIP Devices");
                 print "</b>
                 </td>
                 <td align=right><b>";
@@ -4914,7 +4919,7 @@ class SipSettings {
     }
 
     function showAcceptTab() {
-        $chapter=sprintf(_("Accept Rules"));
+        $chapter=sprintf(_("Do Not Disturb"));
         $this->showChapter($chapter);
 
         $this->getAcceptRules();
@@ -6066,6 +6071,7 @@ class SipSettings {
     }
 
     function showExtraGroups () {
+
 		if ($this->disable_extra_groups) return true;
 
         $foundGroupInAvailableGroups=array();
@@ -6083,18 +6089,22 @@ class SipSettings {
         	$extraGroups_text.=$_eg.' ';
         }
 
-        print "
-        <tr>
-        <td class=border>";
-        print _("Extra Groups");
-        print "
-        </td>
-        <td class=ag1>";
-        printf ("<input type=text size=30 name=extra_groups value='%s'>",trim($extraGroups_text));
-        print "
-        </td>
-        </tr>
-        ";
+        if ($this->login_type == 'subscriber') {
+            printf ("<input type=hidden name=extra_groups value='%s'>",trim($extraGroups_text));
+        } else {
+            print "
+            <tr>
+            <td class=border>";
+            print _("Extra Groups");
+            print "
+            </td>
+            <td class=ag1>";
+            printf ("<input type=text size=30 name=extra_groups value='%s'>",trim($extraGroups_text));
+            print "
+            </td>
+            </tr>
+            ";
+        }
     }
 
     function generateCertificate() {
