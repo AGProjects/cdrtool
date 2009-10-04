@@ -5479,9 +5479,9 @@ class EnumMappings extends Records {
     }
 
     function showAddForm() {
-        //if ($this->selectionActive) return;
+        if ($this->selectionActive) return;
 
-        if ($this->adminonly && !$this->filters['reseller']) return;
+        //if ($this->adminonly && !$this->filters['reseller']) return;
 
         if (!count($this->ranges)) {
             //print "<p><font color=red>You must create at least one ENUM range before adding ENUM numbers</font>";
@@ -5519,7 +5519,7 @@ class EnumMappings extends Records {
 
         foreach ($this->ranges as $_range) {
             $rangeId=$_range['prefix'].'@'.$_range['tld'];
-            printf ("<option value='%s' %s>%s +%s",$rangeId,$selected_range[$rangeId],$_range['tld'],$_range['prefix']);
+            printf ("<option value='%s' %s>+%s (%s)",$rangeId,$selected_range[$rangeId],$_range['prefix'],$_range['tld']);
         }
 
         print "</select>";
@@ -7637,12 +7637,14 @@ class DnsRecords extends Records {
 
     function showAddForm() {
 
+        /*
         if ($this->adminonly) {
         	if (!$this->filters['reseller']) {
                 print "<p>To add a new record you must search first for a customer";
             	return;
             }
         }
+        */
 
         print "
         <p>
