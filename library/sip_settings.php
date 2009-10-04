@@ -146,10 +146,14 @@ class SipSettings {
 
         $this->loginCredentials = &$loginCredentials;
 
-        if ($loginCredentials['login_type']) {
-            $this->login_type = $loginCredentials['login_type'];
+		if ($_SERVER[SSL_CLIENT_CERT]) {
+        	$this->login_type = 'subscriber';
         } else {
-            $this->login_type = 'subscriber';
+            if ($loginCredentials['login_type']) {
+                $this->login_type = $loginCredentials['login_type'];
+            } else {
+                $this->login_type = 'subscriber';
+            }
         }
 
         if ($this->login_type == "admin") {
@@ -259,7 +263,7 @@ class SipSettings {
         }
  
         $this->availableGroups['anonymous-reject']=array("Group"=>$this->anonymous-reject,
-                                    "WEBName" =>sprintf (_("Reject anonymous")),
+                                    "WEBName" =>sprintf (_("Reject Anonymous")),
                                     "WEBComment"=>$_comment,
                                     "SubscriberMaySeeIt"=>1,
                                     "SubscriberMayEditIt"=>1
@@ -268,7 +272,7 @@ class SipSettings {
         $this->pstnChangesAllowed();
         $this->prepaidChangesAllowed();
 
-        $this->tabs=array('info'=>_('Info'),
+        $this->tabs=array('identity'=>_('Identity'),
                           'settings'=>_('Settings'),
                           'diversions'=>_('Diversions'),
                           'locations'=>_('Devices'),
@@ -296,7 +300,7 @@ class SipSettings {
         );
 
         $this->diversionType=array(
-        "FUNC"=>sprintf(_("All calls")),
+        "FUNC"=>sprintf(_("All Calls")),
         "FNOL"=>sprintf(_("If Not-Online")),
         "FBUS"=>sprintf(_("If Busy")),
         "FNOA"=>sprintf(_("If No-Answer")),
@@ -759,7 +763,7 @@ class SipSettings {
 
         if (!array_key_exists($this->tab,$this->tabs)) $this->tab="settings";
 
-        if ($this->tab=="info")      $this->showInfoTab();
+        if ($this->tab=="identity")  $this->showIdentityTab();
         if ($this->tab=="settings")  $this->showSettingsTab();
         if ($this->tab=="diversions")$this->showDiversionsTab();
         if ($this->tab=="locations") $this->showLocationsTab();
@@ -1102,7 +1106,7 @@ class SipSettings {
         } else {
             if ($this->enable_thor) {
                 if ($this->homeNode=getSipThorHomeNode($this->account,$this->sip_proxy)) {
-                    printf (" Home node <font color=green>%s</font>",$this->homeNode);
+                    printf (" Home Node <font color=green>%s</font>",$this->homeNode);
                 }
             }
         }
@@ -1539,32 +1543,38 @@ class SipSettings {
         ";
     }
 
-    function showInfoTab() {
+    function showIdentityTab() {
         $this->getEnumMappings();
         $this->getAliases();
 
-        $chapter=sprintf(_("SIP account"));
+        $chapter=sprintf(_("SIP Account"));
         $this->showChapter($chapter);
 
         print "
         <tr>
         <td class=border>";
-        print _("Address");
+        print _("SIP Address");
         print "
         </td>
-        <td class=border>sip:$this->account
+        <td class=border>$this->account
         </td>
         </tr>
         ";
+
+        /*
         print "
         <tr>
         <td class=border>";
-        print _("Full name");
+        print _("Full Name");
         print "
         </td>
         <td class=border>$this->fullName
         </td>
         </tr>
+        ";
+        */
+
+        print "
         <tr>
         <td class=border>";
         print _("Username");
@@ -1577,7 +1587,7 @@ class SipSettings {
         print "
         <tr>
         <td class=border>";
-        print _("Domain");
+        print _("Domain/Realm");
         print "
         </td>
         <td class=border>$this->domain
@@ -1588,67 +1598,21 @@ class SipSettings {
         print "
         <tr>
         <td class=border>";
-        print _("Outbound proxy");
+        print _("Outbound Proxy");
         print "
         </td>
         <td class=border>$this->sip_proxy
         </td>
         </tr>
-        <tr>
-          <td height=3 colspan=2></td>
-        </tr>
         ";
 
-		if ($this->enrollment_url) {
-            include("/etc/cdrtool/enrollment/config.ini");
-    
-            if (is_array($enrollment)) {
-                $chapter=sprintf(_("Client certificates"));
-                $this->showChapter($chapter);
-                if ($this->sip_settings_api_url) {
-                    print "
-                    <tr>
-                    <td class=border colspan=2>";
-                    printf (_("You can use the certificate for changing settings using <a href=%s target=sip_api>SIP Settings API</a>"),$this->sip_settings_api_url);
-                    printf ("
-                    </td>
-                    </tr>
-                    ");
-                
-                }
-
-                print "
-                <tr>
-                <td class=border>";
-                print _("X.509 PEM format");
-                printf ("
-                </td>
-                <td class=border><a href=%s&action=crt>%s.crt</a>
-                </td>
-                </tr>
-                <tr>
-                  <td height=3 colspan=2></td>
-                </tr>",$this->url, $this->account);
-                print "
-                <tr>
-                <td class=border>";
-                print _("PKCS#12 store format");
-                printf ("
-                </td>
-                <td class=border><a href=%s&action=p12>%s.p12</a>
-                </td>
-                </tr>
-                <tr>
-                  <td height=3 colspan=2></td>
-                </tr>",$this->url, $this->account);
-            }
-        }
-
-
         if ($this->presence_engine) {
+            /*
             $chapter=sprintf(_("Presence settings"));
             $this->showChapter($chapter);
+            */
 
+            /*
             print "
             <tr>
                 <td class=border>Presence mode
@@ -1656,8 +1620,12 @@ class SipSettings {
                 <td class=border>Presence agent with XCAP policy
                 </td>
             </tr>
+            ";
+            */
+
+            print "
             <tr>
-                <td class=border>XCAP root URL
+                <td class=border>XCAP Root
                 </td>
                 <td class=border>$this->xcap_root
             </td>
@@ -1666,7 +1634,9 @@ class SipSettings {
 
         }
 
-        $chapter=sprintf(_("ENUM and aliases"));
+
+
+        $chapter=sprintf(_("Aliases"));
         $this->showChapter($chapter);
 
         $t=0;
@@ -1674,15 +1644,16 @@ class SipSettings {
             $t++;
             print "
             <tr>
-              <td class=border>ENUM $t</td>
+              <td class=border>Phone Number $t</td>
               <td class=border>$e</td>
             </tr>
             ";
         }
+        /*
         if (!$t) {
             print "
             <tr>
-              <td class=border>ENUM</td>
+              <td class=border>Phone Number</td>
               <td class=border>";
                 print _("None");
                 print "
@@ -1690,7 +1661,7 @@ class SipSettings {
             </tr>
             ";
         }
-
+        */
         $t=0;
 
         print "
@@ -1703,7 +1674,7 @@ class SipSettings {
             print "
             <tr>
               <td class=border>";
-                print _("Alias");
+                print _("SIP Alias");
                 print " $t
               </td>
               <td class=border> <input type=text size=35 name=aliases[] value=\"$a\"></td>
@@ -1714,7 +1685,7 @@ class SipSettings {
         print "
         <tr>
           <td class=border>";
-            print _("New alias");
+            print _("New Alias");
             print "
           </td>
           <td class=border> <input type=text size=35 name=aliases[]></td>
@@ -1740,36 +1711,54 @@ class SipSettings {
         ";
 
         print $this->hiddenElements;
-
         print "
         </form>
         ";
 
-        $chapter=sprintf(_("Notifications address"));
-        $this->showChapter($chapter);
+		if ($this->enrollment_url) {
+            include("/etc/cdrtool/enrollment/config.ini");
+    
+            if (is_array($enrollment)) {
+                $chapter=sprintf(_("TLS Certificate"));
+                $this->showChapter($chapter);
+                if ($this->sip_settings_api_url) {
+                    print "
+                    <tr>
+                    <td class=border colspan=2>";
+                    printf (_("You can use the certificate for changing settings using <a href=%s target=sip_api>SIP Settings API</a>"),$this->sip_settings_api_url);
+                    printf ("
+                    </td>
+                    </tr>
+                    ");
+                
+                }
 
-        print "
-        <tr>
-          <td class=border>";
-            print _("Email address");
-            print "
-          </td>
-          <td class=border align=left>";
-
-          if ($this->email) {
-            print "$this->email";
-          } else {
-            print _("Unassigned");
-          }
-          print "
-          </td>
-        </tr>
-        ";
-        print "
-        <tr>
-          <td height=3 colspan=2></td>
-        </tr>
-        ";
+                print "
+                <tr>
+                <td class=border>";
+                print _("X.509 PEM format");
+                printf ("
+                </td>
+                <td class=border><a href=%s&action=get_crt>%s.crt</a>
+                </td>
+                </tr>
+                <tr>
+                  <td height=3 colspan=2></td>
+                </tr>",$this->url, $this->account);
+                print "
+                <tr>
+                <td class=border>";
+                print _("PKCS#12 store format");
+                printf ("
+                </td>
+                <td class=border><a href=%s&action=get_p12>%s.p12</a>
+                </td>
+                </tr>
+                <tr>
+                  <td height=3 colspan=2></td>
+                </tr>",$this->url, $this->account);
+            }
+        }
 
         print "
         <form method=post>";
@@ -1841,7 +1830,7 @@ class SipSettings {
         <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
         ";
 
-        $chapter=sprintf(_("SIP account"));
+        $chapter=sprintf(_("SIP Account"));
         $this->showChapter($chapter);
 
         if ($this->login_type != "admin" && $this->login_type != "reseller") {
@@ -1866,7 +1855,7 @@ class SipSettings {
             print "
             <tr>
             <td class=border>";
-            print _("First name");
+            print _("First Name");
             print "
             </td>
             <td class=borderns>";
@@ -1881,7 +1870,7 @@ class SipSettings {
             print "
             <tr>
             <td class=border>";
-            print _("Last name");
+            print _("Last Name");
             print "
             </td>
             <td class=borderns>";
@@ -2248,13 +2237,13 @@ class SipSettings {
 
         $this->showBillingProfiles();
 
-        $chapter=sprintf(_("Notifications address"));
+        $chapter=sprintf(_("Notifications Address"));
         $this->showChapter($chapter);
 
         print "
         <tr>
           <td class=border>";
-            print _("Email address");
+            print _("Email Address");
             print "
           </td>
           <td class=border align=left>
@@ -2305,7 +2294,7 @@ class SipSettings {
         <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
         ";
 
-        $chapter=sprintf(_("Call diversions"));
+        $chapter=sprintf(_("Call Diversions"));
         $this->showChapter($chapter);
 
         $this->showDiversions();
@@ -2589,7 +2578,7 @@ class SipSettings {
     }
 
     function showBarringTab() {
-        $chapter=sprintf(_("Blocked destinations"));
+        $chapter=sprintf(_("Blocked PSTN Destinations"));
         $this->showChapter($chapter);
 
         print "
@@ -3399,7 +3388,7 @@ class SipSettings {
         $this->getPrepaidStatus();
 
         if ($this->prepaidAccount) {
-            $chapter=sprintf(_("Current balance"));
+            $chapter=sprintf(_("Current Balance"));
             $this->showChapter($chapter);
     
             print "
@@ -3422,7 +3411,7 @@ class SipSettings {
     function showIncreaseBalanceReseller () {
     	if ($this->login_type != 'reseller' && $this->login_type != 'admin') return true;
 
-        $chapter=sprintf(_("Add balance (admin)"));
+        $chapter=sprintf(_("Add Balance (admin)"));
         $this->showChapter($chapter);
 
         print "
@@ -3457,7 +3446,7 @@ class SipSettings {
 
     function showIncreaseBalanceSubscriber () {
 
-        $chapter=sprintf(_("Add balance"));
+        $chapter=sprintf(_("Add Balance"));
         $this->showChapter($chapter);
 
         print "
@@ -3568,20 +3557,11 @@ class SipSettings {
     function showBalanceHistory() {
     	$this->getBalanceHistory();
  
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            if ($error_fault->detail->exception->errorcode != "2000") {
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            }
-        }
-
         if (!count($this->balance_history)) {
             return;
         }
 
-        $chapter=sprintf(_("Balance history"));
+        $chapter=sprintf(_("Balance History"));
         $this->showChapter($chapter);
 
         print "
@@ -3693,7 +3673,7 @@ class SipSettings {
         ";
 
 		if ($found) {
-        	print "<p><a href=$this->url&tab=prepaid&export=1 target=_new><font color=$fontcolor>Export history to CSV file</font>";
+        	print "<p><a href=$this->url&tab=prepaid&action=get_balance_history&csv=1 target=_new><font color=$fontcolor>Export history to CSV file</font>";
         }
         print "</td></tr>";
     }
@@ -3702,21 +3682,6 @@ class SipSettings {
         Header("Content-type: text/csv");
     	$h=sprintf("Content-Disposition: inline; filename=%s-prepaid-history.csv",$this->account);
     	Header($h);
-
-    	$this->getBalanceHistory();
-
-        $this->SipPort->addHeader($this->SoapAuth);
-
-        $result     = $this->SipPort->getCreditHistory($this->sipId,200);
- 
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            if ($error_fault->detail->exception->errorcode != "2000") {
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            }
-        }
 
         printf ("Id,Account,Date,Action,Description,Transaction value,Final balance\n");
         foreach ($this->balance_history as $_line) {
@@ -4034,7 +3999,7 @@ class SipSettings {
         print "
         <tr>
           <td class=border>";
-            print _("Quick dial");
+            print _("Quick Dial");
             print "
           </td>
           <td class=border align=left>
@@ -4061,7 +4026,7 @@ class SipSettings {
         print "
         <tr>
           <td class=border>";
-            print _("Mobile number");
+            print _("Mobile Number");
             printf ("
           </td>
           <td class=border align=left>
@@ -4116,7 +4081,7 @@ class SipSettings {
         }
 
         if (count($this->calls_received)) {
-            $chapter=sprintf(_("Last received calls"));
+            $chapter=sprintf(_("Last Received Calls"));
             $this->showChapter($chapter);
 
             $j=0;
@@ -4156,7 +4121,7 @@ class SipSettings {
         }
 
         if (count($this->calls_placed)) {
-            $chapter=sprintf(_("Last placed calls"));
+            $chapter=sprintf(_("Last Placed Calls"));
             $this->showChapter($chapter);
 
             $j=0;
@@ -4936,7 +4901,7 @@ class SipSettings {
     }
 
     function showAcceptTab() {
-        $chapter=sprintf(_("Accept rules"));
+        $chapter=sprintf(_("Accept Rules"));
         $this->showChapter($chapter);
 
         $this->getAcceptRules();
@@ -4991,7 +4956,7 @@ class SipSettings {
         </tr>
         ";
 
-        $chapter=sprintf(_("Temporary rule"));
+        $chapter=sprintf(_("Temporary Rule"));
         $this->showChapter($chapter);
 
         print "
@@ -5129,7 +5094,7 @@ class SipSettings {
 
         ";
 
-        $chapter=sprintf(_("Permanent rules"));
+        $chapter=sprintf(_("Permanent Rules"));
         $this->showChapter($chapter);
 
         print "
@@ -5324,7 +5289,7 @@ class SipSettings {
         </form>
         ";
 
-        $chapter=sprintf(_("Rejected callers"));
+        $chapter=sprintf(_("Rejected Callers"));
         $this->showChapter($chapter);
 
         print "
@@ -5568,7 +5533,7 @@ class SipSettings {
         print "
         <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
         ";
-        $chapter=sprintf(_("Published information"));
+        $chapter=sprintf(_("Activity"));
         $this->showChapter($chapter);
 
         printf ("
@@ -5972,7 +5937,7 @@ class SipSettings {
 
         $this->getBillingProfiles();
 
-        $chapter=sprintf(_("Billing profiles"));
+        $chapter=sprintf(_("Billing Profiles"));
         $this->showChapter($chapter);
 
         print "
@@ -6108,7 +6073,7 @@ class SipSettings {
         print "
         <tr>
         <td class=border>";
-        print _("Extra groups");
+        print _("Extra Groups");
         print "
         </td>
         <td class=ag1>";
@@ -6379,7 +6344,9 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
 
 	$SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
 
-    if (!$_REQUEST['export']) {
+    if (!strstr($_REQUEST['action'],'get_') &&
+        !strstr($_REQUEST['action'],'set_') &&
+        !strstr($_REQUEST['action'],'add_')) {
         $title  = "SIP settings of $account";
         $header = $SipSettings->headerFile;
         $css    = $SipSettings->cssFile;
@@ -6420,8 +6387,13 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
     } else if ($_REQUEST['action']=="get_p12") {
         $SipSettings->exportCertificateP12();
         return true;
-    } else if ($_REQUEST['action']=="export_balance_history") {
-        $SipSettings->exportBalanceHistory();
+    } else if ($_REQUEST['action'] == 'get_balance_history') {
+        $SipSettings->getBalanceHistory();
+    	if ($_REQUEST['csv']) {
+        	$SipSettings->exportBalanceHistory();
+        } else {
+           print json_encode($SipSettings->balance_history);
+        }
         return true;
     } else if ($_REQUEST['action'] == 'get_diversions') {
         $SipSettings->getDiversions();
@@ -6434,10 +6406,6 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
     } else if ($_REQUEST['action'] == 'get_monthly_usage') {
         $SipSettings->getCallStatistics();
         print json_encode($SipSettings->thisMonth);
-        return true;
-    } else if ($_REQUEST['action'] == 'get_balance_history') {
-        $SipSettings->getBalanceHistory();
-        print json_encode($SipSettings->balance_history);
         return true;
     } else if ($_REQUEST['action'] == 'get_accept'){
         $SipSettings->getAcceptRules();
@@ -6463,6 +6431,41 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings->getEnumMappings();
         print json_encode($SipSettings->enums);
         return true;
+    } else if ($_REQUEST['action'] == 'add_balance'){
+
+        if (!$_REQUEST['id'] || !$_REQUEST['number']) {
+            $return=array('success'       => false,
+                          'error_message' => 'Missing id or number'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        $card      = array('id'     => intval($_REQUEST['id']),
+                           'number' => $_REQUEST['number']
+                           );
+
+        $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+        $result = $SipSettings->SipPort->addBalanceFromVoucher($SipSettings->sipId,$card);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            $_msg=sprintf ("Error (SipPort): %s (%s): %s",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $return=array('success'       => false,
+                          'error_message' => $_msg
+                          );
+            print (json_encode($return));
+            return false;
+        }  else {
+            $return=array('success'       => true,
+                          'error_message' => 'Added balance succeeded'
+                          );
+            print (json_encode($return));
+            return true;
+        }
+
     } else if ($_REQUEST['action'] == 'get_account'){
         $account=array('sip_address'       => $SipSettings->account,
                        'email'             => $SipSettings->email,
