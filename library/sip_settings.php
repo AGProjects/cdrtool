@@ -75,7 +75,7 @@ class SipSettings {
                                            'last_name',
                                            'quota',
                                            'language',
-                                           'quota_reset',
+                                           'quota_deblock',
                                            'voicemail',
                                            'anonymous',
                                            'advanced',
@@ -2029,9 +2029,9 @@ class SipSettings {
                 ";
 
                 if ($this->pstn_changes_allowed) {
-                    print _("Reset");
+                    print _("De-block");
                     print "
-                    <input type=checkbox name=quota_reset value=1>
+                    <input type=checkbox name=quota_deblock value=1>
                     ";
                 }
     
@@ -2719,7 +2719,7 @@ class SipSettings {
                 $this->somethingChanged=1;
             }
 
-            if ($quota_reset) {
+            if ($quota_deblock) {
                 $result->groups = array_unique(array_diff($this->groups,array('quota')));
                 $this->somethingChanged=1;
 
