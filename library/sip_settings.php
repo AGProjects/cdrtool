@@ -273,11 +273,14 @@ class SipSettings {
         $this->prepaidChangesAllowed();
 
         $this->tabs=array('identity'=>_('Identity'),
-                          'settings'=>_('Settings'),
-                          'diversions'=>_('Diversions'),
                           'locations'=>_('Devices'),
+                          'settings'=>_('Settings'),
+                          'diversions'=>_('Call Forwarding'),
+                          'accept' =>_("Do Not Disturb"),
+                          'phonebook'=>_("Contacts"),
                           'calls'=>_('Calls')
                           );
+
 
         $this->acceptDailyProfiles=array('127' => _('Every day'),
                                        '31'  => _('Weekday'),
@@ -318,10 +321,7 @@ class SipSettings {
         "FUNV"=>sprintf(_("If Unavailable"))
         );
 
-        // Advanced accounts has access to call control and Phonebook
-        $this->tabs['phonebook']=_("Contacts");
-        $this->tabs['accept'] =_("Accept");
-
+        /*
         if (in_array("free-pstn",$this->groups)) {
             $this->tabs['barring']=_("Barring");
         }
@@ -329,6 +329,7 @@ class SipSettings {
         if ($this->presence_engine) {
             $this->tabs['presence']=_("Presence");
         }
+        */
 
         $this->access_numbers=array("FUNC"=>$this->FUNC_access_number,
                                     "FNOA"=>$this->FNOA_access_number,
@@ -1634,9 +1635,20 @@ class SipSettings {
 
         }
 
+		if ($this->pstn_access) {
+            $chapter=sprintf(_("PSTN"));
+            $this->showChapter($chapter);
 
+            print "
+            <tr>
+              <td class=border>Caller Id</td>
+              <td class=border>$this->rpid</td>
+            </tr>
+            ";
 
-        $chapter=sprintf(_("Aliases"));
+        }
+
+        $chapter=sprintf(_("SIP Aliases"));
         $this->showChapter($chapter);
 
         $t=0;
@@ -1644,11 +1656,12 @@ class SipSettings {
             $t++;
             print "
             <tr>
-              <td class=border>Phone Number $t</td>
+              <td class=border>Phone Number</td>
               <td class=border>$e</td>
             </tr>
             ";
         }
+
         /*
         if (!$t) {
             print "
@@ -1674,8 +1687,8 @@ class SipSettings {
             print "
             <tr>
               <td class=border>";
-                print _("SIP Alias");
-                print " $t
+                print _("Alias");
+                print "
               </td>
               <td class=border> <input type=text size=35 name=aliases[] value=\"$a\"></td>
             </tr>
@@ -2294,7 +2307,7 @@ class SipSettings {
         <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
         ";
 
-        $chapter=sprintf(_("Call Diversions"));
+        $chapter=sprintf(_("Call Forwarding"));
         $this->showChapter($chapter);
 
         $this->showDiversions();
@@ -4081,7 +4094,7 @@ class SipSettings {
         }
 
         if (count($this->calls_received)) {
-            $chapter=sprintf(_("Last Received Calls"));
+            $chapter=sprintf(_("Incoming"));
             $this->showChapter($chapter);
 
             $j=0;
@@ -4121,7 +4134,7 @@ class SipSettings {
         }
 
         if (count($this->calls_placed)) {
-            $chapter=sprintf(_("Last Placed Calls"));
+            $chapter=sprintf(_("Outgoing"));
             $this->showChapter($chapter);
 
             $j=0;
@@ -6395,7 +6408,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
            print json_encode($SipSettings->balance_history);
         }
         return true;
-    } else if ($_REQUEST['action'] == 'get_diversions') {
+    } else if ($_REQUEST['action'] == 'get_call_forwarding') {
         $SipSettings->getDiversions();
         print json_encode($SipSettings->diversions);
         return true;
@@ -6407,11 +6420,11 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings->getCallStatistics();
         print json_encode($SipSettings->thisMonth);
         return true;
-    } else if ($_REQUEST['action'] == 'get_accept'){
+    } else if ($_REQUEST['action'] == 'get_accept_rules'){
         $SipSettings->getAcceptRules();
         print json_encode($SipSettings->acceptRules);
         return true;
-    } else if ($_REQUEST['action'] == 'get_reject'){
+    } else if ($_REQUEST['action'] == 'get_reject_rules'){
         $SipSettings->getRejectMembers();
         print json_encode($SipSettings->rejectMembers);
         return true;
@@ -6466,11 +6479,12 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
             return true;
         }
 
-    } else if ($_REQUEST['action'] == 'get_account'){
+    } else if ($_REQUEST['action'] == 'get_identity'){
         $account=array('sip_address'       => $SipSettings->account,
                        'email'             => $SipSettings->email,
                        'first'             => $SipSettings->firstName,
                        'lastname'          => $SipSettings->lastName,
+                       'pstn_caller_id'    => $SipSettings->rpid,
                        'mobile_number'     => $SipSettings->mobile_number,
                        'timezone'          => $SipSettings->timezone,
                        'no_answer_timeout' => $SipSettings->timeout,
@@ -6649,7 +6663,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
                       );
         print (json_encode($return));
         return true;
-    } else if ($_REQUEST['action'] == 'set_diversions') {
+    } else if ($_REQUEST['action'] == 'set_call_forwarding') {
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->getCallDiversions($SipSettings->sipId);
 
