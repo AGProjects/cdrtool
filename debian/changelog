@@ -1,3 +1,29 @@
+cdrtool (6.9.6) unstable; urgency=low
+
+  * Improved SIP settings page
+  * Renamed quota reset to quota deblock
+  * Show ENUM range selection in numbers
+  * Save email address used for SIP account registration
+  * Fix display of SIP prepaid balance
+  * Use fixed public contact from NGPro
+  * Added more functions to the sip API
+  * Remove adressbook export
+  * Move geoip.dat in main directory
+  * Added instructions for requesting client certificate
+  * Added sip enrollment and sip settings using X.509
+  * Rename variables and function names
+  * Added links to export of client certificate in info tab
+  * Moved Reject to Accept tab
+  * Added Diversion tab
+  * Removed Diversions from main settings page
+  * Added Enrollment configuration template
+  * Added more one shot functions for SIP account information
+  * Moved user interface to renderUI library
+  * Refactor sip_settings to handle X.509 client certificates
+  * Renamed some variables for clarity
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 13 Oct 2009 23:14:08 +0200
+
 cdrtool (6.9.5) unstable; urgency=low
 
   * Normalize.php script can chose a differet month
