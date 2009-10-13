@@ -281,6 +281,16 @@ class SipSettings {
                           'calls'=>_('Calls')
                           );
 
+        if (in_array("free-pstn",$this->groups)) {
+            $this->tabs['barring']=_("Barring");
+        }
+
+        /*
+        if ($this->presence_engine) {
+            $this->tabs['presence']=_("Presence");
+        }
+        */
+
 
         $this->acceptDailyProfiles=array('127' => _('Every day'),
                                        '31'  => _('Weekday'),
@@ -320,16 +330,6 @@ class SipSettings {
         "FNOA"=>sprintf(_("If No-Answer")),
         "FUNV"=>sprintf(_("If Unavailable"))
         );
-
-        /*
-        if (in_array("free-pstn",$this->groups)) {
-            $this->tabs['barring']=_("Barring");
-        }
-
-        if ($this->presence_engine) {
-            $this->tabs['presence']=_("Presence");
-        }
-        */
 
         $this->access_numbers=array("FUNC"=>$this->FUNC_access_number,
                                     "FNOA"=>$this->FNOA_access_number,
@@ -1608,22 +1608,6 @@ class SipSettings {
         ";
 
         if ($this->presence_engine) {
-            /*
-            $chapter=sprintf(_("Presence settings"));
-            $this->showChapter($chapter);
-            */
-
-            /*
-            print "
-            <tr>
-                <td class=border>Presence mode
-                </td>
-                <td class=border>Presence agent with XCAP policy
-                </td>
-            </tr>
-            ";
-            */
-
             print "
             <tr>
                 <td class=border>XCAP Root
@@ -1632,7 +1616,6 @@ class SipSettings {
             </td>
             </tr>
             ";
-
         }
 
 		if ($this->pstn_access) {
@@ -1645,11 +1628,7 @@ class SipSettings {
               <td class=border>$this->rpid</td>
             </tr>
             ";
-
         }
-
-        $chapter=sprintf(_("Aliases"));
-        $this->showChapter($chapter);
 
         $t=0;
         foreach($this->enums as $e)  {
@@ -1661,6 +1640,19 @@ class SipSettings {
             </tr>
             ";
         }
+
+
+        $chapter=sprintf(_("Aliases"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr>
+        <td class=border colspan=2>";
+        printf (_("You may create new aliases under the same domain"));
+        printf ("
+        </td>
+        </tr>
+        ");
 
         /*
         if (!$t) {
@@ -1738,12 +1730,11 @@ class SipSettings {
                     print "
                     <tr>
                     <td class=border colspan=2>";
-                    printf (_("You can use the certificate for changing settings using <a href=%s target=sip_api>SIP Settings API</a>"),$this->sip_settings_api_url);
+                    printf (_("The certificate is used for accessing <a href=%s target=sip_api>SIP Settings API</a>"),$this->sip_settings_api_url);
                     printf ("
                     </td>
                     </tr>
                     ");
-                
                 }
 
                 print "
@@ -1755,9 +1746,7 @@ class SipSettings {
                 <td class=border><a href=%s&action=get_crt>%s.crt</a>
                 </td>
                 </tr>
-                <tr>
-                  <td height=3 colspan=2></td>
-                </tr>",$this->url, $this->account);
+                ",$this->url, $this->account);
                 print "
                 <tr>
                 <td class=border>";
