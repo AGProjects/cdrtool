@@ -1,4 +1,10 @@
 <?
+
+/*
+     This configuration is used for SIP account enrollment for NGNPro server
+     Copy this file to /etc/cdrtool/enrollment/config.ini
+*/
+
 $enrollment=array('ca_crt'                 => "/etc/cdrtool/enrollment/root_ca.crt",
                   'ca_key'                 => array("file:///etc/cdrtool/enrollment/root_ca.key","root_ca_password"),
 		  'ca_conf'                => "/etc/cdrtool/enrollment/root_ca.conf"

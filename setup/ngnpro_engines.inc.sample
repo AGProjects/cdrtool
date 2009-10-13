@@ -1,4 +1,9 @@
 <?
+/*
+     This configuration is used for accessing remote NGNPro servers
+     Copy this file to /etc/cdrtool/ngnpro_engines.inc
+*/
+
 $customerProperties=array( 
                           'support_order'       => array('name'     => 'Support order number',
                                                             'category' => 'billing',
