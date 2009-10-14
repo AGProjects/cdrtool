@@ -1,3 +1,9 @@
+cdrtool (6.9.7) unstable; urgency=low
+
+  * Added geoip.dat to debian package
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 14 Oct 2009 16:14:10 +0200
+
 cdrtool (6.9.6) unstable; urgency=low
 
   * Improved SIP settings page
