@@ -1836,8 +1836,6 @@ class SipSettings {
         $this->showChapter($chapter);
 
         /*
-        if ($this->login_type != "admin" && $this->login_type != "reseller") {
-    
             print "
             <tr>
             <td class=border>";
@@ -1853,7 +1851,9 @@ class SipSettings {
             </tr>
             ";
     
-        } else {
+        */
+
+        if ($this->login_type != "subscriber" ) {
     
             print "
             <tr>
@@ -1886,7 +1886,6 @@ class SipSettings {
             ";
 
         }
-        */
 
         print "
         <tr>
