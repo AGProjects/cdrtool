@@ -6771,6 +6771,8 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
 
 class Enrollment {
     var $init=false;
+    var $create_voicemail=false;
+    var $send_email_for_sip_account=true;
 
     function Enrollment() {
 
@@ -6911,11 +6913,15 @@ class Enrollment {
             
             if ($SipSettings = new $this->sipClass($sip_address,$this->sipLoginCredentials,$this->soapEngines)) {
 
-                // Add voicemail account
-                $SipSettings->addVoicemail();
-                $SipSettings->setVoicemailDiversions();
-                // Sent account settings by email
-                $SipSettings->sendEmail('hideHtml');
+                if ($this->create_voicemail) {
+                	// Add voicemail account
+                	$SipSettings->addVoicemail();
+                	$SipSettings->setVoicemailDiversions();
+                }
+                if ($this->send_email_for_sip_account) {
+                	// Sent account settings by email
+                	$SipSettings->sendEmail('hideHtml');
+                }
             }
 
             $return=array('success'        => true,
