@@ -7,7 +7,7 @@ Standards-Version: 3.8.0
 
 Package: cdrtool
 Architecture: all
-Depends: debconf (>= 0.5), apache2 | httpd,  libapache2-mod-php5, php5, php5-cli, php5-mysql, php5-curl, php5-gd, php-pear, php-soap, mrtg, smarty
+Depends: debconf (>= 0.5), apache2 | httpd,  libapache2-mod-php5, php5, php5-cli, php5-mysql, php5-curl, php5-gd, php-pear, php-soap, mrtg, smarty, php5-geoip, geoip-database
 Suggests:
 Description:  CDR mediation and rating engine for OpenSIPS
  CDRTool provides a CDR mediation and rating engine for Call Details Records

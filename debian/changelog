@@ -1,3 +1,10 @@
+cdrtool (6.9.8) unstable; urgency=low
+
+  * Use the debian provided geoip database and library. See docs/Install.txt
+    for notes related to obtaining city level information
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 19 Oct 2009 23:49:45 +0200
+
 cdrtool (6.9.7) unstable; urgency=low
 
   * Added geoip.dat to debian package

@@ -2637,9 +2637,13 @@ class CDR_opensips extends CDR {
 
         if (!is_object($perm)) return;
 
-        require_once "GeoIP.php";
-        $geoip = Net_GeoIP::getInstance("geoip.dat");
-        $this->country=$geoip->lookupCountryName($this->SourceIP);
+		if ($_loc=geoip_record_by_name($this->SourceIP)) {
+        	$this->geo_location=$_loc['country_name'].'/'.$_loc['city'];
+        } else if ($_loc=geoip_country_name_by_name($this->SourceIP)) {
+        	$this->geo_location=$_loc;
+        } else {
+        	$this->geo_location='';
+        }
 
         $this->cdr_details="
         <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
@@ -2711,7 +2715,7 @@ class CDR_opensips extends CDR {
             <td>%s</i>
             </td>
         </tr>
-        ",$this->country);
+        ",$this->geo_location);
 
         $this->cdr_details.= "
         <tr>
@@ -3033,7 +3037,7 @@ class CDR_opensips extends CDR {
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime</nobr></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->aNumberPrint</td>
-        <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->country</td>
+        <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->geo_location</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
         <td valign=top><nobr>$this->destinationPrint</nobr>
         ";
@@ -3150,7 +3154,7 @@ class CDR_opensips extends CDR {
             <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
             <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime $timezone_print</nobr></td>
             <td valign=top><nobr>$this->aNumberPrint</nobr></td>
-        	<td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->country</td>
+        	<td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->geo_location</td>
             <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
             <td valign=top><nobr>$this->destinationPrint $this->destinationName</td>
             <td valign=top align=right>$this->durationPrint</td>

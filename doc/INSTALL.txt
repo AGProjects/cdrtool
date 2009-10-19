@@ -506,3 +506,20 @@ using other tools like SNMP.
 
 To see the graphical statistics, follow the Usage link.
 
+
+Geo-location
+------------
+
+CDRs can display geographical location of the source IP that generated the
+SIP session. To obtain and display this information you must install and
+configure php5-geoip and geoip-database packages.
+
+The debian package contains only country level information. If you want city
+level information you must download manually the city level database and
+copy it to /usr/share/GeoIP folder.
+
+sudo apt-get install php5-geoip geoip-database
+wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+gunzip GeoLiteCity.dat.gz
+sudo mv -v GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
+
