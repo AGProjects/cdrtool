@@ -156,13 +156,19 @@ class PageLayoutLocal extends PageLayout {
 ###########################################
 # CDRTool datasources
 
+class CDRS_opensips_custom extends CDRS_opensips {
+	// this shows how you can modify the default behavior of standard CDRS_opensips class
+        // you can overwrite any function from that class here
+        // to use this class set the data source 'class' setting to the name of this class
+}
+
 $DATASOURCES=array(
 "unknown"=>array(
                     "class"              => "CDRS_unknown"		// do not delete this datasource
                     ),
 "opensips_radius"=>array(
                     "name"               => "OpenSIPS",
-                    "class"              => "CDRS_opensips",
+                    "class"              => "CDRS_opensips_custom",
                     "db_class"           => array("DB_radius2","DB_radius"),  
                     "table"              => "radacct",      // or "radacct".date("Ym") if sql.conf uses the mysql procedure to auto-rotate tables
                     "rating"             => "1",            // enable rating
