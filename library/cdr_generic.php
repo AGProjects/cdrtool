@@ -2212,6 +2212,16 @@ class CDR {
             }
         }
     }
+
+    function lookupGeoLocation ($ip) {
+    	if ($_loc=geoip_record_by_name($ip)) {
+        	return $_loc['country_name'].'/'.$_loc['city'];
+        } else if ($_loc=geoip_country_name_by_name($ip)) {
+        	return $_loc;
+        } else {
+            return '';
+        }
+    }
 }
 
 function getLocalTime($timezone,$timestamp) {

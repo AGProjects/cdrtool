@@ -2637,13 +2637,7 @@ class CDR_opensips extends CDR {
 
         if (!is_object($perm)) return;
 
-		if ($_loc=geoip_record_by_name($this->SourceIP)) {
-        	$this->geo_location=$_loc['country_name'].'/'.$_loc['city'];
-        } else if ($_loc=geoip_country_name_by_name($this->SourceIP)) {
-        	$this->geo_location=$_loc;
-        } else {
-        	$this->geo_location='';
-        }
+		$this->geo_location=$this->lookupGeoLocation($this->SourceIP);
 
         $this->cdr_details="
         <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
