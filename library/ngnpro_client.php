@@ -10107,7 +10107,7 @@ class GatewayRules extends Records {
         print "<table border=0>";
         print "<tr>";
         print "<td>";
-        print "<h3>Ruley</h3>";
+        print "<h3>Rule</h3>";
         print "</td>";
         print "</tr>";
 
@@ -10144,7 +10144,7 @@ class GatewayRules extends Records {
                     $selected_gateway[$rule->$item]='selected';
 
                     foreach (array_keys($this->gateways) as $_gateway) {
-                        printf ("<option value='%s'>%s",$_gateway,$this->gateways[$_gateway]);
+                        printf ("<option value='%s' %s>%s",$_gateway,$selected_gateway[$_gateway],$this->gateways[$_gateway]);
                     }
 
                     print "</select>";
