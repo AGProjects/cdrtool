@@ -2,8 +2,11 @@ cdrtool (6.9.8) unstable; urgency=low
 
   * Use the debian provided geoip database and library. See docs/Install.txt
     for notes related to obtaining city level information
+  * Fixed pstn gateway rule selection box
+  * Added instructions for how to subclass the generic CDRS_opensips class
+    in global.inc.complex.sample
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 19 Oct 2009 23:49:45 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 20 Oct 2009 12:06:12 +0200
 
 cdrtool (6.9.7) unstable; urgency=low
 
