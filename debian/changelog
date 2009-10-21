@@ -5,8 +5,9 @@ cdrtool (6.9.8) unstable; urgency=low
   * Fixed pstn gateway rule selection box
   * Added instructions for how to subclass the generic CDRS_opensips class
     in global.inc.complex.sample
+  * Fixed no-answer timeout
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 20 Oct 2009 12:06:12 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 21 Oct 2009 14:24:01 +0200
 
 cdrtool (6.9.7) unstable; urgency=low
 

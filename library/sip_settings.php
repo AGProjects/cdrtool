@@ -2238,6 +2238,28 @@ class SipSettings {
 
         $this->showMobileNumber();
 
+        $selected_timeout[$this->timeout]="selected";
+
+        print "
+        <tr>
+        <td class=border>";
+        print _("No-answer Timeout");
+        printf ("
+        </td>
+        <td class=border align=left>
+        ");
+ 
+        print "<select name=timeout>";
+        foreach (array_keys($this->timeoutEls) as $_el) {
+            printf ("<option value=\"%s\" %s>%s",$_el,$selected_timeout[$_el],$this->timeoutEls[$_el]);
+        }
+        print "</select>";
+ 
+        print "
+        </td>
+        </tr>
+        ";
+
         $this->showVoicemail();
 
         $this->showBillingProfiles();
@@ -3843,19 +3865,6 @@ class SipSettings {
                          onChange=$update_text_java(this)>
                 </span>
                 ";
-            if ($condition=="FNOA") {
-                print " ";
-                print _("Timeout");
-                print " ";
-
-                $selected_timeout[$this->timeout]="selected";
-
-                print "<select name=timeout>";
-                foreach (array_keys($this->timeoutEls) as $_el) {
-                    printf ("<option value=\"%s\" %s>%s",$_el,$selected_timeout[$_el],$this->timeoutEls[$_el]);
-                }
-                print "</select>";
-            }
 
             if ($condition=="FUNV" && $this->FUNC_access_number) {
                 printf ("Dial %s2*X where X = number of minutes, 0 to reset", $this->access_numbers['FUNC']);
@@ -4100,13 +4109,13 @@ class SipSettings {
                 $j++;
 
                 $uri         = $this->calls_received[$call][from];
-                $duration      = normalizeTime($this->calls_received[$call][duration]);
+                $duration    = normalizeTime($this->calls_received[$call][duration]);
                 $dialURI     = $this->PhoneDialURL($uri) ;
                 $htmlDate    = $this->colorizeDate($this->calls_received[$call][date]);
                 $htmlURI     = $this->htmlURI($uri);
-                $urlURI         = urlencode($this->normalizeURI($uri));
+                $urlURI      = urlencode($this->normalizeURI($uri));
 
-                if (!$this->calls_received[$call][duration]) {
+                if (!$this->calls_received[$call]['duration']) {
                     $htmlURI = "<font color=red>$htmlURI</font>";
                 }
 
@@ -4152,7 +4161,7 @@ class SipSettings {
                 $dialURI     = $this->PhoneDialURL($uri) ;
                 $htmlDate    = $this->colorizeDate($this->calls_placed[$call]['date']);
                 $htmlURI     = $this->htmlURI($uri);
-                $urlURI         = urlencode($this->normalizeURI($uri));
+                $urlURI      = urlencode($this->normalizeURI($uri));
 
                 if ($price) {
                     $price_print =sprintf(" (%s %s)",$price,$this->currency);
@@ -5475,6 +5484,9 @@ class SipSettings {
 
     function PhoneDialURL($uri) {
         $uri=$this->normalizeURI($uri);
+        if (!preg_match("/^sip:/",$uri)) {
+            $uri="sip:".$uri;
+        }
         $uri_print="<a href=$uri>$this->call_img</a>";
         return $uri_print;
     }
