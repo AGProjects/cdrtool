@@ -607,9 +607,6 @@ class SoapEngine {
 
             if ($html) {
                 printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
-            } else {
-                printf ("Error from %s: %s (%s): %s\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);
-
             }
             return false;
 
@@ -619,8 +616,6 @@ class SoapEngine {
             if ($function['commit']['logs']['success']) {
                 if ($html) {
                     printf ("<p><font color=green>%s </font>\n",htmlentities($function['commit']['logs']['success']));
-                } else {
-                    printf ("%s\n",$function['commit']['logs']['success']);
                 }
             }
 
@@ -2719,7 +2714,7 @@ class SipAccounts extends Records {
         ";
     }
 
-    function addRecord($dictionary=array(),$skiphtml=false) {
+    function addRecord($dictionary=array()) {
         dprint_r($dictionary);
 
         if ($dictionary['account']) {
@@ -2938,7 +2933,7 @@ class SipAccounts extends Records {
                              'domain'   => $domain);
 
 
-        if (!$skiphtml) {
+        if ($this->html) {
             if ($username == '<autoincrement>') {
                 $success_log=sprintf('SIP account has been generated in domain %s',$domain);
             } else {
@@ -3672,12 +3667,16 @@ class SipAliases extends Records {
             $domain=trim($_REQUEST['domain']);
 
         } else {
-            printf ("<p><font color=red>Error: Missing SIP domain</font>");
+            if ($this->html) {
+            	printf ("<p><font color=red>Error: Missing SIP domain</font>");
+            }
             return false;
         }
 
         if (!$this->validDomain($domain)) {
-            print "<font color=red>Error: invalid domain name</font>";
+            if ($this->html) {
+            	print "<font color=red>Error: invalid domain name</font>";
+            }
             return false;
         }
 
@@ -7360,6 +7359,7 @@ class DnsRecords extends Records {
                     <td><b>Name</b></td>
                     <td><b>Type</b></td>
                     <td><b>Value</b></td>
+                    <td><b>Owner</b></td>
                     <td><b>Change date</b></td>
                     <td><b>Actions</b></td>
                 </tr>
@@ -7471,6 +7471,7 @@ class DnsRecords extends Records {
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
+                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
     
@@ -7486,6 +7487,7 @@ class DnsRecords extends Records {
                         $record->name,
                         $record->type,
                         $record->value,
+                        $record->owner,
                         $record->changeDate,
                         $_url,
                         $actionText
@@ -7786,6 +7788,15 @@ class DnsRecords extends Records {
     }
 
     function addRecord($dictionary=array()) {
+
+    	if ($this->typeFilter) {
+            $type = $this->typeFilter;
+        } else if ($dictionary['type']) {
+            $type = $dictionary['type'];
+        } else {
+            $type = trim($_REQUEST['type']);
+        }
+
         if ($dictionary['name']) {
             $name = $dictionary['name'];
         } else {
@@ -7803,30 +7814,27 @@ class DnsRecords extends Records {
             } else if ($_REQUEST['zone']) {
                 $zone=$_REQUEST['zone'];
             }
+
+            if ($type='MBOXFW') {
+                $name.='@'.$zone;
+            }
         }
 
         if (!strlen($zone)) {
-            printf ("<p><font color=red>Error: Missing zone name. </font>");
+        	if ($this->html) {
+            	printf ("<p><font color=red>Error: Missing zone name. </font>");
+            }
             return false;
         }
 
         $this->filters['zone']=$zone;
 
-        if ($this->typeFilter) {
-            $type = $this->typeFilter;
-        } else if ($dictionary['type']) {
-            $type = $dictionary['type'];
-        } else {
-            $type = trim($_REQUEST['type']);
-        }
 
         if (!strlen($type)) {
-            printf ("<p><font color=red>Error: Missing record type. </font>");
+        	if ($this->html) {
+            	printf ("<p><font color=red>Error: Missing record type. </font>");
+            }
             return false;
-        }
-
-        if ($type=='MBOXFW') {
-        	$name=$name.'@'.$zone;
         }
 
         if ($dictionary['value']) {
@@ -7843,7 +7851,9 @@ class DnsRecords extends Records {
             } else if ($this->filters['reseller']) {
 				$this->initRemoteReplicationEngine($this->filters['reseller']);
             } else {
-            	printf ("<p><font color=red>Error: Missing reseller. </font>");
+        		if ($this->html) {
+                	printf ("<p><font color=red>Error: Missing reseller. </font>");
+                }
                 return false;
             }
         } else {
@@ -7873,7 +7883,9 @@ class DnsRecords extends Records {
         if (in_array($type,array_keys($this->recordTypes))) {
 
             if (!strlen($value)) {
-                printf ("<p><font color=red>Error: Missing record value. </font>");
+        		if ($this->html) {
+                	printf ("<p><font color=red>Error: Missing record value. </font>");
+                }
                 return false;
             }
 
@@ -7881,6 +7893,7 @@ class DnsRecords extends Records {
                           'zone'     => trim($zone),
                           'type'     => $type,
                           'value'    => trim($value),
+                          'owner'    => intval($owner),
                           'ttl'      => intval($ttl),
                           'priority' => intval($priority)
                           );
@@ -7915,8 +7928,9 @@ class DnsRecords extends Records {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-    
+        		if ($this->html) {
+                	printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                }
                 return false;
             } else {
                 if (is_object($this->SoapEngineRemote)) {
@@ -7927,7 +7941,9 @@ class DnsRecords extends Records {
                         $error_msg  = $result->getMessage();
                         $error_fault= $result->getFault();
                         $error_code = $result->getCode();
-                        printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+			        	if ($this->html) {
+            	            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        }
                         unset($this->filters);
     
                         return false;
@@ -7994,6 +8010,7 @@ class DnsRecords extends Records {
                               'zone'     => trim($zone),
                               'type'     => $_records['type'],
                               'value'    => $value_new,
+                              'owner'    => intval($owner),
                               'ttl'      => intval($_records['value']),
                               'priority' => intval($_records['priority'])
                               );
@@ -8006,14 +8023,16 @@ class DnsRecords extends Records {
                                 );
 
                 $result = $this->SoapEngine->execute($function,$this->html);
-    	        dprint_r($result);
 
                 if (PEAR::isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                
+
+                    if ($this->html) {
+                    	printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    }
+
                     return false;
                 } else {
                     if (is_object($this->SoapEngineRemote)) {
@@ -8025,7 +8044,9 @@ class DnsRecords extends Records {
                             $error_msg  = $result->getMessage();
                             $error_fault= $result->getFault();
                             $error_code = $result->getCode();
-                            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+				        	if ($this->html) {
+                            	printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                            }
                             unset($this->filters);
                         }
                     }
@@ -8034,7 +8055,9 @@ class DnsRecords extends Records {
 
 
         } else {
-            printf ("<p><font color=red>Error: Invalid or missing record type. </font>");
+        	if ($this->html) {
+            	printf ("<p><font color=red>Error: Invalid or missing record type. </font>");
+            }
             return false;
         }
 
@@ -12751,6 +12774,7 @@ class Customers extends Records {
     }
 
     function addRecord($dictionary=array(),$confirmPassword=false) {
+
         if (!$this->checkRecord($dictionary)) {
             return false;
         }
