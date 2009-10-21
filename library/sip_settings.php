@@ -699,7 +699,7 @@ class SipSettings {
 
         $this->account   = $this->username."@".$this->domain;
         $this->fullName  = $this->firstName." ".$this->lastName;
-        $this->name      = $this->firstName." ".$this->lastName;
+        $this->name      = $this->firstName; // used by smarty
 
         $this->sipId=array("username" => $this->username,
                            "domain" => $this->domain
