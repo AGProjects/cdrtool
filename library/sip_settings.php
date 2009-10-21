@@ -6788,8 +6788,10 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
 
 class Enrollment {
     var $init=false;
-    var $create_voicemail=false;
-    var $send_email_for_sip_account=true;
+    var $create_voicemail           = false;
+    var $send_email_notification    = true;
+    var $create_email_alias         = true;
+	var $create_customer            = true;
 
     function Enrollment() {
 
@@ -6817,6 +6819,19 @@ class Enrollment {
 
         $this->sipDomain      = $this->enrollment['sip_domain'];
 		$this->sipEngine      = $this->enrollment['sip_engine'];
+
+        if ($this->enrollment['customer_engine']) {
+        	$this->customerEngine = $this->enrollment['customer_engine'];
+        } else {
+        	$this->customerEngine = $this->enrollment['sip_engine'];
+        }
+
+        if ($this->enrollment['email_engine']) {
+        	$this->emailEngine = $this->enrollment['email_engine'];
+        } else {
+        	$this->emailEngine = $this->enrollment['sip_engine'];
+        }
+
 		$this->reseller       = $this->enrollment['reseller'];
 
         $this->outbound_proxy = $this->enrollment['outbound_proxy'];
@@ -6889,11 +6904,92 @@ class Enrollment {
             return false;
         }
 
+        if ($this->create_customer) {
+        	// create owner id
+
+            $customerEngine           = 'customers@'.$this->customerEngine;
+            $this->CustomerSoapEngine = new SoapEngine($customerEngine,$this->soapEngines,$this->customerLoginCredentials);
+            $_customer_class          = $this->CustomerSoapEngine->records_class;
+            $this->customerRecords    = new $_customer_class(&$this->CustomerSoapEngine);
+            $this->customerRecords->html=false;
+    
+            $properties=$this->customerRecords->setInitialCredits(array('sip_credit'         => 2,
+                                                                        'sip_alias_credit'   => 2,
+                                                                        'email_credit'       => 2,
+                                                                        'dns_zone_credit'    => 1,
+                                                                        'enum_range_credit'  => 1,
+                                                                        'enum_number_credit' => 1
+                                                                        )
+                                                                  );
+            if (preg_match("/^(\w+)\s+(\w+)$/",$_REQUEST['display_name'],$m)) {
+                $firstName = $m[1];
+                $lastName  = $m[2];
+            } else {
+                $firstName = $_REQUEST['display_name'];
+                $lastName  = 'Blink lover';
+            }
+
+            $customer=array(
+                         'firstName'  => $firstName,
+                         'lastName'   => $lastName,
+                         'timezone'   => $_REQUEST['timezone'],
+                         'email'      => trim($_REQUEST['email']),
+                         'properties' => $properties
+                        );
+    
+            $_customer_created=false;
+
+            $j=0;
+    
+            while ($j < 3) {
+    
+                $username=RandomString(11);
+    
+                $customer['username']=$username;
+    
+                if (!$result = $this->customerRecords->addRecord($customer)) {
+                    if ($this->customerRecords->SoapEngine->exception->errorcode != "5001") {
+                        $return=array('success'       => false,
+                                      'error_message' => 'failed to create non-duplicate customer'
+                                      );
+                        print (json_encode($return));
+                        return false;
+                    }
+                } else {
+                    $_customer_created=true;
+                    break;
+                }
+    
+                $j++;
+            }
+    
+            if (!$_customer_created) {
+                $return=array('success'       => false,
+                              'error_message' => 'failed to create customer'
+                              );
+                print (json_encode($return));
+                return false;
+            }
+    
+            $owner=$result->id;
+    
+            if (!$owner) {
+                $return=array('success'       => false,
+                              'error_message' => 'failed to obtain a new owner id'
+                              );
+                print (json_encode($return));
+                return false;
+            }
+        }
+
+        // create SIP account
         $sipEngine           = 'sip_accounts@'.$this->sipEngine;
 
         $this->SipSoapEngine = new SoapEngine($sipEngine,$this->soapEngines,$this->sipLoginCredentials);
         $_sip_class          = $this->SipSoapEngine->records_class;
         $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
+        $this->sipRecords->html=false;
+
 
         $sip_properties[]=array('name'=> 'ip',                 'value' => $_SERVER['REMOTE_ADDR']);
         $sip_properties[]=array('name'=> 'registration_email', 'value' => $_REQUEST['email']);
@@ -6905,11 +7001,12 @@ class Enrollment {
                             'pstn'      => 1,
                             'prepaid'   => 1,
                             'quota'     => 50,
+                            'owner'     => intval($owner),
                             'groups'    => array('missed-calls'),
                             'properties'=> $sip_properties
                             );
 
-        if (!$result = $this->sipRecords->addRecord($sipAccount,'skiphtml')) {
+        if (!$result = $this->sipRecords->addRecord($sipAccount)) {
             $return=array('success'       => false,
                           'error_message' => 'failed to create sip account'
                           );
@@ -6927,19 +7024,37 @@ class Enrollment {
             }
 
             // Generic code for all sip settings pages
-            
-            if ($SipSettings = new $this->sipClass($sip_address,$this->sipLoginCredentials,$this->soapEngines)) {
 
-                if ($this->create_voicemail) {
-                	// Add voicemail account
-                	$SipSettings->addVoicemail();
-                	$SipSettings->setVoicemailDiversions();
-                }
-                if ($this->send_email_for_sip_account) {
-                	// Sent account settings by email
-                	$SipSettings->sendEmail('hideHtml');
+            if ($this->create_voicemail || $this->send_email_notification) {
+                if ($SipSettings = new $this->sipClass($sip_address,$this->sipLoginCredentials,$this->soapEngines)) {
+    
+                    if ($this->create_voicemail) {
+                        // Add voicemail account
+                        $SipSettings->addVoicemail();
+                        $SipSettings->setVoicemailDiversions();
+                    }
+                    if ($this->send_email_notification) {
+                        // Sent account settings by email
+                        $SipSettings->sendEmail('hideHtml');
+                    }
                 }
             }
+
+            if ($this->create_email_alias) {
+                $emailEngine           = 'email_aliases@'.$this->emailEngine;
+                $this->EmailSoapEngine = new SoapEngine($emailEngine,$this->soapEngines,$this->sipLoginCredentials);
+                $_email_class          = $this->EmailSoapEngine->records_class;
+                $this->emailRecords    = new $_email_class(&$this->EmailSoapEngine);
+                $this->emailRecords->html=false;
+
+                $emailAlias = array('name'    => strtolower($sip_address),
+                                    'type'    => 'MBOXFW',
+                                    'owner'   => intval($owner),
+                                    'value'   => $_REQUEST['email']
+                                    );
+        
+                $this->emailRecords->addRecord($emailAlias);
+			}
 
             $return=array('success'        => true,
                           'sip_address'    => $sip_address,
