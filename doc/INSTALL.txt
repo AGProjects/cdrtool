@@ -523,3 +523,38 @@ wget http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
 gunzip GeoLiteCity.dat.gz
 sudo mv -v GeoLiteCity.dat /usr/share/GeoIP/GeoIPCity.dat
 
+
+Customizing CDRTool
+-------------------
+
+Most of the functionality of CDRTool can be customized by properly
+sub-classing the standard provided classes. For example you can modify the
+way the OpenSIPS data-source works by:
+
+1. Creating in /etc/cdrtool/global.inc a new class that inherits
+CDRS_opensips, and optionaly CDR_opensips:
+
+class CDRS_opensips_custom extends CDRS_opensips {
+   // specify a different CDR class
+   var $CDR_class = 'CDR_opensips_custom';
+
+   function x () {
+   }
+
+}
+
+class CDR_opensips_custom extends CDR_opensips {
+
+   function y () {
+   }
+
+}
+
+2. Adding functions within this new class, with the same name of the
+functions available in their parent class. For a list of available functions
+see cdr_generic.php and cdr_opensips.php. By doing this you are overwriting
+the default behaviour with your own custom functionality.
+
+For example you can chage the way the geolocation information is displayed
+for each CDR line by overwriting the function CDR->lookupGeoLocation();
+
