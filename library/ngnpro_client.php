@@ -7815,7 +7815,7 @@ class DnsRecords extends Records {
                 $zone=$_REQUEST['zone'];
             }
 
-            if ($type='MBOXFW') {
+            if ($type=='MBOXFW') {
                 $name.='@'.$zone;
             }
         }
