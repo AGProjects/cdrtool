@@ -1106,8 +1106,11 @@ class SipSettings {
             print "</a>";
         } else {
             if ($this->enable_thor) {
+                printf (" Home Node");
                 if ($this->homeNode=getSipThorHomeNode($this->account,$this->sip_proxy)) {
-                    printf (" Home Node <font color=green>%s</font>",$this->homeNode);
+                    printf (" <font color=green>%s</font>",$this->homeNode);
+                } else {
+                    printf (" <font color=red>Unknown</font>");
                 }
             }
         }
