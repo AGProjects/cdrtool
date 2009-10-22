@@ -7829,7 +7829,6 @@ class DnsRecords extends Records {
 
         $this->filters['zone']=$zone;
 
-
         if (!strlen($type)) {
         	if ($this->html) {
             	printf ("<p><font color=red>Error: Missing record type. </font>");
@@ -7851,8 +7850,8 @@ class DnsRecords extends Records {
             } else if ($this->filters['reseller']) {
 				$this->initRemoteReplicationEngine($this->filters['reseller']);
             } else {
-        		if ($this->html) {
-                	printf ("<p><font color=red>Error: Missing reseller. </font>");
+                if ($this->html) {
+                	printf ("<p><font color=red>Error: Missing reseller, please first search zones for a given reseller </font>");
                 }
                 return false;
             }
