@@ -2550,9 +2550,9 @@ class SipSettings {
 
                         if ($publicContact) {
                             $_els=explode(":",$publicContact);
-                            if ($_loc=geoip_record_by_name($this->SourceIP)) {
+                            if ($_loc=geoip_record_by_name($_els[0])) {
         						$this->geo_location=$_loc['country_name'].'/'.$_loc['city'];
-        					} else if ($_loc=geoip_country_name_by_name($this->SourceIP)) {
+        					} else if ($_loc=geoip_country_name_by_name($_els[0])) {
         						$this->geo_location=$_loc;
         					} else {
         						$this->geo_location='';
