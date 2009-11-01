@@ -31,8 +31,10 @@ a.uri2 {color: #808080;font-size: 10pt;font-weight: bold;text-decoration:none;}
 a.uri2:visited {color: #808080;font-size: 10pt;font-weight: bold;text-decoration:none;}
 a.attr {color: #FF6347;font-size: 10pt;line-height: 14pt;font-weight: bold;text-decoration:none;}
 a.attr:visited {color: #FF6347;font-size: 10pt;line-height: 14pt;font-weight: bold;text-decoration:none;}
-a.var3 {font-family: Verdana, Arial, Helvetica, sans-serif;font-weight: bold; font-size: 11pt;margin-top: 0.5cm;margin-bottom: 0.1cm;color: #DA70D6; margin-left: 0cm;}
-a.var3:visited {font-family: Verdana, Arial, Helvetica, sans-serif;font-weight: bold; font-size: 11pt;margin-top: 0.5cm;margin-bottom: 0.1cm;color: #DA70D6; margin-left: 0cm;}
+a.var3 {font-family: Verdana, Arial, Helvetica, sans-serif;font-weight: bold;
+ font-size: 11pt;margin-top: 0.5cm;margin-bottom: 0.1cm;color: #DA70D6; margin-left: 0cm;}
+a.var3:visited {font-family: Verdana, Arial, Helvetica, sans-serif;font-weight: bold;
+ font-size: 11pt;margin-top: 0.5cm;margin-bottom: 0.1cm;color: #DA70D6; margin-left: 0cm;}
 a.letter {color: #DA70D6; text-decoration:none;}
 a.letter:visited {color: #DA70D6; text-decoration:none; font-weight: normal;}
 a.letter:hover {color: red;}
@@ -182,9 +184,12 @@ table.settings {
 
 .tab     	{ background-color: #4A69A5; border: 1px solid #000000; border-color: #A9A9A9;  border-collapse: collapse; -webkit-border-radius: 5px; padding: 5px 5px 5px 3px; }
 .selected_tab  	{ background-color: orange; border: 1px solid #000000; border-color: #A9A9A9;  border-collapse: collapse; -webkit-border-radius: 5px; padding: 5px 5px 5px 3px; }
+.orange  	{ background-color: orange; }
 .chapter        { font-size: 11pt; padding: 10px 1px 5px 0px; }
-.list_header    { font-weight: bold; background-color: #CCCCCC;}
+.list_header    { font-weight: bold; background-color: #CCCCCC; padding: 5px 1px 5px 0px;}
 .even           { background-color: #EDF2FF;}
 .odd            { background-color: white;}
-.checked_groups { color: #FF1493;font-size: 7.5pt; border: 1px solid #cccccc;}-->
+.checked_groups { color: #FF1493;font-size: 7.5pt; border: 1px solid #cccccc;}
+
+-->
 </style>

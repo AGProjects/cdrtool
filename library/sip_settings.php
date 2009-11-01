@@ -1087,7 +1087,7 @@ class SipSettings {
 
         print "
         <tr>
-        <td class=border colspan=2 bgcolor=lightgrey>
+        <td colspan=2 bgcolor=lightgrey>
         ";
 
         print "
@@ -1553,12 +1553,12 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <tr>
-        <td class=border>";
-        print _("SIP Address");
+        <tr class=even>
+        <td>";
+        print _("Address");
         print "
         </td>
-        <td class=border>$this->account
+        <td>sip:$this->account
         </td>
         </tr>
         ";
@@ -1566,56 +1566,56 @@ class SipSettings {
         /*
         print "
         <tr>
-        <td class=border>";
+        <td>";
         print _("Full Name");
         print "
         </td>
-        <td class=border>$this->fullName
+        <td>$this->fullName
         </td>
         </tr>
         ";
         */
 
         print "
-        <tr>
-        <td class=border>";
+        <tr class=odd>
+        <td>";
         print _("Username");
         print "
         </td>
-        <td class=border>$this->username
+        <td>$this->username
         </td>
         </tr>
         ";
         print "
-        <tr>
-        <td class=border>";
+        <tr class=even>
+        <td>";
         print _("Domain/Realm");
         print "
         </td>
-        <td class=border>$this->domain
+        <td>$this->domain
         </td>
         </tr>
         ";
 
         print "
-        <tr>
-        <td class=border>";
+        <tr class=odd>
+        <td>";
         print _("Outbound Proxy");
         print "
         </td>
-        <td class=border>$this->sip_proxy
+        <td>$this->sip_proxy
         </td>
         </tr>
         ";
 
         if ($this->presence_engine) {
             print "
-            <tr>
-                <td class=border>";
+            <tr class=even>
+                <td>";
                 print _("XCAP Root");
                 print "
                 </td>
-                <td class=border>$this->xcap_root
+                <td>$this->xcap_root
             </td>
             </tr>
             ";
@@ -1627,10 +1627,10 @@ class SipSettings {
 
             print "
             <tr>
-              <td class=border>";
+              <td>";
               print _("Caller Id");
               print "</td>
-              <td class=border>$this->rpid</td>
+              <td>$this->rpid</td>
             </tr>
             ";
         }
@@ -1638,12 +1638,23 @@ class SipSettings {
         $t=0;
         foreach($this->enums as $e)  {
             $t++;
+
+            $rr=floor($t/2);
+            $mod=$t-$rr*2;
+    
+            if ($mod ==0) {
+                $_class='odd';
+            } else {
+                $_class='even';
+            }
+
             print "
-            <tr>
-              <td class=border>";
+            <tr class=$_class>
+
+              <td>";
               print _("Phone Number");
               print "</td>
-              <td class=border>$e</td>
+              <td>$e</td>
             </tr>
             ";
         }
@@ -1654,7 +1665,7 @@ class SipSettings {
 
         print "
         <tr>
-        <td class=border colspan=2>";
+        <td colspan=2>";
         printf (_("You may create new aliases under the same domain"));
         printf ("
         </td>
@@ -1670,24 +1681,34 @@ class SipSettings {
         foreach($this->aliases as $a)  {
             $t++;
 
+            $rr=floor($t/2);
+            $mod=$t-$rr*2;
+    
+            if ($mod ==0) {
+                $_class='odd';
+            } else {
+                $_class='even';
+            }
+
             print "
-            <tr>
-              <td class=border>";
+            <tr class=$_class>
+
+              <td>";
                 print _("SIP Alias");
                 print "
               </td>
-              <td class=border> <input type=text size=35 name=aliases[] value=\"$a\"></td>
+              <td> <input type=text size=35 name=aliases[] value=\"$a\"></td>
             </tr>
             ";
         }
 
         print "
         <tr>
-          <td class=border>";
+          <td>";
             print _("New SIP Alias");
             print "
           </td>
-          <td class=border> <input type=text size=35 name=aliases[]></td>
+          <td> <input type=text size=35 name=aliases[]></td>
         </tr>
         ";
 
@@ -1721,33 +1742,35 @@ class SipSettings {
                     $chapter=sprintf(_("TLS Certificate"));
                     $this->showChapter($chapter);
                     if ($this->sip_settings_api_url) {
+                        /*
                         print "
                         <tr>
-                        <td class=border colspan=2>";
+                        <td colspan=2>";
                         printf (_("The certificate is used for accessing <a href=%s target=sip_api>SIP Settings API</a>"),$this->sip_settings_api_url);
                         printf ("
                         </td>
                         </tr>
                         ");
+                        */
                     }
     
                     print "
                     <tr>
-                    <td class=border>";
+                    <td>";
                     print _("X.509 PEM format");
                     printf ("
                     </td>
-                    <td class=border><a href=%s&action=get_crt>%s.crt</a>
+                    <td><a href=%s&action=get_crt>%s.crt</a>
                     </td>
                     </tr>
                     ",$this->url, $this->account);
                     print "
                     <tr>
-                    <td class=border>";
+                    <td>";
                     print _("PKCS#12 store format");
                     printf ("
                     </td>
-                    <td class=border><a href=%s&action=get_p12>%s.p12</a>
+                    <td><a href=%s&action=get_p12>%s.p12</a>
                     </td>
                     </tr>
                     <tr>
@@ -1766,7 +1789,7 @@ class SipSettings {
         ";
 
         if ($this->email)  {
-            printf (_("Email account information to %s"),$this->email);
+            printf (_("Email SIP account information to %s"),$this->email);
             print "
             <input type=hidden name=action value=\"send email\">
             <input type=submit value=";
@@ -1826,12 +1849,12 @@ class SipSettings {
         if ($this->login_type != "subscriber" ) {
     
             print "
-            <tr>
-            <td class=border>";
+            <tr class=odd>
+            <td>";
             print _("First Name");
             print "
             </td>
-            <td class=border>";
+            <td>";
     
             print "<input type=text size=15 name=first_name value=\"$this->firstName\">";
     
@@ -1841,12 +1864,12 @@ class SipSettings {
             ";
     
             print "
-            <tr>
-            <td class=border>";
+            <tr class=even>
+            <td>";
             print _("Last Name");
             print "
             </td>
-            <td class=border>";
+            <td>";
     
             print "<input type=text size=15 name=last_name value=\"$this->lastName\">";
     
@@ -1858,12 +1881,12 @@ class SipSettings {
         }
 
         print "
-        <tr>
-        <td class=border>";
+        <tr class=odd>
+        <td>";
         print _("Password");
         print "
         </td>
-        <td class=border>";
+        <td>";
 
         print "<input type=text size=15 name=sip_password>";
         print _("Enter text to change the current password");
@@ -1897,12 +1920,12 @@ class SipSettings {
         ";
 
         print "
-        <tr>
-        <td class=border>";
+        <tr class=even>
+        <td>";
         print _("Timezone");
         print "
         </td>
-        <td class=border>
+        <td>
         ";
         $this->showTimezones('timezone',$this->timezone);
         print " ";
@@ -1919,11 +1942,11 @@ class SipSettings {
         if (count($this->emergencyRegions) > 0) {
             print "
             <tr>
-            <td class=border>";
+            <td>";
             print _("Location");
             print "
             </td>
-            <td class=border>
+            <td>
             ";
             print "<select name=region>";
             $selected_region[$this->region]="selected";
@@ -1941,10 +1964,10 @@ class SipSettings {
         /*
         print "
         <tr>
-        <td class=border>";
+        <td>";
         print _("Language");
         print "</td>
-        <td class=border>
+        <td>
         <select name=language>
         ";
         $languages=array("en"=>"English",
@@ -1969,20 +1992,20 @@ class SipSettings {
         if (in_array("free-pstn",$this->groups)) {
  
             if (in_array("quota",$this->groups)) {
-                $td_class="orange";
+                $_class="orange";
             } else {
-                $td_class="border";
+                $_class="";
             }
 
             if ($this->pstn_changes_allowed) {
 
                 print "
-                <tr>
-                <td class=border>";
+                <tr class=$_class>
+                <td>";
                 print _("Quota");
                 print "
                 </td>
-                <td class=$td_class>
+                <td>
                 <table cellspacing=0 cellpadding=0 width=100%>
                 <tr>
                 <td>";
@@ -2021,7 +2044,7 @@ class SipSettings {
             } else if ($this->quota) {
                 print "
                 <tr>
-                <td class=border>";
+                <td>";
                 print _("Quota");
                 print "
                 </td>
@@ -2046,11 +2069,11 @@ class SipSettings {
             if (!$this->prepaid_changes_allowed) $disabled_box_prepaid   = "disabled=true";
     
             print "
-            <tr $bgcolor>
-            <td class=border valign=top>";
+            <tr>
+            <td valign=top>";
             print _("Prepaid");
             print "</td>
-            <td class=border>
+            <td>
             <input type=checkbox value=1 name=prepaid $checked_box_prepaid $disabled_box_prepaid>
             </td>
             </tr>
@@ -2085,15 +2108,15 @@ class SipSettings {
             }
 
             if ($key=="blocked" && $checked_box[$key]) {
-                $td_class="orange";
+                $_class="orange";
             } else {
-                $td_class="border";
+                $_class="";
             }
 
             print "
-            <tr $bgcolor>
-            <td class=border valign=top>$elementName</td>
-            <td class=$td_class>
+            <tr class=$_class>
+            <td valign=top>$elementName</td>
+            <td>
             ";
 
             if ($key=="blocked") {
@@ -2218,12 +2241,12 @@ class SipSettings {
         $selected_timeout[$this->timeout]="selected";
 
         print "
-        <tr>
-        <td class=border>";
+        <tr class=even>
+        <td>";
         print _("No-answer Timeout");
         printf ("
         </td>
-        <td class=border align=left>
+        <td align=left>
         ");
  
         print "<select name=timeout>";
@@ -2245,12 +2268,12 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <tr>
-          <td class=border>";
+        <tr class=even>
+          <td>";
             print _("Email Address");
             print "
           </td>
-          <td class=border align=left>
+          <td align=left>
             <input type=text size=40 maxsize=255 name=mailto value=\"$this->email\">
           </td>
         </tr>
@@ -2335,11 +2358,11 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <tr $bgcolor>
-        <td class=border>";
+        <tr class=even>
+        <td>";
         print _("Enable");
         print "</td>
-        <td class=border>
+        <td>
         <input type=checkbox value=1 name=voicemail $checked_voicemail $disabled_box>
         ";
 
@@ -2356,12 +2379,12 @@ class SipSettings {
         if ($this->voicemail['Account']) {
 
             print "
-            <tr $bgcolor>
-            <td class=border>";
+            <tr class=odd>
+            <td>";
 
             print _("Delivery");
             print "</td>
-            <td class=border>
+            <td>
             ";
 
             if ($this->voicemail['Options']->delete=="True") {
@@ -2392,12 +2415,12 @@ class SipSettings {
             if (!$this->voicemail['DisableOptions']) {
 
                 print "
-                <tr $bgcolor>
-                <td class=border>";
+                <tr class=even>
+                <td>";
     
                 print _("Password");
                 print "</td>
-                <td class=border>
+                <td>
                 ";
     
                 printf ("<input type=text size=15 name=voicemail_password value=\"%s\">",$this->voicemail['Password']);
@@ -2409,8 +2432,8 @@ class SipSettings {
     
                 if ($this->voicemail_access_number) {
                    print "
-                   <tr $bgcolor>
-                   <td colspan=2 class=border>";
+                   <tr>
+                   <td colspan=2>";
                    printf(_("Dial %s to listen to your messages or change preferences. "),$this->voicemail_access_number);
                    print "</td>
                    </tr>
@@ -2425,11 +2448,11 @@ class SipSettings {
 
         if ($this->pstn_changes_allowed) {
             print "
-            <tr $bgcolor>
-            <td class=border>";
+            <tr>
+            <td>";
             print _("Owner");
             print "</td>
-            <td class=border>
+            <td>
             <input type=text name=owner size=7 value=\"$this->owner\">
             ";
             print "
@@ -2438,11 +2461,11 @@ class SipSettings {
             ";
         } else {
             print "
-            <tr $bgcolor>
-            <td class=border>";
+            <tr>
+            <td>";
             print _("Owner");
             print "</td>
-            <td class=border>
+            <td>
             $this->owner
             ";
             print "
@@ -2482,10 +2505,10 @@ class SipSettings {
                 print "
                 <tr class=$_class>";
 
-                print "<td class=border align=center>";
+                print "<td align=center>";
                 printf ("<img src='%s/30/%s' border=0>",$this->SipUAImagesPath,$UAImage);
                 print "</td>";
-                print "<td class=border align=left>";
+                print "<td align=left>";
                     print "<table border=0 width=100%>";
                     print "<tr>";
                         print "<td align=left><i>$user_agent</i></td>";
@@ -2579,7 +2602,7 @@ class SipSettings {
 
         print "
         <tr>
-        <td class=border colspan=2 align=left>";
+        <td colspan=2 align=left>";
         print _("You can use deny outbound calls to unwanted destinations on the PSTN. ");
         print "<p>";
         print "
@@ -2589,10 +2612,10 @@ class SipSettings {
 
         print "
         <tr>
-        <td class=border align=left>";
+        <td align=left>";
         print _("Destination prefix");
         print "</td>";
-        print "<td class=border align=left>
+        print "<td align=left>
         <input type=text name=barringPrefixes[]>
         ";
         print _("Example: +31900");
@@ -2617,10 +2640,10 @@ class SipSettings {
                 print "
                 <tr class=$_class>";
 
-                print "<td class=border align=left>";
+                print "<td align=left>";
                 print _("Destination prefix");
                 print "</td>";
-                print "<td class=border align=left>
+                print "<td align=left>
                 <input type=text name=barringPrefixes[] value=\"$_prefix\">
                 </td>";
                 print "<tr>";
@@ -3336,59 +3359,55 @@ class SipSettings {
     function showCreditTab() {
         $task        = $_REQUEST['task'];
         $issuer      = $_REQUEST['issuer'];
+        $prepaidCard = $_REQUEST['prepaidCard'];
+        $prepaidId   = $_REQUEST['prepaidId'];
+
         $_done       = false;
 
-        print "
-        <tr>
-        <form action=$this->url method=post>
-        <input type=hidden name=tab value=prepaid>
-        <input type=hidden name=task value=Add>
-        <td class=list_header colspan=2 align=left> ";
-
-        if ($issuer=='subscriber'){
-            $prepaidCard = $_REQUEST['prepaidCard'];
-            $prepaidId   = $_REQUEST['prepaidId'];
-
-            if ($prepaidCard && $prepaidId) {
-            	if ($result = $this->addBalanceSubscriber($prepaidCard,$prepaidId)) {
+        if ($issuer) {
+            print "
+            <tr>
+            <td colspan=2 align=left> ";
+    
+            if ($issuer=='subscriber'){
+        		if ($prepaidCard && $prepaidId) {
+                    if ($result = $this->addBalanceSubscriber($prepaidCard,$prepaidId)) {
+                        print "<p><font color=green>";
+                        printf (_("Old balance was %s, new balance is %s. "),$result->old_balance, $result->new_balance);
+                        print "</font>";
+                        $_done=true;
+                    }
+                }
+            } else if ($issuer=='reseller' || $issuer=='admin') {
+                $description = $_REQUEST['description'];
+                $value       = $_REQUEST['value'];
+    
+                if (strlen($value) && $result = $this->addBalanceReseller($value,$description)) {
+    
                     print "<p><font color=green>";
-                	printf (_("Old balance was %s, new balance is %s. "),$result->old_balance, $result->new_balance);
+                    printf (_("Old balance was %s, new balance is %s. "),$result->old_balance, $result->new_balance);
                     print "</font>";
                     $_done=true;
                 }
             }
-        }
-
-        if ($issuer=='reseller' || $issuer=='admin') {
-            $description = $_REQUEST['description'];
-            $value       = $_REQUEST['value'];
-
-            if (strlen($value) && $result = $this->addBalanceReseller($value,$description)) {
-
-                print "<p><font color=green>";
-                printf (_("Old balance was %s, new balance is %s. "),$result->old_balance, $result->new_balance);
-                print "</font>";
-                $_done=true;
-            }
-        }
-
-        if ($_done && $_REQUEST['notify']) {
-            $subject=sprintf ("SIP account %s balance update",$this->account);
     
-            $body="Your SIP account balance has been updated. ".
-            "For more details go to $this->sip_settings_page?tab=prepaid";
-    
-            if (mail($this->email, $subject, $body, "From: $this->support_email")) {
-                print "<p><font color=orange>";
-                printf (_("Subscriber has been notified to %s."), $this->email);
-                print "</font>";
+            if ($_done && $_REQUEST['notify']) {
+                $subject=sprintf ("SIP account %s balance update",$this->account);
+        
+                $body="Your SIP account balance has been updated. ".
+                "For more details go to $this->sip_settings_page?tab=prepaid";
+        
+                if (mail($this->email, $subject, $body, "From: $this->support_email")) {
+                    printf (_("Subscriber has been notified at %s."), $this->email);
+                }
             }
+    
+            print "
+            </td>
+            </tr>
+            ";
+    
         }
-
-        print "
-        </td>
-        </tr>
-        ";
 
         $this->getPrepaidStatus();
 
@@ -3398,12 +3417,11 @@ class SipSettings {
     
             print "
             <tr>
-            <td class=list_header align=left>";
+            <td align=left>";
             print _("Your current balance is: ");
             printf ("%.2f %s ",$this->prepaidAccount->balance,$this->currency);
             print "</td><td align=right>
             </td>
-            </form>
             </tr>
             ";
     
@@ -3425,7 +3443,7 @@ class SipSettings {
         <input type=hidden name=tab value=prepaid>
         <input type=hidden name=issuer value=reseller>
         <input type=hidden name=task value=Add>
-        <td class=list_header align=left><nobr>
+        <td align=left><nobr>
         ";
 
         print _("Value");
@@ -3565,7 +3583,6 @@ class SipSettings {
         if (!count($this->balance_history)) {
             return;
         }
-
         $chapter=sprintf(_("Balance History"));
         $this->showChapter($chapter);
 
@@ -3663,7 +3680,7 @@ class SipSettings {
             <td></td>
             <td></td>
             <td></td>
-            <td>Total credit</td>
+            <td><b><font color=blue>Total credit</font></b></td>
             <td align=right>%s</td>
             <td align=right></td>
             </tr>
@@ -3676,8 +3693,8 @@ class SipSettings {
             <td></td>
             <td></td>
             <td></td>
-            <td>Total debit</td>
-            <td align=right>%s</td>
+            <td><b><font color=red>Total debit</font></b></td>
+            <td align=right><b>%s</b></td>
             <td align=right></td>
             </tr>
             ",number_format($total_debit,4));
@@ -3688,7 +3705,15 @@ class SipSettings {
         ";
 
 		if ($found) {
-        	print "<p><a href=$this->url&tab=prepaid&action=get_balance_history&csv=1 target=_new><font color=$fontcolor>Export history to CSV file</font>";
+			if (!$this->isEmbedded()) {
+        		print "<p><a href=$this->url&tab=prepaid&action=get_balance_history&csv=1 target=_new>";
+                print _("Export balance history in CSV format");
+                print "</a>";
+            } else {
+        		print "<p><a href=$this->url&tab=prepaid&action=get_balance_history&csv=1>";
+                print _("Export balance history in CSV format");
+                print "</a>";
+            }
         }
         print "</td></tr>";
     }
@@ -4006,12 +4031,12 @@ class SipSettings {
     function showQuickDial() {
         if (!preg_match("/^\d+$/",$this->username)) return 1;
         print "
-        <tr>
-          <td class=border>";
+        <tr class=even>
+          <td>";
             print _("Quick Dial");
             print "
           </td>
-          <td class=border align=left>
+          <td align=left>
             <input type=text size=15 maxsize=64 name=quickdial value=\"$this->quickdial\">
             ";
             if ($this->quickdial && preg_match("/^$this->quickdial/",$this->username)) {
@@ -4029,16 +4054,16 @@ class SipSettings {
 
     function showMobileNumber() {
 
-           if ($this->SOAPversion <= 1) return;
+    	if ($this->SOAPversion <= 1) return;
         if (!in_array("free-pstn",$this->groups)) return;
 
         print "
-        <tr>
-          <td class=border>";
+        <tr class=odd>
+          <td>";
             print _("Mobile Number");
             printf ("
           </td>
-          <td class=border align=left>
+          <td align=left>
             <input type=text size=15 maxsize=64 name=mobile_number value='%s'>
           </td>
         </tr>
@@ -4078,11 +4103,11 @@ class SipSettings {
     
             print "
             <tr>
-              <td class=border>";
+              <td>";
                 print _("First / Last call");
                 print "
               </td>
-              <td class=border>
+              <td>
                 $this->firstCall / $this->lastCall
               </td>
             </tr>
@@ -4382,8 +4407,8 @@ class SipSettings {
         if (!strlen($search_text)) $search_text="%" ;
 
         if ($this->SOAPversion > 1) {
-            $match=array('uri'  => $search_text,
-                         'name' => $search_text
+            $match=array('uri'  => '%'.$search_text.'%',
+                         'name' => '%'.$search_text.'%'
                          );
         } else {
             $match=array('uri'       => $search_text,
@@ -4426,7 +4451,7 @@ class SipSettings {
 
         print "
         <tr>
-        <td class=border colspan=2 align=left>";
+        <td colspan=2 align=left>";
         print _("You can organize, export and group your contacts. ");
         print _("Groups can be used to Accept selected incoming calls. ");
         print "
@@ -4496,7 +4521,7 @@ class SipSettings {
         <form action=$this->url method=post>
         <input type=hidden name=tab value=phonebook>
         <input type=hidden name=task value=add>
-        <td class=list_header align=left valign=top>
+        <td align=left valign=top>
         <input type=submit value=";
         print _("Add");
         print ">
@@ -4508,8 +4533,8 @@ class SipSettings {
         </form>
         <form action=$this->url method=post>
         <input type=hidden name=tab value=phonebook>
-        <td class=list_header align=right valign=top>
-        <input type=text size=20 name=search_text value=\"$search_text\">
+        <td align=right valign=top>
+        <input type=text size=20 name='search_text' value=\"$search_text\">
         ";
 
         $selected[$group]="selected";
@@ -4527,11 +4552,16 @@ class SipSettings {
         print "<input type=submit value=";
         print _("Search");
         print ">";
-        print "
-        <a href=$this->url&tab=phonebook&export=1 target=export>";
+        /*
+        if ($this->isEmbedded()) {
+        	print "<a href=$this->url&tab=phonebook&export=1>";
+        } else {
+        	print "<a href=$this->url&tab=phonebook&export=1 target=export>";
+        }
         print _("Export");
         print "</a>
-        </td>
+        */
+        print "</td>
         </form>
         </tr>
         </table>
@@ -4952,7 +4982,7 @@ class SipSettings {
 
         print "
         <tr>
-        <td class=border colspan=2 align=left>";
+        <td colspan=2 align=left>";
         print _("You can reject calls depending on the time of day and caller id. ");
         print _("You can create custom groups in the Contacts page like Family or Coworkers. ");
         print  "<p>";
@@ -4974,7 +5004,7 @@ class SipSettings {
 
         print "
         <tr>
-        <td class=border colspan=2 align=left>";
+        <td colspan=2 align=left>";
         print _("This will override the permanent rules for the chosen duration. ");
         print "
         </td>
@@ -4982,7 +5012,7 @@ class SipSettings {
         ";
 
         print "<tr>";
-        print "<td colspan=2 class=border>";
+        print "<td colspan=2>";
 
         print "<table border=0 width=100%>
             <tr>
@@ -5111,7 +5141,7 @@ class SipSettings {
 
         print "
         <tr valign=top>
-        <td colspan=2 class=border align=left valign=top>
+        <td colspan=2 align=left valign=top>
         ";
 
         print "<table border=0 width=100%>";
@@ -5309,7 +5339,7 @@ class SipSettings {
         ";
         print "
         <tr>
-        <td class=border colspan=2 align=left>";
+        <td colspan=2 align=left>";
         print _("Use %Number@% to match PSTN callers and user@domain to match SIP callers");
         print "
         </td>
@@ -5317,10 +5347,10 @@ class SipSettings {
         ";
 
         print "<tr>";
-        print "<td class=border align=left>";
+        print "<td align=left>";
         print _("SIP Address");
         print "</td>";
-        print "<td class=border align=left>
+        print "<td align=left>
         <input type=text size=35 name=rejectMembers[]>
         </td>";
         print "<tr>";
@@ -5563,14 +5593,14 @@ class SipSettings {
 
         printf ("
         <tr>
-        <td class=border>Note</td>
-        <td class=border>Activity</td>
+        <td>Note</td>
+        <td>Activity</td>
         </tr>");
 
         printf ("
         <tr>
-          <td class=border><input type=text size=50 name=note value='%s'>
-          <td class=border>
+          <td><input type=text size=50 name=note value='%s'>
+          <td>
           <select name=activity>
         <option>
         ",$this->presentity['note']);
@@ -5627,8 +5657,8 @@ class SipSettings {
             printf ("
             <tr>
             <input type=hidden name=watcher[] value=%s>
-            <td class=border><font color=%s>%s</font></td>
-            <td class=border>
+            <td><font color=%s>%s</font></td>
+            <td>
             <select name=watcher_status[]>
             ",
             $_watcher,
@@ -5667,8 +5697,8 @@ class SipSettings {
                 printf ("
                 <tr>
                 <input type=hidden name=watcher[] value=%s>
-                <td class=border>%s</td>
-                <td class=border>
+                <td>%s</td>
+                <td>
                 <select name=watcher_status[]>
                 ",$_tmp,$_tmp);
 
@@ -5696,8 +5726,8 @@ class SipSettings {
 
         printf ("
         <tr>
-        <td class=border><input type=text name=watcher[]></td>
-        <td class=border>
+        <td><input type=text name=watcher[]></td>
+        <td>
         <select name=watcher_status[]>
         ");
         $selected['deny']='selected';
@@ -5967,11 +5997,11 @@ class SipSettings {
 
         print "
         <tr>
-          <td class=border valign=top>";
+          <td valign=top>";
             print _("Profiles");
             printf ("
           </td>
-          <td class=border align=left>
+          <td align=left>
             Weekday:
             <input type=text size=10 maxsize=64 name=profileWeekday value='%s'>/
             <input type=text size=10 maxsize=64 name=profileWeekdayAlt value='%s'>
@@ -6101,11 +6131,11 @@ class SipSettings {
         } else {
             print "
             <tr>
-            <td class=border>";
+            <td>";
             print _("Extra Groups");
             print "
             </td>
-            <td class=border>";
+            <td>";
             printf ("<input type=text size=30 name=extra_groups value='%s'>",trim($extraGroups_text));
             print "
             </td>
