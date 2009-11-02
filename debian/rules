@@ -43,6 +43,7 @@ install: build
 	cp -a *.js debian/cdrtool/var/www/CDRTool/
 	cp -a timezones debian/cdrtool/var/www/CDRTool/
 	cp -a version debian/cdrtool/var/www/CDRTool/	
+	cp -a .htaccess debian/cdrtool/var/www/CDRTool/	
 	cp *.phtml debian/cdrtool/var/www/CDRTool/
 	cp *.css debian/cdrtool/var/www/CDRTool/
 	cp debian/changelog debian/cdrtool/var/www/CDRTool/doc/

@@ -5911,7 +5911,7 @@ class SipSettings {
 
     function getFileTemplate($name, $type="file") {
     
-        //dprint("getFileTemplate(name=$name, type=$type, path=$this->templates_path)");
+        dprint("getFileTemplate(name=$name, type=$type, path=$this->templates_path)");
 
         if ($type=='logo') {
             $extensions=array('png','gif','jpg');
@@ -6563,6 +6563,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $css    = $SipSettings->cssFile;
         include($header);
         include($css);
+
     }
 
     if ($_REQUEST['action']=="save settings") {

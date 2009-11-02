@@ -1,38 +1,9 @@
 <?
-/*
-    Copyright (c) 2009 AG Projects
-    http://ag-projects.com
-
-    This page provides functions for management of
-    SIP account settings on a remote NGNPro server,
-
-    The authentication is done using a TLS client 
-    certificate
-
-*/
-
-/*
-To require the TLS client certificate add to .htaccess:
-
-SSLRequireSSL
-SSLVerifyDepth 1
-
-SSLOptions +StdEnvVars
-SSLOptions +ExportCertData
-<Files sip_settings_x509.phtml>
-SSLVerifyClient require
-</Files>
-
-and to apache virtual hosts settings:
-
-SSLCACertificateFile  /etc/cdrtool/enrollment/rootCA.crt
-*/
-
 require("/etc/cdrtool/global.inc");
 require("/etc/cdrtool/ngnpro_engines.inc");
 require('sip_settings.php');
 
-if ($credentials=getSipAccountFromX509Certificate()) {
+if ($credentials=getSipAccountFromHTTPDigest()) {
     $account	 = $credentials['account'];
     $sip_engine  = $credentials['engine'];
     
@@ -40,15 +11,16 @@ if ($credentials=getSipAccountFromX509Certificate()) {
     $customer  	 = $credentials['customer'];
     $login_type  = "subscriber";
 } else {
-    die('X.509 credentials error');
+    die('HTP digest Credentials error');
 }
 
+$_class='SipSettings';
 $_reseller_class=$_class.$reseller;
 
 if (class_exists($_reseller_class)) {
 	$SipSettings_class=$_reseller_class;
 } else {
-	$SipSettings_class='SIPSettings';
+	$SipSettings_class=$_class;
 }
 
 $login_credentials=array(
@@ -56,7 +28,7 @@ $login_credentials=array(
                         'customer'       => $customer,
                         'login_type'     => $login_type,
                         'sip_engine'     => $sip_engine,
-                        'templates_path' => './resellers/template'
+                        'templates_path' => './templates'
 
 );
 
