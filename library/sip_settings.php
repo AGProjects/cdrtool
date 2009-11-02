@@ -3478,7 +3478,7 @@ class SipSettings {
         <input type=hidden name=tab value=prepaid>
         <input type=hidden name=issuer value=subscriber>
         <input type=hidden name=task value=Add>
-        <td class=list_header align=left><nobr>
+        <td align=left><nobr>
         ";
 
         print _("Card id");
@@ -3598,7 +3598,7 @@ class SipSettings {
         print "<td class=list_header>";
         print "</td>";
         print "<td class=list_header>";
-        print _("Date");
+        print _("Date and Time");
         print "</td>";
         print "<td class=list_header>";
         print _("Action");
@@ -4452,8 +4452,7 @@ class SipSettings {
         print "
         <tr>
         <td colspan=2 align=left>";
-        print _("You can organize, export and group your contacts. ");
-        print _("Groups can be used to Accept selected incoming calls. ");
+        print _("You can organize contacts into groups that can be used to accept incoming calls in Do Not Disturb section. ");
         print "
         </td>
         </tr>
@@ -5996,24 +5995,51 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <tr>
+        <tr class=even>
           <td valign=top>";
-            print _("Profiles");
+            print _("Weekdays");
             printf ("
           </td>
           <td align=left>
-            Weekday:
             <input type=text size=10 maxsize=64 name=profileWeekday value='%s'>/
             <input type=text size=10 maxsize=64 name=profileWeekdayAlt value='%s'>
-            Weekend:
+            ",
+            $this->billingProfiles->profileWeekday,
+            $this->billingProfiles->profileWeekdayAlt
+            );
+
+            print "
+          </td>
+        </tr>
+        ";
+
+        print "
+        <tr class=odd>
+          <td valign=top>";
+            print _("Weekends");
+            printf ("
+          </td>
+          <td align=left>
             <input type=text size=10 maxsize=64 name=profileWeekend value='%s'>/
             <input type=text size=10 maxsize=64 name=profileWeekendAlt value='%s'>
             ",
-            $this->billingProfiles->profileWeekday,
-            $this->billingProfiles->profileWeekdayAlt,
             $this->billingProfiles->profileWeekend,
             $this->billingProfiles->profileWeekendAlt
             );
+
+            print "
+          </td>
+        </tr>
+        ";
+
+        print "
+        <tr class=even>
+          <td valign=top>";
+            print _("Timezone");
+            printf ("
+          </td>
+          <td align=left>
+            ");
 
             if ($this->billingProfiles->timezone) {
                 $_timezone=$this->billingProfiles->timezone;
@@ -6021,13 +6047,13 @@ class SipSettings {
                 $_timezone=$this->resellerProperties['timezone'];
             }
 
-            print "<br>Timezone: ";
             $this->showTimezones('profileTimezone',$_timezone);
 
             print "
           </td>
         </tr>
         ";
+
     }
 
     function updateBillingProfiles() {
