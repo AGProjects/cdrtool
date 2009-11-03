@@ -55,6 +55,9 @@ class SipSettings {
     var $check_privacy_access_number    = "*68";
     var $reject_anonymous_access_number = "*69";
 
+	var $showBarringTab = false;
+	var $showPresenceTab = false;
+
     // end variables
 
     var $tab                       = "settings";
@@ -284,15 +287,16 @@ class SipSettings {
                           );
 
         if (in_array("free-pstn",$this->groups)) {
-            $this->tabs['barring']=_("Barring");
+            if ($this->showBarringTab) {
+            	$this->tabs['barring']=_("Barring");
+            }
         }
 
-        /*
         if ($this->presence_engine) {
-            $this->tabs['presence']=_("Presence");
+            if ($this->showPresenceTab) {
+            	$this->tabs['presence']=_("Presence");
+            }
         }
-        */
-
 
         $this->acceptDailyProfiles=array('127' => _('Every day'),
                                        '31'  => _('Weekday'),
@@ -3563,7 +3567,7 @@ class SipSettings {
     function getBalanceHistory() {
         $this->SipPort->addHeader($this->SoapAuth);
 
-        $result     = $this->SipPort->getCreditHistory($this->sipId,20);
+        $result     = $this->SipPort->getCreditHistory($this->sipId,200);
  
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
