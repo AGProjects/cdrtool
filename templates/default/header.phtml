@@ -1,7 +1,14 @@
-<HTML>
-<HEAD>
-    <TITLE><? print "$title"; ?>
-    </TITLE>
-</HEAD>
-<body marginwidth="15" leftmargin="15" link=#000066 vlink=#006666 text="black" bgcolor="white">
+<?
+print "<html>";
+print "<head>";
+print "<title>$title</title>";
 
+if ($autoRefeshTab) {
+	print "<meta http-equiv=refresh content=$autoRefeshTab>";
+}
+
+print "</head>";
+print "<body marginwidth=15 leftmargin=15 link=#000066>
+";
+
+?>

@@ -1,12 +1,11 @@
 <?
-
 /*
-      Copyright (c) 2007-2009 AG Projects
-      http://ag-projects.com
-      Author Adrian Georgescu
+Copyright (c) 2007-2009 AG Projects
+http://ag-projects.com
+Author Adrian Georgescu
 
-      This library provide the functions for managing properties
-      of SIP accounts retrieved from NGNPro
+This library provide the functions for managing properties
+of SIP accounts retrieved from NGNPro
 
 */
 
@@ -57,6 +56,8 @@ class SipSettings {
 
 	var $showBarringTab = false;
 	var $showPresenceTab = false;
+    var $firstTab = 'calls';
+    var $autoRefeshTab = 0;              // number of seconds after which to refresh tab content in the web browser
 
     // end variables
 
@@ -143,9 +144,9 @@ class SipSettings {
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
         $this->soapEngines        = $soapEngines;
 
-        $debug=sprintf("<font color=blue><p><b>Initialize class %s(%s)</b></font>",get_class($this),$account);
+        $debug=sprintf("<font color=blue><p><b>Initialize %s(%s)</b></font>",get_class($this),$account);
         dprint($debug);
-        dprint_r($loginCredentials);
+        //dprint_r($loginCredentials);
 
         $this->loginCredentials = &$loginCredentials;
 
@@ -187,12 +188,16 @@ class SipSettings {
         if ($_REQUEST['tab']) {
         	$this->tab                = $_REQUEST['tab'];
         } else {
-        	$this->tab                = 'calls';
+        	$this->tab                = $this->firstTab;
         }
 
         $this->initSoapClient();
 
         $this->getAccount($account);
+
+        if ($this->tab=='calls' && !$_REQUEST['export']) {
+        	$this->autoRefeshTab=180;
+        }
 
         if ($this->login_type == "admin") {
             $this->url=$this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&sip_engine=$this->sip_engine";
@@ -346,6 +351,9 @@ class SipSettings {
             $this->tabs['prepaid']=_("Credit");
         }
 
+		$_protocol=preg_match("/^(https?:\/\/)/",$_SERVER['SCRIPT_URI'],$m);
+        $this->absolute_url=$m[1].$_SERVER['HTTP_HOST'].$this->url;
+        //dprint($this->absolute_url);
     }
 
     function initSoapClient() {
@@ -674,7 +682,7 @@ class SipSettings {
             $this->Preferences[$_property->name]=$_property->value;
         }
 
-        dprint_r($this->Preferences);
+        //dprint_r($this->Preferences);
 
         if (!$this->Preferences['language']) {
             $this->Preferences['language'] ='en';
@@ -729,6 +737,7 @@ class SipSettings {
     }
 
     function showAccount() {
+        dprint('showAccount()');
 
         if (!$this->account) {
             print "<tr><td colspan=>";
@@ -788,7 +797,7 @@ class SipSettings {
     }
 
     function getDomainOwner ($domain='') {
-        dprint("getdomainOwner(domain=$domain)");
+        dprint("getdomainOwner($domain)");
 
         if ($this->SOAPversion < 2) return;
 
@@ -832,6 +841,7 @@ class SipSettings {
     }
 
     function getMobileNumber() {
+        dprint('getMobileNumber()');
         $this->mobile_number='';
 
         if ($this->Preferences['mobile_number']) {
@@ -852,12 +862,12 @@ class SipSettings {
             $lang = "en";
         }
 
-        dprint("Set language to $lang");
+        //dprint("Set language to $lang");
         changeLanguage($lang);
     }
 
     function getOwnerSettings($owner='') {
-        dprint("getOwnerSettings($owner, engine=$this->customer_engine)");
+        dprint("getOwnerSettings($owner)");
         if (!$owner) {
             return false;
         }
@@ -1050,7 +1060,7 @@ class SipSettings {
     }
 
     function getVoicemail () {
-        dprint("getVoicemail(engine=$this->voicemail_engine)");
+        dprint("getVoicemail()");
 
         $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
         $result     = $this->VoicemailPort->getAccount($this->sipId);
@@ -1266,10 +1276,10 @@ class SipSettings {
     }
 
     function getCustomerSettings () {
+        dprint("getCustomerSettings()");
         if (!$this->loginCredentials['customer']) return;
 
         $id=$this->loginCredentials['customer'];
-        dprint("getCustomerSettings($id,engine=$this->customer_engine)");
 
         $this->CustomerPort->addHeader($this->SoapAuthCustomer);
         $result     = $this->CustomerPort->getAccount(intval($this->loginCredentials['customer']));
@@ -1292,7 +1302,7 @@ class SipSettings {
     }
 
     function getResellerSettings () {
-        dprint("getResellerSettings($this->reseller,engine=$this->customer_engine)");
+        dprint("getResellerSettings()");
 
         $this->logoFile         = $this->getFileTemplate("logo","logo");
         $this->headerFile       = $this->getFileTemplate("header.phtml");
@@ -1330,7 +1340,7 @@ class SipSettings {
         $this->resellerProperties['language'] = $result->language;
         $this->resellerProperties['timezone'] = $result->timezone;
 
-        dprint_r($this->resellerProperties);
+        //dprint_r($this->resellerProperties);
 
         // overwrite settings from soap engine
         if ($this->resellerProperties['sip_proxy']) {
@@ -2406,7 +2416,6 @@ class SipSettings {
                 printf ("<option value=1 %s>%s",$selected_store_voicemail['email'],$_text);
                 printf ("<option value=0 %s>%s",$selected_store_voicemail['server'],_("Send messages by e-mail and store messages on the server"));
                 print "</select>";
-                print "<br>";
             } else {
                 printf (_("Voice messages are sent by email to %s"),$this->email);
             }
@@ -3565,6 +3574,7 @@ class SipSettings {
     }
 
     function getBalanceHistory() {
+        dprint("getBalanceHistory()");
         $this->SipPort->addHeader($this->SoapAuth);
 
         $result     = $this->SipPort->getCreditHistory($this->sipId,200);
@@ -3934,7 +3944,7 @@ class SipSettings {
 
 
     function getEnumMappings () {
-        dprint("getEnumMappings(engine=$this->enum_engine)");
+        dprint("getEnumMappings()");
 
 		$this->enums=array();
 
@@ -4287,7 +4297,7 @@ class SipSettings {
     }
 
     function getCallStatistics () {
-        dprint("getCallStatistics");
+        dprint("getCallStatistics()");
 
         $fromDate=mktime(0, 0, 0, date("m"), "01", date("Y"));
         $toDate=time();
@@ -4818,7 +4828,7 @@ class SipSettings {
         }
 
         $this->rejectMembers=$result;
-        dprint_r($this->rejectMembers);
+        //dprint_r($this->rejectMembers);
 
         return true;
     }
@@ -4885,7 +4895,6 @@ class SipSettings {
 
     function setAcceptRules() {
         dprint("setAcceptRules()");
-        //dprint_r($_REQUEST);
 
         $persistentAcceptArray=array();
         $temporaryAcceptArray=array();
@@ -4955,10 +4964,6 @@ class SipSettings {
 
         $rules=array("persistent" =>$persistentAcceptArray,
                      "temporary"  =>$temporaryAccept);
-
-        //dprint_r($rules);
-
-        dprint("setAcceptRules");
 
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->setAcceptRules($this->sipId,$rules);
@@ -5970,9 +5975,9 @@ class SipSettings {
     }
 
     function getBillingProfiles() {
+        dprint("getBillingProfiles()");
         // Get getBillingProfiles
         if ($this->SOAPversion < 2) return true;
-        dprint("getBillingProfiles()");
 
         $this->RatingPort->addHeader($this->SoapAuth);
         $result     = $this->RatingPort->getEntityProfiles("subscriber://".$this->account);
@@ -6571,8 +6576,14 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $title  = "SIP settings of $account";
         $header = $SipSettings->headerFile;
         $css    = $SipSettings->cssFile;
+
+		$autoRefeshTab=$SipSettings->autoRefeshTab;
+        $absolute_url= $SipSettings->absolute_url;
+
         include($header);
+        dprint("Header file $header included, refresh=$autoRefeshTab");
         include($css);
+        dprint("CSS file $css included");
 
     }
 
