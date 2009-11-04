@@ -4619,10 +4619,16 @@ class SipSettings {
                 <td>";
                 print $this->PhonebookEntries[$_entry]->uri;
 
-                printf ("</td>
-                <td valign=top>%s</td>
-                <td valign=top>",
-                $this->PhoneDialURL($this->PhonebookEntries[$_entry]->uri));
+                if (preg_match("/\%/",$this->PhonebookEntries[$_entry]->uri)) {
+                   printf ("</td>
+                   <td valign=top></td>
+                   <td valign=top>");
+                } else {
+                   printf ("</td>
+                   <td valign=top>%s</td>
+                   <td valign=top>",
+                   $this->PhoneDialURL($this->PhonebookEntries[$_entry]->uri));
+                }
 
                 if ($this->SOAPversion > 1) {
                     printf ("<input type=text name=name value='%s'>",$this->PhonebookEntries[$_entry]->name);
