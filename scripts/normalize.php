@@ -88,4 +88,6 @@ while (list($k,$v) = each($DATASOURCES)) {
     }
 }
 
+keepAliveRatingEngine();
+
 ?>

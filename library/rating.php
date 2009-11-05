@@ -6778,6 +6778,8 @@ class RatingEngine {
             return $this->showHelp();
         } else if ($NetFields['action'] == "reloadratingtables") {
             return $this->reloadRatingTables();
+        } else if ($NetFields['action'] == "keepalive") {
+            return $this->keepAlive();
         } else if ($NetFields['action'] == "reloadquota") {
             if (!$NetFields['account']) {
                 $log=sprintf ("Error: Missing Account parameter");
@@ -7025,6 +7027,22 @@ class RatingEngine {
 
         return round($maxduration);
     }
+
+    function keepAlive() {
+        $query=sprintf("select count(*) as c from log");
+    
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for keepalive query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE, $log);
+            return false;
+        } else {
+
+			$this->db->next_record();
+            $log=sprintf("Keepalive successful, %d logs available",$this->db->f('c'));
+            syslog(LOG_NOTICE, $log);
+            return true;
+        }
+    }
 }
 
 function reloadRatingEngineTables () {
@@ -7039,6 +7057,25 @@ function reloadRatingEngineTables () {
 
         if ($fp = fsockopen ($RatingEngine['socketIPforClients'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
         	fputs($fp, "ReloadRatingTables\n");
+	        fclose($fp);
+    	    return true;
+        }
+    }
+    return false;
+}
+
+function keepAliveRatingEngine() {
+    global $RatingEngine;
+    if (strlen($RatingEngine['socketIP']) && $RatingEngine['socketPort']) {
+
+		if ($RatingEngine['socketIP']=='0.0.0.0' || $RatingEngine['socketIP'] == '0') {
+        	$RatingEngine['socketIPforClients']= '127.0.0.1';
+        } else {
+        	$RatingEngine['socketIPforClients']=$RatingEngine['socketIP'];
+        }
+
+        if ($fp = fsockopen ($RatingEngine['socketIPforClients'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
+        	fputs($fp, "KeepAlive\n");
 	        fclose($fp);
     	    return true;
         }
