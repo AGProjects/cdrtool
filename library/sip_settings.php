@@ -6999,7 +6999,7 @@ class Enrollment {
     var $init=false;
     var $create_voicemail           = false;
     var $send_email_notification    = true;
-    var $create_email_alias         = true;
+    var $create_email_alias         = false;
 	var $create_customer            = true;
 
     function Enrollment() {
