@@ -1771,13 +1771,15 @@ class SipSettings {
                     print "
                     <tr>
                     <td>";
-                    print _("X.509 PEM format");
+                    print _("X.509 format");
                     printf ("
                     </td>
                     <td><a href=%s&action=get_crt>%s.crt</a>
                     </td>
                     </tr>
                     ",$this->url, $this->account);
+
+                    /*
                     print "
                     <tr>
                     <td>";
@@ -1790,6 +1792,8 @@ class SipSettings {
                     <tr>
                       <td height=3 colspan=2></td>
                     </tr>",$this->url, $this->account);
+                    */
+
                 }
             }
         }
