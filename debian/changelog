@@ -1,3 +1,25 @@
+cdrtool (6.9.9) unstable; urgency=low
+
+  * Added database keepalive features to workaround the 2006 mysql error
+  * Add description for how to customize cdrtool classes
+  * Added Fring UA images
+  * Added example in config about subclassing opensips class
+  * Replace geolocation lookup code with a function
+  * Hide Dialable URI if contains wildcards
+  * Hide barring tab and display more balance history entries
+  * Added comment about purpose of sip_ files
+  * Added sip enrollment
+  * Added sip settings pages using digest and x509 auth
+  * Improved look and feel of SIP settings page 
+  * Fixed overwriting of DNS record type
+  * Fixed display of geolocation in sip devices list
+  * Print home node unknown if lookup fails
+  * Use only first name when composing email notifications
+  * Save owner with DNS fancy records
+  * Fixed pstn rule selection box
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 09 Nov 2009 13:29:09 +0100
+
 cdrtool (6.9.8) unstable; urgency=low
 
   * Use the debian provided geoip database and library. See docs/Install.txt
