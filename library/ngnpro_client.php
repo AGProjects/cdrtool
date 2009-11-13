@@ -11771,6 +11771,7 @@ class Customers extends Records {
     }
 
     function showRecord($customer) {
+        //dprint_r($customer);
 
         $this->showRecordHeader($customer);
 

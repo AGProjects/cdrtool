@@ -4429,13 +4429,21 @@ class Media_trace {
 }
 
 include_once("phone_images.php");
-function getImageForUserAgent($agent) {
+function getImageForUserAgent($msg) {
     global $userAgentImages;
 
-    foreach ($userAgentImages as $agentRegexp => $image) {
-        if (preg_match("/(user-agent|server):.*$agentRegexp/i", $agent)) {
-            return $image;
+    $msg_lines=explode("\n",$msg);
+    foreach($msg_lines as $line) {
+        $els=explode(":",$line);
+        if (strtolower($els[0]) == 'user-agent' || strtolower($els[0]) == 'server') {
+            foreach ($userAgentImages as $agentRegexp => $image) {
+                if (preg_match("/^(user-agent|server):.*$agentRegexp/i", $line)) {
+                    return $image;
+                }
+            }
         }
+
+
     }
     return "unknown.png";
 }
