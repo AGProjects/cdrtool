@@ -5,7 +5,7 @@
     Author Adrian Georgescu
     
     This library provide the functions for managing properties
-    of SIP accounts retrieved from NGNPro
+    of SIP Accounts retrieved from NGNPro
 
 */
 
@@ -746,7 +746,7 @@ class SipSettings {
 
         if (!$this->account) {
             print "<tr><td colspan=>";
-            print _("Error: SIP account information cannot be retrieved. ");
+            print _("Error: SIP Account information cannot be retrieved. ");
             return 0;
             print "</td></tr>";
         }
@@ -1420,7 +1420,7 @@ class SipSettings {
 
         if ($this->pstn_access) {
             $this->availableGroups['free-pstn'] = array("Group"=>"free-pstn",
-                                                "WEBName" =>   sprintf(_("Access to PSTN")),
+                                                "WEBName" =>   sprintf(_("PSTN Access")),
                                                 "WEBComment"=> sprintf(_("Caller-ID")),
                                                 "SubscriberMayEditIt" => "0",
                                                 "SubscriberMaySeeIt"  => 1
@@ -1508,7 +1508,7 @@ class SipSettings {
             $value="<voice-mailbox>";
         }
 
-        return array("name"  => sprintf (_("Voice mailbox")),
+        return array("name"  => sprintf (_("Voice Mailbox")),
                    "value" => $value,
                    "description"  => "Voicemail");
     }
@@ -1708,7 +1708,7 @@ class SipSettings {
 
 
             } else {
-                print _("Invalid request");
+                print _("Invalid Request");
                 return false;
             }
 
@@ -1751,7 +1751,7 @@ class SipSettings {
         print "
         <tr class=even>
         <td>";
-        print _("Address");
+        print _("SIP Address");
         print "
         </td>
         <td>sip:$this->account
@@ -1824,7 +1824,7 @@ class SipSettings {
             print "
             <tr>
               <td>";
-              print _("Caller Id");
+              print _("Caller-ID");
               print "</td>
               <td>$this->rpid</td>
             </tr>
@@ -1953,7 +1953,7 @@ class SipSettings {
                     print "
                     <tr>
                     <td>";
-                    print _("X.509 format");
+                    print _("X.509 Format");
                     printf ("
                     </td>
                     <td><a href=%s&action=get_crt>%s.crt</a>
@@ -1989,7 +1989,7 @@ class SipSettings {
         ";
 
         if ($this->email)  {
-            printf (_("Email SIP account information to %s"),$this->email);
+            printf (_("Email SIP Account information to %s"),$this->email);
             print "
             <input type=hidden name=action value=\"send email\">
             <input type=submit value=";
@@ -2090,7 +2090,7 @@ class SipSettings {
 
         print "<input type=text size=15 name=sip_password>";
         print _("Enter text to change the current password");
-        printf ("\n\n<!-- \nSIP account password: %s\n -->\n\n",$this->password);
+        printf ("\n\n<!-- \nSIP Account password: %s\n -->\n\n",$this->password);
 
         /*
         print _("Language");
@@ -2131,7 +2131,7 @@ class SipSettings {
         print " ";
         $timestamp=time();
         $LocalTime=getLocalTime($this->timezone,$timestamp);
-        print _("Local time");
+        print _("Local Time");
         print ": $LocalTime";
         //dprint_r($this->availableGroups);
         print "
@@ -2330,36 +2330,42 @@ class SipSettings {
                         printf ("
                         <select name=%s>
                         <option value=''>Active
-                        <option value='customer' %s> Blocked by customer (%d)
-                        <option value='reseller' %s> Blocked by reseller (%d)
+                        <option value='customer' %s> %s (%d)
+                        <option value='reseller' %s> %s (%d)
                         </select>
                         ",
                         $key,
                         $selected_blocked_by['customer'],
+                        _("Blocked by Customer"),
                         $this->customer,
                         $selected_blocked_by['reseller'],
+                        _("Blocked by Reseller"),
                         $this->reseller
                         );
                     } else if ($this->reseller) {
                         printf ("
                         <select name=%s>
-                        <option value=''>Active
-                        <option value='reseller' %s> Blocked by reseller (%d)
+                        <option value=''>%s
+                        <option value='reseller' %s> %s (%d)
                         </select>
                         ",
                         $key,
+                        _("Active"),
                         $selected_blocked_by['reseller'],
+                        _("Blocked by Reseller"),
                         $this->reseller
                         );
                     } else {
                         printf ("
                         <select name=%s>
-                        <option value=''>Active
-                        <option value='reseller' %s> Blocked
+                        <option value=''>%s
+                        <option value='reseller' %s> %s
                         </select>
                         ",
                         $key,
-                        $selected_blocked_by['reseller']
+                        _("Active"),
+                        $selected_blocked_by['reseller'],
+                        _("Blocked")
                         );
                     }
 
@@ -2379,7 +2385,7 @@ class SipSettings {
                            _("Blocked")
                            );
                        } else {
-                           print _("Blocked by reseller");
+                           print _("Blocked by Reseller");
                        }
                    } else {
                        printf ("
@@ -2568,7 +2574,9 @@ class SipSettings {
 
         if ($this->voicemail['Account'] &&
             ($this->login_type == 'admin' || $this->login_type == 'reseller')) {
-            printf (_(" (Mailbox %s) "),$this->voicemail['Account']);
+            print " (";
+            print _("Mailbox");
+            printf (" %s) ",$this->voicemail['Account']);
         }
 
         print "
@@ -2923,7 +2931,7 @@ class SipSettings {
         $this->properties=$result->properties;
 
         $this->availableGroups['voicemail']=array("Group"=>"voicemail",
-                                    "WEBName" =>sprintf (_("Voice mailbox")),
+                                    "WEBName" =>sprintf (_("Voice Mailbox")),
                                     "SubscriberMayEditIt"=>"1",
                                     "SubscriberMaySeeIt"=>0
                                     );
@@ -3594,7 +3602,7 @@ class SipSettings {
             if ($_done && $_REQUEST['notify']) {
                 $subject=sprintf ("SIP Account %s balance update",$this->account);
         
-                $body="Your SIP account balance has been updated. ".
+                $body="Your SIP Account balance has been updated. ".
                 "For more details go to $this->sip_settings_page?tab=credit";
         
                 if (mail($this->email, $subject, $body, "From: $this->support_email")) {
@@ -3618,7 +3626,8 @@ class SipSettings {
             print "
             <tr>
             <td align=left>";
-            print _("Your current balance is: ");
+            print _("Your current balance is");
+            print ": ";
             printf ("%.2f %s ",$this->prepaidAccount->balance,$this->currency);
             print "</td><td align=right>
             </td>
@@ -3886,7 +3895,7 @@ class SipSettings {
             <td align=right></td>
             </tr>
             ",
-            _("Total credit"),
+            _("Total Credit"),
             number_format($total_credit,4)
             );
         }
@@ -3902,7 +3911,7 @@ class SipSettings {
             <td align=right></td>
             </tr>
             ",
-            _("Total debit"),
+            _("Total Debit"),
             number_format($total_debit,4)
             );
         }
@@ -3942,7 +3951,7 @@ class SipSettings {
         print ",";
         print _("Value");
         print ",";
-        print _("Final balance");
+        print _("Final Balance");
         print ("\n");
 
         foreach ($this->balance_history as $_line) {
@@ -4310,7 +4319,7 @@ class SipSettings {
                     print _("Summary");
                     print "</a>";
                 } else {
-                    print _("Usage data");
+                    print _("Usage Data");
                 }
                 print "
               </td>
@@ -5204,7 +5213,7 @@ class SipSettings {
         print "
         <tr>
         <td colspan=2 align=left>";
-        print _("You can reject calls depending on the time of day and Caller-Id. ");
+        print _("You can reject calls depending on the time of day and Caller-ID. ");
         print _("You can create custom groups in the Contacts page like Family or Coworkers. ");
         print  "<p>";
         print _("Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. ");
@@ -5372,7 +5381,7 @@ class SipSettings {
         print _("Days");
         print "</td>
         <td colspan=2>";
-        print _("Time interval");
+        print _("Time Interval");
         print "</td>
         <td colspan=3>";
         print _("Groups");
@@ -5562,7 +5571,7 @@ class SipSettings {
         print "
         <tr>
         <td colspan=2 align=left>";
-        print _("Use %Number@% to match PSTN numbers and user@domain to match SIP addresses");
+        print _("Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses");
         print "
         </td>
         </tr>
@@ -5648,7 +5657,7 @@ class SipSettings {
             return false;
         }
 
-        $subject = "SIP account settings of $this->name";
+        $subject = "SIP Account settings of $this->name";
 
         $tpl = $this->getEmailTemplate($this->reseller, $this->Preferences['language']);
 
@@ -5687,22 +5696,22 @@ class SipSettings {
         }
 
         if ($accept_temporary_remain && !is_numeric($accept_temporary_remain)) {
-            $this->error=_("Invalid expiration period. ");
+            $this->error=_("Invalid Expiration Period");
             return false;
         }
 
         if ($quota && !is_numeric($quota) && !is_float($quota)) {
-            $this->error=_("Invalid quota. ");
+            $this->error=_("Invalid Quota");
             return false;
         }
 
         if (!$timezone && !$this->timezone) {
-            $this->error=_("Missing time zone. ");
+            $this->error=_("Missing Timezone");
             return false;
         }
 
         if (!$this->checkEmail($mailto)) {
-            $this->error=_("Invalid e-mail address. ");
+            $this->error=_("Invalid E-mail Address");
             return false;
         }
 
@@ -6607,7 +6616,7 @@ function getSipAccountFromX509Certificate() {
      $domain= $a[1];
 
      if (count($a) !=2 ) {
-         print _("No SIP address available. ");
+         print _("No SIP Address available. ");
          return false;
      }
 
@@ -7025,7 +7034,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
             $_ret=false;
         } else {
             $_ret=true;
-            $_msg=sprintf(_('Caller-Id is now hidden for outgoing calls'));
+            $_msg=sprintf(_('Caller-ID is now hidden for outgoing calls'));
         }
 
         $return=array('success'       => $_ret,
@@ -7043,14 +7052,14 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
             $error_code = $result->getCode();
             if ($error_fault->detail->exception->errorcode == 1031) {
                 $_ret=true;
-                $_msg=sprintf(_('Caller-Id is now visible for outgoing calls'));
+                $_msg=sprintf(_('Caller-ID is now visible for outgoing calls'));
             } else {
                 $_msg=sprintf ("Error (SipPort): %s (%s): %s",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 $_ret=false;
             }
         } else {
             $_ret=true;
-            $_msg=sprintf(_('Caller-Id is now visible for outgoing calls'));
+            $_msg=sprintf(_('Caller-ID is now visible for outgoing calls'));
         }
 
         $return=array('success'       => $_ret,
@@ -7401,7 +7410,7 @@ class Enrollment {
             }
         }
 
-        // create SIP account
+        // create SIP Account
         $sipEngine           = 'sip_accounts@'.$this->sipEngine;
 
         $this->SipSoapEngine = new SoapEngine($sipEngine,$this->soapEngines,$this->sipLoginCredentials);
