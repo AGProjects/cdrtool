@@ -1,8 +1,8 @@
-nlsdir       = /var/www/prj/locale
+nlsdir       = /var/www/CDRTool/po/locale
 
 top_builddir = /var/www/CDRTool
 
-CATALOGS = ro.mo nl.mo de.mo
+CATALOGS = ro.mo nl.mo es.mo
 
 .SUFFIXES: .po .mo
 
