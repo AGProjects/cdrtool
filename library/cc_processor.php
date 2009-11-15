@@ -15,8 +15,8 @@ setlocale(LC_MONETARY, 'en_US');
 
 class CreditCardProcessor {
     // default cart items, must be set by external application after instantiating this class
-    var $cart_items      = array('service1'=>array('cost'=>10,'description'=>'First Item'),
-                                 'service2'=>array('cost'=>20,'description'=>'Second Item')
+    var $cart_items      = array('service1'=>array('cost'=>10,'description'=>_('First Item')),
+                                 'service2'=>array('cost'=>20,'description'=>_('Second Item'))
                                  );
 
     // html hidden elements that need to be preserved between submits by the application that uses this form
@@ -628,7 +628,7 @@ class CreditCardProcessor {
 
 
             $page_body_content .= "<tr>\n";
-            $page_body_content .= sprintf("<td colspan=\"2\" class=%s><b>Billing Address</b></td>\n",$this->chapter_class);
+            $page_body_content .= sprintf("<td colspan=\"2\" class=%s><b>%s</b></td>\n",$this->chapter_class,_("Billing Address"));
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
             $page_body_content .= sprintf("<td valign=top>%s</td>\n",_("Address"));
@@ -686,7 +686,8 @@ class CreditCardProcessor {
         } else{
             $page_body_content  = "<html><head></head>";
             $page_body_start    = "<body>";
-            $page_body_content  = "You have no items in your cart. Please <a href=\"javascript:history.go(-1);\">Return</a>";
+            $page_body_content  = _("You have no items in your cart. ");
+            $page_body_content  .= "<a href=\"javascript:history.go(-1);\">"._("Go Back")."</a>";
             $page_body_close    = "</body></html>";
         }
 
@@ -708,40 +709,40 @@ class CreditCardProcessor {
         if($post_vars['amount'] > 0){
             $amount = $post_vars['amount'];
         }else{
-            $errors = array_merge($errors,array('amount'=>array('field'=>'Cart Amount','desc'=>'Amount cannot be zero (0)')));
+            $errors = array_merge($errors,array('amount'=>array('field'=>'Cart Amount','desc'=>_('Amount cannot be zero'))));
         }
         // check first name
         if(strlen(str_replace(" ", "", filter_var($post_vars['firstName'], FILTER_SANITIZE_STRING))) < 2 || is_string($post_vars['firstName']) == false){
-            $errors = array_merge($errors,array('firstname'=>array('field'=>'First Name','desc'=>'Invalid First Name provided')));
+            $errors = array_merge($errors,array('firstname'=>array('field'=>'First Name','desc'=>_('Invalid First Name provided'))));
         }
         // check last name
         if(strlen(str_replace(" ", "", filter_var($post_vars['lastName'], FILTER_SANITIZE_STRING))) < 2 || is_string($post_vars['lastName']) == false){
-            $errors = array_merge($errors,array('lastname'=>array('field'=>'Last Name','desc'=>'Invalid Last Name provided')));
+            $errors = array_merge($errors,array('lastname'=>array('field'=>'Last Name','desc'=>_('Invalid Last Name provided'))));
         }
         // check email
         if(strlen(str_replace(" ", "", filter_var($post_vars['emailAddress'], FILTER_SANITIZE_EMAIL))) < 6){
-            $errors = array_merge($errors,array('email'=>array('field'=>'Email','desc'=>'Invalid Email Address provided')));
+            $errors = array_merge($errors,array('email'=>array('field'=>'Email','desc'=>_('Invalid Email Address provided'))));
         }
         // check card number
         if(strlen(str_replace(" ", "", filter_var($post_vars['creditCardNumber'], FILTER_SANITIZE_NUMBER_INT))) < 16 || $post_vars['creditCardNumber'] == 0){
-            $errors = array_merge($errors,array('ccnumber'=>array('field'=>'Card Number','desc'=>'Invalid Credit Card Number')));
+            $errors = array_merge($errors,array('ccnumber'=>array('field'=>'Card Number','desc'=>_('Invalid Credit Card Number'))));
         }
         // check expiration
         $time_from_exp = mktime(0, 0, 0, $post_vars['expDateMonth'], 31, $post_vars['expDateYear']);
         if(time() > $time_from_exp){
-            $errors = array_merge($errors,array('ccexp'=>array('field'=>'Card Expiration','desc'=>'Invalid Credit Card Expiration Date')));
+            $errors = array_merge($errors,array('ccexp'=>array('field'=>'Card Expiration','desc'=>_('Invalid Credit Card Expiration Date'))));
         }
         // check card verify code
         if(strlen(filter_var($post_vars['cvv2Number'], FILTER_SANITIZE_NUMBER_INT)) < 3 || $post_vars['cvv2Number'] < 100){
-            $errors = array_merge($errors,array('ccvn'=>array('field'=>'Card Verification Number','desc'=>'Invalid Card Verification Number')));
+            $errors = array_merge($errors,array('ccvn'=>array('field'=>'Card Verification Number','desc'=>_('Invalid Card Verification Number'))));
         }
         // check address line 1
         if(strlen(str_replace(" ", "", filter_var($post_vars['address1'], FILTER_SANITIZE_STRING))) < 5){
-            $errors = array_merge($errors,array('address1'=>array('field'=>'Address','desc'=>'Invalid Address')));
+            $errors = array_merge($errors,array('address1'=>array('field'=>'Address','desc'=>_('Invalid Address'))));
         }
         // check city
         if(strlen(str_replace(" ","",$post_vars['city'])) < 2 || !is_string($post_vars['city'])){
-            $errors = array_merge($errors,array('city'=>array('field'=>'City','desc'=>'Invalid City')));
+            $errors = array_merge($errors,array('city'=>array('field'=>'City','desc'=>_('Invalid City'))));
         }
         return $errors;
     }
@@ -750,11 +751,11 @@ class CreditCardProcessor {
         dprint("displayProcessErrors()");
 
         $page_body_content .= "<table>\n";
-        $page_body_content .= "<tr><td colspan=\"2\">Errors occured:</td></tr>\n";
+        $page_body_content .= "<tr><td colspan=\"2\">"._("Error").":</td></tr>\n";
         foreach($arr_errors as $arr_error => $error_desc){
             $page_body_content .= "<tr><td>".$error_desc['field'].":</td><td>".$error_desc['desc']."</td></tr>\n";
         }
-        $page_body_content .= "<tr><td colspan=\"2\"><a href=\"javascript:history.go(-1);\">Go Back</a>, correct the errors and re-submit.</td></tr>\n";
+        $page_body_content .= "<tr><td colspan=\"2\"><a href=\"javascript:history.go(-1);\">"._("Go Back")."</a>, "._("correct the errors and re-submit. ")."</td></tr>\n";
         $page_body_content .= "</table>\n";
         return $page_body_content;
     }

@@ -944,17 +944,13 @@ function unLockTables ($dbid) {
 }
 
 function changeLanguage($lang='en',$domain='cdrtool') {
+    // run dpkg-reconfigure locales and select support languages .utf8
+
     $lang = languageCodeFor(isset($lang) ? $lang : 'en');
-    //print "$lang<br>";
-    //putenv("LANG=$lang");
-    //putenv("LC_ALL=$lang");
-    
-    //$domain = 'cdrtool';   
-    $nlspath = '/var/www/CDRTool/po/locale';
-    //print "setlang: $lang";
-    setlocale(LC_ALL, $lang); // "" to use environment vars, else $lang
-    //print("$domain, $nlspath");
-    bindtextdomain($domain, $nlspath);
+    $lang.='.utf8';
+    setlocale(LC_ALL, $lang); 
+    bindtextdomain($domain, '/var/www/CDRTool/po/locale');
+    bind_textdomain_codeset($domain,'UTF-8');
     textdomain($domain);
 }
 

@@ -7,7 +7,7 @@ msgstr ""
 "Last-Translator: Adrian Georgescu <ag@ag-projects.com>\n"
 "Language-Team: language@ag-projects.com\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 # SOME DESCRIPTIVE TITLE.
@@ -211,7 +211,7 @@ msgstr "Mobil %s"
 #: /var/www/CDRTool/library/sip_settings.php:1217
 #, php-format
 msgid "Other"
-msgstr "Alt(a)"
+msgstr "Altceva"
 
 #: /var/www/CDRTool/library/sip_settings.php:1325
 #: /var/www/CDRTool/library/sip_settings.php:1423
@@ -652,12 +652,12 @@ msgstr "Primul / Ultimul apel"
 #: /var/www/CDRTool/library/sip_settings.php:4348
 #, php-format
 msgid "Incoming"
-msgstr "Primite"
+msgstr "Apeluri Primite"
 
 #: /var/www/CDRTool/library/sip_settings.php:4397
 #, php-format
 msgid "Outgoing"
-msgstr "Facute"
+msgstr "Apeluri Facute"
 
 #: /var/www/CDRTool/library/sip_settings.php:4685
 msgid "You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. "
@@ -703,7 +703,7 @@ msgstr "Nu Deranja"
 
 #: /var/www/CDRTool/library/sip_settings.php:5216
 msgid "You can reject calls depending on the time of day and Caller-ID. "
-msgstr "Poti rejecta apeluri in functia de ora si apelant."
+msgstr "Poti rejecta apeluri in functia de ora si apelant. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5217
 msgid "You can create custom groups in the Contacts page like Family or Coworkers. "
@@ -711,7 +711,7 @@ msgstr "Poti crea grupuri noi in pagina de Contacte."
 
 #: /var/www/CDRTool/library/sip_settings.php:5219
 msgid "Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. "
-msgstr "Apelanti rejectati sint rerutati in functie de conditia Nedisponibil din pagina de Rerutare."
+msgstr "Apelantii rejectati sint rutati in functie de conditia Ne-Disponibil din pagina de Redirectare. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5222
 #, php-format
@@ -725,7 +725,7 @@ msgstr "Regula Temporara"
 
 #: /var/www/CDRTool/library/sip_settings.php:5238
 msgid "This will override the permanent rules for the chosen duration. "
-msgstr "Regulile permanente vor fi evitate pentru durata aleasa. "
+msgstr "Regulile permanente nu vor fi folosite pentru durata aleasa. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5251
 msgid "Duration"
@@ -769,7 +769,7 @@ msgstr "Apelanti Rejectati"
 
 #: /var/www/CDRTool/library/sip_settings.php:5574
 msgid "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
-msgstr "Foloseste %Numar@% pentru a filtra numere de telefon sau user@domeniu pentru a filtra adrese SIP"
+msgstr "Foloseste %Numar@% pentru Numere de Telefon sau user@domeniu pentru adrese SIP"
 
 #: /var/www/CDRTool/library/sip_settings.php:5655
 msgid "Please fill in the e-mail address. "

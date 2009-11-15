@@ -7,7 +7,8 @@ CATALOGS = ro.mo nl.mo es.mo
 .SUFFIXES: .po .mo
 
 POTFILES  = \
-	$(top_builddir)/library/sip_settings.php
+	$(top_builddir)/library/sip_settings.php \
+	$(top_builddir)/library/cc_processor.php
 .po.mo: 
 	msgfmt -o $@ $<
 
