@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: 1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-11-15 20:47+0100\n"
-"PO-Revision-Date: 2009-11-15 18:35+0100\n"
+"PO-Revision-Date: 2009-11-15 20:52+0100\n"
 "Last-Translator: Adrian Georgescu <ag@ag-projects.com>\n"
 "Language-Team: language@ag-projects.com\n"
 "MIME-Version: 1.0\n"
@@ -235,7 +235,7 @@ msgstr "Casuta Vocala"
 
 #: /var/www/CDRTool/library/sip_settings.php:1594
 msgid "PSTN Termination Credit"
-msgstr ""
+msgstr "Credit Apeluri Telefonice"
 
 #: /var/www/CDRTool/library/sip_settings.php:1650
 #, php-format
@@ -373,7 +373,7 @@ msgstr "Introduce text pentru a schimba parola"
 
 #: /var/www/CDRTool/library/sip_settings.php:2103
 msgid "Language"
-msgstr ""
+msgstr "Limba"
 
 #: /var/www/CDRTool/library/sip_settings.php:2130
 #: /var/www/CDRTool/library/sip_settings.php:6281
@@ -672,12 +672,8 @@ msgid "Outgoing"
 msgstr "Apeluri Facute"
 
 #: /var/www/CDRTool/library/sip_settings.php:4690
-msgid ""
-"You can organize contacts into groups that can be used to accept incoming "
-"calls in Don't Disturb section. "
-msgstr ""
-"Poti organiza contactele in grupuri care poti fi folosite in sectiunea Nu "
-"Deranja."
+msgid "You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. "
+msgstr "Poti organiza contactele in grupuri care poti fi folosite in sectiunea Nu Deranja."
 
 #: /var/www/CDRTool/library/sip_settings.php:4764
 msgid "(wildcard %)"
@@ -722,17 +718,12 @@ msgid "You can reject calls depending on the time of day and Caller-ID. "
 msgstr "Poti rejecta apeluri in functia de ora si apelant. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5222
-msgid ""
-"You can create custom groups in the Contacts page like Family or Coworkers. "
+msgid "You can create custom groups in the Contacts page like Family or Coworkers. "
 msgstr "Poti crea grupuri noi in pagina de Contacte."
 
 #: /var/www/CDRTool/library/sip_settings.php:5224
-msgid ""
-"Rejected calls are diverted based on the Unavailable condition in the Call "
-"Forwarding page. "
-msgstr ""
-"Apelantii rejectati sint rutati in functie de conditia Ne-Disponibil din "
-"pagina de Redirectare. "
+msgid "Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. "
+msgstr "Apelantii rejectati sint rutati in functie de conditia Ne-Disponibil din pagina de Redirectare. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5227
 #, php-format
@@ -789,11 +780,8 @@ msgid "Rejected Callers"
 msgstr "Apelanti Rejectati"
 
 #: /var/www/CDRTool/library/sip_settings.php:5579
-msgid ""
-"Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
-msgstr ""
-"Foloseste %Numar@% pentru Numere de Telefon sau user@domeniu pentru adrese "
-"SIP"
+msgid "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
+msgstr "Foloseste %Numar@% pentru Numere de Telefon sau user@domeniu pentru adrese SIP"
 
 #: /var/www/CDRTool/library/sip_settings.php:5660
 msgid "Please fill in the e-mail address. "
@@ -930,76 +918,68 @@ msgstr "S-au schimbat regulile de rutare %s"
 
 #. default cart items, must be set by external application after instantiating this class
 #: /var/www/CDRTool/library/cc_processor.php:18
-#, fuzzy
 msgid "First Item"
-msgstr "Prenume"
+msgstr "Primul Articol"
 
 #: /var/www/CDRTool/library/cc_processor.php:19
 msgid "Second Item"
-msgstr ""
+msgstr "Al doilea produs"
 
 #: /var/www/CDRTool/library/cc_processor.php:526
 msgid "Shopping Cart"
-msgstr ""
+msgstr "Cos de Cumparaturi"
 
 #: /var/www/CDRTool/library/cc_processor.php:560
-#, fuzzy
 msgid "Total Due"
-msgstr "Debit Total"
+msgstr "Total"
 
 #: /var/www/CDRTool/library/cc_processor.php:565
 msgid "Credit Card Details"
-msgstr ""
+msgstr "Detalii Credit Card"
 
 #: /var/www/CDRTool/library/cc_processor.php:568
-#, fuzzy
 msgid "Card Type"
-msgstr "ID Card"
+msgstr "Tip Card"
 
 #: /var/www/CDRTool/library/cc_processor.php:583
-#, fuzzy
 msgid "Expiration Date"
-msgstr "Perioada Expirare Invalida"
+msgstr "Data Expirare"
 
 #: /var/www/CDRTool/library/cc_processor.php:609
-#, fuzzy
 msgid "Card Verification Number"
-msgstr "Numar Card"
+msgstr "Numar Verificare Card"
 
 #: /var/www/CDRTool/library/cc_processor.php:614
 msgid "Card Holder Information"
-msgstr ""
+msgstr "Informatii Proprietar Card"
 
 #: /var/www/CDRTool/library/cc_processor.php:631
-#, fuzzy
 msgid "Billing Address"
-msgstr "Adresa Email"
+msgstr "Adresa Facturare"
 
 #: /var/www/CDRTool/library/cc_processor.php:634
 msgid "Address"
 msgstr "Adresa"
 
 #: /var/www/CDRTool/library/cc_processor.php:646
-#, fuzzy
 msgid "City"
-msgstr "Credit"
+msgstr "Oras"
 
 #: /var/www/CDRTool/library/cc_processor.php:650
 msgid "Country"
-msgstr ""
+msgstr "Tara"
 
 #: /var/www/CDRTool/library/cc_processor.php:665
-#, fuzzy
 msgid "State"
-msgstr "Stare"
+msgstr "Stat"
 
 #: /var/www/CDRTool/library/cc_processor.php:671
 msgid "Postcode"
-msgstr ""
+msgstr "Cod Postal"
 
 #: /var/www/CDRTool/library/cc_processor.php:675
 msgid "Purchase"
-msgstr ""
+msgstr "Cumpara"
 
 #: /var/www/CDRTool/library/cc_processor.php:689
 msgid "You have no items in your cart. "
@@ -1008,57 +988,52 @@ msgstr ""
 #: /var/www/CDRTool/library/cc_processor.php:690
 #: /var/www/CDRTool/library/cc_processor.php:758
 msgid "Go Back"
-msgstr ""
+msgstr "Inapoi"
 
 #: /var/www/CDRTool/library/cc_processor.php:712
 msgid "Amount cannot be zero"
-msgstr ""
+msgstr "Totalul nu poate fi zero"
 
 #: /var/www/CDRTool/library/cc_processor.php:716
-#, fuzzy
 msgid "Invalid First Name provided"
-msgstr "Perioada Expirare Invalida"
+msgstr "Prenume Invalid"
 
 #: /var/www/CDRTool/library/cc_processor.php:720
 msgid "Invalid Last Name provided"
-msgstr ""
+msgstr "Nume Invalid"
 
 #: /var/www/CDRTool/library/cc_processor.php:724
-#, fuzzy
 msgid "Invalid Email Address provided"
 msgstr "Adresa Email Invalida"
 
 #: /var/www/CDRTool/library/cc_processor.php:728
 msgid "Invalid Credit Card Number"
-msgstr ""
+msgstr "Numar Credit Card Invalid"
 
 #: /var/www/CDRTool/library/cc_processor.php:733
-#, fuzzy
 msgid "Invalid Credit Card Expiration Date"
-msgstr "Perioada Expirare Invalida"
+msgstr "Data Expirare Credit Card Invalida"
 
 #: /var/www/CDRTool/library/cc_processor.php:737
 msgid "Invalid Card Verification Number"
-msgstr ""
+msgstr "Numar Verificare Card Invalid"
 
 #: /var/www/CDRTool/library/cc_processor.php:741
-#, fuzzy
 msgid "Invalid Address"
-msgstr "Adresa Email Invalida"
+msgstr "Adresa Invalida"
 
 #: /var/www/CDRTool/library/cc_processor.php:745
-#, fuzzy
 msgid "Invalid City"
-msgstr "Cerere Invalida"
+msgstr "Oras Invalida"
 
 #: /var/www/CDRTool/library/cc_processor.php:754
-#, fuzzy
 msgid "Error"
-msgstr "Eroare: %s"
+msgstr "Eroare"
 
 #: /var/www/CDRTool/library/cc_processor.php:758
 msgid "correct the errors and re-submit. "
-msgstr ""
+msgstr "corecteaza erorile si reincearca."
 
 #~ msgid "Voice mailbox"
 #~ msgstr "Casuta vocal"
+
