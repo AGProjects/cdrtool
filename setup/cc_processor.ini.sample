@@ -1,0 +1,16 @@
+[api_settings_section]
+library_path = "/var/www/CDRTool/library/paypal_lib"
+transaction_type = "Sale"
+sender_email = "billing@example.com"
+
+[paypal_login]
+pp_username = "paypal_account1"
+pp_pass = "xyz"
+pp_signature = "xyw"
+
+[mysqli_connection]
+sql_host = "db"
+sql_user = "cdradmin"
+sql_pw = "PASSWORD"
+sql_db = "cdrtool"
+aes_enc_pwd = "xyz"
