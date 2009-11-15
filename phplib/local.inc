@@ -943,7 +943,30 @@ function unLockTables ($dbid) {
 	$dbid->query("unlock tables");
 }
 
-function changeLanguage() {
+function changeLanguage($lang='en',$domain='cdrtool') {
+    $lang = languageCodeFor(isset($lang) ? $lang : 'en');
+    //print "$lang<br>";
+    //putenv("LANG=$lang");
+    //putenv("LC_ALL=$lang");
+    
+    //$domain = 'cdrtool';   
+    $nlspath = '/var/www/CDRTool/po/locale';
+    //print "setlang: $lang";
+    setlocale(LC_ALL, $lang); // "" to use environment vars, else $lang
+    //print("$domain, $nlspath");
+    bindtextdomain($domain, $nlspath);
+    textdomain($domain);
+}
+
+// return full language code for given 2 letter language code
+function languageCodeFor($lang='en') {
+    $lang = isset($lang) ? strtolower($lang) : 'en';
+    switch ($lang) {
+        case 'en': return 'en_US'; // this can be C or en_US
+        case 'ja': return 'ja_JP';
+        default  : return ($lang . '_' . strtoupper($lang));
+    }
+    return 'C'; // this will never be reached
 }
 
 function RandomString($len=11) {

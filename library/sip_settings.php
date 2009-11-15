@@ -861,7 +861,7 @@ class SipSettings {
             $lang = "en";
         }
 
-        //dprint("Set language to $lang");
+        //print("Set language to $lang");
         changeLanguage($lang);
     }
 
@@ -2049,7 +2049,7 @@ class SipSettings {
         if ($this->login_type != "subscriber" ) {
     
             print "
-            <tr class=odd>
+            <tr class=even>
             <td>";
             print _("First Name");
             print "
@@ -2092,15 +2092,25 @@ class SipSettings {
         print _("Enter text to change the current password");
         printf ("\n\n<!-- \nSIP Account password: %s\n -->\n\n",$this->password);
 
-        /*
+        print "
+        </td>
+        </tr>
+        ";
+
+        print "
+        <tr class=odd>
+        <td>";
         print _("Language");
+        print "
+        </td>
+        <td>";
+
         print "
         <select name=language>
         ";
+
         $languages=array("en"=>"English",
-                         "nl"=>"Nederlands",
-                         "ro"=>"Romaneste",
-                         "de"=>"Deutsch"
+                         "ro"=>"Romaneste"
                          );
 
         $selected_lang[$this->Preferences['language']]="selected";
@@ -2112,12 +2122,7 @@ class SipSettings {
         print "
         </select>
         ";
-        */
 
-        print "
-        </td>
-        </tr>
-        ";
 
         print "
         <tr class=even>
@@ -3097,7 +3102,7 @@ class SipSettings {
 
         if ($language && $language != $this->Preferences['language'] ) {
             if ($this->login_type == 'subscriber') {;
-                dprint("Set lang $language");
+                //print("Set lang $language");
                 changeLanguage($language);
             }
 
@@ -4383,7 +4388,7 @@ class SipSettings {
                 <td align=right width=10></td>
                 <td align=left><nobr>$htmlURI</nobr></td>
                 ";
-                print "<td align=right><a href=$this->url&tab=phonebook&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
+                print "<td align=right><a href=$this->url&tab=contacts&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
                 print "
                 </tr>
                 </table>";
@@ -4443,7 +4448,7 @@ class SipSettings {
                 <td align=left><nobr>$htmlURI $price_print</nobr></td>
                 ";
 
-                print "<td align=right><a href=$this->url&tab=phonebook&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
+                print "<td align=right><a href=$this->url&tab=contacts&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
                 print "
                 </tr>
                 </table>";
@@ -4741,14 +4746,14 @@ class SipSettings {
         $this->getPhoneBookEntries();
         $maxrowsperpage=250;
     
-        $url_string=$this->url."&tab=phonebook";
+        $url_string=$this->url."&tab=contacts";
 
         print "
         <p>
         <table width=100% cellpadding=1 cellspacing=1 border=0>
         <tr>
         <form action=$this->url method=post>
-        <input type=hidden name=tab value=phonebook>
+        <input type=hidden name=tab value=contacts>
         <input type=hidden name=task value=add>
         <td align=left valign=top>
         <input type=submit value=";
@@ -4761,7 +4766,7 @@ class SipSettings {
         </td>
         </form>
         <form action=$this->url method=post>
-        <input type=hidden name=tab value=phonebook>
+        <input type=hidden name=tab value=contacts>
         <td align=right valign=top>
         <input type=text size=20 name='search_text' value=\"$search_text\">
         ";
@@ -4783,9 +4788,9 @@ class SipSettings {
         print ">";
         /*
         if ($this->isEmbedded()) {
-        	print "<a href=$this->url&tab=phonebook&export=1>";
+        	print "<a href=$this->url&tab=contacts&export=1>";
         } else {
-        	print "<a href=$this->url&tab=phonebook&export=1 target=export>";
+        	print "<a href=$this->url&tab=contacts&export=1 target=export>";
         }
         print _("Export");
         print "</a>
