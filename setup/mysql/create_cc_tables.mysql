@@ -1,0 +1,196 @@
+DROP TABLE IF EXISTS `cc_transactions`;
+CREATE TABLE IF NOT EXISTS `cc_transactions` (
+	`TransactionID` mediumint(10) unsigned NOT NULL auto_increment,
+	`TransactionNum` varchar(50) NOT NULL,
+	`TotalAmount` decimal(18,2) NOT NULL default '0.00',
+	`Currency` varchar(10) NOT NULL default 'USD',
+	`AVSCode` char(1) NOT NULL,
+	`CVV2Code` char(1) NOT NULL,
+	`PendingReason` varchar(255) default NULL,
+	`PaymentStatus` varchar(255) default NULL,
+	`FMFDetails` varchar(255) default NULL,
+	`ThreeDSecureResponse` varchar(255) default NULL,
+	`ProcessTime` timestamp NOT NULL default CURRENT_TIMESTAMP,
+	`APITimestamp` varchar(50) NOT NULL,
+	`AckResponse` varchar(50) NOT NULL,
+	`CorrelationID` varchar(50) NOT NULL,
+	`Errors` varchar(255) default NULL,
+	PRIMARY KEY  (`TransactionID`),
+	UNIQUE KEY `unq_ cc_transactions` (`TransactionID`),
+	KEY `idx_ cc_transactions_ TransactionNum` (`TransactionNum`),
+	KEY `idx_ cc_transactions_ CorrelationID` (`CorrelationID`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;
+
+DROP TABLE IF EXISTS `cc_user_info`;
+CREATE TABLE IF NOT EXISTS `cc_user_info` (
+	`CCUserID` mediumint(10) unsigned NOT NULL auto_increment,
+	`TransactionNum` varchar(50) NOT NULL,
+	`FirstName` varchar(32) NOT NULL,
+	`LastName` varchar(32) NOT NULL,
+	`UserAcct` varchar(50) default NULL,
+	`Email` varchar(50) NOT NULL,
+	`CCType` varchar(50) NOT NULL,
+	`CCNum` blob NOT NULL,
+	`CCLast` smallint(4) NOT NULL,
+	`CCVCode` smallint(4) NOT NULL,
+	`CCExpMonth` smallint(2) NOT NULL,
+	`CCExpYear` smallint(4) NOT NULL,
+	`BillingAddress1` varchar(100) default NULL,
+	`BillingAddress2` varchar(100) default NULL,
+	`BillingCity` varchar(40) default NULL,
+	`BillingState` char(2) default NULL,
+	`BillingPostalCode` varchar(20) default NULL,
+	`BillingCountry` char(3) NOT NULL,
+	`ProcessTime` timestamp NOT NULL default CURRENT_TIMESTAMP,
+	`RequesterIP` varchar(50) NOT NULL,
+	`RequesterSID` varchar(50) NOT NULL,
+	PRIMARY KEY  (`CCUserID`),
+	UNIQUE KEY `unq_cc_user_info` (`CCUserID`),
+	KEY `idx_cc_user_info_TransactionNum` (`TransactionNum`),
+	KEY `idx_cc_user_info_LastName` (`LastName`),
+	KEY `idx_cc_user_info_UserAcct` (`UserAcct`),
+	KEY `idx_cc_user_info_Email` (`Email`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;
+
+DROP TABLE IF EXISTS `cc_purchase_items`;
+CREATE TABLE IF NOT EXISTS `cc_purchase_items` (
+	`CCPurchaseID` mediumint(14) unsigned NOT NULL auto_increment,
+	`TransactionNum` varchar(50) NOT NULL,
+	`Item` varchar(50) NOT NULL,
+	`Amount` decimal(8,2) NOT NULL default '0.00',
+	`Currency` varchar(10) NOT NULL default 'USD',
+	PRIMARY KEY  (`CCPurchaseID`),
+	UNIQUE KEY `unq_cc_purchase_items` (`CCPurchaseID`),
+	KEY `idx_cc_purchase_items_TransactionNum` (`TransactionNum`),
+	KEY `idx_cc_purchase_items_Item` (`Item`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;
+
+ALTER TABLE `cc_user_info` 
+ADD CONSTRAINT `fk_cc_user_info_TransactionNum` FOREIGN KEY (`TransactionNum`) REFERENCES `cc_transactions` (`TransactionNum`) ON DELETE CASCADE ON UPDATE NO ACTION;
+
+ALTER TABLE `cc_purchase_items` 
+ADD CONSTRAINT `fk_cc_purchase_items_TransactionNum` FOREIGN KEY (`TransactionNum`) REFERENCES `cc_transactions` (`TransactionNum`) ON DELETE CASCADE ON UPDATE NO ACTION;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `sproc_cc_add_transaction`$$
+CREATE PROCEDURE sproc_cc_add_transaction(
+	IN _TransactionNum varchar(50),
+	IN _TotalAmount decimal(18,2),
+	IN _Currency varchar(10),
+	IN _AVSCode char(1),
+	IN _CVV2Code char(1),
+	IN _PendingReason varchar(255),
+	IN _PaymentStatus varchar(255),
+	IN _FMFDetails varchar(255),
+	IN _ThreeDSecureResponse varchar(255),
+	IN _APITimestamp varchar(50),
+	IN _AckResponse varchar(50),
+	IN _CorrelationID varchar(50),
+	IN _Errors varchar(255),
+	IN _AES_ENC_PWD varchar(10),
+	IN _FirstName varchar(32),
+	IN _LastName varchar(32),
+	IN _UserAcct varchar(50),
+	IN _Email varchar(50),
+	IN _CCType varchar(50),
+	IN _CCNum varchar(19),
+	IN _CCLast smallint(4),
+	IN _CCVCode smallint(4),
+	IN _CCExpMonth smallint(2),
+	IN _CCExpYear smallint(4),
+	IN _BillingAddress1 varchar(100),
+	IN _BillingAddress2 varchar(100),
+	IN _BillingCity varchar(40),
+	IN _BillingState char(2),
+	IN _BillingPostalCode varchar(20),
+	IN _BillingCountry char(3),
+	IN _RequesterIP varchar(50),
+	IN _RequesterSID varchar(50)
+)
+BEGIN
+
+	INSERT INTO cc_transactions 
+	(TransactionNum,TotalAmount,Currency,AVSCode,CVV2Code,PendingReason,
+	PaymentStatus,FMFDetails,ThreeDSecureResponse,APITimestamp,AckResponse,
+	CorrelationID,Errors)
+	VALUES 
+	(_TransactionNum,_TotalAmount,_Currency,_AVSCode,_CVV2Code,_PendingReason,
+	_PaymentStatus,_FMFDetails,_ThreeDSecureResponse,_APITimestamp,_AckResponse,
+	_CorrelationID,_Errors);
+	
+	INSERT INTO cc_user_info 
+	(TransactionNum,FirstName,LastName,UserAcct,Email,CCType,CCNum,CCLast,
+	CCVCode,CCExpMonth,CCExpYear,BillingAddress1,BillingAddress2,
+	BillingCity,BillingState,BillingPostalCode,BillingCountry,RequesterIP,RequesterSID) 
+	VALUES 
+	(_TransactionNum,_FirstName,_LastName,_UserAcct,_Email,_CCType,AES_ENCRYPT(_CCNum,_AES_ENC_PWD),_CCLast,
+	_CCVCode,_CCExpMonth,_CCExpYear,_BillingAddress1,_BillingAddress2,
+	_BillingCity,_BillingState,_BillingPostalCode,_BillingCountry,_RequesterIP,_RequesterSID);
+	
+END$$
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `sproc_cc_add_purchase_items`$$
+CREATE PROCEDURE sproc_cc_add_purchase_items(
+	IN _TransactionNum varchar(50),
+	IN _Item varchar(50),
+	IN _Amount decimal(8,2),
+	IN _Currency varchar(10)
+)
+BEGIN
+	
+	INSERT INTO cc_purchase_items (TransactionNum,Item,Amount,Currency) 
+	VALUES 
+	(_TransactionNum,_Item,_Amount,_Currency);
+
+END$$
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `sproc_cc_get_transaction_details`$$
+CREATE PROCEDURE sproc_cc_get_transaction_details(
+	IN _TransactionNum varchar(50)
+)
+BEGIN
+
+	SELECT DISTINCT 
+		tran.TransactionNum AS TRANSACTION_ID,
+		tran.TotalAmount AS TOTAL_AMOUNT,
+		tran.Currency AS CURRENCY,
+		tran.ProcessTime AS PURCHASE_TIMESTAMP,
+		uinfo.FirstName AS FIRST_NAME,
+		uinfo.LastName AS LAST_NAME,
+		uinfo.UserAcct AS AG_USER_ACCOUNT,
+		uinfo.Email AS USER_EMAIL,
+		uinfo.BillingAddress1 AS ADDRESS1,
+		uinfo.BillingAddress2 AS ADDRESS2,
+		uinfo.BillingCity AS CITY,
+		uinfo.BillingState AS STATE,
+		uinfo.BillingPostalCode AS POSTCODE,
+		uinfo.BillingCountry AS COUNTRY 
+	FROM 
+		cc_transactions tran,
+		cc_user_info uinfo 
+	WHERE tran.TransactionNum = uinfo.TransactionNum 
+	AND tran.TransactionNum = _TransactionNum;
+
+END$$
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `sproc_cc_get_transaction_items`$$
+CREATE PROCEDURE sproc_cc_get_transaction_items(
+	IN _TransactionNum varchar(50)
+)
+BEGIN
+	
+	SELECT 
+	Item AS ITEM_NAME,
+	Amount AS AMOUNT,
+	Currency AS CURRENCY 
+	FROM cc_purchase_items 
+	WHERE TransactionNum = _TransactionNum;
+
+END$$
+DELIMITER ;
