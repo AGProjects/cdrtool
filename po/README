@@ -1,0 +1,45 @@
+Translated Message Catalog Files
+================================
+
+Notes
+-----
+1. Uses iso8859-2 character set. (or at least it should)
+
+If you want to translate CDRTool messages to some other language:
+1 - type make cdrtool.pot 
+2 - translate cdrtool.pot like:
+
+msgid "$var aborted.\n"
+msgstr "$var abortado.\n"
+
+where msgid is the original message and msgstr is the translated
+message. PLEASE DO NOT TOUCH THE msgid LINES.
+
+The info pages for gettext has more detailed information on how to do
+translations.
+
+Then rename the cdrtool.pot file to the language code with a .po extension,
+reconfigure cdrtool and run make install.
+
+To update an already translated message file use the msgmerge command. As
+in:
+
+msgmerge ro.po cdrtool.pot > ronew.po
+msgmerge nl.po cdrtool.pot > nlnew.po
+msgmerge es.po cdrtool.pot > esnew.po
+
+Or just run po/merge.sh script that does it all.
+
+If you use an older version of gettext, the command is tupdate, instead of
+msgmerge.
+
+Notes: 
+
+- if you think a message is too obscure just ask about it
+- you don't need to translate every single word. Some words/expressions are
+  easier to understand in the original English form than in our 
+  native languages. 
+- you can use characters other than standard ASCII, if needed.
+- if you update a translation of someone else, please contact the current
+  maintainer, so that we don't have duplicate work. Also put a "history"
+
