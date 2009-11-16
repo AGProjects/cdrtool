@@ -1,3 +1,12 @@
+# Configuration file for Paypal payments used by NGNPro SIP settings page 
+
+# 1. Copy this file to /etc/cdrtrool/paypal/
+#
+# 2. Make a link /var/www/CDRTool/library/paypal_lib/PayPal to point to
+#    /usr/share/php/SOAP
+#
+# 3. Edit the values below
+
 [api_settings_section]
 library_path = "/var/www/CDRTool/library/paypal_lib"
 transaction_type = "Sale"
@@ -8,6 +17,7 @@ pp_username = "paypal_account1"
 pp_pass = "xyz"
 pp_signature = "xyw"
 
+# aes_enc_pwd is used to encrypt credit card details in the SQL database
 [mysqli_connection]
 sql_host = "db"
 sql_user = "cdradmin"
