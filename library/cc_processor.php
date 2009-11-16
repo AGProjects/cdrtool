@@ -15,8 +15,8 @@ setlocale(LC_MONETARY, 'en_US');
 
 class CreditCardProcessor {
     // default cart items, must be set by external application after instantiating this class
-    var $cart_items      = array('service1'=>array('cost'=>10,'description'=>_('First Item')),
-                                 'service2'=>array('cost'=>20,'description'=>_('Second Item'))
+    var $cart_items      = array('service1'=>array('cost'=>10,'description'=>'First Item'),
+                                 'service2'=>array('cost'=>20,'description'=>'Second Item')
                                  );
 
     // html hidden elements that need to be preserved between submits by the application that uses this form
@@ -355,7 +355,6 @@ class CreditCardProcessor {
         $this->pricepp_pass = $app_settings_array['pp_pass'];
         $this->pp_signature = $app_settings_array['pp_signature'];
         $this->transaction_type = $app_settings_array['transaction_type'];
-        $this->crt_path = $app_settings_array['crt_path'];
         $this->sender_email = $app_settings_array['sender_email'];
         $this->countries_array = $countries_array;
         $this->us_states_arr = $us_states_arr;
@@ -482,6 +481,25 @@ class CreditCardProcessor {
             $page_body_content .= "}\n";
     
             $page_body_content .= "function resetFields() {\n";
+            // set labels font color to black
+            $page_body_content .= "var lbl_errors = document.getElementById('lbl_errors');\n";
+            $page_body_content .= "lbl_errors.innerHTML = '';\n";
+            $page_body_content .= "var lbl_fname = document.getElementById('lbl_fname');\n";
+            $page_body_content .= "lbl_fname.innerHTML = '<font color=\"#000000\">First Name on Card</font>';\n";
+            $page_body_content .= "var lbl_lname = document.getElementById('lbl_lname');\n";
+            $page_body_content .= "lbl_lname.innerHTML = '<font color=\"#000000\">Last Name on Card</font>';\n";
+            $page_body_content .= "var lbl_email = document.getElementById('lbl_email');\n";
+            $page_body_content .= "lbl_email.innerHTML = '<font color=\"#000000\">Email:</font>';\n";
+            $page_body_content .= "var lbl_ccnum = document.getElementById('lbl_ccnum');\n";
+            $page_body_content .= "lbl_ccnum.innerHTML = '<font color=\"#000000\">Card Number</font>';\n";
+            $page_body_content .= "var lbl_cvn = document.getElementById('lbl_cvn');\n";
+            $page_body_content .= "lbl_cvn.innerHTML = '<font color=\"#000000\">Card Verification Number</font>';\n";
+            $page_body_content .= "var lbl_addr1 = document.getElementById('lbl_addr1');\n";
+            $page_body_content .= "lbl_addr1.innerHTML = '<font color=\"#000000\">Address</font>';\n";
+            $page_body_content .= "var lbl_city = document.getElementById('lbl_city');\n";
+            $page_body_content .= "lbl_city.innerHTML = '<font color=\"#000000\">City</font>';\n";
+            $page_body_content .= "var lbl_postcode = document.getElementById('lbl_postcode');\n";
+            $page_body_content .= "lbl_postcode.innerHTML = '<font color=\"#000000\">Postal Code</font>';\n";
             $page_body_content .= "var amt_purchase = document.getElementById('amt_purchase');\n";
             //$page_body_content .= "amt_purchase.innerHTML = '".$this->cart_items[0]['cost']." USD <input type=\"hidden\" name=\"amount\" value=\"".$this->cart_items[0]['cost']."\"><input type=\"hidden\" name=\"item\" value=\"".$this->cart_items[0]."\">';\n";
             $page_body_content .= "amt_purchase.innerHTML = '".$amt_currency."<input type=\"hidden\" name=\"amount\" value=\"".$amt."\">';\n";
@@ -517,10 +535,10 @@ class CreditCardProcessor {
             $page_body_content .= "}\n";
             $page_body_content .= "}\n";
             $page_body_content .= "</script>\n";
-    
-            $page_body_start = '<body onload="javascript:resetFields();" marginwidth=15 leftmargin=15 link=#000066>';
-            
-            $page_body_content .= "".$page_body_start."<form method=\"POST\" name=\"agpay_frm\" id=\"agpay_frm\" onsubmit=\"return agpay_frm_validator(this)\" >\n";
+
+            $page_body_content .= '<body onload="javascript:resetFields();" marginwidth=15 leftmargin=15 link=#000066>';
+
+            $page_body_content .= "<form method=\"POST\" name=\"agpay_frm\" id=\"agpay_frm\" onsubmit=\"return agpay_frm_validator(this)\" >\n";
             $page_body_content .= "<table width=100%>\n";
             $page_body_content .= "<tr>\n";
             $page_body_content .= sprintf("<td colspan=\"2\" class=%s><b>%s</b></td>\n",$this->chapter_class,_("Shopping Cart"));
@@ -560,6 +578,10 @@ class CreditCardProcessor {
             $page_body_content .= sprintf("<td><b>%s</b></td>\n",_("Total Due"));
             $page_body_content .= "<td><div id=\"amt_purchase\"></div></td>\n";
             $page_body_content .= "</tr>\n";
+
+            $page_body_content .= "<tr>\n";
+            $page_body_content .= "<td colspan=\"2\"><div id=\"lbl_errors\"></div></td>\n";
+            $page_body_content .= "</tr>\n";
     
             $page_body_content .= "<tr>\n";
             $page_body_content .= sprintf("<td colspan=\"2\" class=%s><b>%s</b></td>\n",$this->chapter_class,_("Credit Card Details"));
@@ -576,7 +598,7 @@ class CreditCardProcessor {
             $page_body_content .= "</td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= "<tr>\n";
-            $page_body_content .= sprintf("<td>%s</td>\n",_("Card Number"));
+            $page_body_content .= sprintf("<td>%s</td>\n",_("<div id=\"lbl_ccnum\"></div>"));
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"19\" name=\"creditCardNumber\"></td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
@@ -606,7 +628,7 @@ class CreditCardProcessor {
             $page_body_content .= "</td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= "<tr>\n";
-            $page_body_content .= sprintf("<td>%s</td>\n",_("Card Verification Number"));
+            $page_body_content .= sprintf("<td>%s</td>\n",_("<div id=\"lbl_cvn\"></div>"));
             $page_body_content .= "<td><input type=\"text\" size=\"3\" maxlength=\"4\" name=\"cvv2Number\" value=\"\"></td>\n";
             $page_body_content .= "</tr>\n";
 
@@ -614,15 +636,15 @@ class CreditCardProcessor {
             $page_body_content .= sprintf("<td colspan=\"2\" class=%s><b>%s</b></td>\n",$this->chapter_class,_("Card Holder Information"));
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
-            $page_body_content .= sprintf("<td>%s</td>\n",_("First Name"));
+            $page_body_content .= sprintf("<td>%s</td>\n",_("<div id=\"lbl_fname\"></div>"));
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"32\" name=\"firstName\" value=\"".$this->user_account['FirstName']."\"></td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= "<tr>\n";
-            $page_body_content .= sprintf( "<td>%s</td>\n",_("Last Name"));
+            $page_body_content .= sprintf( "<td>%s</td>\n",_("<div id=\"lbl_lname\"></div>"));
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"32\" name=\"lastName\" value=\"".$this->user_account['LastName']."\"></td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
-            $page_body_content .= sprintf("<td>%s</td>\n",_("Email Address"));
+            $page_body_content .= sprintf("<td>%s</td>\n",_("<div id=\"lbl_email\"></div>"));
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"50\" name=\"emailAddress\" value=\"".$this->user_account['Email']."\"></td>\n";
             $page_body_content .= "</tr>\n";
 
@@ -631,7 +653,7 @@ class CreditCardProcessor {
             $page_body_content .= sprintf("<td colspan=\"2\" class=%s><b>%s</b></td>\n",$this->chapter_class,_("Billing Address"));
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
-            $page_body_content .= sprintf("<td valign=top>%s</td>\n",_("Address"));
+            $page_body_content .= sprintf("<td valign=top>%s</td>\n",_("<div id=\"lbl_addr1\"></div>"));
             $page_body_content .= "<td><textarea cols=\"30\" rows=3 maxlength=\"200\" name=\"address1\">".$this->user_account['Address1']."</textarea></td>\n";
             $page_body_content .= "</tr>\n";
     
@@ -643,7 +665,7 @@ class CreditCardProcessor {
             */
     
             $page_body_content .= "<tr>\n";
-            $page_body_content .= sprintf("<td>%s</td>\n",_("City"));
+            $page_body_content .= sprintf("<td>%s</td>\n",_("<div id=\"lbl_city\"></div>"));
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"40\" name=\"city\" value=\"".$this->user_account['City']."\"></td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
@@ -668,7 +690,7 @@ class CreditCardProcessor {
             $page_body_content .= "</tr>\n";
 
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
-            $page_body_content .= sprintf("<td>%s</td>\n",_("Postcode"));
+            $page_body_content .= sprintf("<td>%s</td>\n",_("<div id=\"lbl_postcode\"></div>"));
             $page_body_content .= "<td><input type=\"text\" size=\"8\" maxlength=\"10\" name=\"zip\" value=\"".$this->user_account['PostCode']."\"></td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= "<tr>\n";
