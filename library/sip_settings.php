@@ -54,9 +54,11 @@ class SipSettings {
     var $check_privacy_access_number    = "*68";
     var $reject_anonymous_access_number = "*69";
 
-	var $showBarringTab = false;
-	var $showPresenceTab = false;
-    var $firstTab = 'calls';
+	var $show_barring_tab   = false;
+	var $show_presence_tab  = false;
+    var $show_payments_tab  = false;
+
+    var $first_tab = 'calls';
     var $autoRefeshTab = 0;              // number of seconds after which to refresh tab content in the web browser
 
     // end variables
@@ -193,7 +195,7 @@ class SipSettings {
         if ($_REQUEST['tab']) {
         	$this->tab                = $_REQUEST['tab'];
         } else {
-        	$this->tab                = $this->firstTab;
+        	$this->tab                = $this->first_tab;
         }
 
         $this->initSoapClient();
@@ -236,12 +238,18 @@ class SipSettings {
 			if (!$this->isEmbedded()) {
             	$this->url.="?account=$this->account";
             } else {
-            	$this->url.="?1=1";
+            	$this->url.=sprintf("?1=1&realm=%s",urlencode($_REQUEST['realm']));
             }
-            $this->hiddenElements="
-            <input type=hidden name=account value=\"$this->account\">
-            <input type=hidden name=sip_engine value=$this->sip_engine>
-            ";
+
+            $this->hiddenElements=sprintf("
+            <input type=hidden name=account value='%s'>
+            <input type=hidden name=sip_engine value='%s'>
+            <input type=hidden name=realm value='%s'>
+            ",
+            $this->account,
+            $this->sip_engine,
+            $_REQUEST['realm']
+            );
         }
 
         $this->setLanguage();
@@ -297,28 +305,28 @@ class SipSettings {
                           );
 
         if (in_array("free-pstn",$this->groups)) {
-            if ($this->showBarringTab) {
+            if ($this->show_barring_tab) {
             	$this->tabs['barring']=_("Barring");
             }
         }
 
         if ($this->presence_engine) {
-            if ($this->showPresenceTab) {
+            if ($this->show_presence_tab) {
             	$this->tabs['presence']=_("Presence");
             }
         }
 
         $this->acceptDailyProfiles=array('127' => _('Every day'),
-                                       '31'  => _('Weekday'),
-                                       '96'  => _('Weekend'),
-                                       '1'   => _('Monday'),
-                                       '2'   => _('Tuesday'),
-                                       '4'   => _('Wednesday'),
-                                       '8'   => _('Thursday'),
-                                       '16'  => _('Friday'),
-                                       '32'  => _('Saturday'),
-                                       '64'  => _('Sunday')
-                                       );
+                                         '31'  => _('Weekday'),
+                                         '96'  => _('Weekend'),
+                                         '1'   => _('Monday'),
+                                         '2'   => _('Tuesday'),
+                                         '4'   => _('Wednesday'),
+                                         '8'   => _('Thursday'),
+                                         '16'  => _('Friday'),
+                                         '32'  => _('Saturday'),
+                                         '64'  => _('Sunday')
+                                         );
 
         $this->PhonebookGroups=array(
         "vip"       =>sprintf(_("VIP")),
@@ -359,6 +367,14 @@ class SipSettings {
 		$_protocol=preg_match("/^(https?:\/\/)/",$_SERVER['SCRIPT_URI'],$m);
         $this->absolute_url=$m[1].$_SERVER['HTTP_HOST'].$this->url;
         //dprint($this->absolute_url);
+
+        if ($_SERVER['REMOTE_ADDR']=="80.101.96.20") {
+            $this->show_payments_tab=true;
+        }
+
+        if ($this->show_payments_tab) {
+        	$this->tabs['payments']=_("Payments");
+        }
     }
 
     function initSoapClient() {
@@ -862,7 +878,7 @@ class SipSettings {
         }
 
         //print("Set language to $lang");
-        changeLanguage($lang);
+        $this->changeLanguage($lang);
     }
 
     function getOwnerSettings($owner='') {
@@ -1578,6 +1594,10 @@ class SipSettings {
             return false;
         }
 
+        if (!$this->show_payments_tab) {
+            return false;
+        }
+
         require('cc_processor.php');
         
 		$CardProcessor = new CreditCardProcessor();
@@ -1718,7 +1738,7 @@ class SipSettings {
             ";
 
         } else {
-            $chapter=sprintf(_("Add Balance"));
+            $chapter=sprintf(_("Add Credit"));
             $this->showChapter($chapter);
 
             print "
@@ -3103,7 +3123,7 @@ class SipSettings {
         if ($language && $language != $this->Preferences['language'] ) {
             if ($this->login_type == 'subscriber') {;
                 //print("Set lang $language");
-                changeLanguage($language);
+                $this->changeLanguage($language);
             }
 
             $this->setPreference("language",$language);
@@ -6511,6 +6531,29 @@ class SipSettings {
         }
         return false;
     }
+
+    function changeLanguage($lang='en',$domain='cdrtool') {
+        // run dpkg-reconfigure locales and select support languages .utf8
+    
+        $lang = $this->languageCodeFor(isset($lang) ? $lang : 'en');
+        $lang.='.utf8';
+        setlocale(LC_ALL, $lang); 
+        bindtextdomain($domain, '/var/www/CDRTool/po/locale');
+        bind_textdomain_codeset($domain,'UTF-8');
+        textdomain($domain);
+    }
+    
+    // return full language code for given 2 letter language code
+    function languageCodeFor($lang='en') {
+        $lang = isset($lang) ? strtolower($lang) : 'en';
+        switch ($lang) {
+            case 'en': return 'en_US'; // this can be C or en_US
+            case 'ja': return 'ja_JP';
+            default  : return ($lang . '_' . strtoupper($lang));
+        }
+        return 'C'; // this will never be reached
+	}
+
 }
 
 function normalizeURI($uri) {
@@ -6676,7 +6719,11 @@ function getSipAccountFromX509Certificate() {
 
 function getSipAccountFromHTTPDigest () {
 
-	$realm = 'SIP_settings';
+    if ($_REQUEST['realm']) {
+    	$realm=$_REQUEST['realm'];
+    } else {
+		$realm = 'SIP_settings';
+    }
     
     if (empty($_SERVER['PHP_AUTH_DIGEST'])) {
         header('HTTP/1.1 401 Unauthorized');
