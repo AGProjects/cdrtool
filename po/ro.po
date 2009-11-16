@@ -672,8 +672,12 @@ msgid "Outgoing"
 msgstr "Apeluri Facute"
 
 #: /var/www/CDRTool/library/sip_settings.php:4690
-msgid "You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. "
-msgstr "Poti organiza contactele in grupuri care poti fi folosite in sectiunea Nu Deranja."
+msgid ""
+"You can organize contacts into groups that can be used to accept incoming "
+"calls in Don't Disturb section. "
+msgstr ""
+"Poti organiza contactele in grupuri care poti fi folosite in sectiunea Nu "
+"Deranja."
 
 #: /var/www/CDRTool/library/sip_settings.php:4764
 msgid "(wildcard %)"
@@ -718,12 +722,17 @@ msgid "You can reject calls depending on the time of day and Caller-ID. "
 msgstr "Poti rejecta apeluri in functia de ora si apelant. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5222
-msgid "You can create custom groups in the Contacts page like Family or Coworkers. "
+msgid ""
+"You can create custom groups in the Contacts page like Family or Coworkers. "
 msgstr "Poti crea grupuri noi in pagina de Contacte."
 
 #: /var/www/CDRTool/library/sip_settings.php:5224
-msgid "Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. "
-msgstr "Apelantii rejectati sint rutati in functie de conditia Ne-Disponibil din pagina de Redirectare. "
+msgid ""
+"Rejected calls are diverted based on the Unavailable condition in the Call "
+"Forwarding page. "
+msgstr ""
+"Apelantii rejectati sint rutati in functie de conditia Ne-Disponibil din "
+"pagina de Redirectare. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5227
 #, php-format
@@ -780,8 +789,11 @@ msgid "Rejected Callers"
 msgstr "Apelanti Rejectati"
 
 #: /var/www/CDRTool/library/sip_settings.php:5579
-msgid "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
-msgstr "Foloseste %Numar@% pentru Numere de Telefon sau user@domeniu pentru adrese SIP"
+msgid ""
+"Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
+msgstr ""
+"Foloseste %Numar@% pentru Numere de Telefon sau user@domeniu pentru adrese "
+"SIP"
 
 #: /var/www/CDRTool/library/sip_settings.php:5660
 msgid "Please fill in the e-mail address. "
@@ -1034,6 +1046,10 @@ msgstr "Eroare"
 msgid "correct the errors and re-submit. "
 msgstr "corecteaza erorile si reincearca."
 
-#~ msgid "Voice mailbox"
-#~ msgstr "Casuta vocal"
+msgid "Payments"
+msgstr "Plati"
+
+#, fuzzy
+msgid "Add Credit"
+msgstr "Adauga Credit"
 
