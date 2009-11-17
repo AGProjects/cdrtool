@@ -153,6 +153,9 @@ class SipSettings {
                                      ),
                          "es"=>array('name'=>"Español",
                                      'timezone' => 'Europe/Madrid'
+                                     ),
+                         "de"=>array('name'=>"Deutsche",
+                                     'timezone' => 'Europe/Berlin'
                                      )
                          );
 
