@@ -2466,9 +2466,9 @@ class CDR_opensips extends CDR {
      
         $this->domainNormalized=strtolower($this->domainNormalized);
 
-        $this->RemoteAddressPrint=$this->RemoteAddress;
+        $this->RemoteAddressPrint=quoted_printable_decode($this->RemoteAddress);
 
-        $this->SipRPIDPrint=$this->SipRPID;
+        $this->SipRPIDPrint=quoted_printable_decode($this->SipRPID);
 
         $_timestamp_stop=$this->timestamp+$this->duration;
 
