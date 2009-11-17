@@ -145,6 +145,18 @@ class SipSettings {
 
 	var $owner_information   =array();
 
+    var $languages=array("en"=>array('name'=>"English",
+                                     'timezone'=>''
+                                     ),
+                         "ro"=>array('name'=>"Romaneste",
+                                     'timezone' => 'Europe/Bucharest'
+                                     ),
+                         "es"=>array('name'=>"Español",
+                                     'timezone' => 'Europe/Madrid'
+                                     )
+                         );
+
+
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
 
 		define_syslog_variables();
