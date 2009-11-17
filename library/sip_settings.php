@@ -151,7 +151,7 @@ class SipSettings {
                          "ro"=>array('name'=>"Romaneste",
                                      'timezone' => 'Europe/Bucharest'
                                      ),
-                         "es"=>array('name'=>"Español",
+                         "es"=>array('name'=>"EspaÃ±ol",
                                      'timezone' => 'Europe/Madrid'
                                      )
                          );
