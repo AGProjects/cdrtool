@@ -884,6 +884,14 @@ class SipSettings {
         if ($this->login_type == 'reseller' || $this->login_type == 'customer') {
             $lang = $this->ResellerLanguage;
         } else if ($this->login_type == 'subscriber') {
+            if (!$this->Preferences['language']) {
+                foreach (array_keys($this->languages) as $_lang) {
+                    if ($this->languages[$_lang]['timezone'] == $this->timezone) {
+                        $lang=$_lang;
+                        break;
+                    }
+                }
+            }
             $lang = $this->Preferences['language'];
         } else {
             $lang = "en";
@@ -2113,7 +2121,7 @@ class SipSettings {
         }
 
         print "
-        <tr class=odd>
+        <tr class=even>
         <td>";
         print _("Password");
         print "
@@ -2141,14 +2149,10 @@ class SipSettings {
         <select name=language>
         ";
 
-        $languages=array("en"=>"English",
-                         "ro"=>"Romaneste"
-                         );
-
         $selected_lang[$this->Preferences['language']]="selected";
 
-        while (list ($value, $name) = each($languages)) {
-             print "<option value=$value $selected_lang[$value]>$name\n";
+        foreach (array_keys($this->languages) as $_lang) {
+             printf ("<option value='%s' %s>%s\n",$_lang,$selected_lang[$_lang],$this->languages[$_lang]['name']);
         }
 
         print "
@@ -2197,34 +2201,6 @@ class SipSettings {
             </tr>
             ";
         }
-
-        /*
-        print "
-        <tr>
-        <td>";
-        print _("Language");
-        print "</td>
-        <td>
-        <select name=language>
-        ";
-        $languages=array("en"=>"English",
-                         "nl"=>"Nederlands",
-                         "ro"=>"Romaneste",
-                         "de"=>"Deutsch"
-                         );
-
-        $selected_lang[$this->Preferences['language']]="selected";
-
-        while (list ($value, $name) = each($languages)) {
-             print "<option value=$value $selected_lang[$value]>$name\n";
-        }                
-        print "
-        </select>
-        </td>
-        </tr>
-        ";
-
-        */
 
         if (in_array("free-pstn",$this->groups)) {
  
