@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-11-17 09:53+0100\n"
+"POT-Creation-Date: 2009-11-17 10:09+0100\n"
 "PO-Revision-Date: 2009-11-16 17:26+0100\n"
 "Last-Translator: Adrian Georgescu <ag@ag-projects.com>\n"
 "Language-Team: language@ag-projects.com\n"
@@ -641,6 +641,11 @@ msgstr ""
 msgid "Number"
 msgstr "Numar Card"
 
+#: /var/www/CDRTool/library/sip_settings.php:4127
+#, php-format
+msgid "Dial %s2*X where X = Number of Minutes, 0 to Reset"
+msgstr ""
+
 #: /var/www/CDRTool/library/sip_settings.php:4255
 msgid "Failed to open timezone file."
 msgstr "Deschiderea fisierului cu zone temporale a esuat."
@@ -993,45 +998,17 @@ msgstr "Detalii Credit Card"
 msgid "Card Type"
 msgstr "Tip Card"
 
-#: /var/www/CDRTool/library/cc_processor.php:601
-msgid "<div id=\"lbl_ccnum\"></div>"
-msgstr ""
-
 #: /var/www/CDRTool/library/cc_processor.php:605
 msgid "Expiration Date"
 msgstr "Data Expirare"
-
-#: /var/www/CDRTool/library/cc_processor.php:631
-msgid "<div id=\"lbl_cvn\"></div>"
-msgstr ""
 
 #: /var/www/CDRTool/library/cc_processor.php:636
 msgid "Card Holder Information"
 msgstr "Informatii Proprietar Card"
 
-#: /var/www/CDRTool/library/cc_processor.php:639
-msgid "<div id=\"lbl_fname\"></div>"
-msgstr ""
-
-#: /var/www/CDRTool/library/cc_processor.php:643
-msgid "<div id=\"lbl_lname\"></div>"
-msgstr ""
-
-#: /var/www/CDRTool/library/cc_processor.php:647
-msgid "<div id=\"lbl_email\"></div>"
-msgstr ""
-
 #: /var/www/CDRTool/library/cc_processor.php:653
 msgid "Billing Address"
 msgstr "Adresa Facturare"
-
-#: /var/www/CDRTool/library/cc_processor.php:656
-msgid "<div id=\"lbl_addr1\"></div>"
-msgstr ""
-
-#: /var/www/CDRTool/library/cc_processor.php:668
-msgid "<div id=\"lbl_city\"></div>"
-msgstr ""
 
 #: /var/www/CDRTool/library/cc_processor.php:672
 msgid "Country"
@@ -1040,10 +1017,6 @@ msgstr "Tara"
 #: /var/www/CDRTool/library/cc_processor.php:687
 msgid "State"
 msgstr "Stat"
-
-#: /var/www/CDRTool/library/cc_processor.php:693
-msgid "<div id=\"lbl_postcode\"></div>"
-msgstr ""
 
 #: /var/www/CDRTool/library/cc_processor.php:697
 msgid "Purchase"
