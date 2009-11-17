@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-11-16 23:18+0100\n"
+"POT-Creation-Date: 2009-11-17 09:53+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -356,10 +356,12 @@ msgid "Login using SIP credentials at <a href=%s>%s</a>"
 msgstr ""
 
 #: /var/www/CDRTool/library/sip_settings.php:2094
+#: /var/www/CDRTool/library/cc_processor.php:488
 msgid "First Name"
 msgstr ""
 
 #: /var/www/CDRTool/library/sip_settings.php:2109
+#: /var/www/CDRTool/library/cc_processor.php:490
 msgid "Last Name"
 msgstr ""
 
@@ -572,6 +574,7 @@ msgid "Card Id"
 msgstr ""
 
 #: /var/www/CDRTool/library/sip_settings.php:3710
+#: /var/www/CDRTool/library/cc_processor.php:494
 msgid "Card Number"
 msgstr ""
 
@@ -625,6 +628,17 @@ msgstr ""
 
 #: /var/www/CDRTool/library/sip_settings.php:3967
 msgid "Final Balance"
+msgstr ""
+
+#: /var/www/CDRTool/library/sip_settings.php:4079
+#: /var/www/CDRTool/library/sip_settings.php:4081
+#: /var/www/CDRTool/library/sip_settings.php:4083
+#: /var/www/CDRTool/library/sip_settings.php:4085
+msgid "Dial"
+msgstr ""
+
+#: /var/www/CDRTool/library/sip_settings.php:4085
+msgid "Number"
 msgstr ""
 
 #: /var/www/CDRTool/library/sip_settings.php:4255
@@ -686,6 +700,10 @@ msgstr ""
 msgid "(wildcard %)"
 msgstr ""
 
+#: /var/www/CDRTool/library/sip_settings.php:4790
+msgid "No group"
+msgstr ""
+
 #: /var/www/CDRTool/library/sip_settings.php:4795
 msgid "Search"
 msgstr ""
@@ -696,6 +714,10 @@ msgstr ""
 
 #: /var/www/CDRTool/library/sip_settings.php:4828
 msgid "Group"
+msgstr ""
+
+#: /var/www/CDRTool/library/sip_settings.php:4874
+msgid "Update"
 msgstr ""
 
 #: /var/www/CDRTool/library/sip_settings.php:4889
@@ -925,6 +947,26 @@ msgstr ""
 #: /var/www/CDRTool/library/sip_settings.php:7223
 #, php-format
 msgid "Changed diversions %s"
+msgstr ""
+
+#: /var/www/CDRTool/library/cc_processor.php:492
+msgid "Email"
+msgstr ""
+
+#: /var/www/CDRTool/library/cc_processor.php:496
+msgid "Card Verification Number"
+msgstr ""
+
+#: /var/www/CDRTool/library/cc_processor.php:498
+msgid "Address"
+msgstr ""
+
+#: /var/www/CDRTool/library/cc_processor.php:500
+msgid "City"
+msgstr ""
+
+#: /var/www/CDRTool/library/cc_processor.php:502
+msgid "Postcode"
 msgstr ""
 
 #: /var/www/CDRTool/library/cc_processor.php:544
