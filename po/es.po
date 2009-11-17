@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-11-16 20:55+0100\n"
-"PO-Revision-Date: 2009-11-16 20:39+0100\n"
+"PO-Revision-Date: 2009-11-17 09:28+0100\n"
 "Last-Translator: Saul Ibarra <saul@ag-projects.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -179,7 +179,7 @@ msgstr "Crédito"
 
 #: /var/www/CDRTool/library/sip_settings.php:388
 msgid "Payments"
-msgstr ""
+msgstr "Pagos"
 
 #: /var/www/CDRTool/library/sip_settings.php:777
 msgid "Error: SIP Account information cannot be retrieved. "
@@ -511,8 +511,7 @@ msgstr "Destinos bloqueados"
 
 #: /var/www/CDRTool/library/sip_settings.php:2826
 msgid "You can deny outbound calls to unwanted PSTN prefixes. "
-msgstr ""
-"Puede prohibir las llamadas salientes a los prefijos de la PSTN deseados."
+msgstr "Puede prohibir las llamadas salientes a los prefijos de la PSTN deseados."
 
 #: /var/www/CDRTool/library/sip_settings.php:2836
 #: /var/www/CDRTool/library/sip_settings.php:2865
@@ -547,7 +546,7 @@ msgstr "Su saldo actual es"
 #: /var/www/CDRTool/library/sip_settings.php:3694
 #, php-format
 msgid "Add Balance"
-msgstr ""
+msgstr "Añadir saldo"
 
 #: /var/www/CDRTool/library/sip_settings.php:3671
 #: /var/www/CDRTool/library/sip_settings.php:3833
@@ -669,20 +668,16 @@ msgstr "Primera / última llamada"
 #: /var/www/CDRTool/library/sip_settings.php:4361
 #, php-format
 msgid "Incoming"
-msgstr "Entrante"
+msgstr "Entrantes"
 
 #: /var/www/CDRTool/library/sip_settings.php:4410
 #, php-format
 msgid "Outgoing"
-msgstr "Saliente"
+msgstr "Salientes"
 
 #: /var/www/CDRTool/library/sip_settings.php:4698
-msgid ""
-"You can organize contacts into groups that can be used to accept incoming "
-"calls in Don't Disturb section. "
-msgstr ""
-"Puede organizar sus contactos en grupos que pueden utilizarse para recibir "
-"las llamadas en la sección No Molestar."
+msgid "You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. "
+msgstr "Puede organizar sus contactos en grupos que pueden utilizarse para recibir las llamadas en la sección No Molestar."
 
 #: /var/www/CDRTool/library/sip_settings.php:4772
 msgid "(wildcard %)"
@@ -727,24 +722,17 @@ msgid "You can reject calls depending on the time of day and Caller-ID. "
 msgstr "Puede rechazar llamadas dependiendo de la hora del día y el Caller-ID."
 
 #: /var/www/CDRTool/library/sip_settings.php:5230
-msgid ""
-"You can create custom groups in the Contacts page like Family or Coworkers. "
-msgstr ""
-"Puede crear grupos personalizados como Familia o Amigos en la pestaña de "
-"Contactos."
+msgid "You can create custom groups in the Contacts page like Family or Coworkers. "
+msgstr "Puede crear grupos personalizados como Familia o Amigos en la pestaña de Contactos."
 
 #: /var/www/CDRTool/library/sip_settings.php:5232
-msgid ""
-"Rejected calls are diverted based on the Unavailable condition in the Call "
-"Forwarding page. "
-msgstr ""
-"Las llamadas rechazadas son desviadas según la condición de No Disponible en "
-"la página de Desvíos de llamada."
+msgid "Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. "
+msgstr "Las llamadas rechazadas son desviadas según la condición de No Disponible en la página de Desvíos de llamada."
 
 #: /var/www/CDRTool/library/sip_settings.php:5235
 #, php-format
 msgid "Your current time is: %s"
-msgstr "Su tiempo actual es: %s"
+msgstr "Su hora actual es: %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:5245
 #, php-format
@@ -784,7 +772,7 @@ msgstr "Días"
 
 #: /var/www/CDRTool/library/sip_settings.php:5397
 msgid "Time Interval"
-msgstr "Intervalo de tiempo"
+msgstr "Franja horaria"
 
 #: /var/www/CDRTool/library/sip_settings.php:5400
 msgid "Groups"
@@ -793,14 +781,11 @@ msgstr "Grupos"
 #: /var/www/CDRTool/library/sip_settings.php:5578
 #, php-format
 msgid "Rejected Callers"
-msgstr "Llamantes rechazados"
+msgstr "Rechazar llamadas entrantes"
 
 #: /var/www/CDRTool/library/sip_settings.php:5587
-msgid ""
-"Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
-msgstr ""
-"Use %Número@% para seleccionar los números PSTN y usuario@dominio para las "
-"direcciones SIP"
+msgid "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
+msgstr "Use %Número@% para seleccionar los números PSTN y usuario@dominio para las direcciones SIP"
 
 #: /var/www/CDRTool/library/sip_settings.php:5668
 msgid "Please fill in the e-mail address. "
@@ -1059,3 +1044,4 @@ msgstr "Error"
 #: /var/www/CDRTool/library/cc_processor.php:780
 msgid "correct the errors and re-submit. "
 msgstr "corrija los errores y envíe de nuevo."
+
