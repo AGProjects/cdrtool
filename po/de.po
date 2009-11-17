@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: 1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-11-17 10:09+0100\n"
-"PO-Revision-Date: 2009-11-17 16:22+0100\n"
+"PO-Revision-Date: 2009-11-17 17:21+0100\n"
 "Last-Translator: Adrian Georgescu <ag@ag-projects.com>\n"
 "Language-Team: language@ag-projects.com\n"
 "MIME-Version: 1.0\n"
@@ -247,8 +247,7 @@ msgstr "Transaktion erfolgreich abgeschlossen. "
 
 #: /var/www/CDRTool/library/sip_settings.php:1729
 msgid "You may check your new balance in the Credit tab. "
-msgstr ""
-"Sie können überprüfen Sie Ihre neues Guthaben in der Guthaben-Registerkarte. "
+msgstr "Sie können überprüfen Sie Ihre neues Guthaben in der Guthaben-Registerkarte. "
 
 #: /var/www/CDRTool/library/sip_settings.php:1745
 msgid "Error saving order"
@@ -490,8 +489,7 @@ msgstr "Voice-Nachrichten werden per E-Mail an %s gesendet"
 #: /var/www/CDRTool/library/sip_settings.php:2657
 #, php-format
 msgid "Dial %s to listen to your messages or change preferences. "
-msgstr ""
-"Wählen Sie %s, um Ihre Nachrichten zu hören oder Einstellungen ändern. "
+msgstr "Wählen Sie %s, um Ihre Nachrichten zu hören oder Einstellungen ändern. "
 
 #: /var/www/CDRTool/library/sip_settings.php:2673
 #: /var/www/CDRTool/library/sip_settings.php:2686
@@ -631,17 +629,16 @@ msgstr "Abschlusssaldo"
 #: /var/www/CDRTool/library/sip_settings.php:4083
 #: /var/www/CDRTool/library/sip_settings.php:4085
 msgid "Dial"
-msgstr ""
+msgstr "Wählen"
 
 #: /var/www/CDRTool/library/sip_settings.php:4085
-#, fuzzy
 msgid "Number"
-msgstr "Kartennummer"
+msgstr "Nummer"
 
 #: /var/www/CDRTool/library/sip_settings.php:4127
 #, php-format
 msgid "Dial %s2*X where X = Number of Minutes, 0 to Reset"
-msgstr ""
+msgstr "Wählen %s2 * X, wobei X = Anzahl der Minuten, 0 Zurücksetzen"
 
 #: /var/www/CDRTool/library/sip_settings.php:4255
 msgid "Failed to open timezone file."
@@ -693,21 +690,16 @@ msgid "Outgoing"
 msgstr "Ausgehender"
 
 #: /var/www/CDRTool/library/sip_settings.php:4698
-msgid ""
-"You can organize contacts into groups that can be used to accept incoming "
-"calls in Don't Disturb section. "
-msgstr ""
-"Sie können Kontakte in Gruppen organisieren, die dazu benutzt werden, um "
-"eingehende Anrufe während ,Bitte nicht stören‘ zu akzeptieren. "
+msgid "You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. "
+msgstr "Sie können Kontakte in Gruppen organisieren, die dazu benutzt werden, um eingehende Anrufe während ,Bitte nicht stören‘ zu akzeptieren. "
 
 #: /var/www/CDRTool/library/sip_settings.php:4772
 msgid "(wildcard %)"
 msgstr "(Wildcard %)"
 
 #: /var/www/CDRTool/library/sip_settings.php:4790
-#, fuzzy
 msgid "No group"
-msgstr "Gruppe"
+msgstr "Keine Gruppe"
 
 #: /var/www/CDRTool/library/sip_settings.php:4795
 msgid "Search"
@@ -722,9 +714,8 @@ msgid "Group"
 msgstr "Gruppe"
 
 #: /var/www/CDRTool/library/sip_settings.php:4874
-#, fuzzy
 msgid "Update"
-msgstr "Datum"
+msgstr "Aktualisieren"
 
 #: /var/www/CDRTool/library/sip_settings.php:4889
 msgid "First"
@@ -753,17 +744,12 @@ msgid "You can reject calls depending on the time of day and Caller-ID. "
 msgstr "Sie können Anrufe je nach Tageszeit und Anrufer-ID ablehnen. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5230
-msgid ""
-"You can create custom groups in the Contacts page like Family or Coworkers. "
+msgid "You can create custom groups in the Contacts page like Family or Coworkers. "
 msgstr "Sie können Anrufe je nach Tageszeit und Anrufer-ID ablehnen. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5232
-msgid ""
-"Rejected calls are diverted based on the Unavailable condition in the Call "
-"Forwarding page. "
-msgstr ""
-"Abgelehnte Anrufe werden auf der Grundlage der Nicht-Erreichbar Bedingung in "
-"der Umleitung Seite umgeleitet. "
+msgid "Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. "
+msgstr "Abgelehnte Anrufe werden auf der Grundlage der Nicht-Erreichbar Bedingung in der Umleitung Seite umgeleitet. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5235
 #, php-format
@@ -820,10 +806,8 @@ msgid "Rejected Callers"
 msgstr "Abgelehnt Anrufer"
 
 #: /var/www/CDRTool/library/sip_settings.php:5587
-msgid ""
-"Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
-msgstr ""
-"Verwenden Sie %Nummer@% auf Telefon-Nummern und user@domain für SIP-Adressen"
+msgid "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
+msgstr "Verwenden Sie %Nummer@% auf Telefon-Nummern und user@domain für SIP-Adressen"
 
 #: /var/www/CDRTool/library/sip_settings.php:5668
 msgid "Please fill in the e-mail address. "
@@ -960,26 +944,23 @@ msgstr "Umleitungen % s geändert"
 
 #: /var/www/CDRTool/library/cc_processor.php:492
 msgid "Email"
-msgstr ""
+msgstr "Email"
 
 #: /var/www/CDRTool/library/cc_processor.php:496
-#, fuzzy
 msgid "Card Verification Number"
-msgstr "Ungültige Kartenprüfnummer"
+msgstr "Kartenprüfnummer"
 
 #: /var/www/CDRTool/library/cc_processor.php:498
-#, fuzzy
 msgid "Address"
-msgstr "SIP Adresse"
+msgstr "Adresse"
 
 #: /var/www/CDRTool/library/cc_processor.php:500
-#, fuzzy
 msgid "City"
-msgstr "Guthaben"
+msgstr "Stad"
 
 #: /var/www/CDRTool/library/cc_processor.php:502
 msgid "Postcode"
-msgstr ""
+msgstr "PLZ"
 
 #: /var/www/CDRTool/library/cc_processor.php:544
 msgid "Shopping Cart"
@@ -1073,3 +1054,4 @@ msgstr "Fehler"
 #: /var/www/CDRTool/library/cc_processor.php:780
 msgid "correct the errors and re-submit. "
 msgstr "korrigieren Sie die Fehler und senden Sie erneut ab. "
+
