@@ -598,7 +598,7 @@ class CreditCardProcessor {
             $page_body_content .= "</td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= "<tr>\n";
-            $page_body_content .= sprintf("<td>%s</td>\n",_("<div id=\"lbl_ccnum\"></div>"));
+            $page_body_content .= "<td><div id=\"lbl_ccnum\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"19\" name=\"creditCardNumber\"></td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
@@ -628,7 +628,7 @@ class CreditCardProcessor {
             $page_body_content .= "</td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= "<tr>\n";
-            $page_body_content .= sprintf("<td>%s</td>\n",_("<div id=\"lbl_cvn\"></div>"));
+            $page_body_content .= "<td><div id=\"lbl_cvn\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"3\" maxlength=\"4\" name=\"cvv2Number\" value=\"\"></td>\n";
             $page_body_content .= "</tr>\n";
 
@@ -636,15 +636,15 @@ class CreditCardProcessor {
             $page_body_content .= sprintf("<td colspan=\"2\" class=%s><b>%s</b></td>\n",$this->chapter_class,_("Card Holder Information"));
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
-            $page_body_content .= sprintf("<td>%s</td>\n",_("<div id=\"lbl_fname\"></div>"));
+            $page_body_content .= "<td><div id=\"lbl_fname\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"32\" name=\"firstName\" value=\"".$this->user_account['FirstName']."\"></td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= "<tr>\n";
-            $page_body_content .= sprintf( "<td>%s</td>\n",_("<div id=\"lbl_lname\"></div>"));
+            $page_body_content .= "<td><div id=\"lbl_lname\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"32\" name=\"lastName\" value=\"".$this->user_account['LastName']."\"></td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
-            $page_body_content .= sprintf("<td>%s</td>\n",_("<div id=\"lbl_email\"></div>"));
+            $page_body_content .= "<td><div id=\"lbl_email\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"50\" name=\"emailAddress\" value=\"".$this->user_account['Email']."\"></td>\n";
             $page_body_content .= "</tr>\n";
 
@@ -653,7 +653,7 @@ class CreditCardProcessor {
             $page_body_content .= sprintf("<td colspan=\"2\" class=%s><b>%s</b></td>\n",$this->chapter_class,_("Billing Address"));
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
-            $page_body_content .= sprintf("<td valign=top>%s</td>\n",_("<div id=\"lbl_addr1\"></div>"));
+            $page_body_content .= "<td valign=top><div id=\"lbl_addr1\"></div></td>\n";
             $page_body_content .= "<td><textarea cols=\"30\" rows=3 maxlength=\"200\" name=\"address1\">".$this->user_account['Address1']."</textarea></td>\n";
             $page_body_content .= "</tr>\n";
     
@@ -665,7 +665,7 @@ class CreditCardProcessor {
             */
     
             $page_body_content .= "<tr>\n";
-            $page_body_content .= sprintf("<td>%s</td>\n",_("<div id=\"lbl_city\"></div>"));
+            $page_body_content .= "<td><div id=\"lbl_city\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"40\" name=\"city\" value=\"".$this->user_account['City']."\"></td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
@@ -690,7 +690,7 @@ class CreditCardProcessor {
             $page_body_content .= "</tr>\n";
 
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
-            $page_body_content .= sprintf("<td>%s</td>\n",_("<div id=\"lbl_postcode\"></div>"));
+            $page_body_content .= "<td><div id=\"lbl_postcode\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"8\" maxlength=\"10\" name=\"zip\" value=\"".$this->user_account['PostCode']."\"></td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= "<tr>\n";
