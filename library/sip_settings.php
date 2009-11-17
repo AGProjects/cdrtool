@@ -4076,13 +4076,13 @@ class SipSettings {
 
                 if ($this->access_numbers[$condition]) {
                     if ($phone['description'] == "Mobile") {
-                        $name .= sprintf(' (Dial %s0)',$this->access_numbers[$condition]);
+                        $name .= sprintf(' (%s %s0)',_("Dial"),$this->access_numbers[$condition]);
                     } else if ($phone['description'] == "Voicemail") {
-                        $name .= sprintf(' (Dial %s1)',$this->access_numbers[$condition]);
+                        $name .= sprintf(' (%s %s1)',_("Dial"),$this->access_numbers[$condition]);
                     } else if ($phone['description'] == "Disabled") {
-                        $name .= sprintf(' (Dial %s)',$this->access_numbers[$condition]);
+                        $name .= sprintf(' (%s %s)',_("Dial"),$this->access_numbers[$condition]);
                     } else if ($phone['description'] == "Other") {
-                        $name .= sprintf(' (Dial %s+ NUMBER)',$this->access_numbers[$condition]);
+                        $name .= sprintf(' (%s %s+ %s)',_("Dial"),$this->access_numbers[$condition],_("Number"));
                     }
                 }
 
@@ -4787,7 +4787,7 @@ class SipSettings {
             printf ("<option value=\"%s\" %s>%s",$key,$selected[$key],$this->PhonebookGroups[$key]);
         }
         print "<option value=\"\">------";
-        printf ("<option value=\"empty\" %s>No group",$selected['empty']);
+        printf ("<option value=\"empty\" %s>%s",$selected['empty'],_("No group"));
 
         print "</select>";
 
@@ -4871,7 +4871,7 @@ class SipSettings {
 
                 if ($this->SOAPversion > 1) {
                     printf ("<input type=text name=name value='%s'>",$this->PhonebookEntries[$_entry]->name);
-                    print "<a href=\"javascript: document.Entry$found.submit()\">Update</a>";
+                    printf ("<a href=\"javascript: document.Entry$found.submit()\">%s</a>",_("Update"));
                 } else {
                     $fname    = $this->PhonebookEntries[$_entry]->firstName;
                     $lname    = $this->PhonebookEntries[$_entry]->lastName;
