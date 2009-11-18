@@ -3303,7 +3303,7 @@ class SIP_trace {
     var $SIPProxies  = array();
     var $mediaTrace  = false;
     var $thor_nodes  = array();
-
+    var $hostnames   = array();
 
     function SIP_trace ($cdr_source) {
         global $DATASOURCES, $auth;
@@ -3349,6 +3349,10 @@ class SIP_trace {
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
     
+                if (is_array($soapEngines[$this->soapEngineId]['hostnames'])) {
+                    $this->hostnames=$soapEngines[$this->soapEngineId]['hostnames'];
+                }
+
             } else {
                 printf ("<p><font color=red>Error: soapEngineID not defined in datasource %s</font>",$this->cdr_source);
                 return false;
@@ -3731,6 +3735,8 @@ class SIP_trace {
             }
         }
 
+		//print_r($this->hostnames);
+
         print "
         <p>
         <a name=#top>
@@ -3743,7 +3749,13 @@ class SIP_trace {
         ";
 
         foreach (array_keys($this->column) as $_key) {
-               $IPels=explode(":",$_key);
+        	$IPels=explode(":",$_key);
+
+			if ($this->hostnames[$IPels[0]]) {
+                $_hostname=$this->hostnames[$IPels[0]];
+            } else {
+                $_hostname=$_key;
+            }
 
             print "<td align=center class=border>";
             if ($proxyIP != $IPels[0] && $this->isProxy($IPels[0],$proxyIP)) {
@@ -3754,12 +3766,12 @@ class SIP_trace {
                 urlencode($fromtag),
                 urlencode($totag),
                 $IPels[0],
-                $_key,
+                $_hostname,
                 $this->column_port[$_key]
                 );
                 printf ("<b><font color=blue>%s</b>",$trace_link);
             } else {
-                printf ("<b>%s</b>",$_key);
+                printf ("<b>%s</b>",$_hostname);
             }
             print "</td>";
         }
