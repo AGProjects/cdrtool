@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-11-18 12:09+0100\n"
-"PO-Revision-Date: 2009-11-18 11:46+0100\n"
+"PO-Revision-Date: 2009-11-18 12:38+0100\n"
 "Last-Translator: Tijmen de Mes <tijmen@ag-projects.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -54,7 +54,7 @@ msgstr "Instellingen"
 
 #: /var/www/CDRTool/library/sip_settings.php:319
 msgid "Forwarding"
-msgstr "Doorsturen"
+msgstr "Doorschakelen"
 
 #: /var/www/CDRTool/library/sip_settings.php:320
 msgid "Don't Disturb"
@@ -463,7 +463,7 @@ msgstr "Bewaren"
 #: /var/www/CDRTool/library/sip_settings.php:2544
 #, php-format
 msgid "Call Forwarding"
-msgstr "Doorschakeling"
+msgstr "Doorschakelingen"
 
 #: /var/www/CDRTool/library/sip_settings.php:2588
 msgid "Enable"
@@ -688,20 +688,16 @@ msgstr "Eerste/Laatste Gesprek"
 #: /var/www/CDRTool/library/sip_settings.php:4367
 #, php-format
 msgid "Incoming"
-msgstr "Inkomende"
+msgstr "Inkomende Gesprekken"
 
 #: /var/www/CDRTool/library/sip_settings.php:4416
 #, php-format
 msgid "Outgoing"
-msgstr "Uitgaande"
+msgstr "Uitgaande Gesprekken"
 
 #: /var/www/CDRTool/library/sip_settings.php:4704
-msgid ""
-"You can organize contacts into groups that can be used to accept incoming "
-"calls in Don't Disturb section. "
-msgstr ""
-"U kan contacten in groepen plaatsen die kunnen worden gebruikt om gesprekken "
-"te accepteren in de Niet Storen sectie."
+msgid "You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. "
+msgstr "U kan contacten in groepen plaatsen die kunnen worden gebruikt om gesprekken te accepteren in de Niet Storen sectie."
 
 #: /var/www/CDRTool/library/sip_settings.php:4778
 msgid "(wildcard %)"
@@ -756,19 +752,12 @@ msgid "You can reject calls depending on the time of day and Caller-ID. "
 msgstr "U kan gesprekken blokkeren afhankelijk van de tijd en het nummer."
 
 #: /var/www/CDRTool/library/sip_settings.php:5236
-msgid ""
-"You can create custom groups in the Contacts page like Family or Coworkers. "
-msgstr ""
-"U kan eigen groepen definiëren in de Contacten pagina zoals Familie of "
-"Collega's"
+msgid "You can create custom groups in the Contacts page like Family or Coworkers. "
+msgstr "U kan eigen groepen definiëren in de Contacten pagina zoals Familie of Collega's"
 
 #: /var/www/CDRTool/library/sip_settings.php:5238
-msgid ""
-"Rejected calls are diverted based on the Unavailable condition in the Call "
-"Forwarding page. "
-msgstr ""
-"Geweigerde gesprekken worden omgeleid met de Niet Beschikbaar conditie op de "
-"Doorschakelingen pagina"
+msgid "Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. "
+msgstr "Geweigerde gesprekken worden omgeleid met de Niet Beschikbaar conditie op de Doorschakelingen pagina"
 
 #: /var/www/CDRTool/library/sip_settings.php:5241
 #, php-format
@@ -825,11 +814,8 @@ msgid "Rejected Callers"
 msgstr "Geweigerde Gesprekken"
 
 #: /var/www/CDRTool/library/sip_settings.php:5593
-msgid ""
-"Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
-msgstr ""
-"Gebruik %Number@% om PSTN nummers en gebruiker@domein om SIP adressen te "
-"filteren"
+msgid "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
+msgstr "Gebruik %Nummer@% om PSTN nummers en gebruiker@domein om SIP adressen te filteren"
 
 #: /var/www/CDRTool/library/sip_settings.php:5674
 msgid "Please fill in the e-mail address. "
@@ -1076,3 +1062,4 @@ msgstr "Fout"
 #: /var/www/CDRTool/library/cc_processor.php:790
 msgid "correct the errors and re-submit. "
 msgstr "verbeter de fouten en probeer opnieuw"
+
