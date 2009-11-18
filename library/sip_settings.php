@@ -387,7 +387,7 @@ class SipSettings {
             $this->show_payments_tab=true;
         }
 
-        if ($this->show_payments_tab) {
+        if ($this->prepaid && $this->show_payments_tab) {
         	$this->tabs['payments']=_("Payments");
         }
     }

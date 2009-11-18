@@ -293,7 +293,7 @@ class CreditCardProcessor {
     array("label"=>"Zaire",    "value"=>"ZR"),
     array("label"=>"Zambia",    "value"=>"ZM"),
     array("label"=>"Zimbabwe",    "value"=>"ZW"),
-    array("label"=>"Undefined",    "value"=>"N/A")
+    array("label"=>"",    "value"=>"N/A")
     );
 
     public $pp_username;
@@ -498,6 +498,8 @@ class CreditCardProcessor {
             $page_body_content .= sprintf("lbl_addr1.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("Address"));
             $page_body_content .= "var lbl_city = document.getElementById('lbl_city');\n";
             $page_body_content .= sprintf("lbl_city.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("City"));
+            $page_body_content .= "var lbl_postcode = document.getElementById('lbl_country');\n";
+            $page_body_content .= sprintf("lbl_country.innerHTML = '<font color=\"#000000\">%s</font>';\n", _("Country"));
             $page_body_content .= "var lbl_postcode = document.getElementById('lbl_postcode');\n";
             $page_body_content .= sprintf("lbl_postcode.innerHTML = '<font color=\"#000000\">%s</font>';\n", _("Postcode"));
             $page_body_content .= "var amt_purchase = document.getElementById('amt_purchase');\n";
@@ -669,7 +671,7 @@ class CreditCardProcessor {
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"40\" name=\"city\" value=\"".$this->user_account['City']."\"></td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
-            $page_body_content .= sprintf("<td>%s</td>\n",_("Country"));
+            $page_body_content .= "<td><div id=\"lbl_country\"></div></td>\n";
             $page_body_content .= "<td>\n";
             $page_body_content .= "<select name=\"country\" id=\"country\" onChange=\"changeStates(this)\">\n";
             foreach($this->countries_array as $country_abbr => $country_name){
@@ -765,6 +767,14 @@ class CreditCardProcessor {
         // check city
         if(strlen(str_replace(" ","",$post_vars['city'])) < 2 || !is_string($post_vars['city'])){
             $errors = array_merge($errors,array('city'=>array('field'=>'City','desc'=>_('Invalid City'))));
+        }
+        // check country
+        if($this->countries_array[$post_vars['country']] == ''){
+            $errors = array_merge($errors,array('country'=>array('field'=>'Country','desc'=>'A country must be selected')));
+        }
+        // check postcode
+        if($post_vars['zip'] == ''){
+            $errors = array_merge($errors,array('zip'=>array('field'=>'Postcode','desc'=>'A postal code must be provided')));
         }
         return $errors;
     }
