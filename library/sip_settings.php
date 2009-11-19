@@ -162,6 +162,7 @@ class SipSettings {
                                      )
                          );
 
+	var $pstn_termination_price_page = 'sip_rates.html';
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
 
@@ -385,10 +386,6 @@ class SipSettings {
 		$_protocol=preg_match("/^(https?:\/\/)/",$_SERVER['SCRIPT_URI'],$m);
         $this->absolute_url=$m[1].$_SERVER['HTTP_HOST'].$this->url;
         //dprint($this->absolute_url);
-
-        if ($_SERVER['REMOTE_ADDR']=="80.101.96.20") {
-            $this->show_payments_tab=true;
-        }
 
         if ($this->prepaid && $this->show_payments_tab) {
         	$this->tabs['payments']=_("Payments");
@@ -2110,7 +2107,7 @@ class SipSettings {
             ";
     
             print "
-            <tr class=even>
+            <tr class=odd>
             <td>";
             print _("Last Name");
             print "
@@ -3732,6 +3729,26 @@ class SipSettings {
         </form>
         </tr>
         ";
+
+        /*
+        print "
+        <tr>
+        <td colspan=3>
+        <p>
+        ";
+        printf (_("Calling to PSTN numbers is possible at the costs set forth in the <a href=%s>price list</a>. "),$this->pstn_termination_price_page);
+
+        $_url=$this->url.'&tab=payments';
+
+        print "<p>";
+        printf (_("To add Credit to your account, go to the <a href=%s>Payments</a> Tab. "),$_url);
+
+        print "
+        </td>
+        </tr>
+        ";
+        */
+
     }
 
     function getPrepaidStatus() {
