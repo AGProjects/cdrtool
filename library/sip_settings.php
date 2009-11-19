@@ -1688,7 +1688,7 @@ class SipSettings {
         	$CardProcessor->user_account['PostCode']='';
         }
 
-        if ($_POST['submit'] == 'Purchase' ) {
+        if ($_REQUEST['purchase'] == '1' ) {
 
             $chapter=sprintf(_("Transaction Results"));
             $this->showChapter($chapter);
@@ -1699,8 +1699,8 @@ class SipSettings {
             ";
 
             // ensure that submit requests are coming only from the current page
-            if($_SERVER['HTTP_REFERER'] == $CardProcessor->getPageURL()){
-        
+            if($_SERVER['HTTP_REFERER'] == $CardProcessor->getPageURL()) {
+
                 // check submitted values
                 $formcheck1 = $CardProcessor->checkForm($_POST);
                 if (count($formcheck1) > 0){
@@ -1708,9 +1708,10 @@ class SipSettings {
                     print $CardProcessor->displayProcessErrors($formcheck1);
                     return false;
                 }
-        
+
                 // process the payment
                 $pay_process_results = $CardProcessor->processPayment($_POST);
+                //print_r($pay_process_results);
                 if(count($pay_process_results['error']) > 0){
                     // there was a problem with payment
                     // show error and stop
