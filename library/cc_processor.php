@@ -15,8 +15,18 @@ setlocale(LC_MONETARY, 'en_US');
 
 class CreditCardProcessor {
     // default cart items, must be set by external application after instantiating this class
-    var $cart_items      = array('service1'=>array('cost'=>10,'description'=>'First Item'),
-                                 'service2'=>array('cost'=>20,'description'=>'Second Item')
+    var $cart_items      = array('service1'=>array('price'       => 10,
+                                                   'unit'        => 'unit1',
+                                                   'description' => 'First Item',
+                                                   'duration'    => 'N/A',
+                                                   'qty'         => 1
+                                                   ),
+                                 'service2'=>array('price'       => 20,
+                                                   'unit'        => 'unit2',
+                                                   'description' => 'Second Item',
+                                                   'duration'    => 'N/A',
+                                                   'qty'         => 1
+                                                   )
                                  );
 
     // html hidden elements that need to be preserved between submits by the application that uses this form
@@ -44,6 +54,7 @@ class CreditCardProcessor {
     var $billing_name     = ''; // saved after transaction is sucessfull
     var $billing_address  = ''; // saved after transaction is sucessfull
 
+    var $vat              = 0; // percentage for VAT tax
     // nothing should be needed to be changed below this line by the application using this class
 
     // countries that are in sync with other AG Projects backends
@@ -424,7 +435,7 @@ class CreditCardProcessor {
             $amt = 0;
 
             foreach($this->cart_items as $item_array => $item_details){
-                $amt = $amt+$item_details['cost'];
+                $amt = $amt+$item_details['price'];
             }
 
             $amt_currency = money_format('%i', $amt);
@@ -503,7 +514,7 @@ class CreditCardProcessor {
             $page_body_content .= "var lbl_postcode = document.getElementById('lbl_postcode');\n";
             $page_body_content .= sprintf("lbl_postcode.innerHTML = '<font color=\"#000000\">%s</font>';\n", _("Postcode"));
             $page_body_content .= "var amt_purchase = document.getElementById('amt_purchase');\n";
-            //$page_body_content .= "amt_purchase.innerHTML = '".$this->cart_items[0]['cost']." USD <input type=\"hidden\" name=\"amount\" value=\"".$this->cart_items[0]['cost']."\"><input type=\"hidden\" name=\"item\" value=\"".$this->cart_items[0]."\">';\n";
+            //$page_body_content .= "amt_purchase.innerHTML = '".$this->cart_items[0]['price']." USD <input type=\"hidden\" name=\"amount\" value=\"".$this->cart_items[0]['price']."\"><input type=\"hidden\" name=\"item\" value=\"".$this->cart_items[0]."\">';\n";
             $page_body_content .= "amt_purchase.innerHTML = '".$amt_currency."<input type=\"hidden\" name=\"amount\" value=\"".$amt."\">';\n";
             $page_body_content .= "var states_list = document.getElementById('states_list');\n";
             $page_body_content .= "if('".$this->user_account['Country']."' == 'CA'){\n";
@@ -551,7 +562,7 @@ class CreditCardProcessor {
             // dropdown menu
             $page_body_content .= "<select name=\"item_purchase\" onChange=\"changeAmount(this)\">\n";
             foreach($this->cart_items as $item_array => $item_details){
-                $page_body_content .=  "<option value=\"".$item_array."|".$item_details['cost']."\">".$item_details['description']."</option>\n";
+                $page_body_content .=  "<option value=\"".$item_array."|".$item_details['price']."\">".$item_details['description']."</option>\n";
             }
             $page_body_content .= "</select>\n";
             */
@@ -571,9 +582,9 @@ class CreditCardProcessor {
     
                 $page_body_content .= "<tr class=".$_class.">
                 <input type=\"hidden\" name=\"cart_item[]\" value=\"".$item_array."\">
-                    <input type=\"hidden\" name=\"cart_item_price[]\" value=\"".$item_details['cost']."\">".
+                    <input type=\"hidden\" name=\"cart_item_price[]\" value=\"".$item_details['price']."\">".
                 "<td>".$item_details['description']."</td>".
-                "<td>".money_format('%i', $item_details['cost'])."</td></tr>\n";
+                "<td>".money_format('%i', $item_details['price'])."</td></tr>\n";
             }
 
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_odd_class);
@@ -939,7 +950,11 @@ class CreditCardProcessor {
         }
 
         $this->billing_address .= $_BillingPostalCode.', '.$_BillingCity."\n";
-        $this->billing_address .= $_BillingState.', '.$_BillingCountry;
+        if ($_BillingState) {
+        	$this->billing_address .= $_BillingState.', '.$_BillingCountry;
+        } else {
+        	$this->billing_address .= $_BillingCountry;
+        }
 
         $sql_conn = $this->dbConnection();
         // insert transaction information

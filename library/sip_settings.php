@@ -1633,8 +1633,12 @@ class SipSettings {
 
         // load shopping items
         $CardProcessor->cart_items = array(
-                            'pstn_credit'=>array('cost'=>30,
-                                                 'description'=>_('PSTN Termination Credit'))
+                            'pstn_credit'=>array('price'       => 30,
+                                                 'description' => _('PSTN Termination Credit'),
+                                                 'unit'        => 'credit',
+                                                 'duration'    => 'N/A',
+                                                 'qty'         => 1
+                                                 )
                             );
 
 
