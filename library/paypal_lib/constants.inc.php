@@ -9,7 +9,11 @@ define('REFUND_PARTIAL', 'Partial');
 define('REFUND_FULL', 'Full');
 
 // Profile
-define('ENVIRONMENT', 'sandbox');
+// TEST ENVIRONMENT
+//define('ENVIRONMENT', 'sandbox');
+
+// LIVE ENVIRONMENT
+define('ENVIRONMENT', 'live');
 
 define('DEV_CENTRAL_URL', 'https://developer.paypal.com');
 
