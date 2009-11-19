@@ -56,7 +56,7 @@ class SipSettings {
 
 	var $show_barring_tab   = false;
 	var $show_presence_tab  = false;
-    var $show_payments_tab  = false;
+    var $show_payments_tab  = true;
 
     var $first_tab = 'calls';
     var $autoRefeshTab = 0;              // number of seconds after which to refresh tab content in the web browser
