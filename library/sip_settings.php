@@ -56,10 +56,10 @@ class SipSettings {
 
 	var $show_barring_tab   = false;
 	var $show_presence_tab  = false;
-    var $show_payments_tab  = true;
+    var $show_payments_tab  = false;
 
-    var $first_tab = 'calls';
-    var $autoRefeshTab = 0;              // number of seconds after which to refresh tab content in the web browser
+    var $first_tab          = 'calls';
+    var $auto_refesh_tab = 0;              // number of seconds after which to refresh tab content in the web browser
 
     // end variables
 
@@ -68,11 +68,9 @@ class SipSettings {
     var $call_img                  = "<img src=images/call.gif border=0>";
     var $delete_img                = "<img src=images/del_pb.gif border=0>";
 
-    var $ForwardingTargetTypes       = array("Voicemail","Other","Mobile","Tel","ENUM","Disabled");
-
     var $groups                    = array();
 
-    var $WEBdictionary             = array(
+    var $form_elements             = array(
                                            'mailto',
                                            'free-pstn',
                                            'blocked',
@@ -104,17 +102,17 @@ class SipSettings {
                                            'extra_groups'
                                            );
 
-    var $presenceStatuses   = array('allow','deny','confirm');
-    var $presenceActivities = array('busy'      => 'buddy_busy.jpg',
+    var $presence_statuses   = array('allow','deny','confirm');
+    var $presence_activities = array('busy'      => 'buddy_busy.jpg',
                                     'open'      => 'buddy_online.jpg',
                                     'available' => 'buddy_online.jpg',
                                     'idle'      => 'buddy_idle.jpg',
                                     'away'      => 'buddy_away.jpg'
                                     );
 
-	var $disable_extra_groups=false;
+	var $disable_extra_groups=true;
 
-    var $timeoutEls=array(
+    var $timeout_els=array(
              "5" =>"5 s",
              "10"=>"10 s",
              "15"=>"15 s",
@@ -130,13 +128,13 @@ class SipSettings {
              );
 
     var $prepaid             = 0;
-    var $emergencyRegions    = array();
+    var $emergency_regions   = array();
     var $FNOA_timeoutDefault = 35;
-    var $exportFilename      = "export.txt";
-    var $presenceRules       = array();
+    var $export_filename     = "export.txt";
+    var $presence_rules      = array();
     var $enums               = array();
-    var $barringPrefixes     = array();
-    var $presenceWatchers    = array();
+    var $barring_prefixes    = array();
+    var $presence_watchers   = array();
     var $SipUAImagesPath     = "images";
     var $SipUAImagesFile     = "phone_images.php";
     var $balance_history     = array();
@@ -157,7 +155,7 @@ class SipSettings {
                          "es"=>array('name'=>"Español",
                                      'timezone' => 'Europe/Madrid'
                                      ),
-                         "de"=>array('name'=>"Deutsche",
+                         "de"=>array('name'=>"Deutsch",
                                      'timezone' => 'Europe/Berlin'
                                      )
                          );
@@ -222,7 +220,7 @@ class SipSettings {
         $this->getAccount($account);
 
         if ($this->tab=='calls' && !$_REQUEST['export']) {
-        	$this->autoRefeshTab=180;
+        	$this->auto_refesh_tab=180;
         }
 
         if ($this->login_type == "admin") {
@@ -1274,16 +1272,20 @@ class SipSettings {
 
             // for a reseller we need to check if a subaccount is allowed
             if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
-                dprint("is reseller");
-                $this->pstn_changes_allowed = true;
+                if ($this->resellerProperties['pstn_access']) {
+                	dprint("is reseller");
+                	$this->pstn_changes_allowed = true;
+                }
                 return;
             } else if ($this->customerImpersonate == $this->loginCredentials['reseller']) {
-                dprint("impersonate reseller");
-                $this->pstn_changes_allowed = true;
+                if ($this->resellerProperties['pstn_access']) {
+                	dprint("impersonate reseller");
+                	$this->pstn_changes_allowed = true;
+                }
                 return;
             }
         } else if ($this->login_type == 'customer') {
-            if ($this->customerProperties['pstn_changes']) {
+            if ($this->resellerProperties['pstn_access'] && $this->customerProperties['pstn_access']) {
                 $this->pstn_changes_allowed = true;
                 return;
             }
@@ -1306,15 +1308,19 @@ class SipSettings {
             // for a reseller we need to check if a subaccount is allowed
             if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
                 dprint("is reseller");
-                $this->prepaid_changes_allowed = true;
+                if ($this->resellerProperties['prepaid_changes']) {
+                    $this->prepaid_changes_allowed = true;
+                }
                 return;
             } else if ($this->customerImpersonate == $this->loginCredentials['reseller']) {
                 dprint("impersonate reseller");
-                $this->prepaid_changes_allowed = true;
+                if ($this->resellerProperties['prepaid_changes']) {
+                    $this->prepaid_changes_allowed = true;
+                }
                 return;
             }
         } elseif ($this->login_type == 'customer') {
-            if ($this->customerProperties['prepaid_changes']) {
+            if ($this->resellerProperties['prepaid_changes'] && $this->customerProperties['prepaid_changes']) {
                 $this->prepaid_changes_allowed = true;
                 return;
             }
@@ -1614,6 +1620,21 @@ class SipSettings {
 
     function showPaymentsTab() {
         if (!$this->owner) {
+            $chapter=sprintf(_("Payments"));
+            $this->showChapter($chapter);
+
+            print "
+            <tr>
+            <td colspan=3>
+            <p>";
+
+            print _("You must set the Owner to enable Credit Card Payments. ");
+
+            print "
+            </td>
+            </tr>
+            ";
+
             return false;
         }
 
@@ -2188,7 +2209,7 @@ class SipSettings {
         </tr>
         ";
 
-        if (count($this->emergencyRegions) > 0) {
+        if (count($this->emergency_regions) > 0) {
             print "
             <tr>
             <td>";
@@ -2199,8 +2220,8 @@ class SipSettings {
             ";
             print "<select name=region>";
             $selected_region[$this->region]="selected";
-            foreach (array_keys($this->emergencyRegions) as $_region) {
-                printf ("<option value=\"%s\" %s>%s",$_region,$selected_region[$_region],$this->emergencyRegions[$_region]);
+            foreach (array_keys($this->emergency_regions) as $_region) {
+                printf ("<option value=\"%s\" %s>%s",$_region,$selected_region[$_region],$this->emergency_regions[$_region]);
             }
             print "</select>";
 
@@ -2219,7 +2240,6 @@ class SipSettings {
             }
 
             if ($this->pstn_changes_allowed) {
-
                 print "
                 <tr class=$_class>
                 <td>";
@@ -2477,8 +2497,8 @@ class SipSettings {
         ");
  
         print "<select name=timeout>";
-        foreach (array_keys($this->timeoutEls) as $_el) {
-            printf ("<option value=\"%s\" %s>%s",$_el,$selected_timeout[$_el],$this->timeoutEls[$_el]);
+        foreach (array_keys($this->timeout_els) as $_el) {
+            printf ("<option value=\"%s\" %s>%s",$_el,$selected_timeout[$_el],$this->timeout_els[$_el]);
         }
         print "</select>";
  
@@ -2791,16 +2811,16 @@ class SipSettings {
             return false;
         }
 
-        $this->barringPrefixes=$result;
+        $this->barring_prefixes=$result;
         return true;
     }
 
     function setBarringPrefixes() {
         dprint("setBarringPrefixes");
         $prefixes=array();
-        $barringPrefixes=$_REQUEST['barringPrefixes'];
+        $barring_prefixes=$_REQUEST['barring_prefixes'];
 
-        foreach ($barringPrefixes as $_prefix) {
+        foreach ($barring_prefixes as $_prefix) {
             if (preg_match("/^\+[1-9][0-9]*$/",$_prefix)) {
                 $prefixes[]=$_prefix;
             }
@@ -2844,7 +2864,7 @@ class SipSettings {
         print _("Destination Prefix");
         print "</td>";
         print "<td align=left>
-        <input type=text name=barringPrefixes[]>
+        <input type=text name=barring_prefixes[]>
         ";
         print _("Example");
         print ": +31900";
@@ -2854,7 +2874,7 @@ class SipSettings {
         ";
 
         if ($this->getBarringPrefixes()) {
-            foreach ($this->barringPrefixes as $_prefix) {
+            foreach ($this->barring_prefixes as $_prefix) {
                 $found++;
 
                 $rr=floor($found/2);
@@ -2873,7 +2893,7 @@ class SipSettings {
                 print _("Destination Prefix");
                 print "</td>";
                 print "<td align=left>
-                <input type=text name=barringPrefixes[] value=\"$_prefix\">
+                <input type=text name=barring_prefixes[] value=\"$_prefix\">
                 </td>";
                 print "<tr>";
             }
@@ -2916,7 +2936,7 @@ class SipSettings {
         $this->getDiversions();
         */
 
-        foreach ($this->WEBdictionary as $el) {
+        foreach ($this->form_elements as $el) {
             ${$el} = $_REQUEST[$el];
         }
 
@@ -3009,6 +3029,8 @@ class SipSettings {
             }
 
             $result->prepaid=intval($_REQUEST['prepaid']);
+        } else {
+            $result->prepaid=1;
         }
 
         reset($this->availableGroups);
@@ -3026,6 +3048,9 @@ class SipSettings {
                             $this->somethingChanged=1;
                             $this->setPreference('last_sip_quota',"$this->quota");
                         }
+
+                        $this->somethingChanged=1;
+                        $result->prepaid=0;
                     }
 
                 	if (!in_array($key,$this->groups) && $val) {
@@ -3662,9 +3687,9 @@ class SipSettings {
     }
 
     function showIncreaseBalanceReseller () {
-    	if ($this->login_type != 'reseller' && $this->login_type != 'admin') return true;
+    	if (!$this->prepaid_changes_allowed) return false;
 
-        $chapter=sprintf(_("Add Balance"))." (admin)";
+	    $chapter=sprintf(_("Add Balance"));
         $this->showChapter($chapter);
 
         print "
@@ -5006,16 +5031,16 @@ class SipSettings {
         if (!$userAgent) $userAgent='snom';
 
         if ($userAgent=='snom') {
-            $this->exportFilename="tbook.csv";
+            $this->export_filename="tbook.csv";
             $phonebook.=sprintf("Name,Address,Group\n");
         } else if ($userAgent == 'eyebeam') {
             $phonebook.=sprintf("Name,Group Name,SIP URL,Proxy ID\n");
         } else if ($userAgent == 'csco') {
             $this->contentType="Content-type: text/xml";
-            $this->exportFilename="directory.xml";
+            $this->export_filename="directory.xml";
             $phonebook.=sprintf ("<CiscoIPPhoneDirectory>\n\t<Title>%s</Title>\n\t<Prompt>Directory</Prompt>\n",$this->account);
         } else if ($userAgent == 'unidata') {
-            $this->exportFilename="phonebook.csv";
+            $this->export_filename="phonebook.csv";
             $phonebook.=sprintf("Index,Name,,,,\n");
             $phonebook.=sprintf("0,Undefined,,,,\n");
 
@@ -5061,7 +5086,7 @@ class SipSettings {
         }
 
         Header($this->contentType);
-        $_header=sprintf("Content-Disposition: inline; filename=%s",$this->exportFilename);
+        $_header=sprintf("Content-Disposition: inline; filename=%s",$this->export_filename);
         Header($_header);
         header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
         header("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -5732,7 +5757,7 @@ class SipSettings {
     function checkSettings() {
         dprint ("checkSettings()");
 
-        foreach ($this->WEBdictionary as $el) {
+        foreach ($this->form_elements as $el) {
             ${$el}=trim($_REQUEST[$el]);
         }
 
@@ -5883,13 +5908,13 @@ class SipSettings {
 
         $selected_activity[$this->presentity['activity']]='selected';
 
-        foreach (array_keys($this->presenceActivities) as $_activity) {
+        foreach (array_keys($this->presence_activities) as $_activity) {
             printf ("<option %s value='%s'>%s",$selected_activity[$_activity],$_activity,ucfirst($_activity));
         }
         print "</select>";
 
-        if ($this->presenceActivities[$this->presentity['activity']]) {
-            printf ("<img src=images/%s border=0>",$this->presenceActivities[$this->presentity['activity']]);
+        if ($this->presence_activities[$this->presentity['activity']]) {
+            printf ("<img src=images/%s border=0>",$this->presence_activities[$this->presentity['activity']]);
         }
 
         print "
@@ -5902,20 +5927,20 @@ class SipSettings {
 
         $j=0;
 
-        foreach (array_keys($this->presenceWatchers) as $_watcher) {
+        foreach (array_keys($this->presence_watchers) as $_watcher) {
             $j++;
 
             $online_icon='';
 
-            if (is_array($this->presenceRules['allow']) && in_array($_watcher,$this->presenceRules['allow'])) {
+            if (is_array($this->presence_rules['allow']) && in_array($_watcher,$this->presence_rules['allow'])) {
                 $display_status = 'allow';
-            } elseif (is_array($this->presenceRules['deny']) && in_array($_watcher,$this->presenceRules['deny'])) {
+            } elseif (is_array($this->presence_rules['deny']) && in_array($_watcher,$this->presence_rules['deny'])) {
                 $display_status = 'deny';
             } else {
-                $display_status = $this->presenceWatchers[$_watcher]['status'];
+                $display_status = $this->presence_watchers[$_watcher]['status'];
             }
 
-            if ($this->presenceWatchers[$_watcher]['online'] == 1) {
+            if ($this->presence_watchers[$_watcher]['online'] == 1) {
                 $online_icon="<img src=images/buddy_online.jpg border=0>";
             } else {
                 $online_icon="<img src=images/buddy_offline.jpg border=0>";
@@ -5944,7 +5969,7 @@ class SipSettings {
             unset($selected);
             $selected[$display_status]='selected';
 
-            foreach ($this->presenceStatuses as $_status) {
+            foreach ($this->presence_statuses as $_status) {
                 if ($_status== 'confirm' && !$selected[$_status]) continue;
                 printf ("<option %s value=%s>%s",$selected[$_status],$_status,ucfirst($_status));
             }
@@ -5961,12 +5986,12 @@ class SipSettings {
         $this->showChapter($chapter);
 
         $j=0;
-        foreach (array_keys($this->presenceRules) as $_key) {
+        foreach (array_keys($this->presence_rules) as $_key) {
             $j++;
 
-            foreach ($this->presenceRules[$_key] as $_tmp) {
+            foreach ($this->presence_rules[$_key] as $_tmp) {
 
-                if (in_array($_tmp,array_keys($this->presenceWatchers))) {
+                if (in_array($_tmp,array_keys($this->presence_watchers))) {
                     continue;
                 }
 
@@ -5981,7 +6006,7 @@ class SipSettings {
                 unset($selected);
                 $selected[$_key]='selected';
 
-                foreach ($this->presenceStatuses as $_status) {
+                foreach ($this->presence_statuses as $_status) {
                     if ($_status== 'confirm' && !$selected[$_status]) continue;
                     printf ("<option %s value=%s>%s",$selected[$_status],$_status,ucfirst($_status));
                 }
@@ -6009,7 +6034,7 @@ class SipSettings {
         <select name=watcher_status[]>
         ");
         $selected['deny']='selected';
-        foreach ($this->presenceStatuses as $_status) {
+        foreach ($this->presence_statuses as $_status) {
             printf ("<option %s value=%s>%s",$selected[$_status],$_status,ucfirst($_status));
         }
 
@@ -6053,7 +6078,7 @@ class SipSettings {
 
         // set policy
         unset($policy);
-        foreach ($this->presenceStatuses as $_status) {
+        foreach ($this->presence_statuses as $_status) {
             $policy[$_status]=array();
         }
 
@@ -6116,14 +6141,14 @@ class SipSettings {
         dprint_r($result);
 
         foreach ($result as $_watcher) {
-            $this->presenceWatchers[$_watcher->id]['status']=$_watcher->status;
-            $this->presenceWatchers[$_watcher->id]['online']=$_watcher->online;
+            $this->presence_watchers[$_watcher->id]['status']=$_watcher->status;
+            $this->presence_watchers[$_watcher->id]['online']=$_watcher->online;
             $this->watchersOnline=0;
-            if ($this->presenceWatchers[$_watcher->id]['online']) {
+            if ($this->presence_watchers[$_watcher->id]['online']) {
                 $this->watchersOnline++;
             }
         }
-        //dprint_r($this->presenceWatchers);
+        //dprint_r($this->presence_watchers);
 
     }
 
@@ -6181,11 +6206,11 @@ class SipSettings {
             return false;
         }
 
-        foreach ($this->presenceStatuses as $_status) {
-            $this->presenceRules[$_status] = $result->$_status;
+        foreach ($this->presence_statuses as $_status) {
+            $this->presence_rules[$_status] = $result->$_status;
         }
 
-        //dprint_r($this->presenceRules);
+        //dprint_r($this->presence_rules);
     }
 
     function getFileTemplate($name, $type="file") {
@@ -6868,11 +6893,11 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $header = $SipSettings->headerFile;
         $css    = $SipSettings->cssFile;
 
-		$autoRefeshTab=$SipSettings->autoRefeshTab;
+		$auto_refesh_tab=$SipSettings->auto_refesh_tab;
         $absolute_url= $SipSettings->absolute_url;
 
         include($header);
-        dprint("Header file $header included, refresh=$autoRefeshTab");
+        dprint("Header file $header included, refresh=$auto_refesh_tab");
         include($css);
         dprint("CSS file $css included");
 
