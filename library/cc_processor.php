@@ -55,6 +55,9 @@ class CreditCardProcessor {
     var $billing_address  = ''; // saved after transaction is sucessfull
 
     var $vat              = 0; // percentage for VAT tax
+
+    var $note             = ''; // can be set to add a note to the transaction
+
     // nothing should be needed to be changed below this line by the application using this class
 
     // countries that are in sync with other AG Projects backends

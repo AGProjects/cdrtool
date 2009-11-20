@@ -362,8 +362,11 @@ class CallerServices extends SOAP_Client
             $logger->log('Response XML: ' . $this->_sanitizeLog($this->__last_response), PEAR_LOG_DEBUG);
 
         case PEAR_LOG_INFO:
+            /*
+            // Commented out by adigeo because getAck() crashed Paypal API is there is no ACK in the response
             $ack = is_object($response) && method_exists($response, 'getAck') ? ', Ack: ' . $response->getAck() : '';
             $logger->log($operation . ', Elapsed: ' . $elapsed . 'ms' . $ack, PEAR_LOG_INFO);
+            */
 
         case PEAR_LOG_ERR:
             if (PayPal::isError($response)) {
