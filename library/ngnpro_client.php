@@ -1129,15 +1129,8 @@ class Records {
         }
 
         $filter=array('customer'=>intval($this->customer));
-
-        $range=array('start' => 0,
-                     'count' => 100
-                     );
-
-        // Order
-        $orderBy = array('attribute' => 'customer',
-                         'direction' => 'ASC'
-                         );
+        $range=array('start' => 0,'count' => 1);
+        $orderBy = array('attribute' => 'customer','direction' => 'ASC');
 
         // Compose query
         $Query=array('filter'     => $filter,
@@ -1160,8 +1153,41 @@ class Records {
             return false;
         } else {
             $this->loginAccount=$result->accounts[0];
+            $this->loginImpersonate=$result->accounts[0]->impersonate;
             $this->loginProperties=$this->loginAccount->properties;
         }
+
+        if ($this->loginAccount->reseller == $this->customer) {
+        	$this->resellerProperties=$this->loginProperties;
+        } else {
+            $filter=array('customer'=>intval($this->loginAccount->reseller));
+            $range=array('start' => 0,'count' => 1);
+            $orderBy = array('attribute' => 'customer','direction' => 'ASC');
+    
+            // Compose query
+            $Query=array('filter'     => $filter,
+                            'orderBy' => $orderBy,
+                            'range'   => $range
+                            );
+    
+    
+            // Insert credetials
+            $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
+    
+            // Call function
+            $result     = $this->SoapEngine->soapclientCustomers->getResellers($Query);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            } else {
+                $this->resellerProperties=$result->accounts[0]->properties;
+            }
+        }
+        //dprint_r($this->resellerProperties);
     }
 
     function showCustomerForm($name='customer_filter') {
@@ -1473,6 +1499,18 @@ class Records {
         if (!count($this->loginProperties)) return false;
 
         foreach ($this->loginProperties as $_property) {
+            if ($_property->name == $name) {
+                return $_property->value;
+            }
+        }
+
+        return false;
+    }
+
+    function getResellerProperty($name='') {
+        if (!count($this->resellerProperties)) return false;
+
+        foreach ($this->resellerProperties as $_property) {
             if ($_property->name == $name) {
                 return $_property->value;
             }
@@ -2696,7 +2734,12 @@ class SipAccounts extends Records {
         printf ("<nobr>Owner<input type=text size=7 name=owner value='%s'></nobr> ",$_REQUEST['owner']);
         printf ("<nobr>PSTN<input type=checkbox name=pstn value=1 %s></nobr> ",$checked_pstn);
         printf ("<nobr>Quota<input type=text size=5 name=quota value='%s'></nobr> ",$_quota);
-        printf ("<nobr>Prepaid<input type=checkbox name=prepaid value=1 %s></nobr> ",$checked_prepaid);
+
+		if ($this->prepaidChangesAllowed()) {
+            printf ("<nobr>Prepaid<input type=checkbox name=prepaid value=1 %s></nobr> ",$checked_prepaid);
+        } else {
+            printf ("<nobr>Prepaid<input type=checkbox name=prepaid value=1 checked disabled=true></nobr> ");
+        }
 
         print "
         </td>
@@ -2705,6 +2748,7 @@ class SipAccounts extends Records {
         print "
         </td>
         ";
+
         $this->printHiddenFormElements();
 
         print "
@@ -2926,7 +2970,7 @@ class SipAccounts extends Records {
                      'quota'      => $quota,
                      'region'     => '',
                      'properties' => $properties
-                    );
+                     );
 
         //print_r($account);
         $deleteAccount=array('username' => $username,
@@ -3170,6 +3214,24 @@ class SipAccounts extends Records {
 
     }
 
+    function prepaidChangesAllowed() {
+
+        //dprint_r($this->loginProperties);
+		$_customer_prepaid_changes=$this->getCustomerProperty('prepaid_changes');
+        $_reseller_prepaid_changes=$this->getCustomerProperty('prepaid_changes');
+
+        if ($this->customer == $this->reseller && $_reseller_prepaid_changes) {
+        	return true;
+        } else if ($this->loginImpersonate == $this->reseller && $_reseller_prepaid_changes) {
+        	return true;
+        } else if ($_reseller_prepaid_changes && $_customer_prepaid_changes) {
+            return true;
+        }
+
+        return false;
+    }
+
+
 }
 
 class SipAliases extends Records {
@@ -3327,7 +3389,7 @@ class SipAliases extends Records {
 
             $this->rows = $result->total;
 
-             if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
+            if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
             }
 
@@ -10879,13 +10941,10 @@ class Customers extends Records {
                                                                'permission' => 'admin',
                                                                'resellerMayManageForChildAccounts' => true
                                                                ),
-                                 'pstn_changes'         => array('name'      => 'Change PSTN settings',
+                                 'prepaid_changes'      => array('name'      => 'Prepaid Changes',
                                                                'category'   => 'sip',
-                                                               'permission' => 'reseller'
-                                                               ),
-                                 'prepaid_changes'      => array('name'      => 'Change Prepaid',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'reseller'
+                                                               'permission' => 'admin',
+                                                               'resellerMayManageForChildAccounts' => true
                                                                ),
                                  'voicemail_server'    => array('name'      => 'Voicemail server address',
                                                                'category'   => 'sip',
