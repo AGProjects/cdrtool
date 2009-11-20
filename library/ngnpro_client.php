@@ -1192,7 +1192,7 @@ class Records {
 
     function showCustomerForm($name='customer_filter') {
         if ($this->login_credentials['customer'] != $this->login_credentials['reseller']) {
-            printf ("%s",$this->login_credentials['customer']);
+            printf (" %s ",$this->login_credentials['customer']);
         } else {
             if (count($this->customers)) {
                 $select_customer[$this->filters['customer']]='selected';
@@ -1211,7 +1211,7 @@ class Records {
     function showResellerForm($name='reseller_filter') {
         if (!$this->adminonly) return;
         if ($this->login_credentials['reseller']) {
-            printf ("%s",$this->login_credentials['reseller']);
+            printf (" %s ",$this->login_credentials['reseller']);
         } else {
             if (count($this->resellers)) {
                 $select_reseller[$this->filters['reseller']]='selected';
