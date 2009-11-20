@@ -146,7 +146,7 @@ class SipSettings {
     var $languages=array("en"=>array('name'=>"English",
                                      'timezone'=>''
                                      ),
-                         "ro"=>array('name'=>"Romaneste",
+                         "ro"=>array('name'=>"Română",
                                      'timezone' => 'Europe/Bucharest'
                                      ),
                          "nl"=>array('name'=>"Nederlands",
