@@ -3760,18 +3760,22 @@ class SipSettings {
         </tr>
         ";
 
+        $_url=$this->url.'&tab=payments';
+
+        $_s1=sprintf (_("Calling to PSTN numbers is possible at the costs set forth in the <a href=%s>price list</a>. "),$this->pstn_termination_price_page);
+        $_s2=sprintf (_("To add Credit to your account, go to the <a href=%s>Payments</a> Tab. "),$_url);
+
         /*
         print "
         <tr>
         <td colspan=3>
-        <p>
         ";
-        printf (_("Calling to PSTN numbers is possible at the costs set forth in the <a href=%s>price list</a>. "),$this->pstn_termination_price_page);
-
-        $_url=$this->url.'&tab=payments';
 
         print "<p>";
-        printf (_("To add Credit to your account, go to the <a href=%s>Payments</a> Tab. "),$_url);
+        print $_s1;
+
+        print "<p>";
+        print $_s2;
 
         print "
         </td>
