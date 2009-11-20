@@ -61,6 +61,9 @@ class SipSettings {
     var $first_tab          = 'calls';
     var $auto_refesh_tab = 0;              // number of seconds after which to refresh tab content in the web browser
 
+    var $deny_countries  = array();
+	var $allow_countries = array();
+
     // end variables
 
     var $tab                       = "settings";
@@ -1642,12 +1645,38 @@ class SipSettings {
             return false;
         }
 
+        if ($this->fraudDetected()) {
+            $chapter=sprintf(_("Payments"));
+            $this->showChapter($chapter);
+
+            print "
+            <tr>
+            <td colspan=3>
+            ";
+
+
+            if ($this->login_type!='subscriber') {
+                print "<p>";
+            	printf ("<font color=red>%s</font>",$this->fraud_reason);
+            } else {
+            	print _("Page Not Available");
+            }
+
+            print "</td>
+            </tr>
+            ";
+
+            return false;
+        }
+
         require('cc_processor.php');
         
 		$CardProcessor = new CreditCardProcessor();
 		$CardProcessor->chapter_class  = 'chapter';
         $CardProcessor->odd_row_class  = 'odd';
         $CardProcessor->even_row_class = 'even';
+
+        $CardProcessor->note = 'SIP Account '.$this->account;
 
         // set hidden elements we need to preserve in the shopping cart application
 		$CardProcessor->hidden_elements = $this->hiddenElements;
@@ -1662,8 +1691,7 @@ class SipSettings {
                                                  )
                             );
 
-
-	    // load user information from owner infromation if available otherwise from sip account settings
+	    // load user information from owner information if available otherwise from sip account settings
 
 		if ($this->owner_information['firstName']) {
         	$CardProcessor->user_account['FirstName']=$this->owner_information['firstName'];
@@ -1742,14 +1770,14 @@ class SipSettings {
                     // show error and stop
                     print $CardProcessor->displayProcessErrors($pay_process_results);
 
-                	$log=sprintf("SIP Account - CC Transaction failed to complete");
+                	$log=sprintf("Error: SIP Account %s - CC transaction %s failed to process (%s)",$this->account, $CardProcessor->transaction_data['TRANSACTION_ID'],$pay_process_results['desc']);
                 	syslog(LOG_NOTICE, $log);
 
                     return false;
                 }
         
-                // save the transaction in the database, add credit to user account and 
-                // notify parties by email
+                $log=sprintf("SIP Account %s - CC transaction %s completed succesfully", $this->account, $CardProcessor->transaction_data['TRANSACTION_ID']);
+                syslog(LOG_NOTICE, $log);
 
                 print "<p>";
                 print _("Transaction completed sucessfully. ");
@@ -1757,11 +1785,11 @@ class SipSettings {
                 print "<p>";
                 print _("You may check your new balance in the Credit tab. ");
 
+                // save the transaction in the database, add credit to user account and 
+                // notify parties by email
+
                 if ($CardProcessor->saveOrder($_POST,$pay_process_results)) {
 
-                    $log=sprintf("SIP Account - CC Transaction %s completed sucesfully",$CardProcessor->transaction_data['TRANSACTION_ID']);
-                    syslog(LOG_NOTICE, $log);
-    
                     // add PSTN credit
                     $description=sprintf("CC transaction %s",$CardProcessor->transaction_data['TRANSACTION_ID']);
                     $this->addBalanceReseller($CardProcessor->transaction_data['TOTAL_AMOUNT'],$description);
@@ -1771,7 +1799,9 @@ class SipSettings {
                     return true;
 
                 } else {
-                    print _("Error saving order");
+                	$log=sprintf("Error: SIP Account %s - CC transaction %s failed to Save Order",$this->account, $CardProcessor->transaction_data['TRANSACTION_ID']);
+                	syslog(LOG_NOTICE, $log);
+                    //print _("Error Saving Order");
                     return false;
                 }
 
@@ -6599,6 +6629,29 @@ class SipSettings {
         return 'C'; // this will never be reached
 	}
 
+    function fraudDetected () {
+        if (count($this->deny_countries)) {
+
+            if ($_loc=geoip_record_by_name($this->Preferences['ip'])) {
+                if (in_array($_loc['country_name'],$this->deny_countries)) {
+                    $this->fraud_reason=$_loc['country_name'].' is Blocked';
+                    return true;
+                }
+            }
+        }
+
+        if (count($this->allow_countries)) {
+            if ($_loc=geoip_record_by_name($this->Preferences['ip'])) {
+                if (!in_array($_loc['country_name'],$this->allow_countries)) {
+                    $this->fraud_reason=$_loc['country_name'].' is Not Allowed';
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
 }
 
 function normalizeURI($uri) {
@@ -7309,6 +7362,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         </html>
         ";
     }
+
 }
 
 class Enrollment {
