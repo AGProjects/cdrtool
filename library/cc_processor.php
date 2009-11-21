@@ -823,7 +823,9 @@ class CreditCardProcessor {
         $profile->setAPIPassword($this->pricepp_pass);
         $profile->setSignature($this->pp_signature); 
         $profile->setCertificateFile(null);
+
         $profile->setEnvironment(ENVIRONMENT); 
+
         $dp_request =& PayPal::getType('DoDirectPaymentRequestType');
         $paymentType = $this->transaction_type;
 
@@ -833,6 +835,7 @@ class CreditCardProcessor {
         $creditCardType = filter_var($_POST['creditCardType'], FILTER_SANITIZE_STRING);
         $creditCardNumber = filter_var($_POST['creditCardNumber'], FILTER_SANITIZE_NUMBER_INT);
         $expDateMonth = filter_var($_POST['expDateMonth'], FILTER_SANITIZE_NUMBER_INT);
+
         // Month must be padded with leading zero
         $padDateMonth = str_pad($expDateMonth, 2, '0', STR_PAD_LEFT);
         $expDateYear = filter_var($_POST['expDateYear'], FILTER_SANITIZE_NUMBER_INT);
@@ -895,13 +898,35 @@ class CreditCardProcessor {
 
         // Execute SOAP request
         $response = $caller->DoDirectPayment($dp_request);
-        $ack = $response->getAck();
-        $pp_return = array();
-        if($ack == "Success"){
-            $pp_return = array('success'=>array('field'=>'Card Processing','desc'=>$response));
-        }else{
-            $pp_return = array('error'=>array('field'=>'Card Processing','desc'=>$response->Errors->LongMessage));
+
+        if (!method_exists($response,'getAck')) {
+            $error = 'Response is a '.get_class($response).' object:';
+            if(method_exists($response,'getMessage')){
+                $_log.="\n\xA0\xA0getMessage() => ".strval($response->getMessage());
+            }
+
+            foreach(get_object_vars($response) as $k=>$v){
+                $_log.="\n\xA0\xA0$k => ".strval($v);
+            }
+
+            // Finish handling the error, etc. For example,
+            $pp_return = array('error'=>array('field'=>'Card Processing','desc'=>'Unknown Processing Error'));
+
+            $log=sprintf("Error: SIP Account %s - CC transaction failed to process: %s",$this->account,$_log);
+            syslog(LOG_NOTICE, $log);
+
+        } else {
+
+            $ack = $response->getAck();
+            $pp_return = array();
+    
+            if ($ack == "Success") {
+                $pp_return = array('success'=>array('field'=>'Card Processing','desc'=>$response));
+            } else {
+                $pp_return = array('error'=>array('field'=>'Card Processing','desc'=>$response->Errors->LongMessage));
+            }
         }
+
         return $pp_return;
     }
 
@@ -1097,7 +1122,7 @@ class CreditCardProcessor {
 
     function sendEmail ($from, $to, $subject, $msg) {
         dprint ("sendEmail()");
-        // send email notifications to AG Projects
+        // send email notifications
         $extra = "From: ".$from."" . "\r\n" .
         "Reply-To: ".$from."" . "\r\n" .
         "X-Mailer: PHP/" . phpversion();
