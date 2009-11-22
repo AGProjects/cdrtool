@@ -389,6 +389,19 @@ class CreditCardProcessor {
         $sql_conn->close();
         return $tran_data;
     }
+    
+    function transaction_exists ($tran_key){
+    	// check if the current transaction key is already in the database
+    	$ret = true;
+    	$sql_conn = $this->dbConnection();
+    	$q_result = mysqli_query($sql_conn, "SELECT COUNT(TransactionID) AS MYCNT FROM cc_transactions WHERE TransactionKey = '".$tran_key."'");
+    	$row = mysqli_fetch_array($q_result,MYSQLI_ASSOC);
+    	if($row['MYCNT'] == 0){
+    		$ret = false;
+    	}
+    	$sql_conn->close();
+    	return $ret;
+    }
 
     function getPageURL () {
         $pageURL = 'http';
@@ -401,6 +414,19 @@ class CreditCardProcessor {
         return $pageURL;
     }
     
+    function randomString($length)
+    {
+    	$chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
+        $chars_length = (strlen($chars) - 1);
+        $string = $chars{rand(0, $chars_length)};   
+        for ($i = 1; $i < $length; $i = strlen($string))
+        {
+            $r = $chars{rand(0, $chars_length)};
+            if ($r != $string{$i - 1}) $string .=  $r;
+        }
+        return $string;
+    }
+
     function showSubmitForm () {
 
         if(count($this->cart_items) > 0) {
@@ -488,6 +514,9 @@ class CreditCardProcessor {
             $page_body_content .= "var amt_purchase = document.getElementById('amt_purchase');\n";
             //$page_body_content .= "amt_purchase.innerHTML = '".$this->cart_items[0]['price']." USD <input type=\"hidden\" name=\"amount\" value=\"".$this->cart_items[0]['price']."\"><input type=\"hidden\" name=\"item\" value=\"".$this->cart_items[0]."\">';\n";
             $page_body_content .= "amt_purchase.innerHTML = '".$amt_currency."<input type=\"hidden\" name=\"amount\" value=\"".$amt."\">';\n";
+            $page_body_content .= "var tran_key = document.getElementById('tran_key');\n";
+            $tk = CreditCardProcessor::randomString(26);
+            $page_body_content .= "tran_key.innerHTML = '<input type=\"hidden\" name=\"transactionKey\" value=\"".$tk."\">';\n";
             $page_body_content .= "var states_list = document.getElementById('states_list');\n";
             $page_body_content .= "if('".$this->user_account['Country']."' == 'CA'){\n";
             // Canada States
@@ -523,7 +552,7 @@ class CreditCardProcessor {
 
             $page_body_content .= '<body onload="javascript:resetFields();" marginwidth=15 leftmargin=15 link=#000066>';
 
-            $page_body_content .= "<form method=\"POST\" name=\"agpay_frm\" id=\"agpay_frm\" onsubmit=\"return agpay_frm_validator(this)\" >\n";
+            $page_body_content .= "<form method=\"POST\" name=\"agpay_frm\" id=\"agpay_frm\" onsubmit=\"return agpay_frm_validator(this)\" ><div id=\"tran_key\"></div>\n";
             $page_body_content .= "<table width=100%>\n";
             $page_body_content .= "<tr>\n";
             $page_body_content .= sprintf("<td colspan=\"2\" class=%s><b>%s</b></td>\n",$this->chapter_class,_("Shopping Cart"));
@@ -783,131 +812,136 @@ class CreditCardProcessor {
         dprint("processPayment()");
         // return sucess and set relevant data from the transaction to variables belonging to the class
         $errors = array();
-        $pid = ProfileHandler::generateID();
-        $handler = & ProfileHandler_Array::getInstance(array(
-                                                             'username' => $this->pp_username,
-                                                             'certificateFile' => null,
-                                                             'subject' => null,
-                                                             'environment' => $this->environment
-                                                             )
-                                                       );
+        $pp_return = array();
+        $_TransactionKey = filter_var($_POST['transactionKey'], FILTER_SANITIZE_STRING);
 
-        $profile = & new APIProfile($pid, $handler);
-        $profile->setAPIUsername($this->pp_username);
-        $profile->setAPIPassword($this->pricepp_pass);
-        $profile->setSignature($this->pp_signature); 
-        $profile->setCertificateFile(null);
-
-        $profile->setEnvironment($this->environment);
-
-        $dp_request =& PayPal::getType('DoDirectPaymentRequestType');
-        $paymentType = $this->transaction_type;
-
-        $firstName = filter_var($_POST['firstName'], FILTER_SANITIZE_STRING);
-        $lastName = filter_var($_POST['lastName'], FILTER_SANITIZE_STRING);
-        $emailAddress = filter_var($_POST['emailAddress'], FILTER_SANITIZE_EMAIL);
-        $creditCardType = filter_var($_POST['creditCardType'], FILTER_SANITIZE_STRING);
-        $creditCardNumber = filter_var($_POST['creditCardNumber'], FILTER_SANITIZE_NUMBER_INT);
-        $expDateMonth = filter_var($_POST['expDateMonth'], FILTER_SANITIZE_NUMBER_INT);
-
-        // Month must be padded with leading zero
-        $padDateMonth = str_pad($expDateMonth, 2, '0', STR_PAD_LEFT);
-        $expDateYear = filter_var($_POST['expDateYear'], FILTER_SANITIZE_NUMBER_INT);
-        $cvv2Number = filter_var($_POST['cvv2Number'], FILTER_SANITIZE_NUMBER_INT);
-        $address1 = filter_var($_POST['address1'], FILTER_SANITIZE_STRING);
-        $address2 = filter_var($_POST['address2'], FILTER_SANITIZE_STRING);
-        $city = filter_var($_POST['city'], FILTER_SANITIZE_STRING);
-        $state = filter_var($_POST['state'], FILTER_SANITIZE_STRING);
-        $zip = filter_var($_POST['zip'], FILTER_SANITIZE_STRING);
-        $country = filter_var($_POST['country'], FILTER_SANITIZE_STRING);
-        $amount = filter_var($_POST['amount'], FILTER_SANITIZE_NUMBER_INT);
-
-        // Populate SOAP request information
-        // Payment details
-        $OrderTotal =& PayPal::getType('BasicAmountType');
-        $OrderTotal->setattr('currencyID', 'USD');
-        $OrderTotal->setval($amount, 'iso-8859-1');
-        $PaymentDetails =& PayPal::getType('PaymentDetailsType');
-        $PaymentDetails->setOrderTotal($OrderTotal);
-        
-        $shipTo =& PayPal::getType('AddressType');
-        $shipTo->setName($firstName.' '.$lastName);
-        $shipTo->setStreet1($address1);
-        $shipTo->setStreet2($address2);
-        $shipTo->setCityName($city);
-        $shipTo->setStateOrProvince($state);
-        $shipTo->setCountry($country);
-        $shipTo->setPostalCode($zip);
-        $PaymentDetails->setShipToAddress($shipTo);
-        
-        $dp_details =& PayPal::getType('DoDirectPaymentRequestDetailsType');
-        $dp_details->setPaymentDetails($PaymentDetails);
-        
-        // Credit Card info
-        $card_details =& PayPal::getType('CreditCardDetailsType');
-        $card_details->setCreditCardType($creditCardType);
-        $card_details->setCreditCardNumber($creditCardNumber);
-        $card_details->setExpMonth($padDateMonth);
-        $card_details->setExpYear($expDateYear);
-        $card_details->setCVV2($cvv2Number);
-        
-        $payer =& PayPal::getType('PayerInfoType');
-        $person_name =& PayPal::getType('PersonNameType');
-        $person_name->setFirstName($firstName);
-        $person_name->setLastName($lastName);
-        $payer->setPayerName($person_name);
-        
-        $payer->setPayerCountry($country);
-        $payer->setAddress($shipTo);
-        
-        $card_details->setCardOwner($payer);
-        
-        $dp_details->setCreditCard($card_details);
-        $dp_details->setIPAddress($_SERVER['SERVER_ADDR']);
-
-        // set our session ID to be sent with PayPal Request
-
-        $_id=$this->note.' '.session_id();
-        $dp_details->setMerchantSessionId($_id);
-        $dp_details->setMerchantSessionId(session_id());
-        $dp_details->setPaymentAction($paymentType);
-        
-        $dp_request->setDoDirectPaymentRequestDetails($dp_details);
-        
-        $caller =& PayPal::getCallerServices($profile);
-        $this->logger->_log("CC Profile: ".print_r($profile, true)."");
-        $this->logger->_log("Request Details: ".print_r($dp_details, true)."");
-
-        // Execute SOAP request
-        $response = $caller->DoDirectPayment($dp_request);
-        $this->logger->_log("Response Details: ".print_r($response, true)."");
-
-        if (!method_exists($response,'getAck')) {
-            $error = 'Response is a '.get_class($response).' object:';
-            if(method_exists($response,'getMessage')){
-                $_log.="\n\xA0\xA0getMessage() => ".strval($response->getMessage());
-            }
-
-            foreach(get_object_vars($response) as $k=>$v){
-                $_log.="\n\xA0\xA0$k => ".strval($v);
-            }
-
-            // Finish handling the error, etc. For example,
-            $pp_return = array('error'=>array('field'=>'Card Processing','desc'=>'Unknown Processing Error'));
-
-            $log=sprintf("Error: SIP Account %s - CC transaction failed to process: %s",$this->account,$_log);
-            syslog(LOG_NOTICE, $log);
-
-        } else {
-            $ack = $response->getAck();
-            $pp_return = array();
-    
-            if ($ack == "Success") {
-                $pp_return = array('success'=>array('field'=>'Card Processing','desc'=>$response));
-            } else {
-                $pp_return = array('error'=>array('field'=>'Card Processing','desc'=>$response->Errors->LongMessage));
-                $this->logger->_log("Response Error: ".$response->Errors->LongMessage."");
-            }
+        if($_TransactionKey == '' || CreditCardProcessor::transaction_exists($_TransactionKey) == true){
+        	$pp_return = array('error'=>array('field'=>'Card Processing','desc'=>'You cannot refresh the page or re-submit the proessing form.'));
+        }else{
+	        $pid = ProfileHandler::generateID();
+	        $handler = & ProfileHandler_Array::getInstance(array(
+	                                                             'username' => $this->pp_username,
+	                                                             'certificateFile' => null,
+	                                                             'subject' => null,
+	                                                             'environment' => $this->environment
+	                                                             )
+	                                                       );
+	
+	        $profile = & new APIProfile($pid, $handler);
+	        $profile->setAPIUsername($this->pp_username);
+	        $profile->setAPIPassword($this->pricepp_pass);
+	        $profile->setSignature($this->pp_signature); 
+	        $profile->setCertificateFile(null);
+	
+	        $profile->setEnvironment($this->environment);
+	
+	        $dp_request =& PayPal::getType('DoDirectPaymentRequestType');
+	        $paymentType = $this->transaction_type;
+	
+	        $firstName = filter_var($_POST['firstName'], FILTER_SANITIZE_STRING);
+	        $lastName = filter_var($_POST['lastName'], FILTER_SANITIZE_STRING);
+	        $emailAddress = filter_var($_POST['emailAddress'], FILTER_SANITIZE_EMAIL);
+	        $creditCardType = filter_var($_POST['creditCardType'], FILTER_SANITIZE_STRING);
+	        $creditCardNumber = filter_var($_POST['creditCardNumber'], FILTER_SANITIZE_NUMBER_INT);
+	        $expDateMonth = filter_var($_POST['expDateMonth'], FILTER_SANITIZE_NUMBER_INT);
+	
+	        // Month must be padded with leading zero
+	        $padDateMonth = str_pad($expDateMonth, 2, '0', STR_PAD_LEFT);
+	        $expDateYear = filter_var($_POST['expDateYear'], FILTER_SANITIZE_NUMBER_INT);
+	        $cvv2Number = filter_var($_POST['cvv2Number'], FILTER_SANITIZE_NUMBER_INT);
+	        $address1 = filter_var($_POST['address1'], FILTER_SANITIZE_STRING);
+	        $address2 = filter_var($_POST['address2'], FILTER_SANITIZE_STRING);
+	        $city = filter_var($_POST['city'], FILTER_SANITIZE_STRING);
+	        $state = filter_var($_POST['state'], FILTER_SANITIZE_STRING);
+	        $zip = filter_var($_POST['zip'], FILTER_SANITIZE_STRING);
+	        $country = filter_var($_POST['country'], FILTER_SANITIZE_STRING);
+	        $amount = filter_var($_POST['amount'], FILTER_SANITIZE_NUMBER_INT);
+	
+	        // Populate SOAP request information
+	        // Payment details
+	        $OrderTotal =& PayPal::getType('BasicAmountType');
+	        $OrderTotal->setattr('currencyID', 'USD');
+	        $OrderTotal->setval($amount, 'iso-8859-1');
+	        $PaymentDetails =& PayPal::getType('PaymentDetailsType');
+	        $PaymentDetails->setOrderTotal($OrderTotal);
+	        
+	        $shipTo =& PayPal::getType('AddressType');
+	        $shipTo->setName($firstName.' '.$lastName);
+	        $shipTo->setStreet1($address1);
+	        $shipTo->setStreet2($address2);
+	        $shipTo->setCityName($city);
+	        $shipTo->setStateOrProvince($state);
+	        $shipTo->setCountry($country);
+	        $shipTo->setPostalCode($zip);
+	        $PaymentDetails->setShipToAddress($shipTo);
+	        
+	        $dp_details =& PayPal::getType('DoDirectPaymentRequestDetailsType');
+	        $dp_details->setPaymentDetails($PaymentDetails);
+	        
+	        // Credit Card info
+	        $card_details =& PayPal::getType('CreditCardDetailsType');
+	        $card_details->setCreditCardType($creditCardType);
+	        $card_details->setCreditCardNumber($creditCardNumber);
+	        $card_details->setExpMonth($padDateMonth);
+	        $card_details->setExpYear($expDateYear);
+	        $card_details->setCVV2($cvv2Number);
+	        
+	        $payer =& PayPal::getType('PayerInfoType');
+	        $person_name =& PayPal::getType('PersonNameType');
+	        $person_name->setFirstName($firstName);
+	        $person_name->setLastName($lastName);
+	        $payer->setPayerName($person_name);
+	        
+	        $payer->setPayerCountry($country);
+	        $payer->setAddress($shipTo);
+	        
+	        $card_details->setCardOwner($payer);
+	        
+	        $dp_details->setCreditCard($card_details);
+	        $dp_details->setIPAddress($_SERVER['SERVER_ADDR']);
+	
+	        // set our session ID to be sent with PayPal Request
+	
+	        $_id=$this->note.' '.session_id();
+	        $dp_details->setMerchantSessionId($_id);
+	        $dp_details->setMerchantSessionId($_TransactionKey);
+	        $dp_details->setPaymentAction($paymentType);
+	        
+	        $dp_request->setDoDirectPaymentRequestDetails($dp_details);
+	        
+	        $caller =& PayPal::getCallerServices($profile);
+	        $this->logger->_log("CC Profile: ".print_r($profile, true)."");
+	        $this->logger->_log("Request Details: ".print_r($dp_details, true)."");
+	
+	        // Execute SOAP request
+	        $response = $caller->DoDirectPayment($dp_request);
+	        $this->logger->_log("Response Details: ".print_r($response, true)."");
+	
+	        if (!method_exists($response,'getAck')) {
+	            $error = 'Response is a '.get_class($response).' object:';
+	            if(method_exists($response,'getMessage')){
+	                $_log.="\n\xA0\xA0getMessage() => ".strval($response->getMessage());
+	            }
+	
+	            foreach(get_object_vars($response) as $k=>$v){
+	                $_log.="\n\xA0\xA0$k => ".strval($v);
+	            }
+	
+	            // Finish handling the error, etc. For example,
+	            $pp_return = array('error'=>array('field'=>'Card Processing','desc'=>'Unknown Processing Error'));
+	
+	            $log=sprintf("Error: SIP Account %s - CC transaction failed to process: %s",$this->account,$_log);
+	            syslog(LOG_NOTICE, $log);
+	
+	        } else {
+	            $ack = $response->getAck();    
+	            if ($ack == "Success") {
+	                $pp_return = array('success'=>array('field'=>'Card Processing','desc'=>$response));
+	            } else {
+	                $pp_return = array('error'=>array('field'=>'Card Processing','desc'=>$response->Errors->LongMessage));
+	                $this->logger->_log("Response Error: ".$response->Errors->LongMessage."");
+	            }
+	        }
         }
 
         return $pp_return;
@@ -916,6 +950,7 @@ class CreditCardProcessor {
     function saveOrder ($form_data, $payment_results) {
         dprint("saveOrder()");
         // save order information in a database, etc
+        $_TransactionKey = filter_var($form_data['transactionKey'], FILTER_SANITIZE_STRING);
         $_TransactionNum = $payment_results['success']['desc']->TransactionID;
         $amt_obj = $payment_results['success']['desc']->getAmount();
         $amt = $amt_obj->_value;
@@ -971,7 +1006,7 @@ class CreditCardProcessor {
         // insert transaction information
         try{
             mysqli_query($sql_conn, "CALL sproc_cc_add_transaction(
-                '".$_TransactionNum."', '".$this->environment."', '".$_TotalAmount."', '".$_Currency."', '".$_AVSCode."', '".$_CVV2Code."',
+                '".$_TransactionKey."', '".$_TransactionNum."', '".$this->environment."', '".$_TotalAmount."', '".$_Currency."', '".$_AVSCode."', '".$_CVV2Code."',
                 '".$_PendingReason."', '".$_PaymentStatus."', '".$_FMFDetails."', '".$_ThreeDSecureResponse."',
                 '".$_APITimestamp."', '".$_AckResponse."', '".$_CorrelationID."', '".$_Errors."', '".$_AES_ENC_PWD."',
                 '".$_FirstName."', '".$_LastName."', '".$_UserAcct."', '".$_Email."', '".$_CCType."', '".$_CCNum."', '".$_CCLast."',
