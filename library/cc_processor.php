@@ -272,8 +272,8 @@ class CreditCardProcessor {
     public $logger;
     public $log_level;
     
-    public function __construct() {
-        //dprint("Init CreditCardProcessor()");
+    function CreditCardProcessor () {
+        dprint("CreditCardProcessor()");
 
         // process the ini configuration file
         $app_settings_array = parse_ini_file("/etc/cdrtool/paypal/cc_processor.ini");
