@@ -12,7 +12,7 @@
  * See the PayPal SDK User Guide for more details on these log levels.
  */
 
-$__PP_CONFIG['log_level'] = PEAR_LOG_DEBUG; 
+//$__PP_CONFIG['log_level'] = PEAR_LOG_DEBUG; 
 
 /**
  * If we're logging, what directory should we create log files in?
@@ -21,7 +21,7 @@ $__PP_CONFIG['log_level'] = PEAR_LOG_DEBUG;
  * <DateStamp>.PayPal.log.
  */
 
-$__PP_CONFIG['log_dir'] = '/tmp';
+//$__PP_CONFIG['log_dir'] = '/tmp';
 
 /**
  * The path where custom profile storage handlers are located.
@@ -29,16 +29,16 @@ $__PP_CONFIG['log_dir'] = '/tmp';
  * IMPORTANT: Custom handler classes must be named ProfileHandler_<Handler Name>
  * and be stored in the file <Handler Name>.php within this directory
  */
-$__PP_CONFIG['custom_handler_dir'] = array('/path/to/custom/handlers');
+//$__PP_CONFIG['custom_handler_dir'] = array('/path/to/custom/handlers');
 
 /**
  * Where Profile certificates will be stored. Must be writable by the 
  * web server.
  */
-$__PP_CONFIG['profile_cert_dir'] = '/tmp';
+//$__PP_CONFIG['profile_cert_dir'] = '/tmp';
 
 /**
  * The Location of the public Paypal certificate file
  */
-$__PP_CONFIG['paypal_cert_file']['Live'] = '/path/to/cert/Livefile.crt';
-$__PP_CONFIG['paypal_cert_file']['Sandbox'] = '/path/to/cert/Sandboxfile.crt';
+//$__PP_CONFIG['paypal_cert_file']['Live'] = '/path/to/cert/Livefile.crt';
+//$__PP_CONFIG['paypal_cert_file']['Sandbox'] = '/path/to/cert/Sandboxfile.crt';
