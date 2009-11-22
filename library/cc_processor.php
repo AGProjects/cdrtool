@@ -332,8 +332,8 @@ class CreditCardProcessor {
 
         $this->sql_host = $app_settings_array['sql_host'];
         $this->sql_user = $app_settings_array['sql_user'];
-        $this->sql_pw   = $app_settings_array['sql_pw'];
-        $this->sql_db   = $app_settings_array['sql_db'];
+        $this->sql_pw = $app_settings_array['sql_pw'];
+        $this->sql_db = $app_settings_array['sql_db'];
 
         $this->transaction_type = $app_settings_array['transaction_type'];
         $this->sender_email = $app_settings_array['sender_email'];
@@ -342,8 +342,6 @@ class CreditCardProcessor {
         $this->can_states_arr = $can_states_arr;
         $this->user_account = null;
         $this->aes_enc_pwd = $app_settings_array['aes_enc_pwd'];
-        $this->app_environment = null;
-
         $this->log_path = $app_settings_array['logging_path'];
         $this->log_level = $app_settings_array['log_level'];
         $this->logger->_logDir = $this->log_path;
@@ -483,7 +481,7 @@ class CreditCardProcessor {
             $page_body_content .= sprintf("lbl_addr1.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("Address"));
             $page_body_content .= "var lbl_city = document.getElementById('lbl_city');\n";
             $page_body_content .= sprintf("lbl_city.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("City"));
-            $page_body_content .= "var lbl_postcode = document.getElementById('lbl_country');\n";
+            $page_body_content .= "var lbl_country = document.getElementById('lbl_country');\n";
             $page_body_content .= sprintf("lbl_country.innerHTML = '<font color=\"#000000\">%s</font>';\n", _("Country"));
             $page_body_content .= "var lbl_postcode = document.getElementById('lbl_postcode');\n";
             $page_body_content .= sprintf("lbl_postcode.innerHTML = '<font color=\"#000000\">%s</font>';\n", _("Postcode"));
