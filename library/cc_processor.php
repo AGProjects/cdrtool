@@ -254,6 +254,7 @@ class CreditCardProcessor {
         array("label"=>"Zambia","value"=>"ZM")
     );
 
+    public $app_environment;
     public $pp_username;
     public $pricepp_pass;
     public $pp_signature;
@@ -269,7 +270,7 @@ class CreditCardProcessor {
     public $aes_enc_pwd;
     
     public function __construct() {
-        dprint("Init CreditCardProcessor()");
+        //dprint("Init CreditCardProcessor()");
 
         // process the ini configuration file
         $app_settings_array = parse_ini_file("/etc/cdrtool/paypal/cc_processor.ini");
@@ -299,7 +300,7 @@ class CreditCardProcessor {
         require_once 'constants.inc.php';
 
         // Add logger process file
-        //require_once 'PayLogger.php';
+        //require_once 'Log.php';
 
         foreach ($this->countries as $_country) {
             $countries_array[$_country['value']]=$_country['label'];
@@ -308,21 +309,34 @@ class CreditCardProcessor {
         $us_states_arr = array('AL'=>'Alabama','AK'=>'Alaska','AZ'=>'Arizona','AR'=>'Arkansas','CA'=>'California','CO'=>'Colorado','CT'=>'Connecticut','DE'=>'Delaware','DC'=>'District Of Columbia','FL'=>'Florida','GA'=>'Georgia','HI'=>'Hawaii','ID'=>'Idaho','IL'=>'Illinois', 'IN'=>'Indiana', 'IA'=>'Iowa',  'KS'=>'Kansas','KY'=>'Kentucky','LA'=>'Louisiana','ME'=>'Maine','MD'=>'Maryland', 'MA'=>'Massachusetts','MI'=>'Michigan','MN'=>'Minnesota','MS'=>'Mississippi','MO'=>'Missouri','MT'=>'Montana','NE'=>'Nebraska','NV'=>'Nevada','NH'=>'New Hampshire','NJ'=>'New Jersey','NM'=>'New Mexico','NY'=>'New York','NC'=>'North Carolina','ND'=>'North Dakota','OH'=>'Ohio','OK'=>'Oklahoma', 'OR'=>'Oregon','PA'=>'Pennsylvania','RI'=>'Rhode Island','SC'=>'South Carolina','SD'=>'South Dakota','TN'=>'Tennessee','TX'=>'Texas','UT'=>'Utah','VT'=>'Vermont','VA'=>'Virginia','WA'=>'Washington','WV'=>'West Virginia','WI'=>'Wisconsin','WY'=>'Wyoming');
         $can_states_arr = array('AB'=>'Alberta','BC'=>'British Columbia','MB'=>'Manitoba','NB'=>'New Brunswick','NL'=>'Newfoundland/Labrador','NS'=>'Nova Scotia','NT'=>'Northwest Territories','NU'=>'Nunavut','ON'=>'Ontario','PE'=>'Prince Edward Island','QC'=>'Quebec','SK'=>'Saskatchewan','YT'=>'Yukon');
 
-        // set class variables 
-        $this->pp_username = $app_settings_array['pp_username'];
-        $this->pricepp_pass = $app_settings_array['pp_pass'];
-        $this->pp_signature = $app_settings_array['pp_signature'];
-        $this->transaction_type = $app_settings_array['transaction_type'];
-        $this->sender_email = $app_settings_array['sender_email'];
+        // set class variables
+
+        // separate test and live environment based on ENVIRONMENT variable set in $app_env
+        if($this->app_environment == 'live'){
+            $this->pp_username = $app_settings_array['live_pp_username'];
+            $this->pricepp_pass = $app_settings_array['live_pp_pass'];
+            $this->pp_signature = $app_settings_array['live_pp_signature'];
+            $this->sql_host = $app_settings_array['live_sql_host'];
+            $this->sql_user = $app_settings_array['live_sql_user'];
+            $this->sql_pw = $app_settings_array['live_sql_pw'];
+            $this->sql_db = $app_settings_array['live_sql_db'];
+        }else{
+            $this->pp_username = $app_settings_array['sandbox_pp_username'];
+            $this->pricepp_pass = $app_settings_array['sandbox_pp_pass'];
+            $this->pp_signature = $app_settings_array['sandbox_pp_signature'];
+            $this->sql_host = $app_settings_array['sandbox_sql_host'];
+            $this->sql_user = $app_settings_array['sandbox_sql_user'];
+            $this->sql_pw = $app_settings_array['sandbox_sql_pw'];
+            $this->sql_db = $app_settings_array['sandbox_sql_db'];
+        }
+        $this->transaction_type = $app_settings_array["transaction_type"];
+        $this->sender_email = $app_settings_array["sender_email"];
         $this->countries_array = $countries_array;
         $this->us_states_arr = $us_states_arr;
         $this->can_states_arr = $can_states_arr;
         $this->user_account = null;
-        $this->sql_host = $app_settings_array['sql_host'];
-        $this->sql_user = $app_settings_array['sql_user'];
-        $this->sql_pw = $app_settings_array['sql_pw'];
-        $this->sql_db = $app_settings_array['sql_db'];
-        $this->aes_enc_pwd = $app_settings_array['aes_enc_pwd'];
+        $this->aes_enc_pwd = $app_settings_array["aes_enc_pwd"];
+        $this->app_environment = null;
     }
     
     function dbConnection(){
@@ -760,7 +774,7 @@ class CreditCardProcessor {
             'username' => $this->pp_username,
             'certificateFile' => null,
             'subject' => null,
-            'environment' => ENVIRONMENT ));
+            'environment' => $this->app_environment));
 
         $profile = & new APIProfile($pid, $handler);
         $profile->setAPIUsername($this->pp_username);
@@ -768,7 +782,7 @@ class CreditCardProcessor {
         $profile->setSignature($this->pp_signature); 
         $profile->setCertificateFile(null);
 
-        $profile->setEnvironment(ENVIRONMENT); 
+        $profile->setEnvironment($this->app_environment); 
 
         $dp_request =& PayPal::getType('DoDirectPaymentRequestType');
         $paymentType = $this->transaction_type;
@@ -860,7 +874,6 @@ class CreditCardProcessor {
             syslog(LOG_NOTICE, $log);
 
         } else {
-
             $ack = $response->getAck();
             $pp_return = array();
     
