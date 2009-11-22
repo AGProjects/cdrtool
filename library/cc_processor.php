@@ -268,6 +268,8 @@ class CreditCardProcessor {
     public $sql_pw;
     public $sql_db;
     public $aes_enc_pwd;
+    public $logger;
+    public $log_level;
     
     public function __construct() {
         //dprint("Init CreditCardProcessor()");
@@ -300,7 +302,8 @@ class CreditCardProcessor {
         require_once 'constants.inc.php';
 
         // Add logger process file
-        //require_once 'Log.php';
+        require_once 'cc_logger.php';
+        $this->logger = new cc_logger('CreditCardProcessor', PEAR_LOG_DEBUG);
 
         foreach ($this->countries as $_country) {
             $countries_array[$_country['value']]=$_country['label'];
@@ -329,14 +332,19 @@ class CreditCardProcessor {
             $this->sql_pw = $app_settings_array['sandbox_sql_pw'];
             $this->sql_db = $app_settings_array['sandbox_sql_db'];
         }
-        $this->transaction_type = $app_settings_array["transaction_type"];
-        $this->sender_email = $app_settings_array["sender_email"];
+        $this->transaction_type = $app_settings_array['transaction_type'];
+        $this->sender_email = $app_settings_array['sender_email'];
         $this->countries_array = $countries_array;
         $this->us_states_arr = $us_states_arr;
         $this->can_states_arr = $can_states_arr;
         $this->user_account = null;
-        $this->aes_enc_pwd = $app_settings_array["aes_enc_pwd"];
+        $this->aes_enc_pwd = $app_settings_array['aes_enc_pwd'];
         $this->app_environment = null;
+        $this->log_path = $app_settings_array['logging_path'];
+        $this->log_level = $app_settings_array['log_level'];
+        $this->logger->_logDir = $this->log_path;
+        $this->logger->_logLevel = $this->log_level;
+        $this->logger->_log("Started session: ".session_id()."");
     }
     
     function dbConnection(){
@@ -387,6 +395,7 @@ class CreditCardProcessor {
         }
         $pageURL .= "://";
         $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+        $this->logger->_log("Set submit action to ".$pageURL."");
         return $pageURL;
     }
     
@@ -749,6 +758,9 @@ class CreditCardProcessor {
         if($post_vars['zip'] == ''){
             $errors = array_merge($errors,array('zip'=>array('field'=>'Postcode','desc'=>'A postal code must be provided')));
         }
+        if(count($errors) > 0){
+            $this->logger->_log("Errors found in form ".print_r($errors, true)."");
+        }
         return $errors;
     }
     
@@ -848,14 +860,19 @@ class CreditCardProcessor {
         
         $dp_details->setCreditCard($card_details);
         $dp_details->setIPAddress($_SERVER['SERVER_ADDR']);
+        // set our session ID to be sent with PayPal Request
+        // $dp_details->setMerchantSessionId(session_id());
         $dp_details->setPaymentAction($paymentType);
         
         $dp_request->setDoDirectPaymentRequestDetails($dp_details);
         
         $caller =& PayPal::getCallerServices($profile);
+        $this->logger->_log("CC Profile: ".print_r($profile, true)."");
+        $this->logger->_log("Request Details: ".print_r($dp_details, true)."");
 
         // Execute SOAP request
         $response = $caller->DoDirectPayment($dp_request);
+        $this->logger->_log("Response Details: ".print_r($response, true)."");
 
         if (!method_exists($response,'getAck')) {
             $error = 'Response is a '.get_class($response).' object:';
@@ -881,6 +898,7 @@ class CreditCardProcessor {
                 $pp_return = array('success'=>array('field'=>'Card Processing','desc'=>$response));
             } else {
                 $pp_return = array('error'=>array('field'=>'Card Processing','desc'=>$response->Errors->LongMessage));
+                $this->logger->_log("Response Error: ".$response->Errors->LongMessage."");
             }
         }
 
@@ -954,7 +972,8 @@ class CreditCardProcessor {
                 '".$_RequesterIP."', '".$_RequesterSID."'
             )");
         } catch (Exception $ex) {
-            print $ex;
+            //print $ex;
+            syslog(LOG_ERR,"CC_transaction [".date("Y-m-d H:i:s")."]: ".$ex."");
         }
         // insert item purchase information
         foreach ($form_data['cart_item'] as $cart_item_key => $service_id){
@@ -963,7 +982,8 @@ class CreditCardProcessor {
                     '".$_TransactionNum."', '".$service_id."', '".$form_data['cart_item_price'][$cart_item_key]."', '".$_Currency."'
                 )");
             }catch (Exception $ex){
-                print $ex;
+                //print $ex;
+                syslog(LOG_ERR,"CC_transaction [".date("Y-m-d H:i:s")."]: ".$ex."");
             }
         }
 
