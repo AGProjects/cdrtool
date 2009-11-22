@@ -866,8 +866,7 @@ class CreditCardProcessor {
         $dp_details->setIPAddress($_SERVER['SERVER_ADDR']);
 
         // set our session ID to be sent with PayPal Request
-        $_id=$this->note.' '.session_id();
-        $dp_details->setMerchantSessionId($_id);
+        // $dp_details->setMerchantSessionId(session_id());
         $dp_details->setPaymentAction($paymentType);
         
         $dp_request->setDoDirectPaymentRequestDetails($dp_details);
