@@ -58,6 +58,8 @@ class CreditCardProcessor {
 
     var $note             = ''; // can be set to add a note to the transaction
 
+    var $environment      = 'live'; // set it to 'live' for live transactionr or 'sandbox' for texting
+
     // nothing should be needed to be changed below this line by the application using this class
 
     // countries that are in sync with other AG Projects backends
@@ -254,7 +256,6 @@ class CreditCardProcessor {
         array("label"=>"Zambia","value"=>"ZM")
     );
 
-    public $app_environment;
     public $pp_username;
     public $pricepp_pass;
     public $pp_signature;
@@ -314,16 +315,19 @@ class CreditCardProcessor {
 
         // set class variables
 
-        // separate test and live environment based on ENVIRONMENT variable set in $app_env
-        if($this->app_environment == 'live'){
+        if($this->environment == 'live'){
             $this->pp_username = $app_settings_array['live_pp_username'];
             $this->pricepp_pass = $app_settings_array['live_pp_pass'];
             $this->pp_signature = $app_settings_array['live_pp_signature'];
-        } else {
-            print "<p>Sandbox";
+        } else if ($this->environment == 'sandbox') {
+            print "<p>";
+            print "Test Paypal Enviroment";
             $this->pp_username = $app_settings_array['sandbox_pp_username'];
             $this->pricepp_pass = $app_settings_array['sandbox_pp_pass'];
             $this->pp_signature = $app_settings_array['sandbox_pp_signature'];
+        } else {
+            print "Incorect Paypal Enviroment";
+            return false;
         }
 
         $this->sql_host = $app_settings_array['sql_host'];
@@ -783,10 +787,12 @@ class CreditCardProcessor {
         $errors = array();
         $pid = ProfileHandler::generateID();
         $handler = & ProfileHandler_Array::getInstance(array(
-            'username' => $this->pp_username,
-            'certificateFile' => null,
-            'subject' => null,
-            'environment' => $this->app_environment));
+                                                             'username' => $this->pp_username,
+                                                             'certificateFile' => null,
+                                                             'subject' => null,
+                                                             'environment' => $this->environment
+                                                             )
+                                                       );
 
         $profile = & new APIProfile($pid, $handler);
         $profile->setAPIUsername($this->pp_username);
@@ -794,7 +800,7 @@ class CreditCardProcessor {
         $profile->setSignature($this->pp_signature); 
         $profile->setCertificateFile(null);
 
-        $profile->setEnvironment($this->app_environment); 
+        $profile->setEnvironment($this->environment);
 
         $dp_request =& PayPal::getType('DoDirectPaymentRequestType');
         $paymentType = $this->transaction_type;
