@@ -866,7 +866,10 @@ class CreditCardProcessor {
         $dp_details->setIPAddress($_SERVER['SERVER_ADDR']);
 
         // set our session ID to be sent with PayPal Request
-        // $dp_details->setMerchantSessionId(session_id());
+
+        $_id=$this->note.' '.session_id();
+        $dp_details->setMerchantSessionId($_id);
+        $dp_details->setMerchantSessionId(session_id());
         $dp_details->setPaymentAction($paymentType);
         
         $dp_request->setDoDirectPaymentRequestDetails($dp_details);
@@ -968,7 +971,7 @@ class CreditCardProcessor {
         // insert transaction information
         try{
             mysqli_query($sql_conn, "CALL sproc_cc_add_transaction(
-                '".$_TransactionNum."', '".$_TotalAmount."', '".$_Currency."', '".$_AVSCode."', '".$_CVV2Code."',
+                '".$_TransactionNum."', '".$this->environment."', '".$_TotalAmount."', '".$_Currency."', '".$_AVSCode."', '".$_CVV2Code."',
                 '".$_PendingReason."', '".$_PaymentStatus."', '".$_FMFDetails."', '".$_ThreeDSecureResponse."',
                 '".$_APITimestamp."', '".$_AckResponse."', '".$_CorrelationID."', '".$_Errors."', '".$_AES_ENC_PWD."',
                 '".$_FirstName."', '".$_LastName."', '".$_UserAcct."', '".$_Email."', '".$_CCType."', '".$_CCNum."', '".$_CCLast."',
@@ -1095,7 +1098,7 @@ class CreditCardProcessor {
         $msg .= "Address: ".$this->transaction_data['ADDRESS1']." ".$this->transaction_data['ADDRESS2']."\n";
         $msg .= "City: ".$this->transaction_data['CITY']."\n";
         $msg .= "State: ".$this->transaction_data['STATE']."\n";
-        $msg .= "Postal Code: ".$this->transaction_data['POSTCODE']."\n";
+        $msg .= "Postcode: ".$this->transaction_data['POSTCODE']."\n";
         $msg .= "Country: ".$this->transaction_data['COUNTRY']."\n";
         $msg .= "User IP: ".$_SERVER['REMOTE_ADDR']."";
 
