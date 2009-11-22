@@ -319,19 +319,18 @@ class CreditCardProcessor {
             $this->pp_username = $app_settings_array['live_pp_username'];
             $this->pricepp_pass = $app_settings_array['live_pp_pass'];
             $this->pp_signature = $app_settings_array['live_pp_signature'];
-            $this->sql_host = $app_settings_array['live_sql_host'];
-            $this->sql_user = $app_settings_array['live_sql_user'];
-            $this->sql_pw = $app_settings_array['live_sql_pw'];
-            $this->sql_db = $app_settings_array['live_sql_db'];
-        }else{
+        } else {
+            print "<p>Sandbox";
             $this->pp_username = $app_settings_array['sandbox_pp_username'];
             $this->pricepp_pass = $app_settings_array['sandbox_pp_pass'];
             $this->pp_signature = $app_settings_array['sandbox_pp_signature'];
-            $this->sql_host = $app_settings_array['sandbox_sql_host'];
-            $this->sql_user = $app_settings_array['sandbox_sql_user'];
-            $this->sql_pw = $app_settings_array['sandbox_sql_pw'];
-            $this->sql_db = $app_settings_array['sandbox_sql_db'];
         }
+
+        $this->sql_host = $app_settings_array['sql_host'];
+        $this->sql_user = $app_settings_array['sql_user'];
+        $this->sql_pw   = $app_settings_array['sql_pw'];
+        $this->sql_db   = $app_settings_array['sql_db'];
+
         $this->transaction_type = $app_settings_array['transaction_type'];
         $this->sender_email = $app_settings_array['sender_email'];
         $this->countries_array = $countries_array;
@@ -340,6 +339,7 @@ class CreditCardProcessor {
         $this->user_account = null;
         $this->aes_enc_pwd = $app_settings_array['aes_enc_pwd'];
         $this->app_environment = null;
+
         $this->log_path = $app_settings_array['logging_path'];
         $this->log_level = $app_settings_array['log_level'];
         $this->logger->_logDir = $this->log_path;
@@ -860,8 +860,10 @@ class CreditCardProcessor {
         
         $dp_details->setCreditCard($card_details);
         $dp_details->setIPAddress($_SERVER['SERVER_ADDR']);
+
         // set our session ID to be sent with PayPal Request
-        // $dp_details->setMerchantSessionId(session_id());
+        $_id=$this->note.' '.session_id();
+        $dp_details->setMerchantSessionId($_id);
         $dp_details->setPaymentAction($paymentType);
         
         $dp_request->setDoDirectPaymentRequestDetails($dp_details);
