@@ -3095,8 +3095,6 @@ class SipSettings {
             }
 
             $result->prepaid=intval($_REQUEST['prepaid']);
-        } else {
-            $result->prepaid=1;
         }
 
         reset($this->availableGroups);
@@ -3117,6 +3115,11 @@ class SipSettings {
 
                         $this->somethingChanged=1;
                         $result->prepaid=0;
+                    } else if (!in_array($key,$this->groups) && $val) {
+                    	if (!$this->prepaid_changes_allowed) {
+                            $this->somethingChanged=1;
+                            $result->prepaid=1;
+                        }
                     }
 
                 	if (!in_array($key,$this->groups) && $val) {
