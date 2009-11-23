@@ -1,7 +1,9 @@
 DROP TABLE IF EXISTS `cc_transactions`;
 CREATE TABLE IF NOT EXISTS `cc_transactions` (
 	`TransactionID` mediumint(10) unsigned NOT NULL auto_increment,
-	`TransactionNum` varchar(50) NOT NULL,
+	`TransactionKey` varchar(255) NOT NULL,
+	`TransactionNum` varchar(255) NOT NULL,
+	`TranEnvironment` varchar(255) NOT NULL,
 	`TotalAmount` decimal(18,2) NOT NULL default '0.00',
 	`Currency` varchar(10) NOT NULL default 'USD',
 	`AVSCode` char(1) NOT NULL,
@@ -24,7 +26,7 @@ CREATE TABLE IF NOT EXISTS `cc_transactions` (
 DROP TABLE IF EXISTS `cc_user_info`;
 CREATE TABLE IF NOT EXISTS `cc_user_info` (
 	`CCUserID` mediumint(10) unsigned NOT NULL auto_increment,
-	`TransactionNum` varchar(50) NOT NULL,
+	`TransactionNum` varchar(255) NOT NULL,
 	`FirstName` varchar(32) NOT NULL,
 	`LastName` varchar(32) NOT NULL,
 	`UserAcct` varchar(50) default NULL,
@@ -55,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `cc_user_info` (
 DROP TABLE IF EXISTS `cc_purchase_items`;
 CREATE TABLE IF NOT EXISTS `cc_purchase_items` (
 	`CCPurchaseID` mediumint(14) unsigned NOT NULL auto_increment,
-	`TransactionNum` varchar(50) NOT NULL,
+	`TransactionNum` varchar(255) NOT NULL,
 	`Item` varchar(50) NOT NULL,
 	`Amount` decimal(8,2) NOT NULL default '0.00',
 	`Currency` varchar(10) NOT NULL default 'USD',
@@ -74,7 +76,9 @@ ADD CONSTRAINT `fk_cc_purchase_items_TransactionNum` FOREIGN KEY (`TransactionNu
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `sproc_cc_add_transaction`$$
 CREATE PROCEDURE sproc_cc_add_transaction(
-	IN _TransactionNum varchar(50),
+	IN _TransactionKey varchar(255),
+	IN _TransactionNum varchar(255),
+	IN _TranEnvironment varchar(255),
 	IN _TotalAmount decimal(18,2),
 	IN _Currency varchar(10),
 	IN _AVSCode char(1),
@@ -110,13 +114,13 @@ CREATE PROCEDURE sproc_cc_add_transaction(
 BEGIN
 
 	INSERT INTO cc_transactions 
-	(TransactionNum,TotalAmount,Currency,AVSCode,CVV2Code,PendingReason,
-	PaymentStatus,FMFDetails,ThreeDSecureResponse,APITimestamp,AckResponse,
-	CorrelationID,Errors)
+	(TransactionKey,TransactionNum,TranEnvironment,TotalAmount,Currency,AVSCode,
+	CVV2Code,PendingReason,PaymentStatus,FMFDetails,ThreeDSecureResponse,APITimestamp,
+	AckResponse,CorrelationID,Errors)
 	VALUES 
-	(_TransactionNum,_TotalAmount,_Currency,_AVSCode,_CVV2Code,_PendingReason,
-	_PaymentStatus,_FMFDetails,_ThreeDSecureResponse,_APITimestamp,_AckResponse,
-	_CorrelationID,_Errors);
+	(_TransactionKey,_TransactionNum,_TranEnvironment,_TotalAmount,_Currency,_AVSCode,
+	_CVV2Code,_PendingReason,_PaymentStatus,_FMFDetails,_ThreeDSecureResponse,_APITimestamp,
+	_AckResponse,_CorrelationID,_Errors);
 	
 	INSERT INTO cc_user_info 
 	(TransactionNum,FirstName,LastName,UserAcct,Email,CCType,CCNum,CCLast,
@@ -133,7 +137,7 @@ DELIMITER ;
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `sproc_cc_add_purchase_items`$$
 CREATE PROCEDURE sproc_cc_add_purchase_items(
-	IN _TransactionNum varchar(50),
+	IN _TransactionNum varchar(255),
 	IN _Item varchar(50),
 	IN _Amount decimal(8,2),
 	IN _Currency varchar(10)
@@ -150,7 +154,7 @@ DELIMITER ;
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `sproc_cc_get_transaction_details`$$
 CREATE PROCEDURE sproc_cc_get_transaction_details(
-	IN _TransactionNum varchar(50)
+	IN _TransactionNum varchar(255)
 )
 BEGIN
 
@@ -181,7 +185,7 @@ DELIMITER ;
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `sproc_cc_get_transaction_items`$$
 CREATE PROCEDURE sproc_cc_get_transaction_items(
-	IN _TransactionNum varchar(50)
+	IN _TransactionNum varchar(255)
 )
 BEGIN
 	
