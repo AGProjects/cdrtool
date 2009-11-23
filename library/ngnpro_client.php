@@ -10954,7 +10954,31 @@ class Customers extends Records {
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'FUNC_access_number'    => array('name'      => 'Call forwarding access number',
+                                 'FUNC_access_number'    => array('name'      => 'Forwarding Unconditional access number',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'customer'
+                                                               ),
+                                 'FNOL_access_number'    => array('name'      => 'Forwarding Not-Online access number',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'customer'
+                                                               ),
+                                 'FNOA_access_number'    => array('name'      => 'Forwarding Not-Available access number',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'customer'
+                                                               ),
+                                 'FBUS_access_number'    => array('name'      => 'Forwarding On Busy access number',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'customer'
+                                                               ),
+                                 'change_privacy_access_number' => array('name'      => 'Change privacy access number',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'customer'
+                                                               ),
+                                 'check_privacy_access_number' => array('name'      => 'Check privacy access number',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'customer'
+                                                               ),
+                                 'reject_anonymous_access_number' => array('name'      => 'Reject anonymous access number',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),

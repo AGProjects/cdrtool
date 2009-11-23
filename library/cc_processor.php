@@ -715,6 +715,7 @@ class CreditCardProcessor {
             $page_body_content .= "<td><div id=\"lbl_postcode\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"8\" maxlength=\"10\" name=\"zip\" value=\"".$this->user_account['PostCode']."\"></td>\n";
             $page_body_content .= "</tr>\n";
+
             $page_body_content .= "<tr>\n";
             $page_body_content .= "<input type=hidden name=purchase value=1>\n";
             $page_body_content .= sprintf("<td colspan=2><input type=\"submit\" name=\"submit\" value=\"%s\">\n",_("Purchase"));

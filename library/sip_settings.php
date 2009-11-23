@@ -529,6 +529,18 @@ class SipSettings {
             $this->FBUS_access_number = $this->soapEngines[$this->sip_engine]['FBUS_access_number'];
         }
 
+        if ($this->soapEngines[$this->sip_engine]['change_privacy_access_number']) {
+            $this->change_privacy_access_number = $this->soapEngines[$this->sip_engine]['change_privacy_access_number'];
+        }
+
+        if ($this->soapEngines[$this->sip_engine]['check_privacy_access_number']) {
+            $this->check_privacy_access_number = $this->soapEngines[$this->sip_engine]['check_privacy_access_number'];
+        }
+
+        if ($this->soapEngines[$this->sip_engine]['reject_anonymous_access_number']) {
+            $this->reject_anonymous_access_number = $this->soapEngines[$this->sip_engine]['reject_anonymous_access_number'];
+        }
+
         if (isset($this->soapEngines[$this->sip_engine]['absolute_voicemail_uri'])) {
             $this->absolute_voicemail_uri = $this->soapEngines[$this->sip_engine]['absolute_voicemail_uri'];
         }
@@ -1456,6 +1468,18 @@ class SipSettings {
 
         if (isset($this->resellerProperties['FBUS_access_number'])) {
             $this->FBUS_access_number = $this->resellerProperties['FBUS_access_number'];
+        }
+
+        if (isset($this->resellerProperties['change_privacy_access_number'])) {
+            $this->change_privacy_access_number = $this->resellerProperties['change_privacy_access_number'];
+        }
+
+        if (isset($this->resellerProperties['check_privacy_access_number'])) {
+            $this->check_privacy_access_number = $this->resellerProperties['check_privacy_access_number'];
+        }
+
+        if (isset($this->resellerProperties['reject_anonymous_access_number'])) {
+            $this->reject_anonymous_access_number = $this->resellerProperties['reject_anonymous_access_number'];
         }
 
         if (isset($this->resellerProperties['absolute_voicemail_uri'])) {
