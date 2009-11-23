@@ -276,10 +276,10 @@ class CreditCardProcessor {
         dprint("CreditCardProcessor()");
 
         // process the ini configuration file
-        $app_settings_array = parse_ini_file("/etc/cdrtool/paypal/cc_processor.ini");
+        $this->settings = parse_ini_file("/etc/cdrtool/paypal/cc_processor.ini");
 
         // set the includes directory parameter
-        set_include_path(get_include_path() . PATH_SEPARATOR . $app_settings_array['library_path']);
+        set_include_path(get_include_path() . PATH_SEPARATOR . $this->settings['library_path']);
 
         // include all Paypal library files
         require_once 'PayPal.php';
@@ -313,42 +313,46 @@ class CreditCardProcessor {
         $us_states_arr = array('AL'=>'Alabama','AK'=>'Alaska','AZ'=>'Arizona','AR'=>'Arkansas','CA'=>'California','CO'=>'Colorado','CT'=>'Connecticut','DE'=>'Delaware','DC'=>'District Of Columbia','FL'=>'Florida','GA'=>'Georgia','HI'=>'Hawaii','ID'=>'Idaho','IL'=>'Illinois', 'IN'=>'Indiana', 'IA'=>'Iowa',  'KS'=>'Kansas','KY'=>'Kentucky','LA'=>'Louisiana','ME'=>'Maine','MD'=>'Maryland', 'MA'=>'Massachusetts','MI'=>'Michigan','MN'=>'Minnesota','MS'=>'Mississippi','MO'=>'Missouri','MT'=>'Montana','NE'=>'Nebraska','NV'=>'Nevada','NH'=>'New Hampshire','NJ'=>'New Jersey','NM'=>'New Mexico','NY'=>'New York','NC'=>'North Carolina','ND'=>'North Dakota','OH'=>'Ohio','OK'=>'Oklahoma', 'OR'=>'Oregon','PA'=>'Pennsylvania','RI'=>'Rhode Island','SC'=>'South Carolina','SD'=>'South Dakota','TN'=>'Tennessee','TX'=>'Texas','UT'=>'Utah','VT'=>'Vermont','VA'=>'Virginia','WA'=>'Washington','WV'=>'West Virginia','WI'=>'Wisconsin','WY'=>'Wyoming');
         $can_states_arr = array('AB'=>'Alberta','BC'=>'British Columbia','MB'=>'Manitoba','NB'=>'New Brunswick','NL'=>'Newfoundland/Labrador','NS'=>'Nova Scotia','NT'=>'Northwest Territories','NU'=>'Nunavut','ON'=>'Ontario','PE'=>'Prince Edward Island','QC'=>'Quebec','SK'=>'Saskatchewan','YT'=>'Yukon');
 
-        // set class variables
+        $this->sql_host = $this->settings['sql_host'];
+        $this->sql_user = $this->settings['sql_user'];
+        $this->sql_pw = $this->settings['sql_pw'];
+        $this->sql_db = $this->settings['sql_db'];
 
-        if($this->environment == 'live'){
-            $this->pp_username = $app_settings_array['live_pp_username'];
-            $this->pricepp_pass = $app_settings_array['live_pp_pass'];
-            $this->pp_signature = $app_settings_array['live_pp_signature'];
-        } else if ($this->environment == 'sandbox') {
-            print "<p>";
-            print "Test Paypal Enviroment";
-            $this->pp_username = $app_settings_array['sandbox_pp_username'];
-            $this->pricepp_pass = $app_settings_array['sandbox_pp_pass'];
-            $this->pp_signature = $app_settings_array['sandbox_pp_signature'];
-        } else {
-            print "Incorect Paypal Enviroment";
-            return false;
-        }
-
-        $this->sql_host = $app_settings_array['sql_host'];
-        $this->sql_user = $app_settings_array['sql_user'];
-        $this->sql_pw = $app_settings_array['sql_pw'];
-        $this->sql_db = $app_settings_array['sql_db'];
-
-        $this->transaction_type = $app_settings_array['transaction_type'];
-        $this->sender_email = $app_settings_array['sender_email'];
+        $this->transaction_type = $this->settings['transaction_type'];
+        $this->sender_email = $this->settings['sender_email'];
         $this->countries_array = $countries_array;
         $this->us_states_arr = $us_states_arr;
         $this->can_states_arr = $can_states_arr;
         $this->user_account = null;
-        $this->aes_enc_pwd = $app_settings_array['aes_enc_pwd'];
-        $this->log_path = $app_settings_array['logging_path'];
-        $this->log_level = $app_settings_array['log_level'];
+        $this->aes_enc_pwd = $this->settings['aes_enc_pwd'];
+        $this->log_path = $this->settings['logging_path'];
+        $this->log_level = $this->settings['log_level'];
         $this->logger->_logDir = $this->log_path;
         $this->logger->_logLevel = $this->log_level;
         $this->logger->_log("Started session: ".session_id()."");
     }
-    
+
+    function setEnvironment() {
+        // set environment variables
+        dprint ("setEnvironment()");
+
+        if($this->environment == 'live'){
+            $this->pp_username = $this->settings['live_pp_username'];
+            $this->pricepp_pass = $this->settings['live_pp_pass'];
+            $this->pp_signature = $this->settings['live_pp_signature'];
+            return true;
+        } else if ($this->environment == 'sandbox') {
+            print "<h2>Test Paypal Enviroment</h2>";
+            $this->pp_username = $this->settings['sandbox_pp_username'];
+            $this->pricepp_pass = $this->settings['sandbox_pp_pass'];
+            $this->pp_signature = $this->settings['sandbox_pp_signature'];
+            return true;
+        } else {
+            print "Incorect Paypal Enviroment";
+            return false;
+        }
+    }
+
     function dbConnection(){
         $mysql = new mysqli($this->sql_host,$this->sql_user,$this->sql_pw,$this->sql_db);
         return $mysql;
@@ -428,6 +432,10 @@ class CreditCardProcessor {
     }
 
     function showSubmitForm () {
+
+		if (!$this->setEnvironment()) {
+            return false;
+        }
 
         if(count($this->cart_items) > 0) {
             $amt = 0;
@@ -810,13 +818,17 @@ class CreditCardProcessor {
 
     function processPayment () {
         dprint("processPayment()");
+
+		if (!$this->setEnvironment()) {
+            return false;
+        }
         // return sucess and set relevant data from the transaction to variables belonging to the class
         $errors = array();
         $pp_return = array();
         $_TransactionKey = filter_var($_POST['transactionKey'], FILTER_SANITIZE_STRING);
 
         if($_TransactionKey == '' || CreditCardProcessor::transaction_exists($_TransactionKey) == true){
-        	$pp_return = array('error'=>array('field'=>'Card Processing','desc'=>'You cannot refresh the page or re-submit the proessing form.'));
+        	$pp_return = array('error'=>array('field'=>'reload','desc'=>_('Page cannot be reloaded')));
         }else{
 	        $pid = ProfileHandler::generateID();
 	        $handler = & ProfileHandler_Array::getInstance(array(
@@ -902,13 +914,18 @@ class CreditCardProcessor {
 	
 	        // set our session ID to be sent with PayPal Request
 	
-	        $_id=$this->note.' '.session_id();
+            if ($this->note) {
+            	$_id=$this->note.' '.$_TransactionKey;
+            } else {
+            	$_id=$_TransactionKey;
+            }
+
 	        $dp_details->setMerchantSessionId($_id);
-	        $dp_details->setMerchantSessionId($_TransactionKey);
+	        //$dp_details->setMerchantSessionId($_TransactionKey);
 	        $dp_details->setPaymentAction($paymentType);
 	        
 	        $dp_request->setDoDirectPaymentRequestDetails($dp_details);
-	        
+
 	        $caller =& PayPal::getCallerServices($profile);
 	        $this->logger->_log("CC Profile: ".print_r($profile, true)."");
 	        $this->logger->_log("Request Details: ".print_r($dp_details, true)."");
@@ -996,6 +1013,7 @@ class CreditCardProcessor {
         }
 
         $this->billing_address .= $_BillingPostalCode.', '.$_BillingCity."\n";
+
         if ($_BillingState) {
         	$this->billing_address .= $_BillingState.', '.$_BillingCountry;
         } else {
@@ -1018,13 +1036,14 @@ class CreditCardProcessor {
             //print $ex;
             syslog(LOG_ERR,"CC_transaction [".date("Y-m-d H:i:s")."]: ".$ex."");
         }
+
         // insert item purchase information
         foreach ($form_data['cart_item'] as $cart_item_key => $service_id){
             try{
                 mysqli_query($sql_conn, "CALL sproc_cc_add_purchase_items(
                     '".$_TransactionNum."', '".$service_id."', '".$form_data['cart_item_price'][$cart_item_key]."', '".$_Currency."'
                 )");
-            }catch (Exception $ex){
+            } catch (Exception $ex) {
                 //print $ex;
                 syslog(LOG_ERR,"CC_transaction [".date("Y-m-d H:i:s")."]: ".$ex."");
             }
@@ -1036,7 +1055,6 @@ class CreditCardProcessor {
 
         $this->transaction_data = $this->getTransactionDetails($_TransactionNum);
 
-        $this->notifyMerchant();
         $this->notifyMerchant();
 
         return $_TransactionNum;

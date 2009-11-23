@@ -1654,7 +1654,6 @@ class SipSettings {
             <td colspan=3>
             ";
 
-
             if ($this->login_type!='subscriber') {
                 print "<p>";
             	printf ("<font color=red>%s</font>",$this->fraud_reason);
@@ -1672,6 +1671,13 @@ class SipSettings {
         require('cc_processor.php');
         
 		$CardProcessor = new CreditCardProcessor();
+
+        /*
+        if ($_SERVER['REMOTE_ADDR']=="80.101.96.20") {
+        	$CardProcessor->environment='sandbox';
+        }
+        */
+
 		$CardProcessor->chapter_class  = 'chapter';
         $CardProcessor->odd_row_class  = 'odd';
         $CardProcessor->even_row_class = 'even';
@@ -1768,15 +1774,20 @@ class SipSettings {
                 if(count($pay_process_results['error']) > 0){
                     // there was a problem with payment
                     // show error and stop
-                    print $CardProcessor->displayProcessErrors($pay_process_results);
 
-                	$log=sprintf("Error: SIP Account %s - CC transaction %s failed to process (%s)",$this->account, $CardProcessor->transaction_data['TRANSACTION_ID'],$pay_process_results['desc']);
+                    if ($pay_process_results['error']['field'] == 'reload') {
+                        print $pay_process_results['error']['desc'];
+                    } else {
+                    	print $CardProcessor->displayProcessErrors($pay_process_results);
+                    }
+
+                	$log=sprintf("Error: SIP Account %s - CC transaction failed to process (%s)",$this->account,$pay_process_results['error']['desc']);
                 	syslog(LOG_NOTICE, $log);
 
                     return false;
                 }
-        
-                $log=sprintf("SIP Account %s - CC transaction %s completed succesfully", $this->account, $CardProcessor->transaction_data['TRANSACTION_ID']);
+
+                $log=sprintf("SIP Account %s - CC transaction %s completed succesfully", $this->account, $pay_process_results['success']['desc']->TransactionID);
                 syslog(LOG_NOTICE, $log);
 
                 print "<p>";
