@@ -106,6 +106,7 @@ class CallerServices extends SOAP_Client
 	  // below code will switch off the server certificate validation. this is only required in staging		
 	  $this->setOpt('curl', CURLOPT_SSL_VERIFYPEER, false);
 	  $this->setOpt('curl', CURLOPT_SSL_VERIFYHOST, false);
+      $this->setOpt('curl', CURLOPT_CONNECTTIMEOUT, 10);
 
         if(!empty($profile->_subject)) {
         	$this->setOpt('curl', CURLOPT_SSL_VERIFYPEER, false);

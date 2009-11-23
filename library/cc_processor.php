@@ -60,6 +60,8 @@ class CreditCardProcessor {
 
     var $environment      = 'live'; // set it to 'live' for live transactionr or 'sandbox' for texting
 
+	var $account          = ''; //Account used for logging
+
     // nothing should be needed to be changed below this line by the application using this class
 
     // countries that are in sync with other AG Projects backends

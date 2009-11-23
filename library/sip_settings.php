@@ -1707,6 +1707,7 @@ class SipSettings {
         $CardProcessor->even_row_class = 'even';
 
         $CardProcessor->note = $this->account;
+        $CardProcessor->account = $this->account;
 
         // set hidden elements we need to preserve in the shopping cart application
 		$CardProcessor->hidden_elements = $this->hiddenElements;
