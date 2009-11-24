@@ -10946,43 +10946,47 @@ class Customers extends Records {
                                                                'permission' => 'admin',
                                                                'resellerMayManageForChildAccounts' => true
                                                                ),
-                                 'voicemail_server'    => array('name'      => 'Voicemail server address',
+                                 'payment_processor'      => array('name'      => 'Payment Processor',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'admin'
+                                                               ),
+                                 'voicemail_server'    => array('name'      => 'Voicemail Server Address',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'voicemail_access_number'    => array('name'      => 'Voicemail access number',
+                                 'voicemail_access_number'    => array('name'      => 'Voicemail Access Number',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'FUNC_access_number'    => array('name'      => 'Forwarding Unconditional access number',
+                                 'FUNC_access_number'    => array('name'      => 'Forwarding Unconditional Access Number',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'FNOL_access_number'    => array('name'      => 'Forwarding Not-Online access number',
+                                 'FNOL_access_number'    => array('name'      => 'Forwarding Not-Online Access Number',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'FNOA_access_number'    => array('name'      => 'Forwarding Not-Available access number',
+                                 'FNOA_access_number'    => array('name'      => 'Forwarding Not-Available Access Number',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'FBUS_access_number'    => array('name'      => 'Forwarding On Busy access number',
+                                 'FBUS_access_number'    => array('name'      => 'Forwarding On Busy Access Number',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'change_privacy_access_number' => array('name'      => 'Change privacy access number',
+                                 'change_privacy_access_number' => array('name'      => 'Change privacy Access Number',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'check_privacy_access_number' => array('name'      => 'Check privacy access number',
+                                 'check_privacy_access_number' => array('name'      => 'Check privacy Access Number',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'reject_anonymous_access_number' => array('name'      => 'Reject anonymous access number',
+                                 'reject_anonymous_access_number' => array('name'      => 'Reject anonymous Access Number',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'sip_proxy'           => array('name'      => 'SIP Proxy server address',
+                                 'sip_proxy'           => array('name'      => 'SIP Proxy Address',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
@@ -10994,30 +10998,30 @@ class Customers extends Records {
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'absolute_voicemail_uri'=> array('name'    => 'Use absolute voicemail uri',
+                                 'absolute_voicemail_uri'=> array('name'    => 'Use Absolute Voicemail Uri',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-    		    			     'dns_admin_email'     => array('name'     => 'DNS zones administrator email',
+    		    			     'dns_admin_email'     => array('name'     => 'DNS zones Administrator Email',
                                                                'category' => 'dns',
                                                                'permission'  => 'customer'),
-                                 'support_web'         => array('name'      => 'Support web site',
+                                 'support_web'         => array('name'      => 'Support Web Site',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'support_email'       => array('name'      => 'Support email address',
+                                 'support_email'       => array('name'      => 'Support Email Address',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'support_company'     => array('name'      => 'Support organization',
+                                 'support_company'     => array('name'      => 'Support Organization',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'cdrtool_address'     => array('name'      => 'CDRTool address',
+                                 'cdrtool_address'     => array('name'      => 'CDRTool Address',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-                                 'sip_settings_page'   => array('name'      => 'SIP settings page',
+                                 'sip_settings_page'   => array('name'      => 'SIP Settings Page',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
