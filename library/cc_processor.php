@@ -66,6 +66,7 @@ class CreditCardProcessor {
 
     // countries that are in sync with other AG Projects backends
     var $countries=array(
+        array("label"=>"","value"=>""),
         array("label"=>"Albania","value"=>"AL"),
         array("label"=>"Algeria","value"=>"DZ"),
         array("label"=>"Andorra","value"=>"AD"),
@@ -970,24 +971,45 @@ class CreditCardProcessor {
     function saveOrder ($form_data, $payment_results) {
         dprint("saveOrder()");
         // save order information in a database, etc
+        if ($payment_results['success']) {
+            $_TransactionNum = $payment_results['success']['desc']->TransactionID;
+            $amt_obj = $payment_results['success']['desc']->getAmount();
+            $amt = $amt_obj->_value;
+            $currency_cd = $amt_obj->_attributeValues['currencyID'];
+            $_TotalAmount = $amt;
+            $_Currency = $currency_cd;
+            $_AVSCode = $payment_results['success']['desc']->AVSCode;
+            $_CVV2Code = $payment_results['success']['desc']->CVV2Code;
+            $_PendingReason = $payment_results['success']['desc']->PendingReason;
+            $_PaymentStatus = $payment_results['success']['desc']->PaymentStatus;
+            $_FMFDetails = $payment_results['success']['desc']->FMFDetails;
+            $_ThreeDSecureResponse = $payment_results['success']['desc']->ThreeDSecureResponse;
+            $_APITimestamp = $payment_results['success']['desc']->Timestamp;
+            $_AckResponse = $payment_results['success']['desc']->Ack;
+            $_CorrelationID = $payment_results['success']['desc']->CorrelationID;
+            $_Errors = $payment_results['success']['desc']->Errors;
+
+        } else {
+            $_TransactionNum = '';
+            $amt_obj = '';
+            $amt = '';
+            $currency_cd = '';
+            $_TotalAmount = '';
+            $_Currency = '';
+            $_AVSCode = '';
+            $_CVV2Code = '';
+            $_PendingReason = '';
+            $_PaymentStatus = '';
+            $_FMFDetails = '';
+            $_ThreeDSecureResponse = '';
+            $_APITimestamp = '';
+            $_AckResponse = '';
+            $_CorrelationID = '';
+            $_Errors = '';
+        }
+
         $_TransactionKey = filter_var($form_data['transactionKey'], FILTER_SANITIZE_STRING);
-        $_TransactionNum = $payment_results['success']['desc']->TransactionID;
-        $amt_obj = $payment_results['success']['desc']->getAmount();
-        $amt = $amt_obj->_value;
-        $currency_cd = $amt_obj->_attributeValues['currencyID'];
-        $_TotalAmount = $amt;
-        $_Currency = $currency_cd;
-        $_AVSCode = $payment_results['success']['desc']->AVSCode;
-        $_CVV2Code = $payment_results['success']['desc']->CVV2Code;
-        $_PendingReason = $payment_results['success']['desc']->PendingReason;
-        $_PaymentStatus = $payment_results['success']['desc']->PaymentStatus;
-        $_FMFDetails = $payment_results['success']['desc']->FMFDetails;
-        $_ThreeDSecureResponse = $payment_results['success']['desc']->ThreeDSecureResponse;
-        $_APITimestamp = $payment_results['success']['desc']->Timestamp;
-        $_AckResponse = $payment_results['success']['desc']->Ack;
-        $_CorrelationID = $payment_results['success']['desc']->CorrelationID;
-        $_Errors = $payment_results['success']['desc']->Errors;
-        $_AES_ENC_PWD = $this->aes_enc_pwd;        
+        $_AES_ENC_PWD = $this->aes_enc_pwd;
         $_FirstName = filter_var($form_data['firstName'], FILTER_SANITIZE_STRING);
         $_LastName = filter_var($form_data['lastName'], FILTER_SANITIZE_STRING);
         $_UserAcct = $_SESSION['login'];    // change this with actual account ientifier session
@@ -1054,17 +1076,11 @@ class CreditCardProcessor {
 
         $sql_conn->close();
 
-        $this->saveOrderExternal($form_data, $payment_results);
-
         $this->transaction_data = $this->getTransactionDetails($_TransactionNum);
 
         $this->notifyMerchant();
 
         return $_TransactionNum;
-    }
-
-    function saveOrderExternal($form_data, $payment_results) {
-        // save to additional databases ...
     }
 
     function deliverMerchandise ($transaction_data) {
