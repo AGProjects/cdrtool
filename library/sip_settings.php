@@ -528,6 +528,14 @@ class SipSettings {
             $this->FBUS_access_number = $this->soapEngines[$this->sip_engine]['FBUS_access_number'];
         }
 
+        if ($this->soapEngines[$this->sip_engine]['FNOL_access_number']) {
+            $this->FNOL_access_number = $this->soapEngines[$this->sip_engine]['FNOL_access_number'];
+        }
+
+        if ($this->soapEngines[$this->sip_engine]['payment_processor_class']) {
+            $this->payment_processor_class = $this->soapEngines[$this->sip_engine]['payment_processor_class'];
+        }
+
         if ($this->soapEngines[$this->sip_engine]['change_privacy_access_number']) {
             $this->change_privacy_access_number = $this->soapEngines[$this->sip_engine]['change_privacy_access_number'];
         }
@@ -1467,6 +1475,14 @@ class SipSettings {
 
         if (isset($this->resellerProperties['FBUS_access_number'])) {
             $this->FBUS_access_number = $this->resellerProperties['FBUS_access_number'];
+        }
+
+        if (isset($this->resellerProperties['FNOL_access_number'])) {
+            $this->FNOL_access_number = $this->resellerProperties['FNOL_access_number'];
+        }
+
+        if (isset($this->resellerProperties['payment_processor_class'])) {
+            $this->payment_processor_class = $this->resellerProperties['payment_processor_class'];
         }
 
         if (isset($this->resellerProperties['change_privacy_access_number'])) {

@@ -10946,7 +10946,7 @@ class Customers extends Records {
                                                                'permission' => 'admin',
                                                                'resellerMayManageForChildAccounts' => true
                                                                ),
-                                 'payment_processor'      => array('name'      => 'Payment Processor',
+                                 'payment_processor_class'      => array('name'      => 'Payment Processor Class',
                                                                'category'   => 'sip',
                                                                'permission' => 'admin'
                                                                ),
