@@ -54,12 +54,12 @@ class SipSettings {
     var $check_privacy_access_number    = "*68";
     var $reject_anonymous_access_number = "*69";
 
-	var $show_barring_tab   = false;
+	var $show_barring_tab   = true;
 	var $show_presence_tab  = false;
     var $show_payments_tab  = false;
 
     var $first_tab          = 'calls';
-    var $auto_refesh_tab = 0;              // number of seconds after which to refresh tab content in the web browser
+    var $auto_refesh_tab    = 0;              // number of seconds after which to refresh tab content in the web browser
 
     var $deny_countries  = array();
 	var $allow_countries = array();
