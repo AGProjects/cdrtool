@@ -944,10 +944,12 @@ class CreditCardProcessor {
 	                $_log.="\n\xA0\xA0getMessage() => ".strval($response->getMessage());
 	            }
 	
-	            foreach(get_object_vars($response) as $k=>$v){
+	            /*
+                foreach(get_object_vars($response) as $k=>$v){
 	                $_log.="\n\xA0\xA0$k => ".strval($v);
 	            }
-	
+	            */
+
 	            // Finish handling the error, etc. For example,
 	            $pp_return = array('error'=>array('field'=>'Card Processing','desc'=>'Unknown Processing Error'));
 	
