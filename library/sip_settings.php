@@ -548,6 +548,10 @@ class SipSettings {
             $this->reject_anonymous_access_number = $this->soapEngines[$this->sip_engine]['reject_anonymous_access_number'];
         }
 
+        if ($this->soapEngines[$this->sip_engine]['show_presence_tab']) {
+            $this->show_presence_tab = $this->soapEngines[$this->sip_engine]['show_presence_tab'];
+        }
+
         if (isset($this->soapEngines[$this->sip_engine]['absolute_voicemail_uri'])) {
             $this->absolute_voicemail_uri = $this->soapEngines[$this->sip_engine]['absolute_voicemail_uri'];
         }
