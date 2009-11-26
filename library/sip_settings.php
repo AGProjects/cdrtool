@@ -7679,6 +7679,7 @@ class PaypalProcessor {
                 }
 
                 // process the payment
+                $b=time();
                 $pay_process_results = $CardProcessor->processPayment($_POST);
                 //print_r($pay_process_results);
                 if(count($pay_process_results['error']) > 0){
@@ -7691,13 +7692,19 @@ class PaypalProcessor {
                         print $CardProcessor->displayProcessErrors($pay_process_results);
                     }
 
-                    $log=sprintf("Error: SIP Account %s - CC transaction failed to process (%s)",$account->account,$pay_process_results['error']['desc']);
+                    $e=time();
+	                $d=$e-$b;
+
+                    $log=sprintf("Error: SIP Account %s - CC transaction failed to process (%s) in %d seconds",$account->account,$pay_process_results['error']['desc'],$d);
                     syslog(LOG_NOTICE, $log);
 
                     return false;
                 } else {
 
-                    $log=sprintf("SIP Account %s - CC transaction %s completed succesfully", $account->account, $pay_process_results['success']['desc']->TransactionID);
+                    $e=time();
+	                $d=$e-$b;
+
+                    $log=sprintf("SIP Account %s - CC transaction %s completed succesfully in %d seconds", $account->account, $pay_process_results['success']['desc']->TransactionID,$d);
                     syslog(LOG_NOTICE, $log);
     
                     print "<p>";
