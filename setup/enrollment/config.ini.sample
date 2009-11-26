@@ -18,7 +18,8 @@ $enrollment=array('ca_crt'                 => "/etc/cdrtool/enrollment/root_ca.c
     		  'organizationName'       => 'N/A',
     		  'organizationalUnitName' => 'N/A',
                   'outbound_proxy'         => 'sip.example.com',
-                  'xcap_root'              => 'https://xcap.example.com/xcap-root/'
+                  'xcap_root'              => 'https://xcap.example.com/xcap-root/',
+                  'msrp_relay'             => 'msrprelay.example.com'
                  );
                  
 ?>

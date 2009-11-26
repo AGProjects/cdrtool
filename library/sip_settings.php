@@ -6487,599 +6487,6 @@ class SipSettings {
 
 }
 
-class Enrollment {
-    var $init=false;
-    var $create_voicemail           = false;
-    var $send_email_notification    = true;
-    var $create_email_alias         = false;
-	var $create_customer            = true;
-
-    function Enrollment() {
-
-        include("/etc/cdrtool/enrollment/config.ini");
-        include("/etc/cdrtool/ngnpro_engines.inc");
-
-    	$this->soapEngines  = $soapEngines;
-        $this->enrollment   = $enrollment;
-
-        if (!is_array($this->soapEngines)) {
-            $return=array('success'       => false,
-                          'error_message' => 'Error: Missing soap engines configuration'
-                          );
-            print (json_encode($return));
-            return false;
-        }
-
-        if (!is_array($this->enrollment)) {
-            $return=array('success'       => false,
-                          'error_message' => 'Error: Missing enrollment configuration'
-                          );
-            print (json_encode($return));
-            return false;
-        }
-
-        $this->sipDomain      = $this->enrollment['sip_domain'];
-		$this->sipEngine      = $this->enrollment['sip_engine'];
-
-        if ($this->enrollment['customer_engine']) {
-        	$this->customerEngine = $this->enrollment['customer_engine'];
-        } else {
-        	$this->customerEngine = $this->enrollment['sip_engine'];
-        }
-
-        if ($this->enrollment['email_engine']) {
-        	$this->emailEngine = $this->enrollment['email_engine'];
-        } else {
-        	$this->emailEngine = $this->enrollment['sip_engine'];
-        }
-
-		$this->reseller       = $this->enrollment['reseller'];
-
-        $this->outbound_proxy = $this->enrollment['outbound_proxy'];
-        $this->xcap_root      = $this->enrollment['xcap_root'];
-
-        if ($this->enrollment['sip_class']) {
-        	$this->sipClass = $this->enrollment['sip_class'];
-        } else {
-        	$this->sipClass = 'SipSettings';
-        }
-
-        if (!$this->sipEngine) {
-            $return=array('success'       => false,
-                          'error_message' => 'Error: Missing sip engine'
-                          );
-            print (json_encode($return));
-            return false;
-        }
-
-        if (!$this->sipDomain) {
-            $return=array('success'       => false,
-                          'error_message' => 'Error: Missing sip domain'
-                          );
-            print (json_encode($return));
-            return false;
-        }
-
-		$this->sipLoginCredentials = array(
-                                           'reseller'       => intval($this->reseller),
-                                           'sip_engine'     => $this->sipEngine,
-                                           'login_type'     => 'admin'
-                                           );
-
-        $this->init=true;
-    }
-
-    function createAccount() {
-
-        if (!$this->init) return false;
-
-        if (!$_REQUEST['email']) {
-            $return=array('success'       => false,
-                          'error_message' => 'Error: Missing email address'
-                          );
-            print (json_encode($return));
-            return false;
-        }
-
-        if (!$this->checkEmail($_REQUEST['email'])) {
-            $return=array('success'       => false,
-                          'error_message' => 'Error: Invalid email address'
-                          );
-            print (json_encode($return));
-            return false;
-        }
-        
-        if (!$_REQUEST['password']) {
-            $return=array('success'       => false,
-                          'error_message' => 'Error: Missing password'
-                          );
-            print (json_encode($return));
-            return false;
-        }
-
-        if (!$_REQUEST['display_name']) {
-            $return=array('success'       => false,
-                          'error_message' => 'Error: Missing display name'
-                          );
-            print (json_encode($return));
-            return false;
-        }
-
-        if ($this->create_customer) {
-        	// create owner id
-
-            $customerEngine           = 'customers@'.$this->customerEngine;
-            $this->CustomerSoapEngine = new SoapEngine($customerEngine,$this->soapEngines,$this->customerLoginCredentials);
-            $_customer_class          = $this->CustomerSoapEngine->records_class;
-            $this->customerRecords    = new $_customer_class(&$this->CustomerSoapEngine);
-            $this->customerRecords->html=false;
-    
-            $properties=$this->customerRecords->setInitialCredits(array('sip_credit'         => 2,
-                                                                        'sip_alias_credit'   => 2,
-                                                                        'email_credit'       => 2,
-                                                                        'dns_zone_credit'    => 1,
-                                                                        'enum_range_credit'  => 1,
-                                                                        'enum_number_credit' => 1
-                                                                        )
-                                                                  );
-            if (preg_match("/^(\w+)\s+(\w+)$/",$_REQUEST['display_name'],$m)) {
-                $firstName = $m[1];
-                $lastName  = $m[2];
-            } else {
-                $firstName = $_REQUEST['display_name'];
-                $lastName  = 'Blink lover';
-            }
-
-            $customer=array(
-                         'firstName'  => $firstName,
-                         'lastName'   => $lastName,
-                         'timezone'   => $_REQUEST['timezone'],
-                         'email'      => trim($_REQUEST['email']),
-                         'properties' => $properties
-                        );
-    
-            $_customer_created=false;
-
-            $j=0;
-    
-            while ($j < 3) {
-    
-                $username=RandomString(11);
-    
-                $customer['username']=$username;
-    
-                if (!$result = $this->customerRecords->addRecord($customer)) {
-                    if ($this->customerRecords->SoapEngine->exception->errorcode != "5001") {
-                        $return=array('success'       => false,
-                                      'error_message' => 'failed to create non-duplicate customer'
-                                      );
-                        print (json_encode($return));
-                        return false;
-                    }
-                } else {
-                    $_customer_created=true;
-                    break;
-                }
-    
-                $j++;
-            }
-    
-            if (!$_customer_created) {
-                $return=array('success'       => false,
-                              'error_message' => 'failed to create customer'
-                              );
-                print (json_encode($return));
-                return false;
-            }
-    
-            $owner=$result->id;
-    
-            if (!$owner) {
-                $return=array('success'       => false,
-                              'error_message' => 'failed to obtain a new owner id'
-                              );
-                print (json_encode($return));
-                return false;
-            }
-        }
-
-        // create SIP Account
-        $sipEngine           = 'sip_accounts@'.$this->sipEngine;
-
-        $this->SipSoapEngine = new SoapEngine($sipEngine,$this->soapEngines,$this->sipLoginCredentials);
-        $_sip_class          = $this->SipSoapEngine->records_class;
-        $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
-        $this->sipRecords->html=false;
-
-
-        $sip_properties[]=array('name'=> 'ip',                 'value' => $_SERVER['REMOTE_ADDR']);
-        $sip_properties[]=array('name'=> 'registration_email', 'value' => $_REQUEST['email']);
-
-        $sipAccount = array('account'   => strtolower('<autoincrement>@'.$this->sipDomain),
-                            'fullname'  => $_REQUEST['display_name'],
-                            'email'     => $_REQUEST['email'],
-                            'password'  => $_REQUEST['password'],
-                            'pstn'      => 1,
-                            'prepaid'   => 1,
-                            'quota'     => 50,
-                            'owner'     => intval($owner),
-                            'groups'    => array('missed-calls'),
-                            'properties'=> $sip_properties
-                            );
-
-        if (!$result = $this->sipRecords->addRecord($sipAccount)) {
-            $return=array('success'       => false,
-                          'error_message' => 'failed to create sip account'
-                          );
-            print (json_encode($return));
-            return false;
-        } else {
-            $sip_address=$result->id->username.'@'.$result->id->domain;
-
-        	if (!$passport = $this->generateCertificate($sip_address,$_REQUEST['email'],$_REQUEST['password'])) {
-                $return=array('success'       => false,
-                              'error_message' => 'failed to generate certificate'
-                              );
-                print (json_encode($return));
-                return false;
-            }
-
-            // Generic code for all sip settings pages
-
-            if ($this->create_voicemail || $this->send_email_notification) {
-                if ($SipSettings = new $this->sipClass($sip_address,$this->sipLoginCredentials,$this->soapEngines)) {
-    
-                    if ($this->create_voicemail) {
-                        // Add voicemail account
-                        $SipSettings->addVoicemail();
-                        $SipSettings->setVoicemailDiversions();
-                    }
-                    if ($this->send_email_notification) {
-                        // Sent account settings by email
-                        $SipSettings->sendEmail('hideHtml');
-                    }
-                }
-            }
-
-            if ($this->create_email_alias) {
-                $emailEngine           = 'email_aliases@'.$this->emailEngine;
-                $this->EmailSoapEngine = new SoapEngine($emailEngine,$this->soapEngines,$this->sipLoginCredentials);
-                $_email_class          = $this->EmailSoapEngine->records_class;
-                $this->emailRecords    = new $_email_class(&$this->EmailSoapEngine);
-                $this->emailRecords->html=false;
-
-                $emailAlias = array('name'    => strtolower($sip_address),
-                                    'type'    => 'MBOXFW',
-                                    'owner'   => intval($owner),
-                                    'value'   => $_REQUEST['email']
-                                    );
-        
-                $this->emailRecords->addRecord($emailAlias);
-			}
-
-            $return=array('success'        => true,
-                          'sip_address'    => $sip_address,
-                          'email'          => $result->email,
-                          'passport'       => $passport,
-                          'outbound_proxy' => $this->outbound_proxy,
-                          'xcap_root'      => $this->xcap_root
-                          );
-
-            print (json_encode($return));
-
-            return true;
-        }
-    }
-
-    function generateCertificate($sip_address,$email,$password) {
-        if (!$this->init) return false;
-
-    	$config = array(
-    		'config'           => $this->enrollment['ca_conf'],
-    		'digest_alg'       => 'md5',
-    		'private_key_bits' => 1024,
-    		'private_key_type' => OPENSSL_KEYTYPE_RSA,
-    		'encrypt_key'      => false,
-    	);
-
-		$dn = array(
-    		"countryName"            => $this->enrollment['countryName'],
-	    	"stateOrProvinceName"    => $this->enrollment['stateOrProvinceName'],
-    		"localityName"           => $this->enrollment['localityName'],
-    		"organizationName"       => $this->enrollment['organizationName'],
-    		"organizationalUnitName" => $this->enrollment['organizationalUnitName'],
-    		"commonName"             => $sip_address,
-    		"emailAddress"           => $email
-		);
-
-		$this->key = openssl_pkey_new($config);
-		$this->csr = openssl_csr_new($dn, $this->key);
-
-        openssl_csr_export($this->csr, $this->csr_out);
-        openssl_pkey_export($this->key, $this->key_out, $password, $config);
-
-		$ca="file://".$this->enrollment['ca_crt'];
-
-        $this->crt = openssl_csr_sign($this->csr, $ca, $this->enrollment['ca_key'], 3650, $config);
-
-		if ($this->crt==FALSE) {
-			while (($e = openssl_error_string()) !== false) {
-				echo $e . "\n";
-				print "<br><br>";
-			}
-            return false;
-		}
-
-        openssl_x509_export   ($this->crt, $this->crt_out);
-        openssl_pkcs12_export ($this->crt, $this->pk12_out, $this->key, $password);
-
-        return array(
-                     'crt'  => $this->crt_out,
-                     'key'  => $this->key_out,
-                     'pk12' => $this->pk12_out,
-                     'ca'   => file_get_contents($this->enrollment['ca_crt'])
-                     );
-    }
-
-    function checkEmail($email) {
-        dprint ("checkEmail($email)");
-        $regexp = "/^([a-z0-9][a-z0-9_.-]*)@([a-z0-9][a-z0-9-]*\.)+([a-z]{2,})$/i";
-        if (stristr($email,"-.") ||
-            !preg_match($regexp, $email)) {
-            return false;
-        }
-        return true;
-    }
-}
-
-class PaypalProcessor {
-    var $deny_countries     = array();
-	var $allow_countries    = array();
-	var $deny_ips           = array();
-
-    function PaypalProcessor($account) {
-        if (!is_object($account)) {
-            return false;
-        }
-
-        require('cc_processor.php');
-
-        if ($this->fraudDetected()) {
-            $chapter=sprintf(_("Payments"));
-            $account->showChapter($chapter);
-    
-            print "
-            <tr>
-            <td colspan=3>
-            ";
-    
-            if ($account->login_type!='subscriber') {
-                print "<p>";
-                printf ("<font color=red>%s</font>",$this->fraud_reason);
-            } else {
-                print _("Page Not Available");
-            }
-    
-            print "</td>
-            </tr>
-            ";
-    
-            return false;
-        }
-
-        $CardProcessor = new CreditCardProcessor();
-
-        if (is_array($this->test_credit_cards) &&
-            in_array($_POST['creditCardNumber'], $this->test_credit_cards)) {
-            $CardProcessor->environment='sandbox';
-        }
-
-        $CardProcessor->chapter_class  = 'chapter';
-        $CardProcessor->odd_row_class  = 'odd';
-        $CardProcessor->even_row_class = 'even';
-
-        $CardProcessor->note = $account->account;
-        $CardProcessor->account = $account->account;
-
-        // set hidden elements we need to preserve in the shopping cart application
-        $CardProcessor->hidden_elements = $account->hiddenElements;
-
-        // load shopping items
-        $CardProcessor->cart_items = array(
-                            'pstn_credit'=>array('price'       => 30,
-                                                 'description' => _('PSTN Termination Credit'),
-                                                 'unit'        => 'credit',
-                                                 'duration'    => 'N/A',
-                                                 'qty'         => 1
-                                                 )
-                            );
-
-        // load user information from owner information if available otherwise from sip account settings
-
-        if ($account->owner_information['firstName']) {
-            $CardProcessor->user_account['FirstName']=$account->owner_information['firstName'];
-        } else {
-            $CardProcessor->user_account['FirstName']=$account->firstName;
-        }
-
-        if ($account->owner_information['lastName']) {
-            $CardProcessor->user_account['LastName']=$account->owner_information['lastName'];
-        } else {
-            $CardProcessor->user_account['LastName']=$account->lastName;
-        }
-
-        if ($account->owner_information['email']) {
-            $CardProcessor->user_account['Email']=$account->owner_information['email'];
-        } else {
-            $CardProcessor->user_account['Email']=$account->email;
-        }
-
-        if ($account->owner_information['address'] && $account->owner_information['address']!= 'Unknown') {
-            $CardProcessor->user_account['Address1']=$account->owner_information['address'];
-        } else {
-            $CardProcessor->user_account['Address1']='';
-        }
-
-        if ($account->owner_information['city'] && $account->owner_information['city']!= 'Unknown') {
-            $CardProcessor->user_account['City']=$account->owner_information['city'];
-        } else {
-            $CardProcessor->user_account['City']='';
-        }
-
-        if ($account->owner_information['country'] && $account->owner_information['country']!= 'Unknown') {
-            $CardProcessor->user_account['Country']=$account->owner_information['country'];
-        } else {
-            $CardProcessor->user_account['Country']='';
-        }
-
-        if ($account->owner_information['state'] && $account->owner_information['state']!= 'Unknown') {
-            $CardProcessor->user_account['State']=$account->owner_information['state'];
-        } else {
-            $CardProcessor->user_account['State']='';
-        }
-
-        if ($account->owner_information['postcode'] && $account->owner_information['postcode']!= 'Unknown') {
-            $CardProcessor->user_account['PostCode']=$account->owner_information['postcode'];
-        } else {
-            $CardProcessor->user_account['PostCode']='';
-        }
-
-        if ($_REQUEST['purchase'] == '1' ) {
-
-            $chapter=sprintf(_("Transaction Results"));
-            $account->showChapter($chapter);
-
-            print "
-            <tr>
-            <td colspan=3>
-            ";
-
-            // ensure that submit requests are coming only from the current page
-            if($_SERVER['HTTP_REFERER'] == $CardProcessor->getPageURL()) {
-
-                // check submitted values
-                $formcheck1 = $CardProcessor->checkForm($_POST);
-                if (count($formcheck1) > 0){
-                    // we have errors; let's print and stop
-                    print $CardProcessor->displayProcessErrors($formcheck1);
-                    return false;
-                }
-
-                // process the payment
-                $pay_process_results = $CardProcessor->processPayment($_POST);
-                //print_r($pay_process_results);
-                if(count($pay_process_results['error']) > 0){
-                    // there was a problem with payment
-                    // show error and stop
-
-                    if ($pay_process_results['error']['field'] == 'reload') {
-                        print $pay_process_results['error']['desc'];
-                    } else {
-                        print $CardProcessor->displayProcessErrors($pay_process_results);
-                    }
-
-                    $log=sprintf("Error: SIP Account %s - CC transaction failed to process (%s)",$account->account,$pay_process_results['error']['desc']);
-                    syslog(LOG_NOTICE, $log);
-
-                    return false;
-                } else {
-
-                    $log=sprintf("SIP Account %s - CC transaction %s completed succesfully", $account->account, $pay_process_results['success']['desc']->TransactionID);
-                    syslog(LOG_NOTICE, $log);
-    
-                    print "<p>";
-                    print _("Transaction completed sucessfully. ");
-    
-                    print "<p>";
-                    print _("You may check your new balance in the Credit tab. ");
-    
-                    // save the transaction in the database, add credit to user account and 
-                    // notify parties by email
-                }
-
-                if ($CardProcessor->saveOrder($_POST,$pay_process_results)) {
-
-                    // add PSTN credit
-                    $description=sprintf("CC transaction %s",$CardProcessor->transaction_data['TRANSACTION_ID']);
-                    $account->addBalanceReseller($CardProcessor->transaction_data['TOTAL_AMOUNT'],$description);
-
-                    $account->addInvoice($CardProcessor);
-
-                    return true;
-
-                } else {
-                    $log=sprintf("Error: SIP Account %s - CC transaction %s failed to Save Order",$account->account, $CardProcessor->transaction_data['TRANSACTION_ID']);
-                    syslog(LOG_NOTICE, $log);
-                    //print _("Error Saving Order");
-                    return false;
-                }
-
-
-            } else {
-                print _("Invalid Request");
-                return false;
-            }
-
-            print "
-            </td>
-            </tr>
-            ";
-
-        } else {
-            $chapter=sprintf(_("Add Credit"));
-            $account->showChapter($chapter);
-
-            print "
-            <tr>
-            <td colspan=3>
-            ";
-
-            print "<p>";
-            print _("Add balance to your Credit by purchasing it with a Credit Card. ");
-            // print the submit form
-            $arr_form_page_objects = $CardProcessor->showSubmitForm();
-            print $arr_form_page_objects['page_body_content'];
-
-            print "
-            </td>
-            </tr>
-            ";
-
-        }
-
-    }
-
-    function fraudDetected () {
-        if (count($this->deny_ips)) {
-            if ($account->Preferences['ip'] && in_array($account->Preferences['ip'],$this->deny_ips)) {
-            	$this->fraud_reason=$account->Preferences['ip'].' is Blocked';
-                return true;
-            }
-        }
-        if (count($this->deny_countries)) {
-
-            if ($_loc=geoip_record_by_name($this->Preferences['ip'])) {
-                if (in_array($_loc['country_name'],$this->deny_countries)) {
-                    $this->fraud_reason=$_loc['country_name'].' is Blocked';
-                    return true;
-                }
-            }
-        }
-
-        if (count($this->allow_countries)) {
-            if ($_loc=geoip_record_by_name($this->Preferences['ip'])) {
-                if (!in_array($_loc['country_name'],$this->allow_countries)) {
-                    $this->fraud_reason=$_loc['country_name'].' is Not Allowed';
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-}
-
 function normalizeURI($uri) {
     $uri=quoted_printable_decode($uri);
     if (preg_match("/^(.*<sips?:.*)@(.*>)/",$uri,$m)) {
@@ -7791,7 +7198,605 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
 
 }
 
+class Enrollment {
+    var $init=false;
+    var $create_voicemail           = false;
+    var $send_email_notification    = true;
+    var $create_email_alias         = false;
+	var $create_customer            = true;
+
+    function Enrollment() {
+
+        include("/etc/cdrtool/enrollment/config.ini");
+        include("/etc/cdrtool/ngnpro_engines.inc");
+
+    	$this->soapEngines  = $soapEngines;
+        $this->enrollment   = $enrollment;
+
+        if (!is_array($this->soapEngines)) {
+            $return=array('success'       => false,
+                          'error_message' => 'Error: Missing soap engines configuration'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        if (!is_array($this->enrollment)) {
+            $return=array('success'       => false,
+                          'error_message' => 'Error: Missing enrollment configuration'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        $this->sipDomain      = $this->enrollment['sip_domain'];
+		$this->sipEngine      = $this->enrollment['sip_engine'];
+
+        if ($this->enrollment['customer_engine']) {
+        	$this->customerEngine = $this->enrollment['customer_engine'];
+        } else {
+        	$this->customerEngine = $this->enrollment['sip_engine'];
+        }
+
+        if ($this->enrollment['email_engine']) {
+        	$this->emailEngine = $this->enrollment['email_engine'];
+        } else {
+        	$this->emailEngine = $this->enrollment['sip_engine'];
+        }
+
+		$this->reseller       = $this->enrollment['reseller'];
+
+        $this->outbound_proxy = $this->enrollment['outbound_proxy'];
+        $this->xcap_root      = $this->enrollment['xcap_root'];
+        $this->msrp_relay     = $this->enrollment['msrp_relay'];
+
+        if ($this->enrollment['sip_class']) {
+        	$this->sipClass = $this->enrollment['sip_class'];
+        } else {
+        	$this->sipClass = 'SipSettings';
+        }
+
+        if (!$this->sipEngine) {
+            $return=array('success'       => false,
+                          'error_message' => 'Error: Missing sip engine'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        if (!$this->sipDomain) {
+            $return=array('success'       => false,
+                          'error_message' => 'Error: Missing sip domain'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+		$this->sipLoginCredentials = array(
+                                           'reseller'       => intval($this->reseller),
+                                           'sip_engine'     => $this->sipEngine,
+                                           'login_type'     => 'admin'
+                                           );
+
+        $this->init=true;
+    }
+
+    function createAccount() {
+
+        if (!$this->init) return false;
+
+        if (!$_REQUEST['email']) {
+            $return=array('success'       => false,
+                          'error_message' => 'Error: Missing email address'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        if (!$this->checkEmail($_REQUEST['email'])) {
+            $return=array('success'       => false,
+                          'error_message' => 'Error: Invalid email address'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+        
+        if (!$_REQUEST['password']) {
+            $return=array('success'       => false,
+                          'error_message' => 'Error: Missing password'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        if (!$_REQUEST['display_name']) {
+            $return=array('success'       => false,
+                          'error_message' => 'Error: Missing display name'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        if ($this->create_customer) {
+        	// create owner id
+
+            $customerEngine           = 'customers@'.$this->customerEngine;
+            $this->CustomerSoapEngine = new SoapEngine($customerEngine,$this->soapEngines,$this->customerLoginCredentials);
+            $_customer_class          = $this->CustomerSoapEngine->records_class;
+            $this->customerRecords    = new $_customer_class(&$this->CustomerSoapEngine);
+            $this->customerRecords->html=false;
+    
+            $properties=$this->customerRecords->setInitialCredits(array('sip_credit'         => 2,
+                                                                        'sip_alias_credit'   => 2,
+                                                                        'email_credit'       => 2,
+                                                                        'dns_zone_credit'    => 1,
+                                                                        'enum_range_credit'  => 1,
+                                                                        'enum_number_credit' => 1
+                                                                        )
+                                                                  );
+            if (preg_match("/^(\w+)\s+(\w+)$/",$_REQUEST['display_name'],$m)) {
+                $firstName = $m[1];
+                $lastName  = $m[2];
+            } else {
+                $firstName = $_REQUEST['display_name'];
+                $lastName  = 'Blink lover';
+            }
+
+            $customer=array(
+                         'firstName'  => $firstName,
+                         'lastName'   => $lastName,
+                         'timezone'   => $_REQUEST['timezone'],
+                         'email'      => trim($_REQUEST['email']),
+                         'properties' => $properties
+                        );
+    
+            $_customer_created=false;
+
+            $j=0;
+    
+            while ($j < 3) {
+    
+                $username=RandomString(11);
+    
+                $customer['username']=$username;
+    
+                if (!$result = $this->customerRecords->addRecord($customer)) {
+                    if ($this->customerRecords->SoapEngine->exception->errorcode != "5001") {
+                        $return=array('success'       => false,
+                                      'error_message' => 'failed to create non-duplicate customer'
+                                      );
+                        print (json_encode($return));
+                        return false;
+                    }
+                } else {
+                    $_customer_created=true;
+                    break;
+                }
+    
+                $j++;
+            }
+    
+            if (!$_customer_created) {
+                $return=array('success'       => false,
+                              'error_message' => 'failed to create customer'
+                              );
+                print (json_encode($return));
+                return false;
+            }
+    
+            $owner=$result->id;
+    
+            if (!$owner) {
+                $return=array('success'       => false,
+                              'error_message' => 'failed to obtain a new owner id'
+                              );
+                print (json_encode($return));
+                return false;
+            }
+        }
+
+        // create SIP Account
+        $sipEngine           = 'sip_accounts@'.$this->sipEngine;
+
+        $this->SipSoapEngine = new SoapEngine($sipEngine,$this->soapEngines,$this->sipLoginCredentials);
+        $_sip_class          = $this->SipSoapEngine->records_class;
+        $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
+        $this->sipRecords->html=false;
+
+
+        $sip_properties[]=array('name'=> 'ip',                 'value' => $_SERVER['REMOTE_ADDR']);
+        $sip_properties[]=array('name'=> 'registration_email', 'value' => $_REQUEST['email']);
+
+        $sipAccount = array('account'   => strtolower('<autoincrement>@'.$this->sipDomain),
+                            'fullname'  => $_REQUEST['display_name'],
+                            'email'     => $_REQUEST['email'],
+                            'password'  => $_REQUEST['password'],
+                            'pstn'      => 1,
+                            'prepaid'   => 1,
+                            'quota'     => 50,
+                            'owner'     => intval($owner),
+                            'groups'    => array('missed-calls'),
+                            'properties'=> $sip_properties
+                            );
+
+        if (!$result = $this->sipRecords->addRecord($sipAccount)) {
+            $return=array('success'       => false,
+                          'error_message' => 'failed to create sip account'
+                          );
+            print (json_encode($return));
+            return false;
+        } else {
+            $sip_address=$result->id->username.'@'.$result->id->domain;
+
+        	if (!$passport = $this->generateCertificate($sip_address,$_REQUEST['email'],$_REQUEST['password'])) {
+                $return=array('success'       => false,
+                              'error_message' => 'failed to generate certificate'
+                              );
+                print (json_encode($return));
+                return false;
+            }
+
+            // Generic code for all sip settings pages
+
+            if ($this->create_voicemail || $this->send_email_notification) {
+                if ($SipSettings = new $this->sipClass($sip_address,$this->sipLoginCredentials,$this->soapEngines)) {
+    
+                    if ($this->create_voicemail) {
+                        // Add voicemail account
+                        $SipSettings->addVoicemail();
+                        $SipSettings->setVoicemailDiversions();
+                    }
+                    if ($this->send_email_notification) {
+                        // Sent account settings by email
+                        $SipSettings->sendEmail('hideHtml');
+                    }
+                }
+            }
+
+            if ($this->create_email_alias) {
+                $emailEngine           = 'email_aliases@'.$this->emailEngine;
+                $this->EmailSoapEngine = new SoapEngine($emailEngine,$this->soapEngines,$this->sipLoginCredentials);
+                $_email_class          = $this->EmailSoapEngine->records_class;
+                $this->emailRecords    = new $_email_class(&$this->EmailSoapEngine);
+                $this->emailRecords->html=false;
+
+                $emailAlias = array('name'    => strtolower($sip_address),
+                                    'type'    => 'MBOXFW',
+                                    'owner'   => intval($owner),
+                                    'value'   => $_REQUEST['email']
+                                    );
+        
+                $this->emailRecords->addRecord($emailAlias);
+			}
+
+            $return=array('success'        => true,
+                          'sip_address'    => $sip_address,
+                          'email'          => $result->email,
+                          'passport'       => $passport,
+                          'outbound_proxy' => $this->outbound_proxy,
+                          'xcap_root'      => $this->xcap_root,
+                          'msrp_relay'     => $this->msrp_relay
+                          );
+
+            print (json_encode($return));
+
+            return true;
+        }
+    }
+
+    function generateCertificate($sip_address,$email,$password) {
+        if (!$this->init) return false;
+
+    	$config = array(
+    		'config'           => $this->enrollment['ca_conf'],
+    		'digest_alg'       => 'md5',
+    		'private_key_bits' => 1024,
+    		'private_key_type' => OPENSSL_KEYTYPE_RSA,
+    		'encrypt_key'      => false,
+    	);
+
+		$dn = array(
+    		"countryName"            => $this->enrollment['countryName'],
+	    	"stateOrProvinceName"    => $this->enrollment['stateOrProvinceName'],
+    		"localityName"           => $this->enrollment['localityName'],
+    		"organizationName"       => $this->enrollment['organizationName'],
+    		"organizationalUnitName" => $this->enrollment['organizationalUnitName'],
+    		"commonName"             => $sip_address,
+    		"emailAddress"           => $email
+		);
+
+		$this->key = openssl_pkey_new($config);
+		$this->csr = openssl_csr_new($dn, $this->key);
+
+        openssl_csr_export($this->csr, $this->csr_out);
+        openssl_pkey_export($this->key, $this->key_out, $password, $config);
+
+		$ca="file://".$this->enrollment['ca_crt'];
+
+        $this->crt = openssl_csr_sign($this->csr, $ca, $this->enrollment['ca_key'], 3650, $config);
+
+		if ($this->crt==FALSE) {
+			while (($e = openssl_error_string()) !== false) {
+				echo $e . "\n";
+				print "<br><br>";
+			}
+            return false;
+		}
+
+        openssl_x509_export   ($this->crt, $this->crt_out);
+        openssl_pkcs12_export ($this->crt, $this->pk12_out, $this->key, $password);
+
+        return array(
+                     'crt'  => $this->crt_out,
+                     'key'  => $this->key_out,
+                     'pk12' => $this->pk12_out,
+                     'ca'   => file_get_contents($this->enrollment['ca_crt'])
+                     );
+    }
+
+    function checkEmail($email) {
+        dprint ("checkEmail($email)");
+        $regexp = "/^([a-z0-9][a-z0-9_.-]*)@([a-z0-9][a-z0-9-]*\.)+([a-z]{2,})$/i";
+        if (stristr($email,"-.") ||
+            !preg_match($regexp, $email)) {
+            return false;
+        }
+        return true;
+    }
+}
+
+class PaypalProcessor {
+    var $deny_countries     = array();
+	var $allow_countries    = array();
+	var $deny_ips           = array();
+
+    function PaypalProcessor($account) {
+        if (!is_object($account)) {
+            return false;
+        }
+
+        require('cc_processor.php');
+
+        if ($this->fraudDetected()) {
+            $chapter=sprintf(_("Payments"));
+            $account->showChapter($chapter);
+    
+            print "
+            <tr>
+            <td colspan=3>
+            ";
+    
+            if ($account->login_type!='subscriber') {
+                print "<p>";
+                printf ("<font color=red>%s</font>",$this->fraud_reason);
+            } else {
+                print _("Page Not Available");
+            }
+    
+            print "</td>
+            </tr>
+            ";
+    
+            return false;
+        }
+
+        $CardProcessor = new CreditCardProcessor();
+
+        if (is_array($this->test_credit_cards) &&
+            in_array($_POST['creditCardNumber'], $this->test_credit_cards)) {
+            $CardProcessor->environment='sandbox';
+        }
+
+        $CardProcessor->chapter_class  = 'chapter';
+        $CardProcessor->odd_row_class  = 'odd';
+        $CardProcessor->even_row_class = 'even';
+
+        $CardProcessor->note = $account->account;
+        $CardProcessor->account = $account->account;
+
+        // set hidden elements we need to preserve in the shopping cart application
+        $CardProcessor->hidden_elements = $account->hiddenElements;
+
+        // load shopping items
+        $CardProcessor->cart_items = array(
+                            'pstn_credit'=>array('price'       => 30,
+                                                 'description' => _('PSTN Termination Credit'),
+                                                 'unit'        => 'credit',
+                                                 'duration'    => 'N/A',
+                                                 'qty'         => 1
+                                                 )
+                            );
+
+        // load user information from owner information if available otherwise from sip account settings
+
+        if ($account->owner_information['firstName']) {
+            $CardProcessor->user_account['FirstName']=$account->owner_information['firstName'];
+        } else {
+            $CardProcessor->user_account['FirstName']=$account->firstName;
+        }
+
+        if ($account->owner_information['lastName']) {
+            $CardProcessor->user_account['LastName']=$account->owner_information['lastName'];
+        } else {
+            $CardProcessor->user_account['LastName']=$account->lastName;
+        }
+
+        if ($account->owner_information['email']) {
+            $CardProcessor->user_account['Email']=$account->owner_information['email'];
+        } else {
+            $CardProcessor->user_account['Email']=$account->email;
+        }
+
+        if ($account->owner_information['address'] && $account->owner_information['address']!= 'Unknown') {
+            $CardProcessor->user_account['Address1']=$account->owner_information['address'];
+        } else {
+            $CardProcessor->user_account['Address1']='';
+        }
+
+        if ($account->owner_information['city'] && $account->owner_information['city']!= 'Unknown') {
+            $CardProcessor->user_account['City']=$account->owner_information['city'];
+        } else {
+            $CardProcessor->user_account['City']='';
+        }
+
+        if ($account->owner_information['country'] && $account->owner_information['country']!= 'Unknown') {
+            $CardProcessor->user_account['Country']=$account->owner_information['country'];
+        } else {
+            $CardProcessor->user_account['Country']='';
+        }
+
+        if ($account->owner_information['state'] && $account->owner_information['state']!= 'Unknown') {
+            $CardProcessor->user_account['State']=$account->owner_information['state'];
+        } else {
+            $CardProcessor->user_account['State']='';
+        }
+
+        if ($account->owner_information['postcode'] && $account->owner_information['postcode']!= 'Unknown') {
+            $CardProcessor->user_account['PostCode']=$account->owner_information['postcode'];
+        } else {
+            $CardProcessor->user_account['PostCode']='';
+        }
+
+        if ($_REQUEST['purchase'] == '1' ) {
+
+            $chapter=sprintf(_("Transaction Results"));
+            $account->showChapter($chapter);
+
+            print "
+            <tr>
+            <td colspan=3>
+            ";
+
+            // ensure that submit requests are coming only from the current page
+            if($_SERVER['HTTP_REFERER'] == $CardProcessor->getPageURL()) {
+
+                // check submitted values
+                $formcheck1 = $CardProcessor->checkForm($_POST);
+                if (count($formcheck1) > 0){
+                    // we have errors; let's print and stop
+                    print $CardProcessor->displayProcessErrors($formcheck1);
+                    return false;
+                }
+
+                // process the payment
+                $pay_process_results = $CardProcessor->processPayment($_POST);
+                //print_r($pay_process_results);
+                if(count($pay_process_results['error']) > 0){
+                    // there was a problem with payment
+                    // show error and stop
+
+                    if ($pay_process_results['error']['field'] == 'reload') {
+                        print $pay_process_results['error']['desc'];
+                    } else {
+                        print $CardProcessor->displayProcessErrors($pay_process_results);
+                    }
+
+                    $log=sprintf("Error: SIP Account %s - CC transaction failed to process (%s)",$account->account,$pay_process_results['error']['desc']);
+                    syslog(LOG_NOTICE, $log);
+
+                    return false;
+                } else {
+
+                    $log=sprintf("SIP Account %s - CC transaction %s completed succesfully", $account->account, $pay_process_results['success']['desc']->TransactionID);
+                    syslog(LOG_NOTICE, $log);
+    
+                    print "<p>";
+                    print _("Transaction completed sucessfully. ");
+    
+                    print "<p>";
+                    print _("You may check your new balance in the Credit tab. ");
+    
+                    // save the transaction in the database, add credit to user account and 
+                    // notify parties by email
+                }
+
+                if ($CardProcessor->saveOrder($_POST,$pay_process_results)) {
+
+                    // add PSTN credit
+                    $description=sprintf("CC transaction %s",$CardProcessor->transaction_data['TRANSACTION_ID']);
+                    $account->addBalanceReseller($CardProcessor->transaction_data['TOTAL_AMOUNT'],$description);
+
+                    $account->addInvoice($CardProcessor);
+
+                    return true;
+
+                } else {
+                    $log=sprintf("Error: SIP Account %s - CC transaction %s failed to Save Order",$account->account, $CardProcessor->transaction_data['TRANSACTION_ID']);
+                    syslog(LOG_NOTICE, $log);
+                    //print _("Error Saving Order");
+                    return false;
+                }
+
+
+            } else {
+                print _("Invalid Request");
+                return false;
+            }
+
+            print "
+            </td>
+            </tr>
+            ";
+
+        } else {
+            $chapter=sprintf(_("Add Credit"));
+            $account->showChapter($chapter);
+
+            print "
+            <tr>
+            <td colspan=3>
+            ";
+
+            print "<p>";
+            print _("Add balance to your Credit by purchasing it with a Credit Card. ");
+            // print the submit form
+            $arr_form_page_objects = $CardProcessor->showSubmitForm();
+            print $arr_form_page_objects['page_body_content'];
+
+            print "
+            </td>
+            </tr>
+            ";
+
+        }
+
+    }
+
+    function fraudDetected () {
+        if (count($this->deny_ips)) {
+            if ($account->Preferences['ip'] && in_array($account->Preferences['ip'],$this->deny_ips)) {
+            	$this->fraud_reason=$account->Preferences['ip'].' is Blocked';
+                return true;
+            }
+        }
+        if (count($this->deny_countries)) {
+
+            if ($_loc=geoip_record_by_name($this->Preferences['ip'])) {
+                if (in_array($_loc['country_name'],$this->deny_countries)) {
+                    $this->fraud_reason=$_loc['country_name'].' is Blocked';
+                    return true;
+                }
+            }
+        }
+
+        if (count($this->allow_countries)) {
+            if ($_loc=geoip_record_by_name($this->Preferences['ip'])) {
+                if (!in_array($_loc['country_name'],$this->allow_countries)) {
+                    $this->fraud_reason=$_loc['country_name'].' is Not Allowed';
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+}
+
+
+
 if (file_exists("/etc/cdrtool/local/sip_settings.php")) {
 	require_once('/etc/cdrtool/local/sip_settings.php');
 }
+
 ?>
