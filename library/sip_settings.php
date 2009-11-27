@@ -7342,10 +7342,13 @@ class Enrollment {
                 $lastName  = 'Blink lover';
             }
 
+
+            $timezone=$_REQUEST['tzinfo'];
+
             $customer=array(
                          'firstName'  => $firstName,
                          'lastName'   => $lastName,
-                         'timezone'   => $_REQUEST['timezone'],
+                         'timezone'   => $timezone,
                          'email'      => trim($_REQUEST['email']),
                          'properties' => $properties
                         );
@@ -7411,6 +7414,7 @@ class Enrollment {
                             'fullname'  => $_REQUEST['display_name'],
                             'email'     => $_REQUEST['email'],
                             'password'  => $_REQUEST['password'],
+                            'timezone'  => $timezone,
                             'pstn'      => 1,
                             'prepaid'   => 1,
                             'quota'     => 50,

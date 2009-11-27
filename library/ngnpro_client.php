@@ -2212,6 +2212,8 @@ class SipAccounts extends Records {
 		if (strlen($this->SoapEngine->store_clear_text_passwords)) {
         	$this->store_clear_text_passwords=$this->SoapEngine->store_clear_text_passwords;
         }
+
+		$this->getTimezones();
     }
 
     function getRecordKeys() {
@@ -2826,6 +2828,10 @@ class SipAccounts extends Records {
             $timezone='Europe/Amsterdam';
         }
 
+        if (!in_array($timezone,$this->timezones)) {
+            $timezone='Europe/Amsterdam';
+        }
+
         if (strlen($dictionary['password'])) {
             $password=$dictionary['password'];
         } else if (strlen(trim($_REQUEST['password']))) {
@@ -3231,7 +3237,17 @@ class SipAccounts extends Records {
         return false;
     }
 
-
+    function getTimezones () {
+    	$this->timezones=array();
+        if (!$fp = fopen("timezones", "r")) {
+            print _("Failed to open timezone file.");
+            return false;
+        }
+        while ($buffer = fgets($fp,1024)) {
+            $this->timezones[]=trim($buffer);
+        }
+        fclose($fp);
+    }
 }
 
 class SipAliases extends Records {
