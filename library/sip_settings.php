@@ -5768,6 +5768,11 @@ class SipSettings {
 
     function showPresenceTab() {
 
+        if (!$this->password) {
+            print "Error: the acocunt password is not available in clear text. You cannot retrieve XCAP documents from this page.";
+            return false;
+        }
+
         $this->getPresenceWatchers();
         $this->getPresenceRules();
         $this->getPresenceInformation();
@@ -6002,8 +6007,6 @@ class SipSettings {
             $j++;
         }
 
-        //dprint_r($policy);
-
         $result = $this->PresencePort->setPolicy(array("username" =>$this->username,"domain"   =>$this->domain),$this->password,$policy);
 
         if (PEAR::isError($result)) {
@@ -6018,6 +6021,12 @@ class SipSettings {
 
     function getPresenceWatchers () {
         dprint("getPresenceWatchers()");
+
+        if (!$this->password) {
+            print "Error: password is not available in clear text";
+            return false;
+        }
+
         $result = $this->PresencePort->getWatchers(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
 
         if (PEAR::isError($result)) {
@@ -6044,6 +6053,12 @@ class SipSettings {
 
     function getPresenceInformation() {
         dprint("getPresenceInformation()");
+
+        if (!$this->password) {
+            print "<p>Error: password is not available in clear text";
+            return false;
+        }
+
         $result = $this->PresencePort->getPresenceInformation(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
 
         if (PEAR::isError($result)) {
@@ -6061,6 +6076,11 @@ class SipSettings {
     }
 
     function setPresenceInformation() {
+
+        if (!$this->password) {
+            print "<p>Error: password is not available in clear text";
+            return false;
+        }
 
         $presentity['activity'] = $_REQUEST['activity'];
         $presentity['note']     = $_REQUEST['note'];
@@ -6086,6 +6106,12 @@ class SipSettings {
 
     function getPresenceRules () {
         dprint("getPresenceRules()");
+
+        if (!$this->password) {
+            print "<p>Error: password is not available in clear text";
+            return false;
+        }
+
         $result = $this->PresencePort->getPolicy(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
 
         if (PEAR::isError($result)) {
