@@ -57,6 +57,7 @@ class SipSettings {
 	var $show_barring_tab   = true;
 	var $show_presence_tab  = false;
     var $show_payments_tab  = false;
+    var $show_directory     = false;
 
     var $first_tab          = 'calls';
     var $auto_refesh_tab    = 0;              // number of seconds after which to refresh tab content in the web browser
@@ -550,6 +551,10 @@ class SipSettings {
 
         if ($this->soapEngines[$this->sip_engine]['show_presence_tab']) {
             $this->show_presence_tab = $this->soapEngines[$this->sip_engine]['show_presence_tab'];
+        }
+
+        if ($this->soapEngines[$this->sip_engine]['show_directory']) {
+            $this->show_directory = $this->soapEngines[$this->sip_engine]['show_directory'];
         }
 
         if (isset($this->soapEngines[$this->sip_engine]['absolute_voicemail_uri'])) {
@@ -4630,9 +4635,31 @@ class SipSettings {
     }
 
     function showContactsTab() {
-        dprint("showPhonebook()");
+        dprint("showContactsTab()");
 
-        $chapter=sprintf(_("Contacts"));
+        if ($this->show_directory) {
+            $chapter=sprintf(_("Global Directory"));
+            $this->showChapter($chapter);
+
+            print "
+            <tr>
+            <td colspan=3>";
+
+			$this->showSearchDirectory();
+
+            print "
+            </td>
+            </tr>
+            ";
+
+        }
+
+        if ($this->rows) {
+            // hide local contacts if we found a global contact
+            return true;
+        }
+
+        $chapter=sprintf(_("Local Contacts"));
         $this->showChapter($chapter);
 
         print "
@@ -4643,7 +4670,6 @@ class SipSettings {
         </td>
         </tr>
         ";
-
 
         print '
         <SCRIPT>
@@ -4719,6 +4745,9 @@ class SipSettings {
         <form action=$this->url method=post>
         <input type=hidden name=tab value=contacts>
         <td align=right valign=top>
+        ";
+        print _("Name");
+        print "
         <input type=text size=20 name='search_text' value=\"$search_text\">
         ";
 
@@ -4726,6 +4755,7 @@ class SipSettings {
 
         print "<select name=group>";
         print "<option value=\"\">";
+        print _('Group');
         foreach(array_keys($this->PhonebookGroups) as $key) {
             printf ("<option value=\"%s\" %s>%s",$key,$selected[$key],$this->PhonebookGroups[$key]);
         }
@@ -6510,6 +6540,223 @@ class SipSettings {
         }
         return 'C'; // this will never be reached
 	}
+
+    function showDirectorySearchForm () {
+        print "
+        <p>
+        <table width=100% cellpadding=1 cellspacing=1 border=0>
+        <tr>
+        <form action=$this->url method=post>
+        <input type=hidden name=tab value=contacts>
+        <input type=hidden name=task value=directory>
+        <td align=left valign=top colspan=2>";
+        print _("First Name");
+        printf (" <input type=text size=20 name='firstname' value='%s'> ",$_REQUEST['firstname']);
+
+        print _("Last Name");
+
+        printf (" <input type=text size=20 name='lastname' value='%s'>",$_REQUEST['lastname']);
+
+        print "</td>
+        <td align=right valign=top>";
+        print "<input type=submit value=";
+        print _("Search");
+        print ">";
+        print "</td>
+        </form>
+        </tr>
+        </table>
+        ";
+    }
+
+    function showSearchDirectory() {
+
+        if (!$this->show_directory) {
+            return false;
+        }
+
+		$this->maxrowsperpage=20;
+
+        $this->showDirectorySearchForm();
+
+        if ($_REQUEST['firstname'] || $_REQUEST['lastname']) {
+        	if ($_REQUEST['firstname'] && strlen($_REQUEST['firstname']) < 3) {
+                return false;
+            }
+        	if ($_REQUEST['lastname'] && strlen($_REQUEST['lastname']) < 3) {
+                return false;
+            }
+
+        } else {
+            return false;
+        }
+
+        $this->next       = $_REQUEST['next'];
+
+        // Filter
+        $filter=array('firstName'=> trim($_REQUEST['firstname']),
+                      'lastName' => trim($_REQUEST['lastname'])
+                      );
+
+        // Range
+        $range=array('start' => intval($this->next),
+                     'count' => intval($this->maxrowsperpage)
+                     );
+
+        // Order
+        if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
+        if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
+
+        $orderBy = array('attribute' => $this->sorting['sortBy'],
+                         'direction' => $this->sorting['sortOrder']
+                         );
+
+        // Compose query
+        $Query=array('filter'  => $filter,
+                        'orderBy' => $orderBy,
+                        'range'   => $range
+                        );
+
+        // Insert credetials
+        $this->SipPort->addHeader($this->SoapAuth);
+
+        // Call function
+        $result     = $this->SipPort->getAccounts($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }
+
+        $this->rows = $result->total;
+
+        if (!$this->next)  $this->next=0;
+
+        if ($this->rows > $this->maxrowsperpage)  {
+            $maxrows = $this->maxrowsperpage + $this->next;
+            if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
+        } else {
+            $maxrows=$this->rows;
+        }
+
+        if ($this->rows) {
+            print "
+            <p>
+            <table border=0 align=center>
+            <tr><td>$this->rows contacts found</td></tr>
+            </table>
+            <p>
+            <table border=0 cellpadding=2 width=100%>
+            <tr bgcolor=lightgrey>
+            <td bgcolor=white></td>";
+    
+            print "<td><b>";
+            print _('Display Name');
+            print "</b></td>";
+            print "<td><b>";
+            print _('SIP Address');
+            print "</b></td>";
+            print "<td><b>";
+            print _('Timezone');
+            print "</b></td>";
+            print "<td><b>";
+            print _('Actions');
+            print "</b></td>";
+    
+            print "
+            </tr>
+            ";
+    
+
+            $i=0;
+
+            while ($i < $maxrows)  {
+
+                if (!$result->accounts[$i]) break;
+
+                $account = $result->accounts[$i];
+
+                $index=$this->next+$i+1;
+
+                $rr=floor($index/2);
+                $mod=$index-$rr*2;
+        
+                if ($mod ==0) {
+                    $_class='odd';
+                } else {
+                    $_class='even';
+                }
+    
+                $i++;
+	            $sip_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
+                printf ("<tr class=%s><td>%d</td><td>%s %s</td><td>%s</td><td>%s</td><td>%s</td>",
+                $_class,
+                $index,
+                $account->firstName,
+                $account->lastName,
+                $sip_account,
+                $account->timezone,
+                $this->PhoneDialURL($sip_account)
+                );
+            }
+
+            print "</table>";
+    
+            $this->showPagination($maxrows);
+    
+            return true;
+    	}
+    }
+
+    function showPagination($maxrows) {
+
+        $url = sprintf("%s&tab=%s&firstname=%s&lastname%s",
+               $this->url,
+               $this->tab,
+               $_REQUEST['firstname'],
+               $_REQUEST['lastname']
+               );
+
+        print "
+        <p>
+        <table border=0 align=center>
+        <tr>
+        <td>
+        ";
+
+        if ($this->next != 0  ) {
+            $show_next=$this->maxrowsperpage-$this->next;
+            if  ($show_next < 0)  {
+                $mod_show_next  =  $show_next-2*$show_next;
+            }
+            if (!$mod_show_next) $mod_show_next=0;
+
+            if ($mod_show_next/$this->maxrowsperpage >= 1) {
+                printf ("<a href='%s&next=0'>Begin</a> ",$url);
+            }
+
+            printf ("<a href='%s&next=%s'>Previous</a> ",$url,$mod_show_next);
+        }
+        
+        print "
+        </td>
+        <td>
+        ";
+
+        if ($this->next + $this->maxrowsperpage < $this->rows)  {
+            $show_next = $this->maxrowsperpage + $this->next;
+            printf ("<a href='%s&next=%s'>Next</a> ",$url,$show_next);
+        }
+
+        print "
+        </td>
+        </tr>
+        </table>
+        ";
+    }
 
 }
 
