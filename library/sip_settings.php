@@ -7375,6 +7375,7 @@ class Enrollment {
                          'firstName'  => $firstName,
                          'lastName'   => $lastName,
                          'timezone'   => $timezone,
+                         'password'   => trim($_REQUEST['password']),
                          'email'      => trim($_REQUEST['email']),
                          'properties' => $properties
                         );
