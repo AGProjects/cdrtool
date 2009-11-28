@@ -4509,10 +4509,13 @@ class SipSettings {
         dprint("addPhonebookEntry()");
 
         $uri       = strtolower(trim($_REQUEST['uri']));
+        $name      = trim($_REQUEST['name']);
 
         if (!strlen($uri)) return false;
 
-        $phonebookEntry=array('uri'       => $uri);
+        $phonebookEntry=array('uri'       => $uri,
+                              'name'      => $name
+                              );
 
         dprint("addPhonebookEntry");
         $this->SipPort->addHeader($this->SoapAuth);
@@ -4643,6 +4646,15 @@ class SipSettings {
 
             print "
             <tr>
+            <td colspan=2 align=left>";
+            print _("To search for other SIP Addresses fill in the First Name or Last Name. ");
+            print "
+            </td>
+            </tr>
+            ";
+
+            print "
+            <tr>
             <td colspan=3>";
 
 			$this->showSearchDirectory();
@@ -4659,7 +4671,7 @@ class SipSettings {
             return true;
         }
 
-        $chapter=sprintf(_("Local Contacts"));
+        $chapter=sprintf(_("Contacts"));
         $this->showChapter($chapter);
 
         print "
@@ -4742,40 +4754,36 @@ class SipSettings {
         print "
         </td>
         </form>
-        <form action=$this->url method=post>
-        <input type=hidden name=tab value=contacts>
-        <td align=right valign=top>
         ";
-        print _("Name");
-        print "
-        <input type=text size=20 name='search_text' value=\"$search_text\">
-        ";
-
-        $selected[$group]="selected";
-
-        print "<select name=group>";
-        print "<option value=\"\">";
-        print _('Group');
-        foreach(array_keys($this->PhonebookGroups) as $key) {
-            printf ("<option value=\"%s\" %s>%s",$key,$selected[$key],$this->PhonebookGroups[$key]);
+        if (count($this->PhonebookEntries)){
+            print "
+            <form action=$this->url method=post>
+            <input type=hidden name=tab value=contacts>
+            <td align=right valign=top>
+            ";
+            print _("Name");
+            print "
+            <input type=text size=20 name='search_text' value=\"$search_text\">
+            ";
+    
+            $selected[$group]="selected";
+    
+            print "<select name=group>";
+            print "<option value=\"\">";
+            print _('Group');
+            foreach(array_keys($this->PhonebookGroups) as $key) {
+                printf ("<option value=\"%s\" %s>%s",$key,$selected[$key],$this->PhonebookGroups[$key]);
+            }
+            print "<option value=\"\">------";
+            printf ("<option value=\"empty\" %s>%s",$selected['empty'],_("No group"));
+    
+            print "</select>";
+    
+            print "<input type=submit value=";
+            print _("Search");
+            print ">";
         }
-        print "<option value=\"\">------";
-        printf ("<option value=\"empty\" %s>%s",$selected['empty'],_("No group"));
 
-        print "</select>";
-
-        print "<input type=submit value=";
-        print _("Search");
-        print ">";
-        /*
-        if ($this->isEmbedded()) {
-        	print "<a href=$this->url&tab=contacts&export=1>";
-        } else {
-        	print "<a href=$this->url&tab=contacts&export=1 target=export>";
-        }
-        print _("Export");
-        print "</a>
-        */
         print "</td>
         </form>
         </tr>
@@ -4903,12 +4911,12 @@ class SipSettings {
                     print "
                     <td bgcolor=red valign=top>
                     ";
-                    printf ("<a href=%s&task=deleteContact&uri=%s&confirm=1>",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri));
+                    printf ("<a href=%s&task=deleteContact&uri=%s&confirm=1&search_text=%s>",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($search_text));
                     print _("Confirm");
                 } else {
                     print "
                     <td valign=top>";
-                    printf ("<a href=%s&task=deleteContact&uri=%s>",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri));
+                    printf ("<a href=%s&task=deleteContact&uri=%s&search_text=%s>",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($search_text));
                     if ($this->delete_img) {
                         print $this->delete_img;
                     } else {
@@ -6663,7 +6671,7 @@ class SipSettings {
             print _('Timezone');
             print "</b></td>";
             print "<td><b>";
-            print _('Actions');
+            print _('Action');
             print "</b></td>";
     
             print "
@@ -6691,15 +6699,18 @@ class SipSettings {
                 }
     
                 $i++;
+                $name=$account->firstName.' '.$account->lastName;
 	            $sip_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
-                printf ("<tr class=%s><td>%d</td><td>%s %s</td><td>%s</td><td>%s</td><td>%s</td>",
+                $contacts_url=sprintf("<a href=%s&tab=contacts&task=add&uri=%s&name=%s&search_text=%s>%s</a>",$this->url,$sip_account,urlencode($name),$sip_account,$this->phonebook_img);
+
+                printf ("<tr class=%s><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
                 $_class,
                 $index,
-                $account->firstName,
-                $account->lastName,
+                $name,
                 $sip_account,
                 $account->timezone,
-                $this->PhoneDialURL($sip_account)
+                $this->PhoneDialURL($sip_account),
+				$contacts_url
                 );
             }
 
@@ -6716,8 +6727,8 @@ class SipSettings {
         $url = sprintf("%s&tab=%s&firstname=%s&lastname%s",
                $this->url,
                $this->tab,
-               $_REQUEST['firstname'],
-               $_REQUEST['lastname']
+               urlencode($_REQUEST['firstname']),
+               urlencode($_REQUEST['lastname'])
                );
 
         print "
