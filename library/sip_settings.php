@@ -6811,16 +6811,6 @@ function normalizeTime($period) {
     }
 }
 
-function checkSIPURI($uri) {
-    if ($uri == "<voice-mailbox>") return true;
-
-    $regexp = "/^sips?:([a-z0-9][a-z0-9_.-]*)@([a-z0-9][a-z0-9-]*\.)+([a-z0-9]{2,})$/i";
-    if (stristr($contact,"-.") || !preg_match($regexp, $uri)) {
-        return false;
-    }
-    return true;
-}
-
 function checkURI($uri) {
     //dprint ("<b>checkURI($uri) </b>");
     if ($uri == "<voice-mailbox>") return true;
@@ -7609,6 +7599,16 @@ class Enrollment {
             return false;
         }
 
+        $sip_address=preg_replace("/\s+/","_",trim($_REQUEST['display_name'])).'@'.$this->sipDomain;
+
+		if (!$this->checkEmail($sip_address)) {
+            $return=array('success'       => false,
+                          'error_message' => 'Display Name must contain [0-9a-zA-Z_-. ] characters only'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
         if ($this->create_customer) {
         	// create owner id
 
@@ -7650,7 +7650,7 @@ class Enrollment {
 
             $j=0;
     
-            while ($j < 3) {
+            while ($j < 5) {
     
                 $username=RandomString(11);
     
@@ -7673,8 +7673,15 @@ class Enrollment {
             }
     
             if (!$_customer_created) {
+
+                if ($this->sipRecords->soap_error_description) {
+                    $_msg=$this->sipRecords->soap_error_description;
+                } else {
+                    $_msg='failed to create customer account';
+                }
+
                 $return=array('success'       => false,
-                              'error_message' => 'failed to create customer'
+                              'error_message' => $_msg
                               );
                 print (json_encode($return));
                 return false;
@@ -7703,7 +7710,7 @@ class Enrollment {
         $sip_properties[]=array('name'=> 'ip',                 'value' => $_SERVER['REMOTE_ADDR']);
         $sip_properties[]=array('name'=> 'registration_email', 'value' => $_REQUEST['email']);
 
-        $sipAccount = array('account'   => strtolower('<autoincrement>@'.$this->sipDomain),
+        $sipAccount = array('account'   => $sip_address,
                             'fullname'  => $_REQUEST['display_name'],
                             'email'     => $_REQUEST['email'],
                             'password'  => $_REQUEST['password'],
@@ -7717,11 +7724,28 @@ class Enrollment {
                             );
 
         if (!$result = $this->sipRecords->addRecord($sipAccount)) {
+            if ($this->sipRecords->SoapEngine->exception->errorstring) {
+                $_msg="\n\n".$this->sipRecords->SoapEngine->exception->errorstring;
+                if ($this->sipRecords->SoapEngine->exception->errorcode == 1011) {
+                    $_msg.= "\n\nChose another Display Name and try again";
+                }
+            } else {
+                $_msg='failed to create sip account';
+            }
+
             $return=array('success'       => false,
-                          'error_message' => 'failed to create sip account'
+                          'error_message' => $_msg
                           );
             print (json_encode($return));
+
+            $_dictionary=array('customer'=>intval($owner),
+                               'confirm' => true
+                               );
+
+            $this->customerRecords->deleteRecord($_dictionary);
+
             return false;
+
         } else {
             $sip_address=$result->id->username.'@'.$result->id->domain;
 
@@ -7840,6 +7864,7 @@ class Enrollment {
         }
         return true;
     }
+
 }
 
 class PaypalProcessor {

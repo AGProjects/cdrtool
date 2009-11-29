@@ -606,7 +606,11 @@ class SoapEngine {
             $this->exception   = $this->error_fault->detail->exception;
 
             if ($html) {
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,$this->error_msg, $this->error_fault->detail->exception->errorcode,$this->error_fault->detail->exception->errorstring);                return false;
+                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,
+                $this->error_msg,
+                $this->error_fault->detail->exception->errorcode,
+                $this->error_fault->detail->exception->errorstring);
+                return false;
             }
             return false;
 
@@ -2996,7 +3000,9 @@ class SipAccounts extends Records {
                                             'logs'       => array('success' => $success_log))
                         );
 
-        return $this->SoapEngine->execute($function,$this->html);
+
+		$return $this->SoapEngine->execute($function,$this->html);
+
     }
 
     function getAllowedDomains() {
@@ -11807,19 +11813,25 @@ class Customers extends Records {
         }
     }
 
-    function deleteRecord($confirm) {
-        if (!$confirm && !$_REQUEST['confirm']) {
-            print "<p><font color=red>Please press on Delete again to confirm the delete. </font>";
+    function deleteRecord($dictionary) {
+        if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
+            print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
         }
 
-        if (!strlen($this->filters['customer'])) {
+        if ($dictionary['customer']) {
+            $customer=$dictionary['customer'];
+        } else {
+            $customer=$this->filters['customer'];
+        }
+
+        if (!strlen($customer)) {
             print "<p><font color=red>Error: missing customer id. </font>";
             return false;
         }
 
         $function=array('commit'   => array('name'       => 'deleteAccount',
-                                            'parameters' => array(intval($this->filters['customer'])),
+                                            'parameters' => array(intval($customer)),
                                             'logs'       => array('success' => sprintf('Customer id %s has been deleted',$this->filters['customer'])))
                         );
 
