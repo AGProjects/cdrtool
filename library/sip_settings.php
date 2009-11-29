@@ -431,6 +431,14 @@ class SipSettings {
 
         //dprint_r($this->SoapAuth);
 
+        $this->SOAPloginAdmin = array(
+                               "username"    => $this->soapEngines[$this->sip_engine]['username'],
+                               "password"    => $this->soapEngines[$this->sip_engine]['password'],
+                               "admin"       => true
+                               );
+
+        $this->SoapAuthAdmin = array('auth', $this->SOAPloginAdmin , 'urn:AGProjects:NGNPro', 0, '');
+
         // Presence
         $this->SOAPurlPresence=$this->soapEngines[$this->presence_engine]['url'];
 
@@ -4641,7 +4649,7 @@ class SipSettings {
         dprint("showContactsTab()");
 
         if ($this->show_directory) {
-            $chapter=sprintf(_("Global Directory"));
+            $chapter=sprintf(_("Directory"));
             $this->showChapter($chapter);
 
             print "
@@ -6626,7 +6634,7 @@ class SipSettings {
                         );
 
         // Insert credetials
-        $this->SipPort->addHeader($this->SoapAuth);
+        $this->SipPort->addHeader($this->SoapAuthAdmin);
 
         // Call function
         $result     = $this->SipPort->getAccounts($Query);
