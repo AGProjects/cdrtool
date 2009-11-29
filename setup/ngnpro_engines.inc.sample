@@ -39,7 +39,11 @@ $soapEngines=array(
                                          'timeout'             => 5,
                                          'enrollment_url'      => 'https://enrollment.example.com/',
                                          'sip_settings_api_url'=> 'https://wiki.example.com',
-                                         'hostnames'           => array ('10.10.0.1'=>'node01.example.com')
+                                         'hostnames'           => array ('10.10.0.1'=>'node01.example.com'),
+                                         'store_clear_text_passwords' => true,
+                                         'show_presence_tab'   => false,
+                                         'show_directory'      => false,
+                                         'disableExtraGroups'  => true
                                          ),
                            'vm' => array('name'=> 'Voicemail server',
                                          'username'=> 'admin',
@@ -62,7 +66,7 @@ $recordGenerators =array (
 
 $resellerFilters=array('default'  => array('soap_filter'        => 'sip'
                                           ),
-                       '1745'     => array('soap_filter'        => 'sip:customers,enum_ranges,enum_numbers',
+                       '17451'     => array('soap_filter'        => 'sip:customers,enum_ranges,enum_numbers',
                                            'record_generator'  => 'rg',
                                            'voicemail_engine'  => 'vm',
                                            'currency'          => '&euro'
