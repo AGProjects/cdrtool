@@ -3001,7 +3001,7 @@ class SipAccounts extends Records {
                         );
 
 
-		$return $this->SoapEngine->execute($function,$this->html);
+		return $this->SoapEngine->execute($function,$this->html);
 
     }
 

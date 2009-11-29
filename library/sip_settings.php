@@ -7599,11 +7599,19 @@ class Enrollment {
             return false;
         }
 
-        $sip_address=preg_replace("/\s+/","_",trim($_REQUEST['display_name'])).'@'.$this->sipDomain;
+        if (!$_REQUEST['username']) {
+            $return=array('success'       => false,
+                          'error_message' => 'Error: Missing username'
+                          );
+            print (json_encode($return));
+            return false;
+        }
+
+        $sip_address=strtolower($_REQUEST['username']).'@'.$this->sipDomain;
 
 		if (!$this->checkEmail($sip_address)) {
             $return=array('success'       => false,
-                          'error_message' => 'Display Name must contain [0-9a-zA-Z_-. ] characters only'
+                          'error_message' => 'Username must contain [0-9a-z_-.] characters only'
                           );
             print (json_encode($return));
             return false;
@@ -7631,7 +7639,7 @@ class Enrollment {
                 $lastName  = $m[2];
             } else {
                 $firstName = $_REQUEST['display_name'];
-                $lastName  = 'Blink lover';
+                $lastName  = 'Blink';
             }
 
 
@@ -7650,9 +7658,9 @@ class Enrollment {
 
             $j=0;
     
-            while ($j < 5) {
+            while ($j < 3) {
     
-                $username=RandomString(11);
+                $username=strtolower($_REQUEST['username']).RandomString(4);
     
                 $customer['username']=$username;
     
