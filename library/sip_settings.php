@@ -68,9 +68,9 @@ class SipSettings {
 
     var $tab                       = "settings";
     var $phonebook_img             = "<img src=images/pb.gif border=0>";
-    var $call_img                  = "<img src=images/call.gif border=0>";
-    var $delete_img                = "<img src=images/del_pb.gif border=0>";
-    var $plus_sign_img             = "<img src=images/plus_sign.png border=0>";
+    var $call_img                  = "<img src=images/call.gif border=0 alt='Dial'>";
+    var $delete_img                = "<img src=images/del_pb.gif border=0 alt='Delete'>";
+    var $plus_sign_img             = "<img src=images/plus_sign.png border=0 alt='Add Contact'>";
 
     var $groups                    = array();
 
@@ -4661,7 +4661,7 @@ class SipSettings {
             print "
             <tr>
             <td colspan=2 align=left>";
-            print _("To search for other SIP Addresses fill in the First Name or Last Name. ");
+            print _("To find other SIP Addresses fill in the First Name or the Last Name and click the Search button. ");
             print "
             </td>
             </tr>
@@ -4685,7 +4685,7 @@ class SipSettings {
             return true;
         }
 
-        $chapter=sprintf(_("Contacts"));
+        $chapter=sprintf(_("Don't Disturb")).' '.sprintf(_("Groups"));
         $this->showChapter($chapter);
 
         print "
@@ -4817,7 +4817,7 @@ class SipSettings {
             print "<td class=list_header>";
             print "</td>";
             print "<td class=list_header>";
-            print _("Name");
+            print _("Display Name");
             print "</td>";
             print "<td class=list_header>";
             print _("Group");
@@ -6569,13 +6569,11 @@ class SipSettings {
         <table width=100% cellpadding=1 cellspacing=1 border=0>
         <tr>
         <form action=$this->url method=post>
-        <input type=hidden name=tab value=contacts>
-        <input type=hidden name=task value=directory>";
-        if ($_REQUEST['user_agent']) {
-        	printf ("<input type=hidden name=user_agent value='%s'>",$_REQUEST['user_agent']);
-        }
+        <input type=hidden name=tab value='contacts'>
+        ";
+        print $this->hiddenElements;
         print "
-        <td align=left valign=top colspan=2>";
+        <td align=left valign=top colspan=3>";
         print _("First Name");
         printf (" <input type=text size=20 name='firstname' value='%s'> ",$_REQUEST['firstname']);
 
@@ -6584,8 +6582,10 @@ class SipSettings {
         printf (" <input type=text size=20 name='lastname' value='%s'>",$_REQUEST['lastname']);
 
         print "</td>
-        <td align=right valign=top>";
-        print "<input type=submit value=";
+        </tr>
+        <tr>
+        <td colpsan=3 valign=top>";
+        print "<br><input type=submit value=";
         print _("Search");
         print ">";
         print "</td>
@@ -6670,9 +6670,15 @@ class SipSettings {
 
         if ($this->rows) {
             print "
-            <p>
             <table border=0 align=center>
-            <tr><td>$this->rows contacts found</td></tr>
+            <tr><td>";
+
+            printf(_("%s contacts found. "),$this->rows);
+
+            if ($this->isEmbedded()) {
+            	printf (_("Click on %s to add a Contact to Blink. "),$this->plus_sign_img);
+            }
+            print "</td></tr>
             </table>
             <p>
             <table border=0 cellpadding=2 width=100%>
@@ -6721,15 +6727,14 @@ class SipSettings {
 
                 if ($this->isEmbedded()) {
 
-					$add_contact_url=sprintf("<a href=>%s</a>",$this->plus_sign_img);
-                    printf ("<tr class=%s><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s %s</td>",
+                    $add_contact_url=sprintf("<a href=\"javascript:blink.addContact_withDisplayName_('%s', '%s');\">%s</a>",$sip_account,$name,$this->plus_sign_img);
+                    printf ("<tr class=%s><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
                     $_class,
                     $index,
                     $name,
                     $sip_account,
                     $account->timezone,
                     $this->PhoneDialURL($sip_account),
-                    $contacts_url,
                     $add_contact_url
                     );
                 } else {
