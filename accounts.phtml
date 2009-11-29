@@ -219,7 +219,7 @@ if ($action == "edit" && $id) {
         if ($sources) $sources = implode($sources,",");
 
         if (strlen($impersonate)) {
-			if (!preg_match("/^[1-9][0-9]*\.[1-9][0-9]*$/",$impersonate)) {
+            if (!preg_match("/^[0-9]*\.[0-9]*$/",$impersonate)) {
                 printf ("<p><font color=blue>Warning: Impersonate must be formated as CustomerId.ResellerId</font>");
             	unset($impersonate);
             }
