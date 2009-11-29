@@ -7916,7 +7916,7 @@ class PaypalProcessor {
 
         require('cc_processor.php');
 
-        if ($this->fraudDetected()) {
+        if ($this->fraudDetected(&$account)) {
             $chapter=sprintf(_("Payments"));
             $account->showChapter($chapter);
     
@@ -8048,13 +8048,19 @@ class PaypalProcessor {
                     if ($pay_process_results['error']['field'] == 'reload') {
                         print $pay_process_results['error']['desc'];
                     } else {
-                        print $CardProcessor->displayProcessErrors($pay_process_results);
+                        print $CardProcessor->displayProcessErrors($pay_process_results['error']);
                     }
 
                     $e=time();
 	                $d=$e-$b;
 
-                    $log=sprintf("Error: SIP Account %s - CC transaction failed to process (%s) in %d seconds",$account->account,$pay_process_results['error']['desc'],$d);
+                    $log=sprintf("Error, CC transaction failed for %s: %s (%s) after %d seconds",
+                                $account->account,
+                                $pay_process_results['error']['short_message'],
+                                $pay_process_results['error']['error_code'],
+                                $d
+                                );
+
                     syslog(LOG_NOTICE, $log);
 
                     return false;
@@ -8063,7 +8069,11 @@ class PaypalProcessor {
                     $e=time();
 	                $d=$e-$b;
 
-                    $log=sprintf("SIP Account %s - CC transaction %s completed succesfully in %d seconds", $account->account, $pay_process_results['success']['desc']->TransactionID,$d);
+                    $log=sprintf("CC transaction for %s %s completed succesfully in %d seconds",
+                    $account->account,
+                    $pay_process_results['success']['desc']->TransactionID,
+                    $d
+                    );
                     syslog(LOG_NOTICE, $log);
     
                     print "<p>";
@@ -8128,16 +8138,17 @@ class PaypalProcessor {
 
     }
 
-    function fraudDetected () {
+    function fraudDetected ($account) {
         if (count($this->deny_ips)) {
             if ($account->Preferences['ip'] && in_array($account->Preferences['ip'],$this->deny_ips)) {
             	$this->fraud_reason=$account->Preferences['ip'].' is Blocked';
                 return true;
             }
         }
+
         if (count($this->deny_countries)) {
 
-            if ($_loc=geoip_record_by_name($this->Preferences['ip'])) {
+            if ($_loc=geoip_record_by_name($account->Preferences['ip'])) {
                 if (in_array($_loc['country_name'],$this->deny_countries)) {
                     $this->fraud_reason=$_loc['country_name'].' is Blocked';
                     return true;
@@ -8146,7 +8157,7 @@ class PaypalProcessor {
         }
 
         if (count($this->allow_countries)) {
-            if ($_loc=geoip_record_by_name($this->Preferences['ip'])) {
+            if ($_loc=geoip_record_by_name($account->Preferences['ip'])) {
                 if (!in_array($_loc['country_name'],$this->allow_countries)) {
                     $this->fraud_reason=$_loc['country_name'].' is Not Allowed';
                     return true;

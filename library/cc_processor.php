@@ -807,16 +807,19 @@ class CreditCardProcessor {
         return $errors;
     }
     
-    function displayProcessErrors($arr_errors){
+    function displayProcessErrors($error=array()){
         dprint("displayProcessErrors()");
 
+        $page_body_content .= "<h2>"._("Error")."</h2>";
+
         $page_body_content .= "<table>\n";
-        $page_body_content .= "<tr><td colspan=\"2\">"._("Error").":</td></tr>\n";
-        foreach($arr_errors as $arr_error => $error_desc){
-            $page_body_content .= "<tr><td>".$error_desc['field'].":</td><td>".$error_desc['desc']."</td></tr>\n";
-        }
-        $page_body_content .= "<tr><td colspan=\"2\"><a href=\"javascript:history.go(-1);\">"._("Go Back")."</a>, "._("correct the errors and re-submit. ")."</td></tr>\n";
+        $page_body_content .= sprintf("<tr><td>Error code:</td><td>%s</td></tr>\n",$error['error_code']);
+        $page_body_content .= sprintf("<tr><td>Description:</td><td>%s</td></tr>\n",$error['short_message']);
+        $page_body_content .= sprintf("<tr><td colspan=2>%s</td></tr>\n",$error['desc']);
+
         $page_body_content .= "</table>\n";
+        $page_body_content .= "<p><a href=\"javascript:history.go(-1);\">"._("Go Back")."</a>, "._("correct the errors and re-submit. ")."\n";
+
         return $page_body_content;
     }
 
@@ -959,10 +962,25 @@ class CreditCardProcessor {
 	        } else {
 	            $ack = $response->getAck();    
 	            if ($ack == "Success") {
-	                $pp_return = array('success'=>array('field'=>'Card Processing','desc'=>$response));
+	                $pp_return = array('success'=>array('field'=>'Card Processing',
+                                                        'desc'=>$response)
+                                                        );
 	            } else {
-	                $pp_return = array('error'=>array('field'=>'Card Processing','desc'=>$response->Errors->LongMessage));
-	                $this->logger->_log("Response Error: ".$response->Errors->LongMessage."");
+	                $pp_return = array('error'=>array('field'          => 'Card Processing',
+                                                      'desc'           => $response->Errors->LongMessage,
+                                                      'short_message'  => $response->Errors->ShortMessage,
+                                                      'error_code'     => $response->Errors->ErrorCode,
+                                                      'correlation_id' => $response->CorrelationID
+                                                      )
+                                      );
+
+                    $log=sprintf("Error: %s (%s) %s, correlation id %s",
+                                 $response->Errors->ShortMessage,
+                                 $response->Errors->ErrorCode,
+                                 $response->Errors->LongMessage,
+                                 $response->CorrelationID
+                                 );
+	                $this->logger->_log($log);
 	            }
 	        }
         }
