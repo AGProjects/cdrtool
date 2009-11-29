@@ -45,7 +45,7 @@ class SipSettings {
     var $currency                  = "&euro";
     // access numbers
 
-    var $voicemail_access_number        = "*70";
+    var $voicemail_access_number        = "1233";
     var $FUNC_access_number             = "*21*";
     var $FNOL_access_number             = "*22*";
     var $FNOA_access_number             = "*23*";
