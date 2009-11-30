@@ -71,6 +71,7 @@ class SipSettings {
     var $call_img                  = "<img src=images/call.gif border=0 alt='Dial'>";
     var $delete_img                = "<img src=images/del_pb.gif border=0 alt='Delete'>";
     var $plus_sign_img             = "<img src=images/plus_sign.png border=0 alt='Add Contact'>";
+    var $embedded_img              = " <img src=images/blink.png border=0>";
 
     var $groups                    = array();
 
@@ -1639,7 +1640,15 @@ class SipSettings {
     function showTabs() {
         print "
         <tr>
-        <td colspan=2>
+        <td align=left>
+        ";
+        if ($this->isEmbedded()) {
+            print $this->embedded_img;;
+        }
+
+        print "
+        </td>
+        <td>
         ";
 
         print "
@@ -3866,7 +3875,7 @@ class SipSettings {
             <td></td>
             <td></td>
             <td><b><font color=blue>%s</font></b></td>
-            <td align=right>%s</td>
+            <td align=right><b>%s</b></td>
             <td align=right></td>
             </tr>
             ",
