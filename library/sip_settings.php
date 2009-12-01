@@ -3586,7 +3586,7 @@ class SipSettings {
     
             print "
             <tr>
-            <td align=left>";
+            <td align=left colspan=2>";
             print _("Your current balance is");
             print ": ";
             printf ("%.2f %s ",$this->prepaidAccount->balance,$this->currency);
@@ -3613,7 +3613,7 @@ class SipSettings {
         <input type=hidden name=tab value=credit>
         <input type=hidden name=issuer value=reseller>
         <input type=hidden name=task value=Add>
-        <td align=left><nobr>
+        <td align=left colspan=2><nobr>
         ";
 
         print _("Value");
