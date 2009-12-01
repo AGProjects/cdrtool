@@ -12931,9 +12931,12 @@ class Customers extends Records {
         }
 
         $customer['billingEmail']   = $customer['email'];
-        $customer['billingAddress'] = $customer['address']."\n".
-                                      $customer['postcode']." ".$customer['city']."\n".
-                                      $_state.$customer['country']."\n";
+
+        if ($customer['address'] != 'Unknown') {
+            $customer['billingAddress'] = $customer['address']."\n".
+                                          $customer['postcode']." ".$customer['city']."\n".
+                                          $_state.$customer['country']."\n";
+        }
 
         if ($confirmPassword) {
             if (!strlen($customer['password'])) {
