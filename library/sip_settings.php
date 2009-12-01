@@ -1213,7 +1213,8 @@ class SipSettings {
         } else {
             if ($this->enable_thor) {
                 print " ";
-                print _("Home Node");
+                //print _("Home Node");
+                print _("SIP Thor Node");
                 if ($this->homeNode=getSipThorHomeNode($this->account,$this->sip_proxy)) {
                     printf (" <font color=green>%s</font>",$this->homeNode);
                 } else {
@@ -7755,6 +7756,11 @@ class Enrollment {
 
         $sip_properties[]=array('name'=> 'ip',                 'value' => $_SERVER['REMOTE_ADDR']);
         $sip_properties[]=array('name'=> 'registration_email', 'value' => $_REQUEST['email']);
+
+        if (strlen($timezone)) {
+        	$sip_properties[]=array('name'=> 'timezone', 'value' => $timezone);
+        }
+
 
         $sipAccount = array('account'   => $sip_address,
                             'fullname'  => $_REQUEST['display_name'],
