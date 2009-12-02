@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-11-20 13:27+0100\n"
-"PO-Revision-Date: 2009-11-18 12:38+0100\n"
+"PO-Revision-Date: 2009-12-02 09:54+0100\n"
 "Last-Translator: Tijmen de Mes <tijmen@ag-projects.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -241,7 +241,7 @@ msgstr "Voice Mailbox"
 
 #: /var/www/CDRTool/library/sip_settings.php:1631
 msgid "You must set the Owner to enable Credit Card Payments. "
-msgstr ""
+msgstr "U moet de Eigenaar invullen om Credit Card betalingen aan te zetten."
 
 #: /var/www/CDRTool/library/sip_settings.php:1658
 msgid "PSTN Termination Credit"
@@ -589,15 +589,13 @@ msgstr "Aankondigen"
 
 #: /var/www/CDRTool/library/sip_settings.php:3765
 #, php-format
-msgid ""
-"Calling to PSTN numbers is possible at the costs set forth in the <a href=%"
-"s>price list</a>. "
-msgstr ""
+msgid "Calling to PSTN numbers is possible at the costs set forth in the <a href=%s>price list</a>. "
+msgstr "Bellen naar normale nummers is mogelijk met de kosten die staan in de  <a href=%s>prijs lijst</a>."
 
 #: /var/www/CDRTool/library/sip_settings.php:3766
 #, php-format
 msgid "To add Credit to your account, go to the <a href=%s>Payments</a> Tab. "
-msgstr ""
+msgstr "Om beltegoed toe te voegen, ga naar de <a href=%s>Betalingen</a> tab."
 
 #: /var/www/CDRTool/library/sip_settings.php:3866
 #, php-format
@@ -675,7 +673,7 @@ msgstr "Snel kiezen"
 #: /var/www/CDRTool/library/sip_settings.php:4345
 #, php-format
 msgid "Prefix to auto-complete short numbers"
-msgstr "Voorvoegsel om korte nummers auto aan te vullen"
+msgstr "Voorvoegsel om korte nummers aan te vullen"
 
 #: /var/www/CDRTool/library/sip_settings.php:4363
 msgid "Mobile Number"
@@ -714,12 +712,8 @@ msgid "Outgoing"
 msgstr "Uitgaande Gesprekken"
 
 #: /var/www/CDRTool/library/sip_settings.php:4755
-msgid ""
-"You can organize contacts into groups that can be used to accept incoming "
-"calls in Don't Disturb section. "
-msgstr ""
-"U kan contacten in groepen plaatsen die kunnen worden gebruikt om gesprekken "
-"te accepteren in de Niet Storen sectie."
+msgid "You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. "
+msgstr "U kan contacten in groepen plaatsen die kunnen worden gebruikt om gesprekken te accepteren in de Niet Storen sectie."
 
 #: /var/www/CDRTool/library/sip_settings.php:4829
 msgid "(wildcard %)"
@@ -774,19 +768,12 @@ msgid "You can reject calls depending on the time of day and Caller-ID. "
 msgstr "U kan gesprekken blokkeren afhankelijk van de tijd en het nummer."
 
 #: /var/www/CDRTool/library/sip_settings.php:5287
-msgid ""
-"You can create custom groups in the Contacts page like Family or Coworkers. "
-msgstr ""
-"U kan eigen groepen definiëren in de Contacten pagina zoals Familie of "
-"Collega's"
+msgid "You can create custom groups in the Contacts page like Family or Coworkers. "
+msgstr "U kan eigen groepen definiëren in de Contacten pagina zoals Familie of Collega's"
 
 #: /var/www/CDRTool/library/sip_settings.php:5289
-msgid ""
-"Rejected calls are diverted based on the Unavailable condition in the Call "
-"Forwarding page. "
-msgstr ""
-"Geweigerde gesprekken worden omgeleid met de Niet Beschikbaar conditie op de "
-"Doorschakelingen pagina"
+msgid "Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. "
+msgstr "Geweigerde gesprekken worden omgeleid met de Niet Beschikbaar conditie op de Doorschakelingen pagina"
 
 #: /var/www/CDRTool/library/sip_settings.php:5292
 #, php-format
@@ -843,11 +830,8 @@ msgid "Rejected Callers"
 msgstr "Geweigerde Gesprekken"
 
 #: /var/www/CDRTool/library/sip_settings.php:5644
-msgid ""
-"Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
-msgstr ""
-"Gebruik %Nummer@% om PSTN nummers en gebruiker@domein om SIP adressen te "
-"filteren"
+msgid "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
+msgstr "Gebruik %Nummer@% om PSTN nummers en gebruiker@domein om SIP adressen te filteren"
 
 #: /var/www/CDRTool/library/sip_settings.php:5725
 msgid "Please fill in the e-mail address. "
@@ -1094,3 +1078,4 @@ msgstr "Fout"
 #: /var/www/CDRTool/library/cc_processor.php:802
 msgid "correct the errors and re-submit. "
 msgstr "verbeter de fouten en probeer opnieuw"
+
