@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-12-04 13:42+0100\n"
-"PO-Revision-Date: 2009-11-17 10:15+0100\n"
+"PO-Revision-Date: 2009-12-04 13:59+0100\n"
 "Last-Translator: Saul Ibarra <saul@ag-projects.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -54,7 +54,7 @@ msgstr "Preferencias"
 
 #: /var/www/CDRTool/library/sip_settings.php:328
 msgid "Forwarding"
-msgstr "Devíos"
+msgstr "Desvíos"
 
 #: /var/www/CDRTool/library/sip_settings.php:329
 #: /var/www/CDRTool/library/sip_settings.php:4702
@@ -195,7 +195,7 @@ msgstr "Salir"
 #. print _("Home Node");
 #: /var/www/CDRTool/library/sip_settings.php:1217
 msgid "SIP Thor Node"
-msgstr ""
+msgstr "Nodo SIP Thor"
 
 #: /var/www/CDRTool/library/sip_settings.php:1222
 msgid "Unknown"
@@ -243,7 +243,7 @@ msgstr "Buzón de voz"
 
 #: /var/www/CDRTool/library/sip_settings.php:1706
 msgid "You must set the Owner to enable Credit Card Payments. "
-msgstr ""
+msgstr "Tiene que especificar el propietario para habilitar los pagos con tarjeta de crédito"
 
 #: /var/www/CDRTool/library/sip_settings.php:1731
 #: /var/www/CDRTool/library/sip_settings.php:2031
@@ -491,8 +491,7 @@ msgstr "Destinos bloqueados"
 
 #: /var/www/CDRTool/library/sip_settings.php:2770
 msgid "You can deny outbound calls to unwanted PSTN prefixes. "
-msgstr ""
-"Puede prohibir las llamadas salientes a los prefijos de la PSTN deseados."
+msgstr "Puede prohibir las llamadas salientes a los prefijos de la PSTN deseados."
 
 #: /var/www/CDRTool/library/sip_settings.php:2780
 #: /var/www/CDRTool/library/sip_settings.php:2809
@@ -562,15 +561,13 @@ msgstr "Notificar"
 
 #: /var/www/CDRTool/library/sip_settings.php:3684
 #, php-format
-msgid ""
-"Calling to PSTN numbers is possible at the costs set forth in the <a href=%"
-"s>price list</a>. "
-msgstr ""
+msgid "Calling to PSTN numbers is possible at the costs set forth in the <a href=%s>price list</a>. "
+msgstr "Es posible llamar a la PSTN de cuerdo a los precios de la siguiente <a href=%s>lista</a>. "
 
 #: /var/www/CDRTool/library/sip_settings.php:3685
 #, php-format
 msgid "To add Credit to your account, go to the <a href=%s>Payments</a> Tab. "
-msgstr ""
+msgstr "Para añadir saldo a su cuenta vaya a la sección de <a href=%s>pagos</a>. "
 
 #: /var/www/CDRTool/library/sip_settings.php:3785
 #, php-format
@@ -687,15 +684,13 @@ msgid "Outgoing"
 msgstr "Salientes"
 
 #: /var/www/CDRTool/library/sip_settings.php:4672
-#, fuzzy, php-format
+#, php-format
 msgid "Directory"
-msgstr "Historial"
+msgstr "Directorio"
 
 #: /var/www/CDRTool/library/sip_settings.php:4678
-msgid ""
-"To find other SIP Addresses fill in the First Name or the Last Name and "
-"click the Search button. "
-msgstr ""
+msgid "To find other SIP Addresses fill in the First Name or the Last Name and click the Search button. "
+msgstr "Para encontrar otras direcciones SIP introduzca el nombre y el apellido y haga click en Buscar. "
 
 #: /var/www/CDRTool/library/sip_settings.php:4702
 #: /var/www/CDRTool/library/sip_settings.php:5409
@@ -704,12 +699,8 @@ msgid "Groups"
 msgstr "Grupos"
 
 #: /var/www/CDRTool/library/sip_settings.php:4708
-msgid ""
-"You can organize contacts into groups that can be used to accept incoming "
-"calls in Don't Disturb section. "
-msgstr ""
-"Puede organizar sus contactos en grupos que pueden utilizarse para recibir "
-"las llamadas en la sección No Molestar."
+msgid "You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. "
+msgstr "Puede organizar sus contactos en grupos que pueden utilizarse para recibir las llamadas en la sección No Molestar."
 
 #: /var/www/CDRTool/library/sip_settings.php:4781
 msgid "(wildcard %)"
@@ -735,9 +726,8 @@ msgstr "Buscar"
 
 #: /var/www/CDRTool/library/sip_settings.php:4834
 #: /var/www/CDRTool/library/sip_settings.php:6703
-#, fuzzy
 msgid "Display Name"
-msgstr "Nombre"
+msgstr "Nombre a mostrar"
 
 #: /var/www/CDRTool/library/sip_settings.php:4883
 msgid "Update"
@@ -767,23 +757,15 @@ msgstr "No Molestar"
 
 #: /var/www/CDRTool/library/sip_settings.php:5238
 msgid "You can reject calls depending on the time of day and Caller-ID. "
-msgstr ""
-"Puede rechazar llamadas dependiendo de la hora del día y el Caller-ID. "
+msgstr "Puede rechazar llamadas dependiendo de la hora del día y el Caller-ID. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5239
-msgid ""
-"You can create custom groups in the Contacts page like Family or Coworkers. "
-msgstr ""
-"Puede crear grupos personalizados como Familia o Amigos en la pestaña de "
-"Contactos."
+msgid "You can create custom groups in the Contacts page like Family or Coworkers. "
+msgstr "Puede crear grupos personalizados como Familia o Amigos en la pestaña de Contactos."
 
 #: /var/www/CDRTool/library/sip_settings.php:5241
-msgid ""
-"Rejected calls are diverted based on the Unavailable condition in the Call "
-"Forwarding page. "
-msgstr ""
-"Las llamadas rechazadas son desviadas según la condición de No Disponible en "
-"la sección de Desvíos."
+msgid "Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. "
+msgstr "Las llamadas rechazadas son desviadas según la condición de No Disponible en la sección de Desvíos."
 
 #: /var/www/CDRTool/library/sip_settings.php:5244
 #, php-format
@@ -836,11 +818,8 @@ msgid "Rejected Callers"
 msgstr "Rechazar llamadas entrantes"
 
 #: /var/www/CDRTool/library/sip_settings.php:5596
-msgid ""
-"Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
-msgstr ""
-"Use %Número@% para seleccionar los números PSTN y usuario@dominio para las "
-"direcciones SIP"
+msgid "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
+msgstr "Use %Número@% para seleccionar los números PSTN y usuario@dominio para las direcciones SIP"
 
 #: /var/www/CDRTool/library/sip_settings.php:5677
 msgid "Please fill in the e-mail address. "
@@ -925,12 +904,12 @@ msgstr "Error: no se han encontrado las preferencias"
 #: /var/www/CDRTool/library/sip_settings.php:6690
 #, php-format
 msgid "%s contacts found. "
-msgstr ""
+msgstr "%s contactos encontrados. "
 
 #: /var/www/CDRTool/library/sip_settings.php:6693
 #, php-format
 msgid "Click on %s to add a Contact to Blink. "
-msgstr ""
+msgstr "Haz click en %s para añadir un contacto a Blink. "
 
 #: /var/www/CDRTool/library/sip_settings.php:6908
 msgid "Error: No X.509 client certificate provided\n"
@@ -987,12 +966,11 @@ msgstr "Modificados desvíos %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:7951
 msgid "Page Not Available"
-msgstr ""
+msgstr "Página no disponible"
 
 #: /var/www/CDRTool/library/sip_settings.php:7981
-#, fuzzy
 msgid "PSTN Credit"
-msgstr "Crédito"
+msgstr "Crédito PSTN"
 
 #: /var/www/CDRTool/library/sip_settings.php:8040
 #, php-format
@@ -1135,25 +1113,20 @@ msgstr "corrija los errores y envíe de nuevo."
 
 #: /var/www/CDRTool/library/cc_processor.php:838
 msgid "Page cannot be reloaded"
-msgstr ""
+msgstr "La página no puede ser recargada"
 
 #~ msgid "Home Node"
 #~ msgstr "Nodo Home"
-
 #~ msgid "PSTN Termination Credit"
 #~ msgstr "Crédito para terminación PSTN"
-
 #~ msgid "Error saving order"
 #~ msgstr "Error guardando pedido"
-
 #~ msgid "<div id=\"lbl_cvn\"></div>"
 #~ msgstr "Código de verificación CVV"
-
 #~ msgid "<div id=\"lbl_addr1\"></div>"
 #~ msgstr "Dirección"
-
 #~ msgid "<div id=\"lbl_city\"></div>"
 #~ msgstr "Ciudad"
-
 #~ msgid "<div id=\"lbl_postcode\"></div>"
 #~ msgstr "Código postal"
+
