@@ -1724,7 +1724,9 @@ class SipSettings {
 
     function showIdentityTab() {
         $this->getEnumMappings();
-        $this->getAliases();
+        if (!$this->isEmbedded()) {
+        	$this->getAliases();
+        }
 
         $chapter=sprintf(_("SIP Account"));
         $this->showChapter($chapter);
@@ -1837,81 +1839,83 @@ class SipSettings {
         }
 
 
-        $chapter=sprintf(_("Aliases"));
-        $this->showChapter($chapter);
+        if (!$this->isEmbedded()) {
 
-        print "
-        <tr>
-        <td colspan=2>";
-        printf (_("You may create new aliases under the same domain"));
-        printf ("
-        </td>
-        </tr>
-        ");
-
-        $t=0;
-
-        print "
-        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
-        ";
-
-        foreach($this->aliases as $a)  {
-            $t++;
-
-            $rr=floor($t/2);
-            $mod=$t-$rr*2;
+            $chapter=sprintf(_("Aliases"));
+            $this->showChapter($chapter);
     
-            if ($mod ==0) {
-                $_class='odd';
-            } else {
-                $_class='even';
-            }
-
             print "
-            <tr class=$_class>
-
+            <tr>
+            <td colspan=2>";
+            printf (_("You may create new aliases under the same domain"));
+            printf ("
+            </td>
+            </tr>
+            ");
+    
+            $t=0;
+    
+            print "
+            <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+            ";
+    
+            foreach($this->aliases as $a)  {
+                $t++;
+    
+                $rr=floor($t/2);
+                $mod=$t-$rr*2;
+        
+                if ($mod ==0) {
+                    $_class='odd';
+                } else {
+                    $_class='even';
+                }
+    
+                print "
+                <tr class=$_class>
+    
+                  <td>";
+                    print _("SIP Alias");
+                    print "
+                  </td>
+                  <td> <input type=text size=35 name=aliases[] value=\"$a\"></td>
+                </tr>
+                ";
+            }
+    
+            print "
+            <tr>
               <td>";
-                print _("SIP Alias");
+                print _("New SIP Alias");
                 print "
               </td>
-              <td> <input type=text size=35 name=aliases[] value=\"$a\"></td>
+              <td> <input type=text size=35 name=aliases[]></td>
             </tr>
             ";
-        }
-
-        print "
-        <tr>
-          <td>";
-            print _("New SIP Alias");
+    
             print "
-          </td>
-          <td> <input type=text size=35 name=aliases[]></td>
-        </tr>
-        ";
+            <tr>
+              <td align=left>
+                <input type=hidden name=action value=\"set aliases\">
+            ";
+            print "
+            <input type=submit value=\"";
+            print _("Save aliases");
+            print "\"
+                   onClick=saveHandler(this)>
+            ";
+            print "
+              </td>
+              <td align=right>
+              </td>
+            </tr>
+            ";
+    
+            print $this->hiddenElements;
+            print "
+            </form>
+            ";
 
-        print "
-        <tr>
-          <td align=left>
-            <input type=hidden name=action value=\"set aliases\">
-        ";
-        print "
-        <input type=submit value=\"";
-        print _("Save aliases");
-        print "\"
-               onClick=saveHandler(this)>
-        ";
-        print "
-          </td>
-          <td align=right>
-          </td>
-        </tr>
-        ";
-
-        print $this->hiddenElements;
-        print "
-        </form>
-        ";
-    	if (!$this->isEmbedded()) {
             if ($this->enrollment_url) {
                 include("/etc/cdrtool/enrollment/config.ini");
     
@@ -7974,7 +7978,7 @@ class PaypalProcessor {
         // load shopping items
         $CardProcessor->cart_items = array(
                             'pstn_credit'=>array('price'       => 30,
-                                                 'description' => _('PSTN Termination Credit'),
+                                                 'description' => _('PSTN Credit'),
                                                  'unit'        => 'credit',
                                                  'duration'    => 'N/A',
                                                  'qty'         => 1
