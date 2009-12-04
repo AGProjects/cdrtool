@@ -1,3 +1,9 @@
+cdrtool (6.7.0) unstable; urgency=low
+
+  * to be added
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 04 Dec 2009 13:55:03 +0100
+
 cdrtool (6.9.9) unstable; urgency=low
 
   * Added database keepalive features to workaround the 2006 mysql error
