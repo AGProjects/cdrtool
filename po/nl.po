@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-12-04 13:42+0100\n"
-"PO-Revision-Date: 2009-12-02 09:54+0100\n"
+"PO-Revision-Date: 2009-12-04 13:56+0100\n"
 "Last-Translator: Tijmen de Mes <tijmen@ag-projects.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -195,7 +195,7 @@ msgstr "Uitloggen"
 #. print _("Home Node");
 #: /var/www/CDRTool/library/sip_settings.php:1217
 msgid "SIP Thor Node"
-msgstr ""
+msgstr "SIP Thor Node"
 
 #: /var/www/CDRTool/library/sip_settings.php:1222
 msgid "Unknown"
@@ -561,12 +561,8 @@ msgstr "Aankondigen"
 
 #: /var/www/CDRTool/library/sip_settings.php:3684
 #, php-format
-msgid ""
-"Calling to PSTN numbers is possible at the costs set forth in the <a href=%"
-"s>price list</a>. "
-msgstr ""
-"Bellen naar normale nummers is mogelijk met de kosten die staan in de  <a "
-"href=%s>prijs lijst</a>."
+msgid "Calling to PSTN numbers is possible at the costs set forth in the <a href=%s>price list</a>. "
+msgstr "Bellen naar normale nummers is mogelijk met de kosten die staan in de  <a href=%s>prijs lijst</a>."
 
 #: /var/www/CDRTool/library/sip_settings.php:3685
 #, php-format
@@ -630,7 +626,6 @@ msgid "Dial"
 msgstr "Bel"
 
 #: /var/www/CDRTool/library/sip_settings.php:4061
-#, fuzzy
 msgid "Number"
 msgstr "Kaart Nummer"
 
@@ -689,15 +684,13 @@ msgid "Outgoing"
 msgstr "Uitgaande Gesprekken"
 
 #: /var/www/CDRTool/library/sip_settings.php:4672
-#, fuzzy, php-format
+#, php-format
 msgid "Directory"
-msgstr "Geschiedenis"
+msgstr "Telefoonboek"
 
 #: /var/www/CDRTool/library/sip_settings.php:4678
-msgid ""
-"To find other SIP Addresses fill in the First Name or the Last Name and "
-"click the Search button. "
-msgstr ""
+msgid "To find other SIP Addresses fill in the First Name or the Last Name and click the Search button. "
+msgstr "Om andere SIP adressen te vinden, vul de voornaam of achternaam in en klik op de Zoek knop"
 
 #: /var/www/CDRTool/library/sip_settings.php:4702
 #: /var/www/CDRTool/library/sip_settings.php:5409
@@ -706,12 +699,8 @@ msgid "Groups"
 msgstr "Groepen"
 
 #: /var/www/CDRTool/library/sip_settings.php:4708
-msgid ""
-"You can organize contacts into groups that can be used to accept incoming "
-"calls in Don't Disturb section. "
-msgstr ""
-"U kan contacten in groepen plaatsen die kunnen worden gebruikt om gesprekken "
-"te accepteren in de Niet Storen sectie."
+msgid "You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. "
+msgstr "U kan contacten in groepen plaatsen die kunnen worden gebruikt om gesprekken te accepteren in de Niet Storen sectie."
 
 #: /var/www/CDRTool/library/sip_settings.php:4781
 msgid "(wildcard %)"
@@ -727,9 +716,8 @@ msgid "Group"
 msgstr "Groep"
 
 #: /var/www/CDRTool/library/sip_settings.php:4806
-#, fuzzy
 msgid "No group"
-msgstr "Groep"
+msgstr "Geen groep"
 
 #: /var/www/CDRTool/library/sip_settings.php:4811
 #: /var/www/CDRTool/library/sip_settings.php:6603
@@ -738,14 +726,12 @@ msgstr "Zoek"
 
 #: /var/www/CDRTool/library/sip_settings.php:4834
 #: /var/www/CDRTool/library/sip_settings.php:6703
-#, fuzzy
 msgid "Display Name"
-msgstr "Voornaam"
+msgstr "Getoonde naam"
 
 #: /var/www/CDRTool/library/sip_settings.php:4883
-#, fuzzy
 msgid "Update"
-msgstr "Datum"
+msgstr "Update"
 
 #: /var/www/CDRTool/library/sip_settings.php:4898
 msgid "First"
@@ -774,19 +760,12 @@ msgid "You can reject calls depending on the time of day and Caller-ID. "
 msgstr "U kan gesprekken blokkeren afhankelijk van de tijd en het nummer."
 
 #: /var/www/CDRTool/library/sip_settings.php:5239
-msgid ""
-"You can create custom groups in the Contacts page like Family or Coworkers. "
-msgstr ""
-"U kan eigen groepen definiëren in de Contacten pagina zoals Familie of "
-"Collega's"
+msgid "You can create custom groups in the Contacts page like Family or Coworkers. "
+msgstr "U kan eigen groepen definiëren in de Contacten pagina zoals Familie of Collega's"
 
 #: /var/www/CDRTool/library/sip_settings.php:5241
-msgid ""
-"Rejected calls are diverted based on the Unavailable condition in the Call "
-"Forwarding page. "
-msgstr ""
-"Geweigerde gesprekken worden omgeleid met de Niet Beschikbaar conditie op de "
-"Doorschakelingen pagina"
+msgid "Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. "
+msgstr "Geweigerde gesprekken worden omgeleid met de Niet Beschikbaar conditie op de Doorschakelingen pagina"
 
 #: /var/www/CDRTool/library/sip_settings.php:5244
 #, php-format
@@ -839,11 +818,8 @@ msgid "Rejected Callers"
 msgstr "Geweigerde Gesprekken"
 
 #: /var/www/CDRTool/library/sip_settings.php:5596
-msgid ""
-"Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
-msgstr ""
-"Gebruik %Nummer@% om PSTN nummers en gebruiker@domein om SIP adressen te "
-"filteren"
+msgid "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
+msgstr "Gebruik %Nummer@% om PSTN nummers en gebruiker@domein om SIP adressen te filteren"
 
 #: /var/www/CDRTool/library/sip_settings.php:5677
 msgid "Please fill in the e-mail address. "
@@ -928,12 +904,12 @@ msgstr "Fout: missende inschrijvingsgegevens"
 #: /var/www/CDRTool/library/sip_settings.php:6690
 #, php-format
 msgid "%s contacts found. "
-msgstr ""
+msgstr "%s contacten gevonden"
 
 #: /var/www/CDRTool/library/sip_settings.php:6693
 #, php-format
 msgid "Click on %s to add a Contact to Blink. "
-msgstr ""
+msgstr "Klik op %s om een contactpersoon aan Blink toe te voegen"
 
 #: /var/www/CDRTool/library/sip_settings.php:6908
 msgid "Error: No X.509 client certificate provided\n"
@@ -990,12 +966,11 @@ msgstr "Gewijzigde omleidingen %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:7951
 msgid "Page Not Available"
-msgstr ""
+msgstr "Pagina niet beschikbaar"
 
 #: /var/www/CDRTool/library/sip_settings.php:7981
-#, fuzzy
 msgid "PSTN Credit"
-msgstr "Tegoed"
+msgstr "Beltegoed"
 
 #: /var/www/CDRTool/library/sip_settings.php:8040
 #, php-format
@@ -1015,9 +990,9 @@ msgid "Invalid Request"
 msgstr "Ongeldig verzoek"
 
 #: /var/www/CDRTool/library/sip_settings.php:8137
-#, fuzzy, php-format
+#, php-format
 msgid "Add Credit"
-msgstr "Tegoed"
+msgstr "Beltegoed toevoegen"
 
 #: /var/www/CDRTool/library/sip_settings.php:8146
 msgid "Add balance to your Credit by purchasing it with a Credit Card. "
@@ -1138,13 +1113,12 @@ msgstr "verbeter de fouten en probeer opnieuw"
 
 #: /var/www/CDRTool/library/cc_processor.php:838
 msgid "Page cannot be reloaded"
-msgstr ""
+msgstr "Pagina kan niet opnieuw worden geladen"
 
 #~ msgid "Home Node"
 #~ msgstr "Home Node"
-
 #~ msgid "PSTN Termination Credit"
 #~ msgstr "PSTN Termination Credit"
-
 #~ msgid "Error saving order"
 #~ msgstr "Fout met bewaren order"
+
