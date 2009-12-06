@@ -988,8 +988,9 @@ class CreditCardProcessor {
         return $pp_return;
     }
 
-    function saveOrder ($form_data, $payment_results) {
+    function saveOrder ($form_data, $payment_results, $extra_information=array()) {
         dprint("saveOrder()");
+
         // save order information in a database, etc
         if ($payment_results['success']) {
             $_TransactionNum = $payment_results['success']['desc']->TransactionID;
@@ -1098,7 +1099,7 @@ class CreditCardProcessor {
 
         $this->transaction_data = $this->getTransactionDetails($_TransactionNum);
 
-        $this->notifyMerchant();
+        $this->notifyMerchant($extra_information);
 
         return $_TransactionNum;
     }
@@ -1166,7 +1167,7 @@ class CreditCardProcessor {
         return $this->sendEmail($this->sender_email,$this->transaction_data['USER_EMAIL'],'AG Projects Purchase Notice',$msg);
     }
 
-    function notifyMerchant () {
+    function notifyMerchant ($extra_information=array()) {
         dprint ("notifyMerchant()");
 
         if (!$this->notify_merchant) return true;
@@ -1192,7 +1193,13 @@ class CreditCardProcessor {
         $msg .= "State: ".$this->transaction_data['STATE']."\n";
         $msg .= "Postcode: ".$this->transaction_data['POSTCODE']."\n";
         $msg .= "Country: ".$this->transaction_data['COUNTRY']."\n";
-        $msg .= "User IP: ".$_SERVER['REMOTE_ADDR']."";
+        $msg .= "User IP: ".$_SERVER['REMOTE_ADDR']."\n";
+
+        $msg .= "\n";
+
+        foreach (array_keys($extra_information) as $idx) {
+        	$msg .= sprintf("%s: %s\n",$idx,$extra_information[$idx]);
+        }
 
         return $this->sendEmail($this->sender_email,$this->sender_email,'AG Projects Purchase Notice',$msg);
     }

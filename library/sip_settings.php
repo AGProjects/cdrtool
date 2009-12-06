@@ -8105,7 +8105,34 @@ class PaypalProcessor {
                     // notify parties by email
                 }
 
-                if ($CardProcessor->saveOrder($_POST,$pay_process_results)) {
+
+                if ($account->Preferences['ip'] && $_loc=geoip_record_by_name($account->Preferences['ip'])) {
+                    $registration_location=$_loc['country_name'].'/'.$_loc['city'];
+                } else if ($account->Preferences['ip'] && $_loc=geoip_country_name_by_name($account->Preferences['ip'])) {
+                    $registration_location=$_loc;
+                } else {
+                	$registration_location='';
+                }
+
+
+                if ($_loc=geoip_record_by_name($_REQUEST['REMOTE_ADDR'])) {
+                    $transaction_location=$_loc['country_name'].'/'.$_loc['city'];
+                } else if ($_loc=geoip_country_name_by_name($_REQUEST['REMOTE_ADDR'])) {
+                    $transaction_location=$_loc;
+                } else {
+                	$transaction_location='';
+                }
+
+				$extra_information=array('SIP account'           => $account->account,
+                                         'SIP Account Timezone'  => $account->timezone,
+                                         'Registration IP'       => $account->Preferences['ip'],
+                                         'Registration Location' => $registration_location,
+                                         'Registration Email'    => $account->Preferences['registration_email'],
+                                         'Registration Timezone' => $account->Preferences['timezone'],
+                                         'Transaction Location'  => $transaction_location
+                                         );
+
+                if ($CardProcessor->saveOrder($_POST,$pay_process_results,$extra_information)) {
 
                     // add PSTN credit
                     $description=sprintf("CC transaction %s",$CardProcessor->transaction_data['TRANSACTION_ID']);
