@@ -4947,7 +4947,7 @@ class OpenSIPSQuota {
         }
 
         if ($this->enableThor) {
-            $query=sprintf("select username,domain from sip_accounts");
+            $query=sprintf("select username,domain from sip_accounts where (1=1) ");
 
             if (count($reset_quota_for)) {
                 $k=0;
