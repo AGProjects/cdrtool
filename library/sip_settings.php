@@ -1717,8 +1717,22 @@ class SipSettings {
             return false;
         }
 
+        $this->getBalanceHistory();
+ 
+        if (!count($this->balance_history)) {
+            $this->first_transaction=true;
+        } else {
+            $this->first_transaction=false;
+        }
+
         if (class_exists($this->payment_processor_class)) {
             $payment_processor = new $this->payment_processor_class(&$this);
+        }
+
+        if ($payment_processor->make_credit_checks) {
+            // block account temporary to check the user
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain),"free-pstn");
         }
     }
 
@@ -2279,6 +2293,8 @@ class SipSettings {
             if ($key=="blocked") {
                 if ($this->Preferences['blocked_by']) {
                     $selected_blocked_by[$this->Preferences['blocked_by']]='selected';
+                } else if ($checked_box[$key]) {
+                    $selected_blocked_by['reseller']='selected';
                 }
 
                 if ($this->login_type == 'admin' || $this->login_type == 'reseller') {
@@ -2964,7 +2980,6 @@ class SipSettings {
                         }
 
                         $this->somethingChanged=1;
-                        $result->prepaid=0;
                     } else if (!in_array($key,$this->groups) && $val) {
                     	if (!$this->prepaid_changes_allowed) {
                             $this->somethingChanged=1;
@@ -7927,6 +7942,7 @@ class PaypalProcessor {
     var $deny_countries     = array();
 	var $allow_countries    = array();
 	var $deny_ips           = array();
+    var $make_credit_checks = false;
 
     function PaypalProcessor($account) {
         if (!is_object($account)) {
@@ -8060,6 +8076,7 @@ class PaypalProcessor {
 
                 // process the payment
                 $b=time();
+
                 $pay_process_results = $CardProcessor->processPayment($_POST);
                 //print_r($pay_process_results);
                 if(count($pay_process_results['error']) > 0){
@@ -8099,14 +8116,23 @@ class PaypalProcessor {
     
                     print "<p>";
                     print _("Transaction completed sucessfully. ");
-    
-                    print "<p>";
-                    print _("You may check your new balance in the Credit tab. ");
+
+                    if ($account->first_transaction) {
+                        print "<p>";
+                        print _("This is your first payment. ");
+
+                        print "<p>";
+                        print _("Please allow the time to check the validity of your transaction before activating your Credit. ");
+
+                        $this->make_credit_checks=true;
+                    } else {
+                        print "<p>";
+                        print _("You may check your new balance in the Credit tab. ");
+                    }
     
                     // save the transaction in the database, add credit to user account and 
                     // notify parties by email
                 }
-
 
                 if ($account->Preferences['ip'] && $_loc=geoip_record_by_name($account->Preferences['ip'])) {
                     $registration_location=$_loc['country_name'].'/'.$_loc['city'];
