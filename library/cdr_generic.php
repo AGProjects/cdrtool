@@ -949,6 +949,8 @@ class CDRS {
 
     function NormalizeCDRS($where="",$table="") {
 
+        $this->missing_destinations=array();
+
         $b=time();
 
         if (!$where) $where=" (1=1) ";
@@ -1042,12 +1044,27 @@ class CDRS {
                     foreach (array_keys($this->brokenRates) as $dest) {
                         $missingRatesBodytext=$missingRatesBodytext."\nDestination id $dest (".$this->brokenRates[$dest]." calls)";
                     }
+
                     $to=$this->CDRTool['provider']['toEmail'];
                     $from=$this->CDRTool['provider']['fromEmail'];
      
                     mail($to, "Missing CDRTool rates",$missingRatesBodytext, "From: $from");
                 }
             }
+        }
+
+        if (count($this->missing_destinations)) {
+            $to=$this->CDRTool['provider']['toEmail'];
+            $from=$this->CDRTool['provider']['fromEmail'];
+
+            $body='';
+            foreach($this->missing_destinations as $_dest) {
+                if (!$seen[$_dest]) {
+                	$body.=sprintf("No destination for number %s\n",$_dest);
+                }
+                $seen[$_dest]++;
+            }
+            mail($to, "Missing CDRTool destinations",$body, "From: $from");
         }
 
         if ($this->status['cdr_to_normalize']>0) {
@@ -1277,6 +1294,7 @@ class CDRS {
         $log=sprintf("Error: cannot find destination id for %s, customer = %s, total destinations = %d\n",$destination,$fCustomer,count($codes));
         syslog(LOG_NOTICE,$log);
 
+		$this->missing_destinations[]=$destination;
         return false;
     }
 
@@ -2042,6 +2060,10 @@ class CDR {
                 $this->pricePrint = $Rate->pricePrint;
                 $this->price      = $Rate->price;
                 $this->rateInfo   = $Rate->rateInfo;
+
+				if (count($Rate->brokenRates)) {
+                    $this->CDRS->brokenRates=array_merge($this->CDRS->brokenRates,array_keys($Rate->brokenRates));
+                }
 
                 if ($this->CDRS->priceField) {
 

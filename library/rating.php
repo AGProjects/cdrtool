@@ -20,6 +20,7 @@ class Rate {
     var $spans                  = 0;     // number of spans we looped through
 	var $connectCost            = 0;
     var $rateValuesCache        = array(); // used to speed up prepaid apoplication
+    var $brokenRates            = array();
 
     function Rate($settings=array(),&$db) {
 
