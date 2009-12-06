@@ -1036,7 +1036,7 @@ class RatingTables {
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array("gateway"=>array("size"=>15,
                                                                                   "checkType"=>'ip',
-                                                                                  "name"=>"Trusted peer"
+                                                                                  "name"=>"Trusted Peer"
                                                                                 ),
                                                                  "reseller_id"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
@@ -1126,7 +1126,7 @@ class RatingTables {
                                                  "keys"=>array("id"),
                                                  "size"=>10,
                                                  "exceptions"=>array('maxPrice'),               
-                                                 "order"=>"destination ASC, name ASC",
+                                                 "order"=>"durationRate desc",
                                                  "fields"=>array(
                                                                  "reseller_id"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
@@ -1151,11 +1151,11 @@ class RatingTables {
                                                                                  ),
                                                                  "connectCostIn"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
-                                                                                  "name"=>"Connect in"
+                                                                                  "name"=>"Connect In"
                                                                                  ),
                                                                  "durationRateIn"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
-                                                                                  "name"=>"Price in"
+                                                                                  "name"=>"Price In"
                                                                                  ),
                                                                  "increment"     =>array("size"=>3,
                                                                                "checkType"=>'numeric',
@@ -1195,11 +1195,11 @@ class RatingTables {
                                                                                  ),
                                                                  "connectCostIn"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
-                                                                                  "name"=>"Connect in"
+                                                                                  "name"=>"Connect In"
                                                                                  ),
                                                                  "durationRateIn"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
-                                                                                  "name"=>"Price in"
+                                                                                  "name"=>"Price In"
                                                                                  ),
                                                                  "increment"     =>array("size"=>3,
                                                                                "checkType"=>'numeric',
@@ -1235,7 +1235,7 @@ class RatingTables {
                                                                                 ),
                                                                   "e164_regexp"=>array("size"=>35,
                                                                                "mustExist"=>true,
-                                                                                  "name"=>"E164 regexp"
+                                                                                  "name"=>"E164 Regexp"
                                                                                 ),
                                                                  "discount"=>array("size"=>10,
                                                                                "mustExist"=>true,
@@ -1264,12 +1264,15 @@ class RatingTables {
                                                                                   "name"=>"Balance"
                                                                                  ),
                                                                  "change_date"=>array("size"=>19,
-                                                                                  "name"=>"Last change",
+                                                                                  "name"=>"Last Change",
                                                                                  "readonly"=>1
                                                                                  ),
                                                                  "session_counter"=>array("size"=>3,
-                                                                                  "name"=>"Sessions",
+                                                                                  "name"=>"Active Sessions",
                                                                                  "readonly"=>1
+                                                                                 ),
+                                                                 "max_sessions"=>array("size"=>3,
+                                                                                  "name"=>"Max Sessions"
                                                                                  )
                                                                   )
                                                    ),
@@ -1286,28 +1289,28 @@ class RatingTables {
                                                                                   "name"=>"Reseller"
                                                                                  ),
                                                                  "date_batch"=>array("size"=>11,
-                                                                                  "name"=>"Batch date"
+                                                                                  "name"=>"Batch Date"
                                                                                  ),
                                                                  "number"=>array("size"=>20,
                                                                                "checkType"=>'numeric',
                                                                                "mustExist"=>true,
-                                                                                  "name"=>"Card number"
+                                                                                  "name"=>"Card Number"
                                                                                  ),
                                                                  "id"=>array("size"=>20,
                                                                                "checkType"=>'numeric',
                                                                                "mustExist"=>true,
-                                                                                  "name"=>"Card id"
+                                                                                  "name"=>"Card Id"
                                                                                  ),
                                                                  "value"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
                                                                                "mustExist"=>true,
-                                                                                  "name"=>"Card value"
+                                                                                  "name"=>"Card Value"
                                                                                  ),
                                                                  "blocked"=>array("size"=>1,
                                                                                   "name"=>"Lock"
                                                                                  ),
                                                                  "date_active"=>array("size"=>18,
-                                                                                  "name"=>"Activation date"
+                                                                                  "name"=>"Activation Date"
                                                                                  )
 
                                                                   )
@@ -6285,6 +6288,7 @@ class RatingEngine {
             $this->db->next_record();
             $Balance             = $this->db->f('balance');
             $session_counter     = $this->db->f('session_counter');
+            $max_sessions        = $this->db->f('max_sessions');
 
             if (strlen($this->db->f('active_sessions'))) {
             	// load active sessions
@@ -6322,6 +6326,14 @@ class RatingEngine {
 
             } else {
             	$active_sessions=array();
+            }
+
+			$session_counter=count($active_sessions);
+
+            if ($session_counter >= $max_sessions) {
+                $log = sprintf ("Locked: too many parallel calls, $max_sessions allowed");
+                syslog(LOG_NOTICE, $log);
+                return 'Locked';
             }
 
             if (!$Balance) {
