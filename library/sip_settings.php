@@ -7949,8 +7949,10 @@ class PaypalProcessor {
                 printf ("<font color=red>%s</font>",$this->fraud_reason);
             } else {
                 print _("Page Not Available");
+                $log=sprintf("CC transaction is not allowed from %s for %s (%s)",$_SERVER['REMOTE_ADDR'],$account->account,$this->fraud_reason);
+                syslog(LOG_NOTICE, $log);
             }
-    
+
             print "</td>
             </tr>
             ";
@@ -8111,16 +8113,16 @@ class PaypalProcessor {
                 } else if ($account->Preferences['ip'] && $_loc=geoip_country_name_by_name($account->Preferences['ip'])) {
                     $registration_location=$_loc;
                 } else {
-                	$registration_location='';
+                	$registration_location='Unknown';
                 }
 
 
-                if ($_loc=geoip_record_by_name($_REQUEST['REMOTE_ADDR'])) {
+                if ($_loc=geoip_record_by_name($_SERVER['REMOTE_ADDR'])) {
                     $transaction_location=$_loc['country_name'].'/'.$_loc['city'];
-                } else if ($_loc=geoip_country_name_by_name($_REQUEST['REMOTE_ADDR'])) {
+                } else if ($_loc=geoip_country_name_by_name($_SERVER['REMOTE_ADDR'])) {
                     $transaction_location=$_loc;
                 } else {
-                	$transaction_location='';
+                	$transaction_location='Unknown';
                 }
 
 				$extra_information=array('SIP account'           => $account->account,
@@ -8185,10 +8187,18 @@ class PaypalProcessor {
     }
 
     function fraudDetected ($account) {
+
         if (count($this->deny_ips)) {
-            if ($account->Preferences['ip'] && in_array($account->Preferences['ip'],$this->deny_ips)) {
-            	$this->fraud_reason=$account->Preferences['ip'].' is Blocked';
-                return true;
+            foreach ($this->deny_ips as $_ip) {
+                if ($account->Preferences['ip'] && preg_match("/^$_ip/",$account->Preferences['ip'])) {
+                    $this->fraud_reason=$account->Preferences['ip'].' is Blocked';
+                    return true;
+                }
+
+                if (preg_match("/^$_ip/",$_SERVER['REMOTE_ADDR'])) {
+                    $this->fraud_reason=$_SERVER['REMOTE_ADDR'].' is a Blocked';
+                    return true;
+                }
             }
         }
 
@@ -8207,6 +8217,22 @@ class PaypalProcessor {
                 if (!in_array($_loc['country_name'],$this->allow_countries)) {
                     $this->fraud_reason=$_loc['country_name'].' is Not Allowed';
                     return true;
+                }
+            }
+        }
+
+
+        if (count($this->deny_email_domains)) {
+            if (count($this->accept_email_addresses)) {
+                if (in_array($account->email,$this->accept_email_addresses)) return false;
+            }
+
+            list($user,$domain)= explode("@",$account->email);
+            foreach ($this->deny_email_domains as $deny_domain) {
+                if ($domain == $deny_domain) {
+                    $this->fraud_reason=sprintf ('Domain %s is Not Allowed',$domain);
+                    return true;
+
                 }
             }
         }
