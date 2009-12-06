@@ -14201,6 +14201,7 @@ class Actions {
     var $actions = array();
     var $version = 1;
     var $sub_action_parameter_size = 35;
+    var $html = true;
 
     function Actions(&$SoapEngine) {
         $this->SoapEngine = $SoapEngine;
@@ -14314,7 +14315,6 @@ class SipAccountsActions extends Actions {
 
         print "<ol>";
         foreach($selectionKeys as $key) {
-            print "<li>";
 
             flush();
             //printf ("Performing action=%s on key=%s",$action,$key);
@@ -14322,6 +14322,8 @@ class SipAccountsActions extends Actions {
             $account=array('username' => $key['username'],
                            'domain'   => $key['domain']
                           );
+
+            printf ("<li>%s@%s",$key['username'],$key['domain']);
 
             if ($action=='block') {
 
