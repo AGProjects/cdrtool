@@ -1570,8 +1570,9 @@ class CDRS_opensips extends CDRS {
                         	list($_dst_id,$_dst_name)=$this->getPSTNDestinationId($mygroup,'',$this->CDRTool['filter']['domain']);
                             $description=$_dst_name;
                         } else {
-                        	list($_dst_id,$_dst_name)=$this->getPSTNDestinationId($mygroup);
-                            $description=$_dst_name;
+							$description=$this->destinations["default"][$mygroup];
+                        	//list($_dst_id,$_dst_name)=$this->getPSTNDestinationId($mygroup);
+                            //$description=$_dst_name;
                         }
 
                         $mygroup_print=$mygroup;

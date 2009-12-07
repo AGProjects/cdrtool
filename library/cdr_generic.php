@@ -388,61 +388,73 @@ class CDRS {
                 $gateway     = trim($this->cdrtool->Record['gateway']);
                 $domain      = trim($this->cdrtool->Record['domain']);
                 $subscriber  = trim($this->cdrtool->Record['subscriber']);
-                $id          = trim($this->cdrtool->Record['dest_id']);
+                $dest_id     = trim($this->cdrtool->Record['dest_id']);
                 $name        = trim($this->cdrtool->Record['dest_name']);
-                $name_print  = $this->cdrtool->Record['dest_name']." (".$id.")";
+                $name_print  = $this->cdrtool->Record['dest_name']." (".$dest_id.")";
 
-                if (strstr($id,'@')) {
+                if (strstr($dest_id,'@')) {
                     // SIP destination
-	                $this->destinations_sip_count++;
 
                     if ($subscriber) {
-                        $_destinations_sip[$reseller_id][$subscriber][$id]=$name;
-                        $destinations_sip_cache.=$reseller_id."_".$subscriber.";".$id."=".$name."\n";
-                        continue;
+                        $_destinations_sip[$reseller_id][$subscriber][$dest_id]=$name;
+                        $destinations_sip_cache.=$reseller_id."_".$subscriber.";".$dest_id."=".$name."\n";
+
+	                	$this->destinations_sip_count++;
+                    } else if ($domain) {
+                        $_destinations_sip[$reseller_id][$domain][$dest_id]=$name;
+                        $destinations_sip_cache.=$reseller_id."_".$domain.";".$dest_id."=".$name."\n";
+
+	                	$this->destinations_sip_count++;
+                    } else if ($gateway) {
+                        $_destinations_sip[$reseller_id][$gateway][$dest_id]=$name;
+                        $destinations_sip_cache.=$reseller_id."_".$gateway.";".$dest_id."=".$name."\n";
+
+	                	$this->destinations_sip_count++;
+                    } else if ($dest_id) {
+                        $_destinations_sip[$reseller_id]["default"][$dest_id]=$name;
+                        $destinations_sip_cache.=$reseller_id."_"."default;".$dest_id."=".$name."\n";
+	                	$this->destinations_sip_count++;
                     }
-        
-                    if ($domain) {
-                        $_destinations_sip[$reseller_id][$domain][$id]=$name;
-                        $destinations_sip_cache.=$reseller_id."_".$domain.";".$id."=".$name."\n";
-                        continue;
-                    }
-        
-                    if ($gateway) {
-                        $_destinations_sip[$reseller_id][$gateway][$id]=$name;
-                        $destinations_sip_cache.=$reseller_id."_".$gateway.";".$id."=".$name."\n";
-                        continue;
-                    }
-    
-                    if ($id) {
-                        $_destinations_sip[$reseller_id]["default"][$id]=$name;
-                        $destinations_sip_cache.=$reseller_id."_"."default;".$id."=".$name."\n";
-                    }
+
                 } else {
                     // PSTN destination
-	                $this->destinations_count++;
+                    if (!is_numeric($dest_id)) {
+                        $log=sprintf("Error: cannot load non-numeric destination '%s' from row id %d",$dest_id,$this->cdrtool->Record['id']);
+                        syslog(LOG_NOTICE,$log);
+                        continue;
+                    }
 
                     if ($subscriber) {
-                        $_destinations[$reseller_id][$subscriber][$id]=$name;
-                        $destinations_cache.=$reseller_id."_".$subscriber.";".$id."=".$name."\n";
-                        continue;
-                    }
-        
-                    if ($domain) {
-                        $_destinations[$reseller_id][$domain][$id]=$name;
-                        $destinations_cache.=$reseller_id."_".$domain.";".$id."=".$name."\n";
-                        continue;
-                    }
-        
-                    if ($gateway) {
-                        $_destinations[$reseller_id][$gateway][$id]=$name;
-                        $destinations_cache.=$reseller_id."_".$gateway.";".$id."=".$name."\n";
-                        continue;
-                    }
-    
-                    if ($id) {
-                        $_destinations[$reseller_id]["default"][$id]=$name;
-                        $destinations_cache.=$reseller_id."_"."default;".$id."=".$name."\n";
+                      	$this->destinations_subscriber_count++;
+
+                        $_destinations[$reseller_id][$subscriber][$dest_id]=$name;
+                        $destinations_cache.=$reseller_id."_".$subscriber.";".$dest_id."=".$name."\n";
+
+	                	$this->destinations_count++;
+
+                    } else if ($domain) {
+                      	$this->destinations_domain_count++;
+
+                        $_destinations[$reseller_id][$domain][$dest_id]=$name;
+                        $destinations_cache.=$reseller_id."_".$domain.";".$dest_id."=".$name."\n";
+
+                        $this->destinations_count++;
+
+                    } else if ($gateway) {
+	                	$this->destinations_gateway_count++;
+
+                        $_destinations[$reseller_id][$gateway][$dest_id]=$name;
+                        $destinations_cache.=$reseller_id."_".$gateway.";".$dest_id."=".$name."\n";
+
+                        $this->destinations_count++;
+
+                    } else if ($dest_id) {
+	                	$this->destinations_default_count++;
+
+                        $_destinations[$reseller_id]["default"][$dest_id]=$name;
+                        $destinations_cache.=$reseller_id."_"."default;".$dest_id."=".$name."\n";
+
+	                	$this->destinations_count++;
                     }
                 }
             }
@@ -470,8 +482,14 @@ class CDRS {
                     return false;
                 }
 
-                $log=sprintf("Updated %d destinations in cache key destinations",$this->destinations_count);
-            	syslog(LOG_NOTICE, $log);
+                $log=sprintf("Cached %d total, %d default, %d gateway, %d domain, %d subscriber destinations",
+                $this->destinations_count,
+                $this->destinations_default_count,
+                $this->destinations_gateway_count,
+                $this->destinations_domain_count,
+                $this->destinations_subscriber_count
+                );
+                syslog(LOG_NOTICE, $log);
 
             } else {
                 $query=sprintf("insert into memcache (`key`,`value`) values ('destinations','%s')",addslashes($destinations_cache));
@@ -481,9 +499,18 @@ class CDRS {
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
-                $log=sprintf("Inserted %d destinations in cache key destinations",$this->destinations_count);
-            	syslog(LOG_NOTICE, $log);
+
+                $log=sprintf("Cached %d total, %d default, %d gateway, %d domain, %d subscriber destinations",
+                $this->destinations_count,
+                $this->destinations_default_count,
+                $this->destinations_gateway_count,
+                $this->destinations_domain_count,
+                $this->destinations_subscriber_count
+                );
+                syslog(LOG_NOTICE, $log);
+
             }
+
 
             $query=sprintf("select `value` from memcache where `key` = 'destinations_sip'");
             if (!$this->cdrtool->query($query)) {
