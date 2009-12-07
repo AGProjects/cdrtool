@@ -11035,6 +11035,10 @@ class Customers extends Records {
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
+                                 'billing_email'       => array('name'      => 'Billing Email Address',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'customer'
+                                                               ),
                                  'support_company'     => array('name'      => 'Support Organization',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'

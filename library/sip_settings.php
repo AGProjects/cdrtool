@@ -33,6 +33,7 @@ class SipSettings {
     var $cdrtool_address           = "https://cdrtool.example.com/CDRTool";
     var $support_web               = "https://www.example.com/help";
     var $support_email             = "Support <support@example.com>";
+    var $billing_email             = "Billing <billing@example.com>";
     var $sip_settings_page         = "https://cdrtool.example.com/sip_settings.phtml";
     var $xcap_root                 = "https://cdrtool.example.com/xcap-root";
     var $pstn_access               = false;
@@ -502,6 +503,10 @@ class SipSettings {
 
         if (strlen($this->soapEngines[$this->sip_engine]['support_email'])) {
             $this->support_email    = $this->soapEngines[$this->sip_engine]['support_email'];
+        }
+
+        if (strlen($this->soapEngines[$this->sip_engine]['billing_email'])) {
+            $this->billing_email    = $this->soapEngines[$this->sip_engine]['billing_email'];
         }
 
         if (strlen($this->soapEngines[$this->sip_engine]['sip_settings_page'])) {
@@ -1463,6 +1468,10 @@ class SipSettings {
 
         if ($this->resellerProperties['support_email']) {
             $this->support_email         = $this->resellerProperties['support_email'];
+        }
+
+        if ($this->resellerProperties['billing_email']) {
+            $this->billing_email         = $this->resellerProperties['billing_email'];
         }
 
         if ($this->resellerProperties['sip_settings_page']) {
