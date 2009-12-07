@@ -7795,7 +7795,6 @@ class Enrollment {
                             'email'     => $_REQUEST['email'],
                             'password'  => $_REQUEST['password'],
                             'timezone'  => $timezone,
-                            'pstn'      => 1,
                             'prepaid'   => 1,
                             'quota'     => 50,
                             'owner'     => intval($owner),
