@@ -1474,6 +1474,10 @@ class SipSettings {
             $this->billing_email         = $this->resellerProperties['billing_email'];
         }
 
+        if (!$this->billing_email) {
+            $this->billing_email=$this->support_email;
+        }
+
         if ($this->resellerProperties['sip_settings_page']) {
             $this->sip_settings_page = $this->resellerProperties['sip_settings_page'];
         }
@@ -8132,14 +8136,22 @@ class PaypalProcessor {
                         print "<p>";
                         print _("Please allow the time to check the validity of your transaction before activating your Credit. ");
 
+                        print "<p>";
+                        print _("You can speed up the validation process by sending a copy of an utility bill (electriciy, gas or TV) that displays your address. ");
+
+                        print "<p>";
+                        printf (_("For questions related to your payments or to request a refund please email to <i>%s</i> and mention your transaction id <b>%s</b>. "),
+                        $account->billing_email,
+                        $pay_process_results['success']['desc']->TransactionID
+                        );
+
                         $this->make_credit_checks=true;
+
                     } else {
                         print "<p>";
                         print _("You may check your new balance in the Credit tab. ");
                     }
     
-                    // save the transaction in the database, add credit to user account and 
-                    // notify parties by email
                 }
 
                 if ($account->Preferences['ip'] && $_loc=geoip_record_by_name($account->Preferences['ip'])) {
