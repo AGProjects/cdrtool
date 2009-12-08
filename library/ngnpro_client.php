@@ -12502,7 +12502,8 @@ class Customers extends Records {
                                             'parameters' => array($customer),
                                             'logs'       => array('success' => sprintf('Customer id %s has been updated',$customer->id)))
                         );
-     
+
+        //dprint_r($customer);
         if ($this->SoapEngine->execute($function,$this->html)) {
 
             // update remote

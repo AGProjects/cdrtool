@@ -1499,6 +1499,37 @@ class RatingTables {
                 $reseller_id    = trim($p[1]);
             }
 
+            if (strlen($reseller_id) && !is_integer($reseller_id)) {
+                $skipped++;
+            	continue;
+            }
+
+            if (!is_numeric($destination) && !strstr($destination,'@')) {
+                // skip invalid destinations
+                $skipped++;
+            	continue;
+            }
+
+            if (strlen($connectCost) && !is_numeric($connectCost)) {
+                $skipped++;
+            	continue;
+            }
+
+            if (strlen($durationRate) && !is_numeric($durationRate)) {
+                $skipped++;
+            	continue;
+            }
+
+            if (strlen($increment) && !is_integer($increment)) {
+                $skipped++;
+            	continue;
+            }
+
+            if (strlen($min_duration) && !is_integer($min_duration)) {
+                $skipped++;
+            	continue;
+            }
+
             if (!$application) $application='audio';
 
             if ($ops=="1") {
@@ -1855,6 +1886,8 @@ class RatingTables {
                         $failed++;
                     }
                 }
+            } else {
+                $skipped++;
             }
 
             $this->showImportProgress($file);
@@ -1863,6 +1896,7 @@ class RatingTables {
         }
 
         if ($i) print "Read $i records\n";
+        if ($skipped) print "Skipped $skipped records\n";
         if ($inserted) print "Inserted $inserted records\n";
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
@@ -1908,6 +1942,47 @@ class RatingTables {
             	$reseller_id    = $reseller;
             } else {
                 $reseller_id    = trim($p[1]);
+            }
+
+            if (strlen($reseller_id) && !is_integer($reseller_id)) {
+                $skipped++;
+            	continue;
+            }
+
+            if (!is_numeric($destination) && !strstr($destination,'@')) {
+                // skip invalid destinations
+                $skipped++;
+            	continue;
+            }
+
+            if (strlen($connectCost) && !is_numeric($connectCost)) {
+                $skipped++;
+            	continue;
+            }
+
+            if (strlen($durationRate) && !is_numeric($durationRate)) {
+                $skipped++;
+            	continue;
+            }
+
+            if (strlen($increment) && !is_integer($increment)) {
+                $skipped++;
+            	continue;
+            }
+
+            if (strlen($min_duration) && !is_integer($min_duration)) {
+                $skipped++;
+            	continue;
+            }
+
+            if (preg_match("/^\d{4}\-{\d{2}\-\d{2}$/",$startDate)) {
+                $skipped++;
+            	continue;
+            }
+
+            if (preg_match("/^\d{4}\-{\d{2}\-\d{2}$/",$endDate)) {
+                $skipped++;
+            	continue;
             }
 
             if ($ops=="1") {
@@ -2108,6 +2183,8 @@ class RatingTables {
                         $failed++;
                     }
                 }
+            } else {
+                $skipped++;
             }
 
             $j++;
@@ -2123,6 +2200,7 @@ class RatingTables {
         }
 
         if ($i) print "Read $i records\n";
+        if ($skipped) print "Skipped $skipped records\n";
         if ($inserted) print "Inserted $inserted records\n";
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
@@ -2167,6 +2245,21 @@ class RatingTables {
             	$reseller_id    = $reseller;
             } else {
                 $reseller_id    = trim($p[1]);
+            }
+
+            if (strlen($reseller_id) && !is_integer($reseller_id)) {
+                $skipped++;
+            	continue;
+            }
+
+            if (strlen($increment) && !is_integer($increment)) {
+                $skipped++;
+            	continue;
+            }
+
+            if (strlen($min_duration) && !is_integer($min_duration)) {
+                $skipped++;
+            	continue;
             }
 
             if ($ops=="1") {
@@ -2351,6 +2444,8 @@ class RatingTables {
                         $inserted++;
                     }
                 }
+            } else {
+                $skipped++;
             }
 
             $this->showImportProgress($file);
@@ -2359,6 +2454,7 @@ class RatingTables {
         }
 
         if ($i) print "Read $i records\n";
+        if ($skipped) print "Skipped $skipped records\n";
         if ($inserted) print "Inserted $inserted records\n";
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
@@ -2396,6 +2492,12 @@ class RatingTables {
             	$reseller_id    = $reseller;
             } else {
                 $reseller_id    = trim($p[1]);
+            }
+
+            if (!is_numeric($dest_id) && !strstr($dest_id,'@')) {
+                // skip invalid destinations
+                $skipped++;
+            	continue;
             }
 
             if ($ops=="1") {
@@ -2544,7 +2646,8 @@ class RatingTables {
                     }
 
                  }
-
+            } else {
+                $skipped++;
             }
 
             $this->showImportProgress($file);
@@ -2553,6 +2656,7 @@ class RatingTables {
         }
 
         if ($i) print "Read $i records\n";
+        if ($skipped) print "Skipped $skipped records\n";
         if ($inserted) print "Inserted $inserted records\n";
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
