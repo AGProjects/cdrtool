@@ -31,6 +31,7 @@ $soapEngines=array(
                                          'voicemail_server'    => 'vm.example.com',
                                          'xcap_root'           => 'https://cdr.example.com/xcap-root',
                                          'support_email'       => 'support@example.com',
+                                         'billing_email'       => 'billing@example.com',
                                          'support_web'         => 'https://web.example.com',
                                          'enable_thor'         => false,
                                          'pstn_access'         => false,
