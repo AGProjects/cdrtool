@@ -229,8 +229,11 @@ class SipSettings {
         	$this->auto_refesh_tab=180;
         }
 
+        $this->admin_url      = $this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&sip_engine=$this->sip_engine";
+        $this->reseller_url   = $this->settingsPage."?account=$this->account&reseller=$this->reseller&sip_engine=$this->sip_engine";
+
         if ($this->login_type == "admin") {
-            $this->url=$this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&sip_engine=$this->sip_engine";
+            $this->url=$this->admin_url;
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
             <input type=hidden name=reseller value=$this->reseller>
@@ -240,7 +243,7 @@ class SipSettings {
 
         } else if ($this->login_type == "reseller") {
 
-            $this->url=$this->settingsPage."?account=$this->account&reseller=$this->reseller&sip_engine=$this->sip_engine";
+            $this->url=$this->reseller_url;
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
             <input type=hidden name=reseller value=$this->reseller>
@@ -249,7 +252,7 @@ class SipSettings {
 
         } else if ($this->login_type == "customer") {
 
-            $this->url=$this->settingsPage."?account=$this->account&reseller=$this->reseller&sip_engine=$this->sip_engine";
+            $this->url=$this->reseller_url;
             $this->hiddenElements="
             <input type=hidden name=account value=\"$this->account\">
             <input type=hidden name=reseller value=$this->reseller>
@@ -7961,6 +7964,7 @@ class PaypalProcessor {
             return false;
         }
 
+
         require('cc_processor.php');
 
         if ($this->fraudDetected(&$account)) {
@@ -8171,14 +8175,24 @@ class PaypalProcessor {
                 	$transaction_location='Unknown';
                 }
 
-				$extra_information=array('SIP account'           => $account->account,
+				if ($account->Preferences['timezone']) {
+                	$timezone=$account->Preferences['timezone'];
+                } else {
+                    $timezone='Unknown';
+                }
+
+				$extra_information=array('SIP account'           => sprintf("<a href=%s>%s",$account->admin_url,$account->account),
                                          'SIP Account Timezone'  => $account->timezone,
                                          'Registration IP'       => $account->Preferences['ip'],
                                          'Registration Location' => $registration_location,
                                          'Registration Email'    => $account->Preferences['registration_email'],
-                                         'Registration Timezone' => $account->Preferences['timezone'],
+                                         'Registration Timezone' => $timezone,
                                          'Transaction Location'  => $transaction_location
                                          );
+
+                if ($this->make_credit_checks) {
+                	$extra_information['First Payment']='Yes';
+                }
 
                 if ($CardProcessor->saveOrder($_POST,$pay_process_results,$extra_information)) {
 
