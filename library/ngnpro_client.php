@@ -513,14 +513,21 @@ class SoapEngine {
                                        "admin"       => true,
                                        "impersonate" => intval($this->reseller)
                                        );
+
+                $this->SOAPloginAdmin = array(
+                                       "username"    => $this->soapUsername,
+                                       "password"    => $this->soapEngines[$this->soapEngine]['password'],
+                                       "admin"       => true
+                                       );
             }
 
             $this->SOAPurl=$this->soapEngines[$this->soapEngine]['url'];
 
             $log=sprintf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soap_class,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
             dprint($log);
-            $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
+            $this->SoapAuth      = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+            $this->SoapAuthAdmin = array('auth', $this->SOAPloginAdmin , 'urn:AGProjects:NGNPro', 0, '');
 
             // Instantiate the SOAP client
             if (!class_exists($this->soap_class)) return ;
@@ -573,7 +580,7 @@ class SoapEngine {
 
     }
 
-    function execute($function,$html=true) {
+    function execute($function,$html=true,$adminonly=false) {
 
         /*
         $function=array('commit'   => array('name'       => 'addAccount',
@@ -595,7 +602,12 @@ class SoapEngine {
             return false;
         }
 
-        $this->soapclient->addHeader($this->SoapAuth);
+        if ($adminonly) {
+        	$this->soapclient->addHeader($this->SoapAuthAdmin);
+        } else {
+        	$this->soapclient->addHeader($this->SoapAuth);
+        }
+
         $result = call_user_func_array(array(&$this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
 
         if (PEAR::isError($result)) {
@@ -1565,12 +1577,19 @@ class Records {
                                "impersonate" => intval($reseller)
                            );
 
+        $this->SOAPloginRemoteAdmin = array(
+                               "username"    => $this->SoapEngine->soapEngines[$remote_engine]['username'],
+                               "password"    => $this->SoapEngine->soapEngines[$remote_engine]['password'],
+                               "admin"       => true
+                           );
+
         $this->SOAPurlRemote=$this->SoapEngine->soapEngines[$remote_engine]['url'];
 
         $log=sprintf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
         dprint($log);
 
         $this->SoapAuthRemote  = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
+        $this->SoapAuthRemoteAdmin  = array('auth', $this->SOAPloginRemoteAdmin , 'urn:AGProjects:NGNPro', 0, '');
 
         $this->SoapEngineRemote = new $this->SoapEngine->soap_class($this->SOAPurlRemote);
 
@@ -11508,6 +11527,12 @@ class Customers extends Records {
                                                "admin"       => true,
                                                "impersonate" => intval($this->reseller)
                                            );
+
+                        $this->SOAPloginRemoteAdmin = array(
+                                               "username"    => $this->SoapEngine->soapEngines[$customer_engine_remote]['username'],
+                                               "password"    => $this->SoapEngine->soapEngines[$customer_engine_remote]['password'],
+                                               "admin"       => true
+                                           );
         
                         //dprint_r($this->SOAPloginRemote);
                         $this->SOAPurlRemote=$this->SoapEngine->soapEngines[$customer_engine_remote]['url'];
@@ -11515,7 +11540,8 @@ class Customers extends Records {
                         $log=sprintf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
                         dprint($log);
     
-                        $this->SoapAuthRemote  = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
+                        $this->SoapAuthRemote      = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
+                        $this->SoapAuthRemoteAdmin = array('auth', $this->SOAPloginRemoteAdmin , 'urn:AGProjects:NGNPro', 0, '');
     
                         $this->SoapEngineRemote = new $this->SoapEngine->soap_class($this->SOAPurlRemote);
 
@@ -12504,12 +12530,17 @@ class Customers extends Records {
                         );
 
         //dprint_r($customer);
-        if ($this->SoapEngine->execute($function,$this->html)) {
+
+        if ($this->SoapEngine->execute($function,$this->html,$this->adminonly)) {
 
             // update remote
             if (is_object($this->SoapEngineRemote)) {
 
-                $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
+                if ($this->adminonly) {
+                	$this->SoapEngineRemote->addHeader($this->SoapAuthRemoteAdmin);
+                } else {
+                	$this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
+                }
                 $result     = $this->SoapEngineRemote->updateAccount($customer);
 
                 if (PEAR::isError($result)) {
