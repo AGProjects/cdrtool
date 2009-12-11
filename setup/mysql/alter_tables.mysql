@@ -621,4 +621,4 @@ alter table prepaid drop column maxsessiontime;
 alter table prepaid drop column domain;
 
 6.7.0
-alter table prepaid add column max_sessions int(10) unsigned nul null default 1;
+alter table prepaid add column max_sessions int(10) unsigned not null default 1;
