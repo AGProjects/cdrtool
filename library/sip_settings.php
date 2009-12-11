@@ -215,6 +215,7 @@ class SipSettings {
         }
 
         $this->settingsPage       = $_SERVER['PHP_SELF'];
+
         if ($_REQUEST['tab']) {
         	$this->tab                = $_REQUEST['tab'];
         } else {
@@ -2977,6 +2978,10 @@ class SipSettings {
             }
 
             $result->prepaid=intval($_REQUEST['prepaid']);
+        }
+
+        if ($result->prepaid == 1) {
+            $newACLarray[]='prepaid';
         }
 
         reset($this->availableGroups);

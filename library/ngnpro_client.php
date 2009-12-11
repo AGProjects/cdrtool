@@ -2905,6 +2905,10 @@ class SipAccounts extends Records {
             $prepaid=intval($_REQUEST['prepaid']);
         }
 
+        if ($prepaid) {
+            $groups[]='prepaid';
+        }
+
         if (!$email) {
             if ($username=="<autoincrement>") {
         		$email='unknown@'.strtolower($domain);
@@ -14130,6 +14134,10 @@ class recordGenerator extends SoapEngine {
 
                 if ($this->template['pstn']) {
                     $groups[]='free-pstn';
+                }
+
+                if ($this->template['prepaid']) {
+                    $groups[]='prepaid';
                 }
 
                 printf ('and sip account %s@%s ',$username,$this->template['domain']);

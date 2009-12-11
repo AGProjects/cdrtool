@@ -6376,6 +6376,7 @@ class RatingEngine {
             $this->runtime['normalize_cdr']=microtime_float();
 
             $query=sprintf("select * from %s where account = '%s'",addslashes($this->prepaid_table),addslashes($CDR->BillingPartyId));
+
             if (!$this->db->query($query)) {
                 $log=sprintf ("Database error for query '%s': %s (%s), link_id =%s, query_id =%s",$query,$this->db->Error,$this->db->Errno,$this->db->Link_ID,$this->db->Query_ID);
                 syslog(LOG_NOTICE,$log);
