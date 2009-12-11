@@ -6382,7 +6382,7 @@ class RatingEngine {
                 syslog(LOG_NOTICE,$log);
                 $this->logRuntime();
                 $log=sprintf("Error: database error for query '%s': %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                return $log;
+                return 0;
             }
 
             if (!$this->db->num_rows()) {
@@ -6446,7 +6446,7 @@ class RatingEngine {
                 $log=sprintf ("No balance found");
                 syslog(LOG_NOTICE,$log);
                 $this->logRuntime();
-                return "none";
+                return 0;
             }
 
             if (!preg_match("/^0/",$CDR->CanonicalURINormalized)) {
@@ -6461,7 +6461,7 @@ class RatingEngine {
                     $log = sprintf ("error: cannot figure out the destination id for %s",$CDR->CanonicalURI);
                     $this->logRuntime();
                     syslog(LOG_NOTICE, $log);
-                	return "none";
+                	return "0";
                 }
             }
 
