@@ -1490,18 +1490,13 @@ class RatingTables {
             $durationRate   = trim($p[6]);
             $connectCostIn  = trim($p[7]);
             $durationRateIn = trim($p[8]);
-            $increment      = trim($p[9]);
-            $min_duration   = trim($p[10]);
+            $increment      = intval($p[9]);
+            $min_duration   = intval($p[10]);
 
             if ($reseller) {
-            	$reseller_id    = $reseller;
+            	$reseller_id    = intval($reseller);
             } else {
-                $reseller_id    = trim($p[1]);
-            }
-
-            if (strlen($reseller_id) && !is_integer($reseller_id)) {
-                $skipped++;
-            	continue;
+                $reseller_id    = intval($p[1]);
             }
 
             if (!is_numeric($destination) && !strstr($destination,'@')) {
@@ -1516,16 +1511,6 @@ class RatingTables {
             }
 
             if (strlen($durationRate) && !is_numeric($durationRate)) {
-                $skipped++;
-            	continue;
-            }
-
-            if (strlen($increment) && !is_integer($increment)) {
-                $skipped++;
-            	continue;
-            }
-
-            if (strlen($min_duration) && !is_integer($min_duration)) {
                 $skipped++;
             	continue;
             }
@@ -1933,20 +1918,15 @@ class RatingTables {
             $durationRate   = trim($p[6]);
             $connectCostIn  = trim($p[7]);
             $durationRateIn = trim($p[8]);
-            $increment      = trim($p[9]);
-            $min_duration   = trim($p[10]);
+            $increment      = intval($p[9]);
+            $min_duration   = intval($p[10]);
             $startDate      = trim($p[11]);
             $endDate        = trim($p[12]);
 
             if ($reseller) {
-            	$reseller_id    = $reseller;
+            	$reseller_id    = intval($reseller);
             } else {
-                $reseller_id    = trim($p[1]);
-            }
-
-            if (strlen($reseller_id) && !is_integer($reseller_id)) {
-                $skipped++;
-            	continue;
+                $reseller_id    = intval($p[1]);
             }
 
             if (!is_numeric($destination) && !strstr($destination,'@')) {
@@ -1961,16 +1941,6 @@ class RatingTables {
             }
 
             if (strlen($durationRate) && !is_numeric($durationRate)) {
-                $skipped++;
-            	continue;
-            }
-
-            if (strlen($increment) && !is_integer($increment)) {
-                $skipped++;
-            	continue;
-            }
-
-            if (strlen($min_duration) && !is_integer($min_duration)) {
                 $skipped++;
             	continue;
             }
@@ -2238,26 +2208,16 @@ class RatingTables {
             $profile_name2     = trim($p[7]);
             $profile_name2_alt = trim($p[8]);
             $timezone          = trim($p[9]);
-            $increment         = trim($p[10]);
-            $min_duration      = trim($p[11]);
+            $increment         = intval($p[10]);
+            $min_duration      = intval($p[11]);
 
             if ($reseller) {
-            	$reseller_id    = $reseller;
+            	$reseller_id    = intval($reseller);
             } else {
-                $reseller_id    = trim($p[1]);
+                $reseller_id    = intval($p[1]);
             }
 
             if (strlen($reseller_id) && !is_integer($reseller_id)) {
-                $skipped++;
-            	continue;
-            }
-
-            if (strlen($increment) && !is_integer($increment)) {
-                $skipped++;
-            	continue;
-            }
-
-            if (strlen($min_duration) && !is_integer($min_duration)) {
                 $skipped++;
             	continue;
             }
@@ -2489,9 +2449,9 @@ class RatingTables {
             $dest_name       = trim($p[6]);
 
             if ($reseller) {
-            	$reseller_id    = $reseller;
+            	$reseller_id    = intval($reseller);
             } else {
-                $reseller_id    = trim($p[1]);
+                $reseller_id    = intval($p[1]);
             }
 
             if (!is_numeric($dest_id) && !strstr($dest_id,'@')) {
@@ -2694,9 +2654,9 @@ class RatingTables {
             $hour4      = trim($p[10]);
 
             if ($reseller) {
-            	$reseller_id    = $reseller;
+            	$reseller_id    = intval($reseller);
             } else {
-                $reseller_id    = trim($p[1]);
+                $reseller_id    = intval($p[1]);
             }
 
             if (!$hour1) $hour1=0;
