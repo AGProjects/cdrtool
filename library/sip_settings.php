@@ -233,6 +233,8 @@ class SipSettings {
         $this->admin_url      = $this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&sip_engine=$this->sip_engine";
         $this->reseller_url   = $this->settingsPage."?account=$this->account&reseller=$this->reseller&sip_engine=$this->sip_engine";
 
+        $this->admin_url_absolute = $this->sip_settings_page."?account=$this->account&adminonly=1&reseller=$this->reseller&sip_engine=$this->sip_engine";
+
         if ($this->login_type == "admin") {
             $this->url=$this->admin_url;
             $this->hiddenElements="
