@@ -7107,19 +7107,17 @@ class RatingEngine {
     }
 
     function keepAlive() {
-        $query=sprintf("select count(*) as c from log");
+        $query=sprintf("select * from auth_user");
     
-        if (!$this->db->query($query)) {
+        if (!$this->db->query($query) || !$this->db->num_rows()) {
             $log=sprintf ("Database error for keepalive query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             syslog(LOG_NOTICE, $log);
             return false;
-        } else {
-
-			$this->db->next_record();
-            $log=sprintf("Keepalive successful, %d logs available",$this->db->f('c'));
-            syslog(LOG_NOTICE, $log);
-            return true;
         }
+
+        $log=sprintf("Keepalive successful");
+        syslog(LOG_NOTICE, $log);
+        return true;
     }
 }
 
