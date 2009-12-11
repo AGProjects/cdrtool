@@ -1,8 +1,8 @@
--- MySQL dump 10.10
+-- MySQL dump 10.11
 --
 -- Host: db-log    Database: cdrtool
 -- ------------------------------------------------------
--- Server version	5.0.24a-Debian_9-log
+-- Server version	5.0.51a-3-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -20,6 +20,8 @@
 --
 
 DROP TABLE IF EXISTS `active_sessions`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `active_sessions` (
   `sid` varchar(32) NOT NULL default '',
   `name` varchar(32) NOT NULL default '',
@@ -28,13 +30,16 @@ CREATE TABLE `active_sessions` (
   `count` bigint(20) unsigned NOT NULL default '0',
   PRIMARY KEY  (`name`,`sid`),
   KEY `changed` (`changed`)
-)  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `active_sessions_split`
 --
 
 DROP TABLE IF EXISTS `active_sessions_split`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `active_sessions_split` (
   `ct_sid` varchar(32) NOT NULL default '',
   `ct_name` varchar(32) NOT NULL default '',
@@ -43,13 +48,16 @@ CREATE TABLE `active_sessions_split` (
   `ct_changed` varchar(14) NOT NULL default '',
   PRIMARY KEY  (`ct_name`,`ct_sid`,`ct_pos`),
   KEY `ct_changed` (`ct_changed`)
-)  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `asterisk_cdr`
 --
 
 DROP TABLE IF EXISTS `asterisk_cdr`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `asterisk_cdr` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
   `calldate` datetime NOT NULL default '0000-00-00 00:00:00',
@@ -79,13 +87,16 @@ CREATE TABLE `asterisk_cdr` (
   KEY `channel_idx` (`channel`),
   KEY `dstchannel_idx` (`dstchannel`),
   KEY `normalized_idx` (`Normalized`)
-)  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `auth_user`
 --
 
 DROP TABLE IF EXISTS `auth_user`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `auth_user` (
   `user_id` varchar(32) NOT NULL default '',
   `username` varchar(32) NOT NULL default '',
@@ -104,27 +115,31 @@ CREATE TABLE `auth_user` (
   `serviceFilter` varchar(255) NOT NULL default '',
   `aNumberFilter` varchar(255) NOT NULL default '',
   `afterDateFilter` varchar(255) NOT NULL default '',
+  `soapFilter` varchar(255) NOT NULL,
   `sources` varchar(255) NOT NULL default '',
   `otp_enable` enum('0','1') NOT NULL default '0',
   `otp_rcpt` varchar(255) NOT NULL default '',
   `otp_expire` datetime NOT NULL default '0000-00-00 00:00:00',
   `otp_passwd` varchar(255) NOT NULL default '',
-  `impersonate` varchar(50) not null default '',
+  `impersonate` varchar(50) NOT NULL,
   PRIMARY KEY  (`user_id`),
   UNIQUE KEY `k_username` (`username`)
-)  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `billing_customers`
 --
 
 DROP TABLE IF EXISTS `billing_customers`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `billing_customers` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `reseller_id` int(10) unsigned not NULL,
-  `gateway` varchar(15) NOT NULL default '',
-  `domain` varchar(64) NOT NULL default '',
-  `subscriber` varchar(128) NOT NULL default '',
+  `reseller_id` int(10) unsigned NOT NULL,
+  `gateway` varchar(15) NOT NULL,
+  `domain` varchar(64) NOT NULL,
+  `subscriber` varchar(128) NOT NULL,
   `profile_name1` varchar(25) NOT NULL,
   `profile_name1_alt` varchar(25) NOT NULL,
   `profile_name2` varchar(25) NOT NULL,
@@ -133,32 +148,58 @@ CREATE TABLE `billing_customers` (
   `increment` smallint(5) unsigned NOT NULL,
   `min_duration` smallint(5) unsigned NOT NULL,
   PRIMARY KEY  (`id`),
-  KEY `reseller_idx` (`reseller_id`),
   UNIQUE KEY `cust_idx` (`gateway`,`domain`,`subscriber`),
   KEY `subsc_idx` (`gateway`,`domain`,`subscriber`),
   KEY `gatedom_idx` (`gateway`,`domain`),
   KEY `gate_idx` (`gateway`),
-  KEY `sub_idx` (`subscriber`)
-)  DEFAULT CHARSET=latin1;
+  KEY `sub_idx` (`subscriber`),
+  KEY `reseller_idx` (`reseller_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Table structure for table `billing_enum_tlds`
+--
+
+DROP TABLE IF EXISTS `billing_enum_tlds`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `billing_enum_tlds` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `reseller_id` int(10) unsigned NOT NULL,
+  `enum_tld` varchar(100) NOT NULL,
+  `e164_regexp` varchar(100) NOT NULL,
+  `discount` varchar(25) NOT NULL default '',
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `enum_idx` (`enum_tld`),
+  KEY `tld_idx` (`enum_tld`),
+  KEY `reseller_idx` (`reseller_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `billing_holidays`
 --
 
 DROP TABLE IF EXISTS `billing_holidays`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `billing_holidays` (
   `day` date NOT NULL default '0000-00-00',
   UNIQUE KEY `day_idx` (`day`)
-)  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `billing_profiles`
 --
 
 DROP TABLE IF EXISTS `billing_profiles`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `billing_profiles` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `reseller_id` int(10) unsigned not NULL,
+  `reseller_id` int(10) unsigned NOT NULL,
   `name` varchar(25) NOT NULL,
   `rate_name1` varchar(25) NOT NULL default '',
   `hour1` smallint(5) unsigned NOT NULL default '0',
@@ -169,135 +210,233 @@ CREATE TABLE `billing_profiles` (
   `rate_name4` varchar(25) NOT NULL default '',
   `hour4` smallint(5) unsigned NOT NULL default '0',
   PRIMARY KEY  (`id`),
-  KEY `reseller_idx` (`reseller_id`),
-  KEY `name_idx` (`name`)
-)  DEFAULT CHARSET=latin1;
-
-
-DROP TABLE IF EXISTS `billing_enum_tlds`;
-CREATE TABLE `billing_enum_tlds` (
-  `id` bigint(20) unsigned NOT NULL auto_increment,
-  `reseller_id` int(10) unsigned not NULL,
-  `enum_tld` varchar(100) NOT NULL,
-  `e164_regexp` varchar(100) NOT NULL,
-  `discount` varchar(25) NOT NULL default '',
-  PRIMARY KEY  (`id`),
-  KEY `reseller_idx` (`reseller_id`),
-  UNIQUE KEY `enum_idx` (`enum_tld`),
-  KEY `tld_idx` (`enum_tld`)
-)  DEFAULT CHARSET=latin1;
+  UNIQUE KEY `profile_idx` (`name`),
+  KEY `name_idx` (`name`),
+  KEY `reseller_idx` (`reseller_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `billing_rates`
 --
 
 DROP TABLE IF EXISTS `billing_rates`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `billing_rates` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `reseller_id` int(10) unsigned not NULL,
+  `reseller_id` int(10) unsigned NOT NULL,
   `name` varchar(25) NOT NULL,
   `destination` varchar(100) NOT NULL,
   `application` varchar(25) NOT NULL default 'audio',
-  `connectCost` varchar(25) NOT NULL default '',
+  `connectCost` varchar(25) NOT NULL,
   `durationRate` varchar(25) NOT NULL default '',
-  `connectCostIn` varchar(25) NOT NULL default '',
-  `durationRateIn` varchar(25) NOT NULL default '',
+  `connectCostIn` varchar(25) NOT NULL,
+  `durationRateIn` varchar(25) NOT NULL,
   `increment` smallint(5) unsigned NOT NULL,
   `min_duration` smallint(5) unsigned NOT NULL,
   `maxPrice` varchar(25) NOT NULL default '',
   PRIMARY KEY  (`id`),
-  KEY `reseller_idx` (`reseller_id`),
   UNIQUE KEY `rate_idx` (`name`,`destination`,`application`),
   KEY `name_idx` (`name`),
-  KEY `dest_idx` (`destination`)
-)  DEFAULT CHARSET=latin1;
+  KEY `dest_idx` (`destination`),
+  KEY `reseller_idx` (`reseller_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `billing_rates_history`
 --
 
 DROP TABLE IF EXISTS `billing_rates_history`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `billing_rates_history` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `reseller_id` int(10) unsigned not NULL,
+  `reseller_id` int(10) unsigned NOT NULL,
   `name` varchar(25) NOT NULL default '',
   `destination` varchar(100) NOT NULL default '',
   `application` varchar(25) NOT NULL default 'audio',
-  `connectCost` varchar(25) NOT NULL default '',
+  `connectCost` varchar(25) NOT NULL,
   `durationRate` varchar(25) NOT NULL default '',
-  `connectCostIn` varchar(25) NOT NULL default '',
-  `durationRateIn` varchar(25) NOT NULL default '',
+  `connectCostIn` varchar(25) NOT NULL,
+  `durationRateIn` varchar(25) NOT NULL,
   `increment` smallint(5) unsigned NOT NULL,
   `min_duration` smallint(5) unsigned NOT NULL,
   `startDate` date NOT NULL,
   `endDate` date NOT NULL,
   PRIMARY KEY  (`id`),
-  KEY `reseller_idx` (`reseller_id`),
   UNIQUE KEY `rate_idx` (`name`,`destination`,`startDate`,`endDate`,`application`),
   KEY `name_idx` (`name`),
-  KEY `dest_idx` (`destination`)
-)  DEFAULT CHARSET=latin1;
+  KEY `dest_idx` (`destination`),
+  KEY `reseller_idx` (`reseller_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Table structure for table `cc_purchase_items`
+--
+
+DROP TABLE IF EXISTS `cc_purchase_items`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `cc_purchase_items` (
+  `CCPurchaseID` mediumint(14) unsigned NOT NULL auto_increment,
+  `TransactionNum` varchar(255) NOT NULL,
+  `Item` varchar(50) NOT NULL,
+  `Amount` decimal(8,2) NOT NULL default '0.00',
+  `Currency` varchar(10) NOT NULL default 'USD',
+  PRIMARY KEY  (`CCPurchaseID`),
+  UNIQUE KEY `unq_cc_purchase_items` (`CCPurchaseID`),
+  KEY `idx_cc_purchase_items_TransactionNum` (`TransactionNum`),
+  KEY `idx_cc_purchase_items_Item` (`Item`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Table structure for table `cc_transactions`
+--
+
+DROP TABLE IF EXISTS `cc_transactions`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `cc_transactions` (
+  `TransactionID` mediumint(10) unsigned NOT NULL auto_increment,
+  `TransactionKey` varchar(255) NOT NULL,
+  `TransactionNum` varchar(255) NOT NULL,
+  `TranEnvironment` varchar(255) NOT NULL,
+  `TotalAmount` decimal(18,2) NOT NULL default '0.00',
+  `Currency` varchar(10) NOT NULL default 'USD',
+  `AVSCode` char(1) NOT NULL,
+  `CVV2Code` char(1) NOT NULL,
+  `PendingReason` varchar(255) default NULL,
+  `PaymentStatus` varchar(255) default NULL,
+  `FMFDetails` varchar(255) default NULL,
+  `ThreeDSecureResponse` varchar(255) default NULL,
+  `ProcessTime` timestamp NOT NULL default CURRENT_TIMESTAMP,
+  `APITimestamp` varchar(50) NOT NULL,
+  `AckResponse` varchar(50) NOT NULL,
+  `CorrelationID` varchar(50) NOT NULL,
+  `Errors` varchar(255) default NULL,
+  PRIMARY KEY  (`TransactionID`),
+  UNIQUE KEY `unq_ cc_transactions` (`TransactionID`),
+  KEY `idx_ cc_transactions_ TransactionNum` (`TransactionNum`),
+  KEY `idx_ cc_transactions_ CorrelationID` (`CorrelationID`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Table structure for table `cc_user_info`
+--
+
+DROP TABLE IF EXISTS `cc_user_info`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `cc_user_info` (
+  `CCUserID` mediumint(10) unsigned NOT NULL auto_increment,
+  `TransactionNum` varchar(255) NOT NULL,
+  `FirstName` varchar(32) NOT NULL,
+  `LastName` varchar(32) NOT NULL,
+  `UserAcct` varchar(50) default NULL,
+  `Email` varchar(50) NOT NULL,
+  `CCType` varchar(50) NOT NULL,
+  `CCNum` blob NOT NULL,
+  `CCLast` smallint(4) NOT NULL,
+  `CCVCode` smallint(4) NOT NULL,
+  `CCExpMonth` smallint(2) NOT NULL,
+  `CCExpYear` smallint(4) NOT NULL,
+  `BillingAddress1` varchar(100) default NULL,
+  `BillingAddress2` varchar(100) default NULL,
+  `BillingCity` varchar(40) default NULL,
+  `BillingState` char(2) default NULL,
+  `BillingPostalCode` varchar(20) default NULL,
+  `BillingCountry` char(3) NOT NULL,
+  `ProcessTime` timestamp NOT NULL default CURRENT_TIMESTAMP,
+  `RequesterIP` varchar(50) NOT NULL,
+  `RequesterSID` varchar(50) NOT NULL,
+  PRIMARY KEY  (`CCUserID`),
+  UNIQUE KEY `unq_cc_user_info` (`CCUserID`),
+  KEY `idx_cc_user_info_TransactionNum` (`TransactionNum`),
+  KEY `idx_cc_user_info_LastName` (`LastName`),
+  KEY `idx_cc_user_info_UserAcct` (`UserAcct`),
+  KEY `idx_cc_user_info_Email` (`Email`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `db_sequence`
 --
 
 DROP TABLE IF EXISTS `db_sequence`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `db_sequence` (
   `seq_name` varchar(127) NOT NULL default '',
   `nextid` int(10) unsigned NOT NULL default '0',
   PRIMARY KEY  (`seq_name`)
-)  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `destinations`
 --
 
 DROP TABLE IF EXISTS `destinations`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `destinations` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `reseller_id` int(10) unsigned not NULL,
-  `gateway` varchar(15) NOT NULL default '',
-  `domain` varchar(64) NOT NULL default '',
-  `subscriber` varchar(128) NOT NULL default '',
+  `reseller_id` int(10) unsigned NOT NULL,
+  `gateway` varchar(50) NOT NULL default '',
+  `domain` varchar(50) NOT NULL default '',
+  `subscriber` varchar(50) NOT NULL default '',
   `dest_id` varchar(100) NOT NULL,
   `dest_name` varchar(255) NOT NULL default '',
   PRIMARY KEY  (`id`),
+  KEY `dest_idx` (`dest_id`),
   KEY `reseller_idx` (`reseller_id`),
-  UNIQUE KEY `cust_dest_idx` (`reseller_id`,`gateway`,`domain`,`subscriber`,`dest_id`),
-  KEY `dest_idx` (`dest_id`)
-)  DEFAULT CHARSET=latin1;
+  KEY `cust_dest_idx` (`reseller_id`,`gateway`,`domain`,`subscriber`,`dest_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `isdncause`
 --
 
 DROP TABLE IF EXISTS `isdncause`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `isdncause` (
   `cause` int(11) NOT NULL default '0',
   `description` varchar(255) NOT NULL default ''
-)  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `lastquery`
 --
 
 DROP TABLE IF EXISTS `lastquery`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `lastquery` (
   `id` int(10) unsigned NOT NULL auto_increment,
   `date` datetime NOT NULL default '0000-00-00 00:00:00',
   `query` text,
   PRIMARY KEY  (`id`)
-)  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `log`
 --
 
 DROP TABLE IF EXISTS `log`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `log` (
   `id` int(10) unsigned NOT NULL auto_increment,
-  `reseller_id` int(10) unsigned not NULL,
+  `reseller_id` int(10) unsigned NOT NULL,
   `date` datetime NOT NULL default '0000-00-00 00:00:00',
   `login` varchar(32) NOT NULL default '',
   `ip` varchar(32) NOT NULL default '',
@@ -308,100 +447,145 @@ CREATE TABLE `log` (
   `description` text,
   `datasource` varchar(255) NOT NULL default '',
   PRIMARY KEY  (`id`),
-  KEY `reseller_idx` (`reseller_id`),
   KEY `log_date` (`date`),
-  KEY `login_idx` (`login`)
-)  DEFAULT CHARSET=latin1;
+  KEY `login_idx` (`login`),
+  KEY `reseller_idx` (`reseller_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `memcache`
 --
 
 DROP TABLE IF EXISTS `memcache`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `memcache` (
   `key` varchar(255) NOT NULL default '',
   `value` longblob NOT NULL,
   PRIMARY KEY  (`key`)
-)  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `normalize_lock`
 --
 
 DROP TABLE IF EXISTS `normalize_lock`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `normalize_lock` (
   `notused` char(1) default NULL
-)  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `prepaid`
 --
 
 DROP TABLE IF EXISTS `prepaid`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `prepaid` (
   `id` int(10) unsigned NOT NULL auto_increment,
-  `reseller_id` int(10) unsigned not NULL,
+  `reseller_id` int(10) unsigned NOT NULL,
   `account` varchar(255) NOT NULL default '',
   `balance` decimal(10,4) NOT NULL default '0.0000',
   `change_date` datetime NOT NULL default '0000-00-00 00:00:00',
   `active_sessions` text NOT NULL,
   `session_counter` int(10) unsigned NOT NULL,
-  `max_sessions` int(10) unsigned not null default 1,
+  `max_sessions` int(10) unsigned NOT NULL default '1',
   PRIMARY KEY  (`id`),
-  KEY `reseller_idx` (`reseller_id`),
-  UNIQUE KEY `acc_id` (`account`)
-)  DEFAULT CHARSET=latin1;
+  UNIQUE KEY `acc_id` (`account`),
+  KEY `reseller_idx` (`reseller_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `prepaid_cards`
 --
 
 DROP TABLE IF EXISTS `prepaid_cards`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `prepaid_cards` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `reseller_id` int(10) unsigned not NULL,
+  `reseller_id` int(10) unsigned NOT NULL,
   `batch` varchar(255) NOT NULL default '',
-  `number` bigint(20) unsigned NOT NULL default '0',
-  `value` decimal(10,4) NOT NULL default '0.0000',
-  `blocked` smallint unsigned not null,
+  `number` varchar(64) NOT NULL default '',
+  `value` decimal(10,4) default '0.0000',
+  `blocked` smallint(5) unsigned NOT NULL,
   `date_active` date NOT NULL default '0000-00-00',
   `date_batch` date NOT NULL default '0000-00-00',
   `service` varchar(255) NOT NULL default 'sip',
   PRIMARY KEY  (`id`),
-  KEY `reseller_idx` (`reseller_id`),
   UNIQUE KEY `card_idx` (`number`),
-  KEY `nr_id` (`number`)
-)  DEFAULT CHARSET=latin1;
+  KEY `nr_id` (`number`),
+  KEY `reseller_idx` (`reseller_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `prepaid_history`
 --
 
 DROP TABLE IF EXISTS `prepaid_history`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `prepaid_history` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
-  `reseller_id` int(10) unsigned not NULL,
+  `reseller_id` int(10) unsigned NOT NULL,
   `username` varchar(64) NOT NULL default '',
   `domain` varchar(64) NOT NULL default '',
   `action` varchar(255) NOT NULL default '',
-  `description` varchar(255) NOT NULL default '',
-  `duration` bigint unsigned not null,
-  `destination` varchar(15) not null default '',
-  `session` varchar(255) not null default '',
-  `value` decimal(10,4)  not null,
-  `balance` decimal(10,4)  not null,
+  `duration` bigint(20) unsigned NOT NULL,
+  `destination` varchar(15) NOT NULL,
+  `session` varchar(255) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `value` decimal(10,4) NOT NULL,
+  `balance` decimal(10,4) NOT NULL,
   `date` datetime default NULL,
   PRIMARY KEY  (`id`),
-  KEY `reseller_idx` (`reseller_id`),
   KEY `acct_id` (`username`,`domain`),
-  index session_idx(session) 
-) DEFAULT CHARSET=latin1;
+  KEY `session_idx` (`session`),
+  KEY `reseller_idx` (`reseller_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Table structure for table `quota_usage`
+--
+
+DROP TABLE IF EXISTS `quota_usage`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+CREATE TABLE `quota_usage` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `reseller_id` int(10) unsigned NOT NULL,
+  `datasource` varchar(50) NOT NULL,
+  `account` varchar(128) NOT NULL default '',
+  `domain` varchar(64) default NULL,
+  `quota` int(11) unsigned NOT NULL,
+  `blocked` enum('0','1') NOT NULL default '0',
+  `notified` datetime NOT NULL,
+  `calls` int(10) unsigned NOT NULL,
+  `duration` bigint(20) unsigned NOT NULL,
+  `cost` decimal(10,4) NOT NULL,
+  `traffic` varchar(50) NOT NULL,
+  `change_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `account_idx` (`datasource`,`account`),
+  KEY `reseller_idx` (`reseller_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `settings`
 --
 
 DROP TABLE IF EXISTS `settings`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `settings` (
   `id` bigint(20) unsigned NOT NULL auto_increment,
   `billing_party` varchar(255) NOT NULL default '',
@@ -414,49 +598,47 @@ CREATE TABLE `settings` (
   `var_module` varchar(255) default NULL,
   PRIMARY KEY  (`id`),
   KEY `name` (`var_name`)
-)  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `sip_status`
 --
 
 DROP TABLE IF EXISTS `sip_status`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `sip_status` (
   `code` smallint(5) unsigned NOT NULL default '0',
   `description` varchar(255) NOT NULL default '',
   `code_type` varchar(255) NOT NULL default '',
   `isdn_cause` smallint(5) unsigned NOT NULL default '0'
-)  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
 
 --
 -- Table structure for table `spam`
 --
 
 DROP TABLE IF EXISTS `spam`;
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
 CREATE TABLE `spam` (
   `ip` varchar(64) NOT NULL default '',
   `tries` smallint(5) unsigned NOT NULL default '0',
   `login` varchar(255) default NULL,
   `stamp` int(10) unsigned NOT NULL default '0',
   UNIQUE KEY `spam_ip` (`ip`)
-)  DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+SET character_set_client = @saved_cs_client;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
-DROP TABLE IF EXISTS `quota_usage`;
-CREATE TABLE `quota_usage` (                    
-  `id` int(10) unsigned NOT NULL auto_increment,
-  `reseller_id` int(10) unsigned not NULL,
-  `datasource` varchar(50) NOT NULL,
-  `account` varchar(128) NOT NULL default '',  
-  `domain` varchar(64) default NULL,
-  `quota` int(11) unsigned NOT NULL,
-  `blocked` enum('0','1') NOT NULL default '0',
-  `notified` datetime NOT NULL,                                                          
-  `calls` int(10) unsigned NOT NULL,
-  `duration` bigint(20) unsigned NOT NULL,
-  `cost` decimal(10,4) NOT NULL,
-  `traffic` varchar(50) NOT NULL,
-  `change_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  PRIMARY KEY  (`id`),
-  KEY `reseller_idx` (`reseller_id`),
-  UNIQUE KEY `account_idx` (`datasource`,`account`)
-);
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2009-12-11 22:53:58

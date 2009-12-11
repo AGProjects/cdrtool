@@ -622,3 +622,15 @@ alter table prepaid drop column domain;
 
 6.7.0
 alter table prepaid add column max_sessions int(10) unsigned not null default 1;
+
+alter table billing_enum_tlds drop KEY `enum_idx`;
+alter table billing_enum_tlds UNIQUE `enum_idx` (`reseller_id`,`enum_tld`);
+
+alter table billing_rates drop KEY `rate_idx`;
+alter table billing_rates add UNIQUE `rate_idx` (`reseller_id`,`name`,`destination`,`application`);
+
+alter table billing_rates_history drop KEY `rate_idx`;
+alter table billing_rates_history add UNIQUE `rate_idx` (`reseller_id`,`name`,`destination`,`startDate`,`endDate`,`application`);
+
+alter table billing_profiles drop KEY `name_idx`;
+alter table billing_profiles add UNIQUE `name_idx` (`reseller_id`,`name`);
