@@ -7970,19 +7970,18 @@ class PaypalProcessor {
         if (!is_object($account)) {
             return false;
         }
-
-
+        
         require('cc_processor.php');
-
+        
         if ($this->fraudDetected(&$account)) {
             $chapter=sprintf(_("Payments"));
             $account->showChapter($chapter);
-    
+            
             print "
             <tr>
             <td colspan=3>
             ";
-    
+            
             if ($account->login_type!='subscriber') {
                 print "<p>";
                 printf ("<font color=red>%s</font>",$this->fraud_reason);
@@ -7991,104 +7990,102 @@ class PaypalProcessor {
                 $log=sprintf("CC transaction is not allowed from %s for %s (%s)",$_SERVER['REMOTE_ADDR'],$account->account,$this->fraud_reason);
                 syslog(LOG_NOTICE, $log);
             }
-
+            
             print "</td>
             </tr>
             ";
-    
+            
             return false;
         }
-
+        
         $CardProcessor = new CreditCardProcessor();
-
-        if (is_array($this->test_credit_cards) &&
-            in_array($_POST['creditCardNumber'], $this->test_credit_cards)) {
-            $CardProcessor->environment='sandbox';
+        
+        if (is_array($this->test_credit_cards) && in_array($_POST['creditCardNumber'], $this->test_credit_cards)) {
+	        $CardProcessor->environment='sandbox';
         }
-
+        
         $CardProcessor->chapter_class  = 'chapter';
         $CardProcessor->odd_row_class  = 'odd';
         $CardProcessor->even_row_class = 'even';
-
+        
         $CardProcessor->note = $account->account;
         $CardProcessor->account = $account->account;
-
+        
         // set hidden elements we need to preserve in the shopping cart application
         $CardProcessor->hidden_elements = $account->hiddenElements;
-
+        
         // load shopping items
         $CardProcessor->cart_items = array(
-                            'pstn_credit'=>array('price'       => 30,
-                                                 'description' => _('PSTN Credit'),
-                                                 'unit'        => 'credit',
-                                                 'duration'    => 'N/A',
-                                                 'qty'         => 1
-                                                 )
-                            );
-
+        'pstn_credit'=>array('price'       => 30,
+        'description' => _('PSTN Credit'),
+        'unit'        => 'credit',
+        'duration'    => 'N/A',
+        'qty'         => 1
+        )
+        );
+        
         // load user information from owner information if available otherwise from sip account settings
-
+        
         if ($account->owner_information['firstName']) {
-            $CardProcessor->user_account['FirstName']=$account->owner_information['firstName'];
-        } else {
-            $CardProcessor->user_account['FirstName']=$account->firstName;
+	    	$CardProcessor->user_account['FirstName']=$account->owner_information['firstName'];
+    	} else {
+        	$CardProcessor->user_account['FirstName']=$account->firstName;
         }
-
+        
         if ($account->owner_information['lastName']) {
-            $CardProcessor->user_account['LastName']=$account->owner_information['lastName'];
+        	$CardProcessor->user_account['LastName']=$account->owner_information['lastName'];
         } else {
-            $CardProcessor->user_account['LastName']=$account->lastName;
+        	$CardProcessor->user_account['LastName']=$account->lastName;
         }
-
+        
         if ($account->owner_information['email']) {
-            $CardProcessor->user_account['Email']=$account->owner_information['email'];
+        	$CardProcessor->user_account['Email']=$account->owner_information['email'];
         } else {
-            $CardProcessor->user_account['Email']=$account->email;
+        	$CardProcessor->user_account['Email']=$account->email;
         }
-
+        
         if ($account->owner_information['address'] && $account->owner_information['address']!= 'Unknown') {
-            $CardProcessor->user_account['Address1']=$account->owner_information['address'];
+        	$CardProcessor->user_account['Address1']=$account->owner_information['address'];
         } else {
-            $CardProcessor->user_account['Address1']='';
+        	$CardProcessor->user_account['Address1']='';
         }
-
+        
         if ($account->owner_information['city'] && $account->owner_information['city']!= 'Unknown') {
-            $CardProcessor->user_account['City']=$account->owner_information['city'];
+        	$CardProcessor->user_account['City']=$account->owner_information['city'];
         } else {
-            $CardProcessor->user_account['City']='';
+        	$CardProcessor->user_account['City']='';
         }
-
+        
         if ($account->owner_information['country'] && $account->owner_information['country']!= 'Unknown') {
-            $CardProcessor->user_account['Country']=$account->owner_information['country'];
+        	$CardProcessor->user_account['Country']=$account->owner_information['country'];
         } else {
-            $CardProcessor->user_account['Country']='';
+	        $CardProcessor->user_account['Country']='';
         }
-
+        
         if ($account->owner_information['state'] && $account->owner_information['state']!= 'Unknown') {
-            $CardProcessor->user_account['State']=$account->owner_information['state'];
+    	    $CardProcessor->user_account['State']=$account->owner_information['state'];
         } else {
-            $CardProcessor->user_account['State']='';
+        	$CardProcessor->user_account['State']='';
         }
-
+        
         if ($account->owner_information['postcode'] && $account->owner_information['postcode']!= 'Unknown') {
-            $CardProcessor->user_account['PostCode']=$account->owner_information['postcode'];
+	        $CardProcessor->user_account['PostCode']=$account->owner_information['postcode'];
         } else {
-            $CardProcessor->user_account['PostCode']='';
+    	    $CardProcessor->user_account['PostCode']='';
         }
-
+        
         if ($_REQUEST['purchase'] == '1' ) {
-
             $chapter=sprintf(_("Transaction Results"));
             $account->showChapter($chapter);
-
+            
             print "
             <tr>
             <td colspan=3>
             ";
-
+            
             // ensure that submit requests are coming only from the current page
-            if($_SERVER['HTTP_REFERER'] == $CardProcessor->getPageURL()) {
-
+            if ($_SERVER['HTTP_REFERER'] == $CardProcessor->getPageURL()) {
+                    
                 // check submitted values
                 $formcheck1 = $CardProcessor->checkForm($_POST);
                 if (count($formcheck1) > 0){
@@ -8096,162 +8093,162 @@ class PaypalProcessor {
                     print $CardProcessor->displayProcessErrors($formcheck1);
                     return false;
                 }
-
+                
                 // process the payment
                 $b=time();
-
+                
                 $pay_process_results = $CardProcessor->processPayment($_POST);
                 //print_r($pay_process_results);
                 if(count($pay_process_results['error']) > 0){
                     // there was a problem with payment
                     // show error and stop
-
+                    
                     if ($pay_process_results['error']['field'] == 'reload') {
                         print $pay_process_results['error']['desc'];
                     } else {
                         print $CardProcessor->displayProcessErrors($pay_process_results['error']);
                     }
-
+                    
                     $e=time();
-	                $d=$e-$b;
-
+                    $d=$e-$b;
+                    
                     $log=sprintf("Error, CC transaction failed for %s: %s (%s) after %d seconds",
-                                $account->account,
-                                $pay_process_results['error']['short_message'],
-                                $pay_process_results['error']['error_code'],
-                                $d
-                                );
-
+                    $account->account,
+                    $pay_process_results['error']['short_message'],
+                    $pay_process_results['error']['error_code'],
+                    $d
+                    );
+                    
                     syslog(LOG_NOTICE, $log);
-
+                    
                     return false;
                 } else {
-
+                
                     $e=time();
-	                $d=$e-$b;
-
+                    $d=$e-$b;
+                    
                     $log=sprintf("CC transaction for %s %s completed succesfully in %d seconds",
                     $account->account,
                     $pay_process_results['success']['desc']->TransactionID,
                     $d
                     );
                     syslog(LOG_NOTICE, $log);
-    
+                    
                     print "<p>";
                     print _("Transaction completed sucessfully. ");
-
+                    
                     if ($account->first_transaction) {
                         print "<p>";
                         print _("This is your first payment. ");
-
+                        
                         print "<p>";
                         print _("Please allow the time to check the validity of your transaction before activating your Credit. ");
-
+                        
                         print "<p>";
                         print _("You can speed up the validation process by sending a copy of an utility bill (electriciy, gas or TV) that displays your address. ");
-
+                        
                         print "<p>";
                         printf (_("For questions related to your payments or to request a refund please email to <i>%s</i> and mention your transaction id <b>%s</b>. "),
                         $account->billing_email,
                         $pay_process_results['success']['desc']->TransactionID
                         );
-
+                        
                         $this->make_credit_checks=true;
-
+                    
                     } else {
-                        print "<p>";
-                        print _("You may check your new balance in the Credit tab. ");
+                       print "<p>";
+                       print _("You may check your new balance in the Credit tab. ");
                     }
-    
+                    
                 }
-
+                
                 if ($account->Preferences['ip'] && $_loc=geoip_record_by_name($account->Preferences['ip'])) {
                     $registration_location=$_loc['country_name'].'/'.$_loc['city'];
                 } else if ($account->Preferences['ip'] && $_loc=geoip_country_name_by_name($account->Preferences['ip'])) {
                     $registration_location=$_loc;
                 } else {
-                	$registration_location='Unknown';
+                    $registration_location='Unknown';
                 }
-
-
+                
+                
                 if ($_loc=geoip_record_by_name($_SERVER['REMOTE_ADDR'])) {
                     $transaction_location=$_loc['country_name'].'/'.$_loc['city'];
                 } else if ($_loc=geoip_country_name_by_name($_SERVER['REMOTE_ADDR'])) {
                     $transaction_location=$_loc;
                 } else {
-                	$transaction_location='Unknown';
+                    $transaction_location='Unknown';
                 }
-
-				if ($account->Preferences['timezone']) {
-                	$timezone=$account->Preferences['timezone'];
+                
+                if ($account->Preferences['timezone']) {
+                    $timezone=$account->Preferences['timezone'];
                 } else {
                     $timezone='Unknown';
                 }
-
-				$extra_information=array('SIP account'           => sprintf("<a href=%s>%s",$account->admin_url,$account->account),
-                                         'SIP Account Timezone'  => $account->timezone,
-                                         'Registration IP'       => $account->Preferences['ip'],
-                                         'Registration Location' => $registration_location,
-                                         'Registration Email'    => $account->Preferences['registration_email'],
-                                         'Registration Timezone' => $timezone,
-                                         'Transaction Location'  => $transaction_location
-                                         );
-
+                
+                $extra_information=array('SIP account' => $account->admin_url_absolute,
+                'SIP Account Timezone'  => $account->timezone,
+                'Registration IP'       => $account->Preferences['ip'],
+                'Registration Location' => $registration_location,
+                'Registration Email'    => $account->Preferences['registration_email'],
+                'Registration Timezone' => $timezone,
+                'Transaction Location'  => $transaction_location
+                );
+                
                 if ($this->make_credit_checks) {
-                	$extra_information['First Payment']='Yes';
+                    $extra_information['First Payment']='Yes';
                 }
-
+                
                 if ($CardProcessor->saveOrder($_POST,$pay_process_results,$extra_information)) {
-
+                
                     // add PSTN credit
                     $description=sprintf("CC transaction %s",$CardProcessor->transaction_data['TRANSACTION_ID']);
                     $account->addBalanceReseller($CardProcessor->transaction_data['TOTAL_AMOUNT'],$description);
-
+                    
                     $account->addInvoice($CardProcessor);
-
+                    
                     return true;
-
+                
                 } else {
                     $log=sprintf("Error: SIP Account %s - CC transaction %s failed to Save Order",$account->account, $CardProcessor->transaction_data['TRANSACTION_ID']);
                     syslog(LOG_NOTICE, $log);
                     //print _("Error Saving Order");
                     return false;
                 }
-
-
+                
+                
             } else {
                 print _("Invalid Request");
                 return false;
             }
-
+            
             print "
             </td>
             </tr>
             ";
-
+        
         } else {
             $chapter=sprintf(_("Add Credit"));
             $account->showChapter($chapter);
-
+            
             print "
             <tr>
             <td colspan=3>
             ";
-
+            
             print "<p>";
             print _("Add balance to your Credit by purchasing it with a Credit Card. ");
             // print the submit form
             $arr_form_page_objects = $CardProcessor->showSubmitForm();
             print $arr_form_page_objects['page_body_content'];
-
+            
             print "
             </td>
             </tr>
             ";
-
-        }
-
-    }
+            
+    	}
+    
+	}
 
     function fraudDetected ($account) {
 
@@ -8308,8 +8305,6 @@ class PaypalProcessor {
     }
 
 }
-
-
 
 if (file_exists("/etc/cdrtool/local/sip_settings.php")) {
 	require_once('/etc/cdrtool/local/sip_settings.php');
