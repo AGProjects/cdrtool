@@ -67,14 +67,12 @@ class CDRS {
 
         if (!$cdr_source) {
             $log="Error: cdr_source not defined\n";
-            print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
         }
 
         if (!$DATASOURCES[$cdr_source] || !$DATASOURCES[$cdr_source]['db_class']) {
             $log="Error: no such datasource defined ($cdr_source) \n";
-            print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
         }
@@ -115,7 +113,6 @@ class CDRS {
         // connect to the CDR database(s)
 		if(!$this->DATASOURCES[$this->cdr_source]['db_class']) {
             $log=sprintf("Error: \$DATASOURCES['%s']['db_class'] is not defined",$this->cdr_source);
-            print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
         }
@@ -131,7 +128,6 @@ class CDRS {
 
 		if(!class_exists($this->primary_database)) {
             $log=sprintf("Error: database class '%s' is not defined",$this->primary_database);
-            print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
         }
@@ -141,14 +137,12 @@ class CDRS {
         // check db connectivity
         if (!$this->CDRdb->query('SELECT 1')) {
             $log=sprintf("Error: failed to connect to the primary CDR database %s\n",$this->primary_database);
-            print $log;
             syslog(LOG_NOTICE, $log);
 
             if ($this->secondary_database) {
 				$this->CDRdb    = new $this->secondary_database;
 		        if (!$this->CDRdb->query('SELECT 1')) {
                     $log=sprintf("Error: failed to connect to the secondary CDR database %s\n",$this->secondary_database);
-                    print $log;
                     syslog(LOG_NOTICE, $log);
                     return 0;
                 } else {
@@ -184,8 +178,7 @@ class CDRS {
             	$this->AccountsDB       = new $this->DATASOURCES[$this->cdr_source]['db_subscribers'];
             	$this->db_subscribers  = $this->DATASOURCES[$this->cdr_source]['db_subscribers'];
             } else {
-            	$log=sprintf("Error: susbcribers database class %s is not defined",$this->DATASOURCES[$this->cdr_source]['db_subscribers']);
-            	print $log;
+            	$log=sprintf("Error: subscribers database class %s is not defined",$this->DATASOURCES[$this->cdr_source]['db_subscribers']);
             	syslog(LOG_NOTICE, $log);
             	return 0;
             }
@@ -194,7 +187,6 @@ class CDRS {
             $this->db_subscribers  = 'DB_opensips';
         } else {
         	$log=sprintf("Error: subscribers database is not defined, please define 'db_subscribers' in datasource '%s'",$this->cdr_source);
-            print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
         }

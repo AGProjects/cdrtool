@@ -9,10 +9,10 @@ function signalHandler($sig)
 
    	switch ($sig) {
     	case SIGTERM:
-   	   	 	syslog(LOG_NOTICE,"Rating Engine is Exiting ...");
+   	   	 	syslog(LOG_NOTICE,"Rating Engine is exiting ...");
         	exit(0);
     	case SIGKILL:
-   	   	 	syslog(LOG_NOTICE,"Rating Engine is Exiting ...");
+   	   	 	syslog(LOG_NOTICE,"Rating Engine is exiting ...");
         	exit(0);
     	case SIGUSR1:
        		break;
@@ -238,7 +238,7 @@ class socketServer extends socket {
         	$bind_address_print=$bind_address;
         }
         $this->startTime=time();
-        $log=sprintf("Rating Engine Listening on %s:%s",$bind_address_print, $bind_port);
+        $log=sprintf("Rating Engine listening on %s:%s",$bind_address_print, $bind_port);
         syslog(LOG_NOTICE,$log);
 	}
 

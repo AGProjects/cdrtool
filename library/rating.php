@@ -5751,15 +5751,15 @@ class RatingEngine {
         $this->CDRS->RatingTables = new RatingTables();
         $this->CDRS->RatingTables->LoadRatingTables();
 
-        // init susbcribers database
-        $this->db_subscribers = &$this->CDRS->db_subscribers;
+        // init subscribers database
+        $this->db_subscribers_class = &$this->CDRS->db_subscribers;
 
-        if (!class_exists($this->db_subscribers)) {
+        if (!class_exists($this->db_subscribers_class)) {
             syslog(LOG_NOTICE,"Error: No database defined for SIP accounts");
             return false;
         }
 
-        $this->AccountsDB       = new $this->db_subscribers;
+        $this->AccountsDB       = new $this->db_subscribers_class;
 
         $this->enableThor       = $this->CDRS->enableThor;
 
