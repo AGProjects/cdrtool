@@ -1,8 +1,0 @@
-SSLRequireSSL
-SSLVerifyDepth 1
-
-SSLOptions +StdEnvVars
-SSLOptions +ExportCertData
-<Files sip_settings_tlscert.phtml>
-SSLVerifyClient require
-</Files>
