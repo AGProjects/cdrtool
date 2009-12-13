@@ -394,7 +394,6 @@ class Rate {
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-            print $log;
             syslog(LOG_NOTICE, $log);
             return false;
         }
@@ -414,14 +413,12 @@ class Rate {
 
             if (!$this->db->Record['profile_name1']) {
                 $log=sprintf("Error: customer %s (id=%d) has no weekday profile assigned in profiles table",$this->CustomerProfile,$this->db->Record['id']);
-                print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
 
             if (!$this->db->Record['profile_name2']) {
                 $log=sprintf("Error: customer %s (id=%d) has no weekend profile assigned in profiles table",$this->CustomerProfile,$this->db->Record['id']);
-                print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
@@ -453,7 +450,6 @@ class Rate {
             return true;
         } else {
             $log=sprintf("Error: no customer found in billing_customers table for billing party=%s, domain=%s, gateway=%s",$this->BillingPartyId,$this->domain,$this->gateway);
-            print $log;
             syslog(LOG_NOTICE, $log);
             return false;
         }
@@ -902,7 +898,6 @@ class Rate {
         if (!$this->db->query($query)) {
             if ($this->db->Errno != 1146) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
@@ -916,7 +911,6 @@ class Rate {
 
             if (!$this->db->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
@@ -5747,7 +5741,6 @@ class RatingEngine {
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error: %s (%s) for query %s",$db->Error,$db->Errno,$query);
             syslog(LOG_NOTICE,$log);
-            return false;
         }
 
         // init CDR datasource
@@ -6358,7 +6351,8 @@ class RatingEngine {
                               $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
                               $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
                               $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
-                              $this->CDRS->CDRFields['timestamp']      => time()
+                              $this->CDRS->CDRFields['timestamp']      => time(),
+                              'skip_fix_prepaid_duration'              => true
                               );
 
             $CDR = new $this->CDRS->CDR_class(&$this->CDRS, &$CDRStructure);
@@ -6651,7 +6645,8 @@ class RatingEngine {
                               $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
                               $this->CDRS->CDRFields['ENUMtld']        => $NetFields['enumtld'],
                               $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
-                              $this->CDRS->CDRFields['timestamp']      => time()
+                              $this->CDRS->CDRFields['timestamp']      => time(),
+                              'skip_fix_prepaid_duration'              => true
                               );
 
 
@@ -6794,7 +6789,8 @@ class RatingEngine {
                               $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
                               $this->CDRS->CDRFields['ENUMtld']        => $NetFields['enumtld'],
                               $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
-                              $this->CDRS->CDRFields['timestamp']      => time()
+                              $this->CDRS->CDRFields['timestamp']      => time(),
+                              'skip_fix_prepaid_duration'              => true
                               );
 
             $CDR = new $this->CDRS->CDR_class(&$this->CDRS, &$CDRStructure);

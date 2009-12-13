@@ -2568,29 +2568,33 @@ class CDR_opensips extends CDR {
             $this->outputTrafficPrint = number_format($this->outputTraffic/1024,2);
         }
 
-		if (!$this->normalized) {
-            // fix the duration of prepaid sessions if the prepaid duration is different than radius calculated duration
-            $query=sprintf("select duration from prepaid_history
-            where session = '%s'
-            and destination = '%s'
-            order by id desc limit 1",
-            $this->callId,
-            $this->destinationPrint     // must be synced with maxsession time
-            );
+        if (!$CDRfields['skip_fix_prepaid_duration']) {
 
-            if ($this->CDRS->cdrtool->query($query)) {
-                if ($this->CDRS->cdrtool->num_rows()) {
-                    $this->CDRS->cdrtool->next_record();
-                    $this->durationNormalized = $this->CDRS->cdrtool->f('duration');
-        			$this->durationPrint      = sec2hms($this->durationNormalized);
+            if (!$this->normalized && $this->callId) {
+                // fix the duration of prepaid sessions if the prepaid duration is different than radius calculated duration
+                $query=sprintf("select duration from prepaid_history
+                where session = '%s'
+                and destination = '%s'
+                order by id desc limit 1",
+                $this->callId,
+                $this->destinationPrint     // must be synced with maxsession time
+                );
+    
+                if ($this->CDRS->cdrtool->query($query)) {
+                    if ($this->CDRS->cdrtool->num_rows()) {
+                        $this->CDRS->cdrtool->next_record();
+                        $this->durationNormalized = $this->CDRS->cdrtool->f('duration');
+                        $this->durationPrint      = sec2hms($this->durationNormalized);
+                    } else {
+                        $this->durationPrint      = sec2hms($this->duration);
+    
+                    }
                 } else {
-        			$this->durationPrint      = sec2hms($this->duration);
-
+                    $log=sprintf("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
+                    syslog(LOG_NOTICE,$log);
                 }
             } else {
-                $log=sprintf("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
-                print $log;
-                syslog(LOG_NOTICE,$log);
+                $this->durationPrint      = sec2hms($this->duration);
             }
         } else {
         	$this->durationPrint      = sec2hms($this->duration);

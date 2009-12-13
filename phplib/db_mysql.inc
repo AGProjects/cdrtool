@@ -133,9 +133,10 @@ class DB_Sql {
         $this->Link_ID = 0;
         
         if (!$this->connect()) {
-            syslog(LOG_NOTICE, "Error: failed to re-connect after loosing connection '$this->Link_ID' with code $this->Errno");
+            syslog(LOG_NOTICE, "Error: failed to re-connect to the MySQL server");
             return 0;
         }
+
     	syslog(LOG_NOTICE, "Mysql connection re-created with '$this->Link_ID'");
         
         $this->Query_ID = @mysql_query($Query_String,$this->Link_ID);
