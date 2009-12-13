@@ -321,6 +321,11 @@ missing rates are logged to the syslog.
 Importing and exporting of rating files
 ---------------------------------------
 
+It is important to set the impersonate field corectly for the login
+accounts. To access in the CDRTool Rating web page all the rates table for
+all resellers in the system you must set the impersonate field of the login
+account to 0.0
+
 There are different data files needed for rating. The data files are
 imported into their corresponding MySQL tables. 
 
