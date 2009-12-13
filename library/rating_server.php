@@ -210,7 +210,7 @@ class socketServer extends socket {
         	$bind_address_print=$bind_address;
         }
         $this->startTime=time();
-        $log=sprintf("Listening on %s:%s",$bind_address_print, $bind_port);
+        $log=sprintf("Rating Engine Listening on %s:%s",$bind_address_print, $bind_port);
         syslog(LOG_NOTICE,$log);
 	}
 

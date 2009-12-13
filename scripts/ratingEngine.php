@@ -10,36 +10,17 @@ require('cdr_generic.php');
 require('rating.php');
 require('rating_server.php');
 
-if (!strlen($RatingEngine['socketIP']) || !$RatingEngine['socketPort'] || !$RatingEngine['cdr_source']) {
-    $log=sprintf("Please define \$RatingEngine['socketIP'], \$RatingEngine['socketPort'] and \$RatingEngine['cdr_source'] in /etc/cdrtool/global.inc\n");
-    syslog(LOG_NOTICE,$log);
-    die ($log);
+// Init Rating Engine
+syslog(LOG_NOTICE,"Starting CDRTool Rating Engine...");
+
+$RatingEngineServer = new RatingEngine();
+
+if (!$RatingEngineServer->init_ok) {
+    syslog(LOG_NOTICE,'Error: Cannot start Rating Engine, fix the errors and try again');
+    exit;
 }
 
-if (!is_array($DATASOURCES[$RatingEngine['cdr_source']])) {
-    $log=sprintf("Datasource '%s' does not exist in /etc/cdrtool/global.inc\n",$RatingEngine['cdr_source']);
-    syslog(LOG_NOTICE,$log);
-    die ($log);
-}
-
-$db = new DB_CDRTool;
-$query=sprintf("delete from memcache where `key` = 'destinations_sip' or `key` = 'destinations'");
-if (!$db->query($query)) {
-    $log=sprintf ("Database error: %s (%s)",$db->Error,$db->Errno);
-    print $log;
-    syslog(LOG_NOTICE,$log);
-}
-
-// Init CDRS
-$CDR_class  = $DATASOURCES[$RatingEngine['cdr_source']]["class"];
-$CDRS       = new $CDR_class($RatingEngine['cdr_source']);
-
-// Load rating tables
-$CDRS->RatingTables = new RatingTables();
-$CDRS->RatingTables->LoadRatingTables();
-
-// Init RatingEngine engine
-$RatingEngineServer = new RatingEngine($CDRS);
+syslog(LOG_NOTICE,"Rating Engine started sucesfully, going to background...");
 
 // Go to the background
 $d = new Daemon('/var/run/ratingEngine.pid');
@@ -47,6 +28,7 @@ $d->start();
 
 $daemon = new socketDaemon();
 $server = $daemon->create_server('ratingEngineServer', 'ratingEngineClient', $RatingEngine['socketIP'], $RatingEngine['socketPort']);
+syslog(LOG_NOTICE,"Rating Engine is now ready to serve network request");
 $daemon->process();
 
 ?>

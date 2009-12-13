@@ -5712,32 +5712,65 @@ class OpenSIPSQuota {
 
 class RatingEngine {
 
-    var $method = '';
-    var $log_runtime = false;
-    var $ts = false;
+    var $method        = '';
+    var $log_runtime   = false;
+    var $prepaid_table = "prepaid";
+	var $init_ok       = false;
 
-    function RatingEngine (&$CDRS) {
+    function RatingEngine () {
+
     	global $RatingEngine;   // set in global.inc
+        global $DATASOURCES;    // set in global.inc
+
+        if (!strlen($RatingEngine['socketIP']) || !$RatingEngine['socketPort'] || !$RatingEngine['cdr_source']) {
+            $log=sprintf("Please define \$RatingEngine['socketIP'], \$RatingEngine['socketPort'] and \$RatingEngine['cdr_source'] in /etc/cdrtool/global.inc\n");
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+        
+        if (!is_array($DATASOURCES[$RatingEngine['cdr_source']])) {
+            $log=sprintf("Datasource '%s' does not exist in /etc/cdrtool/global.inc\n",$RatingEngine['cdr_source']);
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
         $this->settings = $RatingEngine;
 
         if ($this->settings['log_runtime']) {
             $this->log_runtime=true;
         }
 
-        $this->CDRS          = &$CDRS;
+        // init database
         $this->db            = new DB_CDRTool;
-        $this->prepaid_table = "prepaid";
+        $query=sprintf("delete from memcache where `key` = 'destinations_sip' or `key` = 'destinations'");
+        
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error: %s (%s) for query %s",$db->Error,$db->Errno,$query);
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
 
+        // init CDR datasource
+        $CDR_class  = $DATASOURCES[$RatingEngine['cdr_source']]['class'];
+        $this->CDRS = new $CDR_class($RatingEngine['cdr_source']);
+        
+        // load Rating Tables
+        $this->CDRS->RatingTables = new RatingTables();
+        $this->CDRS->RatingTables->LoadRatingTables();
+
+        // init susbcribers database
         $this->db_subscribers = &$this->CDRS->db_subscribers;
 
         if (!class_exists($this->db_subscribers)) {
-            syslog(LOG_NOTICE,"Error: No database defined for SIP accounts $this->cdr_source");
+            syslog(LOG_NOTICE,"Error: No database defined for SIP accounts");
             return false;
         }
 
         $this->AccountsDB       = new $this->db_subscribers;
+
         $this->enableThor       = $this->CDRS->enableThor;
 
+		$this->init_ok = true;
     }
 
     function reloadRatingTables () {
