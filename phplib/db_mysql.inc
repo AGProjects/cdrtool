@@ -385,12 +385,10 @@ class DB_Sql {
 
   function haltmsg($msg) {
     $log=sprintf("Database error: %s\n", $msg);
-    print $log;
     syslog(LOG_NOTICE, $log);
 
     if ($this->Errno) {
        $log=printf("MySQL error: %s (%s)\n",$this->Errno,$this->Error);
-       print $log;
        syslog(LOG_NOTICE, $log);
     }
   }

@@ -9,10 +9,10 @@ function signalHandler($sig)
 
    	switch ($sig) {
     	case SIGTERM:
-   	   	 	syslog(LOG_NOTICE,"Exiting ...");
+   	   	 	syslog(LOG_NOTICE,"Rating Engine is Exiting ...");
         	exit(0);
     	case SIGKILL:
-   	   	 	syslog(LOG_NOTICE,"Exiting ...");
+   	   	 	syslog(LOG_NOTICE,"Rating Engine is Exiting ...");
         	exit(0);
     	case SIGUSR1:
        		break;
@@ -31,18 +31,33 @@ class Daemon {
         if ($this->pidFile!==false && file_exists($this->pidFile)) {
             $pf = fopen($this->pidFile, 'r');
             if (!$pf) {
-                print "Unable to read pidfile $this->pidFile\n";
+
+            	$log=sprintf("Error: Unable to read pidfile %s\n",$this->pidFile);
+                syslog(LOG_NOTICE,$log);
+                print $log;
+
                 exit(-1);
             }
+
             $c = fgets($pf);
             fclose($pf);
+
             if ($c===false) {
-                print "Unable to read pidfile $this->pidFile\n";
+
+                $log=sprintf("Error: Unable to read pidfile %s\n",$this->pidFile);
+                syslog(LOG_NOTICE,$log);
+                print $log;
+
                 exit(-1);
             }
+
             $pid = intval($c);
             if (posix_kill($pid, 0)===true) {
-                print "Another process is already running on pid $pid\n";
+
+                $log=sprintf("Error: Another process is already running on pid %d\n",$pid);
+                syslog(LOG_NOTICE,$log);
+                print $log;
+
                 exit(-1);
             }
         }
@@ -50,9 +65,12 @@ class Daemon {
         // do the Unix double fork magic
         $pid = pcntl_fork();
         if ($pid == -1) {
-            print "Couldn't fork!\n";
+            $log=sprintf("Error: Couldn't fork!\n");
+            syslog(LOG_NOTICE,$log);
+            print $log;
             exit(-1);
         }
+
         if ($pid > 0) {
             // this is the parent. nothing to do
             exit(0);
@@ -60,13 +78,21 @@ class Daemon {
 
         // decouple from the parent environment
         chdir('/');
-        posix_setsid();
+        if (posix_setsid() == -1) {
+            $log=sprintf("Error: Could not detach from terminal\n");
+            syslog(LOG_NOTICE,$log);
+            print $log;
+            exit(-1);
+        }
+
         umask(022);
 
         // and now the second fork
         $pid = pcntl_fork();
         if ($pid == -1) {
-            print "Couldn't fork!\n";
+            $log=sprintf("Error: Couldn't fork!\n");
+            syslog(LOG_NOTICE,$log);
+            print $log;
             exit(-1);
         }
         if ($pid > 0) {
@@ -82,7 +108,9 @@ class Daemon {
         if ($this->pidFile) {
             $pf = fopen($this->pidFile, 'w');
             if ($pf===false) {
-                print "Unable to write pidfile $this->pidFile\n";
+                $log=sprintf("Error: Unable to write pidfile %s\n",$this->pidFile);
+   	   	 		syslog(LOG_NOTICE,$log);
+                print $log;
                 exit(-1);
             }
 

@@ -5779,7 +5779,6 @@ class RatingEngine {
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
-            print $log;
             syslog(LOG_NOTICE,$log);
         }
 
@@ -5818,7 +5817,6 @@ class RatingEngine {
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-            print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
         }

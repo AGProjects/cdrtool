@@ -28,7 +28,9 @@ $d->start();
 
 $daemon = new socketDaemon();
 $server = $daemon->create_server('ratingEngineServer', 'ratingEngineClient', $RatingEngine['socketIP'], $RatingEngine['socketPort']);
-syslog(LOG_NOTICE,"Rating Engine is now ready to serve network request");
+
+syslog(LOG_NOTICE,"Rating Engine is now ready to serve network requests");
+
 $daemon->process();
 
 ?>

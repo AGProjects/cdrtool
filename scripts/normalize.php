@@ -16,17 +16,23 @@ if ($argv[1]) {
     }
 }
 
-$f=fopen($lockFile,"w");
-if (flock($f, LOCK_EX + LOCK_NB, $w)) {
-    if ($w) {
-        print "Another CDRTool normalization is in progress. Aborting.\n";
-        syslog(LOG_NOTICE,"Another CDRTool normalization is in progress. Aborting.");
-        exit(2);
-    }
+if ($f=fopen($lockFile,"w")) {
+   if (flock($f, LOCK_EX + LOCK_NB, $w)) {
+       if ($w) {
+           print "Another CDRTool normalization is in progress. Aborting.\n";
+           syslog(LOG_NOTICE,"Another CDRTool normalization is in progress. Aborting.");
+           exit(2);
+       }
+   } else {
+       print "Another CDRTool normalization is in progress. Aborting.\n";
+       syslog(LOG_NOTICE,"Another CDRTool normalization is in progress. Aborting.");
+       exit(1);
+   }
 } else {
-    print "Another CDRTool normalization is in progress. Aborting.\n";
-    syslog(LOG_NOTICE,"Another CDRTool normalization is in progress. Aborting.");
-    exit(1);
+   $log=sprintf("Error: Cannot open lock file %s for writing\n",$lockFile);
+   print $log;
+   syslog(LOG_NOTICE,$log);
+   exit(2);
 }
 
 while (list($k,$v) = each($DATASOURCES)) {
