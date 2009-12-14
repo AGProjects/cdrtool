@@ -1,7 +1,8 @@
 /*
-LAST UPDATED: 2007-01-04 03:14 CET
+LAST UPDATED: 2009-12-14 - 13:03:14 CET
 
 CHANGELOG:
+- Added SipApplicationType, FromHeader and UserAgent
 - Added database name as parameter to stored procedures
 - Fixed the multiple query result in "update_raddact_record_mediaproxy"
 - Modus operandi update
@@ -224,7 +225,9 @@ CREATE PROCEDURE `insert_radacct_record`(
 	IN var_CanonicalURI VARCHAR(255),
 	IN var_Rate TEXT,
 	IN var_RTPStatistics TEXT,
-        IN var_SipApplicationType TEXT
+        IN var_SipApplicationType TEXT,
+        IN var_UserAgent TEXT,
+        IN var_FromHeader TEXT
 )
 BEGIN
 
@@ -272,6 +275,8 @@ BEGIN
  	@v_Rate = var_Rate,
 	@v_RTPStatistics = var_RTPStatistics,
 	@v_SipApplicationType = var_SipApplicationType,
+	@v_UserAgent = var_UserAgent,
+	@v_FromHeader = var_FromHeader,
 	@var_y = (SELECT YEAR(@v_AcctStartTime)),
 	@var_m = (SELECT DATE_FORMAT(@v_AcctStartTime, '%m')),
 	@var_tbl_begin = (SELECT set_radacct_table_name()),
@@ -303,14 +308,14 @@ BEGIN
 		AcctStopDelay, SipResponseCode,
 		SipMethod, SipTranslatedRequestURI, SipToTag,
 		SipFromTag, SipRPID, SourceIP, SourcePort, CanonicalURI,
-		Rate, RTPStatistics, SipApplicationType)
+		Rate, RTPStatistics, SipApplicationType, UserAgent, FromHeader)
 		VALUES
 		(NULL, ?, ?, ?, SUBSTRING_INDEX(?, '@',-1),
 		?, ?, ?, ?, ?, ?, ?, trim(leading 'sip:' from trim(leading 'sips:' from ?)),
 		trim(leading 'sip:' from trim(leading 'sips:' from ?)),
 		?, ?, ?, ?, ?, ?, ?, ?,
 		trim(leading 'sip:' from trim(leading 'sips:' from ?)),
-		?, ?, ?, ?, ?, trim(leading 'sip:' from trim(leading 'sips:' from ?)), ?, ?, ?
+		?, ?, ?, ?, ?, trim(leading 'sip:' from trim(leading 'sips:' from ?)), ?, ?, ?, ?, ?
 	)");
 
 	PREPARE add_rad FROM @instmt;
@@ -323,7 +328,7 @@ BEGIN
 		@v_AcctStopDelay, @v_SipResponseCode, @v_SipMethod,
 		@v_SipTranslatedRequestURI, @v_SipToTag, @v_SipFromTag,
 		@v_SipRPID, @v_SourceIP, @v_SourcePort, @v_CanonicalURI,
-		@v_Rate, @v_RTPStatistics, @v_SipApplicationType;
+		@v_Rate, @v_RTPStatistics, @v_SipApplicationType, @v_UserAgent, @v_FromHeader;
 	DEALLOCATE PREPARE add_rad;
 
 	-- CLEAN UP
@@ -358,6 +363,8 @@ BEGIN
  	@v_Rate = null,
 	@v_RTPStatistics = null,
 	@v_SipApplicationType = null,
+	@v_UserAgent = null,
+        @v_FromHeader = null,
 	@var_y = null,
 	@var_m = null,
 	@v_db_name = null,
