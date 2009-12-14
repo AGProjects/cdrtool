@@ -636,11 +636,12 @@ class CDRS_opensips extends CDRS {
                                     "size"=>"1"
                                 ));
         $application_els=array(
-                               array("label"=>"Any application","value"=>""),
-                               array("label"=>"Audio","value"=>"audio"),
-                               array("label"=>"Video","value"=>"video"),
-                               array("label"=>"Text message" ,"value"=>"message"),
-                               array("label"=>"Presence" ,"value"=>"presence")
+                               array("label"=>"Any",          "value"=>""),
+                               array("label"=>"Audio",        "value"=>"audio"),
+                               array("label"=>"Video",        "value"=>"video"),
+                               array("label"=>"SMS" ,         "value"=>"message"),
+                               array("label"=>"IM Chat" ,     "value"=>"chat"),
+                               array("label"=>"File Transfer","value"=>"file-transfer")
                                );
 
         $this->f->add_element(array("name"=>"application",
