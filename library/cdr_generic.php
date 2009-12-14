@@ -746,7 +746,7 @@ class CDRS {
         print "
         <tr>
             <td valign=middle align=left>
-            <b>Start time</b>
+            <b>Start Time</b>
             </td>
             <td>
             ";
@@ -767,7 +767,7 @@ class CDRS {
         </tr>
         <tr>
             <td valign=middle align=left>
-            <b>Stop time</b>
+            <b>Stop Time</b>
             </td>
             <td>
              ";
@@ -794,7 +794,7 @@ class CDRS {
         print "
         <tr>
         <td class=cdr valign=middle  align=left>
-        <b>Data source</b>
+        <b>Data Source</b>
         </td>
         <td valign=middle>";
         $f->show_element("cdr_source","");

@@ -155,11 +155,11 @@ class CDRS_opensips extends CDRS {
         <table border=0 cellspacing=2 width=100%>
         <tr bgcolor=lightgrey>
         <td>Id</td>
-        <td><b>Session start time</b></td>
-        <td><b>SIP caller</b></td>
+        <td><b>Start Time</b></td>
+        <td><b>SIP Caller</b></td>
         <td><b>Location</b></td>
         <td><b>Sip Proxy</b></td>
-        <td><b>SIP destination</b></td>
+        <td><b>SIP Destination</b></td>
         <td><b>Dur</b></td>
         <td><b>Price</b></td>
         <td align=right><b>KBIn</b></td>
@@ -189,11 +189,11 @@ class CDRS_opensips extends CDRS {
             <table border=0 cellspacing=2 width=100%>
             <tr bgcolor=lightgrey>
         	<td>Id</td>
-            <td><b>Session start time</b>
-            <td><b>SIP caller</b></td>
+            <td><b>Start Time</b>
+            <td><b>SIP Caller</b></td>
             <td><b>Location</b></td>
             <td><b>Sip Proxy</b></td>
-            <td><b>SIP destination</b></td>
+            <td><b>SIP Destination</b></td>
             <td><b>Duration</b></td>
             <td><b>Price</b></td>
             <td align=right><b>KBIn</b></td>
@@ -636,7 +636,7 @@ class CDRS_opensips extends CDRS {
                                     "size"=>"1"
                                 ));
         $application_els=array(
-                               array("label"=>"Any",          "value"=>""),
+                               array("label"=>"Any Application",          "value"=>""),
                                array("label"=>"Audio",        "value"=>"audio"),
                                array("label"=>"Video",        "value"=>"video"),
                                array("label"=>"SMS" ,         "value"=>"message"),
@@ -729,7 +729,7 @@ class CDRS_opensips extends CDRS {
         print "
         <tr> 
             <td align=left>
-            <b>SIP Session Id / Source IP</b>
+            <b>SIP Call Id / Source IP</b>
             </td>
             <td valign=top>
             ";
@@ -750,7 +750,7 @@ class CDRS_opensips extends CDRS {
         print "
         <tr> 
             <td align=left>
-            <b>SIP User Agent / Media Codecs</b>
+            <b>User Agent / Media Codecs</b>
             </td>
             <td valign=top>
             ";
@@ -2695,12 +2695,12 @@ class CDR_opensips extends CDR {
         </tr>
         <tr>
             <td></td>
-            <td>Start time: </td>
+            <td>Start Time: </td>
             <td>$this->startTime $providerTimezone</td>
         </tr>
         <tr>
             <td></td>
-            <td>Stop time: </td>
+            <td>Stop Time: </td>
             <td>$this->stopTime</td>
         </tr>
         ";
@@ -2761,7 +2761,7 @@ class CDR_opensips extends CDR {
         $this->cdr_details.= sprintf("
         <tr>
             <td></td>
-            <td>Next hop URI:</td>
+            <td>Next Hop URI:</td>
             <td>%s</td>
         </tr>
         ",htmlentities($this->RemoteAddress));
