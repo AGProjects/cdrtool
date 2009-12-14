@@ -223,7 +223,8 @@ CREATE PROCEDURE `insert_radacct_record`(
 	IN var_SourcePort VARCHAR(255),
 	IN var_CanonicalURI VARCHAR(255),
 	IN var_Rate TEXT,
-	IN var_RTPStatistics TEXT
+	IN var_RTPStatistics TEXT,
+        IN var_SipApplicationType TEXT
 )
 BEGIN
 
@@ -270,6 +271,7 @@ BEGIN
 	@v_CanonicalURI = var_CanonicalURI,
  	@v_Rate = var_Rate,
 	@v_RTPStatistics = var_RTPStatistics,
+	@v_SipApplicationType = var_SipApplicationType,
 	@var_y = (SELECT YEAR(@v_AcctStartTime)),
 	@var_m = (SELECT DATE_FORMAT(@v_AcctStartTime, '%m')),
 	@var_tbl_begin = (SELECT set_radacct_table_name()),
@@ -301,14 +303,14 @@ BEGIN
 		AcctStopDelay, SipResponseCode,
 		SipMethod, SipTranslatedRequestURI, SipToTag,
 		SipFromTag, SipRPID, SourceIP, SourcePort, CanonicalURI,
-		Rate, RTPStatistics)
+		Rate, RTPStatistics, SipApplicationType)
 		VALUES
 		(NULL, ?, ?, ?, SUBSTRING_INDEX(?, '@',-1),
 		?, ?, ?, ?, ?, ?, ?, trim(leading 'sip:' from trim(leading 'sips:' from ?)),
 		trim(leading 'sip:' from trim(leading 'sips:' from ?)),
 		?, ?, ?, ?, ?, ?, ?, ?,
 		trim(leading 'sip:' from trim(leading 'sips:' from ?)),
-		?, ?, ?, ?, ?, trim(leading 'sip:' from trim(leading 'sips:' from ?)), ?, ?
+		?, ?, ?, ?, ?, trim(leading 'sip:' from trim(leading 'sips:' from ?)), ?, ?, ?
 	)");
 
 	PREPARE add_rad FROM @instmt;
@@ -321,7 +323,7 @@ BEGIN
 		@v_AcctStopDelay, @v_SipResponseCode, @v_SipMethod,
 		@v_SipTranslatedRequestURI, @v_SipToTag, @v_SipFromTag,
 		@v_SipRPID, @v_SourceIP, @v_SourcePort, @v_CanonicalURI,
-		@v_Rate, @v_RTPStatistics;
+		@v_Rate, @v_RTPStatistics, @v_SipApplicationType;
 	DEALLOCATE PREPARE add_rad;
 
 	-- CLEAN UP
@@ -355,6 +357,7 @@ BEGIN
 	@v_CanonicalURI = null,
  	@v_Rate = null,
 	@v_RTPStatistics = null,
+	@v_SipApplicationType = null,
 	@var_y = null,
 	@var_m = null,
 	@v_db_name = null,
@@ -689,9 +692,19 @@ CALL insert_radacct_record (
 'adi@umts.ro', 'adi@umts.ro', '83.149.75.105', '5060', '2006-12-10 12:09:19', 
 '0', '0', '0', '0', 'sip:3333@umts.ro=3Buser=3Dphone',
 'sip:adi@umts.ro', '200', 'Sip-Session', '', '', '0', '0', '200', 'Invite',
-'sip:3333@vm01.dns-hosting.info=3Buser=3Dphone', 'as5664a60b', '27qems1o2j',
+'sip:3333@vm01.dns-hosting.info', 'as5664a60b', '27qems1o2j',
+'31208005169', '81.23.228.147', '5060',
+'sip:3333@vm01.dns-hosting.info', '', '', 'audio'
+);
+
+CALL insert_radacct_record (
+'radius','46477473374@blink-41247', '5af53194787eccf1',
+'adi@umts.ro', 'adi@umts.ro', '83.149.75.105', '5060', '2009-12-14 12:09:19', 
+'0', '0', '0', '0', 'sip:3333@umts.ro',
+'sip:adi@umts.ro', '200', 'Sip-Session', '', '', '0', '0', '200', 'Invite',
+'sip:test@umts.ro', 'a60bsss', 'qe222ms1o2j',
 '208005169', '81.23.228.147', '5060',
-'sip:3333@vm01.dns-hosting.info=3Buser=3Dphone', '', ''
+'sip:test@umts.ro', '', '', 'chat'
 );
 
 -- TEST PROCEDURE THAT UPATES A RECORD WITH MEDIAPROXY INFORMATION
