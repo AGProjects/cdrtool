@@ -1,6 +1,22 @@
 cdrtool (6.7.0) unstable; urgency=low
 
-  [ Rating engine ]
+   [ CDR Storage ]
+
+   * Added FromHeader, UserAgent and SIP-Application-Type
+     You must update radius configuration with sql.conf or reload the
+     radius_accounting.proc in the radius database depending on your setup
+   
+  [ WEB Output]
+
+  * Added Genexis SIP UA image
+  * Added Arris_TM722b SIP UA image
+  * Updated Webstar SIP UA images
+  * Turn off magic quotes at runtime
+  * Decode Radius text encoding
+  * Improve parsing of user-agent and server headers in sip trace
+  * Print node names instead of IP address in SIP trace table header
+
+  [ Rating Engine ]
 
   * Fixed billing tables indexes to contain reseller_id
     Must apply changes from setup/mysql/alter_tables.mysql
@@ -14,15 +30,8 @@ cdrtool (6.7.0) unstable; urgency=low
   * Log when loading broken destinations from destination table
   * Log and mail missing rates and destinations
   * Added max_sessions for prepaid calls
-  * Added Genexis sip ua images
-  * Added Arris_TM722b SIP UA image
-  * Update Webstar SIP UA icon and UA string match
-  * Turn off magic quotes at runtime
-  * Decode Radius text encoding
-  * Improve parsing of user-agent and server headers in sip trace
-  * Print node names instead of IP address in SIP trace table header
 
-  [ NGNPro client ]
+  [ NGNPro Client ]
 
   * Use admin credentials when update customers in administrator panels
   * Deactivate PSTN rights if is the first payment
@@ -39,7 +48,7 @@ cdrtool (6.7.0) unstable; urgency=low
   * Added translation files for SIP Settings page
   * Added prepaid users to group prepaid
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 13 Dec 2009 14:32:11 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 14 Dec 2009 13:47:56 +0100
 
 cdrtool (6.9.9) unstable; urgency=low
 
