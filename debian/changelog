@@ -1,13 +1,16 @@
 cdrtool (6.7.0) unstable; urgency=low
 
-   [ CDR Storage ]
-
-   * Added FromHeader, UserAgent and SIP-Application-Type
-     You must update radius configuration with sql.conf or reload the
+   * IMPORTANT!
+   * You must update radius configuration with sql.conf or reload the
      radius_accounting.proc in the radius database depending on your setup
+   * You must apply changes from setup/mysql/alter_tables.mysql
+
+   [ CDR Storage ]
+   * Added FromHeader radius attribute
+   * Added UserAgent radius attribute
+   * Added SIP-Application-Type radius attribute
    
   [ WEB Output]
-
   * Added Genexis SIP UA image
   * Added Arris_TM722b SIP UA image
   * Updated Webstar SIP UA images
@@ -15,11 +18,11 @@ cdrtool (6.7.0) unstable; urgency=low
   * Decode Radius text encoding
   * Improve parsing of user-agent and server headers in sip trace
   * Print node names instead of IP address in SIP trace table header
+  * Show Destination names when group CDRs by dest id
 
   [ Rating Engine ]
-
   * Fixed billing tables indexes to contain reseller_id
-    Must apply changes from setup/mysql/alter_tables.mysql
+  * Added max_price and max_duration for each rate
   * Improved rating engine logging
   * Added note about setting impersonate field to 0.0
   * Clean-up start procedure of rating engine
@@ -32,23 +35,19 @@ cdrtool (6.7.0) unstable; urgency=low
   * Added max_sessions for prepaid calls
 
   [ NGNPro Client ]
-
   * Use admin credentials when update customers in administrator panels
   * Deactivate PSTN rights if is the first payment
   * Fixed init of quota for accounts in SIP Thor backend
   * Display results of actions on SIP accounts
   * Added max_sessions column to prepaid table
-  * Show Destination names when group CDRs by dest id
   * Added change_privacy_access_number, check_privacy_access_number,
     reject_anonymous_access_number
   * Check if Reseller is allowed to perform Prepaid Changes
   * Added Credit Card Processing
-  * Added sample config file for Paypal transactions
-  * Added schema for sql tables used for Paypal transactions
   * Added translation files for SIP Settings page
-  * Added prepaid users to group prepaid
+  * Add prepaid users to group prepaid
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 14 Dec 2009 13:47:56 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 14 Dec 2009 18:48:26 +0100
 
 cdrtool (6.9.9) unstable; urgency=low
 
