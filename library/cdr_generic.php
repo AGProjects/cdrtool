@@ -1930,11 +1930,12 @@ class CDR {
     var $disconnectField      = "H323DisconnectCause";
     var $traceIn              = "";
     var $traceOut             = "";
-    var $defaultApplicationType = "audio";
+    var $defaultApplicationType    = "audio";
   	var $supportedApplicationTypes = array('audio',
-                                           'presence',
                                            'message',
-                                           'video'
+                                           'video',
+                                           'chat',
+                                           'file-transfer'
                                            );
 
     function CDR() {

@@ -43,7 +43,9 @@ class CDRS_opensips extends CDRS {
                          'ResellerId'      => 'BillingId',
                          'MediaTimeout'    => 'MediaInfo',
                          'RTPStatistics'   => 'RTPStatistics',
-                         'ENUMtld'         => 'ENUMtld'
+                         'ENUMtld'         => 'ENUMtld',
+                         'UserAgent'       => 'UserAgent',
+                         'FromHeader'      => 'FromHeader'
                          );
 
     var $CDRNormalizationFields=array('id'              => 'RadAcctId',
@@ -78,9 +80,7 @@ class CDRS_opensips extends CDRS {
                        'NASIPAddress'         => 'SIP Proxy',
                        'SourceIP'             => 'Source IP',
                        'Realm'                => 'SIP Billing domain',
-                       'UserAgentType'        => 'Caller User Agent',
-                       'UserAgentLeft'        => 'Caller User Agent (version)',
-                       'UserAgentRight'       => 'Called User Agent (version)',
+                       'UserAgent'            => 'User Agent',
                        'SipCodecs'            => 'Codec type',
                        'SipApplicationType'   => 'Application',
                        'SipResponseCode'      => 'SIP status code',
@@ -101,7 +101,7 @@ class CDRS_opensips extends CDRS {
         "a_number","a_number_comp","UserName","UserName_comp","BillingId",
         "c_number","c_number_comp","DestinationId","ExcludeDestinations",
         "NASPortId","Realm","Realms",
-        "SipMethod","SipCodec","SipRPID","SipUserAgents",
+        "SipMethod","SipCodec","SipRPID","UserAgent",
         "application","SipStatus","SipStatusClass","SipProxyServer","gateway",
         "duration","action","MONTHYEAR",
         "order_by","order_type","group_by",
@@ -650,11 +650,11 @@ class CDRS_opensips extends CDRS {
                                     "value"=>$application,
                                     "size"=>"1"
                                 ));
-        $this->f->add_element(array("name"=>"SipUserAgents",
+        $this->f->add_element(array("name"=>"UserAgent",
                                     "type"=>"text",
                                     "size"=>"25",
                                     "maxlength"=>"50",
-                                    "value"=>$SipUserAgents
+                                    "value"=>$UserAgent
                     ));
         $this->f->add_element(array("name"=>"SipCodec",
                                     "type"=>"text",
@@ -754,7 +754,7 @@ class CDRS_opensips extends CDRS {
             </td>
             <td valign=top>
             ";
-            $this->f->show_element("SipUserAgents","");
+            $this->f->show_element("UserAgent","");
             print " Codec: ";
             $this->f->show_element("SipCodec","");
             print "
@@ -1262,10 +1262,10 @@ class CDRS_opensips extends CDRS {
             }
         }
 
-        if ($SipUserAgents) {
-            $where .= " and $this->SipUserAgentsField like '%".addslashes($SipUserAgents)."%'";
-            $SipUserAgents_enc=urlencode($SipUserAgents);
-            $this->url.="&SipUserAgents=$SipUserAgents_enc";
+        if ($UserAgent) {
+            $where .= " and $this->UserAgentField like '%".addslashes($UserAgent)."%'";
+            $UserAgent_enc=urlencode($UserAgent);
+            $this->url.="&UserAgent=$UserAgent_enc";
         }
 
         if (strlen($SipStatus)) {
@@ -1352,11 +1352,7 @@ class CDRS_opensips extends CDRS {
 
             $this->group_byOrig=$group_by;
 
-            if ($group_by=="UserAgentLeft") {
-                $group_by="SUBSTRING_INDEX($this->SipUserAgentsField, '+', '1')";
-            } else if ($group_by=="UserAgentRight") {
-                $group_by="SUBSTRING_INDEX($this->SipUserAgentsField, '+', '-1')";
-            } else if ($group_by=="hour") {
+            if ($group_by=="hour") {
                 $group_by="HOUR(AcctStartTime)";
             } else if (preg_match("/^DAY/",$group_by)) {
                 $group_by="$group_by(AcctStartTime)";
@@ -1601,7 +1597,7 @@ class CDRS_opensips extends CDRS {
                         $traceField="SipCodec";
                         $mygroup_print = $mygroup;
                     } else if (preg_match("/UserAgent/",$this->group_byOrig)) {
-                        $traceField="SipUserAgents";
+                        $traceField="UserAgent";
                         $mygroup_print = $mygroup;
                     } else if (preg_match("/^BY/",$this->group_byOrig)) {
                         $traceField="MONTHYEAR";
@@ -2404,11 +2400,7 @@ class CDR_opensips extends CDR {
 
         if (!$this->applicationType && $this->SipMethod) {
             $_method=strtolower($this->SipMethod);
-            if ($_method=="publish"   ||
-                $_method=="subscribe" ||
-                $_method=="notify"    ){
-                $this->applicationType="presence";
-            } else if ($_method=="message") {
+            if ($_method=="message") {
                 $this->applicationType="message";
             } else {
                 $this->applicationType="audio";
@@ -2418,6 +2410,9 @@ class CDR_opensips extends CDR {
         $this->applicationType=strtolower($this->applicationType);
 
 		$this->applicationType_print=quoted_printable_decode($this->applicationType);
+
+		$this->FromHeaderPrint = quoted_printable_decode($this->FromHeader);
+        $this->UserAgentPrint  = quoted_printable_decode($this->UserAgent);
 
         if (strstr($this->applicationType,'audio')) {
             $this->applicationType='audio';
@@ -2733,6 +2728,16 @@ class CDR_opensips extends CDR {
         </tr>
         <tr>
             <td></td>
+            <td>From Header:</td>
+            <td>$this->FromHeaderPrint</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>User Agent:</td>
+            <td>$this->UserAgentPrint</td>
+        </tr>
+        <tr>
+            <td></td>
             <td>Domain:</td>
             <td>$this->domain</td>
         </tr>
@@ -2808,8 +2813,6 @@ class CDR_opensips extends CDR {
         <td valign=top>
         ";
 
-        if ($this->SipCodec) {
-            $this->SipCodec   = quoted_printable_decode($this->SipCodec);
 
             $this->cdr_details.= "
             <table border=0 cellpadding=0 cellspacing=0>
@@ -2818,7 +2821,8 @@ class CDR_opensips extends CDR {
                 <td colspan=3><b>Media information</b></td>
             </tr>
             ";
-            if ($this->CDRS->mediaTrace) {
+
+            if ($this->SipCodec && $this->CDRS->mediaTrace) {
                 $media_trace_datasource = $this->CDRS->mediaTrace;
 
                 $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
@@ -2839,70 +2843,77 @@ class CDR_opensips extends CDR {
                 <td>Application: </td>
                 <td>$this->applicationType_print</td>
             </tr>
-            <tr>
-                <td></td>
-                <td>Codecs: </td>
-                <td>$this->SipCodec</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>Caller RTP: </td>
-                <td>$this->inputTrafficPrint KB</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>Called RTP: </td>
-                <td>$this->outputTrafficPrint KB</td>
-            </tr>
             ";
 
-            if ($this->MediaTimeout) {
-                $this->cdr_details.= "
-                <tr>
-                <td></td>
-                <td>Media info:</td>
-                <td><font color=red>$this->MediaTimeout</font></td>
-                </tr>
-                ";
-            }
-
-            if ($this->SipUserAgents) {
-                $this->SipUserAgents   = quoted_printable_decode($this->SipUserAgents);
-
-                $callerAgents=explode("+",$this->SipUserAgents);
-                $callerUA=htmlentities($callerAgents[0]);
-                $calledUA=htmlentities($callerAgents[1]);
+            if ($this->SipCodec) {
+                $this->SipCodec   = quoted_printable_decode($this->SipCodec);
 
                 $this->cdr_details.= "
                 <tr>
                     <td></td>
-                    <td>Caller SIP UA: </td>
-                    <td>$callerUA</td>
+                    <td>Codecs: </td>
+                    <td>$this->SipCodec</td>
                 </tr>
                 <tr>
                     <td></td>
-                    <td>Called SIP UA: </td>
-                    <td>$calledUA</td>
+                    <td>Caller RTP: </td>
+                    <td>$this->inputTrafficPrint KB</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>Called RTP: </td>
+                    <td>$this->outputTrafficPrint KB</td>
                 </tr>
                 ";
-            }
-
-            if (is_array($this->QoS)) {
-                foreach (array_keys($this->QoS) as $_key) {
-                    if ($this->QoSParameters[$_key]) {
-                        $_desc=$this->QoSParameters[$_key];
-                    } else {
-                        $_desc=$_key;
-                    }
-                    $this->cdr_details.=
-                    sprintf ("<tr><td></td><td>%s</td><td>%s</td></tr>\n",
-                    $_desc,$this->QoS[$_key]);
+    
+                if ($this->MediaTimeout) {
+                    $this->cdr_details.= "
+                    <tr>
+                    <td></td>
+                    <td>Media info:</td>
+                    <td><font color=red>$this->MediaTimeout</font></td>
+                    </tr>
+                    ";
                 }
+    
+                if ($this->SipUserAgents) {
+                    $this->SipUserAgents   = quoted_printable_decode($this->SipUserAgents);
+    
+                    $callerAgents=explode("+",$this->SipUserAgents);
+                    $callerUA=htmlentities($callerAgents[0]);
+                    $calledUA=htmlentities($callerAgents[1]);
+    
+                    $this->cdr_details.= "
+                    <tr>
+                        <td></td>
+                        <td>Caller SIP UA: </td>
+                        <td>$callerUA</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>Called SIP UA: </td>
+                        <td>$calledUA</td>
+                    </tr>
+                    ";
+                }
+    
+                if (is_array($this->QoS)) {
+                    foreach (array_keys($this->QoS) as $_key) {
+                        if ($this->QoSParameters[$_key]) {
+                            $_desc=$this->QoSParameters[$_key];
+                        } else {
+                            $_desc=$_key;
+                        }
+                        $this->cdr_details.=
+                        sprintf ("<tr><td></td><td>%s</td><td>%s</td></tr>\n",
+                        $_desc,$this->QoS[$_key]);
+                    }
+                }
+
             }
 
-            $this->cdr_details.= "
-            </table>";
-        }
+        $this->cdr_details.= "
+        </table>";
 
         $this->cdr_details.=  "
         </td>
