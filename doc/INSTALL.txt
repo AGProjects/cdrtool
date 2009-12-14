@@ -109,7 +109,7 @@ Configure Apache2 server to support php scripting.
 
 Create a virtual host for cdrtool web pages:
 
-cp setup/apache2/sites-available/cdrtool.example.com /etc/apache2/sites-enabled 
+cp setup/apache2/sites-available/cdrtool.example.com /etc/apache2/sites-available
 cp setup/apache2/conf.d/cdrtool /etc/apache2/conf.d/
 
 Edit /etc/apache2/sites-enabled/cdrtool.example.com to suit your
