@@ -1640,6 +1640,8 @@ class CDRS_opensips extends CDRS {
                         $mygroup_print = $mygroup;
                     }
 
+					$mygroup_print=quoted_printable_decode($mygroup_print);
+
                     if (!$traceField) {
                         $traceField    = $group_by;
                     }
