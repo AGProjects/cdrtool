@@ -1635,6 +1635,9 @@ class CDRS_opensips extends CDRS {
                         $description    =$this->disconnectCodesDescription[$mygroup];
                         $mygroup_print = $mygroup;
                         $traceField="SipStatus";
+                    } else if ($this->group_byOrig=="SipApplicationType") {
+                        $mygroup_print = $mygroup;
+                        $traceField="application";
                     } else {
                         $description   = "";
                         $mygroup_print = $mygroup;
@@ -2842,7 +2845,7 @@ class CDR_opensips extends CDR {
             $this->cdr_details.= "
             <tr>
                 <td></td>
-                <td>Application: </td>
+                <td>Applications: </td>
                 <td>$this->applicationType_print</td>
             </tr>
             ";
