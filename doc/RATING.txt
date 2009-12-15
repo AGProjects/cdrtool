@@ -139,6 +139,20 @@ its own list of destinations. If the reseller_id of trusted peers and domain
 tables have been set, then the rating engine will apply the rating
 information belonging to them.
 
+Each destination has also a set of properties that can be used to alter the
+calculation of the price. These properties are:
+
+- increment: the call duration is rounded to the next increment in seconds,
+  this is only used for rating, the actual CDR duration is not modified
+- min_duration: set the duration to min_duration if the CDR duration is
+  smaller than min_duration, this is only used for rating, the actual CDR
+  duration is not modified
+- max_duration: limit the duration to max_duration if CDR duration is
+  bigger than max_duration, this is only used for rating, the actual CDR
+  duration is not modified
+- max_price: the price is set to max_price per call if the calculated price
+  is bigger than the max_price
+
 
 3. Determination of the costs
 -----------------------------
@@ -411,9 +425,6 @@ billing_customers
 | profile_name2     |
 | profile_name2_alt |
 | timezone          |
-| increment         |
-| min_duration      |
-| country_code      |
 +-------------------+
 
 billing_profiles
@@ -446,8 +457,6 @@ billing_rates
 | durationRate    |
 | connectCostIn   |
 | durationRateIn  |
-| increment       |
-| min_duration    |
 +-----------------+
 
 billing_rates_history
@@ -463,25 +472,26 @@ billing_rates_history
 | durationRate    |
 | connectCostIn   |
 | durationRateIn  |
-| increment       |
-| min_duration    |
 | startDate       |
 | endDate         |
 +-----------------+
 
 destinations
-+------------+
-| Field      |
-+------------+
-| id         |
-| reseller_id|
-| gateway    |
-| domain     |
-| subscriber |
-| dest_id    |
-| dest_name  |
-| asr        |
-+------------+
++--------------+
+| Field        |
++--------------+
+| id           |
+| reseller_id  |
+| gateway      |
+| domain       |
+| subscriber   |
+| dest_id      |
+| dest_name    |
+| increment    |
+| min_duration |
+| max_duration |
+| max_price    |
++--------------+
 
 billing_holidays
 +-------+
