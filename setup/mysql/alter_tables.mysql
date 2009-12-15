@@ -634,3 +634,20 @@ alter table billing_rates_history add UNIQUE `rate_idx` (`reseller_id`,`name`,`d
 
 alter table billing_profiles drop KEY `name_idx`;
 alter table billing_profiles add UNIQUE `name_idx` (`reseller_id`,`name`);
+
+alter table billing_rates drop column maxPrice;
+
+alter table billing_rates drop column min_duration;        
+alter table billing_rates drop column increment;            
+
+alter table billing_rates_history drop column min_duration;
+alter table billing_rates_history drop column increment; 
+
+alter table billing_customers drop column min_duration;             
+alter table billing_customers drop column increment;             
+
+alter table destinations add column increment smallint unsigned not null;
+alter table destinations add column min_duration smallint unsigned not null;
+alter table destinations add column max_duration bigint unsigned  not null;
+alter table destinations add column max_price varchar(25) NOT NULL default '';
+
