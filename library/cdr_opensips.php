@@ -2413,7 +2413,7 @@ class CDR_opensips extends CDR {
 
 		$this->applicationType_print=quoted_printable_decode($this->applicationType);
 
-		$this->FromHeaderPrint = quoted_printable_decode($this->FromHeader);
+		$this->FromHeaderPrint = htmlentities(quoted_printable_decode($this->FromHeader));
         $this->UserAgentPrint  = quoted_printable_decode($this->UserAgent);
 
         if (strstr($this->applicationType,'audio')) {
@@ -2650,7 +2650,7 @@ class CDR_opensips extends CDR {
         <td valign=top>
         <table border=0 cellpadding=0 cellspacing=0>
         <tr>
-            <td colspan=3><b>Signalling information</b></td>
+            <td colspan=3><b>SIP Signalling</b></td>
         </tr>
         ";
 
@@ -2820,7 +2820,7 @@ class CDR_opensips extends CDR {
             <table border=0 cellpadding=0 cellspacing=0>
 
             <tr>
-                <td colspan=3><b>Media information</b></td>
+                <td colspan=3><b>Media Streams</b></td>
             </tr>
             ";
 
@@ -2872,7 +2872,7 @@ class CDR_opensips extends CDR {
                     $this->cdr_details.= "
                     <tr>
                     <td></td>
-                    <td>Media info:</td>
+                    <td>Media Info:</td>
                     <td><font color=red>$this->MediaTimeout</font></td>
                     </tr>
                     ";
@@ -2928,7 +2928,7 @@ class CDR_opensips extends CDR {
             <table border=0 cellpadding=0 cellspacing=0>
     
                 <tr>
-                    <td colspan=3><b>Rating information</b></td>
+                    <td colspan=3><b>Rating</b></td>
     
                 </tr>
             ";
