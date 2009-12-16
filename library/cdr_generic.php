@@ -1100,7 +1100,7 @@ class CDRS {
         return 1;
     }
 
-    function NormalizeNumber($Number,$type="destination",$subscriber="",$domain="",$gateway="",$CountryCode="",$ENUMtld="",$reseller_id) {
+    function NormalizeNumber($Number,$type="destination",$subscriber="",$domain="",$gateway="",$CountryCode="",$ENUMtld="",$reseller_id=0) {
 
         $this->CSCODE="";
 
