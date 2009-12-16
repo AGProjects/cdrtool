@@ -2416,7 +2416,14 @@ class CDR_opensips extends CDR {
 
 		$this->applicationType_print=quoted_printable_decode($this->applicationType);
 
-		$this->FromHeaderPrint = htmlentities(quoted_printable_decode($this->FromHeader));
+		$this->FromHeaderPrint = quoted_printable_decode($this->FromHeader);
+        if (strstr($this->FromHeaderPrint,';')) {
+            $_els=explode(";",$this->FromHeaderPrint);
+            $this->FromHeaderPrint=$_els[0];
+        }
+
+        $this->FromHeaderPrint = htmlentities($this->FromHeaderPrint);
+
         $this->UserAgentPrint  = quoted_printable_decode($this->UserAgent);
 
         if (strstr($this->applicationType,'audio')) {
