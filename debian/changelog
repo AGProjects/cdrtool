@@ -30,6 +30,7 @@ cdrtool (6.7.0) unstable; urgency=low
   * Removed increment, min_duration from billing_rates
   * Removed increment, min_duration from billing_rates_history
   * Fixed billing tables indexes to contain reseller_id
+  * Added normalization for SIP MESSAGE method
   * Added max_price and max_duration for each rate
   * Improved rating engine logging
   * Added note about setting impersonate field to 0.0
@@ -56,7 +57,7 @@ cdrtool (6.7.0) unstable; urgency=low
   * Added translation files for SIP Settings page
   * Add prepaid users to group prepaid
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 15 Dec 2009 19:59:07 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 16 Dec 2009 11:52:51 +0100
 
 cdrtool (6.9.9) unstable; urgency=low
 

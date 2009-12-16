@@ -107,6 +107,8 @@ class Rate {
 
         if (!$this->applicationType) $this->applicationType='audio';
 
+        $this->rateSyslog .= sprintf("App=%s ",$this->applicationType);
+
         $durationRate           = 0;
 
         $foundRates=array();

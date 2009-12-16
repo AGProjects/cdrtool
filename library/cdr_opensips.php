@@ -2405,11 +2405,16 @@ class CDR_opensips extends CDR {
 
         if (!$this->applicationType && $this->SipMethod) {
             $_method=strtolower($this->SipMethod);
-            if ($_method=="message") {
-                $this->applicationType="message";
+            if ($_method == 'message') {
+                $this->applicationType = 'message';
+                $this->stopTimeNormalized=$this->startTime;
             } else {
-                $this->applicationType="audio";
+                $this->applicationType = 'audio';
             }
+        }
+
+		if ($this->applicationType == 'message') {
+        	$this->stopTimeNormalized=$this->startTime;
         }
 
         $this->applicationType=strtolower($this->applicationType);

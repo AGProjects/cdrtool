@@ -2053,7 +2053,13 @@ class CDR {
                 $query.=sprintf(" %s = '%s' ",$this->CDRS->CanonicalURIField,addslashes($this->CanonicalURINormalized));
             }
 
-            if ($this->CDRS->ratingEnabled && $this->duration) {
+            if ($this->stopTimeNormalized) {
+                if ($updatedFields) $query .= ", ";
+                $updatedFields++;
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->stopTimeField,addslashes($this->stopTimeNormalized));
+            }
+
+            if ($this->CDRS->ratingEnabled && ($this->duration || $this->applicationType == 'message')) {
 
   		        $Rate    = new Rate($this->CDRS->rating_settings, $this->CDRS->cdrtool);
 
