@@ -43,6 +43,7 @@ cdrtool (6.7.0) unstable; urgency=low
   * Added max_sessions for prepaid calls
 
   [ NGNPro Client ]
+  * You must upgrade to Freeradius-XS 1.1.7-4
   * Use admin credentials when update customers in administrator panels
   * Deactivate PSTN rights if is the first payment
   * Fixed init of quota for accounts in SIP Thor backend
@@ -55,7 +56,7 @@ cdrtool (6.7.0) unstable; urgency=low
   * Added translation files for SIP Settings page
   * Add prepaid users to group prepaid
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 14 Dec 2009 18:48:26 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 15 Dec 2009 19:59:07 +0100
 
 cdrtool (6.9.9) unstable; urgency=low
 
