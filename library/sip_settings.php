@@ -3644,6 +3644,7 @@ class SipSettings {
             $this->showIncreaseBalanceReseller();
             $this->showIncreaseBalanceSubscriber();
             $this->showBalanceHistory();
+
         }
     }
 
@@ -3694,7 +3695,7 @@ class SipSettings {
         <input type=hidden name=tab value=credit>
         <input type=hidden name=issuer value=subscriber>
         <input type=hidden name=task value=Add>
-        <td align=left><nobr>
+        <td align=left colspan=2><nobr>
         ";
 
         print _("Card Id");
