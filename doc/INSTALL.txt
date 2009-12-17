@@ -299,7 +299,30 @@ To enable quota you must add one extra column in the subscriber table:
 
 ALTER TABLE opensips.subscriber ADD COLUMN quota int NOT NULL;
 
-Entries required in opensips.cfg:
+You must also create the trusted table if not present in your OpenSIPS
+setup, the table must have at a minimum the `src_ip` and `reseller_id`
+columns. Example of a working trusted table:
+
+CREATE TABLE `trusted` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `src_ip` varchar(50) NOT NULL,
+  `proto` varchar(4) NOT NULL DEFAULT 'any',
+  `from_pattern` varchar(64) NOT NULL DEFAULT '^sip:.*$',
+  `tag` varchar(32) DEFAULT NULL,
+  `description` varchar(255) NOT NULL DEFAULT '',
+  `change_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `reseller_id` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `peer_idx` (`src_ip`,`proto`,`from_pattern`,`reseller_id`),
+  KEY `change_date_idx` (`change_date`),
+  KEY `reseller_idx` (`reseller_id`)
+);
+
+This trusted table must be checked by OpenSIPS when allowing sessions
+without Digest authentication, for example for SIP trunks from trusted
+parties.
+
+Entries required for CDRTool accounting in opensips.cfg:
 
 loadmodule "siptrace.so"
 loadmodule "acc.so"
@@ -327,12 +350,13 @@ modparam("acc", "radius_extra",       "User-Name=$Au; \
                                        SIP-Proxy-IP=$avp(s:sip_proxy_ip); \
                                        Canonical-URI=$avp(s:can_uri); \
                                        Billing-Party=$avp(billing_party); \
-                                       Divert-Reason=$avp(s:divert_reason);
-                                       \
+                                       Divert-Reason=$avp(s:divert_reason); \
                                        User-Agent=$hdr(user-agent); \
                                        Contact=$hdr(contact); \
                                        Event=$hdr(event); \
-                                       ENUM-TLD=$avp(s:enum_tld)")
+                                       ENUM-TLD=$avp(s:enum_tld); \
+                                       From-Header=$hdr(from); \
+                                       SIP-Application-Type=$avp(s:sip_application_type)")
 
 modparam("siptrace", "db_url", "mysql://opensips:password@localhost/opensips")
 modparam("siptrace", "traced_user_avp", "$avp(s:traced_user)")
@@ -365,6 +389,9 @@ format of the destination. The default behavior of the rating engine is to
 consider an European dialing plan where a local number starts with a zero
 and an international number starts with two zeros. See the Chapter
 'Determination of the destination id' in RATING.txt for more information.
+
+You must also set all the AVPs defined in radius_extra configuration section
+if you want to have them logged and to appear in CDRTool.
 
 
 MediaProxy setup
