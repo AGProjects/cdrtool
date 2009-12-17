@@ -1,63 +1,76 @@
 cdrtool (6.7.0) unstable; urgency=low
 
-   * IMPORTANT!
+   [ IMPORTANT ]
+
    * You must update radius configuration with sql.conf or reload the
      radius_accounting.proc in the radius database depending on your setup
-   * You must apply changes from setup/mysql/alter_tables.mysql
+   * You must apply the changes from setup/mysql/alter_tables.mysql
    * CSV file import formats have been adjusted, to see the current format
-     export the rating files to CSV after apply the changes to mysql
+     export the rating files to CSV after applying the changes to mysql
    * The increment and min_duration have been moved from billing_rates to
-     destinations table
+     the destinations table
 
    [ CDR Storage ]
+
    * Added FromHeader radius attribute
    * Added UserAgent radius attribute
    * Added SIP-Application-Type radius attribute
+   * If freeradius-xs package from AG Projects is used you must upgrade to
+     Freeradius-XS 1.1.7-4
    
   [ WEB Output]
+
   * Added Genexis SIP UA image
   * Added Arris_TM722b SIP UA image
-  * Updated Webstar SIP UA images
+  * Updated Webstar SIP UA image
   * Turn off magic quotes at runtime
-  * Decode Radius text encoding
-  * Improve parsing of user-agent and server headers in sip trace
-  * Print node names instead of IP address in SIP trace table header
-  * Show Destination names when group CDRs by dest id
+  * Decode Radius text encoding for some OpenSIPS attributes
+  * Show application type (audio, video, chat, message, file-transfer)
+  * Improve parsing of User-Agent and Server headers in SIP trace
+  * Print hostnames instead of IP address in SIP trace table header
+    the hostnames can be set per datasource, see sample configuration file
+  * Show Destination names when grouping the CDRs by destination id
+  * Managed number of maximum parallel sessions per prepaid accounts
 
   [ Rating Engine ]
-  * Added increment, min_duration, max_duration, max_price for each destination
+
+  * Added increment, min_duration, max_duration, max_price for each
+    destination, the usage of these fields is described in RATING.txt
   * Removed increment, min_duration from billing_customers
   * Removed increment, min_duration from billing_rates
   * Removed increment, min_duration from billing_rates_history
+  * Added max_sessions column to prepaid table
+  * Added note in INSTALL.txt about creating trusted peer table if missing
+    from OpenSIPS
   * Fixed billing tables indexes to contain reseller_id
   * Added normalization for SIP MESSAGE method
   * Added max_price and max_duration for each rate
   * Improved rating engine logging
-  * Added note about setting impersonate field to 0.0
-  * Clean-up start procedure of rating engine
-  * Fixed rating file import checks
+  * Added note in documentation about setting impersonate field to 0.0
+  * Clean-up the start procedure of the rating engine
   * Return 0 if mysql failure during query in prepaid table 
-    instead of the error text
-  * Check sanity of imported columns from csv files
-  * Log when loading broken destinations from destination table
-  * Log and mail missing rates and destinations
-  * Added max_sessions for prepaid calls
+    instead of the mysql error text
+  * Check the sanity of imported columns from csv files
+  * Log in syslog when loading broken destinations from destination table
+  * Log in syslog and email missing rates and destinations
+  * Implement max_sessions for prepaid calls, default is one session
+  * Fixed MySQL reconnection errors that could lead to engine shutdown
 
   [ NGNPro Client ]
-  * You must upgrade to Freeradius-XS 1.1.7-4
+  * NGNPro server 4.1.11 or later is required
   * Use admin credentials when update customers in administrator panels
   * Deactivate PSTN rights if is the first payment
   * Fixed init of quota for accounts in SIP Thor backend
-  * Display results of actions on SIP accounts
-  * Added max_sessions column to prepaid table
+  * Display results of multiple actions on SIP accounts
   * Added change_privacy_access_number, check_privacy_access_number,
     reject_anonymous_access_number
   * Check if Reseller is allowed to perform Prepaid Changes
-  * Added Credit Card Processing
-  * Added translation files for SIP Settings page
+  * Added Blink enrollment
+  * Added Credit Card transactions
+  * Added translation files for SIP settings page
   * Add prepaid users to group prepaid
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 16 Dec 2009 11:52:51 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 17 Dec 2009 10:42:50 +0100
 
 cdrtool (6.9.9) unstable; urgency=low
 
