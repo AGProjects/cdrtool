@@ -392,6 +392,7 @@ class CDRS {
                         $destinations_sip_cache.=$reseller_id."_".$subscriber.";".$dest_id."=".$name."\n";
 
 	                	$this->destinations_sip_count++;
+
                     } else if ($domain) {
                         $_destinations_sip[$reseller_id][$domain][$dest_id]=$name;
                         $destinations_sip_cache.=$reseller_id."_".$domain.";".$dest_id."=".$name."\n";
@@ -503,7 +504,6 @@ class CDRS {
 
             }
 
-
             $query=sprintf("select `value` from memcache where `key` = 'destinations_sip'");
             if (!$this->cdrtool->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
@@ -520,7 +520,7 @@ class CDRS {
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
-                $log=sprintf("Updated %d SIP destinations in cache key destinations_sip",$this->destinations_sip_count);
+                $log=sprintf("Cached %d SIP destinations",$this->destinations_sip_count);
                 syslog(LOG_NOTICE, $log);
 
             } else {
@@ -532,7 +532,7 @@ class CDRS {
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
-                $log=sprintf("Inserted %d SIP destinations in cache key destinations_sip",$this->destinations_sip_count);
+                $log=sprintf("Updated cache for %d SIP destinations",$this->destinations_sip_count);
                 syslog(LOG_NOTICE, $log);
             }
         }
@@ -549,9 +549,6 @@ class CDRS {
         }
 
 		$c=$this->destinations_count + $this->destinations_sip_count;
-        //$log=sprintf("Loaded %d PSTN and %d SIP destinations into memory",$this->destinations_count,$this->destinations_sip_count);
-        //syslog(LOG_NOTICE, $log);
-
         return $c;
     }
 
