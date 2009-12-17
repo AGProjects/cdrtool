@@ -159,6 +159,7 @@ class CDRS_opensips extends CDRS {
         <td><b>SIP Caller</b></td>
         <td><b>Location</b></td>
         <td><b>Sip Proxy</b></td>
+        <td><b>Applications</b></td>
         <td><b>SIP Destination</b></td>
         <td><b>Dur</b></td>
         <td><b>Price</b></td>
@@ -201,7 +202,7 @@ class CDRS_opensips extends CDRS {
             </tr>
             ";
         } else {
-            print "id,StartTime,StopTime,SIPBillingParty,SIPBillingDomain,RemotePartyId,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,Application\n";
+            print "id,StartTime,StopTime,SIPBillingParty,SIPBillingDomain,RemotePartyId,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Applications,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,Application\n";
         }
     }
 
@@ -3069,6 +3070,7 @@ class CDR_opensips extends CDR {
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->aNumberPrint</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->geo_location</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
+        <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->applicationType</td>
         <td valign=top><nobr>$this->destinationPrint</nobr>
         ";
 
@@ -3148,6 +3150,7 @@ class CDR_opensips extends CDR {
         print ",$this->duration";
         print ",$this->price";
         print ",$this->SipProxyServer";
+        print ",$this->applicationType";
         print ",$this->inputTraffic";
         print ",$this->outputTraffic";
         print ",$CallingUserAgent";
