@@ -44,6 +44,7 @@ $soapEngines=array(
                                          'store_clear_text_passwords' => true,
                                          'show_presence_tab'   => false,
                                          'show_directory'      => false,
+                                         'emergency_regions'   => array(),
                                          'disableExtraGroups'  => true
                                          ),
                            'vm' => array('name'=> 'Voicemail server',

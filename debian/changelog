@@ -70,8 +70,10 @@ cdrtool (6.7.0) unstable; urgency=low
   * Added Credit Card transactions
   * Added translation files for SIP settings page
   * Add prepaid users to group prepaid
+  * Added emergency_regions per engine
+  * Added Forwarding access codes per engine
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 17 Dec 2009 11:01:09 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 17 Dec 2009 11:26:40 +0100
 
 cdrtool (6.9.9) unstable; urgency=low
 

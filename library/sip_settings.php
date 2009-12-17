@@ -527,6 +527,10 @@ class SipSettings {
             $this->cdrtool_address  = $this->soapEngines[$this->sip_engine]['cdrtool_address'];
         }
 
+        if (strlen($this->soapEngines[$this->sip_engine]['emergency_regions'])) {
+            $this->emergency_regions  = $this->soapEngines[$this->sip_engine]['emergency_regions'];
+        }
+
         if ($this->soapEngines[$this->sip_engine]['pstn_access']) {
             $this->pstn_access     = $this->soapEngines[$this->sip_engine]['pstn_access'];
         }
