@@ -5720,7 +5720,19 @@ class RatingEngine {
             syslog(LOG_NOTICE,$log);
             return false;
         }
-        
+
+        if (preg_match("/^\d{1-3}\.\d{1-3}\.\d{1-3}\.\d{1-3}$/",$RatingEngine['socketIP'])) {
+            $log=sprintf("Invalid \$RatingEngine['socketIP'] in /etc/cdrtool/global.inc\n");
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
+        if (intval($RatingEngine['socketPort']) < 1 || intval($RatingEngine['socketPort']) > 65535) {
+            $log=sprintf("Invalid \$RatingEngine['socketPort'] in /etc/cdrtool/global.inc\n");
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
         if (!is_array($DATASOURCES[$RatingEngine['cdr_source']])) {
             $log=sprintf("Datasource '%s' does not exist in /etc/cdrtool/global.inc\n",$RatingEngine['cdr_source']);
             syslog(LOG_NOTICE,$log);

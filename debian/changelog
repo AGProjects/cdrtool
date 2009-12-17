@@ -55,6 +55,7 @@ cdrtool (6.7.0) unstable; urgency=low
   * Log in syslog and email missing rates and destinations
   * Implement max_sessions for prepaid calls, default is one session
   * Fixed MySQL reconnection errors that could lead to engine shutdown
+  * Check IP and port number before starting rating engine
 
   [ NGNPro Client ]
   * NGNPro server 4.1.11 or later is required
@@ -70,7 +71,7 @@ cdrtool (6.7.0) unstable; urgency=low
   * Added translation files for SIP settings page
   * Add prepaid users to group prepaid
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 17 Dec 2009 10:42:50 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 17 Dec 2009 11:01:09 +0100
 
 cdrtool (6.9.9) unstable; urgency=low
 
