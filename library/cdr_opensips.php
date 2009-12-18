@@ -159,7 +159,7 @@ class CDRS_opensips extends CDRS {
         <td><b>SIP Caller</b></td>
         <td><b>Location</b></td>
         <td><b>Sip Proxy</b></td>
-        <td><b>Applications</b></td>
+        <td><b>Apps</b></td>
         <td><b>SIP Destination</b></td>
         <td><b>Dur</b></td>
         <td><b>Price</b></td>
