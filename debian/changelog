@@ -1,4 +1,4 @@
-cdrtool (6.7.0) unstable; urgency=low
+cdrtool (7.0.0) unstable; urgency=low
 
    * You must update Freeradius configuration with sql.conf and reload the
      radius_accounting.proc in the radius database depending on your setup
