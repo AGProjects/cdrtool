@@ -705,25 +705,25 @@ CALL insert_radacct_record (
 );
 
 CALL insert_radacct_record (
-'radius','46477473374@blink-41247', '5af53194787eccf1',
+'radius','c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', '5af53194787eccf1',
 'adi@umts.ro', 'adi@umts.ro', '83.149.75.105', '5060', '2009-12-14 12:09:19', 
 '0', '0', '0', '0', 'sip:3333@umts.ro',
 'sip:adi@umts.ro', '200', 'Sip-Session', '', '', '0', '0', '200', 'Invite',
 'sip:test@umts.ro', 'a60bsss', 'qe222ms1o2j',
 '208005169', '81.23.228.147', '5060',
-'sip:test@umts.ro', '', '', 'chat'
+'sip:test@umts.ro', '', '', 'chat','Blink-0.11.1',''
 );
 
 -- TEST PROCEDURE THAT UPATES A RECORD WITH MEDIAPROXY INFORMATION
 CALL update_raddact_record_mediaproxy (
 'radius','3','5896','7140','snom320/5.2 + Asterisk', 'GSM', 'Audio', '', '0',
-'3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b','27qems1o2j'
+'c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b','27qems1o2j'
 );
 
 -- TEST PROCEDURE THAT UPATES A RECORD
 CALL update_radacct_record (
-'radius','2006-12-10 12:09:21', '0', '', 'n/a', 
-'3c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b', '27qems1o2j'
+'radius','2009-12-10 12:09:21', '0', '', 'n/a', 
+'c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b', '27qems1o2j'
 );
 
 */
