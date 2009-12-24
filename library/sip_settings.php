@@ -118,21 +118,6 @@ class SipSettings {
 
 	var $disable_extra_groups=true;
 
-    var $timeout_els=array(
-             "5" =>"5 s",
-             "10"=>"10 s",
-             "15"=>"15 s",
-             "20"=>"20 s",
-             "25"=>"25 s",
-             "30"=>"30 s",
-             "35"=>"35 s",
-             "40"=>"40 s",
-             "45"=>"45 s",
-             "50"=>"50 s",
-             "55"=>"55 s",
-             "60"=>"60 s"
-             );
-
     var $prepaid             = 0;
     var $emergency_regions   = array();
     var $FNOA_timeoutDefault = 35;
@@ -2440,8 +2425,6 @@ class SipSettings {
 
         $this->showMobileNumber();
 
-        $selected_timeout[$this->timeout]="selected";
-
         print "
         <tr class=even>
         <td>";
@@ -2451,11 +2434,7 @@ class SipSettings {
         <td align=left>
         ");
  
-        print "<select name=timeout>";
-        foreach (array_keys($this->timeout_els) as $_el) {
-            printf ("<option value=\"%s\" %s>%s",$_el,$selected_timeout[$_el],$this->timeout_els[$_el]);
-        }
-        print "</select>";
+        printf ("<input name=timeout value='%d' size=3> s",$this->timeout);
  
         print "
         </td>
