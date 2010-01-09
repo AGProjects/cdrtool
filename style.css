@@ -239,5 +239,6 @@ td.white {
                   border-color: #A9A9A9; 
                   border-collapse: collapse; 
                   -webkit-border-radius: 5px; 
+                  -moz-border-radius: 5px; 
                   padding: 1px 1px 1px 1px; }
                   
