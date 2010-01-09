@@ -37,6 +37,7 @@ class SipSettings {
     var $sip_settings_page         = "https://cdrtool.example.com/sip_settings.phtml";
     var $xcap_root                 = "https://cdrtool.example.com/xcap-root";
     var $pstn_access               = false;
+    var $sms_access                = false;
     var $pstn_changes_allowed      = false;
     var $prepaid_changes_allowed   = false;
     var $sip_proxy                 = "proxy.example.com";
@@ -281,7 +282,9 @@ class SipSettings {
         $this->availableGroups['blocked']  = array("Group"=>"blocked",
                                         "WEBName" =>sprintf(_("Status")),
                                         "SubscriberMayEditIt"=>0,
-                                        "SubscriberMaySeeIt"=>0
+                                        "SubscriberMaySeeIt"=>0,
+                                        "ResellerMayEditIt"=>1,
+                                        "ResellerMaySeeIt"=>1
                                         );
 
         $this->getResellerSettings();
@@ -296,7 +299,9 @@ class SipSettings {
                                     "WEBName" =>sprintf (_("PSTN Privacy")),
                                     "WEBComment"=>$_comment,
                                     "SubscriberMaySeeIt"=>1,
-                                    "SubscriberMayEditIt"=>1
+                                    "SubscriberMayEditIt"=>1,
+                                    "ResellerMayEditIt"=>1,
+                                    "ResellerMaySeeIt"=>1
                                     );
         if ($this->change_privacy_access_number) {
             $_comment=sprintf(_("Dial %s to change"),$this->reject_anonymous_access_number);
@@ -308,10 +313,14 @@ class SipSettings {
                                     "WEBName" =>sprintf (_("Reject Anonymous")),
                                     "WEBComment"=>$_comment,
                                     "SubscriberMaySeeIt"=>1,
-                                    "SubscriberMayEditIt"=>1
+                                    "SubscriberMayEditIt"=>1,
+                                    "ResellerMayEditIt"=>1,
+                                    "ResellerMaySeeIt"=>1
+
                                     );
 
         $this->pstnChangesAllowed();
+        $this->smsChangesAllowed();
         $this->prepaidChangesAllowed();
 
         $this->tabs=array('identity'=>_('Identity'),
@@ -518,6 +527,10 @@ class SipSettings {
 
         if ($this->soapEngines[$this->sip_engine]['pstn_access']) {
             $this->pstn_access     = $this->soapEngines[$this->sip_engine]['pstn_access'];
+        }
+
+        if ($this->soapEngines[$this->sip_engine]['sms_access']) {
+            $this->sms_access     = $this->soapEngines[$this->sip_engine]['sms_access'];
         }
 
         if ($this->soapEngines[$this->sip_engine]['voicemail_server']) {
@@ -1342,6 +1355,41 @@ class SipSettings {
         return;
     }
 
+    function smsChangesAllowed() {
+        dprint("smsChangesAllowed()");
+        if ($this->login_type == 'subscriber') {
+            $this->sms_changes_allowed = false;
+            return;
+        } else if ($this->login_type == 'admin') {
+            $this->sms_changes_allowed = true;
+            return;
+        } else if ($this->login_type == 'reseller') {
+
+            // for a reseller we need to check if a subaccount is allowed
+            if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
+                if ($this->resellerProperties['sms_access']) {
+                	dprint("is reseller");
+                	$this->sms_changes_allowed = true;
+                }
+                return;
+            } else if ($this->customerImpersonate == $this->loginCredentials['reseller']) {
+                if ($this->resellerProperties['sms_access']) {
+                	dprint("impersonate reseller");
+                	$this->sms_changes_allowed = true;
+                }
+                return;
+            }
+        } else if ($this->login_type == 'customer') {
+            if ($this->resellerProperties['sms_access'] && $this->customerProperties['sms_access']) {
+                $this->sms_changes_allowed = true;
+                return;
+            }
+        }
+
+        $this->sms_changes_allowed = false;
+        return;
+    }
+
     function prepaidChangesAllowed() {
         dprint("prepaidChangesAllowed()");
         if ($this->login_type == 'subscriber') {
@@ -1416,9 +1464,22 @@ class SipSettings {
                 $this->availableGroups['free-pstn'] = array("Group"=>"free-pstn",
                                                     "WEBName" =>   sprintf(_("PSTN Access")),
                                                     "WEBComment"=> sprintf(_("Caller-ID")),
-                                                    "SubscriberMayEditIt" => "0",
-                                                    "SubscriberMaySeeIt"  => 1
+                                                    "SubscriberMayEditIt" => 0,
+                                                    "SubscriberMaySeeIt"  => 1,
+                                                    "ResellerMayEditIt"=>1,
+                				                    "ResellerMaySeeIt"=>1
                                                     );
+            }
+
+            if ($this->sms_access) {
+                $this->availableGroups['sms']  = array("Group"=>"sms",
+                                                "WEBName" =>sprintf(_("Mobile SMS")),
+                                                "SubscriberMayEditIt"=>0,
+                                                "SubscriberMaySeeIt"=>1,
+                                                "ResellerMayEditIt"=>0,
+                                                "ResellerMaySeeIt"=>1
+                                                );
+
             }
 
             return true;
@@ -1441,8 +1502,6 @@ class SipSettings {
 
         $this->resellerProperties['language'] = $result->language;
         $this->resellerProperties['timezone'] = $result->timezone;
-
-        //dprint_r($this->resellerProperties);
 
         // overwrite settings from soap engine
         if ($this->resellerProperties['sip_proxy']) {
@@ -1538,13 +1597,29 @@ class SipSettings {
             $this->pstn_access     = $this->resellerProperties['pstn_access'];
         }
 
+        if (isset($this->resellerProperties['sms_access'])) {
+            $this->sms_access     = $this->resellerProperties['sms_access'];
+        }
+
         if ($this->pstn_access) {
             $this->availableGroups['free-pstn'] = array("Group"=>"free-pstn",
                                                 "WEBName" =>   sprintf(_("PSTN Access")),
                                                 "WEBComment"=> sprintf(_("Caller-ID")),
                                                 "SubscriberMayEditIt" => "0",
-                                                "SubscriberMaySeeIt"  => 1
-                                                );
+                                                "SubscriberMaySeeIt"  => 1,
+                                                "ResellerMayEditIt"=>1,
+                                                "ResellerMaySeeIt"=>1
+        										);
+        }
+        if ($this->sms_access) {
+            $this->availableGroups['sms']  = array("Group"=>"sms",
+                                            "WEBName" =>sprintf(_("Mobile SMS")),
+                                            "SubscriberMayEditIt"=>0,
+                                            "SubscriberMaySeeIt"=>1,
+                                            "ResellerMayEditIt"=>0,
+                                            "ResellerMaySeeIt"=>1
+                                            );
+
         }
     }
 
@@ -2267,6 +2342,10 @@ class SipSettings {
                 continue;
             }
 
+            if ($this->login_type == 'reseller' && !$this->availableGroups[$key]['ResellerMaySeeIt']) {
+                continue;
+            }
+
             if (in_array($key,$this->groups)) {
                 $checked_box[$key]="checked";
             }
@@ -2276,6 +2355,12 @@ class SipSettings {
 
             if ($this->login_type == 'subscriber') {
                 if ($this->availableGroups[$key]['SubscriberMayEditIt']) {
+                    $disabled_box = "";
+                } else {
+                    $disabled_box = "disabled=true";
+                }
+            } elseif ($this->login_type == 'reseller') {
+                if ($this->availableGroups[$key]['ResellerMayEditIt']) {
                     $disabled_box = "";
                 } else {
                     $disabled_box = "disabled=true";
@@ -2965,10 +3050,6 @@ class SipSettings {
             $result->prepaid=intval($_REQUEST['prepaid']);
         }
 
-        if ($result->prepaid == 1) {
-            $newACLarray[]='prepaid';
-        }
-
         reset($this->availableGroups);
 
         foreach (array_keys($this->availableGroups) as $key) {
@@ -3042,6 +3123,22 @@ class SipSettings {
                             if (in_array($key,$this->groups)) {
                                 $newACLarray[]=trim($key);
                             }
+                        }
+                     }
+                } else if ($key == 'sms') {
+                    if ($this->sms_changes_allowed) {
+    
+                        if (!$val && in_array($key,$this->groups)) {
+                            $this->somethingChanged=1;
+                        } else if ($val && !in_array($key,$this->groups)) {
+                            $this->somethingChanged=1;
+                        }
+    
+                        if ($val) $newACLarray[]=trim($key);
+                     } else {
+                        // copy old setting if exists
+                        if (in_array($key,$this->groups)) {
+                            $newACLarray[]=trim($key);
                         }
                      }
                 } else {

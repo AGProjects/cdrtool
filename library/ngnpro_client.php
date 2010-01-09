@@ -10986,6 +10986,11 @@ class Customers extends Records {
                                                                'permission' => 'admin',
                                                                'resellerMayManageForChildAccounts' => true
                                                                ),
+                                 'sms_access'         => array('name'      => 'Access to SMS',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'admin',
+                                                               'resellerMayManageForChildAccounts' => true
+                                                               ),
                                  'prepaid_changes'      => array('name'      => 'Prepaid Changes',
                                                                'category'   => 'sip',
                                                                'permission' => 'admin',
