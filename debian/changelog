@@ -1,3 +1,13 @@
+cdrtool (7.0.1) unstable; urgency=low
+
+  * Added rounded corners for mozilla browsers
+  * Added sms rigts for resellers and subscribers
+  * Use text type in place of select for no-answer timeout
+  * Fixed test stored procedure calls
+  * Fixed bugs in enrollment for sip accounts
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 12 Jan 2010 09:38:24 +0100
+
 cdrtool (7.0.0) unstable; urgency=low
 
    * You must update Freeradius configuration with sql.conf and reload the
