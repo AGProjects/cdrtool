@@ -7891,6 +7891,7 @@ class Enrollment {
                             'password'  => $_REQUEST['password'],
                             'timezone'  => $timezone,
                             'prepaid'   => 1,
+                            'pstn'      => 1,
                             'quota'     => 50,
                             'owner'     => intval($owner),
                             'groups'    => array('missed-calls'),
@@ -7901,7 +7902,7 @@ class Enrollment {
             if ($this->sipRecords->SoapEngine->exception->errorstring) {
                 $_msg="\n\n".$this->sipRecords->SoapEngine->exception->errorstring;
                 if ($this->sipRecords->SoapEngine->exception->errorcode == 1011) {
-                    $_msg.= "\n\nChose another Display Name and try again";
+                    $_msg.= "\n\nChose another username and try again";
                 }
             } else {
                 $_msg='failed to create sip account';
@@ -8217,8 +8218,8 @@ class PaypalProcessor {
                     
                     print "<p>";
                     print _("Transaction completed sucessfully. ");
-                    
-                    if ($account->first_transaction) {
+
+                    if ($CardProcessor->environment!='sandbox' && $account->first_transaction) {
                         print "<p>";
                         print _("This is your first payment. ");
                         
