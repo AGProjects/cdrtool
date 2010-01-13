@@ -701,7 +701,7 @@ CALL insert_radacct_record (
 'sip:adi@umts.ro', '200', 'Sip-Session', '', '', '0', '0', '200', 'Invite',
 'sip:3333@vm01.dns-hosting.info', 'as5664a60b', '27qems1o2j',
 '31208005169', '81.23.228.147', '5060',
-'sip:3333@vm01.dns-hosting.info', '', '', 'audio'
+'sip:3333@vm01.dns-hosting.info', '', '', 'audio','sipsimple 0.11.0',''
 );
 
 CALL insert_radacct_record (
