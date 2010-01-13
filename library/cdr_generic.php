@@ -22,6 +22,7 @@ class CDRS {
 	var $maxCDRsNormalizeWeb = 500;
     var $E164_class          = 'E164_Europe';
     var $quotaEnabled        = false;
+    var $csv_writter         = false;
 
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
@@ -260,6 +261,13 @@ class CDRS {
 
         $this->getCDRtables();
 
+        if ($this->DATASOURCES[$this->cdr_source]['csv_writer_class']) {
+        	$csv_writter_class=$this->DATASOURCES[$this->cdr_source]['csv_writer_class'];
+            if (class_exists($csv_writter_class)) {
+                $this->csv_writter = new $csv_writter_class($this->DATASOURCES[$this->cdr_source]['csv_directory']);
+            }
+
+        }
 
         $this->initOK=1;
     }
@@ -990,10 +998,11 @@ class CDRS {
 		$this->buildWhereForUnnormalizedSessions();
 
         $query=sprintf("select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
-        from %s where %s and %s",
+        from %s where %s and %s order by %s asc",
         $table,
         $where,
-        $this->whereUnnormalized
+        $this->whereUnnormalized,
+        $this->CDRFields['id']
         );
 
         $this->status['cdr_to_normalize']=0;
@@ -1029,12 +1038,31 @@ class CDRS {
         while ($this->CDRdb->next_record()) {
 
 			$Structure=$this->_readCDRNormalizationFieldsFromDB();
+
+			if ($this->csv_writter) {
+                if (!$this->csv_file_cannot_be_opened) {
+                    if (!$this->csv_writter->file_ready) {
+                        if (!$this->csv_writter->open_file($Structure[$this->CDRNormalizationFields['id']])) {
+                            $this->csv_file_cannot_be_opened = true;
+                        } else {
+                            $this->csv_file_ready = true;
+                        }
+                    }
+                }
+            }
+
             $found++;
 
             $CDR = new $this->CDR_class(&$this, &$Structure);
 
             if ($CDR->normalize("Save",$table)) {
                 $this->status['normalized']++;
+                if ($this->csv_file_ready) {
+                    if (!$this->csv_writter->write_record(&$CDR)) {
+                        // stop writting to the csv_writter
+                    	$this->csv_file_cannot_be_opened = true;
+                    }
+                }
             } else {
                 $this->status['normalize_failures']++;
             }
@@ -1088,6 +1116,10 @@ class CDRS {
             $log=sprintf("Normalization done in %d s, memory usage: %0.2f MB",$d,memory_get_usage()/1024/1024);
             syslog(LOG_NOTICE,$log );
     
+        }
+
+		if ($this->csv_file_ready) {
+        	$this->csv_writter->file_close();
         }
 
         if (count($this->usageKeysForDeletionFromCache)) {
@@ -2590,6 +2622,91 @@ class PrepaidHistory {
             print $log;
             syslog(LOG_NOTICE,$log);
         }
+    }
+}
+
+class CSVWritter {
+    var $csv_directory      = '/var/spool/cdrtool/normalize';
+    var $filename_extension = '.csv';
+    var $fields             = array();
+    var $file_ready         = false;
+    var $cdr_type           = array();
+
+    function CSVWritter($csv_directory) {
+        if ($csv_directory) {
+    		$this->csv_directory = $csv_directory;
+        }
+    }
+
+    function open_file ($filename_suffix) {
+    	if ($this->file_ready) return true;
+        if (!$filename_suffix) {
+            $log=sprintf ("No filename suffix provided to CDR writter\n");
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
+    	$this->filename_prefix = 'normalize-'.date('YmdHi');
+        $full_path=rtrim($this->csv_directory,'/').'/'.$this->filename_prefix.'-'.$filename_suffix.$this->filename_extension;
+        $full_path_tmp=$full_path.'.tmp';
+
+        if (!$this->fp = fopen($full_path_tmp, 'w')) {
+            $log=sprintf ("Error: CDR writter cannot open %s for writing\n",$full_path_tmp);
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
+        $log=sprintf ("CDR writter opened %s for writing\n",$full_path_tmp);
+        syslog(LOG_NOTICE,$log);
+
+    	$this->file_ready = true;
+        return true;
+    }
+
+    function close_file () {
+        if (!$this->file_ready) {
+        	return false;
+        }
+
+        fclose($this->fp);
+
+        if (!rename($full_path_tmp, $full_path)) {
+            $log=sprintf ("Error: CDR writter cannot rename %s to %s\n",$full_path_tmp,$full_path);
+            syslog(LOG_NOTICE,$log);
+        }
+        // rename file
+    }
+
+    function write_record ($CDR) {
+        if (!$this->file_ready) return false;
+
+        /*
+        foreach (array_keys($dictionary) as $key) {
+        	$line .= $dictionary[$key].',';
+        }
+
+        $line = rtrim($line);
+
+        if (!fput ($this->fp,$line)) {
+    		$this->file_ready = false;
+            return false;
+        }
+        */
+    }
+
+    function set_cdr_type() {
+    }
+}
+
+class MaxRate extends CSVWritter {
+    var $cdr_type           = array('on-net',
+                                    'outgoing',
+                                    'incoming',
+                                    'diverted'
+                                    );
+
+    function MaxRate ($csv_directory) {
+        $this->CSVWritter($csv_directory);
     }
 }
 
