@@ -7693,6 +7693,7 @@ class Enrollment {
         $this->outbound_proxy = $this->enrollment['outbound_proxy'];
         $this->xcap_root      = $this->enrollment['xcap_root'];
         $this->msrp_relay     = $this->enrollment['msrp_relay'];
+        $this->settings_url   = $this->enrollment['settings_url'];
 
         if ($this->enrollment['sip_class']) {
         	$this->sipClass = $this->enrollment['sip_class'];
@@ -7971,7 +7972,8 @@ class Enrollment {
                           'passport'       => $passport,
                           'outbound_proxy' => $this->outbound_proxy,
                           'xcap_root'      => $this->xcap_root,
-                          'msrp_relay'     => $this->msrp_relay
+                          'msrp_relay'     => $this->msrp_relay,
+                          'settings_url'   => $this->settings_url
                           );
 
             print (json_encode($return));
