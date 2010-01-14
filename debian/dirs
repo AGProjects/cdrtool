@@ -3,5 +3,6 @@ etc/apache2/conf.d
 etc/cdrtool
 etc/cdrtool/local
 var/spool/cdrtool
+var/spool/cdrtool/normalize
 var/www/CDRTool
 var/www/CDRTool/templates_c
