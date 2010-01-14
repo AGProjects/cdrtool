@@ -267,7 +267,7 @@ class CDRS {
         if ($this->DATASOURCES[$this->cdr_source]['csv_writer_class']) {
         	$csv_writter_class=$this->DATASOURCES[$this->cdr_source]['csv_writer_class'];
             if (class_exists($csv_writter_class)) {
-                $this->csv_writter = new $csv_writter_class($this->DATASOURCES[$this->cdr_source]['csv_directory']);
+                $this->csv_writter = new $csv_writter_class($this->cdr_source,$this->DATASOURCES[$this->cdr_source]['csv_directory']);
             }
 
         }
@@ -1061,8 +1061,8 @@ class CDRS {
             if ($CDR->normalize("Save",$table)) {
                 $this->status['normalized']++;
                 if ($this->csv_file_ready) {
-                    if (!$this->csv_writter->write_record(&$CDR)) {
-                        // stop writting to the csv_writter
+                    if (!$this->csv_writter->write_cdr(&$CDR)) {
+                        // stop writing future records if we have a failure
                     	$this->csv_file_cannot_be_opened = true;
                     }
                 }
@@ -1122,7 +1122,7 @@ class CDRS {
         }
 
 		if ($this->csv_file_ready) {
-        	$this->csv_writter->file_close();
+        	$this->csv_writter->close_file();
         }
 
         if (count($this->usageKeysForDeletionFromCache)) {
@@ -2634,14 +2634,21 @@ class CSVWritter {
     var $fields             = array();
     var $file_ready         = false;
     var $cdr_type           = array();
+    var $lines              = 0;
 
-    function CSVWritter($csv_directory) {
+    function CSVWritter($cdr_source='',$csv_directory='') {
         if ($csv_directory) {
     		$this->csv_directory = $csv_directory;
         }
+
+        if ($cdr_source) {
+    		$this->cdr_source = $cdr_source;
+        } else {
+    		$this->cdr_source = 'unknown';
+        }
     }
 
-    function open_file ($filename_suffix) {
+    function open_file ($filename_suffix='') {
     	if ($this->file_ready) return true;
         if (!$filename_suffix) {
             $log=sprintf ("No filename suffix provided to CDR writter\n");
@@ -2649,18 +2656,15 @@ class CSVWritter {
             return false;
         }
 
-    	$this->filename_prefix = 'normalize-'.date('YmdHi');
-        $full_path=rtrim($this->csv_directory,'/').'/'.$this->filename_prefix.'-'.$filename_suffix.$this->filename_extension;
-        $full_path_tmp=$full_path.'.tmp';
+    	$this->filename_prefix = strtolower($this->cdr_source).'-'.date('YmdHi');
+        $this->full_path=rtrim($this->csv_directory,'/').'/'.$this->filename_prefix.'-'.$filename_suffix.$this->filename_extension;
+        $this->full_path_tmp=$this->full_path.'.tmp';
 
-        if (!$this->fp = fopen($full_path_tmp, 'w')) {
-            $log=sprintf ("Error: CDR writter cannot open %s for writing\n",$full_path_tmp);
+        if (!$this->fp = fopen($this->full_path_tmp, 'w')) {
+            $log=sprintf ("Error: CDR writter cannot open %s for writing\n",$this->full_path_tmp);
             syslog(LOG_NOTICE,$log);
             return false;
         }
-
-        $log=sprintf ("CDR writter opened %s for writing\n",$full_path_tmp);
-        syslog(LOG_NOTICE,$log);
 
     	$this->file_ready = true;
         return true;
@@ -2673,32 +2677,57 @@ class CSVWritter {
 
         fclose($this->fp);
 
-        if (!rename($full_path_tmp, $full_path)) {
-            $log=sprintf ("Error: CDR writter cannot rename %s to %s\n",$full_path_tmp,$full_path);
+        if (!rename($this->full_path_tmp, $this->full_path)) {
+            $log=sprintf ("Error: CDR writter cannot rename %s to %s\n",$this->full_path_tmp,$this->full_path);
+            syslog(LOG_NOTICE,$log);
+        } else {
+            $log=sprintf ("%d normalized CDRs written to %s\n",$this->lines, $this->full_path);
             syslog(LOG_NOTICE,$log);
         }
-        // rename file
     }
 
-    function write_record ($CDR) {
+    function write_cdr ($CDR) {
         if (!$this->file_ready) return false;
 
-        /*
-        foreach (array_keys($dictionary) as $key) {
-        	$line .= $dictionary[$key].',';
+        if ($CDR->CallerIsLocal && $CDR->CalleeIsLocal) {
+            $this->flow = 'on-net';
+        } else if ($CDR->CallerIsLocal && !$CDR->CalleeIsLocal) {
+            $this->flow = 'outgoing';
+        } else if (!$CDR->CallerIsLocal && $CDR->CalleeIsLocal) {
+            $this->flow = 'incoming';
+        } else {
+            $this->flow = 'transit';
         }
 
-        $line = rtrim($line);
+        $line = sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+                        $CDR->id,
+                        $CDR->username,
+                        $CDR->domain,
+                        $CDR->aNumber,
+                        $CDR->cNumber,
+                        $CDR->CanonicalURI,
+                        $CDR->duration,
+                        $CDR->startTime,
+                        $CDR->stopTime,
+                        $CDR->callId,
+                        $CDR->applicationType,
+                        $CDR->DestinationId,
+                        $CDR->BillingPartyId,
+                        $CDR->ResellerId,
+                        $CDR->price,
+                        $this->flow
+                        );
 
-        if (!fput ($this->fp,$line)) {
+        if (!fputs($this->fp,$line)) {
     		$this->file_ready = false;
             return false;
         }
-        */
+
+        $this->lines++;
+
+        return true;
     }
 
-    function set_cdr_type() {
-    }
 }
 
 class MaxRate extends CSVWritter {
