@@ -2639,7 +2639,7 @@ class CDR_opensips extends CDR {
 
         $this->obfuscateCallerId();
 
-        //$this->isCalleeLocal();
+        $this->isCalleeLocal();
         $this->isCallerLocal();
 
         if ($this->CDRS->rating) {
@@ -3219,19 +3219,14 @@ class CDR_opensips extends CDR {
     }
 
     function isCallerLocal() {
-        // used by quota
         if (in_array($this->aNumberDomain,array_keys($this->CDRS->localDomains))) {
-            $this->CallerIsLocal=1;
-            return true;
+            $this->CallerIsLocal=true;
         }
-        return false;
     }
 
     function isCalleeLocal() {
-        if ($this->CanonicalURIUsername == $this->RemoteAddressUsername &&
-            in_array($this->CanonicalURIDomain,array_keys($this->CDRS->localDomains)) &&
-            !preg_match("/^0/",$this->CanonicalURIUsername)) {
-            $this->CalleeIsLocal=1;
+        if (in_array($this->CanonicalURIDomain,array_keys($this->CDRS->localDomains)) && !preg_match("/^0/",$this->CanonicalURIUsername)) {
+            $this->CalleeIsLocal=true;
         }
     }
 

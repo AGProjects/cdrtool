@@ -24,6 +24,9 @@ class CDRS {
     var $quotaEnabled        = false;
     var $csv_writter         = false;
 
+    var $CallerIsLocal       = false;
+    var $CalleeIsLocal       = false;
+
     var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
                                       'username'        => 'UserName',
