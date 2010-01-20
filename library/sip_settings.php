@@ -7648,6 +7648,8 @@ class Enrollment {
     var $send_email_notification    = true;
     var $create_email_alias         = false;
 	var $create_customer            = true;
+    var $timezones                  = array();
+    var $default_timezone           = 'Europe/Amsterdam';
 
     function Enrollment() {
 
@@ -7656,6 +7658,8 @@ class Enrollment {
 
     	$this->soapEngines  = $soapEngines;
         $this->enrollment   = $enrollment;
+
+		$this->loadTimezones();
 
         if (!is_array($this->soapEngines)) {
             $return=array('success'       => false,
@@ -7675,6 +7679,10 @@ class Enrollment {
 
         $this->sipDomain      = $this->enrollment['sip_domain'];
 		$this->sipEngine      = $this->enrollment['sip_engine'];
+
+        if ($this->enrollment['timezone']) {
+            $this->default_timezone = $this->enrollment['timezone'];
+        }
 
         if ($this->enrollment['customer_engine']) {
         	$this->customerEngine = $this->enrollment['customer_engine'];
@@ -7805,8 +7813,11 @@ class Enrollment {
                 $lastName  = 'Blink';
             }
 
-
             $timezone=$_REQUEST['tzinfo'];
+
+            if (!in_array($timezone, $this->timezones)) {
+            	$timezone=$this->default_timezone;
+            }
 
             $customer=array(
                          'firstName'  => $firstName,
@@ -8042,6 +8053,17 @@ class Enrollment {
         return true;
     }
 
+    function loadTimezones () {
+        if (!$fp = fopen("timezones", "r")) {
+        	syslog(LOG_NOTICE, 'Error: Failed to open timezones file');
+        	return false;
+        }
+        while ($buffer = fgets($fp,1024)) {
+            $this->timezones[]=trim($buffer);
+        }
+
+        fclose($fp);
+    }
 }
 
 class PaypalProcessor {
