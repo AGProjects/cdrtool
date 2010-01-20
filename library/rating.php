@@ -6430,14 +6430,6 @@ class RatingEngine {
             	$active_sessions=array();
             }
 
-			$session_counter=count($active_sessions);
-
-            if ($session_counter >= $max_sessions) {
-                $log = sprintf ("Locked: too many parallel calls, $max_sessions allowed");
-                syslog(LOG_NOTICE, $log);
-                return 'Locked';
-            }
-
             if (!$Balance) {
                 $log=sprintf ("No balance found");
                 syslog(LOG_NOTICE,$log);
@@ -6459,6 +6451,14 @@ class RatingEngine {
                     syslog(LOG_NOTICE, $log);
                 	return "0";
                 }
+            }
+
+			$session_counter=count($active_sessions);
+
+            if ($max_sessions && $session_counter >= $max_sessions) {
+                $log = sprintf ("Locked: too many parallel calls, $max_sessions allowed");
+                syslog(LOG_NOTICE, $log);
+                return 'Locked';
             }
 
             $maxduration=0;
