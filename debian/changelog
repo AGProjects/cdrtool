@@ -3,7 +3,6 @@ cdrtool (7.0.2) unstable; urgency=low
   [ WEB Output]
 
   * Added Android user agent picture
-  * Fixed name of web form that prevented selection of groups in accept screen
 
   [ Normalization ]
 
@@ -13,14 +12,15 @@ cdrtool (7.0.2) unstable; urgency=low
 
   [ Rating Engine ]
 
-  * Limit number of simultaneous calls only if they have cost
-  * Fixed test procedure call
+  * Limit the number of simultaneous calls only if they have cost
+  * Fixed test procedure call in documentation
 
   [ NGNPro Client ]
 
-  * Added settings_url to enrollment procedure
+  * Added settings_url to the enrollment procedure
   * Check timezone provided by SIP device during enrollment
   * Set default account type for new sip accounts to prepaid
+  * Fixed selecting Contact groups in Accept tab
 
  -- Adrian Georgescu <ag@ag-projects.com>  Sun, 24 Jan 2010 22:16:13 +0100
 
