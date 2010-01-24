@@ -1,3 +1,14 @@
+cdrtool (7.0.2) unstable; urgency=low
+
+  * Check timezone provided during enrollment
+  * Limit number of simultaneous calls only if they have cost
+  * Added settings_url to enrollment
+  * Check if callee is local
+  * Added var/spool/cdrtool/normalize to debian directories
+  * Added preliminary support for writing normalized CDRs to a file
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 24 Jan 2010 14:23:22 +0100
+
 cdrtool (7.0.1) unstable; urgency=low
 
   * Added rounded corners for mozilla browsers
