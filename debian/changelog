@@ -1,13 +1,28 @@
 cdrtool (7.0.2) unstable; urgency=low
 
-  * Check timezone provided during enrollment
-  * Limit number of simultaneous calls only if they have cost
-  * Added settings_url to enrollment
+  [ WEB Output]
+
+  * Added Android user agent picture
+  * Fixed name of web form that prevented selection of groups in accept screen
+
+  [ Normalization ]
+
   * Check if callee is local
-  * Added var/spool/cdrtool/normalize to debian directories
+  * Added /var/spool/cdrtool/normalize to debian directories
   * Added preliminary support for writing normalized CDRs to a file
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 24 Jan 2010 14:23:22 +0100
+  [ Rating Engine ]
+
+  * Limit number of simultaneous calls only if they have cost
+  * Fixed test procedure call
+
+  [ NGNPro Client ]
+
+  * Added settings_url to enrollment procedure
+  * Check timezone provided by SIP device during enrollment
+  * Set default account type for new sip accounts to prepaid
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 24 Jan 2010 22:16:13 +0100
 
 cdrtool (7.0.1) unstable; urgency=low
 
@@ -37,7 +52,6 @@ cdrtool (7.0.0) unstable; urgency=low
    * If freeradius-xs package from AG Projects is used you must upgrade to
      the latest Freeradius-XS 1.1.7-4
    
-  [ WEB Output]
 
   * Added Genexis, Arris_TM722b and Webstar SIP UA images
   * Show application type (audio, video, chat, message, file-transfer)
@@ -71,7 +85,6 @@ cdrtool (7.0.0) unstable; urgency=low
   * Fixed MySQL reconnection errors that could lead to engine shutdown
   * Check IP and port number before starting rating engine
 
-  [ NGNPro Client ]
 
   * NGNPro server 4.1.11 or later is required
   * Use admin credentials when update customers in administrator panels
