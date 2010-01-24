@@ -42,7 +42,8 @@ $userAgentImages = array("Asterisk"       => "asterisk.png",
                          "blink"          => "blink.png",
                          "fring"          => "fring.png",
                          "ARRIS-TM722"    => "Arris_TM722b.png",
-                         "Genexis OCG118" => "genexis.png"
+                         "Genexis OCG118" => "genexis.png",
+                         "droid" => "droid.png"
                          );
 
 ?>
