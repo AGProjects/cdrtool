@@ -5644,7 +5644,6 @@ class SipSettings {
 
             print "<td class=$class_groups>";
             if (count($this->acceptRules['groups'])>2) {
-
                 printf ("<input type=radio name=%s value=2 %s class=hidden>",$_name,$_checked_groups);
                 $i=0;
     
@@ -5707,7 +5706,7 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        <form method=post name=reject_form onSubmit=\"return checkForm(this)\">
         ";
         print "
         <tr>
