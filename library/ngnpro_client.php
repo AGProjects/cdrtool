@@ -2215,6 +2215,7 @@ class SipAccounts extends Records {
                             );
 
     var $store_clear_text_passwords=true;
+    var $default_account_type = 'postpaid';
 
     function SipAccounts(&$SoapEngine) {
         dprint("init SipAccounts");
