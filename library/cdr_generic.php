@@ -1044,7 +1044,7 @@ class CDRS {
 
 			if ($this->csv_writter) {
                 if (!$this->csv_file_cannot_be_opened) {
-                    if (!$this->csv_writter->file_ready) {
+                    if (!$this->csv_writter->ready) {
                         if (!$this->csv_writter->open_file($Structure[$this->CDRNormalizationFields['id']])) {
                             $this->csv_file_cannot_be_opened = true;
                         } else {
@@ -2632,53 +2632,74 @@ class CSVWritter {
     var $csv_directory      = '/var/spool/cdrtool/normalize';
     var $filename_extension = '.csv';
     var $fields             = array();
-    var $file_ready         = false;
+    var $ready              = false;
     var $cdr_type           = array();
     var $lines              = 0;
 
     function CSVWritter($cdr_source='',$csv_directory='') {
-        if ($csv_directory) {
-    		$this->csv_directory = $csv_directory;
-        }
-
         if ($cdr_source) {
     		$this->cdr_source = $cdr_source;
         } else {
     		$this->cdr_source = 'unknown';
         }
+
+        if ($csv_directory) {
+            if (is_dir($csv_directory)) {
+    			$this->csv_directory = $csv_directory;
+            } else {
+                $log=sprintf ("CDR writter error: %s is not a directory\n",$csv_directory);
+                syslog(LOG_NOTICE,$log);
+                return false;
+            }
+        }
+
+    	$this->directory=$this->csv_directory."/".date("Ymd");
+
+        if (!is_dir($this->directory)) {
+            if (!mkdir($this->directory)) {
+                $log=sprintf ("CDR writter error: cannot create directory %s\n",$this->directory);
+                syslog(LOG_NOTICE,$log);
+                return false;
+            }
+        }
+
+    	$this->directory_ready = true;
     }
 
     function open_file ($filename_suffix='') {
-    	if ($this->file_ready) return true;
+    	if ($this->ready) return true;
+
+        if (!$this->directory_ready) return false;
+
         if (!$filename_suffix) {
-            $log=sprintf ("No filename suffix provided to CDR writter\n");
+            $log=sprintf ("CDR writter error: no filename suffix provided\n");
             syslog(LOG_NOTICE,$log);
             return false;
         }
 
     	$this->filename_prefix = strtolower($this->cdr_source).'-'.date('YmdHi');
-        $this->full_path=rtrim($this->csv_directory,'/').'/'.$this->filename_prefix.'-'.$filename_suffix.$this->filename_extension;
+
+        $this->full_path=rtrim($this->directory,'/').'/'.$this->filename_prefix.'-'.$filename_suffix.$this->filename_extension;
+
         $this->full_path_tmp=$this->full_path.'.tmp';
 
         if (!$this->fp = fopen($this->full_path_tmp, 'w')) {
-            $log=sprintf ("Error: CDR writter cannot open %s for writing\n",$this->full_path_tmp);
+            $log=sprintf ("CDR writter error: cannot open %s for writing\n",$this->full_path_tmp);
             syslog(LOG_NOTICE,$log);
             return false;
         }
 
-    	$this->file_ready = true;
+    	$this->ready = true;
         return true;
     }
 
     function close_file () {
-        if (!$this->file_ready) {
-        	return false;
-        }
+    	if (!$this->ready) return false;
 
         fclose($this->fp);
 
         if (!rename($this->full_path_tmp, $this->full_path)) {
-            $log=sprintf ("Error: CDR writter cannot rename %s to %s\n",$this->full_path_tmp,$this->full_path);
+            $log=sprintf ("CDR writter error: cannot rename %s to %s\n",$this->full_path_tmp,$this->full_path);
             syslog(LOG_NOTICE,$log);
         } else {
             $log=sprintf ("%d normalized CDRs written to %s\n",$this->lines, $this->full_path);
@@ -2687,7 +2708,7 @@ class CSVWritter {
     }
 
     function write_cdr ($CDR) {
-        if (!$this->file_ready) return false;
+    	if (!$this->ready) return false;
 
         if ($CDR->CallerIsLocal && $CDR->CalleeIsLocal) {
             $this->flow = 'on-net';
@@ -2699,27 +2720,24 @@ class CSVWritter {
             $this->flow = 'transit';
         }
 
-        $line = sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+        $line = sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
                         $CDR->id,
-                        $CDR->username,
-                        $CDR->domain,
-                        $CDR->aNumber,
-                        $CDR->cNumber,
-                        $CDR->CanonicalURI,
-                        $CDR->duration,
-                        $CDR->startTime,
-                        $CDR->stopTime,
                         $CDR->callId,
                         $CDR->applicationType,
+                        $this->flow,
+                        $CDR->username,
+                        $CDR->CanonicalURI,
+                        $CDR->startTime,
+                        $CDR->stopTime,
+                        $CDR->duration,
                         $CDR->DestinationId,
                         $CDR->BillingPartyId,
                         $CDR->ResellerId,
-                        $CDR->price,
-                        $this->flow
+                        $CDR->price
                         );
 
         if (!fputs($this->fp,$line)) {
-    		$this->file_ready = false;
+    		$this->ready = false;
             return false;
         }
 
@@ -2727,7 +2745,6 @@ class CSVWritter {
 
         return true;
     }
-
 }
 
 class MaxRate extends CSVWritter {
@@ -2737,8 +2754,8 @@ class MaxRate extends CSVWritter {
                                     'diverted'
                                     );
 
-    function MaxRate ($csv_directory) {
-        $this->CSVWritter($csv_directory);
+    function MaxRate ($cdr_source='', $csv_directory='') {
+        $this->CSVWritter($cdr_source, $csv_directory);
     }
 }
 

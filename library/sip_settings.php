@@ -1732,7 +1732,7 @@ class SipSettings {
 
         print "
         </td>
-        <td width=100%>
+        <td>
         ";
 
         print "
