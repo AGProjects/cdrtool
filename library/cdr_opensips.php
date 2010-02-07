@@ -3364,9 +3364,9 @@ class CDR_opensips extends CDR {
             // IP address
             $this->SourceIP='xxx.xxx.xxx.xxx';
         }
-     }
+    }
 
-     function getRPIDforAccount($account) {
+    function getRPIDforAccount($account) {
         if (!$account) return false;
 
         list($username,$domain) = explode('@',$account);
@@ -3391,7 +3391,7 @@ class CDR_opensips extends CDR {
             }
         } else {
 
-            $query=sprintf("select quota from subscriber where username = '%s' and domain = '%s'",$username,$domain);
+            $query=sprintf("select rpid from subscriber where username = '%s' and domain = '%s'",$username,$domain);
             if (!$this->CDRS->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRS->AccountsDB->Error,$this->CDRS->AccountsDB->Errno);
                 syslog(LOG_NOTICE,$log);
