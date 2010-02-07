@@ -30,6 +30,8 @@ case "$1" in
         find /var/www/CDRTool/scripts/ -name \*.php -exec chmod +x {} \;
         chmod g+w /var/www/CDRTool/templates_c
         chgrp www-data /var/www/CDRTool/templates_c
+        chgrp www-data /var/spool/cdrtool/normalize
+        chmod g+sw /var/spool/cdrtool/normalize
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
