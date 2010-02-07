@@ -10759,6 +10759,7 @@ class Routes extends Records {
             printf ("<option value='%s' %s>%s",$_carrier,$selected_carrier[$_carrier],$this->carriers[$_carrier]);
         }
 
+        print "</select>";
         printf (" Prefix<input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
 
     }

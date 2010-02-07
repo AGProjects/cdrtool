@@ -63,6 +63,7 @@ class CDRS_opensips extends CDRS {
                                       'timestamp'       => 'timestamp',
                                       'RemoteAddress'   => 'SipTranslatedRequestURI',
                                       'CanonicalURI'    => 'CanonicalURI',
+                                      'SipRPID'         => 'SipRPID',
                                       'SipMethod'       => 'SipMethod',
                                       'applicationType' => 'SipApplicationType',
                                       'BillingPartyId'  => 'UserName',
@@ -156,6 +157,7 @@ class CDRS_opensips extends CDRS {
         <tr bgcolor=lightgrey>
         <td>Id</td>
         <td><b>Start Time</b></td>
+        <td><b>Flow</b></td>
         <td><b>SIP Caller</b></td>
         <td><b>Location</b></td>
         <td><b>Sip Proxy</b></td>
@@ -1385,7 +1387,7 @@ class CDRS_opensips extends CDRS {
             from $cdr_table where ".$where;
         }
 
-        dprint($query);
+        //dprint($query);
 
         if ($this->CDRdb->query($query)) {
              $this->CDRdb->next_record();
@@ -1755,6 +1757,7 @@ class CDRS_opensips extends CDRS {
                     $this->CDRdb->next_record();                                            
 
                     $Structure=$this->_readCDRFieldsFromDB();
+                    //dprint_r($Structure);
                     $CDR = new $this->CDR_class($this, $Structure);
 
                     if ($this->CDRTool['filter']['aNumber']) {
@@ -2380,6 +2383,7 @@ class CDR_opensips extends CDR {
 
         $this->cdr_source  = $this->CDRS->cdr_source;
 
+        //dprint_r($CDRfields);
         foreach (array_keys($this->CDRS->CDRFields) as $field) {
             $this->$field = $CDRfields[$this->CDRS->CDRFields[$field]];
         }
@@ -2446,6 +2450,7 @@ class CDR_opensips extends CDR {
             $NormalizedNumber        = $this->CDRS->NormalizeNumber($this->aNumber,"source");
             $this->aNumberPrint      = $NormalizedNumber['NumberPrint'];
             $this->aNumberNormalized = $NormalizedNumber['Normalized'];
+            $this->aNumberUsername   = $NormalizedNumber['username'];
             $this->aNumberDomain     = $NormalizedNumber['domain'];
         }
 
@@ -2519,6 +2524,7 @@ class CDR_opensips extends CDR {
             $this->CanonicalURIDomain           = $NormalizedNumber['domain'];
             $this->CanonicalURIPrint            = $NormalizedNumber['NumberPrint'];
             $this->CanonicalURIDelimiter        = $NormalizedNumber['delimiter'];
+            $this->CanonicalURIE164             = $NormalizedNumber['E164'];
 
             // Destination Id is used for rating purposes
             $this->DestinationId                = $NormalizedNumber['DestinationId'];
@@ -2532,6 +2538,7 @@ class CDR_opensips extends CDR {
             $this->cNumberDomain                = $NormalizedNumber['domain'];
             $this->cNumberPrint                 = $NormalizedNumber['username'].$NormalizedNumber['delimiter'].$NormalizedNumber['domain'];
             $this->cNumberDelimiter             = $NormalizedNumber['delimiter'];
+            $this->cNumberE164                  = $NormalizedNumber['E164'];
         }
 
         if ($this->RemoteAddress) {
@@ -2543,6 +2550,7 @@ class CDR_opensips extends CDR {
             $this->RemoteAddressDestinationName = $NormalizedNumber['destinationName'];
             $this->RemoteAddressUsername        = $NormalizedNumber['username'];
             $this->RemoteAddressDelimiter       = $NormalizedNumber['delimiter'];
+            $this->RemoteAddressE164            = $NormalizedNumber['E164'];
     
             $this->remoteGateway                = $NormalizedNumber['domain'];
             $this->remoteUsername               = $NormalizedNumber['username'];
@@ -2641,6 +2649,34 @@ class CDR_opensips extends CDR {
 
         $this->isCalleeLocal();
         $this->isCallerLocal();
+
+        if ($this->aNumberPrint == $this->BillingPartyId) {
+            // call is not diverted
+            if ($this->CDRS->csv_writter) {
+            	$this->CallerRPID=$this->getRPIDforAccount($this->aNumberPrint);
+            }
+
+  			if ($this->CallerIsLocal && $this->CalleeIsLocal) {
+            	$this->flow = 'on-net';
+            } else if ($this->CallerIsLocal && !$this->CalleeIsLocal) {
+            	$this->flow = 'outgoing';
+            } else if (!$this->CallerIsLocal && $this->CalleeIsLocal) {
+            	$this->flow = 'incoming';
+            } else if (!$this->CallerIsLocal && !$this->CalleeIsLocal) {
+            	$this->flow = 'transit';
+            }
+        } else {
+            // call is diverted
+            if ($this->CDRS->csv_writter) {
+            	$this->DiverterRPID=$this->getRPIDforAccount($this->username);
+            }
+
+            if (!$this->CalleeIsLocal) {
+            	$this->flow = 'diverted-off-net';
+            } else if ($this->CalleeIsLocal) {
+            	$this->flow = 'diverted-on-net';
+            }
+        }
 
         if ($this->CDRS->rating) {
         	global $perm;
@@ -3067,6 +3103,7 @@ class CDR_opensips extends CDR {
         <tr bgcolor=$inout_color>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime</nobr></td>
+        <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->flow</nobr></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->aNumberPrint</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->geo_location</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
@@ -3328,6 +3365,47 @@ class CDR_opensips extends CDR {
             $this->SourceIP='xxx.xxx.xxx.xxx';
         }
      }
+
+     function getRPIDforAccount($account) {
+        if (!$account) return false;
+
+        list($username,$domain) = explode('@',$account);
+
+        if ($this->CDRS->enableThor) {
+
+            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+
+            if (!$this->CDRS->AccountsDB->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRS->AccountsDB->Error,$this->CDRS->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return false;
+            }
+
+            if ($this->CDRS->AccountsDB->num_rows()) {
+            	$this->CDRS->AccountsDB->next_record();
+            	$_profile=json_decode(trim($this->CDRS->AccountsDB->f('profile')));
+                return $_profile->rpid;
+
+            } else {
+                return false;
+            }
+        } else {
+
+            $query=sprintf("select quota from subscriber where username = '%s' and domain = '%s'",$username,$domain);
+            if (!$this->CDRS->AccountsDB->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRS->AccountsDB->Error,$this->CDRS->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return 0;
+            }
+
+            if ($this->CDRS->AccountsDB->num_rows()) {
+            	$this->CDRS->AccountsDB->next_record();
+                return $this->CDRS->AccountsDB->f('rpid');
+            } else {
+                return false;
+            }
+        }
+    }
 }
 
 class SIP_trace {

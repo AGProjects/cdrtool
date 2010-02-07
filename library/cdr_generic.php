@@ -2115,9 +2115,10 @@ class CDR {
 
                 $Rate->calculate(&$RateDictionary);
 
-                $this->pricePrint = $Rate->pricePrint;
-                $this->price      = $Rate->price;
-                $this->rateInfo   = $Rate->rateInfo;
+                $this->pricePrint   = $Rate->pricePrint;
+                $this->price        = $Rate->price;
+                $this->rateInfo     = $Rate->rateInfo;
+                $this->rateDuration = $Rate->duration;
 
 				if (count($Rate->brokenRates)) {
                     $this->CDRS->brokenRates=array_merge($this->CDRS->brokenRates,array_keys($Rate->brokenRates));
@@ -2661,6 +2662,7 @@ class CSVWritter {
                 syslog(LOG_NOTICE,$log);
                 return false;
             }
+            chmod($this->directory, 0775);
         }
 
     	$this->directory_ready = true;
@@ -2710,21 +2712,11 @@ class CSVWritter {
     function write_cdr ($CDR) {
     	if (!$this->ready) return false;
 
-        if ($CDR->CallerIsLocal && $CDR->CalleeIsLocal) {
-            $this->flow = 'on-net';
-        } else if ($CDR->CallerIsLocal && !$CDR->CalleeIsLocal) {
-            $this->flow = 'outgoing';
-        } else if (!$CDR->CallerIsLocal && $CDR->CalleeIsLocal) {
-            $this->flow = 'incoming';
-        } else {
-            $this->flow = 'transit';
-        }
-
         $line = sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
                         $CDR->id,
                         $CDR->callId,
+                        $CDR->flow,
                         $CDR->applicationType,
-                        $this->flow,
                         $CDR->username,
                         $CDR->CanonicalURI,
                         $CDR->startTime,
@@ -2748,14 +2740,170 @@ class CSVWritter {
 }
 
 class MaxRate extends CSVWritter {
-    var $cdr_type           = array('on-net',
-                                    'outgoing',
-                                    'incoming',
-                                    'diverted'
-                                    );
+    var $product         = '';
+    var $cdr_types       = '';
+    var $inbound_trunks  = array();
+    var $outbound_trunks = array();
 
     function MaxRate ($cdr_source='', $csv_directory='') {
+    	global $MaxRateSettings;   // set in global.inc
+
+        /*
+		$MaxRateSettings= array('inbound_trunks'  => array('10.0.0.1' => 'KPNtrunk1',
+                                                           '10.0.0.1' => 'KPNtrunk1'
+                                                           ),
+                                'outbound_trunks' => array('ss7a-caiw.net'=>'KPNout1',
+                                                           'ss7b-caiw.net'=>'KPNout1'
+                                                           ),
+                                'cdr_types'       => array('on-net'   => array('feature_set' => '(2)'),
+                                                           'outgoing' => array('feature_set' => '(1)'),
+                                                           'incoming' => array('feature_set' => '(1)'),
+                                                           'diverted-on-net' => array('feature_set' => '(1)'),
+                                                           'diverted-off-net' => array('feature_set' => '(1)')
+                                                           ),
+
+                                'product' => 7
+                               );
+        */
+
+
+        if (is_array($MaxRateSettings['inbound_trunks'])) {
+            $this->inbound_trunks=$MaxRateSettings['inbound_trunks'];
+        }
+
+        if (is_array($MaxRateSettings['outbound_trunks'])) {
+            $this->outbound_trunks=$MaxRateSettings['outbound_trunks'];
+        }
+
+        if (is_array($MaxRateSettings['cdr_types'])) {
+            $this->cdr_types=$MaxRateSettings['cdr_types'];
+        }
+
+
+        if (strlen($MaxRateSettings['product'])) {
+            $this->product=$MaxRateSettings['product'];
+        }
+
         $this->CSVWritter($cdr_source, $csv_directory);
+
+    }
+
+    function write_cdr ($CDR) {
+    	if (!$this->ready) return false;
+
+        if ($CDR->applicationType != 'audio') return true;
+
+        preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
+
+		if ($CDR->CallerRPID) {
+        	$cdr['origin']      = '+'.$CDR->CallerRPID;
+        } else {
+        	$cdr['origin']      = $CDR->aNumberPrint;
+        }
+
+        if ($CDR->CanonicalURIE164) {
+        	$cdr['destination'] = '+'.$CDR->CanonicalURIE164;
+        } else {
+        	$cdr['destination'] = $CDR->CanonicalURI;
+        }
+
+        $cdr['start_date']  = sprintf ("%s/%s/%s %s",$m[3],$m[2],$m[1],$m[4]);
+
+        $cdr['feature_set'] = $this->cdr_types[$CDR->flow]['feature_set'];
+
+        $cdr['product']     = $this->product;
+
+        if ($CDR->rateDuration) {
+        	$cdr['duration']    = $CDR->rateDuration;
+        } else {
+        	$cdr['duration']    = $CDR->duration;
+        }
+
+        $cdr['extra']=$CDR->callId;
+
+		if ($CDR->flow == 'on-net') {
+        	$cdr['charge_info'] = sprintf("(%s,1)",$cdr['origin']);
+
+        } else if ($CDR->flow == 'outgoing') {
+
+        	if ($this->outbound_trunks[$CDR->CanonicalURIDomain]) {
+            	$outbound_trunk = $this->outbound_trunks[$CDR->CanonicalURIDomain];
+            } else {
+                $outbound_trunk = 'unknown';
+            }
+
+        	$cdr['charge_info'] = sprintf("(%s,1),(%s,2)",
+                                          $cdr['origin'],
+                                          $outbound_trunk
+                                          );
+
+        } else if ($CDR->flow == 'incoming') {
+           	if ($this->inbound_trunks[$CDR->SourceIP]) {
+            	$inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
+            } else {
+                $inbound_trunk = 'unknown';
+            }
+
+        	$cdr['charge_info']=sprintf("(%s,2)",$this->inbound_trunk);
+
+        } else if ($CDR->flow == 'diverted-on-net') {
+        	if ($this->inbound_trunks[$CDR->SourceIP]) {
+            	$inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
+            } else {
+                $inbound_trunk = 'unknown';
+            }
+
+        	$cdr['charge_info'] = sprintf("(%s,2)",$this->inbound_trunk);
+
+        } else if ($CDR->flow == 'diverted-off-net') {
+
+            if ($CDR->DiverterRPID) {
+                $diverter_origin='+'.$CDR->DiverterRPID;
+            } else {
+                $diverter_origin=$CDR->username;
+            }
+
+        	if ($this->inbound_trunks[$CDR->SourceIP]) {
+            	$inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
+            } else {
+                $inbound_trunk = 'unknown';
+            }
+
+        	if ($this->outbound_trunks[$CDR->remoteGateway]) {
+            	$outbound_trunk = $this->outbound_trunks[$CDR->remoteGateway];
+            } else {
+                $outbound_trunk = 'unknown';
+            }
+
+           	$cdr['charge_info'] = sprintf("(%s,1),(%s,2),(%s,2)",
+                                          $diverter_origin,
+                                          $inbound_trunk,
+                                          $outbound_trunk
+                                          );
+        }
+
+        $line = sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+                        $cdr['origin'],
+                        '',
+                        $cdr['destination'],
+                        $cdr['start_date'],
+                        $cdr['feature_set'],
+                        $cdr['product'],
+                        $cdr['duration'],
+                        '',
+                        'Voice',
+                        $cdr['charge_info'],
+                        $cdr['extra']
+                       );
+
+        if (!fputs($this->fp,$line)) {
+    		$this->ready = false;
+            return false;
+        }
+
+        $this->lines++;
+
+        return true;
     }
 }
 
