@@ -2796,7 +2796,7 @@ class MaxRate extends CSVWritter {
         preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
 
 		if ($CDR->CallerRPID) {
-        	$cdr['origin']      = '+'.$CDR->CallerRPID;
+        	$cdr['origin']      = '+31'.ltrim($CDR->CallerRPID,'0');
         } else {
         	$cdr['origin']      = $CDR->aNumberPrint;
         }
