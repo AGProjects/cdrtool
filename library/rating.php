@@ -6377,14 +6377,15 @@ class RatingEngine {
                 $log=sprintf ("Database error for query '%s': %s (%s), link_id =%s, query_id =%s",$query,$this->db->Error,$this->db->Errno,$this->db->Link_ID,$this->db->Query_ID);
                 syslog(LOG_NOTICE,$log);
                 $this->logRuntime();
-                $log=sprintf("Error: database error for query '%s': %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                return 0;
+                $ret=sprintf("error: database error for query '%s': %s (%s)",$query,$this->db->Error,$this->db->Errno)."\n"."type=prepaid";
+                return $ret;
             }
 
             if (!$this->db->num_rows()) {
                 $log=sprintf ("MaxSessionTime=unlimited Type=postpaid CallId=%s BillingParty=%s",$NetFields['callid'],$CDR->BillingPartyId);
                 syslog(LOG_NOTICE, $log);
-                return "none";
+                $ret="none"."\n"."type=postpaid";
+                return $ret;
             }
 
             $this->db->next_record();
@@ -6434,7 +6435,9 @@ class RatingEngine {
                 $log=sprintf ("No balance found");
                 syslog(LOG_NOTICE,$log);
                 $this->logRuntime();
-                return 0;
+                $ret="0"."\n"."type=prepaid";
+                return $ret;
+
             }
 
             if (!preg_match("/^0/",$CDR->CanonicalURINormalized)) {
@@ -6443,13 +6446,15 @@ class RatingEngine {
                 syslog(LOG_NOTICE, $log);
                 */
                 $this->logRuntime();
-                return "none";
+                $ret="none"."\n"."type=prepaid";
+                return $ret;
             } else {
                 if (!$CDR->DestinationId) {
                     $log = sprintf ("error: cannot figure out the destination id for %s",$CDR->CanonicalURI);
                     $this->logRuntime();
                     syslog(LOG_NOTICE, $log);
-                	return "0";
+                    $ret=$log."\n"."type=prepaid";
+                    return $ret;
                 }
             }
 
@@ -6458,7 +6463,8 @@ class RatingEngine {
             if ($max_sessions && $session_counter >= $max_sessions) {
                 $log = sprintf ("Locked: too many parallel calls, $max_sessions allowed");
                 syslog(LOG_NOTICE, $log);
-                return 'Locked';
+                $ret="Locked"."\n"."type=prepaid";
+                return $ret;
             }
 
             $maxduration=0;
@@ -6467,7 +6473,8 @@ class RatingEngine {
 			if (count($active_sessions)) {
                 // set  $this->remaining_balance and $this->parallel_calls for ongoing calls:
                 if (!$this->getActivePrepaidSessions($active_sessions,$Balance,$CDR->BillingPartyId,array($CDR->callId))) {
-                    return 0;
+                    $ret="0"."\n"."type=prepaid";
+                    return $ret;
                 }
 
                 $this->runtime['get_parallel_calls']=microtime_float();
@@ -6503,7 +6510,8 @@ class RatingEngine {
                 } else {
                     $log = sprintf ("Maxduration for session %s of %s will become negative",$CDR->callId,$CDR->BillingPartyId);
                     syslog(LOG_NOTICE, $log);
-                    return 0;
+                    $ret="0"."\n"."type=prepaid";
+                    return $ret;
                 }
 
     			$this->parallel_calls[$CDR->callId]=array('pricePerSecond' => $this->remaining_balance/$_maxduration);
@@ -6551,25 +6559,29 @@ class RatingEngine {
             if ($maxduration < 0) {
                 $log = sprintf ("error: maxduration %s is negative",$maxduration);
                 syslog(LOG_NOTICE, $log);
-                return $log;
+                $ret=$log."\n"."type=prepaid";
+                return $ret;
             }
 
             if ($Rate->min_duration && $maxduration < $Rate->min_duration) {
                 $log = sprintf ("Notice: maxduration of %s is less then min_duration (%s)",$maxduration,$Rate->min_duration);
                 syslog(LOG_NOTICE, $log);
-                return 0;
+                $ret="0"."\n"."type=prepaid";
+                return $ret;
             }
 
             if (!$Rate->billingTimezone) {
-                $log = sprintf ("error: cannot figure out the billing timezone");
+                $log = sprintf ("error: cannot figure out the billing timezone")."\n"."type=prepaid";
                 syslog(LOG_NOTICE, $log);
-                return $log;
+                $ret=$log."\n"."type=prepaid";
+                return $ret;
             }
 
             if (!$Rate->startTimeBilling) {
-                $log = sprintf ("error: cannot figure out the billing start time");
+                $log = sprintf ("error: cannot figure out the billing start time")."\n"."type=prepaid";
                 syslog(LOG_NOTICE, $log);
-                return $log;
+                $ret=$log."\n"."type=prepaid";
+                return $ret;
             }
 
             $log=sprintf ("MaxSessionTime=%s Type=prepaid CallId=%s BillingParty=%s DestId=%s Balance=%s Spans=%d",
@@ -6606,7 +6618,8 @@ class RatingEngine {
 
             $this->logRuntime();
 
-            return $maxduration;
+			$ret=$maxduration."\n"."type=prepaid";
+            return $ret;
 
         } else if ($NetFields['action'] == "debitbalance") {
 
