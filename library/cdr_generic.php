@@ -267,7 +267,7 @@ class CDRS {
         if ($this->DATASOURCES[$this->cdr_source]['csv_writer_class']) {
         	$csv_writter_class=$this->DATASOURCES[$this->cdr_source]['csv_writer_class'];
             if (class_exists($csv_writter_class)) {
-                $this->csv_writter = new $csv_writter_class($this->cdr_source,$this->DATASOURCES[$this->cdr_source]['csv_directory']);
+                $this->csv_writter = new $csv_writter_class($this->cdr_source,$this->DATASOURCES[$this->cdr_source]['csv_directory'],$this->db_subscribers);
             }
 
         }
@@ -2745,7 +2745,7 @@ class MaxRate extends CSVWritter {
     var $inbound_trunks  = array();
     var $outbound_trunks = array();
 
-    function MaxRate ($cdr_source='', $csv_directory='') {
+    function MaxRate ($cdr_source='', $csv_directory='', $db_subscribers='') {
     	global $MaxRateSettings;   // set in global.inc
 
         /*
@@ -2784,6 +2784,8 @@ class MaxRate extends CSVWritter {
             $this->product=$MaxRateSettings['product'];
         }
 
+		$this->AccountsDB = new $db_subscribers();
+
         $this->CSVWritter($cdr_source, $csv_directory);
 
     }
@@ -2795,8 +2797,10 @@ class MaxRate extends CSVWritter {
 
         preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
 
-		if ($CDR->CallerRPID) {
-        	$cdr['origin']      = '+31'.ltrim($CDR->CallerRPID,'0');
+        $CallerRPID=$this->getRPIDforAccount($CDR->aNumberPrint);
+
+		if ($CallerRPID) {
+        	$cdr['origin']      = '+31'.ltrim($CallerRPID,'0');
         } else {
         	$cdr['origin']      = $CDR->aNumberPrint;
         }
@@ -2857,8 +2861,10 @@ class MaxRate extends CSVWritter {
 
         } else if ($CDR->flow == 'diverted-off-net') {
 
-            if ($CDR->DiverterRPID) {
-                $diverter_origin='+'.$CDR->DiverterRPID;
+	        $DiverterRPID=$this->getRPIDforAccount($CDR->username);
+
+            if ($DiverterRPID) {
+                $diverter_origin='+'.$DiverterRPID;
             } else {
                 $diverter_origin=$CDR->username;
             }
@@ -2904,6 +2910,29 @@ class MaxRate extends CSVWritter {
         $this->lines++;
 
         return true;
+    }
+
+    function getRPIDforAccount($account) {
+        if (!$account) return false;
+
+        list($username,$domain) = explode('@',$account);
+
+        $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+
+        if (!$this->AccountsDB->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+            syslog(LOG_NOTICE,$log);
+            return false;
+        }
+
+        if ($this->AccountsDB->num_rows()) {
+            $this->AccountsDB->next_record();
+            $_profile=json_decode(trim($this->AccountsDB->f('profile')));
+            return $_profile->rpid;
+
+        } else {
+            return false;
+        }
     }
 }
 

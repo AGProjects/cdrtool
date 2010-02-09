@@ -2355,6 +2355,7 @@ class CDRS_opensips extends CDRS {
             }
         }
     }
+
 }
 
 class CDR_opensips extends CDR {
@@ -2652,9 +2653,6 @@ class CDR_opensips extends CDR {
 
         if ($this->aNumberPrint == $this->BillingPartyId) {
             // call is not diverted
-            if ($this->CDRS->csv_writter) {
-            	$this->CallerRPID=$this->getRPIDforAccount($this->aNumberPrint);
-            }
 
   			if ($this->CallerIsLocal && $this->CalleeIsLocal) {
             	$this->flow = 'on-net';
@@ -2667,10 +2665,6 @@ class CDR_opensips extends CDR {
             }
         } else {
             // call is diverted
-            if ($this->CDRS->csv_writter) {
-            	$this->DiverterRPID=$this->getRPIDforAccount($this->username);
-            }
-
             if (!$this->CalleeIsLocal) {
             	$this->flow = 'diverted-off-net';
             } else if ($this->CalleeIsLocal) {
@@ -3363,47 +3357,6 @@ class CDR_opensips extends CDR {
 
             // IP address
             $this->SourceIP='xxx.xxx.xxx.xxx';
-        }
-    }
-
-    function getRPIDforAccount($account) {
-        if (!$account) return false;
-
-        list($username,$domain) = explode('@',$account);
-
-        if ($this->CDRS->enableThor) {
-
-            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
-
-            if (!$this->CDRS->AccountsDB->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRS->AccountsDB->Error,$this->CDRS->AccountsDB->Errno);
-                syslog(LOG_NOTICE,$log);
-                return false;
-            }
-
-            if ($this->CDRS->AccountsDB->num_rows()) {
-            	$this->CDRS->AccountsDB->next_record();
-            	$_profile=json_decode(trim($this->CDRS->AccountsDB->f('profile')));
-                return $_profile->rpid;
-
-            } else {
-                return false;
-            }
-        } else {
-
-            $query=sprintf("select rpid from subscriber where username = '%s' and domain = '%s'",$username,$domain);
-            if (!$this->CDRS->AccountsDB->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRS->AccountsDB->Error,$this->CDRS->AccountsDB->Errno);
-                syslog(LOG_NOTICE,$log);
-                return 0;
-            }
-
-            if ($this->CDRS->AccountsDB->num_rows()) {
-            	$this->CDRS->AccountsDB->next_record();
-                return $this->CDRS->AccountsDB->f('rpid');
-            } else {
-                return false;
-            }
         }
     }
 }
