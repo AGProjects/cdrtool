@@ -4381,13 +4381,6 @@ class Media_trace {
                 $this->info = json_decode($this->db->f('info'));
             }
         }
-
-        /*
-        print "<pre>";
-        print_r($this->info);
-        print "</pre>";
-        */
-
     }
 
     function show($proxyIP,$callid,$fromtag,$totag) {
@@ -4469,23 +4462,44 @@ class Media_trace {
 
         foreach (array_values($this->info->streams) as $_val) {
 
-            $w_col1=intval($_val->start_time*$w/$this->info->duration);
-            $w_col2=intval(($_val->end_time-$_val->start_time-$_val->timeout_wait)*$w/$this->info->duration);
-            $w_col3=intval(($this->info->duration-$_val->end_time+$_val->timeout_wait)*$w/$this->info->duration);
+            $_timeout=$_val->timeout_wait;
+
+            $_duration=$_val->end_time-$_val->start_time;
+
+            if ($_val->status == 'conntrack timeout') {
+            	$bar_duration=$_val->end_time+$_val->timeout_wait;
+                $w_col2=intval(($_val->end_time-$_val->start_time)*$w/$bar_duration);
+                $w_col3=intval(($bar_duration-$_val->end_time)*$w/$bar_duration);
+
+            } else if ($_val->status == 'no-traffic timeout') {
+            	$bar_duration=$_val->end_time-$_val->start_time;
+            	$_timeout=$bar_duration;
+                $_duration=0;
+                $w_col2=0;
+                $w_col3=intval(($bar_duration*$w/$bar_duration));
+
+            } else if ($_val->status == 'closed') {
+            	$bar_duration=$_val->end_time-$_val->start_time;
+                $w_col2=intval(($_val->end_time-$_val->start_time)*$w/$bar_duration);
+                $w_col3=intval(($bar_duration-$_val->end_time)*$w/$bar_duration);
+
+			} else if ($_val->status == 'unselected ice candidate') {
+            	$bar_duration=0;
+            }
+
+			if (!$bar_duration) continue;
+
+          	$w_col1=intval($_val->start_time*$w/$bar_duration);
 
             print "<tr><td width=$w1 class=border>$_val->media_type</td>";
-
-            //$t2=$_val->end_time-$_val->timeout_wait;
-            $t2=$_val->end_time-$_val->start_time;
-            if (!$t2) $t2='';
-            $t3=$this->info->duration;
 
             print "<td>
             <table width=100%><tr>";
             print "<td width=$w_col1 bgcolor=white></td>";
-            print "<td width=$w_col2 bgcolor=green align=center><font color=white>$t2</font></td>";
+            print "<td width=$w_col2 bgcolor=green align=center><font color=white>$_duration</font></td>";
+
             if ($_val->timeout_wait) {
-                print "<td width=$w_col3 bgcolor=red align=center><font color=white>$t3</font></td>";
+                print "<td width=$w_col3 bgcolor=red align=center><font color=white>$_timeout</font></td>";
             } else {
                 print "<td width=$w_col3 bgcolor=white></td>";
             }
@@ -4494,6 +4508,7 @@ class Media_trace {
             print "</td></tr>";
 
         }
+
         print "</table>";
 
         print "<h4>Legend</h4>";
