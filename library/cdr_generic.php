@@ -2848,7 +2848,7 @@ class MaxRate extends CSVWritter {
                 $inbound_trunk = 'unknown';
             }
 
-        	$cdr['charge_info']=sprintf("(%s,2)",$this->inbound_trunk);
+        	$cdr['charge_info']=sprintf("(%s,2)",$inbound_trunk);
 
         } else if ($CDR->flow == 'diverted-on-net') {
         	if ($this->inbound_trunks[$CDR->SourceIP]) {
@@ -2857,7 +2857,7 @@ class MaxRate extends CSVWritter {
                 $inbound_trunk = 'unknown';
             }
 
-        	$cdr['charge_info'] = sprintf("(%s,2)",$this->inbound_trunk);
+        	$cdr['charge_info'] = sprintf("(%s,2)",$inbound_trunk);
 
         } else if ($CDR->flow == 'diverted-off-net') {
 
