@@ -41,8 +41,8 @@ Extract it using tar xzvf cdrtool-version.tar.gz
 cd CDRTool
 debuild
 
-Assuming you have all the dependencies satisfied (if you are compiling opensips
-from source you'll have them), it will generate a file called
+Assuming you have all the dependencies satisfied (if you are compiling
+opensips from source you'll have them), it will generate a file called
 cdrtool_version_all.deb
 
 You can install it with dpkg -i cdrtool_version_all.deb
@@ -230,20 +230,13 @@ Create RADIUS tables
 
 mysql -u root radius < /var/www/CDRTool/setup/radius/OpenSIPS/radacct.mysql
 
-Configure Freeradius to write data into mysql:
-
-a. To write data into one radacct table:
-
-   cp /var/www/CDRTool/setup/radius/OpenSIPS/sql.conf /etc/freeradius/sql.conf  
-
-b. To automatically create a table for each calendar month radacctYYYYMM:
-
-   cp /var/www/CDRTool/setup/radius/OpenSIPS/radius_accounting.conf /etc/freeradius/sql.conf
-
-   Load the MySQL stored procedures that create the monthly tables:
+Load the MySQL stored procedures that create the radius monthly tables:
    
-   mysql -u root radius < /var/www/CDRTool/setup/radius/OpenSIPS/radius_accounting.proc
+mysql -u root radius < /var/www/CDRTool/setup/radius/OpenSIPS/radius_accounting.proc
 
+Configure Freeradius to use the MySQL procedure:
+
+cp /var/www/CDRTool/setup/radius/OpenSIPS/sql.conf /etc/freeradius/sql.conf  
 
 Add RADIUS clients in clients.conf. Each device sending RADIUS accounting
 requests must be added to /etc/freeradius/clients.conf. Examples:
