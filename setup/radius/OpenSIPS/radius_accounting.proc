@@ -1,7 +1,9 @@
 /*
-LAST UPDATED: 2009-12-14 - 13:03:14 CET
+LAST UPDATED: 2010-02-17 - 14:17:00 MST
 
 CHANGELOG:
+- Set case statement for update block in "proc_update_raddact_record_mediaproxy" 
+  when MediaInfo value passed to query is 'ICE success'
 - Added SipApplicationType, FromHeader and UserAgent
 - Added database name as parameter to stored procedures
 - Fixed the multiple query result in "update_raddact_record_mediaproxy"
@@ -17,7 +19,7 @@ details records in automatically rotated radacct tables by using MySQL
 stored procedures.
 
 This implementation has been contributed by
-Andrei Magureanu <uskratos@gmail.com>
+Andrew Madison <andrew@ag-projects.com>
 
 How to setup auto-rotation
 --------------------------
@@ -641,6 +643,7 @@ BEGIN
 	-- TABLENAME VARIABLE
 	SET @var_tbl = var_tblname,
 	@var_db_name = var_dbname,
+	@var_MediaInfo = var_MediaInfo,
 	@var_tbl_cnt = (SELECT COUNT(TABLE_NAME) AS TBLCNT
 	FROM information_schema.tables
 	WHERE TABLE_SCHEMA = @var_db_name
@@ -651,38 +654,57 @@ BEGIN
 		SET @rcnt = (SELECT 0);
 	ELSE
 
-		SET @radupdstmt = CONCAT("UPDATE ", @var_tbl, " SET
-			AcctSessionTime = AcctSessionTime + IF(ConnectInfo_stop IS NULL, ?, 0),
-			AcctStopTime = DATE_ADD(AcctStartTime, INTERVAL AcctSessionTime SECOND),
-			AcctInputOctets = AcctInputOctets + ?,
-			AcctOutputOctets = AcctOutputOctets + ?,
-			SipUserAgents = ?,
-			SipCodecs = ?,
-			SipApplicationType = ?,
-			MediaInfo = ?,
-			Normalized = ?
-			WHERE
-			AcctSessionId = ?
-			AND SipToTag = ? AND SipFromTag = ?;");
-			PREPARE update_rad FROM @radupdstmt;
+    IF @var_MediaInfo = 'ICE success' THEN
+    	SET @radupdstmt = CONCAT("UPDATE ", @var_tbl, " SET
+    		MediaInfo = ?,
+    		Normalized = '0' 
+    		WHERE 
+    		AcctSessionId = ?
+				AND SipToTag = ? AND SipFromTag = ?;");
+				PREPARE update_rad FROM @radupdstmt;
 
-		SET @v_AcctSessionTime = var_AcctSessionTime,
-		@v_AcctInputOctets = var_AcctInputOctets,
-		@v_AcctOutputOctets = var_AcctOutputOctets,
-		@v_SipUserAgents = var_SipUserAgents,
-		@v_SipCodecs = var_SipCodecs,
-		@v_SipApplicationType = var_SipApplicationType,
-		@v_MediaInfo = var_MediaInfo,
-		@v_Normalized = var_Normalized,
-		@v_AcctSessionId = var_AcctSessionId,
-		@v_SipToTag = var_SipToTag,
-		@v_SipFromTag = var_SipFromTag;
+			SET @v_MediaInfo = var_MediaInfo,
+			@v_AcctSessionId = var_AcctSessionId,
+			@v_SipToTag = var_SipToTag,
+			@v_SipFromTag = var_SipFromTag;
+    
+			EXECUTE update_rad USING @v_MediaInfo, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
+			SET @rcnt = (SELECT ROW_COUNT());
+			DEALLOCATE PREPARE update_rad;
+    ELSE
+			SET @radupdstmt = CONCAT("UPDATE ", @var_tbl, " SET
+				AcctSessionTime = AcctSessionTime + IF(ConnectInfo_stop IS NULL, ?, 0),
+				AcctStopTime = DATE_ADD(AcctStartTime, INTERVAL AcctSessionTime SECOND),
+				AcctInputOctets = AcctInputOctets + ?,
+				AcctOutputOctets = AcctOutputOctets + ?,
+				SipUserAgents = ?,
+				SipCodecs = ?,
+				SipApplicationType = ?,
+				MediaInfo = ?,
+				Normalized = ?
+				WHERE
+				AcctSessionId = ?
+				AND SipToTag = ? AND SipFromTag = ?;");
+				PREPARE update_rad FROM @radupdstmt;
 
-		EXECUTE update_rad USING @v_AcctSessionTime, @v_AcctInputOctets, @v_AcctOutputOctets,
-			@v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
-			@v_MediaInfo, @v_Normalized, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
-		SET @rcnt = (SELECT ROW_COUNT());
-		DEALLOCATE PREPARE update_rad;
+			SET @v_AcctSessionTime = var_AcctSessionTime,
+			@v_AcctInputOctets = var_AcctInputOctets,
+			@v_AcctOutputOctets = var_AcctOutputOctets,
+			@v_SipUserAgents = var_SipUserAgents,
+			@v_SipCodecs = var_SipCodecs,
+			@v_SipApplicationType = var_SipApplicationType,
+			@v_MediaInfo = var_MediaInfo,
+			@v_Normalized = var_Normalized,
+			@v_AcctSessionId = var_AcctSessionId,
+			@v_SipToTag = var_SipToTag,
+			@v_SipFromTag = var_SipFromTag;
+
+			EXECUTE update_rad USING @v_AcctSessionTime, @v_AcctInputOctets, @v_AcctOutputOctets,
+				@v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
+				@v_MediaInfo, @v_Normalized, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
+			SET @rcnt = (SELECT ROW_COUNT());
+			DEALLOCATE PREPARE update_rad;
+		END IF;
 
 	END IF;
 
@@ -714,13 +736,13 @@ CALL insert_radacct_record (
 'sip:test@umts.ro', '', '', 'chat','Blink-0.11.1',''
 );
 
--- TEST PROCEDURE THAT UPATES A RECORD WITH MEDIAPROXY INFORMATION
+-- TEST PROCEDURE THAT UPDATES A RECORD WITH MEDIAPROXY INFORMATION
 CALL update_raddact_record_mediaproxy (
 'radius','3','5896','7140','snom320/5.2 + Asterisk', 'GSM', 'Audio', '', '0',
 'c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b','27qems1o2j'
 );
 
--- TEST PROCEDURE THAT UPATES A RECORD
+-- TEST PROCEDURE THAT UPDATES A RECORD
 CALL update_radacct_record (
 'radius','2009-12-10 12:09:21', '0', '', 'n/a', 
 'c3b5ff12bf2-m5udeydrjsuw@snom320-000413241247', 'as5664a60b', '27qems1o2j'
