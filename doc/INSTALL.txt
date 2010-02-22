@@ -226,15 +226,15 @@ Create the database for radius tables on the MySQL server:
 
 mysqladmin -u root create radius
 
-Create RADIUS tables
+Create the RADIUS tables:
 
 mysql -u root radius < /var/www/CDRTool/setup/radius/OpenSIPS/radacct.mysql
 
-Load the MySQL stored procedures that create the radius monthly tables:
+Load the MySQL stored procedures:
    
 mysql -u root radius < /var/www/CDRTool/setup/radius/OpenSIPS/radius_accounting.proc
 
-Configure Freeradius to use the MySQL procedure:
+Configure Freeradius to use the MySQL procedures:
 
 cp /var/www/CDRTool/setup/radius/OpenSIPS/sql.conf /etc/freeradius/sql.conf  
 

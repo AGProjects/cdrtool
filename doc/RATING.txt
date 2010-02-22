@@ -17,10 +17,13 @@ Based on exceptions, different rates may be applied per caller party
 identified by source IP, domain or subscriber.
 
 Rating is applied only after the call has ended. CDRTool considers that a
-call has ended when there is a stop time. In case of missing BYEs, CDRTool
-relies on the fact that MediaProxy will update the CDR with the proper stop
-time information based on the last moment the media stream passed through
-the media proxy.
+call has ended when there is a stop time. 
+
+In case of missing BYEs, CDRTool relies on the fact that MediaProxy will
+update the CDR with the proper stop time information based on the last
+moment the media stream passed through the media proxy. This functionality
+is not available when the end-points have negotiated using ICE another
+candidate than MediaProxy.
 
 The rates are linked with profiles corresponding with different time of the
 day, day of the week or holidays. For rating calls, which span multiple
