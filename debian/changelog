@@ -1,8 +1,12 @@
 cdrtool (7.1.0) unstable; urgency=low
 
-  * Added support for ICE negotiation (requires MediaRPxy 2.4.0)
+  * Added support for ICE negotiation (requires MediaProxy >=2.4.0)
+    You must update Freeradius configuration with sql.conf and reload the
+    stored procedures file radius_accounting.proc in the radius database
+  * Insert/update sql queries in Freeradius sql.conf have been deprecated in
+    favour of the stored procedure
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 21 Feb 2010 19:10:29 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 22 Feb 2010 10:46:17 +0100
 
 cdrtool (7.0.2) unstable; urgency=low
 
