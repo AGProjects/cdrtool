@@ -2362,21 +2362,6 @@ class CDR_opensips extends CDR {
 
     var $show_in_icon=0;
     var $show_out_icon=0;
-    var $QoSParameters=array(
-        "PS"=>"Audio packets sent",
-        "OS"=>"Audio octets sent",
-        "SP"=>"Comfort noise packets sent",
-        "SO"=>"Silence octets sent",
-        "PR"=>"Audio packets received",
-        "OR"=>"Audio octets received",
-        "CR"=>"Comfort noise packets received",
-        "SR"=>"Comfort noise octets received",
-        "PL"=>"Receive packets lost",
-        "BL"=>"Receive maximum burst packets lost",
-        "EN"=>"Encoder1, encoder 2",
-        "DE"=>"Decoder1, decoder 2",
-        "JI"=>"Jitter in ms"
-        );
 
     function CDR_opensips(&$parent, $CDRfields) {
 
