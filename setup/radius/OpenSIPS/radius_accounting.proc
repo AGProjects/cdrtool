@@ -3,7 +3,7 @@ LAST UPDATED: 2010-02-17 - 14:17:00 MST
 
 CHANGELOG:
 - Set case statement for update block in "proc_update_raddact_record_mediaproxy" 
-  when MediaInfo value passed to query is 'ICE success'
+  when MediaInfo value passed to query is 'ICE session'
 - Added SipApplicationType, FromHeader and UserAgent
 - Added database name as parameter to stored procedures
 - Fixed the multiple query result in "update_raddact_record_mediaproxy"
@@ -654,9 +654,12 @@ BEGIN
 		SET @rcnt = (SELECT 0);
 	ELSE
 
-    IF @var_MediaInfo = 'ICE success' THEN
+    IF @var_MediaInfo = 'ICE session' THEN
     	SET @radupdstmt = CONCAT("UPDATE ", @var_tbl, " SET
-    		MediaInfo = ?,
+		MediaInfo = ?,
+		SipUserAgents = ?,
+		SipCodecs = ?,
+		SipApplicationType = ?,
     		Normalized = '0' 
     		WHERE 
     		AcctSessionId = ?
@@ -664,11 +667,14 @@ BEGIN
 				PREPARE update_rad FROM @radupdstmt;
 
 			SET @v_MediaInfo = var_MediaInfo,
+			@v_SipUserAgents = var_SipUserAgents,
+			@v_SipCodecs = var_SipCodecs,
+			@v_SipApplicationType = var_SipApplicationType,
 			@v_AcctSessionId = var_AcctSessionId,
 			@v_SipToTag = var_SipToTag,
 			@v_SipFromTag = var_SipFromTag;
     
-			EXECUTE update_rad USING @v_MediaInfo, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
+			EXECUTE update_rad USING @v_MediaInfo, @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
 			SET @rcnt = (SELECT ROW_COUNT());
 			DEALLOCATE PREPARE update_rad;
     ELSE

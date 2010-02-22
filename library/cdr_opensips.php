@@ -41,7 +41,7 @@ class CDRS_opensips extends CDRS {
                          'price'           => 'Price',
                          'DestinationId'   => 'DestinationId',
                          'ResellerId'      => 'BillingId',
-                         'MediaTimeout'    => 'MediaInfo',
+                         'MediaInfo'       => 'MediaInfo',
                          'RTPStatistics'   => 'RTPStatistics',
                          'ENUMtld'         => 'ENUMtld',
                          'UserAgent'       => 'UserAgent',
@@ -2585,10 +2585,14 @@ class CDR_opensips extends CDR {
 
         if ($this->inputTraffic) {
             $this->inputTrafficPrint  = number_format($this->inputTraffic/1024,2);
+        } else {
+        	$this->inputTrafficPrint=0;
         }
 
         if ($this->outputTraffic) {
             $this->outputTrafficPrint = number_format($this->outputTraffic/1024,2);
+        } else {
+        	$this->outputTrafficPrint=0;
         }
 
         if (!$CDRfields['skip_fix_prepaid_duration']) {
@@ -2861,114 +2865,102 @@ class CDR_opensips extends CDR {
         <td valign=top>
         ";
 
+        $this->cdr_details.= "
+        <table border=0 cellpadding=0 cellspacing=0>
 
-            $this->cdr_details.= "
-            <table border=0 cellpadding=0 cellspacing=0>
+        <tr>
+            <td colspan=3><b>Media Streams</b></td>
+        </tr>
+        ";
 
+        if ($this->CDRS->mediaTrace) {
+            $media_trace_datasource = $this->CDRS->mediaTrace;
+
+            $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
+            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here to see the media information for this call</a> &nbsp;";
+
+            $this->cdr_details.= sprintf("
             <tr>
-                <td colspan=3><b>Media Streams</b></td>
+                <td width=10></td>
+                <td colspan=2>%s</td>
+            </tr>
+            ", $this->mediaTraceLink);
+
+        }
+
+        $this->cdr_details.= "
+        <tr>
+            <td></td>
+            <td>Applications: </td>
+            <td>$this->applicationType_print</td>
+        </tr>
+        ";
+
+        $this->SipCodec   = quoted_printable_decode($this->SipCodec);
+
+        if ($this->SipCodec) {
+            $this->cdr_details.= "
+            <tr>
+                <td></td>
+                <td>Codecs: </td>
+                <td>$this->SipCodec</td>
             </tr>
             ";
+        }
 
-            if ($this->SipCodec && $this->CDRS->mediaTrace) {
-                $media_trace_datasource = $this->CDRS->mediaTrace;
+        $this->cdr_details.= "
+        <tr>
+            <td></td>
+            <td>Caller RTP: </td>
+            <td>$this->inputTrafficPrint KB</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>Called RTP: </td>
+            <td>$this->outputTrafficPrint KB</td>
+        </tr>
+        ";
 
-                $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
-                'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here to see the media information for this call</a> &nbsp;";
+        if ($this->MediaInfo) {
+            $this->cdr_details.= "
+            <tr>
+            <td></td>
+            <td>Media Info:</td>
+            <td><font color=red>$this->MediaInfo</font></td>
+            </tr>
+            ";
+        }
 
-                $this->cdr_details.= sprintf("
-                <tr>
-                    <td width=10></td>
-                    <td colspan=2>%s</td>
-                </tr>
-                ", $this->mediaTraceLink);
+        if ($this->SipUserAgents) {
+            $this->SipUserAgents   = quoted_printable_decode($this->SipUserAgents);
 
-            }
+            $callerAgents=explode("+",$this->SipUserAgents);
+            $callerUA=htmlentities($callerAgents[0]);
+            $calledUA=htmlentities($callerAgents[1]);
 
             $this->cdr_details.= "
             <tr>
                 <td></td>
-                <td>Applications: </td>
-                <td>$this->applicationType_print</td>
+                <td>Caller SIP UA: </td>
+                <td>$callerUA</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Called SIP UA: </td>
+                <td>$calledUA</td>
             </tr>
             ";
-
-            if ($this->SipCodec) {
-                $this->SipCodec   = quoted_printable_decode($this->SipCodec);
-
-                $this->cdr_details.= "
-                <tr>
-                    <td></td>
-                    <td>Codecs: </td>
-                    <td>$this->SipCodec</td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>Caller RTP: </td>
-                    <td>$this->inputTrafficPrint KB</td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>Called RTP: </td>
-                    <td>$this->outputTrafficPrint KB</td>
-                </tr>
-                ";
-    
-                if ($this->MediaTimeout) {
-                    $this->cdr_details.= "
-                    <tr>
-                    <td></td>
-                    <td>Media Info:</td>
-                    <td><font color=red>$this->MediaTimeout</font></td>
-                    </tr>
-                    ";
-                }
-    
-                if ($this->SipUserAgents) {
-                    $this->SipUserAgents   = quoted_printable_decode($this->SipUserAgents);
-    
-                    $callerAgents=explode("+",$this->SipUserAgents);
-                    $callerUA=htmlentities($callerAgents[0]);
-                    $calledUA=htmlentities($callerAgents[1]);
-    
-                    $this->cdr_details.= "
-                    <tr>
-                        <td></td>
-                        <td>Caller SIP UA: </td>
-                        <td>$callerUA</td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td>Called SIP UA: </td>
-                        <td>$calledUA</td>
-                    </tr>
-                    ";
-                }
-    
-                if (is_array($this->QoS)) {
-                    foreach (array_keys($this->QoS) as $_key) {
-                        if ($this->QoSParameters[$_key]) {
-                            $_desc=$this->QoSParameters[$_key];
-                        } else {
-                            $_desc=$_key;
-                        }
-                        $this->cdr_details.=
-                        sprintf ("<tr><td></td><td>%s</td><td>%s</td></tr>\n",
-                        $_desc,$this->QoS[$_key]);
-                    }
-                }
-
-            }
+        }
 
         $this->cdr_details.= "
         </table>";
-
+ 
         $this->cdr_details.=  "
         </td>
         <td width=30></td>
         <td valign=top>
         ";
-
+ 
         if ($perm->have_perm("showPrice") && $this->normalized) {
             $this->cdr_details.= "
             <table border=0 cellpadding=0 cellspacing=0>
@@ -2978,16 +2970,16 @@ class CDR_opensips extends CDR {
     
                 </tr>
             ";
-
+ 
             if ($this->price > 0 || $this->rate) {
-            	$this->ratePrint=nl2br($this->rate);
+                $this->ratePrint=nl2br($this->rate);
                 $this->cdr_details.= "
                 <tr>
                 <td></td>
                 <td colspan=2>$this->ratePrint</td>
                 </tr>
                 ";
-
+ 
             } else {
                 $this->cdr_details.= "
                 <tr>
@@ -2996,7 +2988,7 @@ class CDR_opensips extends CDR {
                 </tr>
                 ";
             }
-
+ 
             $this->cdr_details.= "
             </table>
             ";
