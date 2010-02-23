@@ -5,8 +5,9 @@ cdrtool (7.1.0) unstable; urgency=low
     stored procedures file radius_accounting.proc in the radius database
   * Insert/update sql queries in Freeradius sql.conf have been deprecated in
     favour of the stored procedure
+  * Added EPC2203 user agent
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 22 Feb 2010 10:46:17 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 22 Feb 2010 11:35:28 +0100
 
 cdrtool (7.0.2) unstable; urgency=low
 
