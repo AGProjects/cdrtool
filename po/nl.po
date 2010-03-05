@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-05 12:45+0100\n"
+"POT-Creation-Date: 2010-03-05 13:17+0100\n"
 "PO-Revision-Date: 2009-12-04 13:56+0100\n"
 "Last-Translator: Tijmen de Mes <tijmen@ag-projects.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -270,25 +270,9 @@ msgstr ""
 msgid "Proof of Identity"
 msgstr "Identiteit"
 
-#: /var/www/CDRTool/library/sip_settings.php:1905
-#, php-format
-msgid "Error: Failed to save identity document %s (%s)"
-msgstr ""
-
 #: /var/www/CDRTool/library/sip_settings.php:1937
 #, php-format
-msgid "Error: Maximum file size is %s. "
-msgstr ""
-
-#: /var/www/CDRTool/library/sip_settings.php:1953
-#, php-format
-msgid "Error deleting record: %s (%s)"
-msgstr ""
-
-#: /var/www/CDRTool/library/sip_settings.php:1968
-#: /var/www/CDRTool/library/sip_settings.php:2131
-#, php-format
-msgid "Error for database query: %s (%s)"
+msgid "Error: Maximum file size is %s"
 msgstr ""
 
 #: /var/www/CDRTool/library/sip_settings.php:1980
@@ -365,6 +349,11 @@ msgstr ""
 #: /var/www/CDRTool/library/sip_settings.php:6463
 msgid "Save"
 msgstr "Bewaren"
+
+#: /var/www/CDRTool/library/sip_settings.php:2131
+#, php-format
+msgid "Error for database query: %s (%s)"
+msgstr ""
 
 #: /var/www/CDRTool/library/sip_settings.php:2157
 #: /var/www/CDRTool/library/sip_settings.php:2457

@@ -1902,7 +1902,7 @@ class SipSettings {
 
                 if (!$this->db->query($query)) {
                     print "<font color=red>";
-                    printf (_("Error: Failed to save identity document %s (%s)"), $this->db->Error,$this->db->Errno);
+                    printf ("Error: Failed to save identity document %s (%s)", $this->db->Error,$this->db->Errno);
                     print "</font>";
                 }
 
@@ -1934,7 +1934,7 @@ class SipSettings {
 
             } else {
                 print "<font color=red>";
-                printf (_("Error: Maximum file size is %s. "),$max_file_size);
+                printf (_("Error: Maximum file size is %s"),$max_file_size);
                 print "</font>";
             }
         }
@@ -1950,7 +1950,7 @@ class SipSettings {
     
             if (!$this->db->query($query)) {
                 print "<font color=red>";
-                printf (_("Error deleting record: %s (%s)"), $this->db->Error,$this->db->Errno);
+                printf ("Error deleting record: %s (%s)", $this->db->Error,$this->db->Errno);
                 print "</font>";
             }
         }
@@ -1965,7 +1965,7 @@ class SipSettings {
 
         if (!$this->db->query($query)) {
             print "<font color=red>";
-            printf (_("Error for database query: %s (%s)"), $this->db->Error,$this->db->Errno);
+            printf ("Error for database query: %s (%s)", $this->db->Error,$this->db->Errno);
             print "</font>";
         }
 
