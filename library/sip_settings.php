@@ -840,7 +840,7 @@ class SipSettings {
         dprint('showAccount()');
 
         if (!$this->account) {
-            print "<tr><td colspan=>";
+            print "<tr><td>";
             print _("Error: SIP Account information cannot be retrieved. ");
             return 0;
             print "</td></tr>";
@@ -1719,7 +1719,7 @@ class SipSettings {
     function showAboveTabs() {
         print "
         <tr>
-        <td colspan=2>
+        <td colspan=3>
         ";
 
         print "
@@ -1732,17 +1732,20 @@ class SipSettings {
     function showTabs() {
         print "
         <tr>
-        <td align=left>
         ";
+        print "
+        <td colspan=3>
+        ";
+
+        print "<table border=0 width=100%>";
+        print "<tr>";
+        print "<td>";
+
         if ($this->isEmbedded()) {
             print $this->embedded_img;;
         }
-
-        print "
-        </td>
-        <td>
-        ";
-
+        print "</td>";
+        print "<td align=right>";
         print "
         <table border=0 cellspacing=0 cellpadding=0 align=right>
         <tr>
@@ -1762,6 +1765,9 @@ class SipSettings {
         </tr>
         </table>
         ";
+        print "</td>";
+        print "</tr>";
+        print "</table>";
         print "
         </td>
         </tr>
@@ -1846,9 +1852,9 @@ class SipSettings {
 
     function showIdentityProof () {
 
-        $this->db = new DB_CDRTool();
-
         $max_file_size=1024000;
+
+        $this->db = new DB_CDRTool();
 
         $chapter=sprintf(_("Proof of Identity"));
         $this->showChapter($chapter);
@@ -2043,7 +2049,6 @@ class SipSettings {
             ";
 
             print "
-            <tr>
             <form action=$this->url method='post' enctype='multipart/form-data'>
             <input type='hidden' name='tab' value='payments'>
             <input type='hidden' name='task' value='upload'>
@@ -2053,13 +2058,12 @@ class SipSettings {
             print "
             <tr class=even>
             <td>";
-            print _("Name");
-
+            print _("Name printed on the Credit Card");
             print "
             </td>
-            <td>";
+            <td colspan=2>
+            ";
             printf ("<input type=text size=20 name='name' value='%s'>",$_REQUEST['name']);
-            print _("Name that appears on the Credit Card");
             print "
             </td>
             </tr>
@@ -2068,13 +2072,12 @@ class SipSettings {
             print "
             <tr class=odd>
             <td>";
-            print _("Document");
+            print _("Scanned copy of your Passport or Driver License");
             print "
             </td>
-            <td>
+            <td colspan=2>
             ";
             printf ("<input type='file' name='tmpfile'>");
-            print _("Scanned copy of your Passport or Driver License");
             print "
             </td>
             </tr>
@@ -2083,12 +2086,12 @@ class SipSettings {
             print "
             <tr class=even>
             <td>";
-            print _("Credit Card");
+            print _("Last 4 digits on your Credit Card");
             print "
             </td>
-            <td>";
+            <td colspan=2>
+            ";
             printf("<input type=text size=5 name='last_digits' value='%s'>",$_REQUEST['last_digits']);
-            print _("Last 4 digits on your Credit Card");
     
             print "
             </td>
@@ -2097,14 +2100,15 @@ class SipSettings {
     
             print "
             <tr class=odd>
-            <td>";
+            <td colspan=3>
+            ";
             print "
             <input type=submit value=";
             print _("Save");
             print ">
             </td>
-            </form>
             </tr>
+            </form>
             ";
 
         }
