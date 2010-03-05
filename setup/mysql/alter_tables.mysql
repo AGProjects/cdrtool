@@ -651,3 +651,20 @@ alter table destinations add column min_duration smallint unsigned not null;
 alter table destinations add column max_duration bigint unsigned  not null;
 alter table destinations add column max_price varchar(25) NOT NULL default '';
 
+7.1.1
+CREATE TABLE `subscriber_docs` (    
+  `id` int(11) NOT NULL auto_increment,
+  `username` varchar(64) NOT NULL,                           
+  `domain` varchar(64) NOT NULL,                 
+  `name` varchar(64) NOT NULL,                           
+  `document` varchar(64) NOT NULL,      
+  `file_content` mediumblob NOT NULL,
+  `file_name` varchar(255) NOT NULL default '',
+  `file_size` varchar(255) NOT NULL default '',
+  `file_type` varchar(255) NOT NULL default '',
+  `file_date` datetime NOT NULL default '0000-00-00 00:00:00',
+  `last_digits` varchar(64) NOT NULL,                           
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `document_idx` (`username`,`domain`,`document`)     
+);
+

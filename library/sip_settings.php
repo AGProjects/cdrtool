@@ -122,7 +122,6 @@ class SipSettings {
     var $prepaid             = 0;
     var $emergency_regions   = array();
     var $FNOA_timeoutDefault = 35;
-    var $export_filename     = "export.txt";
     var $presence_rules      = array();
     var $enums               = array();
     var $barring_prefixes    = array();
@@ -281,6 +280,14 @@ class SipSettings {
 
         $this->availableGroups['blocked']  = array("Group"=>"blocked",
                                         "WEBName" =>sprintf(_("Status")),
+                                        "SubscriberMayEditIt"=>0,
+                                        "SubscriberMaySeeIt"=>0,
+                                        "ResellerMayEditIt"=>1,
+                                        "ResellerMaySeeIt"=>1
+                                        );
+
+        $this->availableGroups['payments'] = array("Group"=>"payments",
+                                        "WEBName" =>sprintf(_("CC Payments")),
                                         "SubscriberMayEditIt"=>0,
                                         "SubscriberMaySeeIt"=>0,
                                         "ResellerMayEditIt"=>1,
@@ -1483,7 +1490,6 @@ class SipSettings {
                                                 );
 
             }
-
             return true;
         }
 
@@ -1779,9 +1785,14 @@ class SipSettings {
     }
 
     function showPaymentsTab() {
+        $chapter=sprintf(_("Payments"));
+        $this->showChapter($chapter);
+
+        if (!$this->show_payments_tab) {
+            return false;
+        }
+
         if (!$this->owner) {
-            $chapter=sprintf(_("Payments"));
-            $this->showChapter($chapter);
 
             print "
             <tr>
@@ -1798,7 +1809,19 @@ class SipSettings {
             return false;
         }
 
-        if (!$this->show_payments_tab) {
+
+        print "
+        <tr>
+        <td colspan=3>
+        ";
+        printf (_("Calling to PSTN numbers is possible at the costs set forth in the <a href=%s>price list</a>. "),$this->pstn_termination_price_page);
+        print "
+        </td>
+        </tr>
+        ";
+
+        if (!in_array("payments",$this->groups)) {
+			$this->showIdentityProof();
             return false;
         }
 
@@ -1818,6 +1841,306 @@ class SipSettings {
             // block account temporary to check the user
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain),"free-pstn");
+        }
+    }
+
+    function showIdentityProof () {
+
+        $this->db = new DB_CDRTool();
+
+        $max_file_size=1024000;
+
+        $chapter=sprintf(_("Proof of Identity"));
+        $this->showChapter($chapter);
+
+		if ($_FILES['tmpfile']['tmp_name'] && $_REQUEST['name'] && is_numeric($_REQUEST['last_digits'])) {
+
+            if ($_FILES['tmpfile']['size']['size'] < $max_file_size) {
+    
+                $fp=fopen($_FILES['tmpfile']['tmp_name'], "r");
+                $content=fread($fp, $_FILES['tmpfile']['size']);
+                fclose($fp);
+    
+                $query=sprintf("insert into subscriber_docs (
+                `name`,
+                `username`,
+                `domain`,
+                `document`,
+                `file_content`,
+                `file_name`,
+                `file_size`,
+                `file_type`,
+                `file_date`,
+                `last_digits`
+                ) values (
+                '%s',
+                '%s',
+                '%s',
+                'identity',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                NOW(),
+                '%s'
+                )",
+                addslashes($_REQUEST['name']),
+                $this->username,
+                $this->domain,
+                addslashes($content),
+                addslashes($_FILES['tmpfile']['name']),
+                addslashes($_FILES['tmpfile']['size']),
+                addslashes($_FILES['tmpfile']['type']),
+                addslashes($_REQUEST['last_digits'])
+                );
+
+                if (!$this->db->query($query)) {
+                    print "<font color=red>";
+                    printf (_("Error: Failed to save identity document %s (%s)"), $this->db->Error,$this->db->Errno);
+                    print "</font>";
+                }
+
+                // send mail
+                include_once('Mail.php');
+                include_once('Mail/mime.php');
+
+                $subject=sprintf ("%s requested CC Payments",$this->account);
+
+                $hdrs = array(
+                     'From'=> $this->billing_email,
+                     'Subject' => $subject
+                     );
+
+                $crlf = "\n";
+                $mime = new Mail_mime($crlf);
+
+                $mime->setTXTBody($subject);
+                $mime->setHTMLBody($subject);
+
+                $mime->addAttachment($content, $_FILES['tmpfile']['type'],$_FILES['tmpfile']['name'],'false');
+
+                $body = $mime->get();     
+                $hdrs = $mime->headers($hdrs);
+
+                $mail =& Mail::factory('mail');
+
+                $mail->send($this->billing_email, $hdrs, $body);
+
+            } else {
+                print "<font color=red>";
+                printf (_("Error: Maximum file size is %s. "),$max_file_size);
+                print "</font>";
+            }
+        }
+
+  		if ($this->login_type != 'subscriber' && $_REQUEST['task'] == 'delete_identity_proof' && $_REQUEST['confirm']) {
+            $query=sprintf("delete from subscriber_docs
+            where username = '%s'
+            and domain = '%s'
+            and document = 'identity'",
+            $this->username,
+            $this->domain
+            );
+    
+            if (!$this->db->query($query)) {
+                print "<font color=red>";
+                printf (_("Error deleting record: %s (%s)"), $this->db->Error,$this->db->Errno);
+                print "</font>";
+            }
+        }
+
+    	$query=sprintf("select * from subscriber_docs
+        where username = '%s'
+        and domain = '%s'
+        and document = 'identity'",
+        $this->username,
+        $this->domain
+        );
+
+        if (!$this->db->query($query)) {
+            print "<font color=red>";
+            printf (_("Error for database query: %s (%s)"), $this->db->Error,$this->db->Errno);
+            print "</font>";
+        }
+
+        if ($this->db->num_rows()) {
+
+            print "
+            <tr>
+            <td colspan=3>
+            ";
+
+            print "<p>";
+            print _("Credit Card payments will be activated after your identity is verified. ");
+
+            print "<p>";
+            print "<table border=0>
+            ";
+
+            printf ("<tr bgcolor=lightgrey><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>",
+            _("Name"),
+            _("Document"),
+            _("Type"),
+            _("Size"),
+            _("Date"),
+            _("Last digits")
+            );
+
+			if ($this->login_type != 'subscriber') {
+                print "<td>";
+                print _("Actions");
+                print "</td>";
+            }
+
+            printf ("</tr>");
+
+            $this->db->next_record();
+
+            $download_url=$this->url.'&action=export_identity_proof';
+
+            printf ("<tr> <td>%s</td><td><a href=%s>%s</a></td> <td>%s</td> <td>%s KB</td> <td>%s</td><td align=right>%s</td>",
+            $this->db->f('name'),
+            $download_url,
+            $this->db->f('file_name'),
+            $this->db->f('file_type'),
+            number_format($this->db->f('file_size')/1024,2),
+            $this->db->f('file_date'),
+            $this->db->f('last_digits')
+            );
+
+			if ($this->login_type != 'subscriber') {
+                if ($_REQUEST['task'] == 'delete_identity_proof' && !$_REQUEST['confirm']){
+                    $delete_url=$this->url.'&tab=payments&task=delete_identity_proof&confirm=1';
+                    printf ("<td align=right><a href='%s'>%s</a></td>",$delete_url,_("Confirm"));
+                } else {
+                    $delete_url=$this->url.'&tab=payments&task=delete_identity_proof';
+                    printf ("<td align=right><a href='%s'>%s</a></td>",$delete_url,$this->delete_img);
+                }
+            }
+
+            printf ("</tr>");
+
+            print "
+            </table>
+            </td>
+            </tr>
+            ";
+
+        } else {
+            print "
+            <tr>
+            <td colspan=3>
+            <p>";
+
+            print _("Credit Card payments are available only to verified customers. ");
+
+            print "<p>";
+            printf (_("To become verified, upload a copy of your passport or driving license that matches the Credit Card owner. "),$this->billing_email, $this->account, $this->billing_email);
+
+            print "
+            </td>
+            </tr>
+            ";
+
+            print "
+            <tr>
+            <form action=$this->url method='post' enctype='multipart/form-data'>
+            <input type='hidden' name='tab' value='payments'>
+            <input type='hidden' name='task' value='upload'>
+            <input type='hidden' name='MAX_FILE_SIZE' value=$max_file_size>
+            ";
+    
+            print "
+            <tr class=even>
+            <td>";
+            print _("Name");
+
+            print "
+            </td>
+            <td>";
+            printf ("<input type=text size=20 name='name' value='%s'>",$_REQUEST['name']);
+            print _("Name that appears on the Credit Card");
+            print "
+            </td>
+            </tr>
+            ";
+    
+            print "
+            <tr class=odd>
+            <td>";
+            print _("Document");
+            print "
+            </td>
+            <td>
+            ";
+            printf ("<input type='file' name='tmpfile'>");
+            print _("Scanned copy of your Passport or Driver License");
+            print "
+            </td>
+            </tr>
+            ";
+    
+            print "
+            <tr class=even>
+            <td>";
+            print _("Credit Card");
+            print "
+            </td>
+            <td>";
+            printf("<input type=text size=5 name='last_digits' value='%s'>",$_REQUEST['last_digits']);
+            print _("Last 4 digits on your Credit Card");
+    
+            print "
+            </td>
+            </tr>
+            ";
+    
+            print "
+            <tr class=odd>
+            <td>";
+            print "
+            <input type=submit value=";
+            print _("Save");
+            print ">
+            </td>
+            </form>
+            </tr>
+            ";
+
+        }
+    }
+
+    function exportIdentityProof() {
+
+        $this->db = new DB_CDRTool();
+
+    	$query=sprintf("select * from subscriber_docs
+        where username = '%s'
+        and domain = '%s'
+        and document = 'identity'",
+        $this->username,
+        $this->domain
+        );
+
+        if (!$this->db->query($query)) {
+            print "<font color=red>";
+            printf (_("Error for database query: %s (%s)"), $this->db->Error,$this->db->Errno);
+            print "</font>";
+        }
+
+        if ($this->db->num_rows()) {
+            $this->db->next_record();
+
+			$h=sprintf("Content-type: %s",$this->db->f('file_type'));
+            Header($h);
+
+            $h=sprintf("Content-Disposition: attachment; filename=%s",$this->db->f('file_name'));
+            Header($h);
+
+            $h=sprintf("Content-Length: %s",$this->db->f('file_size'));
+            Header($h);
+
+            $this->db->p('file_content');
         }
     }
 
@@ -7223,6 +7546,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
 
     if (!strstr($_REQUEST['action'],'get_') &&
         !strstr($_REQUEST['action'],'set_') &&
+        !strstr($_REQUEST['action'],'export_') &&
         !strstr($_REQUEST['action'],'add_')) {
         $title  = "SIP settings of $account";
         $header = $SipSettings->headerFile;
@@ -7314,6 +7638,9 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
     } else if ($_REQUEST['action'] == 'get_enum'){
         $SipSettings->getEnumMappings();
         print json_encode($SipSettings->enums);
+        return true;
+    } else if ($_REQUEST['action'] == 'export_identity_proof'){
+        $SipSettings->exportIdentityProof();
         return true;
     } else if ($_REQUEST['action'] == 'add_balance'){
 
