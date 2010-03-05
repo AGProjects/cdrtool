@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-05 13:17+0100\n"
+"POT-Creation-Date: 2010-03-05 13:20+0100\n"
 "PO-Revision-Date: 2009-12-04 13:59+0100\n"
 "Last-Translator: Saul Ibarra <saul@ag-projects.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -351,11 +351,6 @@ msgstr ""
 #: /var/www/CDRTool/library/sip_settings.php:6463
 msgid "Save"
 msgstr "Guardar"
-
-#: /var/www/CDRTool/library/sip_settings.php:2131
-#, php-format
-msgid "Error for database query: %s (%s)"
-msgstr ""
 
 #: /var/www/CDRTool/library/sip_settings.php:2157
 #: /var/www/CDRTool/library/sip_settings.php:2457
