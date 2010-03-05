@@ -2128,7 +2128,7 @@ class SipSettings {
 
         if (!$this->db->query($query)) {
             print "<font color=red>";
-            printf (_("Error for database query: %s (%s)"), $this->db->Error,$this->db->Errno);
+            printf ("Error for database query: %s (%s)", $this->db->Error,$this->db->Errno);
             print "</font>";
         }
 
