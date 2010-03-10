@@ -3475,7 +3475,10 @@ class SIP_trace {
                 $error_fault = $result->getFault();
                 $error_code  = $result->getCode();
     
-                printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->faultstring,$error_fault->faultcode);
+                printf("<font color=red>Error from %s: %s (%s)</font>",$this->SOAPurl,
+                $error_fault->detail->exception->errorstring,
+                $error_fault->detail->exception->errorcode
+                );
                 return false;
             }
     
@@ -4327,7 +4330,11 @@ class Media_trace {
                 $error_code  = $result->getCode();
     
                 if ($error_fault->detail->exception->errorcode != 1060) {
-                    printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    printf("<font color=red>Error from %s: %s (%s)</font>",
+                    $this->SOAPurl,
+                    $error_fault->detail->exception->errorstring,
+                    $error_fault->detail->exception->errorcode
+                    );
                 }
                 return false;
             }
