@@ -773,7 +773,7 @@ class CreditCardProcessor {
             $errors = array_merge($errors,array('email'=>array('field'=>'Email','desc'=>_('Invalid Email Address provided'))));
         }
         // check card number
-        if(strlen(str_replace(" ", "", filter_var($post_vars['creditCardNumber'], FILTER_SANITIZE_NUMBER_INT))) < 16 || $post_vars['creditCardNumber'] == 0){
+        if(strlen(str_replace(" ", "", filter_var($post_vars['creditCardNumber'], FILTER_SANITIZE_NUMBER_INT))) < 15 || $post_vars['creditCardNumber'] == 0){
             $errors = array_merge($errors,array('ccnumber'=>array('field'=>'Card Number','desc'=>_('Invalid Credit Card Number'))));
         }
         // check expiration
