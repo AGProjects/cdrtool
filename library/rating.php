@@ -1379,7 +1379,7 @@ class RatingTables {
                                                  "keys"=>array("id"),
                                                  "size"=>15,
                                                  "readonly"=>1,
-                                                 "exceptions" =>array("change_date","traffic"),
+                                                 "exceptions" =>array("change_date","traffic","duration"),
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array("datasource"=>array("size"=>15,
                                                                                "readonly"=>1
