@@ -8102,9 +8102,9 @@ class Enrollment {
             return false;
         }
 
-        if (!$_REQUEST['username']) {
+        if (!preg_match("/^[1-9a-z][0-9a-z_.-]{2,64}[0-9a-z]$/",$_REQUEST['username'])) {
             $return=array('success'       => false,
-                          'error_message' => 'Error: Missing username'
+                          'error_message' => 'Error: The Username must contain at least 4 lowercase alpha-numeric . _ or - characters and must start and end with a positive digit or letter'
                           );
             print (json_encode($return));
             return false;
