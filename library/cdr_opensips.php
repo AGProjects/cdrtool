@@ -4389,8 +4389,8 @@ class Media_trace {
         }
 
         print "
-        <h1>CDRTool media trace</h1>
-        <h2>Media session $callid</h2>
+        <h1>CDRTool Media Trace</h1>
+        <h2>Media Session $callid</h2>
         ";
 
         foreach (array_values($this->info->streams) as $_val) {
@@ -4401,7 +4401,7 @@ class Media_trace {
             $media_types[]=$_val->media_type;
         }
 
-        print "<h3>Media information</h3>";
+        print "<h3>Media Information</h3>";
 
         print "<table border=0>";
         printf ("<tr><td class=border>Call duration</td><td class=border>%s</td></tr>",$this->info->duration);
@@ -4409,7 +4409,7 @@ class Media_trace {
         printf ("<tr><td class=border>Media relay</td><td class=border>%s</td></tr>",$relay_ip);
         print "</table>";
 
-        print "<h3>Media streams</h3>";
+        print "<h3>Media Streams</h3>";
 
         print "<table border=0>";
         print "<th></th>";
@@ -4433,7 +4433,7 @@ class Media_trace {
 
         print "</table>";
 
-        print "<h3>Stream succession</h3>";
+        print "<h3>Stream Succession</h3>";
 
         $w=500;
         $w1=30;
