@@ -1831,6 +1831,8 @@ class SipSettings {
             return false;
         }
 
+		$this->showIdentityProof();
+
         $this->getBalanceHistory();
  
         if (!count($this->balance_history)) {
@@ -1859,10 +1861,35 @@ class SipSettings {
         $chapter=sprintf(_("Proof of Identity"));
         $this->showChapter($chapter);
 
-		if ($_FILES['tmpfile']['tmp_name'] && $_REQUEST['name'] && is_numeric($_REQUEST['last_digits'])) {
+		if ($_REQUEST['task'] == 'upload') {
+            if (!$_FILES['tmpfile']['tmp_name']) {
+                print "<font color=red>";
+                printf (_("Error: Please specify a file"));
+                print "</font>";
 
-            if ($_FILES['tmpfile']['size']['size'] < $max_file_size) {
-    
+            } else if (!$_REQUEST['name']) {
+                print "<font color=red>";
+                printf (_("Error: Please enter the name printed on the Credit Card"));
+                print "</font>";
+
+            } else if (!preg_match("/^\d{4}$/",$_REQUEST['last_digits'])) {
+                print "<font color=red>";
+                printf (_("Error: Last digits must be numeric"));
+                print "</font>";
+
+            } else if (!preg_match("/^\+[1-9][0-9]{7,14}$/",$_REQUEST['mobile_number'])) {
+
+                print "<font color=red>";
+                printf (_("Error: Mobile Number must be in international format starting with +"));
+                print "</font>";
+
+            } else if ($_FILES['tmpfile']['size']['size'] > $max_file_size) {
+                print "<font color=red>";
+                printf (_("Error: Maximum file size is %s"),$max_file_size);
+                print "</font>";
+
+            } else {
+
                 $fp=fopen($_FILES['tmpfile']['tmp_name'], "r");
                 $content=fread($fp, $_FILES['tmpfile']['size']);
                 fclose($fp);
@@ -1877,7 +1904,8 @@ class SipSettings {
                 `file_size`,
                 `file_type`,
                 `file_date`,
-                `last_digits`
+                `last_digits`,
+                `mobile_number`
                 ) values (
                 '%s',
                 '%s',
@@ -1888,6 +1916,7 @@ class SipSettings {
                 '%s',
                 '%s',
                 NOW(),
+                '%s',
                 '%s'
                 )",
                 addslashes($_REQUEST['name']),
@@ -1897,7 +1926,8 @@ class SipSettings {
                 addslashes($_FILES['tmpfile']['name']),
                 addslashes($_FILES['tmpfile']['size']),
                 addslashes($_FILES['tmpfile']['type']),
-                addslashes($_REQUEST['last_digits'])
+                addslashes($_REQUEST['last_digits']),
+                addslashes($_REQUEST['mobile_number'])
                 );
 
                 if (!$this->db->query($query)) {
@@ -1931,11 +1961,6 @@ class SipSettings {
                 $mail =& Mail::factory('mail');
 
                 $mail->send($this->billing_email, $hdrs, $body);
-
-            } else {
-                print "<font color=red>";
-                printf (_("Error: Maximum file size is %s"),$max_file_size);
-                print "</font>";
             }
         }
 
@@ -1976,20 +2001,23 @@ class SipSettings {
             <td colspan=3>
             ";
 
-            print "<p>";
-            print _("Credit Card payments will be activated after your identity is verified. ");
+	        if (!in_array("payments",$this->groups)) {
+                print "<p>";
+                print _("Credit Card payments will be activated after your identity is verified. ");
+            }
 
             print "<p>";
             print "<table border=0>
             ";
 
-            printf ("<tr bgcolor=lightgrey><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>",
+            printf ("<tr bgcolor=lightgrey><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>",
             _("Name"),
             _("Document"),
             _("Type"),
             _("Size"),
             _("Date"),
-            _("Last digits")
+            _("Last digits"),
+            _("Mobile Number")
             );
 
 			if ($this->login_type != 'subscriber') {
@@ -2004,14 +2032,15 @@ class SipSettings {
 
             $download_url=$this->url.'&action=export_identity_proof';
 
-            printf ("<tr> <td>%s</td><td><a href=%s>%s</a></td> <td>%s</td> <td>%s KB</td> <td>%s</td><td align=right>%s</td>",
+            printf ("<tr> <td>%s</td><td><a href=%s>%s</a></td> <td>%s</td> <td>%s KB</td> <td>%s</td><td align=right>%s</td><td align=right>%s</td>",
             $this->db->f('name'),
             $download_url,
             $this->db->f('file_name'),
             $this->db->f('file_type'),
             number_format($this->db->f('file_size')/1024,2),
             $this->db->f('file_date'),
-            $this->db->f('last_digits')
+            $this->db->f('last_digits'),
+            $this->db->f('mobile_number')
             );
 
 			if ($this->login_type != 'subscriber') {
@@ -2063,7 +2092,7 @@ class SipSettings {
             </td>
             <td colspan=2>
             ";
-            printf ("<input type=text size=20 name='name' value='%s'>",$_REQUEST['name']);
+            printf ("<input type=text size=35 name='name' value='%s'>",$_REQUEST['name']);
             print "
             </td>
             </tr>
@@ -2082,7 +2111,22 @@ class SipSettings {
             </td>
             </tr>
             ";
+
+            print "
+            <tr class=even>
+            <td>";
+            print _("Mobile Number");
+            print "
+            </td>
+            <td colspan=2>
+            ";
+            printf("<input type=text size=15 name='mobile_number' value='%s'> %s",$_REQUEST['mobile_number'],_("International format starting with +"));
     
+            print "
+            </td>
+            </tr>
+            ";
+
             print "
             <tr class=even>
             <td>";
@@ -3552,6 +3596,10 @@ class SipSettings {
         }
 
         $mobile_number  = preg_replace("/[^\+0-9]/","",$mobile_number);
+        if ($mobile_number && !preg_match("/^\+/",$mobile_number)) {
+            $mobile_number='+'.$mobile_number;
+        }
+
         if ($this->Preferences['mobile_number'] != $mobile_number) {
             $this->setPreference('mobile_number',$mobile_number);
             $this->somethingChanged=1;
@@ -4708,10 +4756,8 @@ class SipSettings {
             ";
             if ($this->quickdial && preg_match("/^$this->quickdial/",$this->username)) {
                 $dial_suffix=strlen($this->username) - strlen($this->quickdial);
-                if ($dial_suffix > 0) {
-                    printf (_("Prefix to auto-complete short numbers"),$dial_suffix);
-                }
             }
+            printf (_("Prefix to auto-complete short numbers"),$dial_suffix);
             print "
           </td>
         </tr>
@@ -4721,9 +4767,6 @@ class SipSettings {
 
     function showMobileNumber() {
 
-    	if ($this->SOAPversion <= 1) return;
-        if (!in_array("free-pstn",$this->groups)) return;
-
         print "
         <tr class=odd>
           <td>";
@@ -4731,11 +4774,10 @@ class SipSettings {
             printf ("
           </td>
           <td align=left>
-            <input type=text size=15 maxsize=64 name=mobile_number value='%s'>
+            <input type=text size=15 maxsize=64 name=mobile_number value='%s'> %s
           </td>
         </tr>
-        ",$this->Preferences['mobile_number']);
-
+        ",$this->Preferences['mobile_number'],_("International format starting with +"));
     }
 
     function showCallsTab() {

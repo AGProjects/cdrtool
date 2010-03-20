@@ -651,6 +651,7 @@ CREATE TABLE `subscriber_docs` (
   `file_type` varchar(255) NOT NULL default '',
   `file_date` datetime NOT NULL default '0000-00-00 00:00:00',
   `last_digits` varchar(64) NOT NULL,
+  `mobile_number` varchar(15) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `document_idx` (`username`,`domain`,`document`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
