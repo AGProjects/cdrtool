@@ -2447,6 +2447,8 @@ class CDR_opensips extends CDR {
         // calculate reseller either from trusted ip or domain
         $_els=explode("@",$this->BillingPartyId);
 
+        if (!strlen($_els[0])) $this->BillingPartyId=$_els[1];
+
         if (count($_els)==2) {
         	if (!$this->domain) $this->domain=$_els[1];
         	$this->ResellerId=$this->CDRS->localDomains[$_els[1]]['reseller'];
@@ -2640,24 +2642,32 @@ class CDR_opensips extends CDR {
         $this->isCalleeLocal();
         $this->isCallerLocal();
 
-        if ($this->aNumberPrint == $this->BillingPartyId) {
-            // call is not diverted
-
-  			if ($this->CallerIsLocal && $this->CalleeIsLocal) {
-            	$this->flow = 'on-net';
-            } else if ($this->CallerIsLocal && !$this->CalleeIsLocal) {
-            	$this->flow = 'outgoing';
-            } else if (!$this->CallerIsLocal && $this->CalleeIsLocal) {
-            	$this->flow = 'incoming';
-            } else if (!$this->CallerIsLocal && !$this->CalleeIsLocal) {
-            	$this->flow = 'transit';
+        if ($this->CallerIsLocal) {
+            if ($this->aNumberPrint == $this->BillingPartyId) {
+                // call is not diverted
+    
+                if ($this->CallerIsLocal && $this->CalleeIsLocal) {
+                    $this->flow = 'on-net';
+                } else if ($this->CallerIsLocal && !$this->CalleeIsLocal) {
+                    $this->flow = 'outgoing';
+                } else if (!$this->CallerIsLocal && $this->CalleeIsLocal) {
+                    $this->flow = 'incoming';
+                } else if (!$this->CallerIsLocal && !$this->CalleeIsLocal) {
+                    $this->flow = 'transit';
+                }
+            } else {
+                // call is diverted
+                if (!$this->CalleeIsLocal) {
+                    $this->flow = 'diverted-off-net';
+                } else if ($this->CalleeIsLocal) {
+                    $this->flow = 'diverted-on-net';
+                }
             }
         } else {
-            // call is diverted
-            if (!$this->CalleeIsLocal) {
-            	$this->flow = 'diverted-off-net';
-            } else if ($this->CalleeIsLocal) {
-            	$this->flow = 'diverted-on-net';
+        	if ($this->CalleeIsLocal) {
+            	$this->flow = 'incoming';
+            } else if (!$this->CalleeIsLocal) {
+            	$this->flow = 'transit';
             }
         }
 
