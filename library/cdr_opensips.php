@@ -2646,28 +2646,32 @@ class CDR_opensips extends CDR {
             if ($this->aNumberPrint == $this->BillingPartyId) {
                 // call is not diverted
     
-                if ($this->CallerIsLocal && $this->CalleeIsLocal) {
+                if ($this->CalleeIsLocal) {
                     $this->flow = 'on-net';
-                } else if ($this->CallerIsLocal && !$this->CalleeIsLocal) {
+                } else {
                     $this->flow = 'outgoing';
-                } else if (!$this->CallerIsLocal && $this->CalleeIsLocal) {
-                    $this->flow = 'incoming';
-                } else if (!$this->CallerIsLocal && !$this->CalleeIsLocal) {
-                    $this->flow = 'transit';
                 }
             } else {
                 // call is diverted
-                if (!$this->CalleeIsLocal) {
-                    $this->flow = 'diverted-off-net';
-                } else if ($this->CalleeIsLocal) {
+                if ($this->CalleeIsLocal) {
                     $this->flow = 'diverted-on-net';
+                } else {
+                    $this->flow = 'diverted-off-net';
                 }
             }
         } else {
-        	if ($this->CalleeIsLocal) {
-            	$this->flow = 'incoming';
-            } else if (!$this->CalleeIsLocal) {
-            	$this->flow = 'transit';
+            if ($this->BillingPartyIdIsLocal()) {
+                // call is diverted by local user
+                if ($this->CalleeIsLocal) {
+                    $this->flow = 'diverted-on-net';
+                } else {
+                    $this->flow = 'diverted-off-net';
+                }
+            } else if ($this->CalleeIsLocal) {
+                $this->flow = 'incoming';
+            } else {
+                // transit from trusted peer
+                $this->flow = 'transit';
             }
         }
 
@@ -3240,6 +3244,16 @@ class CDR_opensips extends CDR {
         if (in_array($this->aNumberDomain,array_keys($this->CDRS->localDomains))) {
             $this->CallerIsLocal=true;
         }
+    }
+
+    function BillingPartyIdIsLocal() {
+        $els=explode("@",$this->BillingPartyId);
+
+        if ($els[1] && in_array($els[1],array_keys($this->CDRS->localDomains))) {
+            return true;
+        }
+
+        return false;
     }
 
     function isCalleeLocal() {
