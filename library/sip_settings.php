@@ -4104,7 +4104,7 @@ class SipSettings {
     function showIncreaseBalanceReseller () {
     	if (!$this->prepaid_changes_allowed) return false;
 
-	    $chapter=sprintf(_("Add Balance"));
+	    $chapter=sprintf(_("Add Balance")).' ('.$this->login_type.')';
         $this->showChapter($chapter);
 
         print "
@@ -4138,9 +4138,26 @@ class SipSettings {
     }
 
     function showIncreaseBalanceSubscriber () {
+        $this->showPrepaidVoucherForm();
+    }
 
-        $chapter=sprintf(_("Add Balance"));
+    function showPrepaidVoucherForm () {
+
+        $chapter=sprintf(_("Prepaid Card"));
         $this->showChapter($chapter);
+
+        print "
+        <tr>
+        <td colspan=3>
+        <p>
+        ";
+
+        printf (_("To add Credit to your account using a Prepaid Card enter it below. "));
+
+        print "
+        </td>
+        </tr>
+        ";
 
         print "
         <tr>
@@ -4175,30 +4192,8 @@ class SipSettings {
         </tr>
         ";
 
-        $_url=$this->url.'&tab=payments';
-
-        $_s1=sprintf (_("Calling to PSTN numbers is possible at the costs set forth in the <a href=%s>price list</a>. "),$this->pstn_termination_price_page);
-        $_s2=sprintf (_("To add Credit to your account, go to the <a href=%s>Payments</a> Tab. "),$_url);
-
-        /*
-        print "
-        <tr>
-        <td colspan=3>
-        ";
-
-        print "<p>";
-        print $_s1;
-
-        print "<p>";
-        print $_s2;
-
-        print "
-        </td>
-        </tr>
-        ";
-        */
-
     }
+
 
     function getPrepaidStatus() {
         dprint("getPrepaidStatus()");
