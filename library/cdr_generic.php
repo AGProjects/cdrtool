@@ -2052,6 +2052,13 @@ class CDR {
                 $this->applicationType=$this->applicationTypeNormalized;
             }
 
+            if ($this->CDRS->ServiceTypeField && $this->flow) {
+                if ($updatedFields) $query .= ", ";
+                $updatedFields++;
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->ServiceTypeField,addslashes($this->flow));
+                $this->ServiceType=$this->flow;
+            }
+
             if ($this->domainNormalized && $this->domainNormalized != $this->domain) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
@@ -2238,11 +2245,11 @@ class CDR {
 
 
     function isCallerLocal() {
-        return 0;
+        return false;
     }
 
     function isCalleeLocal() {
-        return 0;
+        return false;
     }
 
     function obfuscateCallerId() {
