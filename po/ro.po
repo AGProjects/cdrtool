@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: 1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-03-28 10:35+0200\n"
-"PO-Revision-Date: 2010-03-05 13:18+0100\n"
+"PO-Revision-Date: 2010-03-28 10:42+0100\n"
 "Last-Translator: Adrian Georgescu <ag@ag-projects.com>\n"
 "Language-Team: language@ag-projects.com\n"
 "MIME-Version: 1.0\n"
@@ -253,17 +253,12 @@ msgstr "Căsuta Vocală"
 
 #: /var/www/CDRTool/library/sip_settings.php:1808
 msgid "You must set the Owner to enable Credit Card Payments. "
-msgstr ""
-"Trebuie setat Proprietarul contului pentru a permite plați cu Card de Credit."
+msgstr "Trebuie setat Proprietarul contului pentru a permite plați cu Card de Credit."
 
 #: /var/www/CDRTool/library/sip_settings.php:1823
 #, php-format
-msgid ""
-"Calling to PSTN numbers is possible at the costs set forth in the <a href=%"
-"s>price list</a>. "
-msgstr ""
-"Apelurile către Rețeaua de Telefonie Fixă sînt posibile la costurile "
-"stabilite în <a href=%s>Lista De Prețuri</a>. "
+msgid "Calling to PSTN numbers is possible at the costs set forth in the <a href=%s>price list</a>. "
+msgstr "Apelurile către Rețeaua de Telefonie Fixă sînt posibile la costurile stabilite în <a href=%s>Lista De Prețuri</a>. "
 
 #: /var/www/CDRTool/library/sip_settings.php:1861
 #, php-format
@@ -273,22 +268,22 @@ msgstr "Dovada Identității"
 #: /var/www/CDRTool/library/sip_settings.php:1867
 #, php-format
 msgid "Error: Please specify a file"
-msgstr ""
+msgstr "Eroare: Specifică un fișier"
 
 #: /var/www/CDRTool/library/sip_settings.php:1872
-#, fuzzy, php-format
+#, php-format
 msgid "Error: Please enter the name printed on the Credit Card"
-msgstr "Nume tipărit pe Cardul de Credit"
+msgstr "Eroare: Introduce nume tipărit pe Cardul de Credit"
 
 #: /var/www/CDRTool/library/sip_settings.php:1877
 #, php-format
 msgid "Error: Last digits must be numeric"
-msgstr ""
+msgstr "Eroare: Ultimile cifre trebuie să fie numerice"
 
 #: /var/www/CDRTool/library/sip_settings.php:1883
 #, php-format
 msgid "Error: Mobile Number must be in international format starting with +"
-msgstr ""
+msgstr "Eroare: Numărul Mobil trebuie sa fie in format internațional incepînd cu +"
 
 #: /var/www/CDRTool/library/sip_settings.php:1888
 #, php-format
@@ -296,8 +291,7 @@ msgid "Error: Maximum file size is %s"
 msgstr "EroareaȘ mărimea maximă a fișsierului este %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:2006
-msgid ""
-"Credit Card payments will be activated after your identity is verified. "
+msgid "Credit Card payments will be activated after your identity is verified. "
 msgstr "Plațile cu Card de Credit sînt posibile după verificarea identitații."
 
 #: /var/www/CDRTool/library/sip_settings.php:2014
@@ -347,11 +341,8 @@ msgstr "Plațile cu Card de Credit sînt disponibile clienților verificați."
 
 #: /var/www/CDRTool/library/sip_settings.php:2073
 #, php-format
-msgid ""
-"To become verified, upload a copy of your passport or driving license that "
-"matches the Credit Card owner. "
-msgstr ""
-"Pentru a fi verificat, introduce o copie scanată după Buletin sau Pașaport."
+msgid "To become verified, upload a copy of your passport or driving license that matches the Credit Card owner. "
+msgstr "Pentru a fi verificat, introduce o copie scanată după Buletin sau Pașaport."
 
 #: /var/www/CDRTool/library/sip_settings.php:2090
 msgid "Name printed on the Credit Card"
@@ -364,7 +355,7 @@ msgstr "Copie scanată după Pașaport sau Buletin"
 #: /var/www/CDRTool/library/sip_settings.php:2123
 #: /var/www/CDRTool/library/sip_settings.php:4775
 msgid "International format starting with +"
-msgstr ""
+msgstr "Prefix international incepînd cu +"
 
 #: /var/www/CDRTool/library/sip_settings.php:2133
 msgid "Last 4 digits on your Credit Card"
@@ -672,15 +663,14 @@ msgid "Add"
 msgstr "Adaugă"
 
 #: /var/www/CDRTool/library/sip_settings.php:4146
-#, fuzzy, php-format
+#, php-format
 msgid "Prepaid Card"
-msgstr "Prepaid"
+msgstr "Card Prepaid"
 
 #: /var/www/CDRTool/library/sip_settings.php:4155
-#, fuzzy, php-format
+#, php-format
 msgid "To add Credit to your account using a Prepaid Card enter it below. "
-msgstr ""
-"Ca să adaugi Credit la contul tău, du-te la Sectiunea <a href=%s>Plați</a>. "
+msgstr "Ca să adaugi Credit la contul tău folosind un Card de Credit introduce-l mai jos. "
 
 #: /var/www/CDRTool/library/sip_settings.php:4171
 msgid "Card Id"
@@ -807,12 +797,8 @@ msgid "Directory"
 msgstr "Lista Abonati"
 
 #: /var/www/CDRTool/library/sip_settings.php:5163
-msgid ""
-"To find other SIP Addresses fill in the First Name or the Last Name and "
-"click the Search button. "
-msgstr ""
-"Pentru a găsi alte adrese SIP introduce Prenume sau Nume și apasă pe butonul "
-"Caută. "
+msgid "To find other SIP Addresses fill in the First Name or the Last Name and click the Search button. "
+msgstr "Pentru a găsi alte adrese SIP introduce Prenume sau Nume și apasă pe butonul Caută. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5187
 #: /var/www/CDRTool/library/sip_settings.php:5894
@@ -821,12 +807,8 @@ msgid "Groups"
 msgstr "Grupuri"
 
 #: /var/www/CDRTool/library/sip_settings.php:5193
-msgid ""
-"You can organize contacts into groups that can be used to accept incoming "
-"calls in Don't Disturb section. "
-msgstr ""
-"Poți organiza contactele in grupuri care pot fi folosite in secțiunea Nu "
-"Deranja."
+msgid "You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. "
+msgstr "Poți organiza contactele in grupuri care pot fi folosite in secțiunea Nu Deranja."
 
 #: /var/www/CDRTool/library/sip_settings.php:5266
 msgid "(wildcard %)"
@@ -878,17 +860,12 @@ msgid "You can reject calls depending on the time of day and Caller-ID. "
 msgstr "Poți rejecta apeluri in funcție de oră si apelant. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5724
-msgid ""
-"You can create custom groups in the Contacts page like Family or Coworkers. "
+msgid "You can create custom groups in the Contacts page like Family or Coworkers. "
 msgstr "Poti creaa grupuri noi in pagina de Contacte."
 
 #: /var/www/CDRTool/library/sip_settings.php:5726
-msgid ""
-"Rejected calls are diverted based on the Unavailable condition in the Call "
-"Forwarding page. "
-msgstr ""
-"Apelanții rejectați sînt rutați in funcție de condiția Ne-Disponibil din "
-"pagina de Redirectare. "
+msgid "Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. "
+msgstr "Apelanții rejectați sînt rutați in funcție de condiția Ne-Disponibil din pagina de Redirectare. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5729
 #, php-format
@@ -941,11 +918,8 @@ msgid "Rejected Callers"
 msgstr "Apelanți Rejectați"
 
 #: /var/www/CDRTool/library/sip_settings.php:6080
-msgid ""
-"Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
-msgstr ""
-"Folosește %Număr@% pentru Numere de Telefon sau user@domeniu pentru adrese "
-"SIP"
+msgid "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
+msgstr "Folosește %Număr@% pentru Numere de Telefon sau user@domeniu pentru adrese SIP"
 
 #: /var/www/CDRTool/library/sip_settings.php:6161
 msgid "Please fill in the e-mail address. "
@@ -1112,27 +1086,17 @@ msgid "This is your first payment. "
 msgstr "Aceasta este prima plată."
 
 #: /var/www/CDRTool/library/sip_settings.php:8620
-msgid ""
-"Please allow the time to check the validity of your transaction before "
-"activating your Credit. "
+msgid "Please allow the time to check the validity of your transaction before activating your Credit. "
 msgstr "Tranzacțiea va fi validată, acest lucru durează timp."
 
 #: /var/www/CDRTool/library/sip_settings.php:8623
-msgid ""
-"You can speed up the validation process by sending a copy of an utility bill "
-"(electriciy, gas or TV) that displays your address. "
-msgstr ""
-"Poți grabi procesul de validare al transacției dacă trimiți o copie după o "
-"factură de plată pentru electricitate, gaz sau televiziune."
+msgid "You can speed up the validation process by sending a copy of an utility bill (electriciy, gas or TV) that displays your address. "
+msgstr "Poți grabi procesul de validare al transacției dacă trimiți o copie după o factură de plată pentru electricitate, gaz sau televiziune."
 
 #: /var/www/CDRTool/library/sip_settings.php:8626
 #, php-format
-msgid ""
-"For questions related to your payments or to request a refund please email "
-"to <i>%s</i> and mention your transaction id <b>%s</b>. "
-msgstr ""
-"Pentru intrebări referitoare la plăți sau cereri de anulare trimite un email "
-"la adresa <i>%s</i> și mentionează numărul tranzacției <b>%s</b>."
+msgid "For questions related to your payments or to request a refund please email to <i>%s</i> and mention your transaction id <b>%s</b>. "
+msgstr "Pentru intrebări referitoare la plăți sau cereri de anulare trimite un email la adresa <i>%s</i> și mentionează numărul tranzacției <b>%s</b>."
 
 #: /var/www/CDRTool/library/sip_settings.php:8635
 msgid "You may check your new balance in the Credit tab. "
