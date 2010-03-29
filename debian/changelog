@@ -1,3 +1,24 @@
+cdrtool (7.1.1) unstable; urgency=low
+
+  [ WEB Output ]
+  * Hide duration from quota table
+
+  [ Normalization ]
+
+  * Save call flow in radius table
+  * Fixed call flow detection
+
+  [ NGNPro Client ]
+
+  * Update translations
+  * Improve sip settings payments tab
+  * Fixed enrollment username checks
+  * Fixed display of soap error
+  * Fixed CC length check
+  * Added identity checks for CC payments
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 29 Mar 2010 11:33:55 +0200
+
 cdrtool (7.1.0) unstable; urgency=low
 
   * Added support for ICE negotiation (requires MediaProxy >=2.4.0)
@@ -11,7 +32,7 @@ cdrtool (7.1.0) unstable; urgency=low
 
 cdrtool (7.0.2) unstable; urgency=low
 
-  [ WEB Output]
+  [ WEB Output ]
 
   * Added Android user agent picture
 
