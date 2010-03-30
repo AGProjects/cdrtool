@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-03-28 10:35+0200\n"
-"PO-Revision-Date: 2010-03-05 14:17+0100\n"
-"Last-Translator: Saul Ibarra <saul@ag-projects.com>\n"
+"PO-Revision-Date: 2010-03-30 09:49+0100\n"
+"Last-Translator: Saul Ibarra Corretge <saul@ag-projects.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -25,9 +25,9 @@ msgid "Status"
 msgstr "Estado"
 
 #: /var/www/CDRTool/library/sip_settings.php:290
-#, fuzzy, php-format
+#, php-format
 msgid "CC Payments"
-msgstr "Pagos"
+msgstr "Pagos con Tarjeta de Crédito"
 
 #: /var/www/CDRTool/library/sip_settings.php:301
 #: /var/www/CDRTool/library/sip_settings.php:314
@@ -253,18 +253,12 @@ msgstr "Buzón de voz"
 
 #: /var/www/CDRTool/library/sip_settings.php:1808
 msgid "You must set the Owner to enable Credit Card Payments. "
-msgstr ""
-"Tiene que especificar el propietario para habilitar los pagos con tarjeta de "
-"crédito"
+msgstr "Tiene que especificar el propietario para habilitar los pagos con tarjeta de crédito"
 
 #: /var/www/CDRTool/library/sip_settings.php:1823
 #, php-format
-msgid ""
-"Calling to PSTN numbers is possible at the costs set forth in the <a href=%"
-"s>price list</a>. "
-msgstr ""
-"Es posible llamar a la PSTN de cuerdo a los precios de la siguiente <a href=%"
-"s>lista</a>. "
+msgid "Calling to PSTN numbers is possible at the costs set forth in the <a href=%s>price list</a>. "
+msgstr "Es posible llamar a la PSTN de cuerdo a los precios de la siguiente <a href=%s>lista</a>. "
 
 #: /var/www/CDRTool/library/sip_settings.php:1861
 #, php-format
@@ -274,22 +268,22 @@ msgstr "Prueba de Identidad"
 #: /var/www/CDRTool/library/sip_settings.php:1867
 #, php-format
 msgid "Error: Please specify a file"
-msgstr ""
+msgstr "Error: Por favor especifique un fichero"
 
 #: /var/www/CDRTool/library/sip_settings.php:1872
-#, fuzzy, php-format
+#, php-format
 msgid "Error: Please enter the name printed on the Credit Card"
-msgstr "Nombre en la Tarjeta de Crédito"
+msgstr "Error: Por favor introduzca el nombre que figura en la Tarjeta de Crédito"
 
 #: /var/www/CDRTool/library/sip_settings.php:1877
 #, php-format
 msgid "Error: Last digits must be numeric"
-msgstr ""
+msgstr "Error: Los últimos dígitos han de ser números"
 
 #: /var/www/CDRTool/library/sip_settings.php:1883
 #, php-format
 msgid "Error: Mobile Number must be in international format starting with +"
-msgstr ""
+msgstr "Error: El número móvil ha de estar en formato internacional empezando por +"
 
 #: /var/www/CDRTool/library/sip_settings.php:1888
 #, php-format
@@ -297,11 +291,8 @@ msgid "Error: Maximum file size is %s"
 msgstr "Error: El tamaño máximo de fichero es %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:2006
-msgid ""
-"Credit Card payments will be activated after your identity is verified. "
-msgstr ""
-"Los pagos con tarjeta de crédito serán activados cuando su identidad haya "
-"sido verificada."
+msgid "Credit Card payments will be activated after your identity is verified. "
+msgstr "Los pagos con tarjeta de crédito serán activados cuando su identidad haya sido verificada."
 
 #: /var/www/CDRTool/library/sip_settings.php:2014
 #: /var/www/CDRTool/library/sip_settings.php:5277
@@ -346,18 +337,12 @@ msgstr "Confirmar"
 
 #: /var/www/CDRTool/library/sip_settings.php:2070
 msgid "Credit Card payments are available only to verified customers. "
-msgstr ""
-"Los pagos con Tarjeta de Crédito solo están disponibles para clientes que "
-"hayan sido verificados."
+msgstr "Los pagos con Tarjeta de Crédito solo están disponibles para clientes que hayan sido verificados."
 
 #: /var/www/CDRTool/library/sip_settings.php:2073
 #, php-format
-msgid ""
-"To become verified, upload a copy of your passport or driving license that "
-"matches the Credit Card owner. "
-msgstr ""
-"Para verificar su cuenta, suba una copia de su pasaporte o permiso de "
-"conducir que coincida con el nombre de la Tarjeta de Crédito."
+msgid "To become verified, upload a copy of your passport or driving license that matches the Credit Card owner. "
+msgstr "Para verificar su cuenta, suba una copia de su pasaporte o permiso de conducir que coincida con el nombre de la Tarjeta de Crédito."
 
 #: /var/www/CDRTool/library/sip_settings.php:2090
 msgid "Name printed on the Credit Card"
@@ -370,7 +355,7 @@ msgstr "Copia escaneada de su Pasaporte o Permiso de Conducir"
 #: /var/www/CDRTool/library/sip_settings.php:2123
 #: /var/www/CDRTool/library/sip_settings.php:4775
 msgid "International format starting with +"
-msgstr ""
+msgstr "Formato internacional empezando por +"
 
 #: /var/www/CDRTool/library/sip_settings.php:2133
 msgid "Last 4 digits on your Credit Card"
@@ -623,8 +608,7 @@ msgstr "Destinos bloqueados"
 
 #: /var/www/CDRTool/library/sip_settings.php:3246
 msgid "You can deny outbound calls to unwanted PSTN prefixes. "
-msgstr ""
-"Puede prohibir las llamadas salientes a los prefijos de la PSTN deseados."
+msgstr "Puede prohibir las llamadas salientes a los prefijos de la PSTN deseados."
 
 #: /var/www/CDRTool/library/sip_settings.php:3256
 #: /var/www/CDRTool/library/sip_settings.php:3285
@@ -679,15 +663,14 @@ msgid "Add"
 msgstr "Añadir"
 
 #: /var/www/CDRTool/library/sip_settings.php:4146
-#, fuzzy, php-format
+#, php-format
 msgid "Prepaid Card"
-msgstr "Prepago"
+msgstr "Tarjeta Prepago"
 
 #: /var/www/CDRTool/library/sip_settings.php:4155
-#, fuzzy, php-format
+#, php-format
 msgid "To add Credit to your account using a Prepaid Card enter it below. "
-msgstr ""
-"Para añadir saldo a su cuenta vaya a la sección de <a href=%s>pagos</a>. "
+msgstr "Para añadir saldo a su cuenta con una Tarjeta Prepago, intrododúzcala debajo."
 
 #: /var/www/CDRTool/library/sip_settings.php:4171
 msgid "Card Id"
@@ -814,12 +797,8 @@ msgid "Directory"
 msgstr "Directorio"
 
 #: /var/www/CDRTool/library/sip_settings.php:5163
-msgid ""
-"To find other SIP Addresses fill in the First Name or the Last Name and "
-"click the Search button. "
-msgstr ""
-"Para encontrar otras direcciones SIP introduzca el nombre y el apellido y "
-"haga click en Buscar. "
+msgid "To find other SIP Addresses fill in the First Name or the Last Name and click the Search button. "
+msgstr "Para encontrar otras direcciones SIP introduzca el nombre y el apellido y haga click en Buscar. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5187
 #: /var/www/CDRTool/library/sip_settings.php:5894
@@ -828,12 +807,8 @@ msgid "Groups"
 msgstr "Grupos"
 
 #: /var/www/CDRTool/library/sip_settings.php:5193
-msgid ""
-"You can organize contacts into groups that can be used to accept incoming "
-"calls in Don't Disturb section. "
-msgstr ""
-"Puede organizar sus contactos en grupos que pueden utilizarse para recibir "
-"las llamadas en la sección No Molestar."
+msgid "You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. "
+msgstr "Puede organizar sus contactos en grupos que pueden utilizarse para recibir las llamadas en la sección No Molestar."
 
 #: /var/www/CDRTool/library/sip_settings.php:5266
 msgid "(wildcard %)"
@@ -882,23 +857,15 @@ msgstr "No Molestar"
 
 #: /var/www/CDRTool/library/sip_settings.php:5723
 msgid "You can reject calls depending on the time of day and Caller-ID. "
-msgstr ""
-"Puede rechazar llamadas dependiendo de la hora del día y el Caller-ID. "
+msgstr "Puede rechazar llamadas dependiendo de la hora del día y el Caller-ID. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5724
-msgid ""
-"You can create custom groups in the Contacts page like Family or Coworkers. "
-msgstr ""
-"Puede crear grupos personalizados como Familia o Amigos en la pestaña de "
-"Contactos."
+msgid "You can create custom groups in the Contacts page like Family or Coworkers. "
+msgstr "Puede crear grupos personalizados como Familia o Amigos en la pestaña de Contactos."
 
 #: /var/www/CDRTool/library/sip_settings.php:5726
-msgid ""
-"Rejected calls are diverted based on the Unavailable condition in the Call "
-"Forwarding page. "
-msgstr ""
-"Las llamadas rechazadas son desviadas según la condición de No Disponible en "
-"la sección de Desvíos."
+msgid "Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. "
+msgstr "Las llamadas rechazadas son desviadas según la condición de No Disponible en la sección de Desvíos."
 
 #: /var/www/CDRTool/library/sip_settings.php:5729
 #, php-format
@@ -951,11 +918,8 @@ msgid "Rejected Callers"
 msgstr "Rechazar llamadas entrantes"
 
 #: /var/www/CDRTool/library/sip_settings.php:6080
-msgid ""
-"Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
-msgstr ""
-"Use %Número@% para seleccionar los números PSTN y usuario@dominio para las "
-"direcciones SIP"
+msgid "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
+msgstr "Use %Número@% para seleccionar los números PSTN y usuario@dominio para las direcciones SIP"
 
 #: /var/www/CDRTool/library/sip_settings.php:6161
 msgid "Please fill in the e-mail address. "
@@ -1122,29 +1086,17 @@ msgid "This is your first payment. "
 msgstr "Éste es su primer pago."
 
 #: /var/www/CDRTool/library/sip_settings.php:8620
-msgid ""
-"Please allow the time to check the validity of your transaction before "
-"activating your Credit. "
-msgstr ""
-"Por favor, espere mientras validamos su identidad antes de activar su "
-"Crédito."
+msgid "Please allow the time to check the validity of your transaction before activating your Credit. "
+msgstr "Por favor, espere mientras validamos su identidad antes de activar su Crédito."
 
 #: /var/www/CDRTool/library/sip_settings.php:8623
-msgid ""
-"You can speed up the validation process by sending a copy of an utility bill "
-"(electriciy, gas or TV) that displays your address. "
-msgstr ""
-"Puede acelerar el proceso de validación enviando una copia de una factura "
-"(electricidad, gas, TV) que muestre su dirección."
+msgid "You can speed up the validation process by sending a copy of an utility bill (electriciy, gas or TV) that displays your address. "
+msgstr "Puede acelerar el proceso de validación enviando una copia de una factura (electricidad, gas, TV) que muestre su dirección."
 
 #: /var/www/CDRTool/library/sip_settings.php:8626
 #, php-format
-msgid ""
-"For questions related to your payments or to request a refund please email "
-"to <i>%s</i> and mention your transaction id <b>%s</b>. "
-msgstr ""
-"Para cuestiones relacionadas con sus pagos o solicitar un reembolso envie un "
-"email a <i>%s</i> y mencione su id de transación <b>%s</b>. "
+msgid "For questions related to your payments or to request a refund please email to <i>%s</i> and mention your transaction id <b>%s</b>. "
+msgstr "Para cuestiones relacionadas con sus pagos o solicitar un reembolso envie un email a <i>%s</i> y mencione su id de transación <b>%s</b>. "
 
 #: /var/www/CDRTool/library/sip_settings.php:8635
 msgid "You may check your new balance in the Credit tab. "
