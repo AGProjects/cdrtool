@@ -10,6 +10,7 @@ cdrtool (7.1.1) unstable; urgency=low
 
   [ NGNPro Client ]
 
+  * Apply the database changes from setup/mysql/alter_tables.mysql
   * Update translations
   * Improve sip settings payments tab
   * Fixed enrollment username checks
