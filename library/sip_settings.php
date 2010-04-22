@@ -73,7 +73,7 @@ class SipSettings {
     var $call_img                  = "<img src=images/call.gif border=0 alt='Dial'>";
     var $delete_img                = "<img src=images/del_pb.gif border=0 alt='Delete'>";
     var $plus_sign_img             = "<img src=images/plus_sign.png border=0 alt='Add Contact'>";
-    var $embedded_img              = " <img src=images/blink.png border=0>";
+    var $embedded_img              = "<img src=images/blink.png border=0>";
 
     var $groups                    = array();
 
