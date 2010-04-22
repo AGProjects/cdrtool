@@ -4462,60 +4462,64 @@ class Media_trace {
 
         print "<h3>Stream Succession</h3>";
 
-        $w=500;
-        $w1=30;
+        $w_legend_bar=500;
+        $w_text=30;
         $stamps=array_keys($seen_stamp);
         sort($stamps);
 
-        $w2=$w+$w1;
+        $w_table=$w_legend_bar+$w_text;
 
-        print "<table border=0 width=$w2>";
+        print "<table border=0 cellpadding=1 cellspacing=1 width=$w_table>";
 
+        $j=0;
+
+		$_index=0;
         foreach (array_values($this->info->streams) as $_val) {
 
-            $_timeout=$_val->timeout_wait;
+			if ($_val->status == 'unselected ice candidate') continue;
 
-            $_duration=$_val->end_time-$_val->start_time;
+            $_index=$_index+$_val->start_time;
+
+            $_duration   = $_val->end_time-$_val->start_time;
+            $_timeout    = $_val->timeout_wait;
+
+			$duration_print= $_duration;
 
             if ($_val->status == 'conntrack timeout') {
-            	$bar_duration=$_val->end_time+$_val->timeout_wait;
-                $w_col2=intval(($_val->end_time-$_val->start_time)*$w/$bar_duration);
-                $w_col3=intval(($bar_duration-$_val->end_time)*$w/$bar_duration);
+                $w_duration   = intval(($_duration-$_timeout)*$w_legend_bar/$this->info->duration);
+                $w_timeout    = intval($_timeout*$w_legend_bar/$this->info->duration);
+                $duration_print = $_duration - $_timeout;
 
             } else if ($_val->status == 'no-traffic timeout') {
-            	$bar_duration=$_val->end_time-$_val->start_time;
-            	$_timeout=$bar_duration;
-                $_duration=0;
-                $w_col2=0;
-                $w_col3=intval(($bar_duration*$w/$bar_duration));
+                $w_duration   = intval($_duration*$w_legend_bar/$this->info->duration);
+                $w_timeout    = intval($_timeout*$w_legend_bar/$this->info->duration);
 
             } else if ($_val->status == 'closed') {
-            	$bar_duration=$_val->end_time-$_val->start_time;
-                $w_col2=intval(($_val->end_time-$_val->start_time)*$w/$bar_duration);
-                $w_col3=intval(($bar_duration-$_val->end_time)*$w/$bar_duration);
-
-			} else if ($_val->status == 'unselected ice candidate') {
-            	$bar_duration=0;
+                $w_duration   = intval($_duration * $w_legend_bar / $this->info->duration);
+                $w_timeout    = 0;
             }
 
-			if (!$bar_duration) continue;
+          	$w_start_time = intval($_index*$w_legend_bar/$this->info->duration);
+            $w_rest       = $w_legend_bar-$w_duration-$w_timeout-$w_start_time;
 
-          	$w_col1=intval($_val->start_time*$w/$bar_duration);
+            //printf ("%s, %s, %s, %s<br>\n",$w_start_time,$w_duration,$w_timeout,$w_rest);
 
-            print "<tr><td width=$w1 class=border>$_val->media_type</td>";
+            print "<tr><td width=$w_text class=border>$_val->media_type</td>";
 
-            print "<td>
-            <table width=100%><tr>";
-            print "<td width=$w_col1 bgcolor=white></td>";
-            print "<td width=$w_col2 bgcolor=green align=center><font color=white>$_duration</font></td>";
+            print "<td width=$w_legend_bar>\n";
+                print "<table width=100% border=0 cellpadding=0 cellspacing=0><tr>\n";
+                print "<td width=$w_start_time bgcolor=white></td>\n";
+                print "<td width=$w_duration bgcolor=green align=center><font color=white>$duration_print</font></td>\n";
+    
+                if ($_val->timeout_wait) {
+                    print "<td width=$w_timeout bgcolor=red align=center><font color=white>$_timeout</font></td>\n";
+                } else {
+                    print "<td width=$w_timeout bgcolor=white></td>\n";
+                }
+                print "<td width=$w_rest bgcolor=white align=center></td>\n";
 
-            if ($_val->timeout_wait) {
-                print "<td width=$w_col3 bgcolor=red align=center><font color=white>$_timeout</font></td>";
-            } else {
-                print "<td width=$w_col3 bgcolor=white></td>";
-            }
+                print "</table>\n";
 
-            print "</table>";
             print "</td></tr>";
 
         }
