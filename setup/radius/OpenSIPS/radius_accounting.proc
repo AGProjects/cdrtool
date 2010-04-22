@@ -31,8 +31,8 @@ version and SUPER priviledges are required.
 Instructions can be found in ../freeradius directory. Re-compile and
 re-install Freeradius server.
 
-3. Copy radius_accounting.conf to sql.conf to the Freeradius server. Edit
-the new sql.conf with the database connection information.
+3. Copy sql.conf to Freeradius server configuration folder. Edit the new
+sql.conf with the database connection information.
 
 4. Update MediaProxy configuration to use radius accounting, instead of
 database accounting (MediaProxy >= 1.8.0 is required)
