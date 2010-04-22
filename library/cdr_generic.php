@@ -316,25 +316,21 @@ class CDRS {
         if ($this->cdrtool->num_rows()) {
 
             $this->cdrtool->next_record();
-			$mc_destinations=$this->cdrtool->f('value');
+			$_destinations=json_decode($this->cdrtool->f('value'),true);
 
-            $_dests=explode("\n",$mc_destinations);
+            foreach (array_keys($_destinations) as $_key1) {
+                foreach(array_keys($_destinations[$_key1]) as $_key2) {
+                	$this->destinations_count=$this->destinations_count+count($_destinations[$_key1][$_key2]);
+                }
+            }
 
-            if (!strlen($mc_destinations)) {
+            if (!$this->destinations_count) {
             	$log=sprintf("Error: cached destinations key contains no data");
             	syslog(LOG_NOTICE,$log);
             }
 
-            foreach ($_dests as $_dest)  {
-                if (!strlen($_dest)) continue;
-                $this->destinations_count++;
-                $_els=explode("=",$_dest) ;
-                $_els_parts=explode(";",$_els[0]);
-                list($_reseller,$_entity)=explode("_",$_els_parts[0]);
-                $_destinations[$_reseller][$_entity][$_els_parts[1]]=$_els[1];
-            }
-
             $query=sprintf("select `value` from memcache where `key` = 'destinations_sip'");
+
             if (!$this->cdrtool->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
                 print $log;
@@ -344,18 +340,14 @@ class CDRS {
 
         	if ($this->cdrtool->num_rows()) {
 
-            	$this->cdrtool->next_record();
-                $mc_destinations_sip = $this->cdrtool->f('value');
+               $this->cdrtool->next_record();
+               $_destinations_sip=json_decode($this->cdrtool->f('value'),true);
 
-                $_SipDests=explode("\n",$mc_destinations_sip);
-                foreach ($_SipDests as $_dest)  {
-                    if (!strlen($_dest)) continue;
-                    $this->destinations_sip_count++;
-                    $_els=explode("=",$_dest) ;
-                    $_els_parts=explode(";",$_els[0]);
-                	list($_reseller,$_entity)=explode("_",$_els_parts[0]);
-                    $_destinations_sip[$_reseller][$_entity][$_els_parts[1]]=$_els[1];
-                }
+               foreach (array_keys($_destinations_sip) as $_key1) {
+                   foreach(array_keys($_destinations_sip[$_key1]) as $_key2) {
+                       $this->destinations_sip_count=$this->destinations_count+count($_destinations_sip[$_key1][$_key2]);
+                   }
+               }
             }
         } else {
 
@@ -392,6 +384,7 @@ class CDRS {
                 $domain      = trim($this->cdrtool->Record['domain']);
                 $subscriber  = trim($this->cdrtool->Record['subscriber']);
                 $dest_id     = trim($this->cdrtool->Record['dest_id']);
+                $region      = trim($this->cdrtool->Record['region']);
                 $name        = trim($this->cdrtool->Record['dest_name']);
                 $name_print  = $this->cdrtool->Record['dest_name']." (".$dest_id.")";
 
@@ -399,24 +392,16 @@ class CDRS {
                     // SIP destination
 
                     if ($subscriber) {
-                        $_destinations_sip[$reseller_id][$subscriber][$dest_id]=$name;
-                        $destinations_sip_cache.=$reseller_id."_".$subscriber.";".$dest_id."=".$name."\n";
-
+                        $_destinations_sip[$reseller_id][$subscriber][$dest_id]=array('name'=>$name, 'region'=>$region);
 	                	$this->destinations_sip_count++;
-
                     } else if ($domain) {
-                        $_destinations_sip[$reseller_id][$domain][$dest_id]=$name;
-                        $destinations_sip_cache.=$reseller_id."_".$domain.";".$dest_id."=".$name."\n";
-
+                        $_destinations_sip[$reseller_id][$domain][$dest_id]=array('name'=>$name, 'region'=>$region);
 	                	$this->destinations_sip_count++;
                     } else if ($gateway) {
-                        $_destinations_sip[$reseller_id][$gateway][$dest_id]=$name;
-                        $destinations_sip_cache.=$reseller_id."_".$gateway.";".$dest_id."=".$name."\n";
-
+                        $_destinations_sip[$reseller_id][$gateway][$dest_id]=array('name'=>$name, 'region'=>$region);
 	                	$this->destinations_sip_count++;
                     } else if ($dest_id) {
-                        $_destinations_sip[$reseller_id]["default"][$dest_id]=$name;
-                        $destinations_sip_cache.=$reseller_id."_"."default;".$dest_id."=".$name."\n";
+                        $_destinations_sip[$reseller_id]["default"][$dest_id]=array('name'=>$name, 'region'=>$region);
 	                	$this->destinations_sip_count++;
                     }
 
@@ -430,44 +415,29 @@ class CDRS {
 
                     if ($subscriber) {
                       	$this->destinations_subscriber_count++;
-
-                        $_destinations[$reseller_id][$subscriber][$dest_id]=$name;
-                        $destinations_cache.=$reseller_id."_".$subscriber.";".$dest_id."=".$name."\n";
-
+                        $_destinations[$reseller_id][$subscriber][$dest_id]=array('name'=>$name, 'region'=>$region);
 	                	$this->destinations_count++;
 
                     } else if ($domain) {
                       	$this->destinations_domain_count++;
-
-                        $_destinations[$reseller_id][$domain][$dest_id]=$name;
-                        $destinations_cache.=$reseller_id."_".$domain.";".$dest_id."=".$name."\n";
-
+                        $_destinations[$reseller_id][$domain][$dest_id]=array('name'=>$name, 'region'=>$region);
                         $this->destinations_count++;
 
                     } else if ($gateway) {
 	                	$this->destinations_gateway_count++;
-
-                        $_destinations[$reseller_id][$gateway][$dest_id]=$name;
-                        $destinations_cache.=$reseller_id."_".$gateway.";".$dest_id."=".$name."\n";
-
+                        $_destinations[$reseller_id][$gateway][$dest_id]=array('name'=>$name, 'region'=>$region);
                         $this->destinations_count++;
 
                     } else if ($dest_id) {
 	                	$this->destinations_default_count++;
-
-                        $_destinations[$reseller_id]["default"][$dest_id]=$name;
-                        $destinations_cache.=$reseller_id."_"."default;".$dest_id."=".$name."\n";
-
+                        $_destinations[$reseller_id]["default"][$dest_id]=array('name'=>$name, 'region'=>$region);
 	                	$this->destinations_count++;
                     }
                 }
             }
 
-            if (!strlen($destinations_cache)) {
-            	$log=sprintf("Error: cached destinations key contains no data");
-            	syslog(LOG_NOTICE,$log);
-                return 0;
-            }
+	   		$destinations_cache     =json_encode($_destinations);
+			$destinations_sip_cache =json_encode($_destinations_sip);
 
             $query=sprintf("select `value` from memcache where `key` = 'destinations'");
             if (!$this->cdrtool->query($query)) {
@@ -1245,18 +1215,16 @@ class CDRS {
 
     function lookupDestination($destination,$subscriber="",$domain="",$gateway="",$reseller_id=0) {
 
-        if (!$destination) {
-            return;
-        }
+        if (!$destination) return;
 
         if (is_numeric($destination)){
-            return $this->getPSTNDestinationId($destination,$subscriber,$domain,$gateway,$reseller_id);
+            return $this->lookupPSTNDestination($destination,$subscriber,$domain,$gateway,$reseller_id);
         } else {
-            return $this->getSIPDestinationId($destination,$subscriber,$domain,$gateway,$reseller_id);
+            return $this->lookupSipDestination($destination,$subscriber,$domain,$gateway,$reseller_id);
         }
     }
 
-    function getSIPDestinationId($destination='',$subscriber='',$domain='',$gateway='',$reseller_id=0) {
+    function lookupSipDestination($destination='',$subscriber='',$domain='',$gateway='',$reseller_id=0) {
         if ($this->destinations_sip[$reseller_id][$subscriber]) {
             $destinations_sip = $this->destinations_sip[$reseller_id][$subscriber];
             $fCustomer="subscriber=$subscriber";
@@ -1284,65 +1252,60 @@ class CDRS {
         }
 
         if ($destinations_sip[$destination]) {
-        	$ret=array($destination,$destinations_sip[$destination]);
+        	$ret=array($destination,$destinations_sip[$destination]['name']);
             return $ret;
         } else {
             return false;
         }
     }
 
-    function getPSTNDestinationId($destination='',$subscriber='',$domain='',$gateway='',$reseller_id=0) {
+    function lookupPSTNDestination($destination='',$subscriber='',$domain='',$gateway='',$reseller_id=0) {
 
         if ($this->destinations[$reseller_id][$subscriber]) {
-            $codes = $this->destinations[$reseller_id][$subscriber];
+            $_destinations = $this->destinations[$reseller_id][$subscriber];
             $maxLength = $this->destinations_length[$reseller_id][$subscriber];
             $fCustomer="subscriber=$subscriber";
         } else if ($this->destinations[$reseller_id][$domain]) {
-            $codes = $this->destinations[$reseller_id][$domain];
+            $_destinations = $this->destinations[$reseller_id][$domain];
             $maxLength = $this->destinations_length[$reseller_id][$domain];
             $fCustomer="domain=$domain";
         } else if ($this->destinations[$reseller_id][$gateway]) {
-            $codes = $this->destinations[$reseller_id][$gateway];
+            $_destinations = $this->destinations[$reseller_id][$gateway];
             $maxLength = $this->destinations_length[$reseller_id][$gateway];
             $fCustomer="gateway=$gateway";
         } else if ($this->destinations[$reseller_id]['default']) {
-            $codes = $this->destinations[$reseller_id]['default'];
+            $_destinations = $this->destinations[$reseller_id]['default'];
             $maxLength = $this->destinations_length[$reseller_id]['default'];
             $fCustomer="default";
-        }else if ($this->destinations[0][$subscriber]) {
-            $codes = $this->destinations[0][$subscriber];
+        } else if ($this->destinations[0][$subscriber]) {
+            $_destinations = $this->destinations[0][$subscriber];
             $maxLength = $this->destinations_length[0][$subscriber];
             $fCustomer="subscriber=$subscriber";
         } else if ($this->destinations[0][$domain]) {
-            $codes = $this->destinations[0][$domain];
+            $_destinations = $this->destinations[0][$domain];
             $maxLength = $this->destinations_length[0][$domain];
             $fCustomer="domain=$domain";
         } else if ($this->destinations[0][$gateway]) {
-            $codes = $this->destinations[0][$gateway];
+            $_destinations = $this->destinations[0][$gateway];
             $maxLength = $this->destinations_length[0][$gateway];
             $fCustomer="gateway=$gateway";
         } else if ($this->destinations_length[0]['default']){
-            $codes = $this->destinations[0]['default'];
+            $_destinations = $this->destinations[0]['default'];
             $maxLength = $this->destinations_length[0]['default'];
             $fCustomer="default";
         }
-
-        if (!$destination)
-            return false;
     
-        if (count($codes)>0) {
+        if (count($_destinations)>0) {
             $length = min(strlen($destination), $maxLength);
             for ($i=$length; $i>0; $i--) {
                 $buf = substr($destination, 0, $i);
-                if ($codes[$buf]) {
-                    $dest_name=$codes[$buf];
-                    $ret=array($buf,$dest_name);
-                    return $ret;
+                if ($_destinations[$buf]) {
+                    return array($buf,$_destinations[$buf]['name']);
                 }
             }
         }
 
-        $log=sprintf("Error: cannot find destination id for %s, customer = %s, total destinations = %d\n",$destination,$fCustomer,count($codes));
+        $log=sprintf("Error: cannot find destination id for %s, customer = %s, total destinations = %d\n",$destination,$fCustomer,count($_destinations));
         syslog(LOG_NOTICE,$log);
 
 		$this->missing_destinations[]=$destination;

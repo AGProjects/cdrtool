@@ -1331,7 +1331,7 @@ class CDRS_opensips extends CDRS {
 
         if ($MediaTimeout) {
             $this->url.="&MediaTimeout=1";
-            $where .= " and $this->MediaTimeoutField > ''";
+            $where .= " and $this->MediaInfoField > ''";
         }
 
         $this->url.="&maxrowsperpage=$this->maxrowsperpage";
@@ -2519,6 +2519,7 @@ class CDR_opensips extends CDR {
             // Destination Id is used for rating purposes
             $this->DestinationId                = $NormalizedNumber['DestinationId'];
             $this->destinationName              = $NormalizedNumber['destinationName'];
+            $this->region                       = $NormalizedNumber['region'];
         }
 
         if ($this->cNumber) {

@@ -669,3 +669,6 @@ CREATE TABLE `subscriber_docs` (
   UNIQUE KEY `document_idx` (`username`,`domain`,`document`)     
 );
 
+7.2.0
+alter table destinations add column region varchar(50) not null after dest_id ;
+

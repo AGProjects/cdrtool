@@ -384,6 +384,7 @@ CREATE TABLE `destinations` (
   `domain` varchar(50) NOT NULL default '',
   `subscriber` varchar(50) NOT NULL default '',
   `dest_id` varchar(100) NOT NULL,
+  `region` varchar(50) NOT NULL,
   `dest_name` varchar(255) NOT NULL default '',
   `increment` smallint(5) unsigned NOT NULL,
   `min_duration` smallint(5) unsigned NOT NULL,

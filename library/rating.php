@@ -117,7 +117,7 @@ class Rate {
             return false;
         }
 
-		if (!$this->lookupDestination()) {
+		if (!$this->lookupDestinationDetails()) {
             return false;
         }
 
@@ -182,6 +182,7 @@ class Rate {
                 "    Duration: $this->duration s\n".
                 "         App: $this->applicationType\n".
                 " Destination: $this->DestinationId\n".
+                "      Region: $this->region\n".
                 "    Customer: $this->CustomerProfile\n";
 
             if ($this->ENUMtld && $this->ENUMtld != 'none' && $this->ENUMtld != 'n/a') {
@@ -389,7 +390,7 @@ class Rate {
         return true;
     }
 
-    function lookupDestination() {
+    function lookupDestinationDetails() {
         // get rating details for the destination
 
         $query=sprintf("select * from destinations
@@ -408,6 +409,7 @@ class Rate {
         if ($this->db->num_rows()) {
             $this->db->next_record();
 
+            $this->region          = $this->db->Record['region'];
             $this->increment       = $this->db->Record['increment'];
             $this->min_duration    = $this->db->Record['min_duration'];
             $this->max_duration    = $this->db->Record['max_duration'];
@@ -509,6 +511,7 @@ class Rate {
 
         $this->cNumber         # E164 destination prefixed with 00  (e.g. 0041 CH)
         $this->DestinationId   # longest matched DestinationId
+        $this->region          # region the destination belongs to
 
         // pertinent to the curent rating SPAN (a span = same profile like evening hours)
         $hourofday             # which hour of teh day started for peak/ofpeak rates
@@ -622,9 +625,19 @@ class Rate {
                 }
 
                 if (!$found_history) {
-                    $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->applicationType);
-                }
+                    if ($this->region) {
+                        $this->rateValues=$this->lookupRateValues($this->rateName,$this->region,$this->applicationType);
+                        if (!$this->rateValues) {
+                            // try the destination as last resort
+                            $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->applicationType);
+                        }
 
+                    } else {
+                        if (!$this->rateValues) {
+                            $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->applicationType);
+                        }
+                    }
+                }
             }
         }
 
@@ -684,7 +697,18 @@ class Rate {
                 }
 
                 if (!$found_history) {
-                    $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->applicationType);
+                    if ($this->region) {
+                        $this->rateValues=$this->lookupRateValues($this->rateName,$this->region,$this->applicationType);
+                        // try destination as last resort
+                        if (!$this->rateValues) {
+                            $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->applicationType);
+                        }
+
+                    } else {
+                        if (!$this->rateValues) {
+                            $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->applicationType);
+                        }
+                    }
                 }
             }
         }
@@ -772,6 +796,7 @@ class Rate {
         $this->timestamp         = time();
         $this->callId            = $dictionary['callId'];
         $this->DestinationId     = $dictionary['DestinationId'];
+        $this->region            = $dictionary['region'];
         $this->BillingPartyId    = $dictionary['BillingPartyId'];
         $this->domain            = $dictionary['domain'];
         $this->duration          = $dictionary['duration'];
@@ -791,7 +816,7 @@ class Rate {
             return false;
         }
 
-		if (!$this->lookupDestination()) {
+		if (!$this->lookupDestinationDetails()) {
             return false;
         }
 
@@ -1055,10 +1080,13 @@ class RatingTables {
                                                                                   "checkType"=>'sip_account',
                                                                                   "name"=>"Subscriber"
                                                                                  ),
-                                                                 "dest_id"=>array("size"=>15,
-                                                                                  "name"=>"Destination Id"
+                                                                 "dest_id"=>array("size"=>12,
+                                                                                  "name"=>"Destination"
                                                                                  ),
-                                                                 "dest_name"=>array("size"=>25,
+                                                                 "region"=>array("size"=>10,
+                                                                                  "name"=>"Region"
+                                                                                 ),
+                                                                 "dest_name"=>array("size"=>20,
                                                                                   "name"=>"Description"
                                                                                  ),
                                                                  "increment"     =>array("size"=>3,
@@ -6486,6 +6514,7 @@ class RatingEngine {
                                       'Balance'         => $this->remaining_balance,
                                       'timestamp'       => $CDR->timestamp,
                                       'DestinationId'   => $CDR->DestinationId,
+                                      'region'          => $CDR->region,
                                       'domain'          => $CDR->domain,
                                       'gateway'         => $CDR->gateway,
                                       'BillingPartyId'  => $CDR->BillingPartyId,
@@ -6525,6 +6554,7 @@ class RatingEngine {
                                       'Balance'         => $Balance,
                                       'timestamp'       => $CDR->timestamp,
                                       'DestinationId'   => $CDR->DestinationId,
+                                      'region'          => $CDR->region,
                                       'domain'          => $CDR->domain,
                                       'gateway'         => $CDR->gateway,
                                       'BillingPartyId'  => $CDR->BillingPartyId,
@@ -6547,6 +6577,7 @@ class RatingEngine {
                                                   'gateway'         => $CDR->gateway,
                                                   'Destination'     => $CDR->destinationPrint,
                                                   'DestinationId'   => $CDR->DestinationId,
+                                                  'region'          => $CDR->region,
                                                   'connectCost'     => $Rate->connectCost
                                                   );
 
@@ -6686,6 +6717,7 @@ class RatingEngine {
                                   'timestamp'       => $CDR->timestamp,
                                   'duration'        => $CDR->duration,
                                   'DestinationId'   => $CDR->DestinationId,
+                                  'region'          => $CDR->region,
                                   'domain'          => $CDR->domain,
                                   'gateway'         => $CDR->gateway,
                                   'BillingPartyId'  => $CDR->BillingPartyId,
@@ -6827,6 +6859,7 @@ class RatingEngine {
                                   'timestamp'       => $CDR->timestamp,
                                   'duration'        => $CDR->duration,
                                   'DestinationId'   => $CDR->DestinationId,
+                                  'region'          => $CDR->region,
                                   'domain'          => $CDR->domain,
                                   'gateway'         => $CDR->gateway,
                                   'BillingPartyId'  => $CDR->BillingPartyId,
@@ -7046,6 +7079,7 @@ class RatingEngine {
                                   'callId'          => $_session,
                                   'timestamp'       => $active_sessions[$_session]['timestamp'],
                                   'DestinationId'   => $active_sessions[$_session]['DestinationId'],
+                                  'region'          => $active_sessions[$_session]['region'],
                                   'domain'          => $active_sessions[$_session]['domain'],
                                   'BillingPartyId'  => $active_sessions[$_session]['BillingPartyId'],
                                   'ENUMtld'         => $active_sessions[$_session]['ENUMtld'],
@@ -7093,6 +7127,7 @@ class RatingEngine {
                                   'timestamp'       => time(),
                                   'Balance'         => $this->remaining_balance,
                                   'DestinationId'   => $active_sessions[$_session]['DestinationId'],
+                                  'region'          => $active_sessions[$_session]['region'],
                                   'domain'          => $active_sessions[$_session]['domain'],
                                   'BillingPartyId'  => $active_sessions[$_session]['BillingPartyId'],
                                   'ENUMtld'         => $active_sessions[$_session]['ENUMtld'],
