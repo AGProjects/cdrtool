@@ -10234,6 +10234,8 @@ class GatewayRules extends Records {
 
     function showRecord($rule) {
 
+        $this->getGateways();
+
         print "<table border=0>";
         print "<tr>";
         print "<td>";
