@@ -2083,7 +2083,7 @@ class CDR {
                                       'ENUMtld'         => $this->ENUMtld
                                       );
 
-                $Rate->calculate(&$RateDictionary);
+                $Rate->calculateAudio(&$RateDictionary);
 
                 $this->pricePrint   = $Rate->pricePrint;
                 $this->price        = $Rate->price;
