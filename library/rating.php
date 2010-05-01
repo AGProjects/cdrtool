@@ -1135,6 +1135,7 @@ class RatingTables {
                            "billing_profiles"      => "profiles.csv",
                            "billing_rates"         => "rates.csv",
                            "billing_rates_history" => "ratesHistory.csv",
+                           "billing_discounts"     => "discounts.csv",
                            "prepaid"   	           => "prepaid.csv",
                            "billing_enum_tlds"     => "enumtld.csv",
                            "quota_usage"           => "quotausage.csv"
@@ -1144,7 +1145,8 @@ class RatingTables {
                            "billing_customers"     => "customers.csv",
                            "billing_profiles"      => "profiles.csv",
                            "billing_rates"         => "rates.csv",
-                           "billing_rates_history" => "ratesHistory.csv"
+                           "billing_rates_history" => "ratesHistory.csv",
+                           "billing_discounts"     => "discounts.csv"
                            );
 
     var $previously_imported_files=0;
@@ -2778,6 +2780,247 @@ class RatingTables {
                     addslashes($max_duration),
                     addslashes($max_price)
                     );
+                    if (!$this->db->query($query)) {
+                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
+                        return false;
+                    }
+
+                    if ($this->db->affected_rows() >0) {
+                        $inserted++;
+                    } else {
+                        $failed++;
+                    }
+
+                 }
+            } else {
+                $skipped++;
+            }
+
+            $this->showImportProgress($file);
+
+            $i++;
+        }
+
+        if ($i) print "Read $i records\n";
+        if ($skipped) print "Skipped $skipped records\n";
+        if ($inserted) print "Inserted $inserted records\n";
+        if ($updated)  print "Updated $updated records\n";
+        if ($deleted)  print "Delete $deleted records\n";
+
+        $results=$inserted+$updated+$deleted;
+        return $results;
+    }
+
+    function ImportDiscounts($file,$reseller=0) {
+
+        if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
+
+        $this->mustReload=true;
+
+        $i=0;
+        $inserted = 0;
+        $updated  = 0;
+        $deleted  = 0;
+
+        printf ("Importing discounts from %s for reseller %s:\n",$file,$reseller);
+
+        while ($buffer = fgets($fp,1024)) {
+            $buffer=trim($buffer);
+
+            $p = explode($this->delimiter, $buffer);
+
+            $ops             = trim($p[0]);
+            $gateway         = trim($p[2]);
+            $domain          = trim($p[3]);
+            $subscriber      = trim($p[4]);
+            $application     = trim($p[5]);
+            $destination     = trim($p[6]);
+            $region          = trim($p[7]);
+            $connect         = intval($p[8]);
+            $duration        = intval($p[9]);
+
+            if ($reseller) {
+            	$reseller_id    = intval($reseller);
+            } else {
+                $reseller_id    = intval($p[1]);
+            }
+
+            if (!is_numeric($destination) && !strstr($destination,'@')) {
+                // skip invalid destinations
+                $skipped++;
+            	continue;
+            }
+
+            if ($ops=="1") {
+                $query=sprintf("insert into billing_discounts
+                (
+                reseller_id,
+                gateway,
+                domain,
+                subscriber,
+                application,
+                destination,
+                region,
+                connect,
+                duration
+                ) values (
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s'
+                )",
+                addslashes($reseller_id),
+                addslashes($gateway),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($application),
+                addslashes($destination),
+                addslashes($region),
+                addslashes($connect),
+                addslashes($duration)
+                );
+
+                if (!$this->db->query($query)) {
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+                }
+
+                if ($this->db->affected_rows() >0) {
+                    $inserted++;
+                } else {
+                    $failed++;
+                }
+            } elseif ($ops=="3") {
+                $query=sprintf("delete from billing_discounts
+                where gateway      = '%s'
+                and reseller_id    = '%s'
+                and domain         = '%s'
+                and subscriber     = '%s'
+                and application    = '%s'
+                and destination    = '%s'
+                and region         = '%s'
+                ",
+                addslashes($gateway),
+                addslashes($reseller_id),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($application),
+                addslashes($destination),
+                addslashes($region)
+                );
+
+                if (!$this->db->query($query)) {
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+                }
+
+                if ($this->db->affected_rows() >0) {
+                    $deleted++;
+                }
+            } elseif ($ops=="2") {
+                $query=sprintf("select * from billing_discounts
+                where gateway      = '%s'
+                and reseller_id    = '%s'
+                and domain         = '%s'
+                and subscriber     = '%s'
+                and application    = '%s'
+                and destination    = '%s'
+                and region         = '%s'
+                ",
+                addslashes($gateway),
+                addslashes($reseller_id),
+                addslashes($domain),
+                addslashes($subscriber),
+                addslashes($application),
+                addslashes($destination),
+                addslashes($region)
+                );
+
+                if (!$this->db->query($query)) {
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+                }
+
+                if ($this->db->num_rows()) {
+                    $query=sprintf("update billing_discounts set
+                    connect            = '%s',
+                    duration           = '%s',
+                    where gateway      = '%s'
+	                and reseller_id    = '%s'
+                    and domain         = '%s'
+                    and subscriber     = '%s'
+                    and application    = '%s'
+                    and destination    = '%s'
+                    and region         = '%s'
+                    ",
+                    addslashes($connect),
+                    addslashes($duration),
+                    addslashes($gateway),
+	                addslashes($reseller_id),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($application),
+                    addslashes($destination),
+                    addslashes($region)
+                    );
+
+                    if (!$this->db->query($query)) {
+                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        print $log;
+                        syslog(LOG_NOTICE, $log);
+                        return false;
+                    }
+
+                    if ($this->db->affected_rows()) {
+                        $updated++;
+                    }
+                 } else {
+                    $query=sprintf("insert into billing_discounts
+                    (
+                    reseller_id,
+                    gateway,
+                    domain,
+                    subscriber,
+                    application,
+                    destination,
+                    region,
+                    connect,
+                    duration
+                    ) values (
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s'
+                    )",
+                    addslashes($reseller_id),
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($application),
+                    addslashes($destination),
+                    addslashes($region),
+                    addslashes($connect),
+                    addslashes($duration)
+                    );
+
                     if (!$this->db->query($query)) {
                         $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                         print $log;
