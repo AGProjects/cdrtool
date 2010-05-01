@@ -672,3 +672,21 @@ CREATE TABLE `subscriber_docs` (
 7.2.0
 alter table destinations add column region varchar(50) not null after dest_id ;
 
+drop table if exists billing_discounts;
+CREATE TABLE `billing_discounts` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `reseller_id` int(10) unsigned not NULL,
+  `gateway` varchar(50) NOT NULL default '',
+  `domain` varchar(50) NOT NULL default '',
+  `subscriber` varchar(50) NOT NULL default '',
+  `application` varchar(25) NOT NULL default '',
+  `destination` varchar(100) NOT NULL default '',
+  `region` varchar(25) NOT NULL default '',
+  `connect` smallint unsigned NOT NULL,
+  `duration` smallint unsigned NOT NULL,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`destination`,`region`),
+  KEY `name_idx` (`region`),
+  KEY `dest_idx` (`destination`)
+) ;
+

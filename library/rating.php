@@ -17,13 +17,15 @@ class Rate {
     var $price                  = 0;
     var $spans                  = 0;     // number of spans we looped through
 	var $connectCost            = 0;
-    var $rateValuesCache        = array(); // used to speed up prepaid apoplication
-    var $brokenRates            = array();
-
     var $increment              = 0;     // used to consider the duration of the call in increments (e.g. 30 seconds)
     var $min_duration           = 0;     // minimum duration considered for calculating the price
     var $max_duration           = 0;     // maimum duration considered for calculating the price
-    var $max_price              = 0;     // maximum price fro the call
+    var $max_price              = 0;     // maximum price for the call
+    var $discount_connect       = 0;
+    var $discount_duration      = 0;
+
+    var $rateValuesCache        = array(); // used to speed up prepaid apoplication
+    var $brokenRates            = array();
 
     function Rate($settings=array(),&$db) {
 
@@ -58,71 +60,85 @@ class Rate {
 
     function calculate(&$dictionary) {
 
-        /////////////////////////////////////////////////////
         // required fields passed from a CDR structure
-        //
-        // Session start time
+
         $this->callId            = $dictionary['callId'];
         $this->timestamp         = $dictionary['timestamp'];
 
-        // Session usage, type and destination Id
         $this->duration          = $dictionary['duration'];
         $this->traffic           = 2 * ($dictionary['inputTraffic'] + $dictionary['outputTraffic']);
-        $this->applicationType   = $dictionary['applicationType'];
-        $this->DestinationId     = $dictionary['DestinationId'];
-        $this->ResellerId        = $dictionary['ResellerId'];
 
-        // Billable entities we try to best match the rating tables
-        // against
+        // aplication type
+        $this->applicationType   = $dictionary['applicationType'];
+
+        // destination
+        $this->DestinationId     = $dictionary['DestinationId'];
+
+        // billing party
         $this->BillingPartyId    = $dictionary['BillingPartyId'];
         $this->domain            = $dictionary['domain'];
         $this->gateway           = $dictionary['gateway'];
+        $this->ResellerId        = $dictionary['ResellerId'];
 
-        if (!$this->gateway)      $this->gateway="0.0.0.0";
-
+        // a reference to the rating tables
         $this->RatingTables      = &$dictionary['RatingTables'];
 
-        /////////////////////////////////////////////////////////
-        // informational fields from CDR structure
         $this->aNumber           = $dictionary['aNumber'];
         $this->cNumber           = $dictionary['cNumber'];
         $this->ENUMtld           = $dictionary['ENUMtld'];
 
         if ($this->minimumDuration && $this->duration < $this->minimumDuration) {
-              //syslog(LOG_NOTICE, "Duration less than minimum $this->minimumDuration");
+            //syslog(LOG_NOTICE, "Duration less than minimum $this->minimumDuration");
             $this->rateInfo .= "   Duration < $this->minimumDuration s\n";
             return false;
         }
 
         if ($this->ENUMtld && $this->ENUMtld != 'n/a' && $this->ENUMtld != 'none' && $this->RatingTables->ENUMtlds[$this->ENUMtld]) {
             $this->ENUMdiscount = $this->RatingTables->ENUMtlds[$this->ENUMtld]['discount'];
-            if (!is_numeric($this->ENUMdiscount ) || $this->ENUMdiscount <0 || $this->ENUMdiscount >100) {
+            if (!is_numeric($this->ENUMdiscount ) || $this->ENUMdiscount < 0 || $this->ENUMdiscount > 100) {
                   syslog(LOG_NOTICE, "Error: ENUM discount for tld $this->ENUMtld must be between 0 and 100");
             }
         }
 
-        if (!$this->duration) $this->duration = 0;
-        if (!$this->traffic)  $this->traffic  = 0;
+        if (!$this->gateway) {
+        	$this->gateway="0.0.0.0";
+        }
 
-        if (!$this->applicationType) $this->applicationType='audio';
+        if (!$this->duration) {
+        	$this->duration = 0;
+        }
 
-        $this->rateSyslog .= sprintf("App=%s ",$this->applicationType);
+        if (!$this->traffic) {
+        	$this->traffic = 0;
+        }
 
-        $durationRate           = 0;
+        if (!$this->applicationType) {
+        	$this->applicationType='audio';
+        }
+
+        $durationRate = 0;
 
         $foundRates=array();
 
         if (!$this->DestinationId) {
+            syslog(LOG_NOTICE, "Error: Cannot calculate rate without destination id");
             return false;
         }
 
 		if (!$this->lookupDestinationDetails()) {
+            // get region, increment and other per destination details
+            syslog(LOG_NOTICE, "Error: Cannot find destination details for call_id=$this->callId, dest_id=$this->DestinationId)");
             return false;
         }
 
         if (!$this->lookupProfiles()) {
+            // get profiles for the billing party
+            syslog(LOG_NOTICE, "Error: Cannot find any profiles for call_id=$this->callId, dest_id=$this->DestinationId)");
             return false;
         }
+
+        // lookup discounts if any
+		$this->lookupDiscounts();
 
         $this->startTimeBilling   = getLocalTime($this->billingTimezone,$this->timestamp);
         list($dateText,$timeText) = explode(" ",trim($this->startTimeBilling));
@@ -181,8 +197,29 @@ class Rate {
                 "    Duration: $this->duration s\n".
                 "         App: $this->applicationType\n".
                 " Destination: $this->DestinationId\n".
-                "      Region: $this->region\n".
                 "    Customer: $this->CustomerProfile\n";
+
+            if ($this->region) {
+            $this->rateInfo .= 
+                "      Region: $this->region\n";
+            }
+
+            if ($this->discount_duration || $this->discount_connect) {
+            	$this->rateInfo .=
+                "    Discount: ";
+            }
+
+            if ($this->discount_connect) {
+            	$this->rateInfo .= " connect $this->discount_connect% ";
+            }
+
+            if ($this->discount_duration) {
+	            $this->rateInfo .= " duration $this->discount_duration% ";
+            }
+
+            if ($this->discount_duration || $this->discount_connect) {
+            	$this->rateInfo .= "\n";
+            }
 
             if ($this->ENUMtld && $this->ENUMtld != 'none' && $this->ENUMtld != 'n/a') {
             $this->rateInfo .= 
@@ -221,7 +258,7 @@ class Rate {
                 $i++;
 
                 if ($i > 10) {
-                    // possible loop because of wrong coding make sure we can end this somehow
+                    // possible loop because of wrong coding make sure we end this loop somehow
                     $body="Rating of call $this->callId (DestId=$this->DestinationId) has more than 10 spans. It could be a serious bug.\n";
                     mail($this->toEmail, "CDRTool rating problem", $body , $this->extraHeaders);
                     syslog(LOG_NOTICE, "Error: Rating of call $this->callId (DestId=$this->DestinationId) has more than 10 spans.");
@@ -251,14 +288,26 @@ class Rate {
             $connectCost     = $thisRate['values']['connectCost'];
             $durationRate    = $thisRate['values']['durationRate'];
 
+            // apply discounts for connect
+            if ($this->discount_connect) {
+                $connectCost=$connectCost-$connectCost*$this->discount_connect/100;
+            }
+
+            // apply discounts for duration
+            if ($this->discount_duration) {
+                $durationRate=$durationRate-$durationRate*$this->discount_duration/100;
+            }
+
             $connectCostIn   = $thisRate['values']['connectCostIn'];
             $durationRateIn  = $thisRate['values']['durationRateIn'];
 
             if ($span=="1") {
+
                 $connectCostSpan=$connectCost;
                 $this->connectCost=number_format($connectCost/$this->priceDenominator,$this->priceDecimalDigits);
 
                 $connectCostSpanIn=$connectCostIn;
+
                 $this->connectCostIn=number_format($connectCostIn/$this->priceDenominator,$this->priceDecimalDigits);
             } else {
                 $connectCostSpan=0;
@@ -292,6 +341,7 @@ class Rate {
             */
 
             $spanPrice      = $durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator;
+
             $this->price    = $this->price+$spanPrice;
             $spanPricePrint = number_format($spanPrice,$this->priceDecimalDigits);
 
@@ -344,6 +394,15 @@ class Rate {
 
             $this->rateSyslog .= " Price=".sprintf("%.4f",$spanPrice);
             $this->rateSyslog .= " PriceIn=".sprintf("%.4f",$spanPriceIn);
+
+            if ($this->discount_connect) {
+                $this->rateSyslog .= sprintf(" DisCon=%s",$this->discount_connect);
+            }
+    
+            if ($this->discount_duration) {
+                $this->rateSyslog .= sprintf(" DisDur=%s",$this->discount_duration);
+            }
+
             syslog(LOG_NOTICE, $this->rateSyslog);
 
             $j++;
@@ -389,8 +448,77 @@ class Rate {
         return true;
     }
 
+    function lookupDiscounts() {
+        // get discounts for customer per region if set otherwise per destination
+
+		if (!$this->CustomerProfile) {
+            return false;
+        }
+
+        if ($this->region) {
+        	$_field='region';
+            $_value=$this->region;
+        } else {
+        	$_field='destination';
+            $_value=$this->DestinationId;
+        }
+		
+        if ($this->CustomerProfile == 'default') {
+
+            $query=sprintf("select * from billing_discounts
+            where subscriber     = '',
+            and domain           = '',
+            and gateway          = '',
+            and application      = '%s'
+            and %s               = '%s'
+            ",
+            addslashes($this->applicationType),
+            addslashes($_field),
+            addslashes($_value)
+            );
+        } else {
+        	$els=explode("=",$this->CustomerProfile);
+
+            $query=sprintf("select * from billing_discounts
+            where %s = '%s'
+            and application = '%s'
+            and %s  = '%s'
+            ",
+            addslashes($els[0]),
+            addslashes($els[1]),
+            addslashes($this->applicationType),
+            addslashes($_field),
+            addslashes($_value)
+            );
+        }
+
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
+        if ($this->db->num_rows()) {
+            $this->db->next_record();
+
+            if ($this->db->f('connect') > 0 && $this->db->f('connect') <=100) {
+            	$this->discount_connect  = $this->db->f('connect');
+            }
+
+            if ($this->db->f('duration') > 0 && $this->db->f('duration') <=100) {
+            	$this->discount_duration = $this->db->f('duration');
+            }
+        }
+
+        return true;
+    }
+
     function lookupDestinationDetails() {
-        // get rating details for the destination
+        // get rating related details for the destination
+
+        if (!$this->DestinationId) {
+            syslog(LOG_NOTICE, "Error: Cannot lookup destination details without a destination id");
+            return false;
+        }
 
         $query=sprintf("select * from destinations
         where dest_id = '%s'
@@ -795,7 +923,6 @@ class Rate {
         $this->timestamp         = time();
         $this->callId            = $dictionary['callId'];
         $this->DestinationId     = $dictionary['DestinationId'];
-        $this->region            = $dictionary['region'];
         $this->BillingPartyId    = $dictionary['BillingPartyId'];
         $this->domain            = $dictionary['domain'];
         $this->duration          = $dictionary['duration'];
@@ -1146,6 +1273,44 @@ class RatingTables {
                                                                  )
 
                                                  ),
+                           "billing_discounts"=>array("name"=>"Discounts",
+                                                 "keys"=>array("id"),
+                                                 "domainFilterColumn"=>"domain",
+                                                 "fields"=>array("gateway"=>array("size"=>15,
+                                                                                  "checkType"=>'ip',
+                                                                                  "name"=>"Trusted Peer"
+                                                                                ),
+                                                                 "reseller_id"=>array("size"=>8,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Reseller"
+                                                                                 ),
+                                                                 "domain"=>array("size"=>15,
+                                                                                  "checkType"=>'domain',
+                                                                                  "name"=>"Domain"
+                                                                                 ),
+                                                                 "subscriber"=>array("size"=>25,
+                                                                               "checkType"=>'sip_account',
+                                                                                  "name"=>"Subscriber",
+                                                                                 ),
+                                                                 "application"=>array("size"=>6,
+                                                                                  "name"=>"App"
+                                                                                 ),
+                                                                 "destination"=>array("size"=>10,
+                                                                                  "name"=>"Destination"
+                                                                                 ),
+                                                                 "region"=>array("size"=>8,
+                                                                                  "name"=>"Region"
+                                                                                 ),
+                                                                 "connect"=>array("size"=>5,
+                                                                                  "name"=>"Connect"
+                                                                                 ),
+                                                                 "duration"=>array("size"=>5,
+                                                                                  "name"=>"Duration"
+                                                                                 )
+                                                                 )
+
+                                                 ),
+
                            "billing_profiles"=>array("name"=>"Profiles",
                                                  "skip_math"=> true,
                                                  "keys"=>array("id"),
@@ -1212,11 +1377,11 @@ class RatingTables {
                                                                                  ),
                                                                  "connectCost"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
-                                                                                  "name"=>"Conn"
+                                                                                  "name"=>"Connect"
                                                                                  ),
                                                                  "durationRate"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
-                                                                                  "name"=>"Price"
+                                                                                  "name"=>"Duration"
                                                                                  ),
                                                                  "connectCostIn"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
@@ -1224,7 +1389,7 @@ class RatingTables {
                                                                                  ),
                                                                  "durationRateIn"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
-                                                                                  "name"=>"Price In"
+                                                                                  "name"=>"Duration In"
                                                                                  )
                                                                   )
                                                    ),
@@ -1382,7 +1547,8 @@ class RatingTables {
                                                                                "checkType"=>'numeric',
                                                                                   "name"=>"Reseller"
                                                                                  ),
-                                                                 "action"=>array("size"=>15
+                                                                 "action"=>array("size"=>15,
+                                                                                 "readonly"=>1
                                                                                  ),
                                                                  "duration"=>array("size"=>5
                                                                                  ),
