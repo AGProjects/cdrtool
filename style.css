@@ -233,6 +233,7 @@ td.white {
   background-color: white;
 }
 
+.tab     	{ background-color: lightgray; border: 1px solid #000000; border-color: #A9A9A9;  border-collapse: collapse; -webkit-border-radius: 3px; -moz-border-radius: 3px; padding: 0px 0px 0px 0px; }
 .border	        { border: 1px solid #cccccc; }
 .orange	        { background-color: orange; }
 .border2     	{ border: 1px solid #000000; 
