@@ -750,39 +750,44 @@ class pageLayout {
         print "<table width=100%>
         <tr>
         <td align=left>
+        <table border=0 width=100%>
+        <tr>
         "; 
 
         if ($perm->have_perm("callsearch")) {  
-            print " <a href=callsearch.phtml>CDRs</a> ";
+            print " <td class=tab><a href=callsearch.phtml>CDRs</a></td> ";
         }
         
         if ($perm->have_perm("rates")) {
-            print " | <a href=rating_tables.phtml>Rating</a>";
-            print " | <a href=rating_tables.phtml?table=prepaid>Prepaid</a>";
-            print " | <a href=rating_tables.phtml?table=quota_usage>Quota</a>";
+            print " <td class=tab><a href=rating_tables.phtml>Rating</a></td>";
+            print " <td class=tab><a href=rating_tables.phtml?table=prepaid>Prepaid</a></td>";
+            print " <td class=tab><a href=rating_tables.phtml?table=quota_usage>Quota</a></td>";
         }
 
         if ($perm->have_perm("statistics")) {
-            print " | <a href=network_status.phtml>Network</a>";
-            print " | <a href=media_sessions.phtml>Sessions</a>";
-            print " | <a href=status/usage/index.phtml target=usage>Usage</a>";
+            print " <td class=tab><a href=network_status.phtml>Network</a></td>";
+            print " <td class=tab><a href=media_sessions.phtml>Sessions</a></td>";
+            print " <td class=tab><a href=status/usage/index.phtml target=usage>Usage</a></td>";
         }
         
         if ($perm->have_perm("admin")) {
-            print " | <a href=mysql_replication_status.phtml>Replication</a>";
+            print " <td class=tab><a href=mysql_replication_status.phtml>Replication</a></td>";
         }
 
         if ($perm->have_perm("provisioning")) {
-            print " | <a href=provisioning.phtml>Provisioning</a>";
+            print " <td class=tab><a href=provisioning.phtml>Provisioning</a></td>";
         }
         
-        print " | <a href=accounts.phtml>Accounts</a>";
-        print " | <a href=log.phtml>Logs</a>";
+        print " <td class=tab><a href=accounts.phtml>Accounts</a></td>";
+        print " <td class=tab><a href=log.phtml>Logs</a></td>";
         
         $now_print=Date("Y-m-d H:i:s",time());
         $tz=$CDRTool['provider']['timezone'];
-        print " | $now_print | <a href=doc/changelog target=changelog>v. $version</a>";
+        //print " <td>$now_print | <a href=doc/changelog target=changelog>v. $version</a></td>";
+        print " <td><a href=doc/changelog target=changelog>v. $version</a></td>";
         print "
+        </tr>
+        </table>
         </td>
         <td align=right>
         ";
