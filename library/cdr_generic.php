@@ -2083,14 +2083,18 @@ class CDR {
                                       'ENUMtld'         => $this->ENUMtld
                                       );
 
-                $Rate->calculateAudio(&$RateDictionary);
+                if ($this->applicationType == 'message') {
+                    $Rate->calculateSMS(&$RateDictionary);
+                } else {
+                    $Rate->calculateAudio(&$RateDictionary);
+                }
 
                 $this->pricePrint   = $Rate->pricePrint;
                 $this->price        = $Rate->price;
                 $this->rateInfo     = $Rate->rateInfo;
                 $this->rateDuration = $Rate->duration;
 
-				if (count($Rate->brokenRates)) {
+                if (count($Rate->brokenRates)) {
                     $this->CDRS->brokenRates=array_merge($this->CDRS->brokenRates,array_keys($Rate->brokenRates));
                 }
 
@@ -2098,13 +2102,13 @@ class CDR {
 
                     if ($updatedFields) $query .= ", ";
                     $updatedFields++;
-                	$query.=sprintf(" %s = '%s' ",$this->CDRS->priceField,$this->pricePrint);
+                    $query.=sprintf(" %s = '%s' ",$this->CDRS->priceField,$this->pricePrint);
     
                     if ($this->CDRS->rateField ) {
                         if ($updatedFields) $query .= ", ";
                         $updatedFields++;
-                		$query.=sprintf(" %s = '%s' ",$this->CDRS->rateField,$this->rateInfo);
-                	}
+                        $query.=sprintf(" %s = '%s' ",$this->CDRS->rateField,$this->rateInfo);
+                    }
                 }
             }
 
