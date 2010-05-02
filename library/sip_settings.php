@@ -1943,7 +1943,7 @@ class SipSettings {
                 $subject=sprintf ("%s requested CC Payments",$this->account);
 
                 $hdrs = array(
-                     'From'=> $this->billing_email,
+                     'From'    => $this->email,
                      'Subject' => $subject
                      );
 
