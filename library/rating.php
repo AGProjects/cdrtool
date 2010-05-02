@@ -241,7 +241,7 @@ class Rate {
                     $dayofyear       = date("Y-m-d",$this->timestampBilling+$durationRatedTotal);
                 }
 
-                $foundRate           = $this->lookupRate($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
+                $foundRate           = $this->lookupRateAudio($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
                 $durationRatedTotal  = $durationRatedTotal + $foundRate['duration'];
 
                 if (!$foundRate['rate']) {
@@ -469,16 +469,12 @@ class Rate {
         	$this->gateway="0.0.0.0";
         }
 
+        $this->application='sms';
+
         $foundRates=array();
 
         if (!$this->DestinationId) {
             syslog(LOG_NOTICE, "Error: Cannot calculate rate without destination id");
-            return false;
-        }
-
-		if (!$this->lookupDestinationDetails()) {
-            // get region, increment and other per destination details
-            syslog(LOG_NOTICE, "Error: Cannot find destination details for call_id=$this->callId, dest_id=$this->DestinationId)");
             return false;
         }
 
@@ -491,16 +487,28 @@ class Rate {
         // lookup discounts if any
 		$this->lookupDiscounts();
 
-        $this->startTimeBilling   = getLocalTime($this->billingTimezone,$this->timestamp);
+        $this->startTimeBilling = getLocalTime($this->billingTimezone,$this->timestamp);
+
         list($dateText,$timeText) = explode(" ",trim($this->startTimeBilling));
 
         $Bdate = explode("-",$dateText);
         $Btime = explode(":",$timeText);
 
-        $this->timestampBilling   = mktime($Btime[0], $Btime[1], $Btime[2], $Bdate[1], $Bdate[2], $Bdate[0]);
+        $this->timestampBilling = mktime($Btime[0], $Btime[1], $Btime[2], $Bdate[1], $Bdate[2], $Bdate[0]);
 
-        $this->startTimeBilling   = Date("Y-m-d H:i:s",$this->timestampBilling);
+        $dayofweek = date("w",$this->timestampBilling);
+        $hourofday = date("G",$this->timestampBilling);
+        $dayofyear = date("Y-m-d",$this->timestampBilling);
 
+        $foundRate = $this->lookupRateSMS($dayofyear,$dayofweek,$hourofday);
+
+        if (is_array($foundRate)) {
+            $this->price=number_format($foundRate['values']['connectCost']/$this->priceDenominator,$this->priceDecimalDigits);
+        	$this->price=sprintf("%.4f",$this->price);
+        	return true;
+        } else {
+            return false;
+        }
     }
 
     function lookupDiscounts() {
@@ -521,9 +529,9 @@ class Rate {
         if ($this->CustomerProfile == 'default') {
 
             $query=sprintf("select * from billing_discounts
-            where subscriber     = '',
-            and domain           = '',
-            and gateway          = '',
+            where subscriber     = ''
+            and domain           = ''
+            and gateway          = ''
             and application      = '%s'
             and %s               = '%s'
             ",
@@ -683,7 +691,7 @@ class Rate {
         }
     }
 
-    function lookupRate($dayofyear,$dayofweek,$hourofday,$durationRatedAlready) {
+    function lookupRateAudio($dayofyear,$dayofweek,$hourofday,$durationRatedAlready) {
 
         /*
         // Required information from CDR structure
@@ -938,7 +946,6 @@ class Rate {
 
         $npdt=Date("Y-m-d H:i", $nextProfileTimestamp);
 
-
         $timeTillNextProfile=$nextProfileTimestamp-$this->timestampBilling;
 
         if ($durationToRate > $timeTillNextProfile) {
@@ -949,17 +956,181 @@ class Rate {
         }
 
         $rate=array(
-                    "customer"      =>$this->CustomerProfile,
-                    "application"   =>$this->application,
-                    "profile"       =>$this->profileNameLog,
-                    "day"           =>$this->PeriodOfProfile,
-                    "destinationId" =>$this->DestinationId,
-                    "duration"      =>$this->durationRated,
-                    "rate"          =>$this->rateName,
-                    "values"        =>$this->rateValues,
-                    "interval"      =>$this->timeInterval,
-                    "nextHourOfDay" =>$this->nextProfile
+                    "customer"      => $this->CustomerProfile,
+                    "application"   => $this->application,
+                    "profile"       => $this->profileNameLog,
+                    "day"           => $this->PeriodOfProfile,
+                    "destinationId" => $this->DestinationId,
+                    "duration"      => $this->durationRated,
+                    "rate"          => $this->rateName,
+                    "values"        => $this->rateValues,
+                    "interval"      => $this->timeInterval,
+                    "nextHourOfDay" => $this->nextProfile
                     );
+        return $rate;
+    }
+
+    function lookupRateSMS($dayofyear,$dayofweek,$hourofday) {
+
+        /*
+        // Required information from CDR structure
+        $this->BillingPartyId  # calling subscriber
+        $this->domain          # multiple callers may belong to same domain
+        $this->gateway         # multiple callers may belong to the same gateway
+
+        $this->cNumber         # E164 destination prefixed with 00  (e.g. 0041 CH)
+        $this->DestinationId   # longest matched DestinationId
+        $this->region          # region the destination belongs to
+
+        // pertinent to the curent rating SPAN (a span = same profile like evening hours)
+        $hourofday             # which hour of teh day started for peak/ofpeak rates
+        $dayofweek             # which day of the week for matching profiles
+        $dayofyear             # which day of the year for matching holidays
+
+        $durationRatedAlready= the full duration for which a profile is defined (e.g. 0800-1800)
+        // the call is called recursively until the $durationRatedAlready = $CDR->duration
+        // when a call spans multiple profiles. If we span multiple profiles we must call
+        // the function again to lookup the corect rates
+
+
+        Rating logic
+        ------------
+
+        1. using the profile_name found, lookup the rate_name based
+           on $hourofday in billing_profiles
+           - the day may be split in maximum 4 periods
+           - each day starts with hour 0 and ends with hour 24
+           - rate_name1 defines the first interval after hour 0
+           - rate_name2 defines the first interval after rate_name1
+           - rate_name3 defines the first interval after rate_name2
+           - rate_name4 defines the first interval after rate_name3
+           When the hour matches an interval use the rate_nameX found
+           to lookup the rate in billing_rates
+           - if no record is found use the rate called 'default'
+        2. lookup in billing_rates the record having same name found above
+           and billing_rates.destination = $this->DestinationId
+           - return an array with all the values to
+           $this->calculateAudio() function that called us
+
+        */
+
+        // get work-day or weekend profile
+        if ($this->RatingTables->holidays[$dayofyear]) {
+
+            $this->profileName           = $this->allProfiles['profile2'];
+            $this->profileNameAlt        = $this->allProfiles['profile2_alt'];
+            $this->PeriodOfProfile       = "weekend";
+
+        } else {
+            if ($dayofweek >=1 && $dayofweek <=5 ) {
+                $this->profileName       = $this->allProfiles['profile1'];
+                $this->profileNameAlt    = $this->allProfiles['profile1_alt'];
+                $this->PeriodOfProfile   = "weekday";
+            } else {
+                $this->profileName       = $this->allProfiles['profile2'];
+                $this->profileNameAlt    = $this->allProfiles['profile2_alt'];
+                $this->PeriodOfProfile   = "weekend";
+            }
+        }
+
+        // get rate for the time of the day
+        $timestampNextProfile    = $this->timestampBilling + $durationRatedAlready;
+        $profileValues           = $this->RatingTables->profiles[$this->profileName];
+
+        if (is_array($profileValues)) {
+            $this->profileNameLog = $this->profileName;
+
+            if ($hourofday          < $profileValues['hour1'] ) {
+                $this->rateName     = $profileValues['rate_name1'];
+                $this->timeInterval = "0-".$profileValues['hour1'];
+                $foundProfile       = $profileValues['hour1'];
+            } else if ($hourofday   < $profileValues['hour2']) {
+                $this->rateName     = $profileValues['rate_name2'];
+                $this->timeInterval = $profileValues['hour1']."-".$profileValues['hour2'];
+                $foundProfile       = $profileValues['hour2'];
+            } else if ($hourofday   < $profileValues['hour3']) {
+                $this->rateName     = $profileValues['rate_name3'];
+                $this->timeInterval = $profileValues['hour2']."-".$profileValues['hour3'];
+                $foundProfile       = $profileValues['hour3'];
+            } else if ($hourofday   < $profileValues['hour4']) {
+                $this->rateName     = $profileValues['rate_name4'];
+                $this->timeInterval = $profileValues['hour3']."-".$profileValues['hour4'];
+                $foundProfile       = $profileValues['hour4'];
+            }
+
+            if ($this->rateName) {
+                if ($this->region) {
+                    $this->rateValues=$this->lookupRateValues($this->rateName,$this->region,$this->application);
+                    if (!$this->rateValues) {
+                        // try the destination as last resort
+                        $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->application);
+                    }
+                } else {
+                    if (!$this->rateValues) {
+                        $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->application);
+                    }
+                }
+            }
+        }
+
+        $profileValuesAlt        = $this->RatingTables->profiles[$this->profileNameAlt];
+
+        if (!$this->rateValues && is_array($profileValuesAlt)) {
+            $this->profileNameLog = $this->profileNameAlt;
+
+            if ($hourofday          < $profileValuesAlt['hour1'] ) {
+                $this->rateName     = $profileValuesAlt['rate_name1'];
+                $this->timeInterval = "0-".$profileValuesAlt['hour1'];
+                $foundProfile       = $profileValuesAlt['hour1'];
+            } else if ($hourofday   < $profileValuesAlt['hour2']) {
+                $this->rateName     = $profileValuesAlt['rate_name2'];
+                $this->timeInterval = $profileValuesAlt['hour1']."-".$profileValuesAlt['hour2'];
+                $foundProfile       = $profileValuesAlt['hour2'];
+            } else if ($hourofday   < $profileValuesAlt['hour3']) {
+                $this->rateName     = $profileValuesAlt['rate_name3'];
+                $this->timeInterval = $profileValuesAlt['hour2']."-".$profileValuesAlt['hour3'];
+                $foundProfile       = $profileValuesAlt['hour3'];
+            } else if ($hourofday   < $profileValuesAlt['hour4']) {
+                $this->rateName     = $profileValuesAlt['rate_name4'];
+                $this->timeInterval = $profileValuesAlt['hour3']."-".$profileValuesAlt['hour4'];
+                $foundProfile       = $profileValuesAlt['hour4'];
+            }
+
+            if ($this->rateName) {
+
+                if ($this->region) {
+                    $this->rateValues=$this->lookupRateValues($this->rateName,$this->region,$this->application);
+                    // try destination as last resort
+                    if (!$this->rateValues) {
+                        $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->application);
+                    }
+
+                } else {
+                    if (!$this->rateValues) {
+                        $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->application);
+                    }
+                }
+            }
+        }
+
+        if (!$this->rateValues) {
+            $this->rateNotFound=true;
+            $log=sprintf("Error: Cannot find rates for callid=%s, billing party=%s, customer %s, gateway=%s, destination=%s, profile=%s, app=%s",
+            $this->callId,$this->BillingPartyId,$this->CustomerProfile,$this->gateway,$this->DestinationId,$this->profileName,$this->application);
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
+
+        $rate=array(
+                    "customer"      => $this->CustomerProfile,
+                    "application"   => $this->application,
+                    "profile"       => $this->profileNameLog,
+                    "day"           => $this->PeriodOfProfile,
+                    "destinationId" => $this->DestinationId,
+                    "rate"          => $this->rateName,
+                    "values"        => $this->rateValues,
+                    );
+
         return $rate;
     }
 
@@ -1031,7 +1202,7 @@ class Rate {
                 $dayofyear       = date("Y-m-d",$this->timestampBilling+$durationRatedTotal);
             }
 
-            $foundRate            = $this->lookupRate($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
+            $foundRate            = $this->lookupRateAudio($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
 
             if ($this->rateNotFound) {
                 // break here to avoid loops
@@ -1162,8 +1333,6 @@ class Rate {
                 return false;
             }
         }
-
-        $log=sprintf("Found %d rows",$this->db->num_rows());
 
         if ($this->db->num_rows()) {
             $this->db->next_record();
@@ -6349,7 +6518,7 @@ class RatingEngine {
         return $line;
     }
 
-    function DebitBalance($account,$balance,$session_id,$duration,$force=false) {
+    function DebitBalanceAudio($account,$balance,$session_id,$duration,$force=false) {
 
         $els=explode(":",$account);
 
@@ -6358,17 +6527,17 @@ class RatingEngine {
         }
 
         if (!$account) {
-            syslog(LOG_NOTICE, "DebitBalance() error: missing account");
+            syslog(LOG_NOTICE, "DebitBalanceAudio() error: missing account");
             return 0;
         }
 
         if (!is_numeric($balance)) {
-            syslog(LOG_NOTICE, "DebitBalance() error: balance must be numeric");
+            syslog(LOG_NOTICE, "DebitBalanceAudio() error: balance must be numeric");
             return 0;
         }
 
         if (!$session_id) {
-            syslog(LOG_NOTICE, "DebitBalance() error: missing call id");
+            syslog(LOG_NOTICE, "DebitBalanceAudio() error: missing call id");
             return 0;
         }
 
@@ -6385,7 +6554,7 @@ class RatingEngine {
         }
 
         if (!$this->db->num_rows()) {
-            $log=sprintf ("DebitBalance() error: account $account does not exist");
+            $log=sprintf ("DebitBalanceAudio() error: account $account does not exist");
             syslog(LOG_NOTICE, $log);
             $this->logRuntime();
             return 0;
@@ -6495,6 +6664,123 @@ class RatingEngine {
         }
 
         return $maxsessiontime;
+    }
+
+    function DebitBalanceSMS($account,$destination,$balance,$session_id) {
+
+        $els=explode(":",$account);
+
+        if (count($els) == 2) {
+            $account=$els[1];
+        }
+
+        if (!$account) {
+            syslog(LOG_NOTICE, "DebitBalanceSMS() error: missing account");
+            return 0;
+        }
+
+        if (!is_numeric($balance)) {
+            syslog(LOG_NOTICE, "DebitBalanceSMS() error: balance must be numeric");
+            return 0;
+        }
+
+        if (!$session_id) {
+            syslog(LOG_NOTICE, "DebitBalanceSMS() error: missing call id");
+            return 0;
+        }
+
+        $query=sprintf("select * from %s where account = '%s'",
+        addslashes($this->prepaid_table),
+        addslashes($account)
+        );
+
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE,$log);
+            $this->logRuntime();
+            return 0;
+        }
+
+        if (!$this->db->num_rows()) {
+            $log=sprintf ("DebitBalanceSMS() error: account $account does not exist");
+            syslog(LOG_NOTICE, $log);
+            $this->logRuntime();
+            return 0;
+        }
+
+        $this->db->next_record();
+
+        if (strlen($this->db->f('active_sessions'))) {
+            $active_sessions = json_decode($this->db->f('active_sessions'),true);
+        }
+
+        $next_balance=$this->db->f('balance')-$balance;
+
+        //get parallel calls and remaining_balance
+        $this->getActivePrepaidSessions($active_sessions,$next_balance,$account);
+
+        // calculate the updated maxsessiontime
+        $maxsessiontime=$this->getAggregatedMaxSessiontime($this->parallel_calls,$this->remaining_balance,$account);
+
+        $query=sprintf("update %s
+        set balance          = balance - '%s',
+        change_date          = NOW()
+        where account        = '%s'",
+        $this->prepaid_table,
+        $balance,
+        addslashes($account)
+        );
+
+        if (!$this->db->query($query)) {
+        	$log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE, $log);
+            return 0;
+        }
+
+        if ($balance > 0) {
+            list($prepaidUser,$prepaidDomain)=explode("@",$account);
+
+			if ($this->enableThor) {
+                $this->domain_table          = "sip_domains";
+            } else {
+                $this->domain_table          = "domain";
+            }
+    
+            $query=sprintf("select * from %s where domain = '%s'",$this->domain_table,$prepaidDomain);
+
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error: %s (%d) %s\n",$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
+                syslog(LOG_NOTICE,$log);
+            }
+    
+            if ($this->AccountsDB->num_rows()){
+            	$this->AccountsDB->next_record();
+            	$_reseller=$this->AccountsDB->f('reseller_id');
+            } else {
+            	$_reseller=0;
+            }
+
+            $query=sprintf("insert into prepaid_history
+            (username,domain,action,description,value,balance,date,session,destination,reseller_id)
+            values 
+            ('%s','%s','Debit balance','SMS to %s','-%s','%s',NOW(),'%s','%s',%d)",
+            addslashes($prepaidUser),
+            addslashes($prepaidDomain),
+            addslashes($destination),
+            $balance,
+            $next_balance,
+            addslashes($session_id),
+            addslashes($destination),
+            $_reseller
+            );
+    
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                syslog(LOG_NOTICE, $log);
+            }
+        }
+
+        return true;
     }
 
     function CreditBalance($account,$balance) {
@@ -7206,58 +7492,78 @@ class RatingEngine {
             $this->runtime['instantiate_rate']=microtime_float();
 
             if ($application == 'audio') {
-                $Rate->calculateAudio($RateDictionary);
+                if ($Rate->calculateAudio($RateDictionary)) {
     
-                $this->runtime['calculate_rate']=microtime_float();
+                    $this->runtime['calculate_rate']=microtime_float();
+        
+                    $this->sessionDoesNotExist=false;
+        
+                    $result = $this->DebitBalanceAudio($CDR->BillingPartyId,$Rate->price,$NetFields['callid'],$CDR->duration,$force);
+            
+                    if ($this->sessionDoesNotExist) {
+                        return "Failed";
+                    }
+        
+                    $this->runtime['debit_balance']=microtime_float();
+        
+                    if ($CDR->duration) {
+                        $log = sprintf ("Price=%s Duration=%s CallId=%s BillingParty=%s DestId=%s MaxSessionTime=%d",
+                        $Rate->price,
+                        $CDR->duration,
+                        $NetFields['callid'],
+                        $CDR->BillingPartyId,
+                        $CDR->DestinationId,
+                        $result
+                        );
+        
+                        syslog(LOG_NOTICE, $log);
+                    }
+        
+                    $RateReturn = "Ok";
+                    $RateReturn.= sprintf("\nMaxSessionTime=%d",$result);
+        
+                    if (strlen($Rate->price)) {
+                        $RateReturn.="\n".$Rate->price;
+                        if ($Rate->rateInfo) {
+                            $RateReturn.="\n".trim($Rate->rateInfo);
+                        }
+                    }
+        
+                    return $RateReturn;
+                } else {
+                    return "Failed\n";
+                }
+            } else if ($application == 'sms') {
+                if ($Rate->calculateSMS($RateDictionary)) {
+
+    	            if ($this->DebitBalanceSMS($CDR->BillingPartyId,$CDR->destinationPrint,$Rate->price,$NetFields['callid'])) {
     
-                $this->sessionDoesNotExist=false;
-    
-                $result = $this->DebitBalance($CDR->BillingPartyId,$Rate->price,$NetFields['callid'],$CDR->duration,$force);
-    
-                if ($this->sessionDoesNotExist) {
+                        $log = sprintf ("Price=%s CallId=%s BillingParty=%s DestId=%s Application=sms",
+                        $Rate->price,
+                        $NetFields['callid'],
+                        $CDR->BillingPartyId,
+                        $CDR->DestinationId
+                        );
+        
+                        syslog(LOG_NOTICE, $log);
+            
+                        $RateReturn = "Ok";
+            
+                        if (strlen($Rate->price)) {
+                            $RateReturn.="\n".$Rate->price;
+                            if ($Rate->rateInfo) {
+                                $RateReturn.="\n".trim($Rate->rateInfo);
+                            }
+                        }
+
+                        return $RateReturn;
+                    } else {
+                    	return "Failed";
+                    }
+
+                } else {
                     return "Failed";
                 }
-    
-                $this->runtime['debit_balance']=microtime_float();
-    
-                if ($CDR->duration) {
-                    $log = sprintf ("Price=%s Duration=%s CallId=%s BillingParty=%s DestId=%s MaxSessionTime=%d",
-                    $Rate->price,
-                    $CDR->duration,
-                    $NetFields['callid'],
-                    $CDR->BillingPartyId,
-                    $CDR->DestinationId,
-                    $result
-                    );
-    
-                    syslog(LOG_NOTICE, $log);
-                }
-    
-                $RateReturn = "Ok";
-                $RateReturn.= sprintf("\nMaxSessionTime=%d",$result);
-    
-                if (strlen($Rate->price)) {
-                    $RateReturn.="\n".$Rate->price;
-                    if ($Rate->rateInfo) {
-                        $RateReturn.="\n".trim($Rate->rateInfo);
-                    }
-                }
-    
-                return $RateReturn;
-            } else if ($application == 'sms') {
-                $Rate->calculateSMS($RateDictionary);
-
-                $log = sprintf ("Price=%s CallId=%s BillingParty=%s DestId=%s Application=SMS",
-                $Rate->price,
-                $NetFields['callid'],
-                $CDR->BillingPartyId,
-                $CDR->DestinationId
-                );
-
-                syslog(LOG_NOTICE, $log);
-    
-                $RateReturn = "Ok\n";
-                return $RateReturn;
 
             } else {
                 return false;
