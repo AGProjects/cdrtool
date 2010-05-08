@@ -7308,10 +7308,8 @@ class RatingEngine {
             }
 
             if (!preg_match("/^0/",$CDR->CanonicalURINormalized)) {
-            	/*
-                $log = sprintf ("Call to %s, no limit imposed",$CDR->CanonicalURINormalized);
+                $log=sprintf ("MaxSessionTime=unlimited Type=prepaid CallId=%s BillingParty=%s",$NetFields['callid'],$CDR->BillingPartyId);
                 syslog(LOG_NOTICE, $log);
-                */
                 $this->logRuntime();
                 $ret="none"."\n"."type=prepaid";
                 return $ret;
