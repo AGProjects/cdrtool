@@ -1826,12 +1826,14 @@ class SipSettings {
         </tr>
         ";
 
-        if (!in_array("payments",$this->groups)) {
-			$this->showIdentityProof();
-            return false;
+		if (!$this->isEmbedded()) {
+            if (!in_array("payments",$this->groups)) {
+                $this->showIdentityProof();
+                return false;
+            }
+    
+            $this->showIdentityProof();
         }
-
-		$this->showIdentityProof();
 
         $this->getBalanceHistory();
  
@@ -8065,6 +8067,12 @@ class Enrollment {
         	$this->emailEngine = $this->enrollment['sip_engine'];
         }
 
+        if (is_array($this->enrollment['groups'])) {
+        	$this->groups = $this->enrollment['groups'];
+        } else {
+        	$this->groups = array();
+        }
+
 		$this->reseller       = $this->enrollment['reseller'];
 
         $this->outbound_proxy = $this->enrollment['outbound_proxy'];
@@ -8275,7 +8283,7 @@ class Enrollment {
                             'pstn'      => 1,
                             'quota'     => 50,
                             'owner'     => intval($owner),
-                            'groups'    => array('missed-calls'),
+                            'groups'    => $this->groups,
                             'properties'=> $sip_properties
                             );
 
@@ -8612,6 +8620,7 @@ class PaypalProcessor {
                     print "<p>";
                     print _("Transaction completed sucessfully. ");
 
+                    /*
                     if ($CardProcessor->environment!='sandbox' && $account->first_transaction) {
                         print "<p>";
                         print _("This is your first payment. ");
@@ -8634,7 +8643,9 @@ class PaypalProcessor {
                        print "<p>";
                        print _("You may check your new balance in the Credit tab. ");
                     }
-                    
+                    */
+                    print "<p>";
+                    print _("You may check your new balance in the Credit tab. ");
                 }
                 
                 if ($account->Preferences['ip'] && $_loc=geoip_record_by_name($account->Preferences['ip'])) {
@@ -8644,7 +8655,6 @@ class PaypalProcessor {
                 } else {
                     $registration_location='Unknown';
                 }
-                
                 
                 if ($_loc=geoip_record_by_name($_SERVER['REMOTE_ADDR'])) {
                     $transaction_location=$_loc['country_name'].'/'.$_loc['city'];
