@@ -2061,31 +2061,46 @@ class CDR {
                 $query.=sprintf(" %s = '%s' ",$this->CDRS->stopTimeField,addslashes($this->stopTimeNormalized));
             }
 
-            if ($this->CDRS->ratingEnabled && ($this->duration || $this->applicationType == 'message')) {
+            if ($this->CDRS->ratingEnabled && $this->DestinationId && ($this->duration || $this->application == 'message')) {
 
   		        $Rate    = new Rate($this->CDRS->rating_settings, $this->CDRS->cdrtool);
 
-                $RateDictionary=array(
-                                      'callId'          => $this->callId,
-                                      'timestamp'       => $this->timestamp,
-                                      'duration'        => $this->duration,
-                                      'DestinationId'   => $this->DestinationId,
-                                      'inputTraffic'    => $this->inputTraffic,
-                                      'outputTraffic'   => $this->outputTraffic,
-                                      'BillingPartyId'  => $this->BillingPartyId,
-                                      'ResellerId'      => $this->ResellerId,
-                                      'domain'          => $this->domain,
-                                      'gateway'         => $this->gateway,
-                                      'RatingTables'    => &$this->CDRS->RatingTables,
-                                      'applicationType' => $this->applicationType,
-                                      'aNumber'         => $this->aNumber,
-                                      'cNumber'         => $this->cNumber,
-                                      'ENUMtld'         => $this->ENUMtld
-                                      );
+                if ($this->application == 'message') {
+                    $RateDictionary=array(
+                                          'callId'          => $this->callId,
+                                          'timestamp'       => $this->timestamp,
+                                          'duration'        => $this->duration,
+                                          'DestinationId'   => $this->DestinationId,
+                                          'BillingPartyId'  => $this->BillingPartyId,
+                                          'ResellerId'      => $this->ResellerId,
+                                          'domain'          => $this->domain,
+                                          'gateway'         => $this->gateway,
+                                          'RatingTables'    => &$this->CDRS->RatingTables,
+                                          'aNumber'         => $this->aNumber,
+                                          'cNumber'         => $this->cNumber
+                                          );
+    
 
-                if ($this->applicationType == 'message') {
-                    $Rate->calculateSMS(&$RateDictionary);
+                    $Rate->calculateMessage(&$RateDictionary);
                 } else {
+                    $RateDictionary=array(
+                                          'callId'          => $this->callId,
+                                          'timestamp'       => $this->timestamp,
+                                          'duration'        => $this->duration,
+                                          'DestinationId'   => $this->DestinationId,
+                                          'inputTraffic'    => $this->inputTraffic,
+                                          'outputTraffic'   => $this->outputTraffic,
+                                          'BillingPartyId'  => $this->BillingPartyId,
+                                          'ResellerId'      => $this->ResellerId,
+                                          'domain'          => $this->domain,
+                                          'gateway'         => $this->gateway,
+                                          'RatingTables'    => &$this->CDRS->RatingTables,
+                                          'aNumber'         => $this->aNumber,
+                                          'cNumber'         => $this->cNumber,
+                                          'ENUMtld'         => $this->ENUMtld
+                                          );
+    
+
                     $Rate->calculateAudio(&$RateDictionary);
                 }
 
@@ -2125,7 +2140,7 @@ class CDR {
                                 $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
                                 $_usage=array('calls'    => 1,
                                               'duration' => $this->duration,
-                                              'cost'     => $Rate->price,
+                                              'cost'     => $this->price,
                                               'traffic'  => $_traffic
                                              );
     
@@ -2148,7 +2163,7 @@ class CDR {
                                             $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
                                             $_usage=array('calls'    => 1,
                                                           'duration' => $this->duration,
-                                                          'cost'     => $Rate->price,
+                                                          'cost'     => $this->price,
                                                           'traffic'  => $_traffic
                                                           );
                                             $this->cacheMonthlyUsage($_usage);

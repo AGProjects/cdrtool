@@ -116,7 +116,7 @@ class Rate {
         $foundRates=array();
 
         if (!$this->DestinationId) {
-            syslog(LOG_NOTICE, "Error: Cannot calculate rate without destination id");
+            syslog(LOG_NOTICE, "Error: Cannot calculate rate without destination id for callid=$this->callId");
             return false;
         }
 
@@ -443,7 +443,7 @@ class Rate {
         return true;
     }
 
-    function calculateSMS(&$dictionary) {
+    function calculateMessage(&$dictionary) {
 
         // required fields passed from a CDR structure
 
@@ -474,13 +474,13 @@ class Rate {
         $foundRates=array();
 
         if (!$this->DestinationId) {
-            syslog(LOG_NOTICE, "Error: Cannot calculate rate without destination id");
+            syslog(LOG_NOTICE, "Error calculateMessage(): Cannot calculate rate without destination id");
             return false;
         }
 
         if (!$this->lookupProfiles()) {
             // get profiles for the billing party
-            syslog(LOG_NOTICE, "Error: Cannot find any profiles for call_id=$this->callId, dest_id=$this->DestinationId)");
+            syslog(LOG_NOTICE, "Error: calculateMessage() Cannot find any profiles for call_id=$this->callId, dest_id=$this->DestinationId)");
             return false;
         }
 
@@ -500,11 +500,42 @@ class Rate {
         $hourofday = date("G",$this->timestampBilling);
         $dayofyear = date("Y-m-d",$this->timestampBilling);
 
-        $foundRate = $this->lookupRateSMS($dayofyear,$dayofweek,$hourofday);
+        $this->rateInfo .= 
+
+            "         App: sms\n".
+            " Destination: $this->DestinationId\n".
+            "    Customer: $this->CustomerProfile\n";
+
+        if ($this->region) {
+        $this->rateInfo .= 
+            "      Region: $this->region\n";
+        }
+
+        if ($this->discount_duration || $this->discount_connect) {
+            $this->rateInfo .=
+            "    Discount: ";
+        }
+
+        if ($this->discount_connect) {
+            $this->rateInfo .= " connect $this->discount_connect% ";
+        }
+
+        if ($this->discount_duration || $this->discount_connect) {
+            $this->rateInfo .= "\n";
+        }
+
+        $foundRate = $this->lookupRateMessage($dayofyear,$dayofweek,$hourofday);
 
         if (is_array($foundRate)) {
             $this->price=number_format($foundRate['values']['connectCost']/$this->priceDenominator,$this->priceDecimalDigits);
         	$this->price=sprintf("%.4f",$this->price);
+            $this->pricePrint=$this->price;
+
+            $this->rateInfo .= 
+            "   ProfileId: $foundRate[profile] / $foundRate[day]\n".
+            "      RateId: $foundRate[rate]\n".
+            "       Price: $this->price\n";
+
         	return true;
         } else {
             return false;
@@ -816,15 +847,15 @@ class Rate {
 
                 if (!$found_history) {
                     if ($this->region) {
-                        $this->rateValues=$this->lookupRateValues($this->rateName,$this->region,$this->application);
+                        $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->region);
                         if (!$this->rateValues) {
                             // try the destination as last resort
-                            $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->application);
+                            $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->DestinationId);
                         }
 
                     } else {
                         if (!$this->rateValues) {
-                            $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->application);
+                            $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->DestinationId);
                         }
                     }
                 }
@@ -888,15 +919,15 @@ class Rate {
 
                 if (!$found_history) {
                     if ($this->region) {
-                        $this->rateValues=$this->lookupRateValues($this->rateName,$this->region,$this->application);
+                        $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->region);
                         // try destination as last resort
                         if (!$this->rateValues) {
-                            $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->application);
+                            $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->DestinationId);
                         }
 
                     } else {
                         if (!$this->rateValues) {
-                            $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->application);
+                            $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->DestinationId);
                         }
                     }
                 }
@@ -970,7 +1001,7 @@ class Rate {
         return $rate;
     }
 
-    function lookupRateSMS($dayofyear,$dayofweek,$hourofday) {
+    function lookupRateMessage($dayofyear,$dayofweek,$hourofday) {
 
         /*
         // Required information from CDR structure
@@ -1060,14 +1091,14 @@ class Rate {
 
             if ($this->rateName) {
                 if ($this->region) {
-                    $this->rateValues=$this->lookupRateValues($this->rateName,$this->region,$this->application);
+                    $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->region);
                     if (!$this->rateValues) {
                         // try the destination as last resort
-                        $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->application);
+                        $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->DestinationId);
                     }
                 } else {
                     if (!$this->rateValues) {
-                        $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->application);
+                        $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->DestinationId);
                     }
                 }
             }
@@ -1099,15 +1130,15 @@ class Rate {
             if ($this->rateName) {
 
                 if ($this->region) {
-                    $this->rateValues=$this->lookupRateValues($this->rateName,$this->region,$this->application);
+                    $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->region);
                     // try destination as last resort
                     if (!$this->rateValues) {
-                        $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->application);
+                        $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->DestinationId);
                     }
 
                 } else {
                     if (!$this->rateValues) {
-                        $this->rateValues=$this->lookupRateValues($this->rateName,$this->DestinationId,$this->application);
+                        $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->DestinationId);
                     }
                 }
             }
@@ -1115,8 +1146,8 @@ class Rate {
 
         if (!$this->rateValues) {
             $this->rateNotFound=true;
-            $log=sprintf("Error: Cannot find rates for callid=%s, billing party=%s, customer %s, gateway=%s, destination=%s, profile=%s, app=%s",
-            $this->callId,$this->BillingPartyId,$this->CustomerProfile,$this->gateway,$this->DestinationId,$this->profileName,$this->application);
+            $log=sprintf("Error: Cannot find rates for callid=%s, billing party=%s, customer %s, gateway=%s, destination=%s, profile=%s, app=sms",
+            $this->callId,$this->BillingPartyId,$this->CustomerProfile,$this->gateway,$this->DestinationId,$this->profileName);
             syslog(LOG_NOTICE, $log);
             return false;
         }
@@ -1283,10 +1314,10 @@ class Rate {
         return false;
     }
 
-    function lookupRateValues($rateName,$DestinationId,$applicationType='audio') {
+    function lookupRateValuesAudio($rateName,$DestinationId) {
 
-    	if (is_array($this->rateValuesCache[$rateName][$DestinationId][$applicationType])) {
-            return $this->rateValuesCache[$rateName][$DestinationId][$applicationType];
+    	if (is_array($this->rateValuesCache[$rateName][$DestinationId]['audio'])) {
+            return $this->rateValuesCache[$rateName][$DestinationId]['audio'];
         }
 
         if ($this->settings['split_rating_table']) {
@@ -1295,19 +1326,17 @@ class Rate {
             } else {
                 $table="billing_rates_default";
             }
-            $query=sprintf("select * from %s where destination = '%s' and application = '%s'",
+            $query=sprintf("select * from %s where destination = '%s' and application = 'audio'",
             $table,
-            $DestinationId,
-            $applicationType
+            $DestinationId
             );
 
         } else {
             $table="billing_rates";
-            $query=sprintf("select * from %s where name = '%s' and destination = '%s' and application = '%s'",
+            $query=sprintf("select * from %s where name = '%s' and destination = '%s' and application = 'audio'",
             $table,
             $rateName,
-            $DestinationId,
-            $applicationType
+            $DestinationId
             );
         }
 
@@ -1321,10 +1350,9 @@ class Rate {
             }
             // try the main table
             // lookup rate from MySQL
-            $query=sprintf("select * from billing_rates where name = '%s' and destination = '%s' and application = '%s'",
+            $query=sprintf("select * from billing_rates where name = '%s' and destination = '%s' and application = 'audio'",
             $rateName,
-            $DestinationId,
-            $applicationType
+            $DestinationId
             );
 
             if (!$this->db->query($query)) {
@@ -1344,7 +1372,69 @@ class Rate {
                        );
 
             // cache values
-            $this->rateValuesCache[$rateName][$DestinationId][$applicationType]=$values;
+            $this->rateValuesCache[$rateName][$DestinationId]['audio']=$values;
+            return $values;
+        } else {
+            return false;
+        }
+    }
+
+    function lookupRateValuesMessage($rateName,$DestinationId) {
+
+    	if (is_array($this->rateValuesCache[$rateName][$DestinationId]['sms'])) {
+            return $this->rateValuesCache[$rateName][$DestinationId]['sms'];
+        }
+
+        if ($this->settings['split_rating_table']) {
+            if ($rateName) {
+                $table="billing_rates_".$rateName;
+            } else {
+                $table="billing_rates_default";
+            }
+            $query=sprintf("select * from %s where (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
+            $table,
+            $DestinationId
+            );
+
+        } else {
+            $table="billing_rates";
+            $query=sprintf("select * from %s where name = '%s' and (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
+            $table,
+            $rateName,
+            $DestinationId
+            );
+        }
+
+        // lookup rate from MySQL
+
+        if (!$this->db->query($query)) {
+            if ($this->db->Errno != 1146) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+            // try the main table
+            // lookup rate from MySQL
+            $query=sprintf("select * from billing_rates where name = '%s' and (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
+            $rateName,
+            $DestinationId
+            );
+
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+        }
+
+        if ($this->db->num_rows()) {
+            $this->db->next_record();
+            $values=array(
+                        "connectCost"     => $this->db->Record['connectCost']
+                       );
+
+            // cache values
+            $this->rateValuesCache[$rateName][$DestinationId]['sms']=$values;
             return $values;
         } else {
             return false;
@@ -6666,7 +6756,7 @@ class RatingEngine {
         return $maxsessiontime;
     }
 
-    function DebitBalanceSMS($account,$destination,$balance,$session_id) {
+    function DebitBalanceMessage($account,$destination,$balance,$session_id) {
 
         $els=explode(":",$account);
 
@@ -6675,17 +6765,17 @@ class RatingEngine {
         }
 
         if (!$account) {
-            syslog(LOG_NOTICE, "DebitBalanceSMS() error: missing account");
+            syslog(LOG_NOTICE, "DebitBalanceMessage() error: missing account");
             return 0;
         }
 
         if (!is_numeric($balance)) {
-            syslog(LOG_NOTICE, "DebitBalanceSMS() error: balance must be numeric");
+            syslog(LOG_NOTICE, "DebitBalanceMessage() error: balance must be numeric");
             return 0;
         }
 
         if (!$session_id) {
-            syslog(LOG_NOTICE, "DebitBalanceSMS() error: missing call id");
+            syslog(LOG_NOTICE, "DebitBalanceMessage() error: missing call id");
             return 0;
         }
 
@@ -6702,7 +6792,7 @@ class RatingEngine {
         }
 
         if (!$this->db->num_rows()) {
-            $log=sprintf ("DebitBalanceSMS() error: account $account does not exist");
+            $log=sprintf ("DebitBalanceMessage() error: account $account does not exist");
             syslog(LOG_NOTICE, $log);
             $this->logRuntime();
             return 0;
@@ -6763,7 +6853,7 @@ class RatingEngine {
             $query=sprintf("insert into prepaid_history
             (username,domain,action,description,value,balance,date,session,destination,reseller_id)
             values 
-            ('%s','%s','Debit balance','SMS to %s','-%s','%s',NOW(),'%s','%s',%d)",
+            ('%s','%s','Debit balance','Message to %s','-%s','%s',NOW(),'%s','%s',%d)",
             addslashes($prepaidUser),
             addslashes($prepaidDomain),
             addslashes($destination),
@@ -7487,6 +7577,7 @@ class RatingEngine {
                                   'RatingTables'    => &$this->CDRS->RatingTables
                                   );
 
+
             $Rate = new Rate($this->settings, $this->db);
 
             $this->runtime['instantiate_rate']=microtime_float();
@@ -7534,9 +7625,9 @@ class RatingEngine {
                     return "Failed\n";
                 }
             } else if ($application == 'sms') {
-                if ($Rate->calculateSMS($RateDictionary)) {
+                if ($Rate->calculateMessage($RateDictionary)) {
 
-    	            if ($this->DebitBalanceSMS($CDR->BillingPartyId,$CDR->destinationPrint,$Rate->price,$NetFields['callid'])) {
+    	            if ($this->DebitBalanceMessage($CDR->BillingPartyId,$CDR->destinationPrint,$Rate->price,$NetFields['callid'])) {
     
                         $log = sprintf ("Price=%s CallId=%s BillingParty=%s DestId=%s Application=sms",
                         $Rate->price,
