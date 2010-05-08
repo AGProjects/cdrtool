@@ -1130,11 +1130,11 @@ class CDRS {
         } else if (preg_match("/^([a-z0-9]+:)(.*)$/i",$Number,$m)) {
             $oct=preg_split("/\./",$m[2]);
     	    if(sizeof($oct)==4) {
-	        // This is SIP address with no username
+	        // This is a SIP address without username
                 $NumberStack['username']  = "";
                 $NumberStack['domain']    = $m[2];
             } else {
-	        // This is SIP address with no domain
+	        // This is a SIP address without domain
                 $NumberStack['username']  = $m[2];
                 $NumberStack['domain']    = "";
             }
@@ -2008,11 +2008,11 @@ class CDR {
                 $this->aNumber=$this->aNumberNormalized;
             }
 
-            if ($this->CDRS->applicationTypeField && $this->applicationTypeNormalized) {
+            if ($this->CDRS->applicationField && $this->applicationNormalized) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->applicationTypeField,addslashes($this->applicationTypeNormalized));
-                $this->applicationType=$this->applicationTypeNormalized;
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->applicationField,addslashes($this->applicationNormalized));
+                $this->application=$this->applicationNormalized;
             }
 
             if ($this->CDRS->ServiceTypeField && $this->flow) {
@@ -2690,7 +2690,7 @@ class CSVWritter {
                         $CDR->id,
                         $CDR->callId,
                         $CDR->flow,
-                        $CDR->applicationType,
+                        $CDR->application,
                         $CDR->username,
                         $CDR->CanonicalURI,
                         $CDR->startTime,
@@ -2767,7 +2767,7 @@ class MaxRate extends CSVWritter {
     function write_cdr ($CDR) {
     	if (!$this->ready) return false;
 
-        if ($CDR->applicationType != 'audio') return true;
+        if ($CDR->application != 'audio') return true;
 
         preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
 

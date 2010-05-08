@@ -28,7 +28,7 @@ class CDRS_opensips extends CDRS {
                          'RemoteAddress'   => 'SipTranslatedRequestURI',
                          'SipCodec'        => 'SipCodecs',
                          'SipUserAgents'   => 'SipUserAgents',
-                         'applicationType' => 'SipApplicationType',
+                         'application' => 'SipApplicationType',
 			             'ServiceType'     => 'ServiceType',
                          'BillingPartyId'  => 'UserName',
                          'SipRPID'         => 'SipRPID',
@@ -66,7 +66,7 @@ class CDRS_opensips extends CDRS {
                                       'CanonicalURI'    => 'CanonicalURI',
                                       'SipRPID'         => 'SipRPID',
                                       'SipMethod'       => 'SipMethod',
-                                      'applicationType' => 'SipApplicationType',
+                                      'application' => 'SipApplicationType',
 			                          'ServiceType'     => 'ServiceType',
                                       'BillingPartyId'  => 'UserName',
                                       'ResellerId'      => 'BillingId',
@@ -656,7 +656,7 @@ class CDRS_opensips extends CDRS {
                                array("label"=>"Any Application",          "value"=>""),
                                array("label"=>"Audio",        "value"=>"audio"),
                                array("label"=>"Video",        "value"=>"video"),
-                               array("label"=>"SMS" ,         "value"=>"message"),
+                               array("label"=>"Message" ,         "value"=>"message"),
                                array("label"=>"IM Chat" ,     "value"=>"chat"),
                                array("label"=>"File Transfer","value"=>"file-transfer")
                                );
@@ -1190,7 +1190,7 @@ class CDRS_opensips extends CDRS {
         }
 
         if ($application) {
-            $where .= " and $this->applicationTypeField like '%".addslashes($application)."%'";
+            $where .= " and $this->applicationField like '%".addslashes($application)."%'";
             $this->url.=sprintf("&application=%s",urlencode($application));
         }
 
@@ -2380,23 +2380,23 @@ class CDR_opensips extends CDR {
             $this->cNumber        = quoted_printable_decode($this->cNumber);
         }
 
-        if (!$this->applicationType && $this->SipMethod) {
+        if (!$this->application && $this->SipMethod) {
             $_method=strtolower($this->SipMethod);
             if ($_method == 'message') {
-                $this->applicationType = 'message';
+                $this->application = 'message';
                 $this->stopTimeNormalized=$this->startTime;
             } else {
-                $this->applicationType = 'audio';
+                $this->application = 'audio';
             }
         }
 
-		if ($this->applicationType == 'message') {
+		if ($this->application == 'message') {
         	$this->stopTimeNormalized=$this->startTime;
         }
 
-        $this->applicationType=strtolower($this->applicationType);
+        $this->application=strtolower($this->application);
 
-		$this->applicationType_print=quoted_printable_decode($this->applicationType);
+		$this->application_print=quoted_printable_decode($this->application);
 
 		$this->FromHeaderPrint = quoted_printable_decode($this->FromHeader);
         if (strstr($this->FromHeaderPrint,';')) {
@@ -2408,15 +2408,15 @@ class CDR_opensips extends CDR {
 
         $this->UserAgentPrint  = quoted_printable_decode($this->UserAgent);
 
-        if (strstr($this->applicationType,'audio')) {
-            $this->applicationType='audio';
+        if (strstr($this->application,'audio')) {
+            $this->application='audio';
         }
 
-        if (!in_array($this->applicationType,$this->supportedApplicationTypes)) {
-            $this->applicationType = $this->defaultApplicationType;
+        if (!in_array($this->application,$this->supportedApplicationTypes)) {
+            $this->application = $this->defaultApplicationType;
         }
 
-        //$this->applicationTypeNormalized=$this->applicationType;
+        //$this->applicationNormalized=$this->application;
 
         if ($this->aNumber) {
             $NormalizedNumber        = $this->CDRS->NormalizeNumber($this->aNumber,"source");
@@ -2532,7 +2532,7 @@ class CDR_opensips extends CDR {
     
         }
 
-        if ($this->applicationType=="presence") {
+        if ($this->application=="presence") {
 
             $this->destinationPrint     = $this->cNumberUsername.$this->cNumberDelimiter.$this->cNumberDomain;
             $this->DestinationForRating = $this->cNumberNormalized;
@@ -2604,22 +2604,6 @@ class CDR_opensips extends CDR {
         if ($this->disconnect) {
             $this->disconnectPrint    = $this->NormalizeDisconnect($this->disconnect);
         }
-
-        $this->NetworkRateDictionary=array(
-                                  'callId'          => $this->callId,
-                                  'Timestamp'       => $this->timestamp,
-                                  'Duration'        => $this->duration,
-                                  'inputTraffic'    => $this->inputTraffic,
-                                  'outputTraffic'   => $this->outputTraffic,
-                                  'DestinationId'   => $this->DestinationId,
-                                  'From'            => $this->BillingPartyId,
-                                  'To'              => $this->DestinationForRating,
-                                  'Domain'          => $this->domain,
-                                  'Gateway'         => $this->gateway,
-                                  'Application'     => $this->applicationType,
-                                  'ENUMtld'         => $this->ENUMtld,
-                                  'ResellerId'      => $this->ResellerId
-                                  );
 
         $this->traceIn();
         $this->traceOut();
@@ -2707,7 +2691,7 @@ class CDR_opensips extends CDR {
             $totag_enc        = urlencode(quoted_printable_decode($this->SipToTag));
 
             $this->traceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
-            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red>Click here to see the SIP trace for this call</font></a> &nbsp;";
+            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red>Click here for the SIP trace</font></a> &nbsp;";
 
             $this->cdr_details.= "
             <tr>
@@ -2853,69 +2837,75 @@ class CDR_opensips extends CDR {
 
         $this->cdr_details.= "
         <table border=0 cellpadding=0 cellspacing=0>
-
-        <tr>
-            <td colspan=3><b>Media Streams</b></td>
-        </tr>
         ";
 
-        if ($this->CDRS->mediaTrace) {
-            $media_trace_datasource = $this->CDRS->mediaTrace;
-
-            $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
-            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here to see the media information for this call</a> &nbsp;";
-
-            $this->cdr_details.= sprintf("
+		if ($this->application != 'message') {
+        	$this->cdr_details.= "
             <tr>
-                <td width=10></td>
-                <td colspan=2>%s</td>
+                <td colspan=3><b>Media Streams</b></td>
             </tr>
-            ", $this->mediaTraceLink);
+            ";
+    
+            if ($this->CDRS->mediaTrace) {
+                $media_trace_datasource = $this->CDRS->mediaTrace;
+    
+                $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
+                'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here for media information</a> &nbsp;";
+    
+                $this->cdr_details.= sprintf("
+                <tr>
+                    <td width=10></td>
+                    <td colspan=2>%s</td>
+                </tr>
+                ", $this->mediaTraceLink);
+    
+            }
 
-        }
-
-        $this->cdr_details.= "
-        <tr>
-            <td></td>
-            <td>Applications: </td>
-            <td>$this->applicationType_print</td>
-        </tr>
-        ";
-
-        $this->SipCodec   = quoted_printable_decode($this->SipCodec);
-
-        if ($this->SipCodec) {
+            $this->SipCodec   = quoted_printable_decode($this->SipCodec);
+    
+            if ($this->SipCodec) {
+                $this->cdr_details.= "
+                <tr>
+                    <td></td>
+                    <td>Codecs: </td>
+                    <td>$this->SipCodec</td>
+                </tr>
+                ";
+            }
+    
             $this->cdr_details.= "
             <tr>
                 <td></td>
-                <td>Codecs: </td>
-                <td>$this->SipCodec</td>
+                <td>Caller RTP: </td>
+                <td>$this->inputTrafficPrint KB</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>Called RTP: </td>
+                <td>$this->outputTrafficPrint KB</td>
             </tr>
             ";
-        }
+    
+            if ($this->MediaInfo) {
+                $this->cdr_details.= "
+                <tr>
+                <td></td>
+                <td>Media Info:</td>
+                <td><font color=red>$this->MediaInfo</font></td>
+                </tr>
+                ";
+            }
 
-        $this->cdr_details.= "
-        <tr>
-            <td></td>
-            <td>Caller RTP: </td>
-            <td>$this->inputTrafficPrint KB</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>Called RTP: </td>
-            <td>$this->outputTrafficPrint KB</td>
-        </tr>
-        ";
-
-        if ($this->MediaInfo) {
             $this->cdr_details.= "
             <tr>
-            <td></td>
-            <td>Media Info:</td>
-            <td><font color=red>$this->MediaInfo</font></td>
+                <td></td>
+                <td>Applications: </td>
+                <td>$this->application_print</td>
             </tr>
             ";
+
         }
+
 
         if ($this->SipUserAgents) {
             $this->SipUserAgents   = quoted_printable_decode($this->SipUserAgents);
@@ -3079,7 +3069,7 @@ class CDR_opensips extends CDR {
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->aNumberPrint</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->geo_location</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
-        <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->applicationType</td>
+        <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->application</td>
         <td valign=top><nobr>$this->destinationPrint</nobr>
         ";
 
@@ -3159,7 +3149,7 @@ class CDR_opensips extends CDR {
         print ",$this->duration";
         print ",$this->price";
         print ",$this->SipProxyServer";
-        print ",$this->applicationType";
+        print ",$this->application";
         print ",$this->inputTraffic";
         print ",$this->outputTraffic";
         print ",$CallingUserAgent";
@@ -3167,7 +3157,7 @@ class CDR_opensips extends CDR {
         print ",$this->disconnect";
         print ",$disconnectName";
         print ",$this->SipCodec";
-        print ",$this->applicationType";
+        print ",$this->application";
         print "\n";
     }
 
@@ -3223,7 +3213,7 @@ class CDR_opensips extends CDR {
             $UserAgents=explode("+",$this->SipUserAgents);
             $CallingUserAgent=trim($UserAgents[0]);
             $CalledUserAgent=trim($UserAgents[1]);
-            print "$found,$this->startTime,$this->stopTime,$this->BillingPartyId,$this->domain,$this->aNumberPrint,$this->cNumberPrint,$this->DestinationId,$this->destinationName,$this->RemoteAddressPrint,$this->duration,$this->price,$this->SipProxyServer,$this->inputTraffic,$this->outputTraffic,$CallingUserAgent,$CalledUserAgent,$this->disconnect,$disconnectName,$this->SipCodec,$this->applicationType\n";
+            print "$found,$this->startTime,$this->stopTime,$this->BillingPartyId,$this->domain,$this->aNumberPrint,$this->cNumberPrint,$this->DestinationId,$this->destinationName,$this->RemoteAddressPrint,$this->duration,$this->price,$this->SipProxyServer,$this->inputTraffic,$this->outputTraffic,$CallingUserAgent,$CalledUserAgent,$this->disconnect,$disconnectName,$this->SipCodec,$this->application\n";
         }
     }
 
