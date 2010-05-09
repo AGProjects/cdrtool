@@ -1779,7 +1779,7 @@ class RatingTables {
                                                  "exceptions" =>array('change_date','active_sessions','domain'),
                                                  "order"=>"change_date DESC",
                                                  "fields"=>array("account"=>array("size"=>35,
-                                                                               "name"=>"Account",
+                                                                               "name"=>"Subscriber",
                                                                                "checkType"=>'sip_account',
                                                                                "mustExist"=>true
                                                                                 ),
@@ -1881,7 +1881,7 @@ class RatingTables {
                                                  "keys"=>array("id"),
                                                  "size"=>15,
                                                  "readonly"=>1,
-                                                 "exceptions" =>array("change_date","traffic","duration"),
+                                                 "exceptions" =>array("change_date","traffic","duration","calls"),
                                                  "domainFilterColumn"=>"domain",
                                                  "fields"=>array("datasource"=>array("size"=>15,
                                                                                "readonly"=>1
@@ -1892,7 +1892,8 @@ class RatingTables {
                                                                                   "readonly" => true
                                                                                  ),
                                                                  "account"=>array("size"=>30,
-                                                                               "readonly"=>1
+                                                                               "readonly"=>1,
+                                                                               "name" => "Subscriber"
                                                                                  ),
                                                                  "domain"=>array("size"=>15,
                                                                                "readonly"=>1
