@@ -1464,6 +1464,7 @@ class RatingTables {
                                    'rates',
                                    'profiles',
                                    'destinations',
+                                   'discounts',
                                    'customers'
                                    );
 
