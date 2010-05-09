@@ -7320,7 +7320,7 @@ class RatingEngine {
             }
 
             if (!preg_match("/^0/",$CDR->CanonicalURINormalized)) {
-                $log=sprintf ("MaxSessionTime=unlimited Type=prepaid CallId=%s BillingParty=%s",$NetFields['callid'],$CDR->BillingPartyId);
+                $log=sprintf ("MaxSessionTime=unlimited Type=prepaid CallId=%s BillingParty=%s DestId=None",$NetFields['callid'],$CDR->BillingPartyId);
                 syslog(LOG_NOTICE, $log);
                 $this->logRuntime();
                 $ret="none"."\n"."type=prepaid";
@@ -7338,7 +7338,7 @@ class RatingEngine {
 			$session_counter=count($active_sessions);
 
             if ($max_sessions && $session_counter >= $max_sessions) {
-                $log = sprintf ("Locked: too many parallel calls, $max_sessions allowed");
+                $log = sprintf ("Locked: maximum number of concurrent calls %s reached, $max_sessions allowed");
                 syslog(LOG_NOTICE, $log);
                 $ret="Locked"."\n"."type=prepaid";
                 return $ret;
