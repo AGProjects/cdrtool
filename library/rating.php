@@ -5861,8 +5861,6 @@ class OpenSIPSQuota {
 
     function initQuotaUsageFromDatabase($month="",$reset_quota_for=array()) {
 
-        // todo: init daily quota usage
-
         if (!$month) {
             $this->startTime=Date("Y-m-01 00:00",time());
         } else {
@@ -5956,6 +5954,7 @@ class OpenSIPSQuota {
             $accounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['duration'] = $this->CDRdb->f('duration');
             $accounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['cost']     = $this->CDRdb->f('cost');
             $accounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['traffic']  = $this->CDRdb->f('traffic');
+            $accounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['cost_today'] = 0;
 
             $this->CDRS->cacheQuotaUsage(&$accounts);
             $j++;

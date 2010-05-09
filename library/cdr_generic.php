@@ -1679,7 +1679,7 @@ class CDRS {
                 $accounts[$_key]['usage']['calls'],
                 $accounts[$_key]['usage']['duration'],
                 $accounts[$_key]['usage']['cost'],
-                $accounts[$_key]['usage']['cost'],
+                $accounts[$_key]['usage']['cost_today'],
                 $accounts[$_key]['usage']['traffic'],
                 $_key
                 );
@@ -1711,7 +1711,7 @@ class CDRS {
                 $accounts[$_key]['usage']['calls'],
                 $accounts[$_key]['usage']['duration'],
                 $accounts[$_key]['usage']['cost'],
-                $accounts[$_key]['usage']['cost'],
+                $accounts[$_key]['usage']['cost_today'],
                 $accounts[$_key]['usage']['traffic'],
                 intval($blocked),
                 $this->localDomains[$_d]['reseller']
@@ -2144,6 +2144,7 @@ class CDR {
                                 $_usage=array('calls'    => 1,
                                               'duration' => $this->duration,
                                               'cost'     => $this->price,
+                                              'cost_today' => $this->price,
                                               'traffic'  => $_traffic
                                              );
     
@@ -2167,6 +2168,7 @@ class CDR {
                                             $_usage=array('calls'    => 1,
                                                           'duration' => $this->duration,
                                                           'cost'     => $this->price,
+                                                          'cost_today' => $this->price,
                                                           'traffic'  => $_traffic
                                                           );
                                             $this->cacheQuotaUsage($_usage);
@@ -2227,7 +2229,6 @@ class CDR {
 		$accounts[$this->BillingPartyId]['usage']=$usage;
         $this->CDRS->cacheQuotaUsage($accounts);
     }
-
 
     function isCallerLocal() {
         return false;
