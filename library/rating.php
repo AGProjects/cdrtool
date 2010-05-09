@@ -638,11 +638,11 @@ class Rate {
         /*
         lookup the profile_name in billing_customers in the following order:
            subscriber, domain, gateway (based on $dayofweek):
-           - profile1 matches days [1-5] (Work-day)
-           - profile2 matches days [6-0] (Week-end)
+           - profile_workday matches days [1-5] (Work-day)
+           - profile_weekend matches days [6-0] (Week-end)
            - week starts with 0 Sunday and ends with 6 Saturday
 
-            Alternatively look for profile1_alt and profile2_alt
+            Alternatively look for profile_workday_alt and profile_weekend_alt
             If no rates are found for destination in the profileX,
             than lookup rates in profileX_alt
         */
@@ -699,10 +699,10 @@ class Rate {
             $this->billingTimezone = $this->db->Record['timezone'];
 
             $this->allProfiles = array (
-                                        "profile1"     => $this->db->Record['profile_name1'],
-                                        "profile2"     => $this->db->Record['profile_name2'],
-                                        "profile1_alt" => $this->db->Record['profile_name1_alt'],
-                                        "profile2_alt" => $this->db->Record['profile_name2_alt'],
+                                        "profile_workday"     => $this->db->Record['profile_name1'],
+                                        "profile_weekend"     => $this->db->Record['profile_name2'],
+                                        "profile_workday_alt" => $this->db->Record['profile_name1_alt'],
+                                        "profile_weekend_alt" => $this->db->Record['profile_name2_alt'],
                                         "timezone"     => $this->db->Record['timezone']
                                     );
 
@@ -761,18 +761,18 @@ class Rate {
         // get work-day or weekend profile
         if ($this->RatingTables->holidays[$dayofyear]) {
 
-            $this->profileName           = $this->allProfiles['profile2'];
-            $this->profileNameAlt        = $this->allProfiles['profile2_alt'];
+            $this->profileName           = $this->allProfiles['profile_weekend'];
+            $this->profileNameAlt        = $this->allProfiles['profile_weekend_alt'];
             $this->PeriodOfProfile       = "weekend";
 
         } else {
             if ($dayofweek >=1 && $dayofweek <=5 ) {
-                $this->profileName       = $this->allProfiles['profile1'];
-                $this->profileNameAlt    = $this->allProfiles['profile1_alt'];
+                $this->profileName       = $this->allProfiles['profile_workday'];
+                $this->profileNameAlt    = $this->allProfiles['profile_workday_alt'];
                 $this->PeriodOfProfile   = "weekday";
             } else {
-                $this->profileName       = $this->allProfiles['profile2'];
-                $this->profileNameAlt    = $this->allProfiles['profile2_alt'];
+                $this->profileName       = $this->allProfiles['profile_weekend'];
+                $this->profileNameAlt    = $this->allProfiles['profile_weekend_alt'];
                 $this->PeriodOfProfile   = "weekend";
             }
         }
@@ -1040,18 +1040,18 @@ class Rate {
         // get work-day or weekend profile
         if ($this->RatingTables->holidays[$dayofyear]) {
 
-            $this->profileName           = $this->allProfiles['profile2'];
-            $this->profileNameAlt        = $this->allProfiles['profile2_alt'];
+            $this->profileName           = $this->allProfiles['profile_weekend'];
+            $this->profileNameAlt        = $this->allProfiles['profile_weekend_alt'];
             $this->PeriodOfProfile       = "weekend";
 
         } else {
             if ($dayofweek >=1 && $dayofweek <=5 ) {
-                $this->profileName       = $this->allProfiles['profile1'];
-                $this->profileNameAlt    = $this->allProfiles['profile1_alt'];
+                $this->profileName       = $this->allProfiles['profile_workday'];
+                $this->profileNameAlt    = $this->allProfiles['profile_workday_alt'];
                 $this->PeriodOfProfile   = "weekday";
             } else {
-                $this->profileName       = $this->allProfiles['profile2'];
-                $this->profileNameAlt    = $this->allProfiles['profile2_alt'];
+                $this->profileName       = $this->allProfiles['profile_weekend'];
+                $this->profileNameAlt    = $this->allProfiles['profile_weekend_alt'];
                 $this->PeriodOfProfile   = "weekend";
             }
         }
