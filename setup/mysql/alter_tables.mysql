@@ -690,3 +690,4 @@ CREATE TABLE `billing_discounts` (
   KEY `dest_idx` (`destination`)
 ) ;
 
+alter table quota_usage add column cost_today decimal(10,4) not null after cost;

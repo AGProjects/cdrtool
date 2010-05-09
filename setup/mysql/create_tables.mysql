@@ -569,6 +569,7 @@ CREATE TABLE `quota_usage` (
   `calls` int(10) unsigned NOT NULL,
   `duration` bigint(20) unsigned NOT NULL,
   `cost` decimal(10,4) NOT NULL,
+  `cost_today` decimal(10,4) NOT NULL,
   `traffic` varchar(50) NOT NULL,
   `change_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   PRIMARY KEY  (`id`),

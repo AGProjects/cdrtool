@@ -1648,7 +1648,7 @@ class CDRS {
         return 1;
     }
 
-    function cacheMonthlyUsage($accounts=array()) {
+    function cacheQuotaUsage($accounts=array()) {
 
     	if (!$this->quotaEnabled) return true;
 
@@ -1672,11 +1672,13 @@ class CDRS {
                 calls = calls + %d,
                 duration = duration + %d,
                 cost = cost + '%s',
+                cost_today = cost_today + '%s',
                 traffic = traffic + '%s'
                 where account = '%s'
                 ",
                 $accounts[$_key]['usage']['calls'],
                 $accounts[$_key]['usage']['duration'],
+                $accounts[$_key]['usage']['cost'],
                 $accounts[$_key]['usage']['cost'],
                 $accounts[$_key]['usage']['traffic'],
                 $_key
@@ -1698,9 +1700,9 @@ class CDRS {
 				list($_u,$_d)=explode("@",$_key);
 
                 $query=sprintf("insert into quota_usage
-                (datasource,account,domain,quota,calls,duration,cost,traffic,blocked,reseller_id)
+                (datasource,account,domain,quota,calls,duration,cost,cost_today,traffic,blocked,reseller_id)
                 values
-                ('%s','%s','%s',%d,%d,'%s','%s','%s','%s',%d)
+                ('%s','%s','%s',%d,%d,'%s','%s','%s','%s','%s',%d)
                 ",
                 $this->cdr_source,
                 $_key,
@@ -1708,6 +1710,7 @@ class CDRS {
                 $quota,
                 $accounts[$_key]['usage']['calls'],
                 $accounts[$_key]['usage']['duration'],
+                $accounts[$_key]['usage']['cost'],
                 $accounts[$_key]['usage']['cost'],
                 $accounts[$_key]['usage']['traffic'],
                 intval($blocked),
@@ -2144,7 +2147,7 @@ class CDR {
                                               'traffic'  => $_traffic
                                              );
     
-                                $this->cacheMonthlyUsage($_usage);
+                                $this->cacheQuotaUsage($_usage);
                             }
                         }
 
@@ -2166,7 +2169,7 @@ class CDR {
                                                           'cost'     => $this->price,
                                                           'traffic'  => $_traffic
                                                           );
-                                            $this->cacheMonthlyUsage($_usage);
+                                            $this->cacheQuotaUsage($_usage);
                                         }
                                     }
                                 }
@@ -2217,12 +2220,12 @@ class CDR {
         return 1;
     }
 
-    function cacheMonthlyUsage($usage) {
+    function cacheQuotaUsage($usage) {
 
         if (!is_array($usage)) return ;
 
 		$accounts[$this->BillingPartyId]['usage']=$usage;
-        $this->CDRS->cacheMonthlyUsage($accounts);
+        $this->CDRS->cacheQuotaUsage($accounts);
     }
 
 

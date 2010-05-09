@@ -1914,7 +1914,12 @@ class RatingTables {
                                                                                "readonly"=>1
                                                                                  ),
                                                                  "cost"=>array("size"=>10,
-                                                                               "readonly"=>1
+                                                                               "readonly"=>1,
+                                                                               "name"=>"This Month"
+                                                                                 ),
+                                                                 "cost_today"=>array("size"=>10,
+                                                                               "readonly"=>1,
+                                                                               "name"=>"Today"
                                                                                  ),
                                                                  "duration"=>array("size"=>10,
                                                                                "readonly"=>1
@@ -5860,7 +5865,9 @@ class OpenSIPSQuota {
         }
     }
 
-    function initMonthlyUsageFromDatabase($month="",$reset_quota_for=array()) {
+    function initQuotaUsageFromDatabase($month="",$reset_quota_for=array()) {
+
+        // todo: init daily quota usage
 
         if (!$month) {
             $this->startTime=Date("Y-m-01 00:00",time());
@@ -5956,14 +5963,14 @@ class OpenSIPSQuota {
             $accounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['cost']     = $this->CDRdb->f('cost');
             $accounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['traffic']  = $this->CDRdb->f('traffic');
 
-            $this->CDRS->cacheMonthlyUsage(&$accounts);
+            $this->CDRS->cacheQuotaUsage(&$accounts);
             $j++;
         }
     }
 
     function checkQuota($notify) {
         global $UserQuota;
-        $this->initMonthlyUsage();
+        $this->initQuotaUsage();
 
         $query=sprintf("select * from quota_usage where datasource = '%s' and quota > 0 and cost > quota",$this->CDRS->cdr_source);
 
@@ -6338,7 +6345,7 @@ class OpenSIPSQuota {
         return true;
     }
 
-    function deleteMonthlyUsageFromCache ($reset_quota_for=array()) {
+    function deleteQuotaUsageFromCache ($reset_quota_for=array()) {
 
         $query=sprintf("delete from quota_usage where datasource = '%s' ",$this->CDRS->cdr_source);
 
@@ -6371,7 +6378,7 @@ class OpenSIPSQuota {
         return true;
     }
 
-    function initMonthlyUsage() {
+    function initQuotaUsage() {
 
         $query=sprintf("select value from memcache where `key` = '%s'",$this->quota_init_flag);
 
@@ -6410,9 +6417,9 @@ class OpenSIPSQuota {
             $this->deblockAccounts($reset_quota_for);
         }
     
-        $this->deleteMonthlyUsageFromCache($reset_quota_for);
+        $this->deleteQuotaUsageFromCache($reset_quota_for);
 
-        $this->initMonthlyUsageFromDatabase('',$reset_quota_for);
+        $this->initQuotaUsageFromDatabase('',$reset_quota_for);
     
         if ($this->CDRS->status['cached_keys']['saved_keys']) {
             $log=sprintf("Saved %d accounts in quota cache\n",$this->CDRS->status['cached_keys']['saved_keys']);
@@ -6448,8 +6455,19 @@ class OpenSIPSQuota {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db1->Error,$this->db1->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
-            return 0;
+            return false;
         }
+    }
+
+    function resetDailyQuota () {
+        $query=sprintf("update quota_usage set cost_today = 0 where datasource = '%s'",$this->CDRS->cdr_source);
+        if (!$this->db1->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db1->Error,$this->db1->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
+        return true;
     }
 }
 

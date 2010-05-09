@@ -4,6 +4,7 @@
 # Check quota
 */5  * * * * root php /var/www/CDRTool/scripts/OpenSIPS/quotaCheck.php    >/dev/null
   0  2 1 * * root php /var/www/CDRTool/scripts/OpenSIPS/quotaReset.php    >/dev/null 
+  10 0 * * * root php /var/www/CDRTool/scripts/OpenSIPS/quotaDailyReset.php    >/dev/null 
  10  3 1 * * root php /var/www/CDRTool/scripts/OpenSIPS/quotaDeblock.php  >/dev/null 
  
 # Purge SIP trace table 
