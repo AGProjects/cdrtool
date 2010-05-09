@@ -59,8 +59,9 @@ class Rate {
     }
 
     function calculateAudio(&$dictionary) {
+        // used for calculate rate for audio application
 
-        // required fields passed from a CDR structure
+        $this->RatingTables      = &$dictionary['RatingTables'];
 
         $this->callId            = $dictionary['callId'];
         $this->timestamp         = $dictionary['timestamp'];
@@ -68,17 +69,12 @@ class Rate {
         $this->duration          = $dictionary['duration'];
         $this->traffic           = 2 * ($dictionary['inputTraffic'] + $dictionary['outputTraffic']);
 
-        // destination
         $this->DestinationId     = $dictionary['DestinationId'];
 
-        // billing party
         $this->BillingPartyId    = $dictionary['BillingPartyId'];
         $this->domain            = $dictionary['domain'];
         $this->gateway           = $dictionary['gateway'];
         $this->ResellerId        = $dictionary['ResellerId'];
-
-        // a reference to the rating tables
-        $this->RatingTables      = &$dictionary['RatingTables'];
 
         $this->aNumber           = $dictionary['aNumber'];
         $this->cNumber           = $dictionary['cNumber'];
@@ -444,23 +440,19 @@ class Rate {
     }
 
     function calculateMessage(&$dictionary) {
+        // used for calculate rate for SMS application
 
-        // required fields passed from a CDR structure
+        $this->RatingTables      = &$dictionary['RatingTables'];
 
         $this->callId            = $dictionary['callId'];
         $this->timestamp         = $dictionary['timestamp'];
 
-        // destination
         $this->DestinationId     = $dictionary['DestinationId'];
 
-        // billing party
         $this->BillingPartyId    = $dictionary['BillingPartyId'];
         $this->domain            = $dictionary['domain'];
         $this->gateway           = $dictionary['gateway'];
         $this->ResellerId        = $dictionary['ResellerId'];
-
-        // a reference to the rating tables
-        $this->RatingTables      = &$dictionary['RatingTables'];
 
         $this->aNumber           = $dictionary['aNumber'];
         $this->cNumber           = $dictionary['cNumber'];
@@ -543,7 +535,7 @@ class Rate {
     }
 
     function lookupDiscounts() {
-        // get discounts for customer per region if set otherwise per destination
+        // get discounts for customer per region if set otherwise per destination id
 
 		if (!$this->CustomerProfile) {
             return false;
@@ -607,7 +599,7 @@ class Rate {
     }
 
     function lookupDestinationDetails() {
-        // get rating related details for the destination
+        // get rating related details for the destination id
 
         if (!$this->DestinationId) {
             syslog(LOG_NOTICE, "Error: Cannot lookup destination details without a destination id");
@@ -1166,10 +1158,10 @@ class Rate {
     }
 
     function MaxSessionTime(&$dictionary) {
+        // Used for prepaid application to return maximum session time based on a prepaid balance
 
 		$this->rateValuesCache=array();
 
-        // Used for prepaid application
         $this->MaxSessionTimeSpans=0;
 
         $durationRate           = 0;
