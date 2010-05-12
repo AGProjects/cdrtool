@@ -110,6 +110,7 @@ $DATASOURCES=array(
                     "db_subscribers"     => "DB_opensips",
                     "db_registrar"       => "DB_opensips",
                     "UserQuotaClass"     => "OpenSIPSQuota",
+                    "daily_quota"        => "10",
                     "UserQuotaNotify"    => "1",
                     "sipTrace"           => "sip_trace",
                     "mediaTrace"         => "media_trace",
