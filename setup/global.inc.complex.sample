@@ -187,6 +187,7 @@ $DATASOURCES=array(
                     "sipTrace"           => "sip_trace",    // which datasource is used for display of sip trace
                     "mediaTrace"         => "media_trace",  // which datasource is used for display of media trace
                     "UserQuotaClass"     => "OpenSIPSQuota",
+                    "daily_quota"        => "0",            // a percentage [1 to 99] of monthly quota to check for daily usage, 0 means disabled
                     "UserQuotaNotify"    => "1",	    // send e-mail notifications when quota is exceeded
                     "notifyLastSessions"   => true,         // send e-mail notifications with sessions received in the last 24 hours
                     "soapEngineId"       => '',             // used by Multimedia Service Platform

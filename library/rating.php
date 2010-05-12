@@ -5615,6 +5615,7 @@ class OpenSIPSQuota {
     var $localDomains  = array();
     var $quotaGroup    = 'quota'; // group set if subscriber was blocked by quota
     var $timeout       = 5;       // soap connection timeout
+    var $daily_quota   = 0;       // by default do not check daily quota
 
     function OpenSIPSQuota(&$parent) {
 
@@ -5657,6 +5658,10 @@ class OpenSIPSQuota {
 
         $this->quota_init_flag   = &$parent->quota_init_flag;
         $this->quota_reset_flag  = &$parent->quota_reset_flag;
+
+        if ($parent->daily_quota && is_numeric($parent->daily_quota) && $parent->daily_quota > 1 && $parent->daily_quota < 100) {
+       		$this->daily_quota = $parent->daily_quota;
+        }
 
         // load e-mail addresses for quota notifications
         $query="select * from settings where var_module = 'notifications'";
@@ -5984,6 +5989,16 @@ class OpenSIPSQuota {
             list($username,$domain)=explode("@",$account);
 
             if ($this->db->f('cost') >= $this->db->f('quota')) {
+                $quota_exceeded=true;
+                $exceeded_period='monthly';
+            } else if ($this->daily_quota && ($this->db->f('cost_daily') >= $this->db->f('quota') * $this->daily_quota/100)) {
+                $quota_exceeded=true;
+                $exceeded_period='daily';
+            } else {
+            	$quota_exceeded= false;
+            }
+
+            if ($quota_exceeded) {
                 $exceeding_accounts++;
 
                 if (!$this->db->f('blocked')) {
@@ -6028,8 +6043,8 @@ class OpenSIPSQuota {
                         $_reseller=0;
                     }
 
-                    $log=sprintf("Monthly quota exceeded for %s (%s > %s)",$account,$this->db->f('cost'), $this->db->f('quota'));
-                      syslog(LOG_NOTICE, $log);
+                    $log=sprintf("%s quota exceeded for %s (%s > %s)",ucfirst($exceeded_period),$account,$this->db->f('cost'), $this->db->f('quota'));
+                    syslog(LOG_NOTICE, $log);
 
                     $log_query=sprintf("insert into log
                     (date,login,ip,datasource,results,description,reseller_id)

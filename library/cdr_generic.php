@@ -112,6 +112,9 @@ class CDRS {
         	$this->quotaEnabled     = 1;
             $this->quota_init_flag  = $this->cdr_source.':quotaCheckInit';
             $this->quota_reset_flag = $this->cdr_source.':reset_quota_for';
+            if ($this->DATASOURCES[$this->cdr_source]['daily_quota']) {
+                $this->daily_quota=$this->DATASOURCES[$this->cdr_source]['daily_quota'];
+            }
         }
 
         // connect to the CDR database(s)
