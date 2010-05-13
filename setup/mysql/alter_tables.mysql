@@ -669,7 +669,7 @@ CREATE TABLE `subscriber_docs` (
   UNIQUE KEY `document_idx` (`username`,`domain`,`document`)     
 );
 
-7.2.0
+8.0.0
 alter table destinations add column region varchar(50) not null after dest_id ;
 
 drop table if exists billing_discounts;
@@ -691,3 +691,4 @@ CREATE TABLE `billing_discounts` (
 ) ;
 
 alter table quota_usage add column cost_today decimal(10,4) not null after cost;
+alter table log change column login login varchar(128)  not null;
