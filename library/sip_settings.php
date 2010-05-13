@@ -4145,6 +4145,8 @@ class SipSettings {
 
     function showPrepaidVoucherForm () {
 
+        if ($this->isEmbedded()) return true;
+
         $chapter=sprintf(_("Prepaid Card"));
         $this->showChapter($chapter);
 
