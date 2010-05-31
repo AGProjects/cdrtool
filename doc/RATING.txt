@@ -156,6 +156,9 @@ calculation of the price. These properties are:
 - max_price: the price is set to max_price per call if the calculated price
   is bigger than the max_price
 
+The min_duration and increment values from billing_customers override the
+values found in the destinations table.
+
 
 3. Determination of the costs
 -----------------------------
@@ -428,6 +431,8 @@ billing_customers
 | profile_name2     |
 | profile_name2_alt |
 | timezone          |
+| increment         |
+| min_duration      |
 +-------------------+
 
 billing_profiles

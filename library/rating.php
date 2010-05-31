@@ -19,7 +19,7 @@ class Rate {
 	var $connectCost            = 0;
     var $increment              = 0;     // used to consider the duration of the call in increments (e.g. 30 seconds)
     var $min_duration           = 0;     // minimum duration considered for calculating the price
-    var $max_duration           = 0;     // maimum duration considered for calculating the price
+    var $max_duration           = 0;     // maximum duration considered for calculating the price
     var $max_price              = 0;     // maximum price for the call
     var $discount_connect       = 0;
     var $discount_duration      = 0;
@@ -623,10 +623,16 @@ class Rate {
             $this->db->next_record();
 
             $this->region          = $this->db->Record['region'];
-            $this->increment       = $this->db->Record['increment'];
-            $this->min_duration    = $this->db->Record['min_duration'];
             $this->max_duration    = $this->db->Record['max_duration'];
             $this->max_price       = $this->db->Record['max_price'];
+
+            if ($this->db->Record['increment']) {
+                $this->increment = $this->db->Record['increment'];
+            }
+
+            if ($this->db->Record['min_duration']) {
+                $this->min_duration = $this->db->Record['min_duration'];
+            }
         }
 
         return true;
@@ -703,8 +709,15 @@ class Rate {
                                         "profile_weekend"     => $this->db->Record['profile_name2'],
                                         "profile_workday_alt" => $this->db->Record['profile_name1_alt'],
                                         "profile_weekend_alt" => $this->db->Record['profile_name2_alt'],
-                                        "timezone"     => $this->db->Record['timezone']
+                                        "timezone"            => $this->db->Record['timezone']
                                     );
+            if ($this->db->Record['increment']) {
+                $this->increment = $this->db->Record['increment'];
+            }
+
+            if ($this->db->Record['min_duration']) {
+                $this->min_duration = $this->db->Record['min_duration'];
+            }
 
             return true;
         } else {
@@ -1577,6 +1590,14 @@ class RatingTables {
                                                                                  ),
                                                                  "timezone"     =>array("size"=>16,
                                                                                   "name"=>"Timezone"
+                                                                                 ),
+                                                                 "increment"     =>array("size"=>3,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Incr"
+                                                                                 ),
+                                                                 "min_duration"  =>array("size"=>3,
+                                                                               "checkType"=>'numeric',
+                                                                                  "name"=>"Min Dur"
                                                                                  )
 
                                                                  )

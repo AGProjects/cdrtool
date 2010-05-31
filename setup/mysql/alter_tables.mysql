@@ -692,3 +692,5 @@ CREATE TABLE `billing_discounts` (
 
 alter table quota_usage add column cost_today decimal(10,4) not null after cost;
 alter table log change column login login varchar(128)  not null;
+alter table billing_customers add column increment smallint unsigned not null;
+alter table billing_customers add column min_duration smallint unsigned not null;
