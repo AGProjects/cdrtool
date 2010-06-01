@@ -1,4 +1,4 @@
-cdrtool (8.0.0-beta) unstable; urgency=low
+cdrtool (8.0.0) unstable; urgency=low
 
   [ Rating Engine ]
 
@@ -38,7 +38,7 @@ cdrtool (8.0.0-beta) unstable; urgency=low
   * Refactor rating engine to use Region to group destinations
   * Update Blink logo
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 01 Jun 2010 20:12:30 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 01 Jun 2010 20:18:14 +0200
 
 cdrtool (7.1.1) unstable; urgency=low
 
