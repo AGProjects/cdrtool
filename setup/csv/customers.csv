@@ -1,4 +1,4 @@
-Ops,Reseller,Gateway,Domain,Subscriber,WeekDay,Fallback,WeekEnd,Fallback,Timezone
-2,,,,,grn_premium,,grn_premium,,Europe/Amsterdam
-2,,,example.com,,grn_premium,,grn_premium,,Europe/Amsterdam
-2,,,,alice@example.com,grn_premium,,grn_premium,,Europe/Amsterdam
+Ops,Reseller,Trusted Peer,Domain,Subscriber,Profile WD,Fallback,Profile WE,Fallback,Timezone,Incr,Min Dur
+2,,,,,grn_premium,,grn_premium,,Europe/Amsterdam,0,0
+2,,,example.com,,grn_premium,,grn_premium,,Europe/Amsterdam,0,0
+2,,,,alice@example.com,grn_premium,,grn_premium,,Europe/Amsterdam,0,0
