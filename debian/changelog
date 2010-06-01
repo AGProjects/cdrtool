@@ -1,12 +1,47 @@
-cdrtool (8.0.0) unstable; urgency=low
+cdrtool (8.0.0-beta) unstable; urgency=low
 
-  * tbd
+  [ Rating Engine ]
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 09 May 2010 22:35:15 +0200
+  * Apply the database changes from setup/mysql/alter_tables.mysql
+  * Added support to debit balance for SMS
+  * Separate calculate functions for Audio and SMS
+  * Added import function for billing discounts
+  * Added discounts per customer per destination
+  * Added increment and min_duration per customer
+  * Added daily_quota per data source setting and check quota usage based on it
+  * Enlarged the login column in log table
+  * Set daily_quota for new installations to 10%
+  * Init the quota usage for today to 0 after quota reset
+  * Improve syslog message for maxsessiontime
+  * Use Subscriber instead of Account in rating tables display for consistency
+  * Added discounts to the list of csv files to import
+  * Rename profile name variables to match weekday and weekend
+  * Added storage for daily quota
+  * Log to syslog the result of maxsessiontime even if call is unlimited
+  * Use sms or audio rate calculation depending on CDR type during normalization
+
+  [ NGNPro Client ]
+
+  * Hide Prepaid Card form for embedded clients
+  * Define groups for enrollment of sip account in configuration
+  * Use sender email when asking for cc payments
+
+  [ WEB Output ]
+
+  * Renamed applicationType to application and fixed display of streams information
+  * Improved look and feel of main menu
+  * Fixed broken main css
+  * Added MediaInfo selection box and beautify code a bit
+  * Fixed display of gateways in delete rules screen
+  * Improved documentation
+  * Improved display of media trace stream sequence
+  * Refactor rating engine to use Region to group destinations
+  * Update Blink logo
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 01 Jun 2010 20:12:30 +0200
 
 cdrtool (7.1.1) unstable; urgency=low
 
-  [ WEB Output ]
   * Hide duration from quota table
 
   [ Normalization ]
