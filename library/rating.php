@@ -6585,6 +6585,7 @@ class RatingEngine {
 
     function reloadRatingTables () {
 
+        $b=time();
         $query="delete from memcache where `key` in ('destinations','destinations_sip','ENUMtlds')";
 
         if (!$this->db->query($query)) {
@@ -6594,6 +6595,9 @@ class RatingEngine {
 
 		$this->CDRS->RatingTables->LoadRatingTables();
         $this->CDRS->LoadDestinations();
+
+        $e=time();
+        $d=$e-$b;
 
         if ($d > 0 ) syslog(LOG_NOTICE, "Reloaded rating tables in $d seconds");
 
