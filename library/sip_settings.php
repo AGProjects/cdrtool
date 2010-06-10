@@ -334,7 +334,7 @@ class SipSettings {
                           'devices'=>_('Devices'),
                           'settings'=>_('Settings'),
                           'diversions'=>_('Forwarding'),
-                          'accept' =>_("Don't Disturb"),
+                          'accept' =>_("DND"),
                           'contacts'=>_("Contacts"),
                           'calls'=>_('History')
                           );
