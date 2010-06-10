@@ -11,13 +11,13 @@ class Rate {
     var $priceDecimalDigits     = 4;     // web display
     var $durationPeriodRated    = 60;    // how the prices are indicated in the billing_rates, default is per minute
     var $trafficSizeRated       = 1024;  // in KBytes, default 1MByte
-    var $minimumDuration        = 0;     // minimum duration considered to apply rates for a call, if call is shorter the price is zero
+    var $rate_longer_than       = 0;     // minimum duration considered to apply rates for a call, if call is shorter the price is zero
     var $ENUMtld                = '';
     var $ENUMdiscount           = 0;     // how much percentage to substract from the final price
     var $price                  = 0;
     var $spans                  = 0;     // number of spans we looped through
 	var $connectCost            = 0;
-    var $increment              = 0;     // used to consider the duration of the call in increments (e.g. 30 seconds)
+    var $increment              = 0;     // used to consider the duration of the call in increments (default 1 second)
     var $min_duration           = 0;     // minimum duration considered for calculating the price
     var $max_duration           = 0;     // maximum duration considered for calculating the price
     var $max_price              = 0;     // maximum price for the call
@@ -51,9 +51,18 @@ class Rate {
             $this->trafficSizeRated=$this->settings['trafficSizeRated'];
         }
 
-        if ($this->settings['minimumDuration']) {
+        if ($this->settings['rate_longer_than']) {
             // if call is shorter than this, it has zero cost
-            $this->minimumDuration=$this->settings['minimumDuration'];
+            $this->rate_longer_than=$this->settings['rate_longer_than'];
+        }
+
+        if ($this->settings['min_duration']) {
+            // if call is shorter than this, it has zero cost
+            $this->min_duration=$this->settings['min_duration'];
+        }
+
+        if ($this->settings['increment']) {
+            $this->increment=$this->settings['increment'];
         }
 
     }
@@ -80,9 +89,9 @@ class Rate {
         $this->cNumber           = $dictionary['cNumber'];
         $this->ENUMtld           = $dictionary['ENUMtld'];
 
-        if ($this->minimumDuration && $this->duration < $this->minimumDuration) {
-            //syslog(LOG_NOTICE, "Duration less than minimum $this->minimumDuration");
-            $this->rateInfo .= "   Duration < $this->minimumDuration s\n";
+        if ($this->rate_longer_than && $this->duration < $this->rate_longer_than) {
+            //syslog(LOG_NOTICE, "Duration less than minimum $this->rate_longer_than");
+            $this->rateInfo .= "   Duration < $this->rate_longer_than s\n";
             return false;
         }
 
