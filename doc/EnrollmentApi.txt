@@ -1,0 +1,24 @@
+
+This is a private API. Do not use it unless you have been instructed to do so by AG Projects.
+
+
+Download API
+------------
+
+download.phtml?install_id=hash(machine_name,login_name)&operator=name&var=value&...
+
+Supported variables:
+
+- sip_address
+- password
+- outbound_proxy
+- xcap_root
+- msrp_relay
+- settings_url
+
+
+Enrollment API
+--------------
+
+enrollment.phtml?install_id=hash(machine_name,login_name)
+

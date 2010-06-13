@@ -694,3 +694,24 @@ alter table quota_usage add column cost_today decimal(10,4) not null after cost;
 alter table log change column login login varchar(128)  not null;
 alter table billing_customers add column increment smallint unsigned not null;
 alter table billing_customers add column min_duration smallint unsigned not null;
+
+drop table if exists enrollment_session;
+CREATE TABLE `enrollment_session` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `install_id` varchar(255) not NULL,
+  `operator` varchar(255) not NULL,
+  `account_data` text NOT NULL default '',
+  `date` datetime not null, 
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY `idx` (`install_id`)
+) ;
+
+drop table if exists enrollment_session_log;
+CREATE TABLE `enrollment_session_log` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `install_id` varchar(255) not NULL,
+  `from_ip` varchar(255) not NULL,
+  `operator` varchar(255) not NULL,
+  `date` datetime not null, 
+  PRIMARY KEY  (`id`)
+) ;
