@@ -40,6 +40,7 @@ install: build
 	cp -a scripts debian/cdrtool/var/www/CDRTool/
 	cp -a setup debian/cdrtool/var/www/CDRTool/
 	cp -a status debian/cdrtool/var/www/CDRTool/
+	cp -a po debian/cdrtool/var/www/CDRTool/
 	cp -a *.js debian/cdrtool/var/www/CDRTool/
 	cp -a timezones debian/cdrtool/var/www/CDRTool/
 	cp -a version debian/cdrtool/var/www/CDRTool/	
