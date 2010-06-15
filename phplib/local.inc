@@ -599,7 +599,7 @@ class pageLayout {
         print "
         <form action=\"$url\" method=post>
         <p>
-        <table align=center cellspacing=0 cellpadding=2 width=300 border=5>
+        <table align=center cellspacing=0 cellpadding=2 width=400 border=5>
         <tr>
         <td colspan=2>
         <p>
