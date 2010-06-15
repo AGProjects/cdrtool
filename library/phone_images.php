@@ -27,7 +27,7 @@ $userAgentImages = array("Asterisk"       => "asterisk.png",
                          "voipster"       => "zoep.png",
                          "Windows RTC"    => "messenger.png",
                          "X-Lite"         => "xten.png",
-                         "X-PRO"          => "xten.png",
+                         "X-PRO|bria"     => "xten.png",
                          "ZyXEL P2000W"   => "zyxel-p2000.png",
                          "-IMVP"          => "innomedia-mta5000.png",
                          "3610\/"         => "siemens-3610.png",
@@ -43,7 +43,8 @@ $userAgentImages = array("Asterisk"       => "asterisk.png",
                          "fring"          => "fring.png",
                          "ARRIS-TM722"    => "Arris_TM722b.png",
                          "Genexis OCG118" => "genexis.png",
-                         "droid" => "droid.png"
+                         "droid" => "droid.png",
+                         "telephone" => "Telephone.png"
                          );
 
 ?>
