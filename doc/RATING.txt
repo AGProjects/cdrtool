@@ -10,7 +10,7 @@ A Call Detail Record (CDR) is one record from the radius radacct table. The
 CDR contains all information related to a session, its duration, the calling
 and called party and media information. The rating engine calculates the
 price of the session. The calculation is done once and its results are saved
-in the CDR table for later use. It is possible to re-calculated the prices
+in the CDR table for later use. It is possible to re-calculate the prices
 at a later time for example when having to change the tariffs.
 
 Based on exceptions, different rates may be applied per caller party
@@ -39,7 +39,7 @@ parties hosted on the same platform.
 Rating logic
 ------------
 
-Different customers can have different rating plans. A rating plan is a
+Different subscribers can have different rating plans. A rating plan is a
 unique combination of holidays, day of week, time of day, destination ids,
 and associated costs.
 
@@ -54,7 +54,6 @@ The steps are described in detail below.
 
 1. Determination of the billing party
 -------------------------------------
-
 
 To be able to calculate the Price for a call the rating engine must
 determine whose rating plan to use.
@@ -72,7 +71,7 @@ The first match is considered to be the billing party for which the rating
 plan is determined. 
 
 The rating plan is further derived from the profiles associated with the
-entry found in the billing_customers.
+entry found in the billing_customers table.
 
 Note
 
@@ -117,7 +116,8 @@ The CanonicalURI is the preferred because is reliable information generated
 by the operator based on the logic configured in the SIP Proxy and the
 subscriber cannot control it. OpenSIPS must be configured to send the
 CanonicalURI Radius attribute when creating the radius accounting START
-record. Instructions for this are available in INSTALL.txt file.
+record. Instructions for how to set this up are available in INSTALL.txt
+file.
 
 The 'destination id' is then calculated based on the longest match of this
 destination field in the billing_destinations table.
@@ -290,10 +290,10 @@ the 'destination id' and the billing party determined at the previous steps.
    files.
 
 
-7. Save the calculated Price, billing party and 'destination id' for each
+6. Save the calculated Price, billing party and 'destination id' for each
    call in the CDR table. Having the price stored in the database, it is
-   possible to build statistics to display consolidated revenues per country
-   code, network or subscriber.
+   possible to build statistics to display consolidated revenues per
+   destination id, gateway, domain or subscriber.
 
 
 Testing the rating engine
@@ -334,14 +334,14 @@ spaces:
    with the E164 class logic used to determine the 'destination id'
  * Duration - the duration of the session in seconds
 
-Check the syslog for any errors, most the of the configuration errors like
+Check the syslog for any errors, most of the configuration errors like
 missing rates are logged to the syslog.
 
    	
 Importing and exporting of rating files
 ---------------------------------------
 
-It is important to set the impersonate field corectly for the login
+It is important to set the impersonate field correctly for the login
 accounts. To access in the CDRTool Rating web page all the rates table for
 all resellers in the system you must set the impersonate field of the login
 account to 0.0
@@ -365,11 +365,11 @@ in all imported records is set to the directory name.
 
 The import script knows to import the files only once so you may dump
 several files over time with the same name and safely run the import script
-from cron. The import script detects whether each file have been imported by
-building a unique key out of the filename and the hash of the file content.
-So you may use the same filenames as long as the content differs and
-viceversa. If the import file has changed any records, the rating engine is
-automatically instructed to reload the changes.
+from cron. The import script detects whether each file has already been
+imported by building a unique key out of the filename and the hash of the
+file content. So you may use the same filenames as long as the content
+differs and viceversa. If the import file has changed any records, the
+rating engine is automatically instructed to reload the changes.
 
 Sample csv files are found in the setup directory. The CSV field order is
 described in setup/*.csv sample files. The first element on each line
@@ -390,7 +390,7 @@ The import script detects the type of file to import based on its filename.
 
 The filename must comply with the following naming convention:
 
-1. Must start with the name of the table without the billing_
+1. Must start with the name of the table without the billing_ prefix
 2. May optionally contain extra characters after the name
 3. Must end with .csv extension
 
@@ -556,7 +556,7 @@ Web based rating tables management
 ----------------------------------
 
 The rating tables can be edited from the web, click on Rating tables link.
-One may insert/update/delete records or apply changes on selections. For
+One may insert/update/delete records or apply the changes on selections. For
 example it is possible to increase with XX units the rate for a specific
 destination.
 
