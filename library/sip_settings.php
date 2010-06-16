@@ -336,8 +336,9 @@ class SipSettings {
                           'diversions'=>_('Forwarding'),
                           'accept' =>_("DND"),
                           'contacts'=>_("Contacts"),
-                          'calls'=>_('History')
+                          'calls'=>_('History'),
                           );
+
 
         if (in_array("free-pstn",$this->groups)) {
             if ($this->show_barring_tab) {
@@ -2445,7 +2446,7 @@ class SipSettings {
           <td align=left colspan=2>
         ";
 
-        if ($this->email)  {
+        if ($this->email) {
             printf (_("Email SIP Account information to %s"),$this->email);
             print "
             <input type=hidden name=action value=\"send email\">
@@ -2472,7 +2473,32 @@ class SipSettings {
         print "
         </form>
         ";
+    }
 
+    function showDownloadTab() {
+
+        $chapter=sprintf(_("Blink Download"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr class=odd>
+        <td colspan=2>";
+
+        printf (_("You may download Blink, preconfigured with your account by clicking on the link below:"));
+
+        $_account=array('sip_address'=>$this->account, 'password'=>$this->password, 'email' => $this->email);
+
+        $Enrollment = new Enrollment();
+
+        print "<p>";
+
+ 		$Enrollment->render_download_applet($_account);
+
+        print "
+        </td>
+        </td>
+        </tr>
+        ";
     }
 
     function showFooter() {
@@ -8024,6 +8050,7 @@ class Enrollment {
     var $timezones                  = array();
     var $default_timezone           = 'Europe/Amsterdam';
     var $operators                  = array();
+    var $reserved_keywords          = array ('operator','system_id');
 
     function Enrollment() {
 
@@ -8455,6 +8482,96 @@ class Enrollment {
         fclose($fp);
     }
 
+    function render_download_applet($_account) {
+
+        if ($_account['email']) {
+            $email = $_account['email'];
+        } else {
+        	$email = $_account['sip_address'];
+        }
+
+		$passport=$this->generateCertificate($_account['sip_address'],$email,$_account['password']);
+
+        $applet_code=sprintf ("
+        <APPLET CODE=\"com.agprojects.apps.browserinfo.BrowserInfoCapture\" ARCHIVE=\"japp_info.jar\" NAME=\"BrowserInfoCapture\" HEIGHT=\"28\" WIDTH=\"100\">
+        <PARAM name=\"LabelText\" value=\"Download Blink\"></PARAM>
+        <PARAM name=\"urlparam_0\" value=\"%s&operator=%s&sip_address=%s&password=%s&outbound_proxy=%s&xcap_root=%s&msrp_relay=%s&settings_url=%s&passport=%s&\"></PARAM>",
+        $this->enrollment['download_url'],
+        urlencode($this->enrollment['operator']),
+        urlencode($_account['sip_address']),
+        urlencode($_account['password']),
+        urlencode($this->enrollment['outbound_proxy']),
+        urlencode($this->enrollment['xcap_root']),
+        urlencode($this->enrollment['msrp_relay']),
+        urlencode($this->enrollment['settings_url']),
+        urlencode($passport)
+        );
+
+        print $applet_code;
+
+    }
+
+    function download_session () {
+        $this->db = new DB_CDRTool();
+
+        if ($_REQUEST['system_id'] ) {
+        	$_install_id=$_REQUEST['system_id'];
+        } else {
+            return false;
+        }
+
+        if ($_REQUEST['operator'] ) {
+        	$_operator=$_REQUEST['operator'];
+        } else {
+            $log=sprintf("Enrollment download error: no operator provided");
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
+
+		if (!$this->operators[$_operator]) {
+            $log=sprintf("Enrollment download error: invalid operator");
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
+
+        // check if the domain part is associated with the service provider
+        if (!in_array($_operator, array_keys($this->operators))) {
+            $log=sprintf("Enrollment error: invalid service provider %s",$_operator);
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
+
+        if (!$_REQUEST['sip_address']) {
+            $log=sprintf("Enrollment download error: missing sip address in enrollment session %s",$_install_id);
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
+
+        if (is_array($this->operators[$_operator]['allowed_domains'])) {
+            if (count($this->operators[$_operator]['allowed_domains']) > 0) {
+            	list($_user,$_domain)=explode('@',$_REQUEST['sip_address']);
+                if (!in_array ($_domain,$this->operators[$_operator]['allowed_domains'])) {
+                    $log=sprintf("Enrollment download error: domain '%s' is not allowed for operator %s",$_domain,$_operator);
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+                }
+            }
+        }
+
+        $query=sprintf("insert into enrollment_session (`install_id`,`operator`,`account_data`,`date`)
+        values ('%s','%s','%s', NOW())",addslashes($_install_id),addslashes($_operator),addslashes(json_encode($_REQUEST)));
+
+        if (!$this->db->query($query)) {
+            $log=sprintf("Enrollment download: database error for query %s: %s (%d)",$query,$this->db->Error,$this->db->Errno);
+            syslog(LOG_NOTICE, $log);
+        }
+
+        $log=sprintf("Enrollment download: added session for operator %s: %s",$_operator,$_install_id);
+        syslog(LOG_NOTICE, $log);
+
+        return true;
+    }
+
     function enrollment_session () {
 
         $_install_id=$_REQUEST['install_id'];
@@ -8507,9 +8624,13 @@ class Enrollment {
             }
         }
 
-        $_data['success'] =true;
+        $_data['success'] = true;
 
-        $this->account_data_from_session=$_data;
+        foreach (array_keys($_data) as $_key) {
+            if ($_data[$_key] && !in_array($_key,$this->reserved_keywords)) {
+        		$this->account_data_from_session[$_key]=$_data[$_key];
+            }
+        }
 
         $query=sprintf("delete from enrollment_session where `install_id` = '%s'",addslashes($_install_id));
 
@@ -8527,67 +8648,6 @@ class Enrollment {
         }
 
         $log=sprintf("Enrollment: consumed session for operator %s: %s",$_operator,$_install_id);
-        syslog(LOG_NOTICE, $log);
-
-        return true;
-    }
-
-    function download_session () {
-        $this->db = new DB_CDRTool();
-
-        if ($_REQUEST['install_id'] ) {
-        	$_install_id=$_REQUEST['install_id'];
-        } else {
-            return false;
-        }
-
-        if ($_REQUEST['operator'] ) {
-        	$_operator=$_REQUEST['operator'];
-        } else {
-            $log=sprintf("Enrollment download error: no operator provided");
-            syslog(LOG_NOTICE, $log);
-            return false;
-        }
-
-		if (!$this->operators[$_operator]) {
-            $log=sprintf("Enrollment download error: invalid operator");
-            syslog(LOG_NOTICE, $log);
-            return false;
-        }
-
-        if (!$_REQUEST['sip_address']) {
-            $log=sprintf("Enrollment download error: missing sip address in enrollment session %s",$_install_id);
-            syslog(LOG_NOTICE, $log);
-            return false;
-        }
-
-        if (is_array($this->operators[$_operator]['allowed_domains'])) {
-            if (count($this->operators[$_operator]['allowed_domains']) > 0) {
-            	list($_user,$_domain)=explode('@',$_REQUEST['sip_address']);
-                if (!in_array ($_domain,$this->operators[$_operator]['allowed_domains'])) {
-                    $log=sprintf("Enrollment download error: domain '%s' is not allowed for operator %s",$_domain,$_operator);
-                    syslog(LOG_NOTICE, $log);
-                    return false;
-                }
-            }
-        }
-
-        $query=sprintf("delete from enrollment_session where `install_id` = '%s'",addslashes($_install_id));
-
-        if (!$this->db->query($query)) {
-            $log=sprintf("Enrollment download: database error for query %s: %s (%d)",$query,$this->db->Error,$this->db->Errno);
-            syslog(LOG_NOTICE, $log);
-        }
-
-        $query=sprintf("insert into enrollment_session (`install_id`,`operator`,`account_data`,`date`)
-        values ('%s','%s','%s', NOW())",addslashes($_install_id),addslashes($_operator),addslashes(json_encode($_REQUEST)));
-
-        if (!$this->db->query($query)) {
-            $log=sprintf("Enrollment download: database error for query %s: %s (%d)",$query,$this->db->Error,$this->db->Errno);
-            syslog(LOG_NOTICE, $log);
-        }
-
-        $log=sprintf("Enrollment download: added session for operator %s: %s",$_operator,$_install_id);
         syslog(LOG_NOTICE, $log);
 
         return true;
