@@ -7683,6 +7683,7 @@ class RatingEngine {
                     return "Failed\n";
                 }
             } else if ($application == 'sms') {
+                // return Ok, No credit, Error
                 if ($Rate->calculateMessage($RateDictionary)) {
 
     	            if ($this->DebitBalanceMessage($CDR->BillingPartyId,$CDR->destinationPrint,$Rate->price,$NetFields['callid'])) {
