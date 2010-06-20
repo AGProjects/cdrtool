@@ -59,6 +59,7 @@ class SipSettings {
 	var $show_barring_tab   = true;
 	var $show_presence_tab  = false;
     var $show_payments_tab  = false;
+    var $show_download_tab  = false;
     var $show_directory     = false;
 
     var $first_tab          = 'calls';
@@ -350,6 +351,10 @@ class SipSettings {
             if ($this->show_presence_tab) {
             	$this->tabs['presence']=_("Presence");
             }
+        }
+
+		if (!$this->isEmbedded() && $this->show_download_tab) {
+        	$this->tabs['download'] = 'Blink';
         }
 
         $this->acceptDailyProfiles=array('127' => _('Every day'),
@@ -1744,7 +1749,10 @@ class SipSettings {
 
         if ($this->isEmbedded()) {
             print $this->embedded_img;;
+        } else if ($this->show_download_tab) {
+            //$this->render_download_applet();
         }
+
         print "</td>";
         print "<td align=right>";
         print "
@@ -2485,20 +2493,21 @@ class SipSettings {
         <td colspan=2>";
 
         printf (_("You may download Blink, preconfigured with your account by clicking on the link below:"));
-
-        $_account=array('sip_address'=>$this->account, 'password'=>$this->password, 'email' => $this->email);
-
-        $Enrollment = new Enrollment();
-
         print "<p>";
 
- 		$Enrollment->render_download_applet($_account);
+        $this->render_download_applet();
 
         print "
         </td>
         </td>
         </tr>
         ";
+    }
+
+    function render_download_applet() {
+        $_account=array('sip_address'=>$this->account, 'password'=>$this->password, 'email' => $this->email);
+        $Enrollment = new Enrollment();
+ 		$Enrollment->render_download_applet($_account);
     }
 
     function showFooter() {
@@ -8050,7 +8059,7 @@ class Enrollment {
     var $timezones                  = array();
     var $default_timezone           = 'Europe/Amsterdam';
     var $operators                  = array();
-    var $reserved_keywords          = array ('operator','system_id');
+    var $reserved_keywords          = array ('operator','install_id');
 
     function Enrollment() {
 
@@ -8483,6 +8492,7 @@ class Enrollment {
     }
 
     function render_download_applet($_account) {
+        // render a java client applet that start Blink download with SIP account information
 
         if ($_account['email']) {
             $email = $_account['email'];
@@ -8494,8 +8504,8 @@ class Enrollment {
 
         $applet_code=sprintf ("
         <APPLET CODE=\"com.agprojects.apps.browserinfo.BrowserInfoCapture\" ARCHIVE=\"japp_info.jar\" NAME=\"BrowserInfoCapture\" HEIGHT=\"28\" WIDTH=\"100\">
-        <PARAM name=\"LabelText\" value=\"Download Blink\"></PARAM>
-        <PARAM name=\"urlparam_0\" value=\"%s&operator=%s&sip_address=%s&password=%s&outbound_proxy=%s&xcap_root=%s&msrp_relay=%s&settings_url=%s&passport=%s&\"></PARAM>",
+        <PARAM name=\"label_text\" value=\"Download Blink\"></PARAM>
+        <PARAM name=\"download_url\" value=\"%s&operator=%s&sip_address=%s&password=%s&outbound_proxy=%s&xcap_root=%s&msrp_relay=%s&settings_url=%s&\"></PARAM>",
         $this->enrollment['download_url'],
         urlencode($this->enrollment['operator']),
         urlencode($_account['sip_address']),
@@ -8503,8 +8513,7 @@ class Enrollment {
         urlencode($this->enrollment['outbound_proxy']),
         urlencode($this->enrollment['xcap_root']),
         urlencode($this->enrollment['msrp_relay']),
-        urlencode($this->enrollment['settings_url']),
-        urlencode($passport)
+        urlencode($this->enrollment['settings_url'])
         );
 
         print $applet_code;
@@ -8512,10 +8521,12 @@ class Enrollment {
     }
 
     function download_session () {
+        // save SIP account information provided during download session
+
         $this->db = new DB_CDRTool();
 
-        if ($_REQUEST['system_id'] ) {
-        	$_install_id=$_REQUEST['system_id'];
+        if ($_REQUEST['install_id'] ) {
+        	$_install_id=$_REQUEST['install_id'];
         } else {
             return false;
         }
@@ -8558,8 +8569,14 @@ class Enrollment {
             }
         }
 
+        foreach (array_keys($_REQUEST) as $_key) {
+            if ($_REQUEST[$_key] && !in_array($_key,$this->reserved_keywords)) {
+        		$_account_data[$_key]=$_REQUEST[$_key];
+            }
+        }
+
         $query=sprintf("insert into enrollment_session (`install_id`,`operator`,`account_data`,`date`)
-        values ('%s','%s','%s', NOW())",addslashes($_install_id),addslashes($_operator),addslashes(json_encode($_REQUEST)));
+        values ('%s','%s','%s', NOW())",addslashes($_install_id),addslashes($_operator),addslashes(json_encode($_account_data)));
 
         if (!$this->db->query($query)) {
             $log=sprintf("Enrollment download: database error for query %s: %s (%d)",$query,$this->db->Error,$this->db->Errno);
@@ -8573,6 +8590,7 @@ class Enrollment {
     }
 
     function enrollment_session () {
+        // provide the SIP account provided during download phase
 
         $_install_id=$_REQUEST['install_id'];
 
