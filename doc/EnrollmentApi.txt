@@ -1,5 +1,12 @@
 
-This is a private API. Do not use it unless you have been instructed to do so by AG Projects.
+Enrollment API
+--------------
+
+Copyright (c) 2010 AG Projects
+http://ag-projects.com
+
+This is a private API. Do not use it unless you have been instructed to do
+so by AG Projects.
 
 
 Download API
@@ -21,4 +28,108 @@ Enrollment API
 --------------
 
 enrollment.phtml?install_id=hash(machine_name,login_name)
+
+
+Download Applet
+---------------
+
+Download Applet is a java client application that provides the possibility
+for a zero-configuration setup of a new Blink instance installed on a new
+computer when starting the download from an environment that has already
+provisioned the SIP account in a local SIP server.
+
+This is realized by generating at download time an unique cookie derived
+from the computer name and the login name of the user that starts the
+download process, cookie that is stored on the enrollment server. The same
+cookie is checked at first runtime by Blink during the enrollment phase and
+the information provided during the download phase is retrieved when Blink
+is run for the first time. The cookie is encrypted for privacy purposes as
+an MD5 hash and passed as id parameter to the download link, so no local
+data is disclosed to the enrollment server.
+
+The format of the md5 hash is: md5(machine_name,login_name) where the
+machine_name is the computer name of the client executing the java client
+application via web browser and login_name is the username logged in. For
+example, a computer called "joecomputer" with a logged in account of joeuser
+will result in a string of: joecomputer,joeuser, which gets MD5 encrypted
+resulting in: a226343381164fc2dc5a1a154141ca97
+
+The SIP account information that must be configured in Blink must also be
+passed during the download phase request to the enrollment server.
+
+At first run, Blink will generate a request to the enrollment server by
+computing the same hash, and the enrollment server will send back the
+account information provided during the download phase. The cookie and
+associated SIP account information are subsequently erased from the server.
+
+
+Applet compilation
+
+Download the source-code from japp_uinfo.tar.gz
+
+Open the project with Eclipse (http://www.eclipse.org/) or any other java 
+compilation IDE of your choice and make any changes needed.
+Export the software package as a .jar (java archive file)
+
+
+Applet signing
+
+In order for the Java Applet to have access to the client system
+environment, it needs to be signed with a certificate. Assuming that we will
+deploy the jar (japp_info.jar) on https://secure.dns-hosting.info for which
+we already have a valid signed certificate that is allowed for code signing
+purposes:
+
+Download GeoTrust signing certificate (Base-64 encoded X.509) from:
+https://www.geotrust.com/resources/root-certificates/index.html
+
+Export the existing signed certificate and private key as a merged certificate:
+
+openssl pkcs12 -export -in secure.dns-hosting.info.crt -inkey
+secure.dns-hosting.info.key -out secure.dns-hosting.info.pfx12 -certfile
+Equifax_Secure_Certificate_Authority.cer
+
+Import the pfx12 file to JKS (Java Key Store) 
+
+keytool -importkeystore -deststorepass mypass -destkeypass mypass
+-destkeystore secure.dns-hosting.info -srckeystore
+secure.dns-hosting.info.pfx12 -srcstoretype PKCS12 -srcstorepass mypass
+-alias agproj_jcert
+
+Now, copy the jar (japp_info.jar) file in the same directory with the newly 
+generated keys and sign the jar file:
+jarsigner -storepass mypass japp_info.jar agproj_jcert
+
+To obtain a certificate valid for code signing go to Verisign.
+
+
+Deployment
+
+Copy the generated signed jar file to the web server (remember to deploy the
+jar file to the same domain for which the keys and signature were
+generated). Edit the web page and add the following script:
+
+
+<APPLET CODE="com.agprojects.apps.browserinfo.BrowserInfoCapture"
+ARCHIVE="japp_info.jar" NAME="BrowserInfoCapture" HEIGHT="28" WIDTH="100">
+<PARAM name="label_text" value="Download Blink"></PARAM> <PARAM
+name="download_url"
+value="http://prefix.myhost.tld/page.ext?param1=param1value&param2=param2value&"></PARAM>
+<PARAM name="hash_elements" value="false"></PARAM> </APPLET>
+
+ARCHIVE parameter can be changed to the actual name and path of the .jar
+file relative to web server root (/). Change Width to desired size (the more
+text in the link, the more width required).  For height, 28 is a good size,
+so leave default. The label_text parameter, is the text that will be
+displayed in the link label.  It is VERY important to have this parameter
+set or the link will not display.
+
+The download_url parameter is the URL value from which the software will be
+downloaded. Remember to add a "&" character at the end of the URL as the
+hash string and computer information will be appended to. download_url
+parameter MUST be a valid URL, starting with the http(s):// prefix.
+
+hash_elements parameters determines if the final URL will include also
+elements 'machine_name' and 'login_name' used to compute the hash, default:
+false.
 
