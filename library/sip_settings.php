@@ -8503,9 +8503,10 @@ class Enrollment {
 		$passport=$this->generateCertificate($_account['sip_address'],$email,$_account['password']);
 
         $applet_code=sprintf ("
-        <APPLET CODE=\"com.agprojects.apps.browserinfo.BrowserInfoCapture\" ARCHIVE=\"japp_info.jar\" NAME=\"BrowserInfoCapture\" HEIGHT=\"28\" WIDTH=\"100\">
+        <APPLET CODE=\"com.agprojects.apps.browserinfo.BrowserInfoCapture\" ARCHIVE=\"download_blink.jar\" NAME=\"BrowserInfoCapture\" HEIGHT=\"28\" WIDTH=\"100\">
         <PARAM name=\"label_text\" value=\"Download Blink\"></PARAM>
-        <PARAM name=\"download_url\" value=\"%s&operator=%s&sip_address=%s&password=%s&outbound_proxy=%s&xcap_root=%s&msrp_relay=%s&settings_url=%s&\"></PARAM>",
+        <PARAM name=\"download_url\" value=\"%s&operator=%s&sip_address=%s&password=%s&outbound_proxy=%s&xcap_root=%s&msrp_relay=%s&settings_url=%s&\"></PARAM>
+        <PARAM name=\"hash_elements\" value=\"false\"></PARAM>",
         $this->enrollment['download_url'],
         urlencode($this->enrollment['operator']),
         urlencode($_account['sip_address']),
