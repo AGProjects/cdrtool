@@ -658,6 +658,7 @@ class CDRS_opensips extends CDRS {
                                array("label"=>"Video",        "value"=>"video"),
                                array("label"=>"Message" ,         "value"=>"message"),
                                array("label"=>"IM Chat" ,     "value"=>"chat"),
+                               array("label"=>"Audio + Chat" ,     "value"=>"audio=2C chat"),
                                array("label"=>"File Transfer","value"=>"file-transfer")
                                );
 
