@@ -22,6 +22,7 @@ Supported variables:
 - xcap_root
 - msrp_relay
 - settings_url
+- passport
 
 
 Enrollment API
@@ -33,10 +34,10 @@ enrollment.phtml?install_id=hash(machine_name,login_name)
 Download Applet
 ---------------
 
-Download Applet is a java client application that provides the possibility
-for a zero-configuration setup of a new Blink instance installed on a new
-computer when starting the download from an environment that has already
-provisioned the SIP account in a local SIP server.
+This java client application allows zero-configuration setup of a new Blink
+instance installed on a new computer when starting the download from an
+environment that has already provisioned the SIP account in a local SIP
+server.
 
 This is realized by generating at download time an unique cookie derived
 from the computer name and the login name of the user that starts the
@@ -65,19 +66,17 @@ associated SIP account information are subsequently erased from the server.
 
 Applet compilation
 
-Download the source-code from japp_uinfo.tar.gz
-
-Open the project with Eclipse (http://www.eclipse.org/) or any other java 
-compilation IDE of your choice and make any changes needed.
-Export the software package as a .jar (java archive file)
+Open the project with Eclipse (http://www.eclipse.org/) or any other java
+compilation IDE of your choice and make any changes needed. Export the
+software package as a .jar (java archive file)
 
 
 Applet signing
 
 In order for the Java Applet to have access to the client system
 environment, it needs to be signed with a certificate. Assuming that we will
-deploy the jar (japp_info.jar) on https://secure.dns-hosting.info for which
-we already have a valid signed certificate that is allowed for code signing
+deploy the jar (download_blink.jar) on https://example.com for which we
+already have a valid signed certificate that is allowed for code signing
 purposes:
 
 Download GeoTrust signing certificate (Base-64 encoded X.509) from:
@@ -85,22 +84,25 @@ https://www.geotrust.com/resources/root-certificates/index.html
 
 Export the existing signed certificate and private key as a merged certificate:
 
-openssl pkcs12 -export -in secure.dns-hosting.info.crt -inkey
-secure.dns-hosting.info.key -out secure.dns-hosting.info.pfx12 -certfile
+openssl pkcs12 -export -in example.com.crt -inkey
+example.com.key -out example.com.pfx12 -certfile
 Equifax_Secure_Certificate_Authority.cer
 
 Import the pfx12 file to JKS (Java Key Store) 
 
 keytool -importkeystore -deststorepass mypass -destkeypass mypass
--destkeystore secure.dns-hosting.info -srckeystore
-secure.dns-hosting.info.pfx12 -srcstoretype PKCS12 -srcstorepass mypass
+-destkeystore example.com -srckeystore
+example.com.pfx12 -srcstoretype PKCS12 -srcstorepass mypass
 -alias agproj_jcert
 
-Now, copy the jar (japp_info.jar) file in the same directory with the newly 
-generated keys and sign the jar file:
-jarsigner -storepass mypass japp_info.jar agproj_jcert
+Now, copy the jar (download_blink.jar) file in the same directory with the
+newly generated keys and sign the jar file:
 
-To obtain a certificate valid for code signing go to Verisign.
+jarsigner -storepass mypass download_blink.jar agproj_jcert
+
+Certificates valid for code signing are available from Verisign:
+
+http://www.verisign.com/code-signing/content-signing-certificates/sun-java/index.html?sl=productdetails
 
 
 Deployment
@@ -111,17 +113,17 @@ generated). Edit the web page and add the following script:
 
 
 <APPLET CODE="com.agprojects.apps.browserinfo.BrowserInfoCapture"
-ARCHIVE="japp_info.jar" NAME="BrowserInfoCapture" HEIGHT="28" WIDTH="100">
-<PARAM name="label_text" value="Download Blink"></PARAM> <PARAM
-name="download_url"
-value="http://prefix.myhost.tld/page.ext?param1=param1value&param2=param2value&"></PARAM>
-<PARAM name="hash_elements" value="false"></PARAM> </APPLET>
+ARCHIVE="download_blink.jar" NAME="BrowserInfoCapture" HEIGHT="28" WIDTH="100">
+<PARAM name="label_text" value="Download Blink"></PARAM>
+<PARAM name="download_url" value="http://prefix.myhost.tld/page.ext?param1=value1&param2=param2value&"></PARAM>
+<PARAM name="hash_elements" value="false"></PARAM>
+</APPLET>
 
 ARCHIVE parameter can be changed to the actual name and path of the .jar
 file relative to web server root (/). Change Width to desired size (the more
 text in the link, the more width required).  For height, 28 is a good size,
 so leave default. The label_text parameter, is the text that will be
-displayed in the link label.  It is VERY important to have this parameter
+displayed in the link label. It is VERY important to have this parameter
 set or the link will not display.
 
 The download_url parameter is the URL value from which the software will be

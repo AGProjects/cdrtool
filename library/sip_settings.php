@@ -2492,7 +2492,7 @@ class SipSettings {
         <tr class=odd>
         <td colspan=2>";
 
-        printf (_("You may download Blink, preconfigured with your account by clicking on the link below:"));
+        printf (_("Download <a href=http://icanblink.com target=blink>Blink</a>, a state of the art easy to use SIP client, preconfigured with your account by clicking on the link below:"));
         print "<p>";
 
         $this->render_download_applet();
