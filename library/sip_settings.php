@@ -8513,7 +8513,7 @@ class Enrollment {
 
         print "<tr><td>";
 
-        printf (_("Download <a href=http://icanblink.com target=blink>Blink</a> preconfigured with your SIP account:"));
+        printf (_("Download and install <a href=http://icanblink.com target=blink>Blink</a> preconfigured with your SIP account:"));
         print "</td></tr>";
         print "<tr><td>";
 
@@ -8537,7 +8537,7 @@ class Enrollment {
 
         printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar' name='BlinkConfigure' height='35' width='250' align='left'>
         <param name='label_text' value='Configure Blink with this account'> 
-        <param name='click_label_text' value='Configuration Saved'>
+        <param name='click_label_text' value='Please restart Blink now!'>
         <param name='download_url' value=''> 
         <param name='file_name' value=''> 
         <param name='file_content' value='%s'> 
@@ -8550,8 +8550,8 @@ class Enrollment {
 
         print "<p>";
         printf ("Notes. ");
-        print _("Java runtime environment must be activated in the browser. ");
-        print _("When prompted, you must agree to run the applet on your computer. The applet runs only once, the browser must be reload to execute the applet again. ");
+        print _("Java must be activated in the browser. ");
+        print _("When prompted, agree to run the applet on your computer. ");
 
     }
 
