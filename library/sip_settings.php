@@ -2485,15 +2485,12 @@ class SipSettings {
 
     function showDownloadTab() {
 
-        $chapter=sprintf(_("Blink Download"));
+        $chapter=sprintf(_("Preconfigured SIP Client"));
         $this->showChapter($chapter);
 
         print "
         <tr class=odd>
         <td colspan=2>";
-
-        printf (_("Download <a href=http://icanblink.com target=blink>Blink</a>, a state of the art easy to use SIP client, preconfigured with your account by clicking on the link below:"));
-        print "<p>";
 
         $this->render_download_applet();
 
@@ -2505,7 +2502,14 @@ class SipSettings {
     }
 
     function render_download_applet() {
-        $_account=array('sip_address'=>$this->account, 'password'=>$this->password, 'email' => $this->email);
+        $_passport = $this->generateCertificate();
+
+        $_account=array('sip_address' => $this->account,
+                        'password'    => $this->password,
+                        'email'       => $this->email,
+                        'passport'    => $_passport
+                        );
+
         $Enrollment = new Enrollment();
  		$Enrollment->render_download_applet($_account);
     }
@@ -8500,28 +8504,62 @@ class Enrollment {
         	$email = $_account['sip_address'];
         }
 
-		$passport=$this->generateCertificate($_account['sip_address'],$email,$_account['password']);
+        $_account['outbound_proxy'] = $this->enrollment['outbound_proxy'];
+        $_account['xcap_root']      = $this->enrollment['xcap_root'];
+        $_account['msrp_relay']     = $this->enrollment['msrp_relay'];
+        $_account['settings_url']   = $this->enrollment['settings_url'];
 
-        $applet_code=sprintf ("
-        <APPLET CODE=\"com.agprojects.apps.browserinfo.BrowserInfoCapture\" ARCHIVE=\"download_blink.jar\" NAME=\"BrowserInfoCapture\" HEIGHT=\"28\" WIDTH=\"100\">
-        <PARAM name=\"label_text\" value=\"Download Blink\"></PARAM>
-        <PARAM name=\"download_url\" value=\"%s&operator=%s&sip_address=%s&password=%s&outbound_proxy=%s&xcap_root=%s&msrp_relay=%s&settings_url=%s&\"></PARAM>
-        <PARAM name=\"hash_elements\" value=\"false\"></PARAM>",
-        $this->enrollment['download_url'],
-        urlencode($this->enrollment['operator']),
-        urlencode($_account['sip_address']),
-        urlencode($_account['password']),
-        urlencode($this->enrollment['outbound_proxy']),
-        urlencode($this->enrollment['xcap_root']),
-        urlencode($this->enrollment['msrp_relay']),
-        urlencode($this->enrollment['settings_url'])
+        print "<table border=0>";
+
+        print "<tr><td>";
+
+        printf (_("Download <a href=http://icanblink.com target=blink>Blink</a> preconfigured with your SIP account:"));
+        print "</td></tr>";
+        print "<tr><td>";
+
+        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkDownload' archive='blink_download.jar' name='BlinkDownload' height='35' width='250' align='left'>
+        <param name='label_text' value='Download Blink'>
+        <param name='click_label_text' value='Downloading...'>
+        <param name='download_url' value='https://blink.sipthor.net/download.phtml?download'>
+        <param name='file_name' value=''>
+        <param name='file_content' value='%s'>
+        </applet>",
+        urlencode(json_encode($_account))
         );
 
-        print $applet_code;
+        print "</td></tr>";
+        print "<tr><td>";
+
+        printf (_("If you have already installed Blink, you can configure it to use your SIP account:"));
+
+        print "</td></tr>";
+        print "<tr><td>";
+
+        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar' name='BlinkConfigure' height='35' width='250' align='left'>
+        <param name='label_text' value='Configure Blink with this account'> 
+        <param name='click_label_text' value='Configuration Saved'>
+        <param name='download_url' value=''> 
+        <param name='file_name' value=''> 
+        <param name='file_content' value='%s'> 
+        </applet>",
+        urlencode(json_encode($_account))
+        );
+
+        print "</td></tr>";
+        print "</table>";
+
+        print "<p>";
+        printf ("Notes. ");
+        print _("Java runtime environment must be activated in the browser. ");
+        print _("When prompted, you must agree to run the applet on your computer. The applet runs only once, the browser must be reload to execute the applet again. ");
 
     }
 
     function download_session () {
+        // this function has been deprecated, the session is now stored in the client computer
+
+        return true;
+
         // save SIP account information provided during download session
 
         $this->db = new DB_CDRTool();
@@ -8591,6 +8629,9 @@ class Enrollment {
     }
 
     function enrollment_session () {
+        return false;
+        // this function has been deprecated, the session is now stored in the client computer
+
         // provide the SIP account provided during download phase
 
         $_install_id=$_REQUEST['install_id'];
