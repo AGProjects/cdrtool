@@ -8517,13 +8517,14 @@ class Enrollment {
         print "</td></tr>";
         print "<tr><td>";
 
-        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkDownload' archive='blink_download.jar' name='BlinkDownload' height='35' width='250' align='left'>
+        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkDownload' archive='blink_download.jar?version=%s' name='BlinkDownload' height='35' width='250' align='left'>
         <param name='label_text' value='Download Blink'>
         <param name='click_label_text' value='Downloading...'>
         <param name='download_url' value='https://blink.sipthor.net/download.phtml?download'>
         <param name='file_name' value=''>
         <param name='file_content' value='%s'>
         </applet>",
+        rand(),
         urlencode(json_encode($_account))
         );
 
@@ -8535,13 +8536,14 @@ class Enrollment {
         print "</td></tr>";
         print "<tr><td>";
 
-        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar' name='BlinkConfigure' height='35' width='250' align='left'>
+        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkConfigure' height='35' width='250' align='left'>
         <param name='label_text' value='Configure Blink with this account'> 
         <param name='click_label_text' value='Please restart Blink now!'>
         <param name='download_url' value=''> 
         <param name='file_name' value=''> 
         <param name='file_content' value='%s'> 
         </applet>",
+        rand(),
         urlencode(json_encode($_account))
         );
 
