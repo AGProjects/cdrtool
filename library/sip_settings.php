@@ -8517,7 +8517,7 @@ class Enrollment {
         print "</td></tr>";
         print "<tr><td>";
 
-        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkDownload' archive='blink_download.jar?version=%s' name='BlinkDownload' height='35' width='250' align='left'>
+        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkDownload' height='35' width='250' align='left'>
         <param name='label_text' value='Download Blink'>
         <param name='click_label_text' value='Downloading...'>
         <param name='download_url' value='https://blink.sipthor.net/download.phtml?download'>
@@ -8552,8 +8552,7 @@ class Enrollment {
 
         print "<p>";
         printf ("Notes. ");
-        print _("Java must be activated in the browser. ");
-        print _("When prompted, agree to run the applet on your computer. ");
+        print _("Java Runtime Environment (JRE) must be activated in the web browser. ");
 
     }
 
