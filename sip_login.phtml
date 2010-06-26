@@ -43,9 +43,15 @@ print "<td>";
   print _("SIP address");
   print ":</td>";
 ?>
-  <td><input type="text" name="username"  
-	value="<?php if (isset($this->auth["uname"])) print $this->auth["uname"] ?>" 
-	size=35 maxlength=50>
+  <td><input type="text" name="username"
+        value="<?php
+    if (isset($this->auth["uname"])) {
+        print $this->auth["uname"];
+    } else if (isset($_REQUEST['username'])) {
+       print $_REQUEST['username'];
+    }
+    ?>"
+        size=35 maxlength=50>
 <?
 print "
  </td>
