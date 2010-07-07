@@ -5788,8 +5788,14 @@ class OpenSIPSQuota {
             return false;
         }
 
+        if (!count($reset_quota_for)) {
+            printf("Deblocking all SIP accounts blocked by quota\n");
+        } else {
+            printf("Deblocking %d SIP accounts blocked by quota\n",count($reset_quota_for));
+        }
+
         if ($this->enableThor) {
-            $query=sprintf("select username,domain from sip_accounts where (1=1) ");
+            $query=sprintf("select username, domain from sip_accounts where (1=1) ");
 
             if (count($reset_quota_for)) {
                 $k=0;
@@ -5817,12 +5823,17 @@ class OpenSIPSQuota {
                     $blockedAccounts[]=$this->AccountsDB->f('account');
                 }
 
-                if ($i%30000 == 0) {
+                if ($i%5000 == 0) {
                     print "$i accounts checked for deblocking\n";
                     flush();
                 }
-
             }
+
+            if ($i) {
+                print "$i accounts checked for deblocking\n";
+                flush();
+            }
+
 
         } else {
              $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",$this->quotaGroup);
@@ -6446,15 +6457,15 @@ class OpenSIPSQuota {
             return false;
         }
 
-         if ($this->db->num_rows()) {
+		$reset_quota_for= array();
+
+        if ($this->db->num_rows()) {
             $this->db->next_record();
             $reset_quota_for = json_decode($this->db->f('value'));
         }
 
-        if ($reset_quota_for) {
-            $this->deblockAccounts($reset_quota_for);
-        }
-    
+        $this->deblockAccounts($reset_quota_for);
+
         $this->deleteQuotaUsageFromCache($reset_quota_for);
 
         $this->initQuotaUsageFromDatabase('',$reset_quota_for);
