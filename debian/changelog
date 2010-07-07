@@ -2,6 +2,7 @@ cdrtool (8.0.0) unstable; urgency=low
 
   [ Rating Engine ]
 
+  * Fixed deblocking of users blocked by quota system
   * Apply the database changes from setup/mysql/alter_tables.mysql
   * Added support to debit balance for SMS
   * Separate calculate functions for Audio and SMS
@@ -38,7 +39,7 @@ cdrtool (8.0.0) unstable; urgency=low
   * Refactor rating engine to use Region to group destinations
   * Update Blink logo
 
- -- Adrian Georgescu <ag@ag-projects.com>  Tue, 01 Jun 2010 20:18:14 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 07 Jul 2010 10:19:12 +0200
 
 cdrtool (7.1.1) unstable; urgency=low
 
