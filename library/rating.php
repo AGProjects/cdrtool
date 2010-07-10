@@ -5795,7 +5795,7 @@ class OpenSIPSQuota {
         }
 
         if ($this->enableThor) {
-            $query=sprintf("select username, domain from sip_accounts where (1=1) ");
+            $query=sprintf("select username, domain, profile from sip_accounts where (1=1) ");
 
             if (count($reset_quota_for)) {
                 $k=0;
@@ -5815,12 +5815,12 @@ class OpenSIPSQuota {
     
             while ($this->AccountsDB->next_record()) {
                 $i++;
-    
+
                 $_account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
                 $_profile=json_decode(trim($this->AccountsDB->f('profile')));
 
                 if (in_array('quota',$_profile->groups)) {
-                    $blockedAccounts[]=$this->AccountsDB->f('account');
+                    $blockedAccounts[]=$_account;
                 }
 
                 if ($i%5000 == 0) {
@@ -5833,7 +5833,6 @@ class OpenSIPSQuota {
                 print "$i accounts checked for deblocking\n";
                 flush();
             }
-
 
         } else {
              $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",$this->quotaGroup);
