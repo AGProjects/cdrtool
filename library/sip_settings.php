@@ -3437,6 +3437,7 @@ class SipSettings {
                 $this->SipPort->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain), "quota");
             }
 
+			$rpid=trim($rpid);
             if (strcmp($rpid,$this->rpid) != 0) {
                 dprint ("change the rpid");
                 $result->rpid=$rpid;
