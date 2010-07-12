@@ -2496,7 +2496,6 @@ class SipSettings {
 
         print "
         </td>
-        </td>
         </tr>
         ";
     }
