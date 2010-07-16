@@ -8314,6 +8314,9 @@ class Enrollment {
         	$sip_properties[]=array('name'=> 'timezone', 'value' => $timezone);
         }
 
+        if (strlen($user_agent)) {
+        	$sip_properties[]=array('name'=> 'user_agent', 'value' => trim(urldecode($user_agent)));
+        }
 
         $sipAccount = array('account'   => $sip_address,
                             'fullname'  => $_REQUEST['display_name'],
