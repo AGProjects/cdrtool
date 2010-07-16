@@ -8062,7 +8062,6 @@ class Enrollment {
 	var $create_customer            = true;
     var $timezones                  = array();
     var $default_timezone           = 'Europe/Amsterdam';
-    var $reserved_keywords          = array ('operator','install_id');
 
     function Enrollment() {
 
