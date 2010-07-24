@@ -155,6 +155,7 @@ class SipSettings {
                          );
 
 	var $pstn_termination_price_page = 'sip_rates.html';
+    var $append_domain_to_xcap_root = false;
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
 
@@ -838,7 +839,9 @@ class SipSettings {
 
         $this->getMobileNumber();
 
-        $this->xcap_root     = rtrim($this->xcap_root,'/')."@".$this->domain."/";
+        if ($this->append_domain_to_xcap_root) {
+        	$this->xcap_root     = rtrim($this->xcap_root,'/')."@".$this->domain."/";
+        }
 
         $this->result    = $result;
 
@@ -1554,7 +1557,9 @@ class SipSettings {
 
         if ($this->resellerProperties['xcap_root']) {
             $this->xcap_root      = rtrim($this->resellerProperties['xcap_root'],'/');
-              $this->xcap_root     .= "@".$this->domain."/";
+            if ($this->append_domain_to_xcap_root) {
+            	$this->xcap_root     .= "@".$this->domain."/";
+            }
         }
 
         if ($this->resellerProperties['cdrtool_address']) {
