@@ -8172,7 +8172,7 @@ class Enrollment {
 
         if (!$this->sipEngine) {
             $return=array('success'       => false,
-                          'error_message' => 'Error: Missing sip engine'
+                          'error_message' => 'Missing sip engine'
                           );
             print (json_encode($return));
             return false;
@@ -8180,7 +8180,7 @@ class Enrollment {
 
         if (!$this->sipDomain) {
             $return=array('success'       => false,
-                          'error_message' => 'Error: Missing sip domain'
+                          'error_message' => 'Missing sip domain'
                           );
             print (json_encode($return));
             return false;
@@ -8201,7 +8201,8 @@ class Enrollment {
 
         if (!$_REQUEST['email']) {
             $return=array('success'       => false,
-                          'error_message' => 'Error: Missing email address'
+                          'error'         => 'value_error',
+                          'error_message' => 'Missing email address'
                           );
             print (json_encode($return));
             return false;
@@ -8209,7 +8210,8 @@ class Enrollment {
 
         if (!$this->checkEmail($_REQUEST['email'])) {
             $return=array('success'       => false,
-                          'error_message' => 'Error: Invalid email address'
+                          'error'         => 'value_error',
+                          'error_message' => 'Invalid email address'
                           );
             print (json_encode($return));
             return false;
@@ -8217,7 +8219,8 @@ class Enrollment {
         
         if (!$_REQUEST['password']) {
             $return=array('success'       => false,
-                          'error_message' => 'Error: Missing password'
+                          'error'         => 'value_error',
+                          'error_message' => 'Missing password'
                           );
             print (json_encode($return));
             return false;
@@ -8225,29 +8228,25 @@ class Enrollment {
 
         if (!$_REQUEST['display_name']) {
             $return=array('success'       => false,
-                          'error_message' => 'Error: Missing display name'
+                          'error'         => 'value_error',
+                          'error_message' => 'Missing display name'
                           );
             print (json_encode($return));
             return false;
         }
 
-        if (!preg_match("/^[1-9a-z][0-9a-z_.-]{2,64}[0-9a-z]$/",$_REQUEST['username'])) {
+		$username=strtolower(trim($_REQUEST['username']));
+
+        if (!preg_match("/^[1-9a-z][0-9a-z_.-]{2,64}[0-9a-z]$/",$username)) {
             $return=array('success'       => false,
-                          'error_message' => 'Error: The Username must contain at least 4 lowercase alpha-numeric . _ or - characters and must start and end with a positive digit or letter'
+                          'error'         => 'value_error',
+                          'error_message' => 'The username must contain at least 4 lowercase alpha-numeric . _ or - characters and must start and end with a positive digit or letter'
                           );
             print (json_encode($return));
             return false;
         }
 
-        $sip_address=strtolower($_REQUEST['username']).'@'.$this->sipDomain;
-
-		if (!$this->checkEmail($sip_address)) {
-            $return=array('success'       => false,
-                          'error_message' => 'Username must contain [0-9a-z_-.] characters only'
-                          );
-            print (json_encode($return));
-            return false;
-        }
+        $sip_address=$username.'@'.$this->sipDomain;
 
         if ($this->create_customer) {
         	// create owner id
@@ -8295,14 +8294,15 @@ class Enrollment {
     
             while ($j < 3) {
     
-                $username=strtolower($_REQUEST['username']).RandomString(4);
+                $username=$username.RandomString(4);
     
                 $customer['username']=$username;
     
                 if (!$result = $this->customerRecords->addRecord($customer)) {
                     if ($this->customerRecords->SoapEngine->exception->errorcode != "5001") {
                         $return=array('success'       => false,
-                                      'error_message' => 'failed to create non-duplicate customer'
+                        	          'error'         => 'internal_error',
+                                      'error_message' => 'failed to create non-duplicate customer entry'
                                       );
                         print (json_encode($return));
                         return false;
@@ -8324,6 +8324,7 @@ class Enrollment {
                 }
 
                 $return=array('success'       => false,
+                              'error'         => 'internal_error',
                               'error_message' => $_msg
                               );
                 print (json_encode($return));
@@ -8334,6 +8335,7 @@ class Enrollment {
     
             if (!$owner) {
                 $return=array('success'       => false,
+                              'error'         => 'internal_error',
                               'error_message' => 'failed to obtain a new owner id'
                               );
                 print (json_encode($return));
@@ -8376,20 +8378,32 @@ class Enrollment {
 
         if (!$result = $this->sipRecords->addRecord($sipAccount)) {
             if ($this->sipRecords->SoapEngine->exception->errorstring) {
-                $_msg="\n\n".$this->sipRecords->SoapEngine->exception->errorstring;
+
                 if ($this->sipRecords->SoapEngine->exception->errorcode == 1011) {
-                    $_msg.= "\n\nChose another username and try again";
+                    $return=array('success'       => false,
+                                  'error'         => 'user_exists',
+                                  'error_message' => $this->sipRecords->SoapEngine->exception->errorstring
+                                  );
+                } else {
+                    $return=array('success'       => false,
+                                  'error'         => 'internal_error',
+                                  'error_message' => $this->sipRecords->SoapEngine->exception->errorstring
+                                  );
                 }
+
             } else {
                 $_msg='failed to create sip account';
+                $return=array('success'       => false,
+                              'error'         => 'internal_error',
+                              'error_message' => $_msg
+                              );
             }
 
-            $return=array('success'       => false,
-                          'error_message' => $_msg
-                          );
+
             print (json_encode($return));
 
             $_dictionary=array('customer'=>intval($owner),
+                               'error'   => 'internal_error',
                                'confirm' => true
                                );
 
@@ -8402,6 +8416,7 @@ class Enrollment {
 
         	if (!$passport = $this->generateCertificate($sip_address,$_REQUEST['email'],$_REQUEST['password'])) {
                 $return=array('success'       => false,
+                              'error'         => 'internal_error',
                               'error_message' => 'failed to generate certificate'
                               );
                 print (json_encode($return));
