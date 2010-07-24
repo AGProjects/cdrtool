@@ -107,7 +107,9 @@ class SipSettings {
                                            'timeout',
                                            'owner',
                                            'mobile_number',
-                                           'extra_groups'
+                                           'extra_groups',
+                                           'show_presence_tab',
+                                           'show_barring_tab'
                                            );
 
     var $presence_statuses   = array('allow','deny','confirm');
@@ -342,13 +344,13 @@ class SipSettings {
 
 
         if (in_array("free-pstn",$this->groups)) {
-            if ($this->show_barring_tab) {
+            if ($this->Preferences['show_barring_tab']) {
             	$this->tabs['barring']=_("Barring");
             }
         }
 
-        if ($this->presence_engine) {
-            if ($this->show_presence_tab) {
+        if ($this->presence_engine && $this->show_presence_tab) {
+            if ($this->Preferences['show_presence_tab']) {
             	$this->tabs['presence']=_("Presence");
             }
         }
@@ -2205,9 +2207,7 @@ class SipSettings {
 
     function showIdentityTab() {
         $this->getEnumMappings();
-        if (!$this->isEmbedded()) {
-        	$this->getAliases();
-        }
+        $this->getAliases();
 
         $chapter=sprintf(_("SIP Account"));
         $this->showChapter($chapter);
@@ -2320,8 +2320,6 @@ class SipSettings {
         }
 
 
-        if (!$this->isEmbedded()) {
-
             $chapter=sprintf(_("Aliases"));
             $this->showChapter($chapter);
     
@@ -2396,6 +2394,8 @@ class SipSettings {
             print "
             </form>
             ";
+
+        if (!$this->isEmbedded()) {
 
             if ($this->enrollment_url) {
                 include("/etc/cdrtool/enrollment/config.ini");
@@ -2481,6 +2481,7 @@ class SipSettings {
         print "
         </form>
         ";
+
     }
 
     function showDownloadTab() {
@@ -2613,7 +2614,6 @@ class SipSettings {
         print "
         </select>
         ";
-
 
         print "
         <tr class=even>
@@ -2939,6 +2939,39 @@ class SipSettings {
         </tr>
         ";
 
+        print "
+        <tr class=odd>
+        <td>";
+        print _("Tabs");
+        print "
+        </td>
+        <td>";
+
+		if ($this->show_presence_tab) {
+            if ($this->Preferences['show_presence_tab']){
+                $check_show_presence_tab="checked";
+            } else {
+                $check_show_presence_tab="";
+            }
+            printf ("<input type=checkbox %s value=1 name='show_presence_tab'>%s\n",$check_show_presence_tab,_("Presence"));
+        }
+
+        if (in_array("free-pstn",$this->groups)) {
+
+            if ($this->Preferences['show_barring_tab']){
+                $check_show_barring_tab="checked";
+            } else {
+                $check_show_barring_tab="";
+            }
+    
+            printf ("<input type=checkbox %s value=1 name='show_barring_tab'>%s\n",$check_show_barring_tab,_("Barring"));
+        }
+
+        print "
+        </td>
+        </tr>
+        ";
+
         $this->showVoicemail();
 
         $this->showBillingProfiles();
@@ -3124,7 +3157,7 @@ class SipSettings {
     }
 
     function showOwner() {
-        if ($this->login_type == 'subscriber') return true;
+        //if ($this->login_type == 'subscriber') return true;
 
         if ($this->pstn_changes_allowed) {
             print "
@@ -3599,6 +3632,16 @@ class SipSettings {
             }
 
             $this->setPreference("language",$language);
+            $this->somethingChanged=1;
+        }
+
+        if ($show_presence_tab != $this->Preferences['show_presence_tab'] ) {
+            $this->setPreference("show_presence_tab",$show_presence_tab);
+            $this->somethingChanged=1;
+        }
+
+        if ($show_barring_tab != $this->Preferences['show_barring_tab'] ) {
+            $this->setPreference("show_barring_tab",$show_barring_tab);
             $this->somethingChanged=1;
         }
 
