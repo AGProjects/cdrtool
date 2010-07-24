@@ -3450,6 +3450,7 @@ class SipSettings {
         } else if ($this->voicemail['Account'] && !$voicemail) {
             if ($this->deleteVoicemail()) {
                 $this->voicemail['Account']="";
+                $this->removeVoicemailDiversions();
             }
         }
 
@@ -3995,6 +3996,43 @@ class SipSettings {
                 printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             }
+        }
+    }
+
+    function removeVoicemailDiversions() {
+        dprint ("removeVoicemailDiversions()");
+
+        $this->getDiversions();
+
+		$diversions=array();
+
+        foreach (array_keys($this->diversionType) as $key) {
+            if ($this->diversions[$key]=="<voice-mailbox>" || preg_match("/voicemail_server/",$this->diversions[$key])) {
+                $diversions_have_changed=true;
+            } else {
+                if ($this->diversions[$key]) {
+            		$diversions[$key]=$this->diversions[$key];
+                }
+            }
+        }
+
+        if (!count($diversions)) {
+        	$diversions['nocondition']='empty';
+        }
+
+        if ($diversions_have_changed) {
+            $this->SipPort->addHeader($this->SoapAuth);
+            $result     = $this->SipPort->setCallDiversions($this->sipId,$diversions);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                return false;
+            }
+        } else {
+            return true;
         }
     }
 
