@@ -2319,81 +2319,81 @@ class SipSettings {
             ";
         }
 
-
-            $chapter=sprintf(_("Aliases"));
-            $this->showChapter($chapter);
+ 
+        $chapter=sprintf(_("Aliases"));
+        $this->showChapter($chapter);
+ 
+        print "
+        <tr>
+        <td colspan=2>";
+        printf (_("You may create new aliases under the same domain"));
+        printf ("
+        </td>
+        </tr>
+        ");
+ 
+        $t=0;
+ 
+        print "
+        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        ";
+ 
+        foreach($this->aliases as $a)  {
+            $t++;
+ 
+            $rr=floor($t/2);
+            $mod=$t-$rr*2;
     
-            print "
-            <tr>
-            <td colspan=2>";
-            printf (_("You may create new aliases under the same domain"));
-            printf ("
-            </td>
-            </tr>
-            ");
-    
-            $t=0;
-    
-            print "
-            <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
-            ";
-    
-            foreach($this->aliases as $a)  {
-                $t++;
-    
-                $rr=floor($t/2);
-                $mod=$t-$rr*2;
-        
-                if ($mod ==0) {
-                    $_class='odd';
-                } else {
-                    $_class='even';
-                }
-    
-                print "
-                <tr class=$_class>
-    
-                  <td>";
-                    print _("SIP Alias");
-                    print "
-                  </td>
-                  <td> <input type=text size=35 name=aliases[] value=\"$a\"></td>
-                </tr>
-                ";
+            if ($mod ==0) {
+                $_class='odd';
+            } else {
+                $_class='even';
             }
-    
+ 
             print "
-            <tr>
+            <tr class=$_class>
+ 
               <td>";
-                print _("New SIP Alias");
+                print _("SIP Alias");
                 print "
               </td>
-              <td> <input type=text size=35 name=aliases[]></td>
+              <td> <input type=text size=35 name=aliases[] value=\"$a\"></td>
             </tr>
             ";
-    
+        }
+ 
+        print "
+        <tr>
+          <td>";
+            print _("New SIP Alias");
             print "
-            <tr>
-              <td align=left>
-                <input type=hidden name=action value=\"set aliases\">
-            ";
-            print "
-            <input type=submit value=\"";
-            print _("Save aliases");
-            print "\"
-                   onClick=saveHandler(this)>
-            ";
-            print "
-              </td>
-              <td align=right>
-              </td>
-            </tr>
-            ";
-    
-            print $this->hiddenElements;
-            print "
-            </form>
-            ";
+          </td>
+          <td> <input type=text size=35 name=aliases[]></td>
+        </tr>
+        ";
+ 
+        print "
+        <tr>
+          <td align=left>
+            <input type=hidden name=action value=\"set aliases\">
+        ";
+        print "
+        <input type=submit value=\"";
+        print _("Save aliases");
+        print "\"
+               onClick=saveHandler(this)>
+        ";
+        print "
+          </td>
+          <td align=right>
+          </td>
+        </tr>
+        ";
+ 
+        print $this->hiddenElements;
+        print "
+        </form>
+        ";
 
         if (!$this->isEmbedded()) {
 
