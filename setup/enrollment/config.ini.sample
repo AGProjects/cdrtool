@@ -10,6 +10,7 @@ $enrollment=array('ca_crt'                 => "/etc/cdrtool/enrollment/root_ca.c
 		  'ca_conf'                => "/etc/cdrtool/enrollment/root_ca.conf"
                   'sip_engine'             => 'sipthor',
                   'reseller'               => '0',
+                  'nonce_key'              => '',
                   'sip_domain'             => 'example.com',
 	          'sip_class'              => 'SipSettings',
                   'countryName'            => 'N/A',

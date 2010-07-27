@@ -6367,7 +6367,7 @@ class SipSettings {
         $alf=array("1","2","3","4","5","6","7","8","9");
         $i=0;
         while($i < $len) {
-            srand((double)microtime()*1000000);
+            srand((double)microtime(true)*1000000);
             $randval = rand(0,8);
             $string="$string"."$alf[$randval]";
             $i++;
@@ -7588,16 +7588,27 @@ function getSipAccountFromX509Certificate() {
 
 function getSipAccountFromHTTPDigest () {
 
-    if ($_REQUEST['realm']) {
-    	$realm=$_REQUEST['realm'];
-    } else {
-		$realm = 'SIP_settings';
+
+
+    require("/etc/cdrtool/enrollment/config.ini");
+ 
+    if (!is_array($enrollment) || !strlen($enrollment['nonce_key'])) {
+        syslog(LOG_NOTICE, 'Missing nonce in enrollment settings');
+        die('Missing enrollment settings');
+        return false;
     }
-    
+
+    // http://static.springsource.org/spring-security/site/docs/2.0.x/reference/digest.html
+	$realm = 'SIP_settings';
+    $_id   = microtime(true)+ 300;  // expires 5 minutes in the future
+    $_key  = $enrollment['nonce_key'];
+    $nonce = base64_encode($_id.":".md5($_id.":".$_key));
+
     if (empty($_SERVER['PHP_AUTH_DIGEST'])) {
         header('HTTP/1.1 401 Unauthorized');
+
         header('WWW-Authenticate: Digest realm="'.$realm.
-               '",qop="auth",nonce="'.uniqid().'",opaque="'.md5($realm).'"');
+               '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
     
         die('You have canceled login');
     }
@@ -7617,7 +7628,7 @@ function getSipAccountFromHTTPDigest () {
     if (count($a) !=2 ) {
         header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
-               '",qop="auth",nonce="'.uniqid().'",opaque="'.md5($realm).'"');
+               '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
     
         die("Invalid username, must be in the format user@domain");
     }
@@ -7625,7 +7636,7 @@ function getSipAccountFromHTTPDigest () {
     if (!strlen($domain)) {
     	header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
-               '",qop="auth",nonce="'.uniqid().'",opaque="'.md5($realm).'"');
+               '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
     
         die("Invalid domain name");
     }
@@ -7670,7 +7681,7 @@ function getSipAccountFromHTTPDigest () {
         $error_code = $result->getCode();
     	header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
-               '",qop="auth",nonce="'.uniqid().'",opaque="'.md5($realm).'"');
+               '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
         die('Wrong Credentials!');
     }
 
@@ -7681,9 +7692,30 @@ function getSipAccountFromHTTPDigest () {
     if ($data['response'] != $valid_response) {
     	header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
-               '",qop="auth",nonce="'.uniqid().'",opaque="'.md5($realm).'"');
+               '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
         die('Wrong Credentials!');
+    }
+    // check nonce
+
+	$client_nonce_els=explode(":",base64_decode($data['nonce']));
+
+	if (md5($client_nonce_els[0].":".$_key) != $client_nonce_els[1]) {
+    	header('HTTP/1.1 401 Unauthorized');
+        header('WWW-Authenticate: Digest realm="'.$realm.
+               '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
+
+        die('Wrong nonce!');
+    }
+
+
+	if (microtime(true) > $client_nonce_els[0]) {
+        // nonce is stale
+        header('HTTP/1.1 401 Unauthorized');
+        header('WWW-Authenticate: Digest realm="'.$realm.
+               '",qop="auth",nonce="'.$nonce.'",stale=true,opaque="'.md5($realm).'"');
+
+        die('Nonce has expired!');
     }
 
     $credentials['customer'] = $result->customer;
