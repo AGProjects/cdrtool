@@ -2942,10 +2942,10 @@ class RatingTables {
             $subscriber      = trim($p[4]);
             $dest_id         = trim($p[5]);
             $dest_name       = trim($p[6]);
-            $increment       = intval($p[7]);
-            $min_duration    = intval($p[8]);
-            $max_duration    = intval($p[9]);
-            $max_price       = trim($p[10]);
+            $increment       = intval($p[8]);
+            $min_duration    = intval($p[9]);
+            $max_duration    = intval($p[10]);
+            $max_price       = trim($p[11]);
 
             if ($reseller) {
             	$reseller_id    = intval($reseller);
