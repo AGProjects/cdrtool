@@ -787,6 +787,8 @@ class SipSettings {
         if (!is_array($result->properties))   $result->properties=array();
         if (!is_array($result->groups))       $result->groups=array();
 
+        if (!$result->quota) $result->quota=0;
+
         foreach ($result->properties as $_property) {
             $this->Preferences[$_property->name]=$_property->value;
         }
