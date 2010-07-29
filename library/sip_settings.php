@@ -7604,8 +7604,16 @@ function getSipAccountFromHTTPDigest () {
         return false;
     }
 
+    if ($_REQUEST['realm']) {
+        // required by Blink cocoa
+        $realm=$_REQUEST['realm'];
+    } else {
+    	$realm = 'SIP_settings';
+    }
+
+    // security implemented based on
     // http://static.springsource.org/spring-security/site/docs/2.0.x/reference/digest.html
-	$realm = 'SIP_settings';
+
     $_id   = microtime(true)+ 300;  // expires 5 minutes in the future
     $_key  = $enrollment['nonce_key'];
     $nonce = base64_encode($_id.":".md5($_id.":".$_key));
