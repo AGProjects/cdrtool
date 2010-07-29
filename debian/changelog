@@ -1,3 +1,22 @@
+cdrtool (8.0.1) unstable; urgency=low
+
+  [ Rating Engine ]
+
+  * Fixed import of destinations csv file
+
+  [ NGNPro Client ]
+
+  * Added back realm used for digest authentication from Blink cocoa
+  * Do not print a link to SIP Thor when page is embedded in a SIP client
+  * Set quota to zero earlier when account is fetched
+  * Added security for the digest algorith used for SIP settings page
+  * Added settings to append domain to xcap_root
+  * Removed diversions to voicemail after vm account has been deleted
+  * Improved return of errors in json delivered back to enrollment clients
+  * Added control to toggle display of some abs in sip settings page
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 29 Jul 2010 18:02:36 +0200
+
 cdrtool (8.0.0) unstable; urgency=low
 
   [ Rating Engine ]
