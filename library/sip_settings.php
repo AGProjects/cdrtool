@@ -1246,10 +1246,14 @@ class SipSettings {
         } else {
             if ($this->enable_thor) {
                 print " ";
-                //print _("Home Node");
-                print "<a href=\"http://www.ag-projects.com/SIPThor.html\" target=_new>";
-                print _("SIP Thor Node");
-                print "</a>";
+                if ($this->isEmbedded()) {
+                    print _("Home Node");
+                } else {
+                    print "<a href=\"http://www.ag-projects.com/SIPThor.html\" target=_new>";
+                    print _("SIP Thor Node");
+                    print "</a>";
+                }
+
                 if ($this->homeNode=getSipThorHomeNode($this->account,$this->sip_proxy)) {
                     printf (" <font color=green>%s</font>",$this->homeNode);
                 } else {
