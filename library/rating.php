@@ -5571,7 +5571,7 @@ class RatingTables {
     				} else {
                         $i=1;
                         while ($i<=4) {
-                            if ($m[$i] < 1 || $m[$i] > 255) {
+                            if ($m[$i] < 0 || $m[$i] > 255) {
                         		printf ("Error: value '%s' for field '%s' must be of a valid IP address\n",$value,$name_print);
         						return false;
                             }
