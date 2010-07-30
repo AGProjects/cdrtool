@@ -2941,7 +2941,8 @@ class RatingTables {
             $domain          = trim($p[3]);
             $subscriber      = trim($p[4]);
             $dest_id         = trim($p[5]);
-            $dest_name       = trim($p[6]);
+            $region          = trim($p[6]);
+            $dest_name       = trim($p[7]);
             $increment       = intval($p[8]);
             $min_duration    = intval($p[9]);
             $max_duration    = intval($p[10]);
@@ -2967,12 +2968,14 @@ class RatingTables {
                 domain,
                 subscriber,
                 dest_id,
+                region,
                 dest_name,
                 increment,
                 min_duration,
                 max_duration,
                 max_price
                 ) values (
+                '%s',
                 '%s',
                 '%s',
                 '%s',
@@ -2989,6 +2992,7 @@ class RatingTables {
                 addslashes($domain),
                 addslashes($subscriber),
                 addslashes($dest_id),
+                addslashes($region),
                 addslashes($dest_name),
                 addslashes($increment),
                 addslashes($min_duration),
@@ -3055,6 +3059,7 @@ class RatingTables {
 
                 if ($this->db->num_rows()) {
                     $query=sprintf("update destinations set
+                    region             = '%s',
                     dest_name          = '%s',
                     increment          = '%s',
                     min_duration       = '%s',
@@ -3066,6 +3071,7 @@ class RatingTables {
                     and subscriber     = '%s'
                     and dest_id        = '%s'
                     ",
+                    addslashes($region),
                     addslashes($dest_name),
                     addslashes($increment),
                     addslashes($min_duration),
@@ -3095,12 +3101,14 @@ class RatingTables {
                     domain,
                     subscriber,
                     dest_id,
+                    region,
                     dest_name,
                     increment,
                     min_duration,
                     max_duration,
                     max_price
                     ) values (
+                    '%s',
                     '%s',
                     '%s',
                     '%s',
@@ -3117,6 +3125,7 @@ class RatingTables {
                     addslashes($domain),
                     addslashes($subscriber),
                     addslashes($dest_id),
+                    addslashes($region),
                     addslashes($dest_name),
                     addslashes($increment),
                     addslashes($min_duration),
