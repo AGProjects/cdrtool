@@ -2518,7 +2518,8 @@ class SipSettings {
         $_account=array('sip_address' => $this->account,
                         'password'    => $this->password,
                         'email'       => $this->email,
-                        'passport'    => $_passport
+                        'passport'    => $_passport,
+                        'download_url'=> $this->blink_download_url
                         );
 
         $Enrollment = new Enrollment();
@@ -8642,6 +8643,15 @@ class Enrollment {
         	$email = $_account['sip_address'];
         }
 
+        if ($_account['download_url']) {
+            $blink_download_url=$_account['download_url'];
+        } else if ($this->enrollment['download_url']) {
+            $blink_download_url=$this->enrollment['download_url'];
+        } else {
+            print "No download URL defined";
+            return false;
+        }
+
         $_account['outbound_proxy'] = $this->enrollment['outbound_proxy'];
         $_account['xcap_root']      = $this->enrollment['xcap_root'];
         $_account['msrp_relay']     = $this->enrollment['msrp_relay'];
@@ -8658,11 +8668,12 @@ class Enrollment {
         printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkDownload' height='35' width='250' align='left'>
         <param name='label_text' value='Download Blink'>
         <param name='click_label_text' value='Downloading...'>
-        <param name='download_url' value='https://blink.sipthor.net/download.phtml?download'>
+        <param name='download_url' value='%s'>
         <param name='file_name' value=''>
         <param name='file_content' value='%s'>
         </applet>",
         rand(),
+        $blink_download_url,
         urlencode(json_encode($_account))
         );
 
@@ -8690,7 +8701,7 @@ class Enrollment {
 
         print "<p>";
         printf ("Notes. ");
-        print _("Java Runtime Environment (JRE) must be activated in the web browser. ");
+        print _("<a href='http://www.java.com/en/download/manual.jsp'>Java Runtime Environment</a> (JRE) must be activated in the web browser. ");
 
     }
 
