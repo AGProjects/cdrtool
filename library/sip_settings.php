@@ -59,7 +59,7 @@ class SipSettings {
 	var $show_barring_tab   = true;
 	var $show_presence_tab  = false;
     var $show_payments_tab  = false;
-    var $show_download_tab  = false;
+    var $show_download_tab  = true;
     var $show_directory     = false;
 
     var $first_tab          = 'calls';
