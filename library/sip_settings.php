@@ -1,6 +1,6 @@
 <?
 /*
-    Copyright (c) 2007-2009 AG Projects
+    Copyright (c) 2007-2010 AG Projects
     http://ag-projects.com
     Author Adrian Georgescu
     
@@ -35,6 +35,7 @@ class SipSettings {
     var $support_email             = "Support <support@example.com>";
     var $billing_email             = "Billing <billing@example.com>";
     var $sip_settings_page         = "https://cdrtool.example.com/sip_settings.phtml";
+    var $blink_settings_page       = "https://cdrtool.example.com/sip_settings_digest.phtml";
     var $xcap_root                 = "https://cdrtool.example.com/xcap-root";
     var $pstn_access               = false;
     var $sms_access                = false;
@@ -527,6 +528,10 @@ class SipSettings {
 
         if (strlen($this->soapEngines[$this->sip_engine]['sip_settings_page'])) {
             $this->sip_settings_page = $this->soapEngines[$this->sip_engine]['sip_settings_page'];
+        }
+
+        if (strlen($this->soapEngines[$this->sip_engine]['blink_settings_page'])) {
+            $this->blink_settings_page = $this->soapEngines[$this->sip_engine]['blink_settings_page'];
         }
 
         if (strlen($this->soapEngines[$this->sip_engine]['xcap_root'])) {
@@ -1559,6 +1564,10 @@ class SipSettings {
 
         if ($this->resellerProperties['sip_settings_page']) {
             $this->sip_settings_page = $this->resellerProperties['sip_settings_page'];
+        }
+
+        if ($this->resellerProperties['blink_settings_page']) {
+            $this->blink_settings_page = $this->resellerProperties['blink_settings_page'];
         }
 
         if ($this->resellerProperties['xcap_root']) {

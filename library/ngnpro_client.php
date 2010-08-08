@@ -461,6 +461,10 @@ class SoapEngine {
                 $this->sip_settings_page=$this->soapEngines[$this->soapEngine]['sip_settings_page'];
             }
 
+            if (strlen($this->soapEngines[$this->soapEngine]['blink_settings_page'])) {
+                $this->blink_settings_page=$this->soapEngines[$this->soapEngine]['blink_settings_page'];
+            }
+
             if (strlen($this->soapEngines[$this->soapEngine]['customer_properties'])) {
                 $this->customer_properties=$this->soapEngines[$this->soapEngine]['customer_properties'];
             }
@@ -704,6 +708,10 @@ class Records {
 
         if (strlen($this->SoapEngine->sip_settings_page)) {
             $this->sip_settings_page=$this->SoapEngine->sip_settings_page;
+        }
+
+        if (strlen($this->SoapEngine->blink_settings_page)) {
+            $this->blink_settings_page=$this->SoapEngine->blink_settings_page;
         }
 
         $this->support_email   = $this->SoapEngine->support_email;
@@ -11082,6 +11090,10 @@ class Customers extends Records {
                                  'sip_settings_page'   => array('name'      => 'SIP Settings Page',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
+                                                               ),
+                                 'blink_settings_page' => array('name'      => 'Blink Settings Page',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'reseller'
                                                                ),
                                  'records_per_page'    => array('name'     => 'Records per page',
                                                                'category'  => 'web',
