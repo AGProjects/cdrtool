@@ -550,6 +550,10 @@ class SipSettings {
             $this->cdrtool_address  = $this->soapEngines[$this->sip_engine]['cdrtool_address'];
         }
 
+        if (strlen($this->soapEngines[$this->sip_engine]['msrp_relay'])) {
+            $this->msrp_relay  = $this->soapEngines[$this->sip_engine]['msrp_relay'];
+        }
+
         if (strlen($this->soapEngines[$this->sip_engine]['emergency_regions'])) {
             $this->emergency_regions  = $this->soapEngines[$this->sip_engine]['emergency_regions'];
         }
@@ -1589,6 +1593,10 @@ class SipSettings {
 
         if ($this->resellerProperties['cdrtool_address']) {
             $this->cdrtool_address     = $this->resellerProperties['cdrtool_address'];
+        }
+
+        if ($this->resellerProperties['msrp_relay']) {
+            $this->msrp_relay     = $this->resellerProperties['msrp_relay'];
         }
 
         if (isset($this->resellerProperties['voicemail_server'])) {

@@ -28,6 +28,7 @@ $soapEngines=array(
                                          'voicemail_engine'    => 'vm',
                                          'customer_properties' => $customerProperties,
                                          'sip_proxy'           => 'sip.example.com',
+                                         'msrp_relay'          => 'msrprelay.example.com',
                                          'voicemail_server'    => 'vm.example.com',
                                          'xcap_root'           => 'https://cdr.example.com/xcap-root',
                                          'support_email'       => 'support@example.com',
