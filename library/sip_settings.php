@@ -61,6 +61,7 @@ class SipSettings {
 	var $show_presence_tab  = false;
     var $show_payments_tab  = false;
     var $show_download_tab  = true;
+    var $show_support_tab   = false;
     var $show_directory     = false;
 
     var $first_tab          = 'calls';
@@ -157,6 +158,8 @@ class SipSettings {
 
 	var $pstn_termination_price_page = 'sip_rates.html';
     var $append_domain_to_xcap_root = false;
+    var $blink_download_url   = "https://blink.sipthor.net/download.phtml?download";
+    var $ownerCredentials = array();
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
 
@@ -416,6 +419,11 @@ class SipSettings {
         if ($this->prepaid && $this->show_payments_tab) {
         	$this->tabs['payments']=_("Payments");
         }
+
+        if ($this->show_support_tab) {
+        	$this->tabs['support'] = 'Support';
+        }
+
     }
 
     function initSoapClient() {
@@ -1004,6 +1012,8 @@ class SipSettings {
         }
  
         $this->owner_information=array(
+                               "username"            => $result->username,
+                               "password"            => $result->password,
                                "firstName"           => $result->firstName,
                                "lastName"            => $result->lastName,
                                "organization"        => $result->organization,
@@ -1464,7 +1474,7 @@ class SipSettings {
 
         $this->CustomerPort->addHeader($this->SoapAuthCustomer);
         $result     = $this->CustomerPort->getAccount(intval($this->loginCredentials['customer']));
- 
+
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
@@ -2699,6 +2709,29 @@ class SipSettings {
         <td colspan=2>";
 
         $this->render_download_applet();
+
+        print "
+        </td>
+        </tr>
+        ";
+    }
+
+    function showSupportTab() {
+
+        $chapter=sprintf(_("Request support"));
+        $this->showChapter($chapter);
+
+        print "
+        <tr class=odd>
+        <td colspan=2>";
+
+        print "<p>";
+        printf (_("To request support you may send an e-mail to %s"),$this->support_email);
+
+        if ($this->support_web) {
+            print "<p>";
+			printf (_("For more information visit %s"),$this->support_web);
+        }
 
         print "
         </td>
