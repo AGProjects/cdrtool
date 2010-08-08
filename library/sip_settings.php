@@ -3010,6 +3010,14 @@ class SipSettings {
                 <tr>
                 <td>";
                 printf ("%s %s",$this->quota,$this->currency);
+                $this->getCallStatistics();
+                if ($this->thisMonth['price']) {
+                    print "&nbsp;&nbsp;&nbsp;";
+                    printf (_("This month usage: %.2f %s"),$this->thisMonth['price'], $this->currency);
+                    printf (" / %d ",$this->thisMonth['calls']);
+                    print _("Calls");
+                }
+
                 print "</td>
                 </tr>
                 </table>
