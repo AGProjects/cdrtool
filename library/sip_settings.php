@@ -8584,7 +8584,6 @@ class Enrollment {
         }
 
 		$this->reseller       = $this->enrollment['reseller'];
-
         $this->outbound_proxy = $this->enrollment['outbound_proxy'];
         $this->xcap_root      = $this->enrollment['xcap_root'];
         $this->msrp_relay     = $this->enrollment['msrp_relay'];
