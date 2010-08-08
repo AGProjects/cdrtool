@@ -1789,8 +1789,6 @@ class SipSettings {
 
         if ($this->isEmbedded()) {
             print $this->embedded_img;;
-        } else if ($this->show_download_tab) {
-            //$this->render_download_applet();
         }
 
         print "</td>";
@@ -2750,15 +2748,60 @@ class SipSettings {
     function render_download_applet() {
         $_passport = $this->generateCertificate();
 
-        $_account=array('sip_address' => $this->account,
-                        'password'    => $this->password,
-                        'email'       => $this->email,
-                        'passport'    => $_passport,
-                        'download_url'=> $this->blink_download_url
-                        );
+        $_account['sip_address']    = $this->account;
+        $_account['password']       = $this->password;
+        $_account['email']          = $this->email;
+        $_account['outbound_proxy'] = $this->sip_proxy;
+        $_account['xcap_root']      = $this->xcap_root;
+        $_account['msrp_relay']     = $this->msrp_relay;
+        $_account['settings_url']   = $this->blink_settings_page;
+        $_account['passport']       = $_passport;
 
-        $Enrollment = new Enrollment();
- 		$Enrollment->render_download_applet($_account);
+        print "<table border=0>";
+
+        print "<tr><td>";
+
+        printf (_("Download and install <a href=http://icanblink.com target=blink>Blink</a> preconfigured with your SIP account:"));
+        print "</td></tr>";
+        print "<tr><td>";
+
+        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkDownload' height='35' width='250' align='left'>
+        <param name='label_text' value='Download Blink'>
+        <param name='click_label_text' value='Downloading...'>
+        <param name='download_url' value='%s'>
+        <param name='file_name' value=''>
+        <param name='file_content' value='%s'>
+        </applet>",
+        rand(),
+        $this->blink_download_url,
+        urlencode(json_encode($_account))
+        );
+
+        print "</td></tr>";
+        print "<tr><td>";
+
+        printf (_("If you have already installed Blink, you can configure it to use your SIP account:"));
+
+        print "</td></tr>";
+        print "<tr><td>";
+
+        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkConfigure' height='35' width='250' align='left'>
+        <param name='label_text' value='Configure Blink with this account'> 
+        <param name='click_label_text' value='Please restart Blink now!'>
+        <param name='download_url' value=''> 
+        <param name='file_name' value=''> 
+        <param name='file_content' value='%s'> 
+        </applet>",
+        rand(),
+        urlencode(json_encode($_account))
+        );
+
+        print "</td></tr>";
+        print "</table>";
+
+        print "<p>";
+        printf ("Notes. ");
+        print _("<a href='http://www.java.com/en/download/manual.jsp'>Java Runtime Environment</a> (JRE) must be activated in the web browser. ");
     }
 
     function showFooter() {
@@ -8917,77 +8960,6 @@ class Enrollment {
         }
 
         fclose($fp);
-    }
-
-    function render_download_applet($_account) {
-        // render a java client applet that start Blink download with SIP account information
-
-        if ($_account['email']) {
-            $email = $_account['email'];
-        } else {
-        	$email = $_account['sip_address'];
-        }
-
-        if ($_account['download_url']) {
-            $blink_download_url=$_account['download_url'];
-        } else if ($this->enrollment['download_url']) {
-            $blink_download_url=$this->enrollment['download_url'];
-        } else {
-            print "No download URL defined";
-            return false;
-        }
-
-        $_account['outbound_proxy'] = $this->enrollment['outbound_proxy'];
-        $_account['xcap_root']      = $this->enrollment['xcap_root'];
-        $_account['msrp_relay']     = $this->enrollment['msrp_relay'];
-        $_account['settings_url']   = $this->enrollment['settings_url'];
-
-        print "<table border=0>";
-
-        print "<tr><td>";
-
-        printf (_("Download and install <a href=http://icanblink.com target=blink>Blink</a> preconfigured with your SIP account:"));
-        print "</td></tr>";
-        print "<tr><td>";
-
-        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkDownload' height='35' width='250' align='left'>
-        <param name='label_text' value='Download Blink'>
-        <param name='click_label_text' value='Downloading...'>
-        <param name='download_url' value='%s'>
-        <param name='file_name' value=''>
-        <param name='file_content' value='%s'>
-        </applet>",
-        rand(),
-        $blink_download_url,
-        urlencode(json_encode($_account))
-        );
-
-        print "</td></tr>";
-        print "<tr><td>";
-
-        printf (_("If you have already installed Blink, you can configure it to use your SIP account:"));
-
-        print "</td></tr>";
-        print "<tr><td>";
-
-        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkConfigure' height='35' width='250' align='left'>
-        <param name='label_text' value='Configure Blink with this account'> 
-        <param name='click_label_text' value='Please restart Blink now!'>
-        <param name='download_url' value=''> 
-        <param name='file_name' value=''> 
-        <param name='file_content' value='%s'> 
-        </applet>",
-        rand(),
-        urlencode(json_encode($_account))
-        );
-
-        print "</td></tr>";
-        print "</table>";
-
-        print "<p>";
-        printf ("Notes. ");
-        print _("<a href='http://www.java.com/en/download/manual.jsp'>Java Runtime Environment</a> (JRE) must be activated in the web browser. ");
-
     }
 
 }
