@@ -8732,7 +8732,7 @@ class Enrollment {
     
             while ($j < 3) {
     
-                $username=$username.RandomString(4);
+                $username.=RandomString(4);
     
                 $customer['username']=$username;
     
