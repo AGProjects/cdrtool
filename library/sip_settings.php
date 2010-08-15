@@ -8698,12 +8698,9 @@ class Enrollment {
             $this->customerRecords    = new $_customer_class(&$this->CustomerSoapEngine);
             $this->customerRecords->html=false;
     
-            $properties=$this->customerRecords->setInitialCredits(array('sip_credit'         => 2,
-                                                                        'sip_alias_credit'   => 2,
-                                                                        'email_credit'       => 2,
-                                                                        'dns_zone_credit'    => 1,
-                                                                        'enum_range_credit'  => 1,
-                                                                        'enum_number_credit' => 1
+            $properties=$this->customerRecords->setInitialCredits(array('sip_credit'         => 1,
+                                                                        'sip_alias_credit'   => 1,
+                                                                        'email_credit'       => 1
                                                                         )
                                                                   );
             if (preg_match("/^(\w+)\s+(\w+)$/",$_REQUEST['display_name'],$m)) {
