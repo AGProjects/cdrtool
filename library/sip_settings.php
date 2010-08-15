@@ -8779,6 +8779,15 @@ class Enrollment {
                 print (json_encode($return));
                 return false;
             }
+        } else if (is_numeric($_REQUEST['owner']) && $_REQUEST['owner'] != 0 ) {
+            $owner=intval($_REQUEST['owner']);
+        } else {
+                $return=array('success'       => false,
+                              'error'         => 'internal_error',
+                              'error_message' => 'no owner information provided'
+                              );
+                print (json_encode($return));
+                return false;
         }
 
         // create SIP Account
