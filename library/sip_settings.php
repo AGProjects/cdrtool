@@ -2707,7 +2707,7 @@ class SipSettings {
 
     function showDownloadTab() {
 
-        $chapter=sprintf(_("Preconfigured SIP Client"));
+        $chapter=sprintf(_("SIP Client"));
         $this->showChapter($chapter);
 
         print "
@@ -2724,7 +2724,7 @@ class SipSettings {
 
     function showSupportTab() {
 
-        $chapter=sprintf(_("Request support"));
+        $chapter=sprintf(_("Support"));
         $this->showChapter($chapter);
 
         print "
@@ -2746,6 +2746,12 @@ class SipSettings {
     }
 
     function render_download_applet() {
+
+		$this->valid_os=array('nt','mac');
+
+        require("browser.php");
+        $os=browser_detection('os');
+
         $_passport = $this->generateCertificate();
 
         $_account['sip_address']    = $this->account;
@@ -2759,25 +2765,35 @@ class SipSettings {
 
         print "<table border=0>";
 
-        print "<tr><td>";
+        if (in_array($os,$this->valid_os)) {
+        	print "<tr><td>";
 
-        printf (_("Download and install <a href=http://icanblink.com target=blink>Blink</a> preconfigured with your SIP account:"));
-        print "</td></tr>";
-        print "<tr><td>";
+            printf (_("Download and install <a href=http://icanblink.com target=blink>Blink</a> preconfigured with your SIP account:"));
 
-        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkDownload' height='35' width='250' align='left'>
-        <param name='label_text' value='Download Blink'>
-        <param name='click_label_text' value='Downloading...'>
-        <param name='download_url' value='%s'>
-        <param name='file_name' value=''>
-        <param name='file_content' value='%s'>
-        </applet>",
-        rand(),
-        $this->blink_download_url,
-        urlencode(json_encode($_account))
-        );
+	        print "</td></tr>";
 
-        print "</td></tr>";
+        	print "<tr><td>";
+            printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkDownload' height='35' width='250' align='left'>
+            <param name='label_text' value='Download Blink'>
+            <param name='click_label_text' value='Downloading...'>
+            <param name='download_url' value='%s'>
+            <param name='file_name' value=''>
+            <param name='file_content' value='%s'>
+            </applet>",
+            rand(),
+            $this->blink_download_url,
+            urlencode(json_encode($_account))
+            );
+        	print "</td></tr>";
+
+        } else {
+        	print "<tr><td>";
+
+            print "<p>";
+            printf (_("To download Blink visit <a href='%s' target=blink>%s</a>"),'http://icanblink.com/download.phtml','http://icanblink.co/download.phtml');
+        	print "</td></tr>";
+        }
+
         print "<tr><td>";
 
         printf (_("If you have already installed Blink, you can configure it to use your SIP account:"));
@@ -6585,7 +6601,7 @@ class SipSettings {
             return false;
         }
 
-        $subject = "SIP Account settings of $this->name";
+        $subject = sprintf("SIP Account settings %s",$this->account);
 
         $tpl = $this->getEmailTemplate($this->reseller, $this->Preferences['language']);
 
@@ -8673,7 +8689,7 @@ class Enrollment {
 
         $sip_address=$username.'@'.$this->sipDomain;
 
-        if ($this->create_customer) {
+        if ($this->create_customer && !$_REQUEST['owner']) {
         	// create owner id
 
             $customerEngine           = 'customers@'.$this->customerEngine;
