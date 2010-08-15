@@ -8905,6 +8905,9 @@ class Enrollment {
 
             $return=array('success'        => true,
                           'sip_address'    => $sip_address,
+                          'mdns_username'  => $customer['username'],
+                          'mdns_password'  => $customer['password'],
+                          'mdns_id'        => intval($owner),
                           'email'          => $result->email,
                           'passport'       => $passport,
                           'outbound_proxy' => $this->outbound_proxy,
