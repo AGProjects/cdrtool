@@ -1,3 +1,24 @@
+cdrtool (8.0.3) unstable; urgency=low
+
+  [ Rating Engine ]
+
+  * Fixed mailing of broken rates
+
+
+  [ SIP client page ]
+
+  * Return mdns account created during enrollment
+  * Use owner if provided by enrollment
+  * Change default credits for free accounts
+  * Detect os from browser when presenting download page for Blink
+  * Show quota usage when logged in as subscriber
+  * Moved render_download_applet from Enrollment to SIP settings
+  * Added configuration for msrp relay
+  * Added Support tab
+  * Added configuration for blink_settings_page
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 19 Aug 2010 10:55:09 +0200
+
 cdrtool (8.0.2) unstable; urgency=low
 
   * Fixed import of region field from destinations csv
