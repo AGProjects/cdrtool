@@ -25,7 +25,7 @@ class Rate {
     var $discount_duration      = 0;
 
     var $rateValuesCache        = array(); // used to speed up prepaid apoplication
-    var $brokenRates            = array();
+    var $broken_rate            = false;
 
     function Rate($settings=array(),&$db) {
 
@@ -250,6 +250,7 @@ class Rate {
                 $durationRatedTotal  = $durationRatedTotal + $foundRate['duration'];
 
                 if (!$foundRate['rate']) {
+                    $this->broken_rate=true;
                     return false;
                 }
 
@@ -433,17 +434,7 @@ class Rate {
         }
 
         $this->price=sprintf("%.4f",$this->price);
-
-        if ($this->price > 0) {
-            $this->pricePrint=number_format($this->price,$this->priceDecimalDigits);
-        } else if ($thisRate[profile]) {
-            if ($j) {
-                if ($this->DestinationId && !strlen($durationRate)) {
-                    $this->brokenRates[$this->DestinationId]++;
-                }
-            }
-            $this->pricePrint="";
-        }
+        $this->pricePrint=number_format($this->price,$this->priceDecimalDigits);
 
         return true;
     }

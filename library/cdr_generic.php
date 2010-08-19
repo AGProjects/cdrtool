@@ -1039,6 +1039,11 @@ class CDRS {
                     	$this->csv_file_cannot_be_opened = true;
                     }
                 }
+
+                if ($CDR->broken_rate) {
+                	$this->brokenRates[$CDR->DestinationId]++;
+                }
+
             } else {
                 $this->status['normalize_failures']++;
             }
@@ -1066,8 +1071,12 @@ class CDRS {
                     }
 
                     $to=$this->CDRTool['provider']['toEmail'];
+
                     $from=$this->CDRTool['provider']['fromEmail'];
-     
+
+                    $log=sprintf("Mailing missing rates for %d destination(s) to %s",count($this->brokenRates),$to);
+                    syslog(LOG_NOTICE,$log);
+
                     mail($to, "Missing CDRTool rates",$missingRatesBodytext, "From: $from");
                 }
             }
@@ -2115,8 +2124,8 @@ class CDR {
                 $this->rateInfo     = $Rate->rateInfo;
                 $this->rateDuration = $Rate->duration;
 
-                if (count($Rate->brokenRates)) {
-                    $this->CDRS->brokenRates=array_merge($this->CDRS->brokenRates,array_keys($Rate->brokenRates));
+                if ($Rate->broken_rate) {
+                    $this->broken_rate=true;
                 }
 
                 if ($this->CDRS->priceField) {
