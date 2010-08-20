@@ -2800,6 +2800,19 @@ class MaxRate extends CSVWritter {
 
         if ($CDR->application != 'audio') return true;
 
+		if (!$CDR->duration) return true;
+
+		list($canonical_username, $canonical_domain)=explode("@",$cdr['destination']);
+
+        // skip voicemail
+        if ($canonical_username == '1233')  return true;
+
+        if ($CDR->CanonicalURIE164) {
+        	$cdr['destination'] = '+'.$CDR->CanonicalURIE164;
+        } else {
+        	$cdr['destination'] = $CDR->CanonicalURI;
+        }
+
         preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
 
         $CallerRPID=$this->getRPIDforAccount($CDR->aNumberPrint);
@@ -2808,12 +2821,6 @@ class MaxRate extends CSVWritter {
         	$cdr['origin']      = '+31'.ltrim($CallerRPID,'0');
         } else {
         	$cdr['origin']      = $CDR->aNumberPrint;
-        }
-
-        if ($CDR->CanonicalURIE164) {
-        	$cdr['destination'] = '+'.$CDR->CanonicalURIE164;
-        } else {
-        	$cdr['destination'] = $CDR->CanonicalURI;
         }
 
         $cdr['start_date']  = sprintf ("%s/%s/%s %s",$m[3],$m[2],$m[1],$m[4]);
@@ -2832,6 +2839,12 @@ class MaxRate extends CSVWritter {
 
 		if ($CDR->flow == 'on-net') {
         	$cdr['charge_info'] = sprintf("(%s,1)",$cdr['origin']);
+
+            $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
+
+            if ($CalleeRPID) {
+                $cdr['destination'] = '+31'.ltrim($CalleeRPID,'0');
+            }
 
         } else if ($CDR->flow == 'outgoing') {
 
@@ -2854,6 +2867,14 @@ class MaxRate extends CSVWritter {
             }
 
         	$cdr['charge_info']=sprintf("(%s,2)",$inbound_trunk);
+
+            // Normalize caller numbers from PSTN gateway to +E.164
+            if (preg_match("/^0([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+            	$cdr['origin']="+31".$m[1];
+            } else if (preg_match("/^00([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+            	$cdr['origin']="+".$m[1];
+            }
+
 
         } else if ($CDR->flow == 'diverted-on-net') {
         	if ($this->inbound_trunks[$CDR->SourceIP]) {
