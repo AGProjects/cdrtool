@@ -3,7 +3,7 @@ cdrtool (8.0.3) unstable; urgency=low
   [ Rating Engine ]
 
   * Fixed mailing of broken rates
-
+  * CSV writter updates
 
   [ SIP client page ]
 
@@ -17,7 +17,7 @@ cdrtool (8.0.3) unstable; urgency=low
   * Added Support tab
   * Added configuration for blink_settings_page
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 19 Aug 2010 10:55:09 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 23 Aug 2010 10:25:44 +0200
 
 cdrtool (8.0.2) unstable; urgency=low
 
