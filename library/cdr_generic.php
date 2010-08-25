@@ -2802,16 +2802,16 @@ class MaxRate extends CSVWritter {
 
 		if (!$CDR->duration) return true;
 
-		list($canonical_username, $canonical_domain)=explode("@",$cdr['destination']);
-
-        // skip voicemail
-        if ($canonical_username == '1233')  return true;
-
         if ($CDR->CanonicalURIE164) {
         	$cdr['destination'] = '+'.$CDR->CanonicalURIE164;
         } else {
         	$cdr['destination'] = $CDR->CanonicalURI;
         }
+
+		list($canonical_username, $canonical_domain)=explode("@",$cdr['destination']);
+
+        // skip voicemail
+        if ($canonical_username == '1233')  return true;
 
         preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
 
