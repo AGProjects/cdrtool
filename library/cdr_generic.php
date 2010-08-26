@@ -2886,6 +2886,11 @@ class MaxRate extends CSVWritter {
             	$cdr['origin']="+".$m[1];
             }
 
+            $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
+
+            if ($CalleeRPID) {
+                $cdr['destination'] = '+31'.ltrim($CalleeRPID,'0');
+            }
 
         } else if ($CDR->flow == 'diverted-on-net') {
         	if ($this->inbound_trunks[$CDR->SourceIP]) {
