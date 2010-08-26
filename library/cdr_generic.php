@@ -2749,6 +2749,8 @@ class MaxRate extends CSVWritter {
     var $cdr_types       = '';
     var $inbound_trunks  = array();
     var $outbound_trunks = array();
+    var $skip_numbers    = array();
+    var $skip_domains    = array();
 
     function MaxRate ($cdr_source='', $csv_directory='', $db_subscribers='') {
     	global $MaxRateSettings;   // set in global.inc
@@ -2767,7 +2769,9 @@ class MaxRate extends CSVWritter {
                                                            'diverted-off-net' => array('feature_set' => '(1)')
                                                            ),
 
-                                'product' => 7
+                                'product' => 7,
+                                'skip_domains' => array('example.net','10.0.0.1'),
+                                'skip_numbers' => array('1233')
                                );
         */
 
@@ -2784,6 +2788,13 @@ class MaxRate extends CSVWritter {
             $this->cdr_types=$MaxRateSettings['cdr_types'];
         }
 
+        if (is_array($MaxRateSettings['skip_domains'])) {
+            $this->skip_domains=$MaxRateSettings['skip_domains'];
+        }
+
+        if (is_array($MaxRateSettings['skip_numbers'])) {
+            $this->skip_numbers=$MaxRateSettings['skip_numbers'];
+        }
 
         if (strlen($MaxRateSettings['product'])) {
             $this->product=$MaxRateSettings['product'];
@@ -2808,10 +2819,10 @@ class MaxRate extends CSVWritter {
         	$cdr['destination'] = $CDR->CanonicalURI;
         }
 
+        // skip some targets
 		list($canonical_username, $canonical_domain)=explode("@",$cdr['destination']);
-
-        // skip voicemail
-        if ($canonical_username == '1233')  return true;
+        if (in_array($canonical_domain,$this->skip_domains)) return true;
+        if (in_array($canonical_username,$this->skip_numbers)) return true;
 
         preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
 
