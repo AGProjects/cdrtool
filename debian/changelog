@@ -1,3 +1,9 @@
+cdrtool (8.0.4) unstable; urgency=low
+
+  * More logic fixes in CSV writter
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 26 Aug 2010 13:00:32 +0200
+
 cdrtool (8.0.3) unstable; urgency=low
 
   [ Rating Engine ]
