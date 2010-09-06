@@ -782,7 +782,7 @@ class CreditCardProcessor {
             $errors = array_merge($errors,array('ccexp'=>array('field'=>'Card Expiration','desc'=>_('Invalid Credit Card Expiration Date'))));
         }
         // check card verify code
-        if(strlen(filter_var($post_vars['cvv2Number'], FILTER_SANITIZE_NUMBER_INT)) < 3 || $post_vars['cvv2Number'] < 100){
+        if(strlen($post_vars['cvv2Number']) != 3){
             $errors = array_merge($errors,array('ccvn'=>array('field'=>'Card Verification Number','desc'=>_('Invalid Card Verification Number'))));
         }
         // check address line 1
@@ -867,7 +867,7 @@ class CreditCardProcessor {
 	        // Month must be padded with leading zero
 	        $padDateMonth = str_pad($expDateMonth, 2, '0', STR_PAD_LEFT);
 	        $expDateYear = filter_var($_POST['expDateYear'], FILTER_SANITIZE_NUMBER_INT);
-	        $cvv2Number = filter_var($_POST['cvv2Number'], FILTER_SANITIZE_NUMBER_INT);
+	        $cvv2Number = filter_var($_POST['cvv2Number'], FILTER_SANITIZE_STRING);
 	        $address1 = filter_var($_POST['address1'], FILTER_SANITIZE_STRING);
 	        $address2 = filter_var($_POST['address2'], FILTER_SANITIZE_STRING);
 	        $city = filter_var($_POST['city'], FILTER_SANITIZE_STRING);
@@ -1038,7 +1038,7 @@ class CreditCardProcessor {
         $_CCType = filter_var($form_data['creditCardType'], FILTER_SANITIZE_STRING);
         $_CCNum = filter_var($form_data['creditCardNumber'], FILTER_SANITIZE_NUMBER_INT);
         $_CCLast = substr($_CCNum,-4);
-        $_CCVCode = filter_var($form_data['cvv2Number'], FILTER_SANITIZE_NUMBER_INT);
+        $_CCVCode = filter_var($form_data['cvv2Number'], FILTER_SANITIZE_STRING);
         $_CCExpMonth = filter_var($form_data['expDateMonth'], FILTER_SANITIZE_NUMBER_INT);
         $_CCExpYear = filter_var($form_data['expDateYear'], FILTER_SANITIZE_NUMBER_INT);
         $_BillingAddress1 = filter_var($form_data['address1'], FILTER_SANITIZE_STRING);
