@@ -2806,7 +2806,7 @@ class MaxRate extends CSVWritter {
 
     }
 
-    function write_cdr ($CDR) {
+    function write_cdr($CDR) {
     	if (!$this->ready) return false;
 
         if ($CDR->application != 'audio') return true;
@@ -2826,12 +2826,27 @@ class MaxRate extends CSVWritter {
 
         preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
 
-        $CallerRPID=$this->getRPIDforAccount($CDR->aNumberPrint);
+        if ($CDR->flow == 'outgoing' || $CDR->flow == 'on-net') {
+        	$CallerRPID=$this->getRPIDforAccount($CDR->aNumberPrint);
+        }
 
 		if ($CallerRPID) {
         	$cdr['origin']      = '+31'.ltrim($CallerRPID,'0');
         } else {
-        	$cdr['origin']      = $CDR->aNumberPrint;
+            // Normalize caller numbers from PSTN gateway to +E.164
+            if (preg_match("/^0([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+            	$cdr['origin'] = "+31".$m[1];
+            } else if (preg_match("/^00([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+            	$cdr['origin'] = "+".$m[1];
+            } else if (preg_match("/^anonymous@(.*)$/",$CDR->aNumberPrint) && $CDR->SipRPID) {
+                if (preg_match("/^0([1-9][0-9]+)@(.*)$/",$CDR->SipRPID,$m)) {
+                    $cdr['origin'] = "+31".$m[1];
+                } else if (preg_match("/^00([1-9][0-9]+)@(.*)$/",$CDR->SipRPID,$m)) {
+                    $cdr['origin'] = "+".$m[1];
+                } else {
+        			$cdr['origin'] = $CDR->aNumberPrint;
+                }
+            }
         }
 
         $cdr['start_date']  = sprintf ("%s/%s/%s %s",$m[3],$m[2],$m[1],$m[4]);
@@ -2871,6 +2886,7 @@ class MaxRate extends CSVWritter {
                                           );
 
         } else if ($CDR->flow == 'incoming') {
+
            	if ($this->inbound_trunks[$CDR->SourceIP]) {
             	$inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
             } else {
@@ -2878,13 +2894,6 @@ class MaxRate extends CSVWritter {
             }
 
         	$cdr['charge_info']=sprintf("(%s,2)",$inbound_trunk);
-
-            // Normalize caller numbers from PSTN gateway to +E.164
-            if (preg_match("/^0([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
-            	$cdr['origin']="+31".$m[1];
-            } else if (preg_match("/^00([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
-            	$cdr['origin']="+".$m[1];
-            }
 
             $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
 
@@ -2928,6 +2937,7 @@ class MaxRate extends CSVWritter {
                                           $inbound_trunk,
                                           $outbound_trunk
                                           );
+
         }
 
         $line = sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
