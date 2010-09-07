@@ -2826,7 +2826,7 @@ class MaxRate extends CSVWritter {
 
         preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
 
-        if ($CDR->flow == 'outgoing' || $CDR->flow == 'on-net') {
+        if ($CDR->flow != 'incoming') {
         	$CallerRPID=$this->getRPIDforAccount($CDR->aNumberPrint);
         }
 
@@ -2846,8 +2846,11 @@ class MaxRate extends CSVWritter {
                 } else {
         			$cdr['origin'] = $CDR->aNumberPrint;
                 }
+            } else {
+        		$cdr['origin'] = $CDR->aNumberPrint;
             }
         }
+
 
         $cdr['start_date']  = sprintf ("%s/%s/%s %s",$m[3],$m[2],$m[1],$m[4]);
 
@@ -2902,6 +2905,13 @@ class MaxRate extends CSVWritter {
             }
 
         } else if ($CDR->flow == 'diverted-on-net') {
+
+            $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
+
+            if ($CalleeRPID) {
+                $cdr['destination'] = '+31'.ltrim($CalleeRPID,'0');
+            }
+
         	if ($this->inbound_trunks[$CDR->SourceIP]) {
             	$inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
             } else {
@@ -2915,7 +2925,7 @@ class MaxRate extends CSVWritter {
 	        $DiverterRPID=$this->getRPIDforAccount($CDR->username);
 
             if ($DiverterRPID) {
-                $diverter_origin='+'.$DiverterRPID;
+                $diverter_origin='+31'.ltrim($DiverterRPID,'0');
             } else {
                 $diverter_origin=$CDR->username;
             }
