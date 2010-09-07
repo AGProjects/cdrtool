@@ -782,7 +782,8 @@ class CreditCardProcessor {
             $errors = array_merge($errors,array('ccexp'=>array('field'=>'Card Expiration','desc'=>_('Invalid Credit Card Expiration Date'))));
         }
         // check card verify code
-        if(strlen($post_vars['cvv2Number']) != 3){
+        // if(strlen($post_vars['cvv2Number']) != 3){
+        if(!filter_var(str_replace(" ", "", $post_vars['cvv2Number']), FILTER_VALIDATE_FLOAT) || $post_vars['cvv2Number'] < 1 || $post_vars['cvv2Number'] > 999){
             $errors = array_merge($errors,array('ccvn'=>array('field'=>'Card Verification Number','desc'=>_('Invalid Card Verification Number'))));
         }
         // check address line 1
