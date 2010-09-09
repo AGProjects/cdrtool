@@ -2163,15 +2163,15 @@ class CDRS_opensips extends CDRS {
                 Id,Date,From,Duration\n
                 ");
     
-                $htmlBody .= sprintf ("<h2>Missed sessions</h2>
+                $htmlBody .= sprintf ("<h2>Missed Calls</h2>
                 <p>
-                <table border=1>
+                <table border=0>
                 <tr>
                 <th>
                 </th>
-                <th>Date and time
+                <th>Date and Time
                 </th>
-                <th>Caller address
+                <th>Caller
                 </th>
                 </tr>
                 ");
@@ -2203,19 +2203,19 @@ class CDRS_opensips extends CDRS {
             if (count($sessions['diverted'])) {
 
                 // diverted sessions
-                $textBody .= sprintf ("Diverted sessions\n\n
+                $textBody .= sprintf ("Diverted Calls\n\n
                 Id,Date,From,Diverted to\n
                 ");
     
-                $htmlBody .= sprintf ("<h2>Diverted sessions</h2>
+                $htmlBody .= sprintf ("<h2>Diverted Calls</h2>
                 <p>
-                <table border=1>
+                <table border=0>
                 <tr>
                 <th>
                 </th>
-                <th>Date and time
+                <th>Date and Time
                 </th>
-                <th>Caller address
+                <th>Caller
                 </th>
                 <th>Diverted to
                 </th>
@@ -2249,18 +2249,18 @@ class CDRS_opensips extends CDRS {
             if (count($sessions['received'])) {
 
                 // received sessions
-                $textBody .= sprintf ("Received sessions\n\n
+                $textBody .= sprintf ("Received Calls\n\n
                 Id,Date,From,Duration\n");
     
-                $htmlBody .= sprintf ("<h2>Received sessions</h2>
+                $htmlBody .= sprintf ("<h2>Received Calls</h2>
                 <p>
-                <table border=1>
+                <table border=0>
                 <tr>
                 <th>
                 </th>
-                <th>Date and time
+                <th>Date and Time
                 </th>
-                <th>Caller address
+                <th>Caller
                 </th>
                 <th>Duration
                 </th>
@@ -2300,7 +2300,7 @@ class CDRS_opensips extends CDRS {
             $crlf = "\n";
            	$hdrs = array(
                      'From'=> $this->CDRTool['provider']['fromEmail'],
-                     'Subject' => sprintf("%s: incoming SIP sessions on %s",$_subscriber,date('Y-m-d'))
+                     'Subject' => sprintf("Incoming Calls for %s on %s",$_subscriber,date('Y-m-d'))
                      );
 
             $mime = new Mail_mime($crlf);
@@ -2342,7 +2342,6 @@ class CDRS_opensips extends CDRS {
             }
         }
     }
-
 }
 
 class CDR_opensips extends CDR {
