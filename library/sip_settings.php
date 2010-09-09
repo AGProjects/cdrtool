@@ -2760,7 +2760,9 @@ class SipSettings {
         require("browser.php");
         $os=browser_detection('os');
 
-        $_passport = $this->generateCertificate();
+        if ($_passport = $this->generateCertificate()) {
+        	$_account['passport']       = $_passport;
+        }
 
         $_account['sip_address']    = $this->account;
         $_account['password']       = $this->password;
@@ -2769,7 +2771,6 @@ class SipSettings {
         $_account['xcap_root']      = $this->xcap_root;
         $_account['msrp_relay']     = $this->msrp_relay;
         $_account['settings_url']   = $this->blink_settings_page;
-        $_account['passport']       = $_passport;
 
         print "<table border=0>";
 
@@ -7393,6 +7394,21 @@ class SipSettings {
 
         if (!is_array($enrollment)) {
             print _("Error: missing enrollment settings");
+            return false;
+        }
+
+        if (!$enrollment['ca_conf']) {
+            //print _("Error: missing enrollment ca_conf settings");
+            return false;
+        }
+
+        if (!$enrollment['ca_crt']) {
+            //print _("Error: missing enrollment ca_crt settings");
+            return false;
+        }
+
+        if (!$enrollment['ca_key']) {
+            //print _("Error: missing enrollment ca_key settings");
             return false;
         }
 
