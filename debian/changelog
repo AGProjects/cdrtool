@@ -1,3 +1,19 @@
+cdrtool (8.0.5) unstable; urgency=low
+
+  [ Rating Engine ]
+
+  * CSV writter fixes
+
+  [ SIP client page ]
+
+  * Update sample enrollment settings
+  * Do not set account passport if TLS settings are missing from enrollment
+  * Added settings for missed_calls via email
+  * Html changes in missed calls email notification
+  * Fixed cvv number check
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 09 Sep 2010 14:10:19 +0200
+
 cdrtool (8.0.4) unstable; urgency=low
 
   * More logic fixes in CSV writter
