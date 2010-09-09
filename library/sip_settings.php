@@ -331,6 +331,14 @@ class SipSettings {
                                     "SubscriberMayEditIt"=>1,
                                     "ResellerMayEditIt"=>1,
                                     "ResellerMaySeeIt"=>1
+                                                        );
+        $this->availableGroups['missed-calls']=array("Group"=>'missed-calls',
+                                    "WEBName" =>sprintf (_("Email Missed Calls")),
+                                    "WEBComment"=>'',
+                                    "SubscriberMaySeeIt"=>1,
+                                    "SubscriberMayEditIt"=>1,
+                                    "ResellerMayEditIt"=>1,
+                                    "ResellerMaySeeIt"=>1
 
                                     );
 
