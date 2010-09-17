@@ -317,6 +317,7 @@ class CDRS {
         }
 
         if ($this->cdrtool->num_rows()) {
+            $b=time();
 
             $this->cdrtool->next_record();
 			$_destinations=json_decode($this->cdrtool->f('value'),true);
@@ -352,177 +353,32 @@ class CDRS {
                    }
                }
             }
+
+            $e=time();
+            $log=sprintf("Read %d PSTN destinations from cache in %d seconds",$this->destinations_count,$e-$b);
+            syslog(LOG_NOTICE,$log);
+
+            if ($this->destinations_sip_count) {
+                $e=time();
+                $log=sprintf("Read %d SIP destinations from cache in %d seconds",$this->destinations_sip_count,$e-$b);
+                syslog(LOG_NOTICE,$log);
+            }
+
+            $this->destinations     = $_destinations;
+            $this->destinations_sip = $_destinations_sip;
+            unset($_destinations);
+            unset($_destinations_sip);
+
         } else {
 
-            $query="select * from destinations";
-            if ($this->CDRTool['filter']['aNumber']) {
-                $faNumber=$this->CDRTool['filter']['aNumber'];
-                $query .= " where subscriber = '$faNumber' or
-                (subscriber = '' and domain = '' and gateway = '') ";
-            } else if ($this->CDRTool['filter']['domain']) {
-                $fdomain=$this->CDRTool['filter']['domain'];
-                $query .= " where domain = '$fdomain' or
-                (subscriber = '' and domain = '' and gateway = '') ";
-            } else if ($this->CDRTool['filter']['gateway']) {
-                $fgateway=$this->CDRTool['filter']['gateway'];
-                $query .= " where gateway = '$fgateway' or
-                (subscriber = '' and domain = '' and gateway = '') ";
-            }
-    
-            $this->cdrtool->query($query);
+            $this->CacheDestinations();
 
-        	if (!$this->cdrtool->num_rows()) {
-            	$log=sprintf("Error: could not find any entries in the destinations table");
-            	syslog(LOG_NOTICE,$log);
-                return 0;
-            }
+            $this->destinations     = $this->_destinations;
+            $this->destinations_sip = $this->_destinations_sip;
 
-            $destinations_cache = "\n";
-            $destinations_sip_cache = "\n";
-
-            while($this->cdrtool->next_record()) {
-
-                $reseller_id = intval(trim($this->cdrtool->Record['reseller_id']));
-                $gateway     = trim($this->cdrtool->Record['gateway']);
-                $domain      = trim($this->cdrtool->Record['domain']);
-                $subscriber  = trim($this->cdrtool->Record['subscriber']);
-                $dest_id     = trim($this->cdrtool->Record['dest_id']);
-                $region      = trim($this->cdrtool->Record['region']);
-                $name        = trim($this->cdrtool->Record['dest_name']);
-                $name_print  = $this->cdrtool->Record['dest_name']." (".$dest_id.")";
-
-                if (strstr($dest_id,'@')) {
-                    // SIP destination
-
-                    if ($subscriber) {
-                        $_destinations_sip[$reseller_id][$subscriber][$dest_id]=array('name'=>$name, 'region'=>$region);
-	                	$this->destinations_sip_count++;
-                    } else if ($domain) {
-                        $_destinations_sip[$reseller_id][$domain][$dest_id]=array('name'=>$name, 'region'=>$region);
-	                	$this->destinations_sip_count++;
-                    } else if ($gateway) {
-                        $_destinations_sip[$reseller_id][$gateway][$dest_id]=array('name'=>$name, 'region'=>$region);
-	                	$this->destinations_sip_count++;
-                    } else if ($dest_id) {
-                        $_destinations_sip[$reseller_id]["default"][$dest_id]=array('name'=>$name, 'region'=>$region);
-	                	$this->destinations_sip_count++;
-                    }
-
-                } else {
-                    // PSTN destination
-                    if (!is_numeric($dest_id)) {
-                        $log=sprintf("Error: cannot load non-numeric destination '%s' from row id %d",$dest_id,$this->cdrtool->Record['id']);
-                        syslog(LOG_NOTICE,$log);
-                        continue;
-                    }
-
-                    if ($subscriber) {
-                      	$this->destinations_subscriber_count++;
-                        $_destinations[$reseller_id][$subscriber][$dest_id]=array('name'=>$name, 'region'=>$region);
-	                	$this->destinations_count++;
-
-                    } else if ($domain) {
-                      	$this->destinations_domain_count++;
-                        $_destinations[$reseller_id][$domain][$dest_id]=array('name'=>$name, 'region'=>$region);
-                        $this->destinations_count++;
-
-                    } else if ($gateway) {
-	                	$this->destinations_gateway_count++;
-                        $_destinations[$reseller_id][$gateway][$dest_id]=array('name'=>$name, 'region'=>$region);
-                        $this->destinations_count++;
-
-                    } else if ($dest_id) {
-	                	$this->destinations_default_count++;
-                        $_destinations[$reseller_id]["default"][$dest_id]=array('name'=>$name, 'region'=>$region);
-	                	$this->destinations_count++;
-                    }
-                }
-            }
-
-	   		$destinations_cache     =json_encode($_destinations);
-			$destinations_sip_cache =json_encode($_destinations_sip);
-
-            $query=sprintf("select `value` from memcache where `key` = 'destinations'");
-            if (!$this->cdrtool->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
-                print $log;
-                syslog(LOG_NOTICE, $log);
-                return false;
-            }
-
-    		if ($this->cdrtool->num_rows()) {
-                $query=sprintf("update memcache set value = '%s' where `key` = 'destinations'",addslashes($destinations_cache));
-                if (!$this->cdrtool->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
-                    print $log;
-                    syslog(LOG_NOTICE, $log);
-                    return false;
-                }
-
-                $log=sprintf("Cached %d total, %d default, %d gateway, %d domain, %d subscriber destinations",
-                $this->destinations_count,
-                $this->destinations_default_count,
-                $this->destinations_gateway_count,
-                $this->destinations_domain_count,
-                $this->destinations_subscriber_count
-                );
-                syslog(LOG_NOTICE, $log);
-
-            } else {
-                $query=sprintf("insert into memcache (`key`,`value`) values ('destinations','%s')",addslashes($destinations_cache));
-                if (!$this->cdrtool->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
-                    print $log;
-                    syslog(LOG_NOTICE, $log);
-                    return false;
-                }
-
-                $log=sprintf("Cached %d total, %d default, %d gateway, %d domain, %d subscriber destinations",
-                $this->destinations_count,
-                $this->destinations_default_count,
-                $this->destinations_gateway_count,
-                $this->destinations_domain_count,
-                $this->destinations_subscriber_count
-                );
-                syslog(LOG_NOTICE, $log);
-
-            }
-
-            $query=sprintf("select `value` from memcache where `key` = 'destinations_sip'");
-            if (!$this->cdrtool->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
-                print $log;
-                syslog(LOG_NOTICE, $log);
-                return false;
-            }
-    
-    		if ($this->cdrtool->num_rows()) {
-                $query=sprintf("update memcache set value = '%s' where `key` = 'destinations_sip'",addslashes($destinations_sip_cache));
-                if (!$this->cdrtool->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
-                    print $log;
-                    syslog(LOG_NOTICE, $log);
-                    return false;
-                }
-                $log=sprintf("Cached %d SIP destinations",$this->destinations_sip_count);
-                syslog(LOG_NOTICE, $log);
-
-            } else {
-                $query=sprintf("insert into memcache (`key`,`value`) values ('destinations_sip','%s')",$destinations_sip_cache);
-
- 				if (!$this->cdrtool->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
-                    print $log;
-                    syslog(LOG_NOTICE, $log);
-                    return false;
-                }
-                $log=sprintf("Updated cache for %d SIP destinations",$this->destinations_sip_count);
-                syslog(LOG_NOTICE, $log);
-            }
+            unset($this->_destinations);
+            unset($this->_destinations_sip);
         }
-
-        $this->destinations     = &$_destinations;
-        $this->destinations_sip = &$_destinations_sip;
 
         if (is_array($this->destinations)) {
 			foreach (array_keys($this->destinations) as $_reseller) {
@@ -534,6 +390,203 @@ class CDRS {
 
 		$c=$this->destinations_count + $this->destinations_sip_count;
         return $c;
+    }
+
+    function CacheDestinations() {
+
+ 		$this->_destinations     = array();
+        $this->_destinations_sip = array();
+
+        $this->destinations_count     = 0;
+        $this->destinations_sip_count = 0;
+
+        $b=time();
+
+        $query="select * from destinations";
+        if ($this->CDRTool['filter']['aNumber']) {
+            $faNumber=$this->CDRTool['filter']['aNumber'];
+            $query .= " where subscriber = '$faNumber' or
+            (subscriber = '' and domain = '' and gateway = '') ";
+        } else if ($this->CDRTool['filter']['domain']) {
+            $fdomain=$this->CDRTool['filter']['domain'];
+            $query .= " where domain = '$fdomain' or
+            (subscriber = '' and domain = '' and gateway = '') ";
+        } else if ($this->CDRTool['filter']['gateway']) {
+            $fgateway=$this->CDRTool['filter']['gateway'];
+            $query .= " where gateway = '$fgateway' or
+            (subscriber = '' and domain = '' and gateway = '') ";
+        }
+
+        $this->cdrtool->query($query);
+
+        if (!$this->cdrtool->num_rows()) {
+            $log=sprintf("Error: could not find any entries in the destinations table");
+            syslog(LOG_NOTICE,$log);
+            return 0;
+        }
+
+        $destinations_cache = "\n";
+        $destinations_sip_cache = "\n";
+
+        $this->destinations_count=0;
+        $this->destinations_default_count=0;
+        $this->destinations_gateway_count=0;
+        $this->destinations_domain_count=0;
+        $this->destinations_subscriber_count=0;
+
+        $j=0;
+        while($this->cdrtool->next_record()) {
+            $j++;
+
+            $reseller_id = $this->cdrtool->Record['reseller_id'];
+            $gateway     = $this->cdrtool->Record['gateway'];
+            $domain      = $this->cdrtool->Record['domain'];
+            $subscriber  = $this->cdrtool->Record['subscriber'];
+            $dest_id     = $this->cdrtool->Record['dest_id'];
+            $region      = $this->cdrtool->Record['region'];
+            $name        = $this->cdrtool->Record['dest_name'];
+
+            $name_print  = $this->cdrtool->Record['dest_name']." (".$dest_id.")";
+
+            if (strstr($dest_id,'@')) {
+                // SIP destination
+
+                if ($subscriber) {
+                    $this->_destinations_sip[$reseller_id][$subscriber][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->destinations_sip_count++;
+                } else if ($domain) {
+                    $this->_destinations_sip[$reseller_id][$domain][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->destinations_sip_count++;
+                } else if ($gateway) {
+                    $this->_destinations_sip[$reseller_id][$gateway][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->destinations_sip_count++;
+                } else if ($dest_id) {
+                    $this->_destinations_sip[$reseller_id]["default"][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->destinations_sip_count++;
+                }
+
+            } else {
+                // PSTN destination
+                if (!is_numeric($dest_id)) {
+                    $log=sprintf("Error: cannot load non-numeric destination '%s' from row id %d",$dest_id,$this->cdrtool->Record['id']);
+                    syslog(LOG_NOTICE,$log);
+                    continue;
+                }
+
+                if ($subscriber) {
+                    $this->destinations_subscriber_count++;
+                    $this->_destinations[$reseller_id][$subscriber][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->destinations_count++;
+
+                } else if ($domain) {
+                    $this->destinations_domain_count++;
+                    $this->_destinations[$reseller_id][$domain][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->destinations_count++;
+
+                } else if ($gateway) {
+                    $this->destinations_gateway_count++;
+                    $this->_destinations[$reseller_id][$gateway][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->destinations_count++;
+
+                } else if ($dest_id) {
+                    $this->destinations_default_count++;
+                    $this->_destinations[$reseller_id]["default"][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->destinations_count++;
+                }
+            }
+        }
+
+        $destinations_cache     =json_encode($this->_destinations);
+        $destinations_sip_cache =json_encode($this->_destinations_sip);
+
+        $log=sprintf ("PSTN destinations cache size: %0.2f MB",strlen($destinations_cache)/1024/1024);
+        syslog(LOG_NOTICE, $log);
+
+        if ($destinations_sip_cache) {
+            $log=sprintf ("SIP destinations cache size: %0.2f MB",strlen($destinations_sip_cache)/1024/1024);
+            syslog(LOG_NOTICE, $log);
+        }
+
+        $query=sprintf("select `value` from memcache where `key` = 'destinations'");
+        if (!$this->cdrtool->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
+
+        if ($this->cdrtool->num_rows()) {
+
+            $query=sprintf("update memcache set value = '%s' where `key` = 'destinations'",addslashes($destinations_cache));
+            if (!$this->cdrtool->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+                print $log;
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+
+            $log=sprintf("Cached %d total, %d default, %d gateway, %d domain, %d subscriber destinations",
+            $this->destinations_count,
+            $this->destinations_default_count,
+            $this->destinations_gateway_count,
+            $this->destinations_domain_count,
+            $this->destinations_subscriber_count
+            );
+            syslog(LOG_NOTICE, $log);
+
+        } else {
+            $query=sprintf("insert into memcache (`key`,`value`) values ('destinations','%s')",addslashes($destinations_cache));
+            if (!$this->cdrtool->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+                print $log;
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+
+            $log=sprintf("Cached %d total, %d default, %d gateway, %d domain, %d subscriber destinations",
+            $this->destinations_count,
+            $this->destinations_default_count,
+            $this->destinations_gateway_count,
+            $this->destinations_domain_count,
+            $this->destinations_subscriber_count
+            );
+            syslog(LOG_NOTICE, $log);
+
+        }
+
+        $query=sprintf("select `value` from memcache where `key` = 'destinations_sip'");
+        if (!$this->cdrtool->query($query)) {
+            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return false;
+        }
+
+        if ($this->cdrtool->num_rows()) {
+            $query=sprintf("update memcache set value = '%s' where `key` = 'destinations_sip'",addslashes($destinations_sip_cache));
+            if (!$this->cdrtool->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+                print $log;
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+            $log=sprintf("Cached %d SIP destinations",$this->destinations_sip_count);
+            syslog(LOG_NOTICE, $log);
+
+        } else {
+            $query=sprintf("insert into memcache (`key`,`value`) values ('destinations_sip','%s')",$destinations_sip_cache);
+
+            if (!$this->cdrtool->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+                print $log;
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+            $log=sprintf("Updated cache for %d SIP destinations",$this->destinations_sip_count);
+            syslog(LOG_NOTICE, $log);
+        }
+
+        return true;
     }
 
     function LoadENUMtlds() {

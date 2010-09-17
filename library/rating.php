@@ -4791,6 +4791,7 @@ class RatingTables {
         
                 if ($ReloadRatingTables) {
                     reloadRatingEngineTables();
+
                 } else {
                     $this->db->query("select var_value from settings where var_name = 'reloadRating' and var_value='1'");
                     if ($this->db->num_rows()) {
@@ -6596,7 +6597,9 @@ class RatingEngine {
     function reloadRatingTables () {
 
         $b=time();
-        $query="delete from memcache where `key` in ('destinations','destinations_sip','ENUMtlds')";
+
+        //$query="delete from memcache where `key` in ('destinations','destinations_sip','ENUMtlds')";
+        $query="delete from memcache where `key` in ('ENUMtlds')";
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
@@ -6604,12 +6607,18 @@ class RatingEngine {
         }
 
 		$this->CDRS->RatingTables->LoadRatingTables();
+        $e=time();
+        $d=$e-$b;
+
+        if ($d > 0 ) syslog(LOG_NOTICE, "Reloaded rating tables in $d seconds");
+        $b=time();
+
         $this->CDRS->LoadDestinations();
 
         $e=time();
         $d=$e-$b;
 
-        if ($d > 0 ) syslog(LOG_NOTICE, "Reloaded rating tables in $d seconds");
+        if ($d > 0 ) syslog(LOG_NOTICE, "Reloaded destinations in $d seconds");
 
         $this->db->query("update settings set var_value = '' where var_name = 'reloadRating'");
         return 1;
@@ -8169,6 +8178,8 @@ class RatingEngine {
 
 function reloadRatingEngineTables () {
     global $RatingEngine;
+    global $DATASOURCES;
+
     if (strlen($RatingEngine['socketIP']) && $RatingEngine['socketPort']) {
 
 		if ($RatingEngine['socketIP']=='0.0.0.0' || $RatingEngine['socketIP'] == '0') {
@@ -8176,6 +8187,11 @@ function reloadRatingEngineTables () {
         } else {
         	$RatingEngine['socketIPforClients']=$RatingEngine['socketIP'];
         }
+
+        // init CDR datasource
+        $CDR_class  = $DATASOURCES[$RatingEngine['cdr_source']]['class'];
+        $CDRS = new $CDR_class($RatingEngine['cdr_source']);
+        $CDRS->CacheDestinations();
 
         if ($fp = fsockopen ($RatingEngine['socketIPforClients'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
         	fputs($fp, "ReloadRatingTables\n");

@@ -1,6 +1,7 @@
 #!/usr/bin/php
 <?
 require("/etc/cdrtool/global.inc");
+require('cdr_generic.php');
 require("rating.php");
 
 if (!reloadRatingEngineTables()) {
