@@ -2749,6 +2749,7 @@ class MaxRate extends CSVWritter {
     var $cdr_types       = '';
     var $inbound_trunks  = array();
     var $outbound_trunks = array();
+    var $skip_prefixes   = array();
     var $skip_numbers    = array();
     var $skip_domains    = array();
 
@@ -2769,9 +2770,10 @@ class MaxRate extends CSVWritter {
                                                            'diverted-off-net' => array('feature_set' => '(1)')
                                                            ),
 
-                                'product' => 7,
-                                'skip_domains' => array('example.net','10.0.0.1'),
-                                'skip_numbers' => array('1233')
+                                'product'       => 7,
+                                'skip_domains'  => array('example.net','10.0.0.1'),
+                                'skip_numbers'  => array('1233'),
+                                'skip_prefixes' => array('0031901')
                                );
         */
 
@@ -2794,6 +2796,10 @@ class MaxRate extends CSVWritter {
 
         if (is_array($MaxRateSettings['skip_numbers'])) {
             $this->skip_numbers=$MaxRateSettings['skip_numbers'];
+        }
+
+        if (is_array($MaxRateSettings['skip_prefixes'])) {
+            $this->skip_prefixes=$MaxRateSettings['skip_prefixes'];
         }
 
         if (strlen($MaxRateSettings['product'])) {
@@ -2823,6 +2829,11 @@ class MaxRate extends CSVWritter {
 		list($canonical_username, $canonical_domain)=explode("@",$cdr['destination']);
         if (in_array($canonical_domain,$this->skip_domains)) return true;
         if (in_array($canonical_username,$this->skip_numbers)) return true;
+        if (count($this->skip_prefixes)) {
+            foreach ($this->skip_prefixes as $prefix) {
+                if (preg_match("/^$prefix/",canonical_username)) return true;
+            }
+        }
 
         if ($CDR->flow != 'incoming') {
         	$CallerRPID=$this->getRPIDforAccount($CDR->aNumberPrint);
