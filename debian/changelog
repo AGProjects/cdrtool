@@ -1,3 +1,10 @@
+cdrtool (8.0.6) unstable; urgency=low
+
+  * Speedup the process of reloading destinations
+  * Added skip_prefixes to CSV writter
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 20 Sep 2010 12:00:33 +0200
+
 cdrtool (8.0.5) unstable; urgency=low
 
   [ Rating Engine ]
