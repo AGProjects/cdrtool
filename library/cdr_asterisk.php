@@ -201,6 +201,10 @@ class CDRS_asterisk extends CDRS {
             $aNumbers    = explode(" ",$aNumbers);
         }
 
+        if ($this->CDRTool['filter']['after_date']) {
+            $where .= sprintf(" and calldate >= '%s' ",$this->CDRTool['filter']['after_date']);
+        }
+
         $where = " calldate > '$begin_datetime' and calldate <= '$end_datetime' ";
         
         $a_number=trim($a_number);

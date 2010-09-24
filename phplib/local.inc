@@ -246,17 +246,20 @@ class CDRTool_Auth extends Auth {
             $CDRTool['filter']['cscode']     = $this->db->f('cscodeFilter');
 
             if (preg_match("/^(\d+)\.(\d+)$/",$this->db->f('impersonate'),$m)) {
-            	$CDRTool['filter']['reseller']  = $m[2];
+            	$CDRTool['filter']['customer']  = $m[1];
+                $CDRTool['filter']['reseller']  = $m[2];
             } else if (preg_match("/^(\d+)$/",$this->db->f('impersonate'),$m)) {
-            	$CDRTool['filter']['reseller']  = $m[1];
+            	$CDRTool['filter']['customer']  = $m[1];
+                $CDRTool['filter']['reseller']  = $m[1];
             } else {
-            	$CDRTool['filter']['reseller']  = '';
+            	$CDRTool['filter']['customer']  = '';
+                $CDRTool['filter']['reseller']  = '';
             }
 
             $CDRTool['impersonate']          = $this->db->f('impersonate');
             
-            if ($this->db->f('only_after_date') && $this->db->f('only_after_date') != "0000-00-00") {
-            	$CDRTool[filter][after_date]=$this->db->f('only_after_date');
+            if ($this->db->f('afterDateFilter') && $this->db->f('afterDateFilter') != "0000-00-00") {
+            	$CDRTool['filter']['after_date']=$this->db->f('afterDateFilter');
             }
       
             $expected_response = md5("$username:$pass_md5:$challenge");

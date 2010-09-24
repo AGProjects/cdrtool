@@ -1084,6 +1084,10 @@ class CDRS_opensips extends CDRS {
             $this->url   .= sprintf("&UserName=%s",urlencode($this->CDRTool['filter']['aNumber']));
         }
 
+        if ($this->CDRTool['filter']['after_date']) {
+            $where .= sprintf(" and %s >= '%s' ",$this->startTimeField,$this->CDRTool['filter']['after_date']);
+        }
+
         if ($order_by) {
             $this->url.=sprintf("&order_by=%s&order_type=%s",$order_by,$order_type);
         }
