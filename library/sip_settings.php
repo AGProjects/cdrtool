@@ -1881,14 +1881,16 @@ class SipSettings {
         </tr>
         ";
 
-		if (!$this->isEmbedded()) {
+		//if (!$this->isEmbedded()) {
+        if ($this->login_type == 'subscriber') {
             if (!in_array("payments",$this->groups)) {
                 $this->showIdentityProof();
                 return false;
             }
-
-            $this->showIdentityProof();
+        } else {
+        	$this->showIdentityProof();
         }
+        //}
 
         $this->getBalanceHistory();
  
