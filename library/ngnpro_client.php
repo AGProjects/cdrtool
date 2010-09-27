@@ -511,12 +511,21 @@ class SoapEngine {
             } else {
                 // use the credentials defined for the soap engine
                 $this->soapUsername=$this->soapEngines[$this->soapEngine]['username'];
-                $this->SOAPlogin = array(
-                                       "username"    => $this->soapUsername,
-                                       "password"    => $this->soapEngines[$this->soapEngine]['password'],
-                                       "admin"       => true,
-                                       "impersonate" => intval($this->reseller)
-                                       );
+                if ($this->customer)  {
+                    $this->SOAPlogin = array(
+                                           "username"    => $this->soapUsername,
+                                           "password"    => $this->soapEngines[$this->soapEngine]['password'],
+                                           "admin"       => true,
+                                           "impersonate" => intval($this->customer)
+                                           );
+                } else {
+                    $this->SOAPlogin = array(
+                                           "username"    => $this->soapUsername,
+                                           "password"    => $this->soapEngines[$this->soapEngine]['password'],
+                                           "admin"       => true,
+                                           "impersonate" => intval($this->reseller)
+                                           );
+                }
 
                 $this->SOAPloginAdmin = array(
                                        "username"    => $this->soapUsername,

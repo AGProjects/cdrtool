@@ -1,10 +1,16 @@
 cdrtool (8.0.6) unstable; urgency=low
 
+  [ Rating Engine ]
+
   * Speedup the process of reloading destinations
   * Added skip_prefixes to CSV writter
   * Fixed filter by date and customer in various tables
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sat, 25 Sep 2010 10:15:44 +0200
+  [ NGNPro Client ]
+
+  * Fixed login credentials for NGNPro requests when logged in as customer level
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 27 Sep 2010 10:53:16 +0200
 
 cdrtool (8.0.5) unstable; urgency=low
 
