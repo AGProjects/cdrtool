@@ -14,18 +14,51 @@ Header('Content-Type: text/html; charset=utf-8');
 require("/etc/cdrtool/global.inc");
 require("/etc/cdrtool/ngnpro_engines.inc");
 
-if (strlen($_REQUEST['reseller'])) {
+if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
     page_open(
             array("sess" => "CDRTool_Session",
                   "auth" => "CDRTool_Auth",
                   "perm" => "CDRTool_Perm"));
 
     $account     = $_REQUEST['account'];
-    $login_type  = "admin";
     $sip_engine  = $_REQUEST['sip_engine'];
 
     $perm->check("provisioning");
 
+	global $CDRTool;
+
+    if ($CDRTool['impersonate']) {
+        if (preg_match("/^([1-9][0-9]*)\.([1-9][0-9]*)$/",$CDRTool['impersonate'],$m)) {
+            $_customer=$m[1];
+            $_reseller=$m[2];
+    
+            $login_credentials=array(
+                            'customer'           => $_customer,
+                            'reseller'           => $_reseller,
+                            'login_type'          => 'admin'
+                            );
+    
+        } else if (preg_match("/^(\[1-9][0-9]*)$/",$CDRTool['impersonate'],$m)) {
+            $_customer=$m[1];
+            $login_credentials=array(
+                            'customer'           => $_customer,
+                            'reseller'           => $_customer,
+                            'login_type'          => 'admin'
+                            );
+        } else if ($CDRTool['impersonate'] == '0' || $CDRTool['impersonate'] = '0.0') {
+            $login_credentials=array(
+                            'login_type'          => 'admin'
+                            );
+        } else {
+            page_close();
+            printf ("Error: Invalid impersonate value %s",$CDRTool['impersonate']);
+            exit;
+        }
+    } else {
+            page_close();
+            printf ("Error: Missing impersonate setting");
+            exit;
+    }
 
 } else {
     page_open(array("sess" => "SIP_Subscriber_Session",
@@ -36,6 +69,14 @@ if (strlen($_REQUEST['reseller'])) {
     $customer  	 = $SIP['customer'];
     $sip_engine  = $SIP['engine'];
     $login_type  = "subscriber";
+
+    $login_credentials=array(
+                            'login_type' => $login_type,
+                            'customer'   => $customer,
+                            'reseller'   => $reseller,
+                            'sip_engine' => $sip_engine
+                            );
+
 }
 
 require('sip_settings.php');
@@ -49,11 +90,6 @@ if (class_exists($_reseller_class)) {
 	$SipSettings_class=$_class;
 }
 
-$login_credentials=array(
-                        'login_type' => $login_type,
-                        'reseller'   => $_REQUEST['reseller'],
-                        'sip_engine' => $sip_engine
-                        );
 
 if ($resellerFilters[$login_credentials['reseller']]['sip_engine']) {
 	$login_credentials['sip_engine']      = $resellerFilters[$login_credentials['reseller']]['sip_engine'];

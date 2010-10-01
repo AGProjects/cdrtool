@@ -183,22 +183,8 @@ class SipSettings {
             }
         }
 
-        if ($this->login_type == "admin") {
-            if ($_REQUEST['reseller']) {
-                $this->reseller = $_REQUEST['reseller'];
-            } else {
-                $this->reseller = $loginCredentials['reseller'];
-            }
-            if ($_REQUEST['customer']) {
-                $this->customer = $_REQUEST['customer'];
-            } else {
-                $this->customer = $loginCredentials['customer'];
-            }
-
-        } else {
-            $this->reseller           = $loginCredentials['reseller'];
-            $this->customer           = $loginCredentials['customer'];
-        }
+        $this->reseller           = $loginCredentials['reseller'];
+        $this->customer           = $loginCredentials['customer'];
 
         if (strlen($loginCredentials['sip_engine'])) {
             $this->sip_engine=$loginCredentials['sip_engine'];
@@ -237,16 +223,7 @@ class SipSettings {
             <input type=hidden name=adminonly value=1>
             ";
 
-        } else if ($this->login_type == "reseller") {
-
-            $this->url=$this->reseller_url;
-            $this->hiddenElements="
-            <input type=hidden name=account value=\"$this->account\">
-            <input type=hidden name=reseller value=$this->reseller>
-            <input type=hidden name=sip_engine value=$this->sip_engine>
-            ";
-
-        } else if ($this->login_type == "customer") {
+        } else if ($this->login_type == "reseller" || $this->login_type == "customer") {
 
             $this->url=$this->reseller_url;
             $this->hiddenElements="
@@ -422,7 +399,6 @@ class SipSettings {
 
 		$_protocol=preg_match("/^(https?:\/\/)/",$_SERVER['SCRIPT_URI'],$m);
         $this->absolute_url=$m[1].$_SERVER['HTTP_HOST'].$this->url;
-        //dprint($this->absolute_url);
 
         if ($this->prepaid && $this->show_payments_tab) {
         	$this->tabs['payments']=_("Payments");
@@ -459,18 +435,20 @@ class SipSettings {
             $this->soapUsername = $this->loginCredentials['soapUsername'];
 
         } else {
-            $this->SOAPlogin = array(
-                                   "username"    => $this->soapEngines[$this->sip_engine]['username'],
-                                   "password"    => $this->soapEngines[$this->sip_engine]['password'],
-                                   "admin"       => true,
-                                   "impersonate" => intval($this->reseller)
-                                   );
+
+           $this->SOAPlogin = array(
+                                  "username"    => $this->soapEngines[$this->sip_engine]['username'],
+                                  "password"    => $this->soapEngines[$this->sip_engine]['password'],
+                                  "admin"       => true,
+                                  "impersonate" => intval($this->customer)
+                                  );
+
             $this->soapUsername = $this->soapEngines[$this->sip_engine]['username'];
         }
 
         $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
-        //dprint_r($this->SoapAuth);
+        //print_r($this->SoapAuth);
 
         $this->SOAPloginAdmin = array(
                                "username"    => $this->soapEngines[$this->sip_engine]['username'],
@@ -676,7 +654,7 @@ class SipSettings {
                                "username"    => $this->soapEngines[$this->voicemail_engine]['username'],
                                "password"    => $this->soapEngines[$this->voicemail_engine]['password'],
                                "admin"       => true,
-                               "impersonate" => intval($this->reseller)
+                               "impersonate" => intval($this->customer)
                                );
 
         $this->SoapAuthVoicemail = array('auth', $this->SOAPloginVoicemail , 'urn:AGProjects:NGNPro', 0, '');
@@ -701,7 +679,7 @@ class SipSettings {
                                "username"    => $this->soapEngines[$this->enum_engine]['username'],
                                "password"    => $this->soapEngines[$this->enum_engine]['password'],
                                "admin"       => true,
-                               "impersonate" => intval($this->reseller)
+                               "impersonate" => intval($this->customer)
                                );
 
         $this->SoapAuthEnum = array('auth', $this->SOAPloginEnum , 'urn:AGProjects:NGNPro', 0, '');
@@ -726,7 +704,7 @@ class SipSettings {
                                "username"    => $this->soapEngines[$this->rating_engine]['username'],
                                "password"    => $this->soapEngines[$this->rating_engine]['password'],
                                "admin"       => true,
-                               "impersonate" => intval($this->reseller)
+                               "impersonate" => intval($this->customer)
                                );
 
         $this->SoapAuthRating = array('auth', $this->SOAPloginRating , 'urn:AGProjects:NGNPro', 0, '');
@@ -1378,11 +1356,7 @@ class SipSettings {
         if ($this->login_type == 'subscriber') {
             $this->pstn_changes_allowed = false;
             return;
-        } else if ($this->login_type == 'admin') {
-            $this->pstn_changes_allowed = true;
-            return;
-        } else if ($this->login_type == 'reseller') {
-
+        } else {
             // for a reseller we need to check if a subaccount is allowed
             if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
                 if ($this->resellerProperties['pstn_access']) {
@@ -1396,9 +1370,7 @@ class SipSettings {
                 	$this->pstn_changes_allowed = true;
                 }
                 return;
-            }
-        } else if ($this->login_type == 'customer') {
-            if ($this->resellerProperties['pstn_access'] && $this->customerProperties['pstn_access']) {
+            } else if ($this->resellerProperties['pstn_access'] && $this->customerProperties['pstn_access']) {
                 $this->pstn_changes_allowed = true;
                 return;
             }
@@ -1413,10 +1385,7 @@ class SipSettings {
         if ($this->login_type == 'subscriber') {
             $this->sms_changes_allowed = false;
             return;
-        } else if ($this->login_type == 'admin') {
-            $this->sms_changes_allowed = true;
-            return;
-        } else if ($this->login_type == 'reseller') {
+        } else {
 
             // for a reseller we need to check if a subaccount is allowed
             if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
@@ -1431,9 +1400,7 @@ class SipSettings {
                 	$this->sms_changes_allowed = true;
                 }
                 return;
-            }
-        } else if ($this->login_type == 'customer') {
-            if ($this->resellerProperties['sms_access'] && $this->customerProperties['sms_access']) {
+            } else if ($this->resellerProperties['sms_access'] && $this->customerProperties['sms_access']) {
                 $this->sms_changes_allowed = true;
                 return;
             }
@@ -1448,10 +1415,7 @@ class SipSettings {
         if ($this->login_type == 'subscriber') {
             $this->prepaid_changes_allowed = false;
             return;
-        } else if ($this->login_type == 'admin') {
-            $this->prepaid_changes_allowed = true;
-            return;
-        } else if ($this->login_type == 'reseller') {
+        } else {
 
             // for a reseller we need to check if a subaccount is allowed
             if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
@@ -1466,9 +1430,7 @@ class SipSettings {
                     $this->prepaid_changes_allowed = true;
                 }
                 return;
-            }
-        } elseif ($this->login_type == 'customer') {
-            if ($this->resellerProperties['prepaid_changes'] && $this->customerProperties['prepaid_changes']) {
+            } else if ($this->resellerProperties['prepaid_changes'] && $this->customerProperties['prepaid_changes']) {
                 $this->prepaid_changes_allowed = true;
                 return;
             }
