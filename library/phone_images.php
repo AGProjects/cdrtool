@@ -46,7 +46,8 @@ $userAgentImages = array("Asterisk"       => "asterisk.png",
                          "droid" => "droid.png",
                          "SIP Communicator"=> "sip-communicator.png",
                          "telephone" => "Telephone.png",
-                         "nimbuzz" => "nimbuzz.png"
+                         "nimbuzz" => "nimbuzz.png",
+                         "ipkall" => "ipkall.png"
                          );
 
 ?>
