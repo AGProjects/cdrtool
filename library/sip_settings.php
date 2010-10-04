@@ -3308,7 +3308,8 @@ class SipSettings {
     function showDiversionsTab () {
 
         $this->getVoicemail();
-        $this->getDivertTargets();
+        $this->getEnumMappings();
+	$this->getDivertTargets();
         $this->getDiversions();
 
         print "
