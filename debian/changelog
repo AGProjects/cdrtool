@@ -6,11 +6,18 @@ cdrtool (8.0.6) unstable; urgency=low
   * Added skip_prefixes to CSV writter
   * Fixed filter by date and customer in various tables
 
+  [ WEB interface]
+
+  * Fixed description field in grouped by destination_id view
+  * Update transparency of some UA icons
+  * Added icons for Ipkall, Nimbuzz and SIP Communicator
+
   [ NGNPro Client ]
 
   * Fixed login credentials for NGNPro requests when logged in as customer level
+  * Fixed missing enum lookup when showing forwarding tab
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 27 Sep 2010 10:53:16 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 06 Oct 2010 09:34:12 +0200
 
 cdrtool (8.0.5) unstable; urgency=low
 
