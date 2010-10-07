@@ -597,7 +597,7 @@ class pageLayout {
         <br>
     	";
 	$this->hasAGProjectslogo=1;
-	$logo=$CDRTool['tld']."/images/CDRTool.gif";
+	$logo=$CDRTool['tld']."/images/CDRTool.png";
         print "<a href=http://cdrtool.ag-projects.com target=agprojects><img src=$logo border=0></a>";
         print "
         <form action=\"$url\" method=post>
@@ -732,7 +732,7 @@ class pageLayout {
         } else {
             $this->hasAGProjectslogo=1;
             print "<td>";
-            printf ("<a href=http://cdrtool.ag-projects.com target=agprojects><img src='%s/images/CDRTool.gif' border=0></a>",$CDRTool['tld']);
+            printf ("<a href=http://cdrtool.ag-projects.com target=agprojects><img src='%s/images/CDRTool.png' border=0></a>",$CDRTool['tld']);
             print "</td>";
         }
 
