@@ -2801,7 +2801,7 @@ class SipSettings {
         if ($this->footerFile) {
             include ("$this->footerFile");
         } else {
-            print "<a href=http://ag-projects.com target=agprojects><img src=images/PoweredbyAGProjects.gif border=0></a>";
+            print "<a href=http://ag-projects.com target=agprojects><img src=images/PoweredbyAGProjects.png border=0></a>";
         }
 
         print "</td>

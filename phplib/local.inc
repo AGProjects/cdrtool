@@ -918,7 +918,7 @@ class pageLayout {
             <table width=100% border=0 align=center>
             <tr>
             <td align=right>
-            <a href=http://cdrtool.ag-projects.com target=agprojects><img src=images/PoweredbyAGProjects.gif border=0>
+            <a href=http://cdrtool.ag-projects.com target=agprojects><img src=images/PoweredbyAGProjects.png border=0>
             </td>
             </tr>
             </table>
