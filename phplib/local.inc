@@ -611,12 +611,12 @@ class pageLayout {
         if ($CDRTool[provider][sampleLoginSubscriber]) {
             $sampleLoginSubscriber    = $CDRTool[provider][sampleLoginSubscriber];
         } else {
-            $sampleLoginSubscriber="account@example.com";
+            $sampleLoginSubscriber="account@sip2sip.info";
         }
         if ($CDRTool[provider][sampleLoginDomain]) {
             $sampleLoginDomain    = $CDRTool[provider][sampleLoginDomain];
         } else {
-            $sampleLoginDomain="client2.eurovoice.ro";
+            $sampleLoginDomain="sip2sip.info";
         }
         
         $web_username=$auth->auth["uname"];
@@ -631,12 +631,12 @@ class pageLayout {
         </tr>
         <tr valign=middle align=left>
         
-          <td>Username:</td>
+          <td>Username</td>
           <td>
             <input type=text name=username value=\"$web_username\" size=40 maxlength=255></td>
          </tr>
          <tr valign=middle align=left>
-          <td>Password:</td>
+          <td>Password</td>
           <td>
             <input type=password name=password size=40 maxlength=32></td>
          </tr>
