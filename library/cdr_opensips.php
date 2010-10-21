@@ -2028,7 +2028,7 @@ class CDRS_opensips extends CDRS {
             	while ($this->AccountsDB->next_record()) {
                     $_profile=json_decode(trim($this->AccountsDB->f('profile')));
                     if (in_array($this->missed_calls_group,$_profile->groups)) {
-                        $this->notifySubscribers[$this->AccountsDB->f('username').'@'.$this->AccountsDB->f('domain')]=array('email'=>$this->AccountsDB->f('email'));
+                        $this->notifySubscribers[$this->AccountsDB->f('username').'@'.$this->AccountsDB->f('domain')]=array('email'=>$this->AccountsDB->f('email'),'timezone' => $_profile->timezone);
                     }
                 }
             } else {
@@ -2049,7 +2049,7 @@ class CDRS_opensips extends CDRS {
 
             if ($this->AccountsDB->num_rows()) {
             	while ($this->AccountsDB->next_record()) {
-                	$this->notifySubscribers[$this->AccountsDB->f('account')]=array('email'=>$this->AccountsDB->f('email'));
+                	$this->notifySubscribers[$this->AccountsDB->f('account')]=array('email'=>$this->AccountsDB->f('email'),'timezone' => $this->AccountsDB->f('timezone'));
                 }
             } else {
                 return 0;
@@ -2065,7 +2065,8 @@ class CDRS_opensips extends CDRS {
 			unset($textBody);
             unset($htmlBody);
 
-        	$query = sprintf("SELECT * FROM %s where (%s = '%s' or %s = '%s') and %s > DATE_ADD(NOW(), INTERVAL -1 day) order by %s desc limit 200",
+        	$query = sprintf("SELECT *, UNIX_TIMESTAMP(%s) as timestamp FROM %s where (%s = '%s' or %s = '%s') and %s > DATE_ADD(NOW(), INTERVAL -1 day) order by %s desc limit 200",
+            $this->startTimeField,
             $this->table,
             $this->usernameField,
             $_subscriber,
@@ -2088,13 +2089,14 @@ class CDRS_opensips extends CDRS {
                                             'to'        => $this->CDRdb->f($this->cNumberField),
                                             'username'  => $this->CDRdb->f($this->usernameField),
                                             'canonical' => $this->CDRdb->f($this->CanonicalURIField),
-                                            'date'      => $this->CDRdb->f($this->startTimeField)
+                                            'date'      => getlocaltime($this->notifySubscribers[$_subscriber]['timezone'],$this->CDRdb->f('timestamp'))
                                           );
                 }
 
             	if (preg_match("/^(\w+)(\d{4})(\d{2})$/",$this->table,$m))  {
                     $previousTable=$m[1].date('Ym', mktime(0, 0, 0, $m[3]-1, "01", $m[2]));
-                    $query = sprintf("SELECT * FROM %s where %s = '%s' and %s > DATE_ADD(NOW(), INTERVAL -1 day) order by %s desc limit 200",
+                    $query = sprintf("SELECT *, UNIX_TIMESTAMP(%s) as timestamp FROM %s where %s = '%s' and %s > DATE_ADD(NOW(), INTERVAL -1 day) order by %s desc limit 200",
+		            $this->startTimeField,
                     $previousTable,
                     $this->CanonicalURIField,
                     $_subscriber,
@@ -2113,7 +2115,7 @@ class CDRS_opensips extends CDRS {
                                                 'to'         => $this->CDRdb->f($this->cNumberField),
                                                 'username'   => $this->CDRdb->f($this->usernameField),
                                                 'canonical'  => $this->CDRdb->f($this->CanonicalURIField),
-                                                'date'       => $this->CDRdb->f($this->startTimeField)
+                                                'date'       => getlocaltime($this->notifySubscribers[$_subscriber]['timezone'],$this->CDRdb->f('timestamp'))
                                               );
                     }
                 }
@@ -2125,7 +2127,7 @@ class CDRS_opensips extends CDRS {
                                             'to'        => $this->CDRdb->f($this->cNumberField),
                                             'username'  => $this->CDRdb->f($this->usernameField),
                                             'canonical' => $this->CDRdb->f($this->CanonicalURIField),
-                                            'date'      => $this->CDRdb->f($this->startTimeField)
+                                            'date'      => getlocaltime($this->notifySubscribers[$_subscriber]['timezone'],$this->CDRdb->f('timestamp'))
                                           );
                 }
             }
