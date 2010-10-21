@@ -1838,6 +1838,8 @@ class SipSettings {
         <td colspan=3>
         ";
         printf (_("Calling to PSTN numbers is possible at the costs set forth in the <a href=%s>price list</a>. "),$this->pstn_termination_price_page);
+        print _("Add balance to your Credit by purchasing it with a Credit Card. ");
+
         print "
         </td>
         </tr>
@@ -1862,8 +1864,21 @@ class SipSettings {
             $this->first_transaction=false;
         }
 
+        $basket = array('pstn_credit'=>array('price'       => 30,
+                                             'description' => _('PSTN Credit'),
+                                             'unit'        => 'credit',
+                                             'duration'    => 'N/A',
+                                             'qty'         => 1
+                                             )
+                               );
+
         if (class_exists($this->payment_processor_class)) {
-            $payment_processor = new $this->payment_processor_class(&$this);
+            $payment_processor = new $this->payment_processor_class(&$this,$basket);
+        }
+
+        if ($payment_processor->transaction_results['success']) {
+        	// add PSTN credit
+        	$this->addBalanceReseller($payment_processor->transaction_results['amount'],sprintf("CC transaction %s",$payment_processor->transaction_results['id']));
         }
 
         if ($payment_processor->make_credit_checks) {
@@ -8986,12 +9001,13 @@ class Enrollment {
 }
 
 class PaypalProcessor {
-    var $deny_countries     = array();
-	var $allow_countries    = array();
-	var $deny_ips           = array();
-    var $make_credit_checks = false;
+    var $deny_countries      = array();
+	var $allow_countries     = array();
+	var $deny_ips            = array();
+    var $make_credit_checks  = false;
+    var $transaction_results = array('success' => false);
 
-    function PaypalProcessor($account) {
+    function PaypalProcessor($account,$basket=array()) {
         if (!is_object($account)) {
             return false;
         }
@@ -9040,15 +9056,8 @@ class PaypalProcessor {
         $CardProcessor->hidden_elements = $account->hiddenElements;
         
         // load shopping items
-        $CardProcessor->cart_items = array(
-        'pstn_credit'=>array('price'       => 30,
-        'description' => _('PSTN Credit'),
-        'unit'        => 'credit',
-        'duration'    => 'N/A',
-        'qty'         => 1
-        )
-        );
-        
+        $CardProcessor->cart_items=$basket;
+
         // load user information from owner information if available otherwise from sip account settings
         
         if ($account->owner_information['firstName']) {
@@ -9186,8 +9195,6 @@ class PaypalProcessor {
                        print _("You may check your new balance in the Credit tab. ");
                     }
                     */
-                    print "<p>";
-                    print _("You may check your new balance in the Credit tab. ");
                 }
                 
                 if ($account->Preferences['ip'] && $_loc=geoip_record_by_name($account->Preferences['ip'])) {
@@ -9226,11 +9233,12 @@ class PaypalProcessor {
                 }
                 
                 if ($CardProcessor->saveOrder($_POST,$pay_process_results,$extra_information)) {
-                
-                    // add PSTN credit
-                    $description=sprintf("CC transaction %s",$CardProcessor->transaction_data['TRANSACTION_ID']);
-                    $account->addBalanceReseller($CardProcessor->transaction_data['TOTAL_AMOUNT'],$description);
-                    
+
+                    $this->transaction_results=array('success' => true,
+                                                     'amount'  => $CardProcessor->transaction_data['TOTAL_AMOUNT'],
+                                                     'id'      => $CardProcessor->transaction_data['TRANSACTION_ID']
+                                                     );
+
                     $account->addInvoice($CardProcessor);
                     
                     return true;
@@ -9254,16 +9262,12 @@ class PaypalProcessor {
             ";
         
         } else {
-            $chapter=sprintf(_("Add Credit"));
-            $account->showChapter($chapter);
             
             print "
             <tr>
             <td colspan=3>
             ";
             
-            print "<p>";
-            print _("Add balance to your Credit by purchasing it with a Credit Card. ");
             // print the submit form
             $arr_form_page_objects = $CardProcessor->showSubmitForm();
             print $arr_form_page_objects['page_body_content'];
