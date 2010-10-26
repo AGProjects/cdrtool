@@ -2884,7 +2884,7 @@ class MaxRate extends CSVWritter {
         if (in_array($canonical_username,$this->skip_numbers)) return true;
         if (count($this->skip_prefixes)) {
             foreach ($this->skip_prefixes as $prefix) {
-                if (preg_match("/^$prefix/",canonical_username)) return true;
+                if (preg_match("/^$prefix/",$canonical_username)) return true;
             }
         }
 
@@ -2911,6 +2911,14 @@ class MaxRate extends CSVWritter {
             } else {
         		$cdr['origin'] = $CDR->aNumberPrint;
             }
+        }
+
+        if (preg_match("/^\d{1,3}@.*$/",$cdr['origin'])) {
+        	$cdr['origin']='+31000000000';
+        }
+
+        if (preg_match("/^anonymous@.*$/",$cdr['origin'])) {
+        	$cdr['origin']='+31000000000';
         }
 
         preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
@@ -3001,8 +3009,6 @@ class MaxRate extends CSVWritter {
             } else {
                 $diverter_origin=$CDR->username;
             }
-
-            $cdr['origin'] = $diverter_origin;
 
         	if ($this->inbound_trunks[$CDR->SourceIP]) {
             	$inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
