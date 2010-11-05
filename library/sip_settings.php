@@ -11,6 +11,7 @@
 
 require_once("ngnpro_client.php");
 
+
 class SipSettings {
 
     var $soapTimeout               = 5;

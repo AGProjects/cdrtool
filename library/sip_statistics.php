@@ -511,7 +511,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
     function generateMrtgData($domain,$dataType) {
     	$value1=0;
         $value2=0;
-		$domain= str_replace(".","\.",$domain);
+	$domain= str_replace(".","\.",$domain);
 
     	$lines=explode("\n",file_get_contents($this->harvest_file));
         foreach ($lines as $line) {

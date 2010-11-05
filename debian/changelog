@@ -1,3 +1,16 @@
+cdrtool (8.0.7) unstable; urgency=low
+
+  * Fixes in CSV writter
+  * Fixed replacing dot in regex when querying generateMrtgData
+  * Updated timezones files to reflect system timezones better
+  * Use localtime in date printed in email notifications for last calls
+  * Update login panel text
+  * Replace CDRTool logo with a transparent one
+  * Added Siemens Gigaset
+  * Added Teles gateway icon
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 05 Nov 2010 13:29:41 +0100
+
 cdrtool (8.0.6) unstable; urgency=low
 
   [ Rating Engine ]
