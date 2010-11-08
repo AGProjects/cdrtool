@@ -63,12 +63,14 @@ class SipSettings {
     var $show_payments_tab  = false;
     var $show_download_tab  = true;
     var $show_support_tab   = false;
+    var $show_did_tab       = false;
     var $show_directory     = false;
 
     var $first_tab          = 'calls';
     var $auto_refesh_tab    = 0;              // number of seconds after which to refresh tab content in the web browser
 
 	var $payment_processor_class = false;
+    var $did_processor_class = false;
 
     // end variables
 
@@ -344,6 +346,10 @@ class SipSettings {
             if ($this->Preferences['show_presence_tab']) {
             	$this->tabs['presence']=_("Presence");
             }
+        }
+
+        if ($this->show_did_tab) {
+        	$this->tabs['did']=_("DID");
         }
 
 		if (!$this->isEmbedded() && $this->show_download_tab) {
@@ -2703,6 +2709,239 @@ class SipSettings {
         <td colspan=2>";
 
         $this->render_download_applet();
+
+        print "
+        </td>
+        </tr>
+        ";
+    }
+
+    function showDIDTab() {
+        if (class_exists($this->did_processor_class)) {
+            $did_processor = new $this->did_processor_class();
+        }
+
+        if (!$_REQUEST['ddi_action']) {
+            $chapter=sprintf(_("Registered Numbers"));
+            $this->showChapter($chapter);
+    
+            print "
+            <tr class=odd>
+            <td colspan=2>";
+    
+    
+            $numbers=$did_processor->getOrders($this->account);
+    
+            if (count($numbers)) {
+                print "<table border=0>";
+                printf ("<tr bgcolor=lightgray><td>Number</td><td>Country</td><td>Expire Date</td><td>Order</td><td>Action</td></tr>");
+    
+                foreach (array_keys($numbers) as $_number) {
+                    $t++;
+        
+                    $rr=floor($t/2);
+                    $mod=$t-$rr*2;
+            
+                    if ($mod ==0) {
+                        $_class='odd';
+                    } else {
+                        $_class='even';
+                    }
+        
+                    $form=sprintf("
+                    
+                    <select name=period>");
+                    $form.=sprintf ("<option value=1>1 %s",_("Month"));
+                    $form.=sprintf ("<option value=3>3 %s",_("Months"));
+                    $form.=sprintf ("<option value=6>6 %s",_("Months"));
+                    $form.=sprintf ("<option value=12>12 %s",_("Months"));
+                    $form.=sprintf ("<option value=24>24 %s",_("Months"));
+                    $form.="</select>";
+            
+                    $form.=$this->hiddenElements;
+    
+                    $form.=sprintf ("<input type=hidden name='number' value='%s'>",$_number);
+                    $form.=sprintf ("<input type=submit name='ddi_action' value='Renew'>");
+                    $form.=sprintf ("<input type=submit name='ddi_action' value='Drop'>");
+    
+                    printf ("<tr class=$_class><td valign=top>+%s</td><td valign=top>%s</td><td valign=top>%s</td><td valign=top>%s</td><form method=post><td>%s</td></form></tr>",$_number,$numbers[$_number]['country_name'],$numbers[$_number]['did_expire_date_gmt'],$numbers[$_number]['order_id'],$form);
+                }
+                print "</table>";
+            }
+    
+            print "
+            </td>
+            </tr>
+            ";
+    
+        }
+
+		if ($prefixes = $did_processor->getPrefixes()) {
+            if ($_REQUEST['ddi_action'] == 'register' && $_REQUEST['prefix'] && $_REQUEST['period']) {
+
+                $chapter=sprintf(_("Register New Number"));
+                $this->showChapter($chapter);
+        
+                print "
+                <tr class=odd>
+                <td colspan=2>";
+
+                $total=$prefixes[$_REQUEST['prefix']]['setup']+$prefixes[$_REQUEST['prefix']]['monthly']* $_REQUEST['period'];
+
+                $basket = array('ddi_number' => array('price'       => sprintf("%.2f",$total),
+                                                      'description' => sprintf(_('Telephone Number (+%s %s) for %d months'),$_REQUEST['prefix'],$prefixes[$_REQUEST['prefix']]['country_name'],$_REQUEST['period']),
+                                                      'unit'        => 'number',
+                                                      'duration'    => 'N/A',
+                                                      'qty'         => 1
+                                                      )
+                                       );
+
+                $this->hiddenElements=sprintf("
+                <input type=hidden name=prefix value='%s'>
+                <input type=hidden name=period value='%s'>
+                <input type=hidden name=ddi_action value='register'>
+                ",
+                $_REQUEST['prefix'],
+                $_REQUEST['period']
+                );
+
+                $data=array('customer_id'   => $this->owner,
+                            'country_iso'   => $prefixes[$_REQUEST['prefix']]['country_iso'],
+                            'city_prefix'   => $prefixes[$_REQUEST['prefix']]['city_prefix'],
+                            'period'        => $_REQUEST['period'],
+                            'map_data'      => array(
+                                                     'map_type'        => 'URI',
+                                                     'map_proto'       => 'SIP',
+                                                     'map_detail'      => $this->account,
+                                                     'map_pref_server' => 1
+                                                    ),
+                            'prepaid_funds' => "0",
+                            'uniq_hash'     => md5(mt_rand())
+                            );
+
+            	$did_processor->createOrder($data);
+
+                /*
+                if (class_exists($this->payment_processor_class)) {
+                    $payment_processor = new $this->payment_processor_class(&$this,$basket);
+                }
+
+                if ($payment_processor->transaction_results['success']) {
+                	if ($did_processor->createOrder($data)) {
+                        // add ENUM entry
+                    } else {
+                        // notify admin about payment without service fullfilment
+                    }
+                }
+                */
+                print "
+                </td>
+                </tr>
+                ";
+
+            } else if ($_REQUEST['ddi_action'] == 'Renew' && $_REQUEST['number'] && $_REQUEST['period']) {
+                $chapter=sprintf(_("Renew Number"));
+                $this->showChapter($chapter);
+        
+                print "
+                <tr class=odd>
+                <td colspan=2>";
+                $data=array('customer_id'   => $this->owner,
+                            'did_number'    => $_REQUEST['number'],
+                            'period'        => $_REQUEST['period'],
+                            'uniq_hash'     => md5(mt_rand())
+                            );
+
+                print "Renewing number....";
+            	$did_processor->renewOrder($data);
+
+                print "
+                </td>
+                </tr>
+                ";
+
+            } else if ($_REQUEST['ddi_action'] == 'Drop' && $_REQUEST['number']) {
+            	$chapter=sprintf(_("Cancel Number"));
+                $this->showChapter($chapter);
+        
+                print "
+                <tr class=odd>
+                <td colspan=2>";
+                $data=array('customer_id'   => $this->owner,
+                            'did_number'    => $_REQUEST['number']
+                            );
+
+            	$did_processor->cancelOrder($data);
+
+                print "
+                </td>
+                </tr>
+                ";
+
+            } else {
+            	$chapter=sprintf(_("Register New Number"));
+                $this->showChapter($chapter);
+        
+                print "
+                <tr class=odd>
+                <td colspan=2>";
+                print "
+                <form method=post>";
+        
+                print _("Select a region where you want to have a telephone number: ");
+                print "<p>";
+
+
+                print "<select name=prefix>";
+                
+                foreach (array_keys($prefixes) as $prefix) {
+
+                	if (!$found_country && $this->owner_information['country'] == $prefixes[$prefix]['country_iso']) {
+                        $selected='selected';
+                        $found_country=true;
+                    } else {
+                        $selected='';
+                    }
+
+                    if ($prefixes[$prefix]['setup']) {
+                        printf ("<option value='%s' %s>%s %s (+%s) - Setup %s USD, Monthy %s USD",$prefix,$selected,$prefixes[$prefix]['country_name'],$prefixes[$prefix]['city_name'],$prefix,$prefixes[$prefix]['setup'],$prefixes[$prefix]['monthly']);
+                    } else {
+                        printf ("<option value='%s' %s>%s %s (+%s) - Monthy %s USD",$prefix,$selected,$prefixes[$prefix]['country_name'],$prefixes[$prefix]['city_name'],$prefix,$prefixes[$prefix]['monthly']);
+                    }
+                }
+    
+                print "</select>";
+        
+                print "<p>";
+                print _("Select the duration for which you want to use the telephone number: ");
+        
+                print "<p>";
+                print "<select name=period>";
+                printf ("<option value=1>1 %s",_("Month"));
+                printf ("<option value=3>3 %s",_("Months"));
+                printf ("<option value=6>6 %s",_("Months"));
+                printf ("<option value=12>12 %s",_("Months"));
+                printf ("<option value=24>24 %s",_("Months"));
+                print "</select>";
+        
+                print $this->hiddenElements;
+
+                print "<p>";
+                print "<input type=hidden name='ddi_action' value='register'>";
+                print "<input type=submit value='Purchase'>";
+                print "
+                </form>
+                ";
+            }
+
+            print "
+            </td>
+            </tr>
+            ";
+
+        } else {
+            print "<p><font color=red>Error fetching DDI prefixes</font>";
+        }
 
         print "
         </td>
@@ -9336,6 +9575,323 @@ class PaypalProcessor {
         return false;
     }
 
+}
+
+class DIDProcessor {
+
+    function DIDProcessor() {
+
+        /*
+        http://www.didww.com/support/
+        API help page: http://open.didww.com
+        */
+
+        $this->db = new DB_CDRTool();
+
+        require('didww_soap_library.php');
+        include("/etc/cdrtool/enrollment/config.ini");
+
+        if (!$enrollment['did_username'] || !$enrollment['did_key']) {
+            print '<p>Error: Missing DID engine credentials';
+            return false;
+        }
+
+		if ($enrollment['did_environment'] == 'production') {
+        	$this->did_engine = new WebService_DID_World_Wide__DID_World_Wide_Port();
+            $this->auth_string = sha1($enrollment['did_username'].$enrollment['did_key']);
+            $this->environment='production';
+        } else {
+            print "<h2>Testing DID environment</h2>";
+            flush();
+        	$this->did_engine = new WebService_DID_World_Wide__DID_World_Wide_Port_Testing();
+            $this->auth_string = sha1($enrollment['did_username'].$enrollment['did_key'].'sandbox');
+            $this->environment='testing';
+        }
+
+        $this->did_engine->_options['timeout'] = 30;
+
+    }
+
+    function getPrefixesFromRemote () {
+
+        if (!$this->auth_string) return false;
+
+        $result = $this->did_engine->didww_getdidwwregions($this->auth_string,$country);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        }  else {
+            foreach ($result as $_country) {
+                foreach ($_country->cities as $_city) {
+                	$prefix = $_country->country_prefix.$_city->city_prefix;
+                    if (!$_city->isavailable) continue;
+                    $prefixes[$prefix]=array('country_prefix' => trim($_country->country_prefix),
+                    	                     'country_name'   => trim($_country->country_name),
+                                             'country_iso'    => trim($_country->country_iso),
+                                             'city_name'      => trim($_city->city_name),
+                                             'city_prefix'    => trim($_city->city_prefix),
+                                             'setup'          => $_city->setup,
+                                             'monthly'        => $_city->monthly
+                                              );
+                }
+            }
+        }
+
+        return $prefixes;
+    }
+
+    function getPrefixes () {
+
+        $query=sprintf("select * from ddi_cache where environment = '%s' and DATE_ADD(date, INTERVAL +1 day) > NOW()",$this->environment);
+
+        if (!$this->db->query($query)) return false;
+
+        if ($this->db->num_rows()) {
+        	$this->db->next_record();
+            $prefixes = json_decode($this->db->f('cache'),true);
+            if (!is_array($prefixes)) {
+            	$prefixes = $this->cachePrefixes();
+            }
+        } else {
+            $prefixes=$this->cachePrefixes();
+        }
+
+        return $prefixes;
+    }
+
+    function cachePrefixes() {
+        if ($prefixes = $this->getPrefixesFromRemote()) {
+
+            $query=sprintf("delete from ddi_cache where environment = '%s'",$this->environment);
+            $this->db->query($query);
+
+            $query=sprintf("insert into ddi_cache (cache,date,environment) values ('%s', NOW(),'%s')",json_encode($prefixes),$this->environment);
+            $this->db->query($query);
+            return $prefixes;
+        } else {
+            return false;
+        }
+
+    }
+
+    function getResellerInfo() {
+
+        if (!$this->auth_string) return false;
+
+    	$result = $this->did_engine->didww_getdidwwapidetails($this->auth_string);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            print "<pre>";
+            print_r($result);
+            print "</pre>";
+        }
+    }
+
+    function createOrder($data) {
+        if (!$this->auth_string) return false;
+
+        print "<pre>";
+        print_r($data);
+        print "</pre>";
+
+        $result = $this->did_engine->didww_ordercreate($this->auth_string,
+                                                       $data['customer_id'],
+                                                       $data['country_iso'],
+                                                       $data['city_prefix'],
+                                                       $data['period'],
+                                                       $data['map_data'],
+                                                       $data['prepaid_funds'],
+                                                       $data['uniq_hash']
+                                                       );
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            $query=sprintf ("insert into ddi_numbers (
+                                         `customer_id`,
+                                         `country_name`,
+                                         `city_name`,
+                                         `did_number`,
+                                         `did_status`,
+                                         `did_timeleft`,
+                                         `did_expire_date_gmt`,
+                                         `order_id`,
+                                         `order_status`,
+                                         `sip_address`,
+                                         `did_setup`,
+                                         `did_monthly`,
+                                         `did_period`,
+                                         `prepaid_balance`,
+                                         `environment`
+                                         )
+                                       values
+                                        (
+                                         '%s',
+                                         '%s',
+                                         '%s',
+                                         '%s',
+                                         '%s',
+                                         '%s',
+                                         '%s',
+                                         '%s',
+                                         '%s',
+                                         '%s',
+                                         '%s',
+                                         '%s',
+                                         '%s',
+                                         '%s',
+                                         '%s'
+                                         )
+                                        ",
+                                        $data['customer_id'],
+                                        $result->country_name,
+                                        $result->city_name,
+                                        $result->did_number,
+                                        $result->did_status,
+                                        $result->did_timeleft,
+                                        $result->did_expire_date_gmt,
+                                        $result->order_id,
+                                        $result->order_status,
+                                        $data['map_data']['map_detail'],
+                                        $result->did_setup,
+                                        $result->did_monthly,
+                                        $result->did_period,
+                                        $result->prepaid_balance,
+                                        $this->environment
+                                        );
+
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error for DID createOrder: %s (%s)",$this->db->Error,$this->db->Errno);
+                print $log;
+        		syslog(LOG_NOTICE, $log);
+            }
+
+        }
+        
+    }
+
+    function renewOrder($data) {
+        if (!$this->auth_string) return false;
+
+        print "<pre>";
+        print_r($data);
+        print "</pre>";
+
+        $result = $this->did_engine->didww_orderautorenew($this->auth_string,
+                                                          $data['customer_id'],
+                                                          $data['number'],
+                                                          $data['period'],
+                                                          $data['uniq_hash']
+                                                          );
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            $query=sprintf ("update ddi_numbers set did_timeleft = '%s' and did_expire_date_gmt = '%s' where did_number = '%s'
+                                        ",
+                                        $result->did_timeleft,
+                                        $result->did_expire_date_gmt,
+                                        $result->did_number
+                                        );
+
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error for DID renewOrder: %s (%s)",$this->db->Error,$this->db->Errno);
+                print $log;
+        		syslog(LOG_NOTICE, $log);
+            }
+
+            print $query;
+        }
+        
+    }
+
+    function cancelOrder($data) {
+        if (!$this->auth_string) return false;
+
+        print "<pre>";
+        print_r($data);
+        print "</pre>";
+
+        $result = $this->did_engine->didww_ordercancel($this->auth_string,
+                                                          $data['customer_id'],
+                                                          $data['number']
+                                                          );
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            return false;
+        } else {
+            $query=sprintf ("delete from  ddi_numbers where did_number = '%s'
+                                        ",
+                                        $result->did_number
+                                        );
+
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error for DID cancelOrder: %s (%s)",$this->db->Error,$this->db->Errno);
+                print $log;
+        		syslog(LOG_NOTICE, $log);
+            }
+
+            print $query;
+        }
+        
+    }
+
+    function getOrders($sip_address) {
+        $orders=array();
+
+        $query=sprintf ("select * from ddi_numbers where sip_address = '%s' and environment = '%s'",$sip_address,$this->environment);
+
+        if (!$this->db->query($query)) {
+            $log=sprintf ("Database error for DID createOrder: %s (%s)",$this->db->Error,$this->db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+        } else {
+            while ($this->db->next_record()) {
+                $orders[$this->db->f('did_number')]=array('country_name' => $this->db->f('country_name'),
+                                                           'city_name' => $this->db->f('city_name'),
+                                                           'did_status' => $this->db->f('did_status'),
+                                                           'did_timeleft' => $this->db->f('did_timeleft'),
+                                                           'did_expire_date_gmt' => $this->db->f('did_expire_date_gmt'),
+                                                           'order_id' => $this->db->f('order_id'),
+                                                           'order_status' => $this->db->f('order_status'),
+                                                           'sip_address' => $this->db->f('sip_address'),
+                                                           'did_setup' => $this->db->f('did_setup'),
+                                                           'did_monthly' => $this->db->f('did_monthly')
+                                                           );
+    
+        	}
+        }
+
+        return $orders;
+
+    }
 }
 
 if (file_exists("/etc/cdrtool/local/sip_settings.php")) {
