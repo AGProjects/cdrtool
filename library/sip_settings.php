@@ -9149,16 +9149,19 @@ class Enrollment {
 
             $return=array('success'        => true,
                           'sip_address'    => $sip_address,
+                          'email'          => $result->email,
+                          'passport'       => $passport,
+                          'settings_url'   => $this->settings_url
+                          );
+
+                          /*
                           'mdns_username'  => $customer['username'],
                           'mdns_password'  => $customer['password'],
                           'mdns_id'        => intval($owner),
-                          'email'          => $result->email,
-                          'passport'       => $passport,
                           'outbound_proxy' => $this->outbound_proxy,
                           'xcap_root'      => $this->xcap_root,
                           'msrp_relay'     => $this->msrp_relay,
-                          'settings_url'   => $this->settings_url
-                          );
+                          */
 
             print (json_encode($return));
 
