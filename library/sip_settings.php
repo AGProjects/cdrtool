@@ -159,7 +159,7 @@ class SipSettings {
                                      )
                          );
 
-	var $pstn_termination_price_page = 'sip_rates.html';
+	var $pstn_termination_price_page = 'sip_rates_body.html';
     var $append_domain_to_xcap_root = false;
     var $blink_download_url   = "https://blink.sipthor.net/download.phtml?download";
     var $ownerCredentials = array();
@@ -1815,12 +1815,31 @@ class SipSettings {
     }
 
     function showPaymentsTab() {
-        $chapter=sprintf(_("Payments"));
-        $this->showChapter($chapter);
-
         if (!$this->show_payments_tab) {
             return false;
         }
+
+        if ($_REQUEST['task'] == 'showprices') {
+            $chapter=sprintf(_("Price list"));
+            $this->showChapter($chapter);
+
+            print "
+            <tr>
+            <td colspan=3>
+            ";
+
+            include($this->pstn_termination_price_page);
+
+            print "
+            </td>
+            </tr>
+            ";
+
+            return true;
+        }
+
+        $chapter=sprintf(_("Payments"));
+        $this->showChapter($chapter);
 
         if (!$this->owner) {
 
@@ -1844,8 +1863,9 @@ class SipSettings {
         <tr>
         <td colspan=3>
         ";
-        printf (_("Calling to PSTN numbers is possible at the costs set forth in the <a href=%s>price list</a>. "),$this->pstn_termination_price_page);
-        print _("Add balance to your Credit by purchasing it with a Credit Card. ");
+        printf (_("Calling to telephone numbers is possible at the costs set forth in the <a href=%s&tab=payments&task=showprices>Price List</a>. "),$this->url);
+        print "<p>";
+        print _("You can purchase credit with a Credit Card. ");
 
         print "
         </td>
@@ -1853,6 +1873,7 @@ class SipSettings {
         ";
 
 		//if (!$this->isEmbedded()) {
+        /*
         if ($this->login_type == 'subscriber') {
             if (!in_array("payments",$this->groups)) {
                 $this->showIdentityProof();
@@ -1861,6 +1882,7 @@ class SipSettings {
         } else {
         	$this->showIdentityProof();
         }
+        */
         //}
 
         $this->getBalanceHistory();
@@ -1871,8 +1893,8 @@ class SipSettings {
             $this->first_transaction=false;
         }
 
-        $basket = array('pstn_credit'=>array('price'       => 30,
-                                             'description' => _('PSTN Credit'),
+        $basket = array('pstn_credit'=>array('price'       => 20,
+                                             'description' => _('Prepaid Credit'),
                                              'unit'        => 'credit',
                                              'duration'    => 'N/A',
                                              'qty'         => 1
