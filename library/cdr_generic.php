@@ -2813,20 +2813,22 @@ class MaxRate extends CSVWritter {
 		$MaxRateSettings= array('inbound_trunks'  => array('10.0.0.1' => 'KPNtrunk1',
                                                            '10.0.0.1' => 'KPNtrunk1'
                                                            ),
+
                                 'outbound_trunks' => array('ss7a-caiw.net'=>'KPNout1',
                                                            'ss7b-caiw.net'=>'KPNout1'
                                                            ),
-                                'cdr_types'       => array('on-net'   => array('feature_set' => '(2)'),
-                                                           'outgoing' => array('feature_set' => '(1)'),
-                                                           'incoming' => array('feature_set' => '(1)'),
-                                                           'diverted-on-net' => array('feature_set' => '(1)'),
+
+                                'cdr_types'       => array('on-net'           => array('feature_set' => '(2)'),
+                                                           'outgoing'         => array('feature_set' => '(1)'),
+                                                           'incoming'         => array('feature_set' => '(1)'),
+                                                           'diverted-on-net'  => array('feature_set' => '(1)'),
                                                            'diverted-off-net' => array('feature_set' => '(1)')
                                                            ),
 
                                 'product'       => 7,
                                 'skip_domains'  => array('example.net','10.0.0.1'),
-                                'skip_numbers'  => array('1233'),
-                                'skip_prefixes' => array('0031901')
+                                'skip_numbers'  => array('1233'), // will skip all CDRs that has the username part in this array
+                                'skip_prefixes' => array('0031901') // will skipp al CDRs that begin with any of this prefixes
                                );
         */
 
@@ -2868,21 +2870,29 @@ class MaxRate extends CSVWritter {
     function write_cdr($CDR) {
     	if (!$this->ready) return false;
 
+        // skip if no audio
         if ($CDR->application != 'audio') return true;
 
-		if (!$CDR->duration) return true;
+        // skip if no duration
+        if (!$CDR->duration) return true;
 
+        // normalize destination
         if ($CDR->CanonicalURIE164) {
         	$cdr['destination'] = '+'.$CDR->CanonicalURIE164;
         } else {
         	$cdr['destination'] = $CDR->CanonicalURI;
         }
 
-        // skip some targets
 		list($canonical_username, $canonical_domain)=explode("@",$cdr['destination']);
-        if (in_array($canonical_domain,$this->skip_domains)) return true;
-        if (in_array($canonical_username,$this->skip_numbers)) return true;
-        if (count($this->skip_prefixes)) {
+
+        // skip domains
+        if ($canonical_domain && in_array($canonical_domain,$this->skip_domains)) return true;
+
+        // skip numbers
+        if ($canonical_username && in_array($canonical_username,$this->skip_numbers)) return true;
+
+        // skip prefixes
+        if ($canonical_username && count($this->skip_prefixes)) {
             foreach ($this->skip_prefixes as $prefix) {
                 if (preg_match("/^$prefix/",$canonical_username)) return true;
             }
@@ -2893,6 +2903,7 @@ class MaxRate extends CSVWritter {
         }
 
 		if ($CallerRPID) {
+            // normalize RPID
         	$cdr['origin']      = '+31'.ltrim($CallerRPID,'0');
         } else {
             // Normalize caller numbers from PSTN gateway to +E.164
@@ -2913,21 +2924,26 @@ class MaxRate extends CSVWritter {
             }
         }
 
+        // normalize short origins
         if (preg_match("/^\d{1,3}@.*$/",$cdr['origin'])) {
         	$cdr['origin']='+31000000000';
         }
 
+        // normalize anonymous origins
         if (preg_match("/^anonymous@.*$/",$cdr['origin'])) {
         	$cdr['origin']='+31000000000';
         }
 
         preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
+
+
         $cdr['start_date']  = sprintf ("%s/%s/%s %s",$m[3],$m[2],$m[1],$m[4]);
 
         $cdr['feature_set'] = $this->cdr_types[$CDR->flow]['feature_set'];
 
         $cdr['product']     = $this->product;
 
+        // normalize duration based on billed duration
         if ($CDR->rateDuration) {
         	$cdr['duration']    = $CDR->rateDuration;
         } else {
@@ -2979,9 +2995,9 @@ class MaxRate extends CSVWritter {
 	        $DiverterRPID=$this->getRPIDforAccount($CDR->username);
 
             if ($DiverterRPID) {
-                $diverter_origin='+31'.ltrim($DiverterRPID,'0');
+                $diverter_origin = '+31'.ltrim($DiverterRPID,'0');
             } else {
-                $diverter_origin=$CDR->username;
+                $diverter_origin = $CDR->username;
             }
 
             $cdr['origin'] = $diverter_origin;
@@ -3005,9 +3021,9 @@ class MaxRate extends CSVWritter {
 	        $DiverterRPID=$this->getRPIDforAccount($CDR->username);
 
             if ($DiverterRPID) {
-                $diverter_origin='+31'.ltrim($DiverterRPID,'0');
+                $diverter_origin = '+31'.ltrim($DiverterRPID,'0');
             } else {
-                $diverter_origin=$CDR->username;
+                $diverter_origin = $CDR->username;
             }
 
         	if ($this->inbound_trunks[$CDR->SourceIP]) {
