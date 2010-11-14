@@ -418,7 +418,7 @@ msgstr "Aliasuri"
 #: /var/www/CDRTool/library/sip_settings.php:2320
 #, php-format
 msgid "You may create new aliases under the same domain"
-msgstr "Poți creea aliasuri în domeniul curent "
+msgstr "Poți crea aliasuri în domeniul curent "
 
 #: /var/www/CDRTool/library/sip_settings.php:2348
 msgid "SIP Alias"
@@ -470,7 +470,7 @@ msgstr "Nume"
 #: /var/www/CDRTool/library/sip_settings.php:2541
 #: /var/www/CDRTool/library/sip_settings.php:3061
 msgid "Password"
-msgstr "Parolă"
+msgstr "Parola"
 
 #: /var/www/CDRTool/library/sip_settings.php:2547
 msgid "Enter text to change the current password"
@@ -478,7 +478,7 @@ msgstr "Introduce text pentru a schimba parola"
 
 #: /var/www/CDRTool/library/sip_settings.php:2558
 msgid "Language"
-msgstr "Limbă"
+msgstr "Limba"
 
 #: /var/www/CDRTool/library/sip_settings.php:2581
 #: /var/www/CDRTool/library/sip_settings.php:6808
@@ -861,7 +861,7 @@ msgstr "Poți rejecta apeluri in funcție de oră si apelant. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5724
 msgid "You can create custom groups in the Contacts page like Family or Coworkers. "
-msgstr "Poti creaa grupuri noi in pagina de Contacte."
+msgstr "Poti crea grupuri noi in pagina de Contacte."
 
 #: /var/www/CDRTool/library/sip_settings.php:5726
 msgid "Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. "
@@ -879,7 +879,7 @@ msgstr "Regulă Temporară"
 
 #: /var/www/CDRTool/library/sip_settings.php:5745
 msgid "This will override the permanent rules for the chosen duration. "
-msgstr "Regulile permanente nu vor fi folosite pentru durata aleasa. "
+msgstr "Regulile permanente nu vor fi folosite pentru durata aleasă. "
 
 #: /var/www/CDRTool/library/sip_settings.php:5758
 msgid "Duration"
