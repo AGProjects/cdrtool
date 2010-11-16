@@ -8,6 +8,7 @@ CATALOGS = ro.mo nl.mo es.mo de.mo
 
 POTFILES  = \
 	$(top_builddir)/library/sip_settings.php \
+	/etc/cdrtool/local/sip_settings.php \
 	$(top_builddir)/library/cc_processor.php \
 	$(top_builddir)/ccp_java.js
 .po.mo: 
