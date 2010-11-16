@@ -2498,140 +2498,6 @@ class SipSettings {
             }
         }
 
-        if ($this->enable_msn) {
-            $chapter=sprintf(_("MSN"));
-            $this->showChapter($chapter);
-
-            list($msn_address,$msn_password)=explode(":",$this->Preferences['msn_credentials']);
-
-            print "
-            <tr>
-            <td colspan=2>";
-            printf (_("You can connect to MSN subscribers by providing your MSN credentials"));
-            printf ("
-            </td>
-            </tr>
-            ");
-     
-            $t=0;
-     
-            print "
-            <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
-            ";
-
-            print "
-            <tr class=even>
-            <td>";
-                print _("Address");
-                printf("
-              </td>
-              <td> <input type=text size=35 name=msn_address value='%s'></td>
-            </tr>
-            ",$msn_address);
-    
-            print "
-            <tr class=odd>
-            <td>";
-                print _("Password");
-                printf ("
-              </td>
-              <td> <input type=password size=35 name=msn_password value='%s'></td>
-            </tr>
-            ",$msn_password);
-            print "
-            <tr>
-              <td align=left>
-            <input type=hidden name=action value=\"set msn\">
-            ";
-    
-            print "
-            <input type=submit value=\"";
-            print _("Save");
-            print "\"
-                   onClick=saveHandler(this)>
-            ";
-    
-            print "
-              </td>
-              <td align=right>
-              </td>
-            </tr>
-            ";
-     
-            print $this->hiddenElements;
-            print "
-            </form>
-            ";
-    
-        }
-
-        if ($this->enable_yahoo) {
-            $chapter=sprintf(_("Yahoo! Messenger"));
-            $this->showChapter($chapter);
-
-            list($yahoo_address,$yahoo_password)=explode(":",$this->Preferences['yahoo_credentials']);
-
-            print "
-            <tr>
-            <td colspan=2>";
-            printf (_("You can connect to Yahoo subscribers by providing your Yahoo credentials"));
-            printf ("
-            </td>
-            </tr>
-            ");
-     
-            $t=0;
-     
-            print "
-            <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
-            ";
-     
-            print "
-            <tr class=even>
-            <td>";
-                print _("Address");
-                printf ("
-              </td>
-              <td> <input type=text size=35 name=yahoo_address value='%s'></td>
-            </tr>
-            ",$yahoo_address);
-    
-            print "
-            <tr class=odd>
-            <td>";
-                print _("Password");
-                printf ("
-              </td>
-              <td> <input type=password size=35 name=yahoo_password value='%s'></td>
-            </tr>
-            ",$yahoo_password);
-            print "
-            <tr>
-              <td align=left>
-            <input type=hidden name=action value=\"set yahoo\">
-            ";
-    
-            print "
-            <input type=submit value=\"";
-            print _("Save");
-            print "\"
-                   onClick=saveHandler(this)>
-            ";
-    
-            print "
-              </td>
-              <td align=right>
-              </td>
-            </tr>
-            ";
-     
-            print $this->hiddenElements;
-            print "
-            </form>
-            ";
-    
-        }
-
         if (!$this->isEmbedded()) {
 
             if ($this->enrollment_url) {
@@ -8008,54 +7874,6 @@ class SipSettings {
         ";
     }
 
-    function setMSN() {
-        $result      = $this->result;
-        $this->properties=$result->properties;
-
-        $_msn_credentials=trim($_REQUEST['msn_address']).":".trim($_REQUEST['msn_password']);
-        $this->setPreference('msn_credentials',$_msn_credentials);
-
-      	$result->properties=$this->properties;
-
-        $this->SipPort->addHeader($this->SoapAuth);
-        $result     = $this->SipPort->updateAccount($result);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-            $this->Preferences['msn_credentials']=$_msn_credentials;
-            return true;
-        }
-
-    }
-
-    function setYahoo() {
-        $result      = $this->result;
-        $this->properties=$result->properties;
-
-        $_yahoo_credentials=trim($_REQUEST['yahoo_address']).":".trim($_REQUEST['yahoo_password']);
-
-        $this->setPreference('yahoo_credentials',$_yahoo_credentials);
-      	$result->properties=$this->properties;
-
-        $this->SipPort->addHeader($this->SoapAuth);
-        $result     = $this->SipPort->updateAccount($result);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        } else {
-            $this->Preferences['yahoo_credentials']=$_yahoo_credentials;
-            return true;
-        }
-    }
 }
 
 function normalizeURI($uri) {
@@ -8418,10 +8236,6 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings->setAcceptRules();
     } else if ($_REQUEST['action']=="set aliases") {
         $SipSettings->setAliases();
-    } else if ($_REQUEST['action']=="set msn") {
-        $SipSettings->setMSN();
-    } else if ($_REQUEST['action']=="set yahoo") {
-        $SipSettings->setYahoo();
     } else if ($_REQUEST['action']=="send email") {
         $SipSettings->sendEmail();
     } else if ($_REQUEST['action']=="get_crt") {
