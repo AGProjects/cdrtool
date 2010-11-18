@@ -3954,7 +3954,12 @@ class SIP_trace {
                                                  $media['streams'][$_key]['port'],
                                                  $media['streams'][$_key]['ice']
                                                  );
-                    $cell_content.="<br><b>$_stream</b>";
+                    if ($media['streams'][$_key]['port']) {
+                    	$cell_content.="<br><b>$_stream</b>";
+                    } else {
+                    	$cell_content.="<br><b><font color=red>$_stream</font></b>";
+                    }
+
                 }
             }
 
