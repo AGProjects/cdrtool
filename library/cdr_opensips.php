@@ -3891,11 +3891,17 @@ class SIP_trace {
             unset($diversions);
 
             $j=0;
-            $t=0;
+            $media_index=0;
+            $search_ice=0;
+            $search_ip=0;
 
             foreach ($_lines as $_line) {
                 if (preg_match("/^(Diversion: ).*;(.*)$/",$_line,$m)) {
                     $diversions[]=$m[1].$m[2];
+                }
+
+                if (preg_match("/^Cseq:\s*\d+\s*(.*)$/i",$_line,$m)) {
+                    $status_for_method=$m[1];
                 }
 
                 if (preg_match("/^c=IN \w+ ([\d|\w\.]+)/i",$_line,$m)) {
@@ -3903,19 +3909,29 @@ class SIP_trace {
                 }
 
                 if (preg_match("/^m=(\w+) (\d+) /i",$_line,$m)) {
-                    $t++;
-                    $media['streams'][$m[2]]=$m[1];
+                    $media_index++;
+                    $search_ice=1;
+                    $search_ip=1;
+                    $media['streams'][$media_index]=array('type' => $m[1],
+                                                          'ip'   => $media['ip'],
+                                                          'port' => $m[2],
+                                                          'ice'  => ''
+                                                          );
                 }
 
-                if (preg_match("/^a=alt:1/i",$_line,$m)) {
-                    $media['streams'][$t]=$media['streams'][$t]." ICE";
+                if ($search_ip && preg_match("/^c=IN \w+ ([\d|\w\.]+)/i",$_line,$m)) {
+                    $media['streams'][$media_index]['ip']=$m[1];
+                    $search_ip=0;
                 }
 
-                if (preg_match("/^Cseq:\s*\d+\s*(.*)$/i",$_line,$m)) {
-                    $status_for_method=$m[1];
+                if ($search_ice && preg_match("/^a=ice/i",$_line,$m)) {
+                    $media['streams'][$media_index]['ice']="ICE";
+                    $search_ice=0;
                 }
+
                 $j++;
             }
+
 
             $_els=explode(";",$_lines[0]);
 
@@ -3933,10 +3949,15 @@ class SIP_trace {
 
             if (is_array($media['streams'])) {
                 foreach (array_keys($media['streams']) as $_key) {
-                    $_stream=$media['streams'][$_key].':'.$media['ip'].':'.$_key;
+                    $_stream=sprintf("%s->%s:%s %s",$media['streams'][$_key]['type'],
+                                                 $media['streams'][$_key]['ip'],
+                                                 $media['streams'][$_key]['port'],
+                                                 $media['streams'][$_key]['ice']
+                                                 );
                     $cell_content.="<br><b>$_stream</b>";
                 }
             }
+
 
             $cell_content.="
             </font>
