@@ -256,12 +256,85 @@ class CDRTool_Auth extends Auth {
                 $CDRTool['filter']['reseller']  = '';
             }
 
-            $CDRTool['impersonate']          = $this->db->f('impersonate');
+            $CDRTool['impersonate'] = $this->db->f('impersonate');
             
             if ($this->db->f('afterDateFilter') && $this->db->f('afterDateFilter') != "0000-00-00") {
             	$CDRTool['filter']['after_date']=$this->db->f('afterDateFilter');
             }
-      
+
+			if ($CDRTool['filter']['customer']) {
+                // get soap credentials from NGNPro database
+                global $soapEngines ;
+    
+                require_once('SOAP/Client.php');
+                require("/etc/cdrtool/ngnpro_engines.inc");
+                require_once("ngnpro_soap_library.php");
+        
+                $this->SOAPlogin=array(
+                                       "username" => $soapEngines[$CDRTool['ngnpro_reseller_engine']]['username'],
+                                       "password" => $soapEngines[$CDRTool['ngnpro_reseller_engine']]['password'],
+                                       "admin"    => true
+                );
+        
+                $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+        
+                $this->CustomerPort  = new WebService_NGNPro_CustomerPort($soapEngines[$CDRTool['ngnpro_reseller_engine']]['url']);
+                $this->CustomerPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+                $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+                $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+    
+                $filter  = array('customer' => intval($CDRTool['filter']['customer']));
+                $range   = array('start' => 0,'count' => 1);
+                $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
+                $Query=array('filter'     => $filter,'orderBy' => $orderBy,'range'   => $range);
+        
+                // Call function
+                $this->CustomerPort->addHeader($this->SoapAuth);
+                $result     = $this->CustomerPort->getCustomers($Query);
+
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                } else {
+                    if (count($result->accounts) == 1) {
+                        if ($result->accounts[0]->impersonate) {
+                            print "impersonate....";
+                            // get the credentials of the impersonate field
+                            $filter  = array('customer' => intval($result->accounts[0]->impersonate), 'reseller' => intval($result->accounts[0]->reseller));
+                            $range   = array('start' => 0,'count' => 1);
+                            $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
+                            $Query=array('filter'     => $filter,'orderBy' => $orderBy,'range'   => $range);
+                    
+                            // Call function
+			                $this->CustomerPort->addHeader($this->SoapAuth);
+                            $result     = $this->CustomerPort->getCustomers($Query);
+
+                            if (PEAR::isError($result)) {
+                                $error_msg  = $result->getMessage();
+                                $error_fault= $result->getFault();
+                                $error_code = $result->getCode();
+                                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                            } else {
+                                if (count($result->accounts) == 1) {
+                                    $CDRTool["soap_username"] = $result->accounts[0]->username;
+                                    $CDRTool["soap_password"] = $result->accounts[0]->password;
+                                } else {
+                        			print "<p>Error retrieving customer data from provisioning server, there is no such impersonate id. ";
+                                }
+                            }
+                        } else {
+                            print 'no imperonate...';
+                            $CDRTool["soap_username"] = $result->accounts[0]->username;
+                            $CDRTool["soap_password"] = $result->accounts[0]->password;
+                        }
+                    } else {
+                        print "<p>Error retrieving customer data from provisioning server, there is no such customer id. ";
+                    }
+                }
+            }
+
             $expected_response = md5("$username:$pass_md5:$challenge");
             $expect_otp=md5("$username:$otp_passwd_md5:$challenge");
         
