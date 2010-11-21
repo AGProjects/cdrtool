@@ -55,6 +55,10 @@ $RatingEngine=array("socketIP"               => "IP.address.of.the.private.inter
 $CDRTool['normalize']['defaultCountryCode']      = "31";
 
 ###########################################
+# Where to retrieve the reseller settings from
+$CDRTool['ngnpro_reseller_engine'] = 'sip';
+
+###########################################
 # build graphical statistics for these domains:
 $CDRTool['statistics']['domains']=array("example.com");
 
