@@ -1,6 +1,29 @@
-cdrtool (8.0.7) unstable; urgency=low
+cdrtool (8.0.8) unstable; urgency=low
+
+  [ Rating Engine ]
 
   * Fixes in CSV writter
+
+  [ WEB interface]
+
+  * Display rejected streams in red in SIP trace
+  * Fixed display of media information in SIP trace
+  * Update translations
+
+  [ NGNPro Client ]
+
+  * Added $CDRTool['ngnpro_reseller_engine'] setting in global.inc
+  * Fixed checks of SOAP credentials in provisioning page
+  * Remove unused MSN and Yahoo account settings code
+  * Update payments display
+  * Update enrollment to not return server addresses
+  * Added DID manager prototype
+
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 21 Nov 2010 10:30:21 +0100
+
+cdrtool (8.0.7) unstable; urgency=low
+
   * Fixed replacing dot in regex when querying generateMrtgData
   * Updated timezones files to reflect system timezones better
   * Use localtime in date printed in email notifications for last calls
