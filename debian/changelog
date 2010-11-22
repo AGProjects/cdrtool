@@ -3,6 +3,7 @@ cdrtool (8.0.8) unstable; urgency=low
   [ Rating Engine ]
 
   * Fixes in CSV writter
+  * Updated sample csv files
 
   [ WEB interface]
 
@@ -19,8 +20,7 @@ cdrtool (8.0.8) unstable; urgency=low
   * Update enrollment to not return server addresses
   * Added DID manager prototype
 
-
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 21 Nov 2010 10:30:21 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 22 Nov 2010 12:58:02 +0100
 
 cdrtool (8.0.7) unstable; urgency=low
 
