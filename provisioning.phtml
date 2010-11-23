@@ -48,10 +48,8 @@ if ($CDRTool['impersonate']) {
         exit;
     }
 
-    if ($_customer == "0" && $_reseller = "0" ) {
-        $login_credentials=array(
-                        'login_type'         => 'admin'
-                        );
+    if ($_customer == "0" && $_reseller == "0" ) {
+        $login_credentials['login_type']=  'admin';
 
     } else if ($_customer == $_reseller) {
         $login_credentials=array(
