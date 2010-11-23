@@ -12982,6 +12982,10 @@ class Customers extends Records {
         if (!strlen($customer['postcode'])) $customer['postcode'] = 'Unknown';
         if (!strlen($customer['timezone'])) $customer['timezone'] = 'Europe/Amsterdam';
 
+        if ($this->adminonly && $this->filters['reseller']) {
+        	$customer['reseller']=intval($this->filters['reseller']);
+        }
+
         $customer['username'] = strtolower(preg_replace ("/\s+/",".",trim($customer['username'])));
         $customer['username'] = preg_replace ("/\.{2,}/",".",$customer['username']);
 
