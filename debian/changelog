@@ -19,8 +19,9 @@ cdrtool (8.0.8) unstable; urgency=low
   * Update payments display
   * Update enrollment to not return server addresses
   * Added DID manager prototype
+  * Fixed adding subacconut in Customer section
 
- -- Adrian Georgescu <ag@ag-projects.com>  Mon, 22 Nov 2010 12:58:02 +0100
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 23 Nov 2010 11:42:07 +0100
 
 cdrtool (8.0.7) unstable; urgency=low
 
