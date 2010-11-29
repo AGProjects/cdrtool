@@ -300,7 +300,6 @@ class CDRTool_Auth extends Auth {
                 } else {
                     if (count($result->accounts) == 1) {
                         if ($result->accounts[0]->impersonate) {
-                            print "impersonate....";
                             // get the credentials of the impersonate field
                             $filter  = array('customer' => intval($result->accounts[0]->impersonate), 'reseller' => intval($result->accounts[0]->reseller));
                             $range   = array('start' => 0,'count' => 1);
@@ -321,16 +320,15 @@ class CDRTool_Auth extends Auth {
                                     $CDRTool["soap_username"] = $result->accounts[0]->username;
                                     $CDRTool["soap_password"] = $result->accounts[0]->password;
                                 } else {
-                        			print "<p>Error retrieving customer data from provisioning server, there is no such impersonate id. ";
+                        	    print "<p>Error retrieving customer data from the provisioning server, there is no such impersonate id. ";
                                 }
                             }
                         } else {
-                            print 'no imperonate...';
                             $CDRTool["soap_username"] = $result->accounts[0]->username;
                             $CDRTool["soap_password"] = $result->accounts[0]->password;
                         }
                     } else {
-                        print "<p>Error retrieving customer data from provisioning server, there is no such customer id. ";
+                        print "<p>Error retrieving customer data from the provisioning server, there is no such customer id. ";
                     }
                 }
             }
