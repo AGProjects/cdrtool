@@ -2818,11 +2818,12 @@ class MaxRate extends CSVWritter {
                                                            'ss7b-caiw.net'=>'KPNout1'
                                                            ),
 
-                                'cdr_types'       => array('on-net'           => array('feature_set' => '(2)'),
-                                                           'outgoing'         => array('feature_set' => '(1)'),
-                                                           'incoming'         => array('feature_set' => '(1)'),
-                                                           'diverted-on-net'  => array('feature_set' => '(1)'),
-                                                           'diverted-off-net' => array('feature_set' => '(1)')
+                                'cdr_types'       => array('on-net'                  => array('feature_set' => '(2)'),
+                                                           'outgoing'                => array('feature_set' => '(1)'),
+                                                           'incoming'                => array('feature_set' => '(1)'),
+                                                           'diverted-off-net'        => array('feature_set' => '(1)'),
+                                                           'on-net-diverted-on-net'  => array('feature_set' => '(2)'),
+                                                           'on-net-diverted-off-net' => array('feature_set' => '(1)')
                                                            ),
 
                                 'product'       => 7,
@@ -2870,13 +2871,13 @@ class MaxRate extends CSVWritter {
     function write_cdr($CDR) {
     	if (!$this->ready) return false;
 
-        // skip if no audio
+        # skip if no audio
         if ($CDR->application != 'audio') return true;
 
-        // skip if no duration
+        # skip if no duration
         if (!$CDR->duration) return true;
 
-        // normalize destination
+        # normalize destination
         if ($CDR->CanonicalURIE164) {
         	$cdr['destination'] = '+'.$CDR->CanonicalURIE164;
         } else {
@@ -2885,28 +2886,29 @@ class MaxRate extends CSVWritter {
 
 		list($canonical_username, $canonical_domain)=explode("@",$cdr['destination']);
 
-        // skip domains
+        # skip domains
         if ($canonical_domain && in_array($canonical_domain,$this->skip_domains)) return true;
 
-        // skip numbers
+        # skip numbers
         if ($canonical_username && in_array($canonical_username,$this->skip_numbers)) return true;
 
-        // skip prefixes
+        # skip prefixes
         if ($canonical_username && count($this->skip_prefixes)) {
             foreach ($this->skip_prefixes as $prefix) {
                 if (preg_match("/^$prefix/",$canonical_username)) return true;
             }
         }
 
+        # get RPID if caller is local
         if ($CDR->flow != 'incoming') {
         	$CallerRPID=$this->getRPIDforAccount($CDR->aNumberPrint);
         }
 
 		if ($CallerRPID) {
-            // normalize RPID
+            # normalize RPID
         	$cdr['origin']      = '+31'.ltrim($CallerRPID,'0');
         } else {
-            // Normalize caller numbers from PSTN gateway to +E.164
+            # normalize caller id numbers from PSTN gateway to +E.164
             if (preg_match("/^0([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
             	$cdr['origin'] = "+31".$m[1];
             } else if (preg_match("/^00([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
@@ -2924,18 +2926,17 @@ class MaxRate extends CSVWritter {
             }
         }
 
-        // normalize short origins
+        # normalize short origins
         if (preg_match("/^\d{1,3}@.*$/",$cdr['origin'])) {
         	$cdr['origin']='+31000000000';
         }
 
-        // normalize anonymous origins
+        # normalize anonymous origins
         if (preg_match("/^anonymous@.*$/",$cdr['origin'])) {
         	$cdr['origin']='+31000000000';
         }
 
         preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
-
 
         $cdr['start_date']  = sprintf ("%s/%s/%s %s",$m[3],$m[2],$m[1],$m[4]);
 
@@ -2943,7 +2944,7 @@ class MaxRate extends CSVWritter {
 
         $cdr['product']     = $this->product;
 
-        // normalize duration based on billed duration
+        # normalize duration based on billed duration
         if ($CDR->rateDuration) {
         	$cdr['duration']    = $CDR->rateDuration;
         } else {
@@ -2953,6 +2954,8 @@ class MaxRate extends CSVWritter {
         $cdr['extra']=$CDR->callId;
 
 		if ($CDR->flow == 'on-net') {
+            # RFP 4.2.1
+
         	$cdr['charge_info'] = sprintf("(%s,1)",$cdr['origin']);
 
             $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
@@ -2962,6 +2965,7 @@ class MaxRate extends CSVWritter {
             }
 
         } else if ($CDR->flow == 'outgoing') {
+            # RFP 4.2.2
 
         	if ($this->outbound_trunks[$CDR->CanonicalURIDomain]) {
             	$outbound_trunk = $this->outbound_trunks[$CDR->CanonicalURIDomain];
@@ -2975,6 +2979,7 @@ class MaxRate extends CSVWritter {
                                           );
 
         } else if ($CDR->flow == 'incoming') {
+            # RFP 4.2.3
 
            	if ($this->inbound_trunks[$CDR->SourceIP]) {
             	$inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
@@ -2991,6 +2996,7 @@ class MaxRate extends CSVWritter {
             }
 
         } else if ($CDR->flow == 'diverted-on-net') {
+            # RFP 4.2.4
 
 	        $DiverterRPID=$this->getRPIDforAccount($CDR->username);
 
@@ -3017,6 +3023,7 @@ class MaxRate extends CSVWritter {
         	$cdr['charge_info'] = sprintf("(%s,2)",$inbound_trunk);
 
         } else if ($CDR->flow == 'diverted-off-net') {
+            # RFP 4.2.5
 
 	        $DiverterRPID=$this->getRPIDforAccount($CDR->username);
 
@@ -3046,16 +3053,13 @@ class MaxRate extends CSVWritter {
 
         }
 
-        $line = sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+        $line = sprintf("%s,'',%s,%s,%s,%s,%s,%s,%s,'','Voice',%s,%s\n",
                         $cdr['origin'],
-                        '',
                         $cdr['destination'],
                         $cdr['start_date'],
                         $cdr['feature_set'],
                         $cdr['product'],
                         $cdr['duration'],
-                        '',
-                        'Voice',
                         $cdr['charge_info'],
                         $cdr['extra']
                        );
