@@ -2805,6 +2805,7 @@ class MaxRate extends CSVWritter {
     var $skip_prefixes   = array();
     var $skip_numbers    = array();
     var $skip_domains    = array();
+    var $rpid_cache      = array();
 
     function MaxRate ($cdr_source='', $csv_directory='', $db_subscribers='') {
     	global $MaxRateSettings;   // set in global.inc
@@ -3118,9 +3119,13 @@ class MaxRate extends CSVWritter {
     function getRPIDforAccount($account) {
         if (!$account) return false;
 
+        if ($this->rpid_cache[$account]) {
+            return $this->rpid_cache[$account];
+        }
+
         list($username,$domain) = explode('@',$account);
 
-        $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+        $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
 
         if (!$this->AccountsDB->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -3131,6 +3136,7 @@ class MaxRate extends CSVWritter {
         if ($this->AccountsDB->num_rows()) {
             $this->AccountsDB->next_record();
             $_profile=json_decode(trim($this->AccountsDB->f('profile')));
+            $this->rpid_cache[$account]=$_profile->rpid;
             return $_profile->rpid;
 
         } else {
