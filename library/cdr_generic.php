@@ -3051,6 +3051,47 @@ class MaxRate extends CSVWritter {
                                           $outbound_trunk
                                           );
 
+        } else if ($CDR->flow == 'on-net-diverted-on-net') {
+            # RFP 4.2.6
+
+	        $DiverterRPID=$this->getRPIDforAccount($CDR->username);
+
+            if ($DiverterRPID) {
+                $diverter_origin = '+31'.ltrim($DiverterRPID,'0');
+            } else {
+                $diverter_origin = $CDR->username;
+            }
+
+            $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
+
+            if ($CalleeRPID) {
+                $cdr['destination'] = '+31'.ltrim($CalleeRPID,'0');
+            }
+
+        	$cdr['charge_info'] = sprintf("(%s,1),(%s,1)",$cdr['origin'],$diverter_origin);
+
+        } else if ($CDR->flow == 'on-net-diverted-off-net') {
+            # RFP 4.2.7
+
+	        $DiverterRPID=$this->getRPIDforAccount($CDR->username);
+
+            if ($DiverterRPID) {
+                $diverter_origin = '+31'.ltrim($DiverterRPID,'0');
+            } else {
+                $diverter_origin = $CDR->username;
+            }
+
+        	if ($this->outbound_trunks[$CDR->remoteGateway]) {
+            	$outbound_trunk = $this->outbound_trunks[$CDR->remoteGateway];
+            } else {
+                $outbound_trunk = 'unknown';
+            }
+
+           	$cdr['charge_info'] = sprintf("(%s,1),(%s,2)",
+                                          $diverter_origin,
+                                          $outbound_trunk
+                                          );
+
         }
 
         $line = sprintf("%s,'',%s,%s,%s,%s,%s,%s,%s,'','Voice',%s,%s\n",

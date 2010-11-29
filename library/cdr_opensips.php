@@ -2631,9 +2631,9 @@ class CDR_opensips extends CDR {
             } else {
                 // call is diverted
                 if ($this->CalleeIsLocal) {
-                    $this->flow = 'diverted-on-net';
+                    $this->flow = 'on-net-diverted-on-net';
                 } else {
-                    $this->flow = 'diverted-off-net';
+                    $this->flow = 'on-net-diverted-off-net';
                 }
             }
         } else {
