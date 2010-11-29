@@ -2829,8 +2829,8 @@ class MaxRate extends CSVWritter {
 
                                 'product'       => 7,
                                 'skip_domains'  => array('example.net','10.0.0.1'),
-                                'skip_numbers'  => array('1233'), // will skip all CDRs that has the username part in this array
-                                'skip_prefixes' => array('0031901') // will skipp al CDRs that begin with any of this prefixes
+                                'skip_numbers'  => array('1233'), //  skip CDRs that has the username part in this array
+                                'skip_prefixes' => array('0031901') // skip CDRs that begin with any of this prefixes
                                );
         */
 
