@@ -1,3 +1,16 @@
+cdrtool (8.0.9) unstable; urgency=low
+
+  [ Rating Engine ]
+
+  * Added CSV writter scenarios for on-net-diverted-off-net and on-net-diverted-on-net
+  * Added a RPID cache in CSV writter to minimize number of queries
+
+  [ NGNPro Client ]
+
+  * Update translations
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 30 Nov 2010 16:40:51 +0100
+
 cdrtool (8.0.8) unstable; urgency=low
 
   [ Rating Engine ]
