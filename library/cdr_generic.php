@@ -2706,7 +2706,7 @@ class CSVWritter {
             if (is_dir($csv_directory)) {
     			$this->csv_directory = $csv_directory;
             } else {
-                $log=sprintf ("CDR writter error: %s is not a directory\n",$csv_directory);
+                $log=sprintf ("CSV writter error: %s is not a directory\n",$csv_directory);
                 syslog(LOG_NOTICE,$log);
                 return false;
             }
@@ -2716,7 +2716,7 @@ class CSVWritter {
 
         if (!is_dir($this->directory)) {
             if (!mkdir($this->directory)) {
-                $log=sprintf ("CDR writter error: cannot create directory %s\n",$this->directory);
+                $log=sprintf ("CSV writter error: cannot create directory %s\n",$this->directory);
                 syslog(LOG_NOTICE,$log);
                 return false;
             }
@@ -2732,7 +2732,7 @@ class CSVWritter {
         if (!$this->directory_ready) return false;
 
         if (!$filename_suffix) {
-            $log=sprintf ("CDR writter error: no filename suffix provided\n");
+            $log=sprintf ("CSV writter error: no filename suffix provided\n");
             syslog(LOG_NOTICE,$log);
             return false;
         }
@@ -2744,7 +2744,7 @@ class CSVWritter {
         $this->full_path_tmp=$this->full_path.'.tmp';
 
         if (!$this->fp = fopen($this->full_path_tmp, 'w')) {
-            $log=sprintf ("CDR writter error: cannot open %s for writing\n",$this->full_path_tmp);
+            $log=sprintf ("CSV writter error: cannot open %s for writing\n",$this->full_path_tmp);
             syslog(LOG_NOTICE,$log);
             return false;
         }
@@ -2759,7 +2759,7 @@ class CSVWritter {
         fclose($this->fp);
 
         if (!rename($this->full_path_tmp, $this->full_path)) {
-            $log=sprintf ("CDR writter error: cannot rename %s to %s\n",$this->full_path_tmp,$this->full_path);
+            $log=sprintf ("CSV writter error: cannot rename %s to %s\n",$this->full_path_tmp,$this->full_path);
             syslog(LOG_NOTICE,$log);
         } else {
             $log=sprintf ("%d normalized CDRs written to %s\n",$this->lines, $this->full_path);
