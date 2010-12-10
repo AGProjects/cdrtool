@@ -3095,18 +3095,25 @@ class MaxRate extends CSVWritter {
 
         }
 
-        $line = sprintf("%s,'',%s,%s,%s,%s,%s,%s,%s,'','Voice',%s,%s\n",
+        $line = sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
                         $cdr['origin'],
+                        '',
                         $cdr['destination'],
-                        $cdr['start_date'],
+                        $cdr['start_date'],  
                         $cdr['feature_set'],
                         $cdr['product'],
                         $cdr['duration'],
+                        '',
+                        'Voice',
                         $cdr['charge_info'],
                         $cdr['extra']
                        );
 
         if (!fputs($this->fp,$line)) {
+            $log=sprintf ("CSV writter error: cannot append to file %s\n",$this->full_path_tmp);
+            syslog(LOG_NOTICE,$log);
+
+            $this->close_file();
     		$this->ready = false;
             return false;
         }
