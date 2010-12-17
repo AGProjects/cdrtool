@@ -9083,6 +9083,7 @@ class PaypalProcessor {
 	var $deny_ips            = array();
     var $make_credit_checks  = false;
     var $transaction_results = array('success' => false);
+    var $vat = 0;
 
     function PaypalProcessor($account,$basket=array()) {
         if (!is_object($account)) {
@@ -9128,7 +9129,9 @@ class PaypalProcessor {
         
         $CardProcessor->note = $account->account;
         $CardProcessor->account = $account->account;
-        
+
+        $CardProcessor->vat = $this->vat;
+
         // set hidden elements we need to preserve in the shopping cart application
         $CardProcessor->hidden_elements = $account->hiddenElements;
         
@@ -9209,7 +9212,6 @@ class PaypalProcessor {
                 $b=time();
                 
                 $pay_process_results = $CardProcessor->processPayment($_POST);
-                //print_r($pay_process_results);
                 if(count($pay_process_results['error']) > 0){
                     // there was a problem with payment
                     // show error and stop
@@ -9312,7 +9314,6 @@ class PaypalProcessor {
                 if ($CardProcessor->saveOrder($_POST,$pay_process_results,$extra_information)) {
 
                     $this->transaction_results=array('success' => true,
-                                                     'amount'  => $CardProcessor->transaction_data['TOTAL_AMOUNT'],
                                                      'id'      => $CardProcessor->transaction_data['TRANSACTION_ID']
                                                      );
 
