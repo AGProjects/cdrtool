@@ -1893,7 +1893,8 @@ class SipSettings {
             $this->first_transaction=false;
         }
 
-        $basket = array('pstn_credit'=>array('price'       => 20,
+        $credit_amount = 20;
+        $basket = array('pstn_credit'=>array('price'       => $credit_amount,
                                              'description' => _('Prepaid Credit'),
                                              'unit'        => 'credit',
                                              'duration'    => 'N/A',
@@ -1907,7 +1908,7 @@ class SipSettings {
 
         if ($payment_processor->transaction_results['success']) {
         	// add PSTN credit
-        	$this->addBalanceReseller($payment_processor->transaction_results['amount'],sprintf("CC transaction %s",$payment_processor->transaction_results['id']));
+        	$this->addBalanceReseller($credit_amount,sprintf("CC transaction %s",$payment_processor->transaction_results['id']));
         }
 
         if ($payment_processor->make_credit_checks) {
