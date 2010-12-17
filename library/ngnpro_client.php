@@ -11517,6 +11517,8 @@ class Customers extends Records {
         array("label"=>"Undefined",    "value"=>"N/A")
         );
 
+        var $hide_html = false;
+
     function Customers(&$SoapEngine) {
         dprint("init Customers");
 
@@ -13030,9 +13032,15 @@ class Customers extends Records {
             $customer['properties']=array();
         }
 
+        if ($this->hide_html) {
+           $logs = array();
+        } else {
+           $logs = array('success' => sprintf('Customer entry %s %s has been created',$customer['firstName'],$customer['lastName']));
+        }
+
         $function=array('commit'   => array('name'       => 'addAccount',
                                             'parameters' => array($customer),
-                                            'logs'       => array('success' => sprintf('Account for %s %s has been added',$customer['firstName'],$customer['lastName']))
+                                            'logs'       => $logs
                                             )
                        );
 
