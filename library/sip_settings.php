@@ -2875,9 +2875,6 @@ class SipSettings {
         $_account['sip_address']    = $this->account;
         $_account['password']       = $this->password;
         $_account['email']          = $this->email;
-        $_account['outbound_proxy'] = $this->sip_proxy;
-        $_account['xcap_root']      = $this->xcap_root;
-        $_account['msrp_relay']     = $this->msrp_relay;
         $_account['settings_url']   = $this->blink_settings_page;
 
         print "<table border=0>";
