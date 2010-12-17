@@ -54,13 +54,14 @@ class CreditCardProcessor {
     var $billing_name     = ''; // saved after transaction is sucessfull
     var $billing_address  = ''; // saved after transaction is sucessfull
 
-    var $vat              = 0; // percentage for VAT tax
-
     var $note             = ''; // can be set to add a note to the transaction
 
     var $environment      = 'live'; // set it to 'live' for live transactionr or 'sandbox' for texting
 
 	var $account          = ''; //Account used for logging
+
+    var $vat              = 0; // percentage for VAT tax
+    var $total            = 0;
 
     // nothing should be needed to be changed below this line by the application using this class
 
@@ -441,13 +442,16 @@ class CreditCardProcessor {
         }
 
         if(count($this->cart_items) > 0) {
-            $amt = 0;
 
             foreach($this->cart_items as $item_array => $item_details){
-                $amt = $amt+$item_details['price'];
+                $subtotal = $subtotal + $item_details['price'];
             }
 
-            $amt_currency = money_format('%i', $amt);
+            $vat_value = $this->vat/100 * $subtotal;
+            $vat_currency = money_format('%i', $vat_value);
+
+			$total = $subtotal + $vat_value;
+            $total_currency = money_format('%i', $total);
             
             // javascript functions in header
             $page_head_objects = "";
@@ -458,11 +462,13 @@ class CreditCardProcessor {
     
             $page_body_content .= "<script type = \"text/javascript\">\n";
             $page_body_content .= "function changeAmount(frm) {\n";
-            $page_body_content .= "var amt_purchase = document.getElementById('amt_purchase');\n";
+            $page_body_content .= "var total_purchase = document.getElementById('total_purchase');\n";
+            $page_body_content .= "var vat_purchase = document.getElementById('vat_purchase');\n";
             //$page_body_content .= "var id = frm.options[frm.selectedIndex].value;\n";
             //$page_body_content .= "var split_vars = id.split(\"|\");\n";
-            //$page_body_content .= "amt_purchase.innerHTML = '' + split_vars[1] + ' USD <input type=\"hidden\" name=\"amount\" value=\"' + split_vars[1] + '\"><input type=\"hidden\" name=\"item\" value=\"' + split_vars[0] + '\">';\n";
-            $page_body_content .= "amt_purchase.innerHTML = '".$amt_currency."<input type=\"hidden\" name=\"amount\" value=\"".$amt."\">';\n";
+            //$page_body_content .= "total_purchase.innerHTML = '' + split_vars[1] + ' USD <input type=\"hidden\" name=\"amount\" value=\"' + split_vars[1] + '\"><input type=\"hidden\" name=\"item\" value=\"' + split_vars[0] + '\">';\n";
+            $page_body_content .= "total_purchase.innerHTML = '".$total_currency."<input type=\"hidden\" name=\"amount\" value=\"".$total."\">';\n";
+            $page_body_content .= "vat_purchase.innerHTML = '".$vat_currency."<input type=\"hidden\" name=\"vat\" value=\"".$vat_value."\">';\n";
             $page_body_content .= "}\n";
     
             $page_body_content .= "function changeStates(frm) {\n";
@@ -522,12 +528,14 @@ class CreditCardProcessor {
             $page_body_content .= sprintf("lbl_country.innerHTML = '<font color=\"#000000\">%s</font>';\n", _("Country"));
             $page_body_content .= "var lbl_postcode = document.getElementById('lbl_postcode');\n";
             $page_body_content .= sprintf("lbl_postcode.innerHTML = '<font color=\"#000000\">%s</font>';\n", _("Postcode"));
-            $page_body_content .= "var amt_purchase = document.getElementById('amt_purchase');\n";
-            //$page_body_content .= "amt_purchase.innerHTML = '".$this->cart_items[0]['price']." USD <input type=\"hidden\" name=\"amount\" value=\"".$this->cart_items[0]['price']."\"><input type=\"hidden\" name=\"item\" value=\"".$this->cart_items[0]."\">';\n";
-            $page_body_content .= "amt_purchase.innerHTML = '".$amt_currency."<input type=\"hidden\" name=\"amount\" value=\"".$amt."\">';\n";
+            //$page_body_content .= "total_purchase.innerHTML = '".$this->cart_items[0]['price']." USD <input type=\"hidden\" name=\"amount\" value=\"".$this->cart_items[0]['price']."\"><input type=\"hidden\" name=\"item\" value=\"".$this->cart_items[0]."\">';\n";
             $page_body_content .= "var tran_key = document.getElementById('tran_key');\n";
             $tk = CreditCardProcessor::randomString(26);
             $page_body_content .= "tran_key.innerHTML = '<input type=\"hidden\" name=\"transactionKey\" value=\"".$tk."\">';\n";
+            $page_body_content .= "var total_purchase = document.getElementById('total_purchase');\n";
+            $page_body_content .= "var vat_purchase = document.getElementById('vat_purchase');\n";
+            $page_body_content .= "total_purchase.innerHTML = '".$total_currency."<input type=\"hidden\" name=\"amount\" value=\"".$total."\">';\n";
+            $page_body_content .= "vat_purchase.innerHTML   = '".$vat_currency.  "<input type=\"hidden\" name=\"vat\" value=\"".$vat_value."\">';\n";
             $page_body_content .= "var states_list = document.getElementById('states_list');\n";
             $page_body_content .= "if('".$this->user_account['Country']."' == 'CA'){\n";
             // Canada States
@@ -569,16 +577,16 @@ class CreditCardProcessor {
             $page_body_content .= sprintf("<td colspan=\"2\" class=%s><b>%s</b></td>\n",$this->chapter_class,_("Shopping Cart"));
             $page_body_content .= "</tr>\n";
     
-            /*
             // decided to display all items in the shopping cart as a list rather than a 
             // dropdown menu
+            /*
             $page_body_content .= "<select name=\"item_purchase\" onChange=\"changeAmount(this)\">\n";
             foreach($this->cart_items as $item_array => $item_details){
                 $page_body_content .=  "<option value=\"".$item_array."|".$item_details['price']."\">".$item_details['description']."</option>\n";
             }
             $page_body_content .= "</select>\n";
             */
-    
+
             $t=0;
             foreach($this->cart_items as $item_array => $item_details) {
                 $t++;
@@ -599,10 +607,34 @@ class CreditCardProcessor {
                 "<td>".money_format('%i', $item_details['price'])."</td></tr>\n";
             }
 
-            $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_odd_class);
-            $page_body_content .= sprintf("<td><b>%s</b></td>\n",_("Total Due"));
-            $page_body_content .= "<td><div id=\"amt_purchase\"></div></td>\n";
-            $page_body_content .= "</tr>\n";
+            if ($this->vat) {
+            	$page_body_content .= sprintf ("<tr class=%s>\n",$this->even_odd_class);
+            	$page_body_content .= sprintf("<td>%s (%s%s)</td>\n",_("VAT"),$this->vat,'%');
+            	$page_body_content .= "<td><div id=\"vat_purchase\"></div></td>\n";
+            	$page_body_content .= "</tr>\n";
+
+                $t++;
+    
+                $rr=floor($t/2);
+                $mod=$t-$rr*2;
+        
+                if ($mod ==0) {
+                    $_class=$this->odd_row_class;
+                } else {
+                    $_class=$this->even_row_class;
+                }
+
+            	$page_body_content .= sprintf ("<tr class=%s>\n",$this->even_odd_class);
+            	$page_body_content .= sprintf("<td><b>%s</b></td>\n",_("Total Due"));
+            	$page_body_content .= "<td><div id=\"total_purchase\"></div></td>\n";
+            	$page_body_content .= "</tr>\n";
+            } else {
+            	$page_body_content .= sprintf ("<tr class=%s>\n",$this->even_odd_class);
+            	$page_body_content .= sprintf("<td><b>%s</b></td>\n",_("Total Due"));
+            	$page_body_content .= "<td><div id=\"total_purchase\"></div></td>\n";
+            	$page_body_content .= "</tr>\n";
+            }
+
 
             $page_body_content .= "<tr>\n";
             $page_body_content .= "<td colspan=\"2\"><div id=\"lbl_errors\"></div></td>\n";
@@ -642,8 +674,8 @@ class CreditCardProcessor {
             $cur_year = date('Y');
             $years_out = 10;
             $max_year = $cur_year + $years_out;
-            for ($y = $cur_year-1; $y <= $max_year; $y++){
-                if($cur_year == $y){
+            for ($y = $cur_year; $y < $max_year; $y++){
+                if($cur_year == $y-2){
                     $page_body_content .= "<option value=\"".$y."\" selected>".$y."</option>\n";
                 }else{
                     $page_body_content .= "<option value=\"".$y."\">".$y."</option>\n";
@@ -814,9 +846,15 @@ class CreditCardProcessor {
         $page_body_content .= "<h2>"._("Error")."</h2>";
 
         $page_body_content .= "<table>\n";
-        $page_body_content .= sprintf("<tr><td>Error code:</td><td>%s</td></tr>\n",$error['error_code']);
-        $page_body_content .= sprintf("<tr><td>Description:</td><td>%s</td></tr>\n",$error['short_message']);
-        $page_body_content .= sprintf("<tr><td colspan=2>%s</td></tr>\n",$error['desc']);
+        if ($error['error_code']) {
+        	$page_body_content .= sprintf("<tr><td>Error code:</td><td>%s</td></tr>\n",$error['error_code']);
+        }
+        if ($error['short_message']) {
+        	$page_body_content .= sprintf("<tr><td>Description:</td><td>%s</td></tr>\n",$error['short_message']);
+        }
+        if ($error['desc']) {
+        	$page_body_content .= sprintf("<tr><td colspan=2>%s</td></tr>\n",$error['desc']);
+        }
 
         $page_body_content .= "</table>\n";
         $page_body_content .= "<p><a href=\"javascript:history.go(-1);\">"._("Go Back")."</a>, "._("correct the errors and re-submit. ")."\n";
@@ -835,9 +873,11 @@ class CreditCardProcessor {
         $pp_return = array();
         $_TransactionKey = filter_var($_POST['transactionKey'], FILTER_SANITIZE_STRING);
 
-        if($_TransactionKey == '' || CreditCardProcessor::transaction_exists($_TransactionKey) == true){
-        	$pp_return = array('error'=>array('field'=>'reload','desc'=>_('Page cannot be reloaded')));
-        }else{
+        if($_TransactionKey == ''){
+        	$pp_return = array('error'=>array('field'=>'key','desc'=>_('Missing transaction key')));
+        } else if (CreditCardProcessor::transaction_exists($_TransactionKey) == true){
+        	$pp_return = array('error'=>array('field'=>'reload','desc'=>_('Transaction already exists, page cannot be reloaded')));
+        } else {
 	        $pid = ProfileHandler::generateID();
 	        $handler = & ProfileHandler_Array::getInstance(array(
 	                                                             'username' => $this->pp_username,
@@ -876,7 +916,9 @@ class CreditCardProcessor {
 	        $zip = filter_var($_POST['zip'], FILTER_SANITIZE_STRING);
 	        $country = filter_var($_POST['country'], FILTER_SANITIZE_STRING);
 	        $amount = filter_var($_POST['amount'], FILTER_SANITIZE_NUMBER_INT);
-	
+
+            $this->total = $_POST['amount'];
+
 	        // Populate SOAP request information
 	        // Payment details
 	        $OrderTotal =& PayPal::getType('BasicAmountType');
@@ -1154,11 +1196,7 @@ class CreditCardProcessor {
         $items_purchase_list = $this->getTransactionItems($this->transaction_data['TRANSACTION_ID']);
         $msg = "Dear ".$this->transaction_data['FIRST_NAME']." ".$this->transaction_data['LAST_NAME'].",\n\n";
         $msg .= "This message is to confirm that on ".$this->transaction_data['PURCHASE_TIMESTAMP']." ";
-        $msg .= "you purchased from AG Projects services in amount of ".$this->transaction_data['TOTAL_AMOUNT']." ".$this->transaction_data['CURRENCY'].".\n\n";
-        $msg .= "Services Purchased:\n\n";
-        foreach($items_purchase_list as $item_purchase){
-            $msg .= "Service: ".$item_purchase['ITEM_NAME']." Price: ".$item_purchase['AMOUNT']." ".$item_purchase['CURRENCY']."\n";
-        }
+        $msg .= "you purchased from AG Projects services in amount of ".$this->total." ".$this->transaction_data['CURRENCY'].".\n\n";
         $msg .= "\n";
         $msg .= "Your account is credited and you can use your available credit immediately. If you ";
         $msg .= "do not recognize this charge, please contact us at ".$this->sender_email." with Transaction ID ".$this->transaction_data['TRANSACTION_ID']." as reference.\n\n";
@@ -1178,7 +1216,7 @@ class CreditCardProcessor {
         $items_purchase_list = $this->getTransactionItems($this->transaction_data['TRANSACTION_ID']);
         $msg = "New Site Credit Card Transaction:\n";
         $msg .= "Transaction Number: ".$this->transaction_data['TRANSACTION_ID']."\n";
-        $msg .= "Amount: ".$this->transaction_data['TOTAL_AMOUNT']." ".$this->transaction_data['CURRENCY']."\n\n";
+        $msg .= "Amount: ".$this->total." ".$this->transaction_data['CURRENCY']."\n\n";
         $msg .= "Items Purchased:\n\n";
         foreach($items_purchase_list as $item_purchase){
             $msg .= "Item: ".$item_purchase['ITEM_NAME']." Price: ".$item_purchase['AMOUNT']." ".$item_purchase['CURRENCY']."\n";
