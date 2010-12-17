@@ -1240,7 +1240,7 @@ class CDRS_opensips extends CDRS {
         if ($sip_proxy) {
             $sip_proxy=urldecode($sip_proxy);
             $where .= " and $this->SipProxyServerField = '".addslashes($sip_proxy)."'";
-            $this->url.=sprinf("&sip_proxy=%s",urlencode($sip_proxy));
+            $this->url.=sprintf("&sip_proxy=%s",urlencode($sip_proxy));
         }
 
         if ($SipCodec) {
