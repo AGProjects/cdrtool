@@ -1,3 +1,17 @@
+cdrtool (8.0.11) unstable; urgency=low
+
+  [ Rating Engine ]
+
+  * Fixed netflow determination for CDR writter
+  * Fixed wrong diverter for CDR writter in 4.2.4
+
+  [ NGNPro Client ]
+
+  * Fixed VAT calculation for prepaid credit
+  * Do not provision server addresses anymore
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 20 Dec 2010 23:16:34 +0100
+
 cdrtool (8.0.10) unstable; urgency=low
 
   * Fixed bug when appending line in CSV writter
