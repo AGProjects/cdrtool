@@ -2999,16 +2999,6 @@ class MaxRate extends CSVWritter {
         } else if ($CDR->flow == 'diverted-on-net') {
             # RFP 4.2.4
 
-	        $DiverterRPID=$this->getRPIDforAccount($CDR->username);
-
-            if ($DiverterRPID) {
-                $diverter_origin = '+31'.ltrim($DiverterRPID,'0');
-            } else {
-                $diverter_origin = $CDR->username;
-            }
-
-            $cdr['origin'] = $diverter_origin;
-
             $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
 
             if ($CalleeRPID) {
