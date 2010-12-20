@@ -915,15 +915,14 @@ class CreditCardProcessor {
 	        $state = filter_var($_POST['state'], FILTER_SANITIZE_STRING);
 	        $zip = filter_var($_POST['zip'], FILTER_SANITIZE_STRING);
 	        $country = filter_var($_POST['country'], FILTER_SANITIZE_STRING);
-	        $amount = filter_var($_POST['amount'], FILTER_SANITIZE_NUMBER_INT);
-
             $this->total = $_POST['amount'];
 
 	        // Populate SOAP request information
 	        // Payment details
 	        $OrderTotal =& PayPal::getType('BasicAmountType');
 	        $OrderTotal->setattr('currencyID', 'USD');
-	        $OrderTotal->setval($amount, 'iso-8859-1');
+	        $OrderTotal->setval($this->total, 'iso-8859-1');
+
 	        $PaymentDetails =& PayPal::getType('PaymentDetailsType');
 	        $PaymentDetails->setOrderTotal($OrderTotal);
 	        
