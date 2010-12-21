@@ -2620,7 +2620,7 @@ class CDR_opensips extends CDR {
         $this->isCallerLocal();
 
         if ($this->CallerIsLocal) {
-            if ($this->aNumberPrint == $this->BillingPartyId && $this->CanonicalURINormalized  == $this->cNumberNormalized ) {
+            if ($this->aNumberPrint == $this->BillingPartyId) {
                 // call is not diverted
     
                 if ($this->CalleeIsLocal) {
