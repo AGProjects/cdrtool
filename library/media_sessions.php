@@ -136,10 +136,12 @@ class MediaSessions {
                 $this->domain_statistics['total']['sessions']++;
 
                 foreach ($_session->streams as $streamInfo) {
-                    $this->domain_statistics[$domain1]['caller']=$this->domain_statistics[$domain1]['caller']+intval($streamInfo->caller_bytes/$_session->duration*2);
-                    $this->domain_statistics['total']['caller']=$this->domain_statistics['total']['caller']+intval($streamInfo->caller_bytes/$_session->duration*2);
-                    $this->domain_statistics[$domain1]['callee']=$this->domain_statistics[$domain1]['callee']+intval($streamInfo->callee_bytes/$_session->duration*2);
-                    $this->domain_statistics['total']['callee']=$this->domain_statistics['total']['callee']+intval($streamInfo->callee_bytes/$_session->duration*2);
+                    if ($_session->duration) {
+                        $this->domain_statistics[$domain1]['caller']=$this->domain_statistics[$domain1]['caller']+intval($streamInfo->caller_bytes/$_session->duration*2);
+                        $this->domain_statistics['total']['caller']=$this->domain_statistics['total']['caller']+intval($streamInfo->caller_bytes/$_session->duration*2);
+                        $this->domain_statistics[$domain1]['callee']=$this->domain_statistics[$domain1]['callee']+intval($streamInfo->callee_bytes/$_session->duration*2);
+                        $this->domain_statistics['total']['callee']=$this->domain_statistics['total']['callee']+intval($streamInfo->callee_bytes/$_session->duration*2);
+                    }
                 }
 
             }
