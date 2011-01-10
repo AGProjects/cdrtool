@@ -175,17 +175,19 @@ class NetworkStatistics {
 				} else {
                 	$a_print='';
 
-                    foreach (array_keys($_entity['attributes']) as $_a1) {
-                        if ($_a1 == 'dburi') {
-                            if (preg_match("/^(mysql:\/\/\w*):\w*(@.*)$/",$_entity['attributes'][$_a1],$m)) {
-                                $val=$m[1].':xxx'.$m[2];
+                    if ( is_array($_entity['attributes'])) {
+                        foreach (array_keys($_entity['attributes']) as $_a1) {
+                            if ($_a1 == 'dburi') {
+                                if (preg_match("/^(mysql:\/\/\w*):\w*(@.*)$/",$_entity['attributes'][$_a1],$m)) {
+                                    $val=$m[1].':xxx'.$m[2];
+                                } else {
+                                    $val=$_entity['attributes'][$_a1];
+                                }
                             } else {
                                 $val=$_entity['attributes'][$_a1];
                             }
-                        } else {
-                            $val=$_entity['attributes'][$_a1];
+                            $a_print .= sprintf ("%s=%s ",$_a1,$val);
                         }
-                        $a_print .= sprintf ("%s=%s ",$_a1,$val);
                     }
 
             		printf ("<tr><td><b>%s</b></td><td class=border>%s</td><td class=border>%s</td><td class=border>%s</td></tr>",
