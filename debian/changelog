@@ -1,3 +1,11 @@
+cdrtool (8.0.12) unstable; urgency=low
+
+  * Fixed division by zero when duration is 0 in media sessions 
+  * Fixed warning in network topology view when role attributes are not an array
+  * Revert wrong fix for CSV writter netflow determination
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 10 Jan 2011 14:39:07 +0100
+
 cdrtool (8.0.11) unstable; urgency=low
 
   [ Rating Engine ]
