@@ -2168,7 +2168,7 @@ class SipDomains extends Records {
             }
         }
 
-        printf ("<input type=hidden name=domain_filter value='%s'",$domain->domain);
+        printf ("<input type=hidden name=domain_filter value='%s'>",$domain->domain);
         $this->printFiltersToForm();
 
         $this->printHiddenFormElements();
@@ -4654,8 +4654,8 @@ class EnumRanges extends Records {
             }
         }
 
-        printf ("<input type=hidden name=tld_filter value='%s'",$range->id->tld);
-        printf ("<input type=hidden name=prefix_filter value='%s'",$range->id->prefix);
+        printf ("<input type=hidden name=tld_filter value='%s'>",$range->id->tld);
+        printf ("<input type=hidden name=prefix_filter value='%s'>",$range->id->prefix);
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
 
@@ -6135,8 +6135,8 @@ class EnumMappings extends Records {
             }
         }
 
-        printf ("<input type=hidden name=tld_filter value='%s'",$number->id->tld);
-        printf ("<input type=hidden name=number_filter value='%s'",$number->id->number);
+        printf ("<input type=hidden name=tld_filter value='%s'>",$number->id->tld);
+        printf ("<input type=hidden name=number_filter value='%s'>",$number->id->number);
 
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
@@ -6948,8 +6948,8 @@ class DnsZones extends Records {
             }
         }
 
-        printf ("<input type=hidden name=tld_filter value='%s'",$zone->id->tld);
-        printf ("<input type=hidden name=prefix_filter value='%s'",$zone->id->prefix);
+        printf ("<input type=hidden name=tld_filter value='%s'>",$zone->id->tld);
+        printf ("<input type=hidden name=prefix_filter value='%s'>",$zone->id->prefix);
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
 
@@ -8304,7 +8304,7 @@ class DnsRecords extends Records {
             }
         }
 
-        printf ("<input type=hidden name=id_filter value='%s'",$record->id);
+        printf ("<input type=hidden name=id_filter value='%s'>",$record->id);
 
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
@@ -9222,7 +9222,7 @@ class Carriers extends Records {
             </tr>";
         }
 
-        printf ("<input type=hidden name=id_filter value='%s'",$carier->id);
+        printf ("<input type=hidden name=id_filter value='%s'>",$carier->id);
 
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
@@ -9754,7 +9754,7 @@ class Gateways extends Records {
 
         }
 
-        printf ("<input type=hidden name=id_filter value='%s'",$gateway->id);
+        printf ("<input type=hidden name=id_filter value='%s'>",$gateway->id);
 
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
@@ -10311,7 +10311,7 @@ class GatewayRules extends Records {
 
         }
 
-        printf ("<input type=hidden name=reseller_filter value='%s'",$rule->reseller);
+        printf ("<input type=hidden name=reseller_filter value='%s'>",$rule->reseller);
 
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
@@ -10896,7 +10896,7 @@ class Routes extends Records {
             </tr>";
         }
 
-        printf ("<input type=hidden name=id_filter value='%s'",$carier->id);
+        printf ("<input type=hidden name=id_filter value='%s'>",$carier->id);
 
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
@@ -12815,7 +12815,7 @@ class Customers extends Records {
             printf ("<tr><td class=border>Reseller</td>
             <td class=border>%s</td></tr>",$this->filters['reseller']);
 
-            printf ("<input type=hidden name=reseller_filter value='%s'",$this->filters['reseller']);
+            printf ("<input type=hidden name=reseller_filter value='%s'>",$this->filters['reseller']);
 
         } else if ($this->reseller) {
             printf ("<tr><td class=border>Reseller</td>
