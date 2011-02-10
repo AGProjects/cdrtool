@@ -2806,7 +2806,8 @@ class MaxRate extends CSVWritter {
     var $skip_numbers    = array();
     var $skip_domains    = array();
     var $rpid_cache      = array();
-
+    var $translate_uris  = array();
+ 
     function MaxRate ($cdr_source='', $csv_directory='', $db_subscribers='') {
     	global $MaxRateSettings;   // set in global.inc
 
@@ -2828,6 +2829,8 @@ class MaxRate extends CSVWritter {
                                                            ),
 
                                 'product'       => 7,
+                                'translate_uris'=> array( '1233@10.0.0.2'=>'+1233',
+                                                          '[1-9][0-9]{4}.*@10.0.0.2'=>'+1233'), 
                                 'skip_domains'  => array('example.net','10.0.0.1'),
                                 'skip_numbers'  => array('1233'), //  skip CDRs that has the username part in this array
                                 'skip_prefixes' => array('0031901') // skip CDRs that begin with any of this prefixes
@@ -2863,7 +2866,11 @@ class MaxRate extends CSVWritter {
             $this->product=$MaxRateSettings['product'];
         }
 
-		$this->AccountsDB = new $db_subscribers();
+        if (is_array($MaxRateSettings['translate_uris'])) {
+            $this->translate_uris=$MaxRateSettings['translate_uris'];
+        }
+
+        $this->AccountsDB = new $db_subscribers();
 
         $this->CSVWritter($cdr_source, $csv_directory);
 
@@ -2935,6 +2942,16 @@ class MaxRate extends CSVWritter {
         # normalize anonymous origins
         if (preg_match("/^anonymous@.*$/",$cdr['origin'])) {
         	$cdr['origin']='+31000000000';
+        }
+
+        #translate destination uris
+        if ($CDR->CanonicalURINormalized && count($this->translate_uris)) {
+            foreach ($this->translate_uris as $key => $uri) {
+                if ( preg_match("/^$key/", $CDR->CanonicalURINormalized)) {
+                     $cdr['destination']=$uri;
+                     break;
+                }
+            }
         }
 
         preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
