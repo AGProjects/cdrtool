@@ -200,6 +200,9 @@ $DATASOURCES=array(
                     "domainTranslation"  => array(
                                                   "gw02.domain.com"      => "pstn.domain.com" // translate Realm
                                                   ), 
+                    "domainTranslationDestination"  => array(
+                                                 "gw02.domain.com"      => "pstn.domain.com" // translate destination
+                                                  ), 
                     "purgeCDRsAfter"     => 120,           // how many days to keep old CDRs, valid only when Radius tables are not atomatically rotated
                     "db_registrar"       => "DB_opensips", // opensips location database
                     "enableThor"         => false,	   // set to true if using SIP Thor

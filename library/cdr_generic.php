@@ -1217,6 +1217,12 @@ class CDRS {
             $NumberStack['domain']    = $p[1];
         }
 
+        // Translate the domain 
+        if (is_array($this->DATASOURCES[$this->cdr_source]['domainTranslationDestination']) && 
+            in_array($NumberStack['domain'],array_keys($this->DATASOURCES[$this->cdr_source]['domainTranslationDestination']))) {
+            $NumberStack['domain'] = $this->DATASOURCES[$this->cdr_source]['domainTranslationDestination'][$NumberStack['domain']];
+        }
+
         if ($type=="destination" && is_numeric($NumberStack['username'])) {
             // strip custom prefix from destination
             $usernameLength=strlen($NumberStack['username']);
