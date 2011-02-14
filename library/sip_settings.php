@@ -1673,8 +1673,10 @@ class SipSettings {
         foreach(array_keys($this->diversionType) as $condition) {
             $uri=$result->$condition;
 
-            if ($uri == "<voice-mailbox>" && $this->absolute_voicemail_uri) {
+            if (($uri == "<voice-mailbox>" || $uri == "voice-mailbox") && $this->absolute_voicemail_uri) {
                 $uri = $this->voicemail['Account'];
+            } else if ($uri == "voice-mailbox") {
+                $uri = "<voice-mailbox>";
             }
 
             if (preg_match("/^(sip:|sips:)(.*)$/i",$uri,$m)) {
