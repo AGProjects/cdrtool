@@ -94,7 +94,7 @@ class XSDType
                     (utf8_encode(utf8_decode($value)) != $value)) {
                     $value = utf8_encode($value);
                 }
-                $elements[] =& new SOAP_Value($ename, $element['type'], $value);
+                $elements[] =new SOAP_Value($ename, $element['type'], $value);
             }
         }
 
@@ -107,9 +107,9 @@ class XSDType
         }
 
         if (count($this->_attributeValues)) {
-            $v =& new SOAP_Value($name, '', $elements, $this->_attributeValues);
+            $v =new SOAP_Value($name, '', $elements, $this->_attributeValues);
         } else {
-            $v =& new SOAP_Value($name, '', $elements);
+            $v =new SOAP_Value($name, '', $elements);
         }
         return $v;
     }

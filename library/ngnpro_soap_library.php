@@ -1,7 +1,7 @@
 <?
 
 /*
-	Copyright (c) 2007-2009 AG Projects
+	Copyright (c) 2007-2011 AG Projects
   	http://ag-projects.com
   	Author Adrian Georgescu
 
@@ -11,7 +11,6 @@
 */
 
 require_once('SOAP/Client.php');
-
 class SOAP_Client_Custom extends SOAP_Client {
 
     function _serializeValue(&$value, $name = '', $type = false, $elNamespace = NULL, $typeNamespace=NULL, $options=array(), $attributes = array(), $artype='')
@@ -73,7 +72,7 @@ class SOAP_Client_Custom extends SOAP_Client {
 
             $array_type = $array_type_prefix = '';
             if ($numtypes != 1) {
-                $arrayTypeQName =& new QName($arrayType);
+                $arrayTypeQName =new QName($arrayType);
                 $arrayType = $arrayTypeQName->name;
                 $array_types = array();
                 $array_val = NULL;
@@ -158,8 +157,8 @@ class SOAP_Client_Custom extends SOAP_Client {
         $xml_attr = '';
         if (count($attributes) > 0) {
             foreach ($attributes as $k => $v) {
-                $kqn =& new QName($k);
-                $vqn =& new QName($v);
+                $kqn =new QName($k);
+                $vqn =new QName($v);
                 $xml_attr .= ' '.$kqn->fqn().'="'.$vqn->fqn().'"';
             }
         }
@@ -205,7 +204,7 @@ class SOAP_Client_Custom extends SOAP_Client {
             $this->headersOut[] =& $soap_value;
         } else if (gettype($soap_value) == 'array') {
             // name, value, namespace, mustunderstand, actor
-            $this->headersOut[] =& new SOAP_Header($soap_value[0], NULL, $soap_value[1], $soap_value[2], $soap_value[3]);;
+            $this->headersOut[] =new SOAP_Header($soap_value[0], NULL, $soap_value[1], $soap_value[2], $soap_value[3]);;
         } else {
             $this->_raiseSoapFault("Don't understand the header info you provided.  Must be array or SOAP_Header.");
         }
@@ -214,463 +213,10 @@ class SOAP_Client_Custom extends SOAP_Client {
 
 class WebService_NGNPro_SipPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_SipPort($url)
-{
-        $this->SOAP_Client_Custom($url, 0);
-    }
-    function &addDomain($domain) {
-        return $this->call("addDomain", 
-                        $v = array("domain"=>$domain), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &updateDomain($domain) {
-        // domain is a ComplexType SipDomain,
-        //refer to wsdl for more info
-        $domain =& new SOAP_Value('domain','{urn:AGProjects:NGNPro}SipDomain',$domain);
-        return $this->call("updateDomain", 
-                        $v = array("domain"=>$domain), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &deleteDomain($domain) {
-        return $this->call("deleteDomain", 
-                        $v = array("domain"=>$domain), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getDomains($query) {
-        // query is a ComplexType SipDomainQuery,
-        //refer to wsdl for more info
-        $query =& new SOAP_Value('query','{urn:AGProjects:NGNPro}SipDomainQuery',$query);
-        return $this->call("getDomains", 
-                        $v = array("query"=>$query), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &addTrustedPeer($peer) {
-        // peer is a ComplexType TrustedPeer,
-        //refer to wsdl for more info
-        $peer =& new SOAP_Value('peer','{urn:AGProjects:NGNPro}TrustedPeer',$peer);
-        return $this->call("addTrustedPeer", 
-                        $v = array("peer"=>$peer), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &deleteTrustedPeer($ip) {
-        return $this->call("deleteTrustedPeer", 
-                        $v = array("ip"=>$ip), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getTrustedPeers($query) {
-        // query is a ComplexType TrustedPeerQuery,
-        //refer to wsdl for more info
-        $query =& new SOAP_Value('query','{urn:AGProjects:NGNPro}TrustedPeerQuery',$query);
-        return $this->call("getTrustedPeers", 
-                        $v = array("query"=>$query), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &addAccount($account) {
-        // account is a ComplexType SipAccount,
-        //refer to wsdl for more info
-        $account =& new SOAP_Value('account','{urn:AGProjects:NGNPro}SipAccount',$account);
-        return $this->call("addAccount", 
-                        $v = array("account"=>$account), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &updateAccount($account) {
-        // account is a ComplexType SipAccount,
-        //refer to wsdl for more info
-        $account =& new SOAP_Value('account','{urn:AGProjects:NGNPro}SipAccount',$account);
-        return $this->call("updateAccount", 
-                        $v = array("account"=>$account), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &deleteAccount($sipId) {
-        // sipId is a ComplexType SipId,
-        //refer to wsdl for more info
-        $sipId =& new SOAP_Value('sipId','{urn:AGProjects:NGNPro}SipId',$sipId);
-        return $this->call("deleteAccount", 
-                        $v = array("sipId"=>$sipId), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getAccount($sipId) {
-        // sipId is a ComplexType SipId,
-        //refer to wsdl for more info
-        $sipId =& new SOAP_Value('sipId','{urn:AGProjects:NGNPro}SipId',$sipId);
-        return $this->call("getAccount", 
-                        $v = array("sipId"=>$sipId), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getAccounts($query) {
-        // query is a ComplexType SipQuery,
-        //refer to wsdl for more info
-        $query =& new SOAP_Value('query','{urn:AGProjects:NGNPro}SipQuery',$query);
-        return $this->call("getAccounts", 
-                        $v = array("query"=>$query), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &addAlias($alias) {
-        // alias is a ComplexType SipAlias,
-        //refer to wsdl for more info
-        $alias =& new SOAP_Value('alias','{urn:AGProjects:NGNPro}SipAlias',$alias);
-        return $this->call("addAlias", 
-                        $v = array("alias"=>$alias), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &updateAlias($alias) {
-        // alias is a ComplexType SipAlias,
-        //refer to wsdl for more info
-        $alias =& new SOAP_Value('alias','{urn:AGProjects:NGNPro}SipAlias',$alias);
-        return $this->call("updateAlias", 
-                        $v = array("alias"=>$alias), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &deleteAlias($id) {
-        // id is a ComplexType SipId,
-        //refer to wsdl for more info
-        $id =& new SOAP_Value('id','{urn:AGProjects:NGNPro}SipId',$id);
-        return $this->call("deleteAlias", 
-                        $v = array("id"=>$id), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getAlias($id) {
-        // id is a ComplexType SipId,
-        //refer to wsdl for more info
-        $id =& new SOAP_Value('id','{urn:AGProjects:NGNPro}SipId',$id);
-        return $this->call("getAlias", 
-                        $v = array("id"=>$id), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getAliasesForAccount($target) {
-        // target is a ComplexType SipId,
-        //refer to wsdl for more info
-        $target =& new SOAP_Value('target','{urn:AGProjects:NGNPro}SipId',$target);
-        return $this->call("getAliasesForAccount", 
-                        $v = array("target"=>$target), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getAliases($query) {
-        // query is a ComplexType AliasQuery,
-        //refer to wsdl for more info
-        $query =& new SOAP_Value('query','{urn:AGProjects:NGNPro}AliasQuery',$query);
-        return $this->call("getAliases", 
-                        $v = array("query"=>$query), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &addToGroup($sipId, $group) {
-        return $this->call("addToGroup", 
-                        $v = array("sipId"=>$sipId, "group"=>$group), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &removeFromGroup($sipId, $group) {
-        return $this->call("removeFromGroup", 
-                        $v = array("sipId"=>$sipId, "group"=>$group), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getGroups($sipId) {
-        // sipId is a ComplexType SipId,
-        //refer to wsdl for more info
-        $sipId =& new SOAP_Value('sipId','{urn:AGProjects:NGNPro}SipId',$sipId);
-        return $this->call("getGroups", 
-                        $v = array("sipId"=>$sipId), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &addBalance($sipId, $value, $description)
+    function WebService_NGNPro_SipPort($path = 'https://mdns.sipthor.net/ngnpro/')
     {
-        // sipId is a ComplexType SipId,
-        // refer to wsdl for more info
-        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
-        $result = $this->call('addBalance',
-                              $v = array('sipId' => $sipId, 'value' => $value, 'description' => $description),
-                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
-                                    'soapaction' => '',
-                                    'style' => 'rpc',
-                                    'use' => 'encoded'));
-        return $result;
+        $this->SOAP_Client($path, 0);
     }
-    function &addBalanceFromVoucher($sipId, $card) {
-        // card is a ComplexType PrepaidCard,
-        //refer to wsdl for more info
-        $card =& new SOAP_Value('card','{urn:AGProjects:NGNPro}PrepaidCard',$card);
-        return $this->call("addBalanceFromVoucher", 
-                        $v = array("sipId"=>$sipId, "card"=>$card), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getPrepaidStatus($sipIds) {
-        // sipIds is a ComplexType SipIdArray,
-        //refer to wsdl for more info
-        $sipIds =& new SOAP_Value('sipIds','{urn:AGProjects:NGNPro}SipIdArray',$sipIds);
-        return $this->call("getPrepaidStatus", 
-                        $v = array("sipIds"=>$sipIds), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getCreditHistory($sipId, $count)
-    {
-        // sipId is a ComplexType SipId,
-        // refer to wsdl for more info
-        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
-        $result = $this->call('getCreditHistory',
-                              $v = array('sipId' => $sipId, 'count' => $count),
-                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
-                                    'soapaction' => '',
-                                    'style' => 'rpc',
-                                    'use' => 'encoded'));
-        return $result;
-    }
-    function &addPhonebookEntry($sipId, $entry) {
-        // entry is a ComplexType PhonebookEntry,
-        //refer to wsdl for more info
-        $entry =& new SOAP_Value('entry','{urn:AGProjects:NGNPro}PhonebookEntry',$entry);
-        return $this->call("addPhonebookEntry", 
-                        $v = array("sipId"=>$sipId, "entry"=>$entry), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &updatePhonebookEntry($sipId, $entry) {
-        // entry is a ComplexType PhonebookEntry,
-        //refer to wsdl for more info
-        $entry =& new SOAP_Value('entry','{urn:AGProjects:NGNPro}PhonebookEntry',$entry);
-        return $this->call("updatePhonebookEntry", 
-                        $v = array("sipId"=>$sipId, "entry"=>$entry), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &deletePhonebookEntry($sipId, $uri) {
-        return $this->call("deletePhonebookEntry", 
-                        $v = array("sipId"=>$sipId, "uri"=>$uri), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getPhonebookEntries($sipId, $match, $range) {
-        // range is a ComplexType Range,
-        //refer to wsdl for more info
-        $range =& new SOAP_Value('range','{urn:AGProjects:NGNPro}Range',$range);
-        return $this->call("getPhonebookEntries", 
-                        $v = array("sipId"=>$sipId, "match"=>$match, "range"=>$range), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &setRejectMembers($sipId, $members) {
-        // members is a ComplexType StringArray,
-        //refer to wsdl for more info
-        $members =& new SOAP_Value('members','{urn:AGProjects:NGNPro}StringArray',$members);
-        return $this->call("setRejectMembers", 
-                        $v = array("sipId"=>$sipId, "members"=>$members), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getRejectMembers($sipId) {
-        // sipId is a ComplexType SipId,
-        //refer to wsdl for more info
-        $sipId =& new SOAP_Value('sipId','{urn:AGProjects:NGNPro}SipId',$sipId);
-        return $this->call("getRejectMembers", 
-                        $v = array("sipId"=>$sipId), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &setAcceptRules($sipId, $rules) {
-        // rules is a ComplexType AcceptRules,
-        //refer to wsdl for more info
-        $rules =& new SOAP_Value('rules','{urn:AGProjects:NGNPro}AcceptRules',$rules);
-        return $this->call("setAcceptRules", 
-                        $v = array("sipId"=>$sipId, "rules"=>$rules), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getAcceptRules($sipId) {
-        // sipId is a ComplexType SipId,
-        //refer to wsdl for more info
-        $sipId =& new SOAP_Value('sipId','{urn:AGProjects:NGNPro}SipId',$sipId);
-        return $this->call("getAcceptRules", 
-                        $v = array("sipId"=>$sipId), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &setBarringPrefixes($sipId, $prefixes) {
-        // prefixes is a ComplexType StringArray,
-        //refer to wsdl for more info
-        $prefixes =& new SOAP_Value('prefixes','{urn:AGProjects:NGNPro}StringArray',$prefixes);
-        return $this->call("setBarringPrefixes", 
-                        $v = array("sipId"=>$sipId, "prefixes"=>$prefixes), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getBarringPrefixes($sipId) {
-        // sipId is a ComplexType SipId,
-        //refer to wsdl for more info
-        $sipId =& new SOAP_Value('sipId','{urn:AGProjects:NGNPro}SipId',$sipId);
-        return $this->call("getBarringPrefixes", 
-                        $v = array("sipId"=>$sipId), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &setCallDiversions($sipId, $diversions) {
-        // diversions is a ComplexType CallDiversions,
-        //refer to wsdl for more info
-        $diversions =& new SOAP_Value('diversions','{urn:AGProjects:NGNPro}CallDiversions',$diversions);
-        return $this->call("setCallDiversions", 
-                        $v = array("sipId"=>$sipId, "diversions"=>$diversions), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getCallDiversions($sipId) {
-        // sipId is a ComplexType SipId,
-        //refer to wsdl for more info
-        $sipId =& new SOAP_Value('sipId','{urn:AGProjects:NGNPro}SipId',$sipId);
-        return $this->call("getCallDiversions", 
-                        $v = array("sipId"=>$sipId), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getCalls($sipId, $query) {
-        // query is a ComplexType CallsQuery,
-        //refer to wsdl for more info
-        $query =& new SOAP_Value('query','{urn:AGProjects:NGNPro}CallsQuery',$query);
-        return $this->call("getCalls", 
-                        $v = array("sipId"=>$sipId, "query"=>$query), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getCallStatistics($sipId, $query) {
-        // query is a ComplexType CallsQuery,
-        //refer to wsdl for more info
-        $query =& new SOAP_Value('query','{urn:AGProjects:NGNPro}CallsQuery',$query);
-        return $this->call("getCallStatistics", 
-                        $v = array("sipId"=>$sipId, "query"=>$query), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getSipDeviceLocations($sipIds) {
-        // sipIds is a ComplexType SipIdArray,
-        //refer to wsdl for more info
-        $sipIds =& new SOAP_Value('sipIds','{urn:AGProjects:NGNPro}SipIdArray',$sipIds);
-        return $this->call("getSipDeviceLocations", 
-                        $v = array("sipIds"=>$sipIds), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Sip',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
-    }
-    function &getSipTrace($filter)
-    {
-        // filter is a ComplexType SipTraceFilter,
-        // refer to wsdl for more info
-        $filter = new SOAP_Value('filter', '{urn:AGProjects:NGNPro}SipTraceFilter', $filter);
-        $result = $this->call('getSipTrace',
-                              $v = array('filter' => $filter),
-                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
-                                    'soapaction' => '',
-                                    'style' => 'rpc',
-                                    'use' => 'encoded'));
-        return $result;
-    }
-    function &getMediaTrace($filter)
-    {
-        // filter is a ComplexType MediaTraceFilter,
-        // refer to wsdl for more info
-        $filter = new SOAP_Value('filter', '{urn:AGProjects:NGNPro}SipTraceFilter', $filter);
-        $result = $this->call('getMediaTrace',
-                              $v = array('filter' => $filter),
-                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
-                                    'soapaction' => '',
-                                    'style' => 'rpc',
-                                    'use' => 'encoded'));
-        return $result;
-    }
-
     function &addGateway($gateway)
     {
         // gateway is a ComplexType Gateway,
@@ -758,6 +304,9 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
     }
     function &getGatewayRules($query)
     {
+        // query is a ComplexType GatewayRuleQuery,
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}GatewayRuleQuery', $query);
         $result = $this->call('getGatewayRules',
                               $v = array('query' => $query),
                               array('namespace' => 'urn:AGProjects:NGNPro:Sip',
@@ -867,6 +416,566 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                                     'use' => 'encoded'));
         return $result;
     }
+    function &addDomain($domain)
+    {
+        // domain is a ComplexType SipDomain,
+        // refer to wsdl for more info
+        $domain = new SOAP_Value('domain', '{urn:AGProjects:NGNPro}SipDomain', $domain);
+        $result = $this->call('addDomain',
+                              $v = array('domain' => $domain),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &updateDomain($domain)
+    {
+        // domain is a ComplexType SipDomain,
+        // refer to wsdl for more info
+        $domain = new SOAP_Value('domain', '{urn:AGProjects:NGNPro}SipDomain', $domain);
+        $result = $this->call('updateDomain',
+                              $v = array('domain' => $domain),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &deleteDomain($domain)
+    {
+        $result = $this->call('deleteDomain',
+                              $v = array('domain' => $domain),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getDomains($query)
+    {
+        // query is a ComplexType SipDomainQuery,
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}SipDomainQuery', $query);
+        $result = $this->call('getDomains',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &addTrustedPeer($peer)
+    {
+        // peer is a ComplexType TrustedPeer,
+        // refer to wsdl for more info
+        $peer = new SOAP_Value('peer', '{urn:AGProjects:NGNPro}TrustedPeer', $peer);
+        $result = $this->call('addTrustedPeer',
+                              $v = array('peer' => $peer),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &deleteTrustedPeer($ip)
+    {
+        $result = $this->call('deleteTrustedPeer',
+                              $v = array('ip' => $ip),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getTrustedPeers($query)
+    {
+        // query is a ComplexType TrustedPeerQuery,
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}TrustedPeerQuery', $query);
+        $result = $this->call('getTrustedPeers',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &addAccount($account)
+    {
+        // account is a ComplexType SipAccount,
+        // refer to wsdl for more info
+        $account = new SOAP_Value('account', '{urn:AGProjects:NGNPro}SipAccount', $account);
+        $result = $this->call('addAccount',
+                              $v = array('account' => $account),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &updateAccount($account)
+    {
+        // account is a ComplexType SipAccount,
+        // refer to wsdl for more info
+        $account = new SOAP_Value('account', '{urn:AGProjects:NGNPro}SipAccount', $account);
+        $result = $this->call('updateAccount',
+                              $v = array('account' => $account),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &deleteAccount($sipId)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('deleteAccount',
+                              $v = array('sipId' => $sipId),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getAccount($sipId)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('getAccount',
+                              $v = array('sipId' => $sipId),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getAccounts($query)
+    {
+        // query is a ComplexType SipQuery,
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}SipQuery', $query);
+        $result = $this->call('getAccounts',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &addAlias($alias)
+    {
+        // alias is a ComplexType SipAlias,
+        // refer to wsdl for more info
+        $alias = new SOAP_Value('alias', '{urn:AGProjects:NGNPro}SipAlias', $alias);
+        $result = $this->call('addAlias',
+                              $v = array('alias' => $alias),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &updateAlias($alias)
+    {
+        // alias is a ComplexType SipAlias,
+        // refer to wsdl for more info
+        $alias = new SOAP_Value('alias', '{urn:AGProjects:NGNPro}SipAlias', $alias);
+        $result = $this->call('updateAlias',
+                              $v = array('alias' => $alias),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &deleteAlias($id)
+    {
+        // id is a ComplexType SipId,
+        // refer to wsdl for more info
+        $id = new SOAP_Value('id', '{urn:AGProjects:NGNPro}SipId', $id);
+        $result = $this->call('deleteAlias',
+                              $v = array('id' => $id),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getAlias($id)
+    {
+        // id is a ComplexType SipId,
+        // refer to wsdl for more info
+        $id = new SOAP_Value('id', '{urn:AGProjects:NGNPro}SipId', $id);
+        $result = $this->call('getAlias',
+                              $v = array('id' => $id),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getAliases($query)
+    {
+        // query is a ComplexType AliasQuery,
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}AliasQuery', $query);
+        $result = $this->call('getAliases',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &addToGroup($sipId, $group)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('addToGroup',
+                              $v = array('sipId' => $sipId, 'group' => $group),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &removeFromGroup($sipId, $group)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('removeFromGroup',
+                              $v = array('sipId' => $sipId, 'group' => $group),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getGroups($sipId)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('getGroups',
+                              $v = array('sipId' => $sipId),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &addBalance($sipId, $value, $description)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('addBalance',
+                              $v = array('sipId' => $sipId, 'value' => $value, 'description' => $description),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &addBalanceFromVoucher($sipId, $card)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        // card is a ComplexType PrepaidCard,
+        // refer to wsdl for more info
+        $card = new SOAP_Value('card', '{urn:AGProjects:NGNPro}PrepaidCard', $card);
+        $result = $this->call('addBalanceFromVoucher',
+                              $v = array('sipId' => $sipId, 'card' => $card),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getPrepaidStatus($sipIds)
+    {
+        // sipIds is a ComplexType SipIdArray,
+        // refer to wsdl for more info
+        $sipIds = new SOAP_Value('sipIds', '{urn:AGProjects:NGNPro}SipIdArray', $sipIds);
+        $result = $this->call('getPrepaidStatus',
+                              $v = array('sipIds' => $sipIds),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getCreditHistory($sipId, $count)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('getCreditHistory',
+                              $v = array('sipId' => $sipId, 'count' => $count),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &addPhonebookEntry($sipId, $entry)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        // entry is a ComplexType PhonebookEntry,
+        // refer to wsdl for more info
+        $entry = new SOAP_Value('entry', '{urn:AGProjects:NGNPro}PhonebookEntry', $entry);
+        $result = $this->call('addPhonebookEntry',
+                              $v = array('sipId' => $sipId, 'entry' => $entry),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &updatePhonebookEntry($sipId, $entry)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        // entry is a ComplexType PhonebookEntry,
+        // refer to wsdl for more info
+        $entry = new SOAP_Value('entry', '{urn:AGProjects:NGNPro}PhonebookEntry', $entry);
+        $result = $this->call('updatePhonebookEntry',
+                              $v = array('sipId' => $sipId, 'entry' => $entry),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &deletePhonebookEntry($sipId, $uri)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('deletePhonebookEntry',
+                              $v = array('sipId' => $sipId, 'uri' => $uri),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getPhonebookEntries($sipId, $match, $range)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        // match is a ComplexType PhonebookEntry,
+        // refer to wsdl for more info
+        $match = new SOAP_Value('match', '{urn:AGProjects:NGNPro}PhonebookEntry', $match);
+        // range is a ComplexType Range,
+        // refer to wsdl for more info
+        $range = new SOAP_Value('range', '{urn:AGProjects:NGNPro}Range', $range);
+        $result = $this->call('getPhonebookEntries',
+                              $v = array('sipId' => $sipId, 'match' => $match, 'range' => $range),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &setRejectMembers($sipId, $members)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        // members is a ComplexType StringArray,
+        // refer to wsdl for more info
+        $members = new SOAP_Value('members', '{urn:AGProjects:NGNPro}StringArray', $members);
+        $result = $this->call('setRejectMembers',
+                              $v = array('sipId' => $sipId, 'members' => $members),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getRejectMembers($sipId)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('getRejectMembers',
+                              $v = array('sipId' => $sipId),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &setAcceptRules($sipId, $rules)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        // rules is a ComplexType AcceptRules,
+        // refer to wsdl for more info
+        $rules = new SOAP_Value('rules', '{urn:AGProjects:NGNPro}AcceptRules', $rules);
+        $result = $this->call('setAcceptRules',
+                              $v = array('sipId' => $sipId, 'rules' => $rules),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getAcceptRules($sipId)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('getAcceptRules',
+                              $v = array('sipId' => $sipId),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &setBarringPrefixes($sipId, $prefixes)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        // prefixes is a ComplexType StringArray,
+        // refer to wsdl for more info
+        $prefixes = new SOAP_Value('prefixes', '{urn:AGProjects:NGNPro}StringArray', $prefixes);
+        $result = $this->call('setBarringPrefixes',
+                              $v = array('sipId' => $sipId, 'prefixes' => $prefixes),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getBarringPrefixes($sipId)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('getBarringPrefixes',
+                              $v = array('sipId' => $sipId),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &setCallDiversions($sipId, $diversions)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        // diversions is a ComplexType CallDiversions,
+        // refer to wsdl for more info
+        $diversions = new SOAP_Value('diversions', '{urn:AGProjects:NGNPro}CallDiversions', $diversions);
+        $result = $this->call('setCallDiversions',
+                              $v = array('sipId' => $sipId, 'diversions' => $diversions),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getCallDiversions($sipId)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('getCallDiversions',
+                              $v = array('sipId' => $sipId),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getCalls($sipId, $query)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        // query is a ComplexType CallsQuery,
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}CallsQuery', $query);
+        $result = $this->call('getCalls',
+                              $v = array('sipId' => $sipId, 'query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getCallStatistics($sipId, $query)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        // query is a ComplexType CallsQuery,
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}CallsQuery', $query);
+        $result = $this->call('getCallStatistics',
+                              $v = array('sipId' => $sipId, 'query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getSipDeviceLocations($sipIds)
+    {
+        // sipIds is a ComplexType SipIdArray,
+        // refer to wsdl for more info
+        $sipIds = new SOAP_Value('sipIds', '{urn:AGProjects:NGNPro}SipIdArray', $sipIds);
+        $result = $this->call('getSipDeviceLocations',
+                              $v = array('sipIds' => $sipIds),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getSipTrace($filter)
+    {
+        // filter is a ComplexType SipTraceFilter,
+        // refer to wsdl for more info
+        $filter = new SOAP_Value('filter', '{urn:AGProjects:NGNPro}SipTraceFilter', $filter);
+        $result = $this->call('getSipTrace',
+                              $v = array('filter' => $filter),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
+    function &getMediaTrace($filter)
+    {
+        // filter is a ComplexType MediaTraceFilter,
+        // refer to wsdl for more info
+        $filter = new SOAP_Value('filter', '{urn:AGProjects:NGNPro}MediaTraceFilter', $filter);
+        $result = $this->call('getMediaTrace',
+                              $v = array('filter' => $filter),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
     function &getMediaSummary()
     {
         $result = $this->call('getMediaSummary',
@@ -890,174 +999,205 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
 }
 class WebService_NGNPro_VoicemailPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_VoicemailPort($url)
-{
-        $this->SOAP_Client_Custom($url, 0);
+    function WebService_NGNPro_VoicemailPort($path = 'https://mdns.sipthor.net/ngnpro/voicemail/')
+    {
+        $this->SOAP_Client($path, 0);
     }
-    function &addAccount($account) {
+    function &addAccount($account)
+    {
         // account is a ComplexType VoicemailAccount,
-        //refer to wsdl for more info
-        $account =& new SOAP_Value('account','{urn:AGProjects:NGNPro}VoicemailAccount',$account);
-        return $this->call("addAccount", 
-                        $v = array("account"=>$account), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Voicemail',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $account = new SOAP_Value('account', '{urn:AGProjects:NGNPro}VoicemailAccount', $account);
+        $result = $this->call('addAccount',
+                              $v = array('account' => $account),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Voicemail',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &updateAccount($account) {
+    function &updateAccount($account)
+    {
         // account is a ComplexType VoicemailAccount,
-        //refer to wsdl for more info
-        $account =& new SOAP_Value('account','{urn:AGProjects:NGNPro}VoicemailAccount',$account);
-        return $this->call("updateAccount", 
-                        $v = array("account"=>$account), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Voicemail',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $account = new SOAP_Value('account', '{urn:AGProjects:NGNPro}VoicemailAccount', $account);
+        $result = $this->call('updateAccount',
+                              $v = array('account' => $account),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Voicemail',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &deleteAccount($sipId) {
+    function &deleteAccount($sipId)
+    {
         // sipId is a ComplexType SipId,
-        //refer to wsdl for more info
-        $sipId =& new SOAP_Value('sipId','{urn:AGProjects:NGNPro}SipId',$sipId);
-        return $this->call("deleteAccount", 
-                        $v = array("sipId"=>$sipId), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Voicemail',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('deleteAccount',
+                              $v = array('sipId' => $sipId),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Voicemail',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &getAccount($sipId) {
+    function &getAccount($sipId)
+    {
         // sipId is a ComplexType SipId,
-        //refer to wsdl for more info
-        $sipId =& new SOAP_Value('sipId','{urn:AGProjects:NGNPro}SipId',$sipId);
-        return $this->call("getAccount", 
-                        $v = array("sipId"=>$sipId), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Voicemail',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('getAccount',
+                              $v = array('sipId' => $sipId),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Voicemail',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &setAnnouncement($sipId, $message) {
-        return $this->call("setAnnouncement", 
-                        $v = array("sipId"=>$sipId, "message"=>$message), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Voicemail',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+    function &setAnnouncement($sipId, $message)
+    {
+        // sipId is a ComplexType SipId,
+        // refer to wsdl for more info
+        $sipId = new SOAP_Value('sipId', '{urn:AGProjects:NGNPro}SipId', $sipId);
+        $result = $this->call('setAnnouncement',
+                              $v = array('sipId' => $sipId, 'message' => $message),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Voicemail',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
 }
 class WebService_NGNPro_EnumPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_EnumPort($url)
-{
-        $this->SOAP_Client_Custom($url, 0);
+    function WebService_NGNPro_EnumPort($path = 'https://mdns.sipthor.net/ngnpro/')
+    {
+        $this->SOAP_Client($path, 0);
     }
-    function &addRange($range) {
+    function &addRange($range)
+    {
         // range is a ComplexType EnumRange,
-        //refer to wsdl for more info
-        $range =& new SOAP_Value('range','{urn:AGProjects:NGNPro}EnumRange',$range);
-        return $this->call("addRange", 
-                        $v = array("range"=>$range), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Enum',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $range = new SOAP_Value('range', '{urn:AGProjects:NGNPro}EnumRange', $range);
+        $result = $this->call('addRange',
+                              $v = array('range' => $range),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Enum',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &updateRange($range) {
+    function &updateRange($range)
+    {
         // range is a ComplexType EnumRange,
-        //refer to wsdl for more info
-        $range =& new SOAP_Value('range','{urn:AGProjects:NGNPro}EnumRange',$range);
-        return $this->call("updateRange", 
-                        $v = array("range"=>$range), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Enum',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $range = new SOAP_Value('range', '{urn:AGProjects:NGNPro}EnumRange', $range);
+        $result = $this->call('updateRange',
+                              $v = array('range' => $range),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Enum',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &deleteRange($range) {
+    function &deleteRange($range)
+    {
         // range is a ComplexType EnumRangeId,
-        //refer to wsdl for more info
-        $range =& new SOAP_Value('range','{urn:AGProjects:NGNPro}EnumRangeId',$range);
-        return $this->call("deleteRange", 
-                        $v = array("range"=>$range), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Enum',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $range = new SOAP_Value('range', '{urn:AGProjects:NGNPro}EnumRangeId', $range);
+        $result = $this->call('deleteRange',
+                              $v = array('range' => $range),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Enum',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &getRanges($query) {
+    function &getRanges($query)
+    {
         // query is a ComplexType EnumRangeQuery,
-        //refer to wsdl for more info
-        $query =& new SOAP_Value('query','{urn:AGProjects:NGNPro}EnumRangeQuery',$query);
-        return $this->call("getRanges", 
-                        $v = array("query"=>$query), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Enum',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}EnumRangeQuery', $query);
+        $result = $this->call('getRanges',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Enum',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &addNumber($number) {
+    function &addNumber($number)
+    {
         // number is a ComplexType EnumNumber,
-        //refer to wsdl for more info
-        $number =& new SOAP_Value('number','{urn:AGProjects:NGNPro}EnumNumber',$number);
-        return $this->call("addNumber", 
-                        $v = array("number"=>$number), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Enum',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $number = new SOAP_Value('number', '{urn:AGProjects:NGNPro}EnumNumber', $number);
+        $result = $this->call('addNumber',
+                              $v = array('number' => $number),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Enum',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &updateNumber($number) {
+    function &updateNumber($number)
+    {
         // number is a ComplexType EnumNumber,
-        //refer to wsdl for more info
-        $number =& new SOAP_Value('number','{urn:AGProjects:NGNPro}EnumNumber',$number);
-        return $this->call("updateNumber", 
-                        $v = array("number"=>$number), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Enum',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $number = new SOAP_Value('number', '{urn:AGProjects:NGNPro}EnumNumber', $number);
+        $result = $this->call('updateNumber',
+                              $v = array('number' => $number),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Enum',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &deleteNumber($enumId) {
+    function &deleteNumber($enumId)
+    {
         // enumId is a ComplexType EnumId,
-        //refer to wsdl for more info
-        $enumId =& new SOAP_Value('enumId','{urn:AGProjects:NGNPro}EnumId',$enumId);
-        return $this->call("deleteNumber", 
-                        $v = array("enumId"=>$enumId), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Enum',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $enumId = new SOAP_Value('enumId', '{urn:AGProjects:NGNPro}EnumId', $enumId);
+        $result = $this->call('deleteNumber',
+                              $v = array('enumId' => $enumId),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Enum',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &getNumber($enumId) {
+    function &getNumber($enumId)
+    {
         // enumId is a ComplexType EnumId,
-        //refer to wsdl for more info
-        $enumId =& new SOAP_Value('enumId','{urn:AGProjects:NGNPro}EnumId',$enumId);
-        return $this->call("getNumber", 
-                        $v = array("enumId"=>$enumId), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Enum',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $enumId = new SOAP_Value('enumId', '{urn:AGProjects:NGNPro}EnumId', $enumId);
+        $result = $this->call('getNumber',
+                              $v = array('enumId' => $enumId),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Enum',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &getNumbers($query) {
-        // query is a ComplexType EnumQuery,
-        //refer to wsdl for more info
-        $query =& new SOAP_Value('query','{urn:AGProjects:NGNPro}EnumQuery',$query);
-        return $this->call("getNumbers", 
-                        $v = array("query"=>$query), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Enum',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+    function &getNumbers($query)
+    {
+        // query is a ComplexType EnumNumberQuery,
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}EnumNumberQuery', $query);
+        $result = $this->call('getNumbers',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Enum',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
 }
 class WebService_NGNPro_DnsPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_DnsPort($url)
+    function WebService_NGNPro_DnsPort($path = 'https://mdns.sipthor.net/ngnpro/')
     {
-        $this->SOAP_Client_Custom($url, 0);
+        $this->SOAP_Client($path, 0);
     }
     function &addZone($zone)
     {
@@ -1133,9 +1273,9 @@ class WebService_NGNPro_DnsPort extends SOAP_Client_Custom
     }
     function &addFancyRecord($record)
     {
-        // record is a ComplexType DnsRecord,
+        // record is a ComplexType DnsFancyRecord,
         // refer to wsdl for more info
-        $record = new SOAP_Value('record', '{urn:AGProjects:NGNPro}DnsRecord', $record);
+        $record = new SOAP_Value('record', '{urn:AGProjects:NGNPro}DnsFancyRecord', $record);
         $result = $this->call('addFancyRecord',
                               $v = array('record' => $record),
                               array('namespace' => 'urn:AGProjects:NGNPro:Dns',
@@ -1159,9 +1299,9 @@ class WebService_NGNPro_DnsPort extends SOAP_Client_Custom
     }
     function &updateFancyRecord($record)
     {
-        // record is a ComplexType DnsRecord,
+        // record is a ComplexType DnsFancyRecord,
         // refer to wsdl for more info
-        $record = new SOAP_Value('record', '{urn:AGProjects:NGNPro}DnsRecord', $record);
+        $record = new SOAP_Value('record', '{urn:AGProjects:NGNPro}DnsFancyRecord', $record);
         $result = $this->call('updateFancyRecord',
                               $v = array('record' => $record),
                               array('namespace' => 'urn:AGProjects:NGNPro:Dns',
@@ -1172,9 +1312,6 @@ class WebService_NGNPro_DnsPort extends SOAP_Client_Custom
     }
     function &deleteRecord($recordId)
     {
-        // recordId is a ComplexType DnsRecordId,
-        // refer to wsdl for more info
-        $recordId = new SOAP_Value('recordId', '{urn:AGProjects:NGNPro}DnsRecordId', $recordId);
         $result = $this->call('deleteRecord',
                               $v = array('recordId' => $recordId),
                               array('namespace' => 'urn:AGProjects:NGNPro:Dns',
@@ -1195,9 +1332,6 @@ class WebService_NGNPro_DnsPort extends SOAP_Client_Custom
     }
     function &getRecord($recordId)
     {
-        // recordId is a ComplexType DnsRecordId,
-        // refer to wsdl for more info
-        $recordId = new SOAP_Value('recordId', '{urn:AGProjects:NGNPro}DnsRecordId', $recordId);
         $result = $this->call('getRecord',
                               $v = array('recordId' => $recordId),
                               array('namespace' => 'urn:AGProjects:NGNPro:Dns',
@@ -1231,9 +1365,9 @@ class WebService_NGNPro_DnsPort extends SOAP_Client_Custom
     }
     function &getFancyRecords($query)
     {
-        // query is a ComplexType DnsRecordQuery,
+        // query is a ComplexType DnsFancyRecordQuery,
         // refer to wsdl for more info
-        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}DnsRecordQuery', $query);
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}DnsFancyRecordQuery', $query);
         $result = $this->call('getFancyRecords',
                               $v = array('query' => $query),
                               array('namespace' => 'urn:AGProjects:NGNPro:Dns',
@@ -1245,129 +1379,151 @@ class WebService_NGNPro_DnsPort extends SOAP_Client_Custom
 }
 class WebService_NGNPro_RatingPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_RatingPort($url)
-{
-        $this->SOAP_Client_Custom($url, 0);
+    function WebService_NGNPro_RatingPort($path = 'https://mdns.sipthor.net/ngnpro/')
+    {
+        $this->SOAP_Client($path, 0);
     }
-    function &setEntityProfiles($profiles) {
+    function &setEntityProfiles($profiles)
+    {
         // profiles is a ComplexType RatingEntityProfiles,
-        //refer to wsdl for more info
-        $profiles =& new SOAP_Value('profiles','{urn:AGProjects:NGNPro}RatingEntityProfiles',$profiles);
-        return $this->call("setEntityProfiles", 
-                        $v = array("profiles"=>$profiles), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Rating',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $profiles = new SOAP_Value('profiles', '{urn:AGProjects:NGNPro}RatingEntityProfiles', $profiles);
+        $result = $this->call('setEntityProfiles',
+                              $v = array('profiles' => $profiles),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Rating',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &deleteEntityProfiles($entity) {
-        return $this->call("deleteEntityProfiles", 
-                        $v = array("entity"=>$entity), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Rating',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+    function &deleteEntityProfiles($entity)
+    {
+        $result = $this->call('deleteEntityProfiles',
+                              $v = array('entity' => $entity),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Rating',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &getEntityProfiles($entity) {
-        return $this->call("getEntityProfiles", 
-                        $v = array("entity"=>$entity), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Rating',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+    function &getEntityProfiles($entity)
+    {
+        $result = $this->call('getEntityProfiles',
+                              $v = array('entity' => $entity),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Rating',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
 }
 class WebService_NGNPro_CustomerPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_CustomerPort($url)
-{
-        $this->SOAP_Client_Custom($url, 0);
+    function WebService_NGNPro_CustomerPort($path = 'https://mdns.sipthor.net/ngnpro/')
+    {
+        $this->SOAP_Client($path, 0);
     }
-    function &addAccount($account) {
+    function &addAccount($account)
+    {
         // account is a ComplexType CustomerAccount,
-        //refer to wsdl for more info
-        $account =& new SOAP_Value('account','{urn:AGProjects:NGNPro}CustomerAccount',$account);
-        return $this->call("addAccount", 
-                        $v = array("account"=>$account), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Customer',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $account = new SOAP_Value('account', '{urn:AGProjects:NGNPro}CustomerAccount', $account);
+        $result = $this->call('addAccount',
+                              $v = array('account' => $account),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Customer',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &updateAccount($account) {
+    function &updateAccount($account)
+    {
         // account is a ComplexType CustomerAccount,
-        //refer to wsdl for more info
-        $account =& new SOAP_Value('account','{urn:AGProjects:NGNPro}CustomerAccount',$account);
-        return $this->call("updateAccount", 
-                        $v = array("account"=>$account), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Customer',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $account = new SOAP_Value('account', '{urn:AGProjects:NGNPro}CustomerAccount', $account);
+        $result = $this->call('updateAccount',
+                              $v = array('account' => $account),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Customer',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &deleteAccount($id) {
-        return $this->call("deleteAccount", 
-                        $v = array("id"=>$id), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Customer',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+    function &deleteAccount($id)
+    {
+        $result = $this->call('deleteAccount',
+                              $v = array('id' => $id),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Customer',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &getAccount($id) {
-        return $this->call("getAccount", 
-                        $v = array("id"=>$id), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Customer',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+    function &getAccount($id)
+    {
+        $result = $this->call('getAccount',
+                              $v = array('id' => $id),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Customer',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &getCustomers($query) {
+    function &getCustomers($query)
+    {
         // query is a ComplexType CustomerQuery,
-        //refer to wsdl for more info
-        $query =& new SOAP_Value('query','{urn:AGProjects:NGNPro}CustomerQuery',$query);
-        return $this->call("getCustomers", 
-                        $v = array("query"=>$query), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Customer',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}CustomerQuery', $query);
+        $result = $this->call('getCustomers',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Customer',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &getResellers($query) {
+    function &getResellers($query)
+    {
         // query is a ComplexType CustomerQuery,
-        //refer to wsdl for more info
-        $query =& new SOAP_Value('query','{urn:AGProjects:NGNPro}CustomerQuery',$query);
-        return $this->call("getResellers", 
-                        $v = array("query"=>$query), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Customer',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'' ));
+        // refer to wsdl for more info
+        $query = new SOAP_Value('query', '{urn:AGProjects:NGNPro}CustomerQuery', $query);
+        $result = $this->call('getResellers',
+                              $v = array('query' => $query),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Customer',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &setProperties($customer, $properties) {
+    function &setProperties($customer, $properties)
+    {
         // properties is a ComplexType CustomerPropertyArray,
-        //refer to wsdl for more info
-        $properties =& new SOAP_Value('properties','{urn:AGProjects:NGNPro}CustomerPropertyArray',$properties);
-        return $this->call("setProperties", 
-                        $v = array("customer"=>$customer, "properties"=>$properties), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Customer',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+        // refer to wsdl for more info
+        $properties = new SOAP_Value('properties', '{urn:AGProjects:NGNPro}CustomerPropertyArray', $properties);
+        $result = $this->call('setProperties',
+                              $v = array('customer' => $customer, 'properties' => $properties),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Customer',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
-    function &getProperties($customer) {
-        return $this->call("getProperties", 
-                        $v = array("customer"=>$customer), 
-                        array('namespace'=>'urn:AGProjects:NGNPro:Customer',
-                            'soapaction'=>'',
-                            'style'=>'rpc',
-                            'use'=>'encoded' ));
+    function &getProperties($customer)
+    {
+        $result = $this->call('getProperties',
+                              $v = array('customer' => $customer),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Customer',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
     }
 }
 class WebService_NGNPro_NetworkPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_NetworkPort($url)
-{
-        $this->SOAP_Client_Custom($url, 0);
+    function WebService_NGNPro_NetworkPort($path = 'https://mdns.sipthor.net/ngnpro/')
+    {
+        $this->SOAP_Client($path, 0);
     }
     function &getStatistics()
     {
@@ -1390,6 +1546,7 @@ class WebService_NGNPro_NetworkPort extends SOAP_Client_Custom
         return $result;
     }
 }
+
 class WebService_SoapSIMPLEProxy_PresencePort extends SOAP_Client_Custom
 {
     function WebService_SoapSIMPLEProxy_PresencePort($url)
@@ -1399,7 +1556,7 @@ class WebService_SoapSIMPLEProxy_PresencePort extends SOAP_Client_Custom
     function &setPresenceInformation($sipId, $password, $information) {
         // information is a ComplexType PresenceInformation,
         //refer to wsdl for more info
-        $information =& new SOAP_Value('information','{urn:AGProjects:SoapSIMPLEProxy}PresenceInformation',$information);
+        $information =new SOAP_Value('information','{urn:AGProjects:SoapSIMPLEProxy}PresenceInformation',$information);
         return $this->call("setPresenceInformation", 
                         $v = array("sipId"=>$sipId, "password"=>$password, "information"=>$information), 
                         array('namespace'=>'urn:AGProjects:SoapSIMPLEProxy:Presence',
@@ -1434,7 +1591,7 @@ class WebService_SoapSIMPLEProxy_PresencePort extends SOAP_Client_Custom
     function &setPolicy($sipId, $password, $policy) {
         // policy is a ComplexType PresencePolicy,
         //refer to wsdl for more info
-        $policy =& new SOAP_Value('policy','{urn:AGProjects:SoapSIMPLEProxy}PresencePolicy',$policy);
+        $policy =new SOAP_Value('policy','{urn:AGProjects:SoapSIMPLEProxy}PresencePolicy',$policy);
         return $this->call("setPolicy", 
                         $v = array("sipId"=>$sipId, "password"=>$password, "policy"=>$policy), 
                         array('namespace'=>'urn:AGProjects:SoapSIMPLEProxy:Presence',

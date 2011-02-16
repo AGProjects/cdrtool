@@ -75,7 +75,7 @@ class MultiOccurs extends XSDType
                 {
                     $value = utf8_encode($value);
                 }
-                $elements[] =& new SOAP_Value($name, $this->_type, $value);
+                $elements[] =new SOAP_Value($name, $this->_type, $value);
             }
         }
 

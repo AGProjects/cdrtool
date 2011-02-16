@@ -50,7 +50,7 @@ class ProfileHandler_Array extends ProfileHandler
     function &getInstance($params)
     {
         $classname = __CLASS__;
-        $inst =& new $classname($params);
+        $inst =new $classname($params);
         return $inst;
     }
 

@@ -1,0 +1,5 @@
+ * Deprecated PHP functions
+   http://php.net/manual/en/migration53.deprecated.php
+
+   Assigning the return value of new by reference is deprecated
+   so '& new' construction must be changed to 'new'

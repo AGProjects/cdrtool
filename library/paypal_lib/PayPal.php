@@ -84,7 +84,7 @@ class PayPal extends PEAR
         }
 
         include_once 'PayPal/CallerServices.php';
-        $c =& new CallerServices($profile);
+        $c =new CallerServices($profile);
         return $c;
     }
 
@@ -112,7 +112,7 @@ class PayPal extends PEAR
         }
 
         include_once 'PayPal/EWPServices.php';
-        return $c =& new EWPServices($profile);
+        return $c =new EWPServices($profile);
     }
 
     /**

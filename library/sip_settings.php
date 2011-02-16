@@ -46,7 +46,7 @@ class SipSettings {
     var $voicemail_server          = "vm.example.com";
     var $absolute_voicemail_uri    = false; // use <voice-mailbox>
     var $enable_thor               = false;
-    var $currency                  = "&euro";
+    var $currency                  = "&euro;";
     // access numbers
 
     var $voicemail_access_number        = "1233";
@@ -1354,7 +1354,7 @@ class SipSettings {
                                       "description"  => "Other"
                                       );
 
-        //dprint_r($this->divertTargets);
+        //print_r($this->divertTargets);
 
     }
 

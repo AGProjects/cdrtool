@@ -66,9 +66,9 @@ class XSDSimpleType extends XSDType
         		}
 
         		if (count($this->_attributeValues)) {
-					$v =& new SOAP_Value($name, '', $value, $this->_attributeValues);
+					$v =new SOAP_Value($name, '', $value, $this->_attributeValues);
         		} else {
-        			$v =& new SOAP_Value($name, '', $value);
+        			$v =new SOAP_Value($name, '', $value);
         		}
 			} else {
 				// Treat as a base XSDType
@@ -95,7 +95,7 @@ class XSDSimpleType extends XSDType
 						if (is_string($value) && $element['charset'] == 'iso-8859-1' && (utf8_encode(utf8_decode($value)) != $value)) {
 							$value = utf8_encode($value);
 						}
-						$elements[] =& new SOAP_Value($ename, $element['type'], $value);
+						$elements[] =new SOAP_Value($ename, $element['type'], $value);
 					}
 				}
 
@@ -108,9 +108,9 @@ class XSDSimpleType extends XSDType
 				}
 
 				if (count($this->_attributeValues)) {
-					$v =& new SOAP_Value($name, '', $elements, $this->_attributeValues);
+					$v =new SOAP_Value($name, '', $elements, $this->_attributeValues);
 				} else {
-					$v =& new SOAP_Value($name, '', $elements);
+					$v =new SOAP_Value($name, '', $elements);
 				}
 			}
 

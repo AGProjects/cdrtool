@@ -887,7 +887,7 @@ class CreditCardProcessor {
 	                                                             )
 	                                                       );
 	
-	        $profile = & new APIProfile($pid, $handler);
+	        $profile = new APIProfile($pid, $handler);
 	        $profile->setAPIUsername($this->pp_username);
 	        $profile->setAPIPassword($this->pricepp_pass);
 	        $profile->setSignature($this->pp_signature); 

@@ -441,7 +441,7 @@ class CallerServices extends SOAP_Client
 
         // RefundTransactionReq is a ComplexType, refer to the WSDL for more info.
         $RefundTransactionReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $RefundTransactionReq =& new SOAP_Value('RefundTransactionReq', false, $RefundTransactionReq, $RefundTransactionReq_attr);
+        $RefundTransactionReq =new SOAP_Value('RefundTransactionReq', false, $RefundTransactionReq, $RefundTransactionReq_attr);
         $result = $this->call('RefundTransaction',
                               $v = array("RefundTransactionReq" => $RefundTransactionReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -473,7 +473,7 @@ class CallerServices extends SOAP_Client
 
         // GetTransactionDetailsReq is a ComplexType, refer to the WSDL for more info.
         $GetTransactionDetailsReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $GetTransactionDetailsReq =& new SOAP_Value('GetTransactionDetailsReq', false, $GetTransactionDetailsReq, $GetTransactionDetailsReq_attr);
+        $GetTransactionDetailsReq =new SOAP_Value('GetTransactionDetailsReq', false, $GetTransactionDetailsReq, $GetTransactionDetailsReq_attr);
         $result = $this->call('GetTransactionDetails',
                               $v = array("GetTransactionDetailsReq" => $GetTransactionDetailsReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -505,7 +505,7 @@ class CallerServices extends SOAP_Client
 
         // BMCreateButtonReq is a ComplexType, refer to the WSDL for more info.
         $BMCreateButtonReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $BMCreateButtonReq =& new SOAP_Value('BMCreateButtonReq', false, $BMCreateButtonReq, $BMCreateButtonReq_attr);
+        $BMCreateButtonReq =new SOAP_Value('BMCreateButtonReq', false, $BMCreateButtonReq, $BMCreateButtonReq_attr);
         $result = $this->call('BMCreateButton',
                               $v = array("BMCreateButtonReq" => $BMCreateButtonReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -537,7 +537,7 @@ class CallerServices extends SOAP_Client
 
         // BMUpdateButtonReq is a ComplexType, refer to the WSDL for more info.
         $BMUpdateButtonReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $BMUpdateButtonReq =& new SOAP_Value('BMUpdateButtonReq', false, $BMUpdateButtonReq, $BMUpdateButtonReq_attr);
+        $BMUpdateButtonReq =new SOAP_Value('BMUpdateButtonReq', false, $BMUpdateButtonReq, $BMUpdateButtonReq_attr);
         $result = $this->call('BMUpdateButton',
                               $v = array("BMUpdateButtonReq" => $BMUpdateButtonReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -569,7 +569,7 @@ class CallerServices extends SOAP_Client
 
         // BMManageButtonStatusReq is a ComplexType, refer to the WSDL for more info.
         $BMManageButtonStatusReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $BMManageButtonStatusReq =& new SOAP_Value('BMManageButtonStatusReq', false, $BMManageButtonStatusReq, $BMManageButtonStatusReq_attr);
+        $BMManageButtonStatusReq =new SOAP_Value('BMManageButtonStatusReq', false, $BMManageButtonStatusReq, $BMManageButtonStatusReq_attr);
         $result = $this->call('BMManageButtonStatus',
                               $v = array("BMManageButtonStatusReq" => $BMManageButtonStatusReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -601,7 +601,7 @@ class CallerServices extends SOAP_Client
 
         // BMGetButtonDetailsReq is a ComplexType, refer to the WSDL for more info.
         $BMGetButtonDetailsReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $BMGetButtonDetailsReq =& new SOAP_Value('BMGetButtonDetailsReq', false, $BMGetButtonDetailsReq, $BMGetButtonDetailsReq_attr);
+        $BMGetButtonDetailsReq =new SOAP_Value('BMGetButtonDetailsReq', false, $BMGetButtonDetailsReq, $BMGetButtonDetailsReq_attr);
         $result = $this->call('BMGetButtonDetails',
                               $v = array("BMGetButtonDetailsReq" => $BMGetButtonDetailsReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -633,7 +633,7 @@ class CallerServices extends SOAP_Client
 
         // BMSetInventoryReq is a ComplexType, refer to the WSDL for more info.
         $BMSetInventoryReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $BMSetInventoryReq =& new SOAP_Value('BMSetInventoryReq', false, $BMSetInventoryReq, $BMSetInventoryReq_attr);
+        $BMSetInventoryReq =new SOAP_Value('BMSetInventoryReq', false, $BMSetInventoryReq, $BMSetInventoryReq_attr);
         $result = $this->call('BMSetInventory',
                               $v = array("BMSetInventoryReq" => $BMSetInventoryReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -665,7 +665,7 @@ class CallerServices extends SOAP_Client
 
         // BMGetInventoryReq is a ComplexType, refer to the WSDL for more info.
         $BMGetInventoryReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $BMGetInventoryReq =& new SOAP_Value('BMGetInventoryReq', false, $BMGetInventoryReq, $BMGetInventoryReq_attr);
+        $BMGetInventoryReq =new SOAP_Value('BMGetInventoryReq', false, $BMGetInventoryReq, $BMGetInventoryReq_attr);
         $result = $this->call('BMGetInventory',
                               $v = array("BMGetInventoryReq" => $BMGetInventoryReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -697,7 +697,7 @@ class CallerServices extends SOAP_Client
 
         // BMButtonSearchReq is a ComplexType, refer to the WSDL for more info.
         $BMButtonSearchReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $BMButtonSearchReq =& new SOAP_Value('BMButtonSearchReq', false, $BMButtonSearchReq, $BMButtonSearchReq_attr);
+        $BMButtonSearchReq =new SOAP_Value('BMButtonSearchReq', false, $BMButtonSearchReq, $BMButtonSearchReq_attr);
         $result = $this->call('BMButtonSearch',
                               $v = array("BMButtonSearchReq" => $BMButtonSearchReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -729,7 +729,7 @@ class CallerServices extends SOAP_Client
 
         // BillUserReq is a ComplexType, refer to the WSDL for more info.
         $BillUserReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $BillUserReq =& new SOAP_Value('BillUserReq', false, $BillUserReq, $BillUserReq_attr);
+        $BillUserReq =new SOAP_Value('BillUserReq', false, $BillUserReq, $BillUserReq_attr);
         $result = $this->call('BillUser',
                               $v = array("BillUserReq" => $BillUserReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -761,7 +761,7 @@ class CallerServices extends SOAP_Client
 
         // TransactionSearchReq is a ComplexType, refer to the WSDL for more info.
         $TransactionSearchReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $TransactionSearchReq =& new SOAP_Value('TransactionSearchReq', false, $TransactionSearchReq, $TransactionSearchReq_attr);
+        $TransactionSearchReq =new SOAP_Value('TransactionSearchReq', false, $TransactionSearchReq, $TransactionSearchReq_attr);
         $result = $this->call('TransactionSearch',
                               $v = array("TransactionSearchReq" => $TransactionSearchReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -793,7 +793,7 @@ class CallerServices extends SOAP_Client
 
         // MassPayReq is a ComplexType, refer to the WSDL for more info.
         $MassPayReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $MassPayReq =& new SOAP_Value('MassPayReq', false, $MassPayReq, $MassPayReq_attr);
+        $MassPayReq =new SOAP_Value('MassPayReq', false, $MassPayReq, $MassPayReq_attr);
         $result = $this->call('MassPay',
                               $v = array("MassPayReq" => $MassPayReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -825,7 +825,7 @@ class CallerServices extends SOAP_Client
 
         // BillAgreementUpdateReq is a ComplexType, refer to the WSDL for more info.
         $BillAgreementUpdateReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $BillAgreementUpdateReq =& new SOAP_Value('BillAgreementUpdateReq', false, $BillAgreementUpdateReq, $BillAgreementUpdateReq_attr);
+        $BillAgreementUpdateReq =new SOAP_Value('BillAgreementUpdateReq', false, $BillAgreementUpdateReq, $BillAgreementUpdateReq_attr);
         $result = $this->call('BillAgreementUpdate',
                               $v = array("BillAgreementUpdateReq" => $BillAgreementUpdateReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -857,7 +857,7 @@ class CallerServices extends SOAP_Client
 
         // AddressVerifyReq is a ComplexType, refer to the WSDL for more info.
         $AddressVerifyReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $AddressVerifyReq =& new SOAP_Value('AddressVerifyReq', false, $AddressVerifyReq, $AddressVerifyReq_attr);
+        $AddressVerifyReq =new SOAP_Value('AddressVerifyReq', false, $AddressVerifyReq, $AddressVerifyReq_attr);
         $result = $this->call('AddressVerify',
                               $v = array("AddressVerifyReq" => $AddressVerifyReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -889,7 +889,7 @@ class CallerServices extends SOAP_Client
 
         // EnterBoardingReq is a ComplexType, refer to the WSDL for more info.
         $EnterBoardingReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $EnterBoardingReq =& new SOAP_Value('EnterBoardingReq', false, $EnterBoardingReq, $EnterBoardingReq_attr);
+        $EnterBoardingReq =new SOAP_Value('EnterBoardingReq', false, $EnterBoardingReq, $EnterBoardingReq_attr);
         $result = $this->call('EnterBoarding',
                               $v = array("EnterBoardingReq" => $EnterBoardingReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -921,7 +921,7 @@ class CallerServices extends SOAP_Client
 
         // GetBoardingDetailsReq is a ComplexType, refer to the WSDL for more info.
         $GetBoardingDetailsReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $GetBoardingDetailsReq =& new SOAP_Value('GetBoardingDetailsReq', false, $GetBoardingDetailsReq, $GetBoardingDetailsReq_attr);
+        $GetBoardingDetailsReq =new SOAP_Value('GetBoardingDetailsReq', false, $GetBoardingDetailsReq, $GetBoardingDetailsReq_attr);
         $result = $this->call('GetBoardingDetails',
                               $v = array("GetBoardingDetailsReq" => $GetBoardingDetailsReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -953,7 +953,7 @@ class CallerServices extends SOAP_Client
 
         // CreateMobilePaymentReq is a ComplexType, refer to the WSDL for more info.
         $CreateMobilePaymentReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $CreateMobilePaymentReq =& new SOAP_Value('CreateMobilePaymentReq', false, $CreateMobilePaymentReq, $CreateMobilePaymentReq_attr);
+        $CreateMobilePaymentReq =new SOAP_Value('CreateMobilePaymentReq', false, $CreateMobilePaymentReq, $CreateMobilePaymentReq_attr);
         $result = $this->call('CreateMobilePayment',
                               $v = array("CreateMobilePaymentReq" => $CreateMobilePaymentReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -985,7 +985,7 @@ class CallerServices extends SOAP_Client
 
         // GetMobileStatusReq is a ComplexType, refer to the WSDL for more info.
         $GetMobileStatusReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $GetMobileStatusReq =& new SOAP_Value('GetMobileStatusReq', false, $GetMobileStatusReq, $GetMobileStatusReq_attr);
+        $GetMobileStatusReq =new SOAP_Value('GetMobileStatusReq', false, $GetMobileStatusReq, $GetMobileStatusReq_attr);
         $result = $this->call('GetMobileStatus',
                               $v = array("GetMobileStatusReq" => $GetMobileStatusReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1017,7 +1017,7 @@ class CallerServices extends SOAP_Client
 
         // SetMobileCheckoutReq is a ComplexType, refer to the WSDL for more info.
         $SetMobileCheckoutReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $SetMobileCheckoutReq =& new SOAP_Value('SetMobileCheckoutReq', false, $SetMobileCheckoutReq, $SetMobileCheckoutReq_attr);
+        $SetMobileCheckoutReq =new SOAP_Value('SetMobileCheckoutReq', false, $SetMobileCheckoutReq, $SetMobileCheckoutReq_attr);
         $result = $this->call('SetMobileCheckout',
                               $v = array("SetMobileCheckoutReq" => $SetMobileCheckoutReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1049,7 +1049,7 @@ class CallerServices extends SOAP_Client
 
         // DoMobileCheckoutPaymentReq is a ComplexType, refer to the WSDL for more info.
         $DoMobileCheckoutPaymentReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $DoMobileCheckoutPaymentReq =& new SOAP_Value('DoMobileCheckoutPaymentReq', false, $DoMobileCheckoutPaymentReq, $DoMobileCheckoutPaymentReq_attr);
+        $DoMobileCheckoutPaymentReq =new SOAP_Value('DoMobileCheckoutPaymentReq', false, $DoMobileCheckoutPaymentReq, $DoMobileCheckoutPaymentReq_attr);
         $result = $this->call('DoMobileCheckoutPayment',
                               $v = array("DoMobileCheckoutPaymentReq" => $DoMobileCheckoutPaymentReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1081,7 +1081,7 @@ class CallerServices extends SOAP_Client
 
         // GetBalanceReq is a ComplexType, refer to the WSDL for more info.
         $GetBalanceReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $GetBalanceReq =& new SOAP_Value('GetBalanceReq', false, $GetBalanceReq, $GetBalanceReq_attr);
+        $GetBalanceReq =new SOAP_Value('GetBalanceReq', false, $GetBalanceReq, $GetBalanceReq_attr);
         $result = $this->call('GetBalance',
                               $v = array("GetBalanceReq" => $GetBalanceReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1113,7 +1113,7 @@ class CallerServices extends SOAP_Client
 
         // GetPalDetailsReq is a ComplexType, refer to the WSDL for more info.
         $GetPalDetailsReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $GetPalDetailsReq =& new SOAP_Value('GetPalDetailsReq', false, $GetPalDetailsReq, $GetPalDetailsReq_attr);
+        $GetPalDetailsReq =new SOAP_Value('GetPalDetailsReq', false, $GetPalDetailsReq, $GetPalDetailsReq_attr);
         $result = $this->call('GetPalDetails',
                               $v = array("GetPalDetailsReq" => $GetPalDetailsReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1145,7 +1145,7 @@ class CallerServices extends SOAP_Client
 
         // DoExpressCheckoutPaymentReq is a ComplexType, refer to the WSDL for more info.
         $DoExpressCheckoutPaymentReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $DoExpressCheckoutPaymentReq =& new SOAP_Value('DoExpressCheckoutPaymentReq', false, $DoExpressCheckoutPaymentReq, $DoExpressCheckoutPaymentReq_attr);
+        $DoExpressCheckoutPaymentReq =new SOAP_Value('DoExpressCheckoutPaymentReq', false, $DoExpressCheckoutPaymentReq, $DoExpressCheckoutPaymentReq_attr);
         $result = $this->call('DoExpressCheckoutPayment',
                               $v = array("DoExpressCheckoutPaymentReq" => $DoExpressCheckoutPaymentReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1177,7 +1177,7 @@ class CallerServices extends SOAP_Client
 
         // DoUATPExpressCheckoutPaymentReq is a ComplexType, refer to the WSDL for more info.
         $DoUATPExpressCheckoutPaymentReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $DoUATPExpressCheckoutPaymentReq =& new SOAP_Value('DoUATPExpressCheckoutPaymentReq', false, $DoUATPExpressCheckoutPaymentReq, $DoUATPExpressCheckoutPaymentReq_attr);
+        $DoUATPExpressCheckoutPaymentReq =new SOAP_Value('DoUATPExpressCheckoutPaymentReq', false, $DoUATPExpressCheckoutPaymentReq, $DoUATPExpressCheckoutPaymentReq_attr);
         $result = $this->call('DoUATPExpressCheckoutPayment',
                               $v = array("DoUATPExpressCheckoutPaymentReq" => $DoUATPExpressCheckoutPaymentReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1209,7 +1209,7 @@ class CallerServices extends SOAP_Client
 
         // SetAuthFlowParamReq is a ComplexType, refer to the WSDL for more info.
         $SetAuthFlowParamReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $SetAuthFlowParamReq =& new SOAP_Value('SetAuthFlowParamReq', false, $SetAuthFlowParamReq, $SetAuthFlowParamReq_attr);
+        $SetAuthFlowParamReq =new SOAP_Value('SetAuthFlowParamReq', false, $SetAuthFlowParamReq, $SetAuthFlowParamReq_attr);
         $result = $this->call('SetAuthFlowParam',
                               $v = array("SetAuthFlowParamReq" => $SetAuthFlowParamReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1241,7 +1241,7 @@ class CallerServices extends SOAP_Client
 
         // GetAuthDetailsReq is a ComplexType, refer to the WSDL for more info.
         $GetAuthDetailsReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $GetAuthDetailsReq =& new SOAP_Value('GetAuthDetailsReq', false, $GetAuthDetailsReq, $GetAuthDetailsReq_attr);
+        $GetAuthDetailsReq =new SOAP_Value('GetAuthDetailsReq', false, $GetAuthDetailsReq, $GetAuthDetailsReq_attr);
         $result = $this->call('GetAuthDetails',
                               $v = array("GetAuthDetailsReq" => $GetAuthDetailsReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1273,7 +1273,7 @@ class CallerServices extends SOAP_Client
 
         // SetAccessPermissionsReq is a ComplexType, refer to the WSDL for more info.
         $SetAccessPermissionsReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $SetAccessPermissionsReq =& new SOAP_Value('SetAccessPermissionsReq', false, $SetAccessPermissionsReq, $SetAccessPermissionsReq_attr);
+        $SetAccessPermissionsReq =new SOAP_Value('SetAccessPermissionsReq', false, $SetAccessPermissionsReq, $SetAccessPermissionsReq_attr);
         $result = $this->call('SetAccessPermissions',
                               $v = array("SetAccessPermissionsReq" => $SetAccessPermissionsReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1305,7 +1305,7 @@ class CallerServices extends SOAP_Client
 
         // UpdateAccessPermissionsReq is a ComplexType, refer to the WSDL for more info.
         $UpdateAccessPermissionsReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $UpdateAccessPermissionsReq =& new SOAP_Value('UpdateAccessPermissionsReq', false, $UpdateAccessPermissionsReq, $UpdateAccessPermissionsReq_attr);
+        $UpdateAccessPermissionsReq =new SOAP_Value('UpdateAccessPermissionsReq', false, $UpdateAccessPermissionsReq, $UpdateAccessPermissionsReq_attr);
         $result = $this->call('UpdateAccessPermissions',
                               $v = array("UpdateAccessPermissionsReq" => $UpdateAccessPermissionsReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1337,7 +1337,7 @@ class CallerServices extends SOAP_Client
 
         // GetAccessPermissionDetailsReq is a ComplexType, refer to the WSDL for more info.
         $GetAccessPermissionDetailsReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $GetAccessPermissionDetailsReq =& new SOAP_Value('GetAccessPermissionDetailsReq', false, $GetAccessPermissionDetailsReq, $GetAccessPermissionDetailsReq_attr);
+        $GetAccessPermissionDetailsReq =new SOAP_Value('GetAccessPermissionDetailsReq', false, $GetAccessPermissionDetailsReq, $GetAccessPermissionDetailsReq_attr);
         $result = $this->call('GetAccessPermissionDetails',
                               $v = array("GetAccessPermissionDetailsReq" => $GetAccessPermissionDetailsReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1369,7 +1369,7 @@ class CallerServices extends SOAP_Client
 
         // SetExpressCheckoutReq is a ComplexType, refer to the WSDL for more info.
         $SetExpressCheckoutReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $SetExpressCheckoutReq =& new SOAP_Value('SetExpressCheckoutReq', false, $SetExpressCheckoutReq, $SetExpressCheckoutReq_attr);
+        $SetExpressCheckoutReq =new SOAP_Value('SetExpressCheckoutReq', false, $SetExpressCheckoutReq, $SetExpressCheckoutReq_attr);
         $result = $this->call('SetExpressCheckout',
                               $v = array("SetExpressCheckoutReq" => $SetExpressCheckoutReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1401,7 +1401,7 @@ class CallerServices extends SOAP_Client
 
         // GetExpressCheckoutDetailsReq is a ComplexType, refer to the WSDL for more info.
         $GetExpressCheckoutDetailsReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $GetExpressCheckoutDetailsReq =& new SOAP_Value('GetExpressCheckoutDetailsReq', false, $GetExpressCheckoutDetailsReq, $GetExpressCheckoutDetailsReq_attr);
+        $GetExpressCheckoutDetailsReq =new SOAP_Value('GetExpressCheckoutDetailsReq', false, $GetExpressCheckoutDetailsReq, $GetExpressCheckoutDetailsReq_attr);
         $result = $this->call('GetExpressCheckoutDetails',
                               $v = array("GetExpressCheckoutDetailsReq" => $GetExpressCheckoutDetailsReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1433,7 +1433,7 @@ class CallerServices extends SOAP_Client
 
         // DoDirectPaymentReq is a ComplexType, refer to the WSDL for more info.
         $DoDirectPaymentReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $DoDirectPaymentReq =& new SOAP_Value('DoDirectPaymentReq', false, $DoDirectPaymentReq, $DoDirectPaymentReq_attr);
+        $DoDirectPaymentReq =new SOAP_Value('DoDirectPaymentReq', false, $DoDirectPaymentReq, $DoDirectPaymentReq_attr);
         $result = $this->call('DoDirectPayment',
                               $v = array("DoDirectPaymentReq" => $DoDirectPaymentReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1465,7 +1465,7 @@ class CallerServices extends SOAP_Client
 
         // ManagePendingTransactionStatusReq is a ComplexType, refer to the WSDL for more info.
         $ManagePendingTransactionStatusReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $ManagePendingTransactionStatusReq =& new SOAP_Value('ManagePendingTransactionStatusReq', false, $ManagePendingTransactionStatusReq, $ManagePendingTransactionStatusReq_attr);
+        $ManagePendingTransactionStatusReq =new SOAP_Value('ManagePendingTransactionStatusReq', false, $ManagePendingTransactionStatusReq, $ManagePendingTransactionStatusReq_attr);
         $result = $this->call('ManagePendingTransactionStatus',
                               $v = array("ManagePendingTransactionStatusReq" => $ManagePendingTransactionStatusReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1497,7 +1497,7 @@ class CallerServices extends SOAP_Client
 
         // DoCaptureReq is a ComplexType, refer to the WSDL for more info.
         $DoCaptureReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $DoCaptureReq =& new SOAP_Value('DoCaptureReq', false, $DoCaptureReq, $DoCaptureReq_attr);
+        $DoCaptureReq =new SOAP_Value('DoCaptureReq', false, $DoCaptureReq, $DoCaptureReq_attr);
         $result = $this->call('DoCapture',
                               $v = array("DoCaptureReq" => $DoCaptureReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1529,7 +1529,7 @@ class CallerServices extends SOAP_Client
 
         // DoReauthorizationReq is a ComplexType, refer to the WSDL for more info.
         $DoReauthorizationReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $DoReauthorizationReq =& new SOAP_Value('DoReauthorizationReq', false, $DoReauthorizationReq, $DoReauthorizationReq_attr);
+        $DoReauthorizationReq =new SOAP_Value('DoReauthorizationReq', false, $DoReauthorizationReq, $DoReauthorizationReq_attr);
         $result = $this->call('DoReauthorization',
                               $v = array("DoReauthorizationReq" => $DoReauthorizationReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1561,7 +1561,7 @@ class CallerServices extends SOAP_Client
 
         // DoVoidReq is a ComplexType, refer to the WSDL for more info.
         $DoVoidReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $DoVoidReq =& new SOAP_Value('DoVoidReq', false, $DoVoidReq, $DoVoidReq_attr);
+        $DoVoidReq =new SOAP_Value('DoVoidReq', false, $DoVoidReq, $DoVoidReq_attr);
         $result = $this->call('DoVoid',
                               $v = array("DoVoidReq" => $DoVoidReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1593,7 +1593,7 @@ class CallerServices extends SOAP_Client
 
         // DoAuthorizationReq is a ComplexType, refer to the WSDL for more info.
         $DoAuthorizationReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $DoAuthorizationReq =& new SOAP_Value('DoAuthorizationReq', false, $DoAuthorizationReq, $DoAuthorizationReq_attr);
+        $DoAuthorizationReq =new SOAP_Value('DoAuthorizationReq', false, $DoAuthorizationReq, $DoAuthorizationReq_attr);
         $result = $this->call('DoAuthorization',
                               $v = array("DoAuthorizationReq" => $DoAuthorizationReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1625,7 +1625,7 @@ class CallerServices extends SOAP_Client
 
         // SetCustomerBillingAgreementReq is a ComplexType, refer to the WSDL for more info.
         $SetCustomerBillingAgreementReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $SetCustomerBillingAgreementReq =& new SOAP_Value('SetCustomerBillingAgreementReq', false, $SetCustomerBillingAgreementReq, $SetCustomerBillingAgreementReq_attr);
+        $SetCustomerBillingAgreementReq =new SOAP_Value('SetCustomerBillingAgreementReq', false, $SetCustomerBillingAgreementReq, $SetCustomerBillingAgreementReq_attr);
         $result = $this->call('SetCustomerBillingAgreement',
                               $v = array("SetCustomerBillingAgreementReq" => $SetCustomerBillingAgreementReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1657,7 +1657,7 @@ class CallerServices extends SOAP_Client
 
         // GetBillingAgreementCustomerDetailsReq is a ComplexType, refer to the WSDL for more info.
         $GetBillingAgreementCustomerDetailsReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $GetBillingAgreementCustomerDetailsReq =& new SOAP_Value('GetBillingAgreementCustomerDetailsReq', false, $GetBillingAgreementCustomerDetailsReq, $GetBillingAgreementCustomerDetailsReq_attr);
+        $GetBillingAgreementCustomerDetailsReq =new SOAP_Value('GetBillingAgreementCustomerDetailsReq', false, $GetBillingAgreementCustomerDetailsReq, $GetBillingAgreementCustomerDetailsReq_attr);
         $result = $this->call('GetBillingAgreementCustomerDetails',
                               $v = array("GetBillingAgreementCustomerDetailsReq" => $GetBillingAgreementCustomerDetailsReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1689,7 +1689,7 @@ class CallerServices extends SOAP_Client
 
         // CreateBillingAgreementReq is a ComplexType, refer to the WSDL for more info.
         $CreateBillingAgreementReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $CreateBillingAgreementReq =& new SOAP_Value('CreateBillingAgreementReq', false, $CreateBillingAgreementReq, $CreateBillingAgreementReq_attr);
+        $CreateBillingAgreementReq =new SOAP_Value('CreateBillingAgreementReq', false, $CreateBillingAgreementReq, $CreateBillingAgreementReq_attr);
         $result = $this->call('CreateBillingAgreement',
                               $v = array("CreateBillingAgreementReq" => $CreateBillingAgreementReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1721,7 +1721,7 @@ class CallerServices extends SOAP_Client
 
         // DoReferenceTransactionReq is a ComplexType, refer to the WSDL for more info.
         $DoReferenceTransactionReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $DoReferenceTransactionReq =& new SOAP_Value('DoReferenceTransactionReq', false, $DoReferenceTransactionReq, $DoReferenceTransactionReq_attr);
+        $DoReferenceTransactionReq =new SOAP_Value('DoReferenceTransactionReq', false, $DoReferenceTransactionReq, $DoReferenceTransactionReq_attr);
         $result = $this->call('DoReferenceTransaction',
                               $v = array("DoReferenceTransactionReq" => $DoReferenceTransactionReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1753,7 +1753,7 @@ class CallerServices extends SOAP_Client
 
         // DoNonReferencedCreditReq is a ComplexType, refer to the WSDL for more info.
         $DoNonReferencedCreditReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $DoNonReferencedCreditReq =& new SOAP_Value('DoNonReferencedCreditReq', false, $DoNonReferencedCreditReq, $DoNonReferencedCreditReq_attr);
+        $DoNonReferencedCreditReq =new SOAP_Value('DoNonReferencedCreditReq', false, $DoNonReferencedCreditReq, $DoNonReferencedCreditReq_attr);
         $result = $this->call('DoNonReferencedCredit',
                               $v = array("DoNonReferencedCreditReq" => $DoNonReferencedCreditReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1785,7 +1785,7 @@ class CallerServices extends SOAP_Client
 
         // DoUATPAuthorizationReq is a ComplexType, refer to the WSDL for more info.
         $DoUATPAuthorizationReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $DoUATPAuthorizationReq =& new SOAP_Value('DoUATPAuthorizationReq', false, $DoUATPAuthorizationReq, $DoUATPAuthorizationReq_attr);
+        $DoUATPAuthorizationReq =new SOAP_Value('DoUATPAuthorizationReq', false, $DoUATPAuthorizationReq, $DoUATPAuthorizationReq_attr);
         $result = $this->call('DoUATPAuthorization',
                               $v = array("DoUATPAuthorizationReq" => $DoUATPAuthorizationReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1817,7 +1817,7 @@ class CallerServices extends SOAP_Client
 
         // CreateRecurringPaymentsProfileReq is a ComplexType, refer to the WSDL for more info.
         $CreateRecurringPaymentsProfileReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $CreateRecurringPaymentsProfileReq =& new SOAP_Value('CreateRecurringPaymentsProfileReq', false, $CreateRecurringPaymentsProfileReq, $CreateRecurringPaymentsProfileReq_attr);
+        $CreateRecurringPaymentsProfileReq =new SOAP_Value('CreateRecurringPaymentsProfileReq', false, $CreateRecurringPaymentsProfileReq, $CreateRecurringPaymentsProfileReq_attr);
         $result = $this->call('CreateRecurringPaymentsProfile',
                               $v = array("CreateRecurringPaymentsProfileReq" => $CreateRecurringPaymentsProfileReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1849,7 +1849,7 @@ class CallerServices extends SOAP_Client
 
         // GetRecurringPaymentsProfileDetailsReq is a ComplexType, refer to the WSDL for more info.
         $GetRecurringPaymentsProfileDetailsReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $GetRecurringPaymentsProfileDetailsReq =& new SOAP_Value('GetRecurringPaymentsProfileDetailsReq', false, $GetRecurringPaymentsProfileDetailsReq, $GetRecurringPaymentsProfileDetailsReq_attr);
+        $GetRecurringPaymentsProfileDetailsReq =new SOAP_Value('GetRecurringPaymentsProfileDetailsReq', false, $GetRecurringPaymentsProfileDetailsReq, $GetRecurringPaymentsProfileDetailsReq_attr);
         $result = $this->call('GetRecurringPaymentsProfileDetails',
                               $v = array("GetRecurringPaymentsProfileDetailsReq" => $GetRecurringPaymentsProfileDetailsReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1881,7 +1881,7 @@ class CallerServices extends SOAP_Client
 
         // ManageRecurringPaymentsProfileStatusReq is a ComplexType, refer to the WSDL for more info.
         $ManageRecurringPaymentsProfileStatusReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $ManageRecurringPaymentsProfileStatusReq =& new SOAP_Value('ManageRecurringPaymentsProfileStatusReq', false, $ManageRecurringPaymentsProfileStatusReq, $ManageRecurringPaymentsProfileStatusReq_attr);
+        $ManageRecurringPaymentsProfileStatusReq =new SOAP_Value('ManageRecurringPaymentsProfileStatusReq', false, $ManageRecurringPaymentsProfileStatusReq, $ManageRecurringPaymentsProfileStatusReq_attr);
         $result = $this->call('ManageRecurringPaymentsProfileStatus',
                               $v = array("ManageRecurringPaymentsProfileStatusReq" => $ManageRecurringPaymentsProfileStatusReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1913,7 +1913,7 @@ class CallerServices extends SOAP_Client
 
         // BillOutstandingAmountReq is a ComplexType, refer to the WSDL for more info.
         $BillOutstandingAmountReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $BillOutstandingAmountReq =& new SOAP_Value('BillOutstandingAmountReq', false, $BillOutstandingAmountReq, $BillOutstandingAmountReq_attr);
+        $BillOutstandingAmountReq =new SOAP_Value('BillOutstandingAmountReq', false, $BillOutstandingAmountReq, $BillOutstandingAmountReq_attr);
         $result = $this->call('BillOutstandingAmount',
                               $v = array("BillOutstandingAmountReq" => $BillOutstandingAmountReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',
@@ -1945,7 +1945,7 @@ class CallerServices extends SOAP_Client
 
         // UpdateRecurringPaymentsProfileReq is a ComplexType, refer to the WSDL for more info.
         $UpdateRecurringPaymentsProfileReq_attr['xmlns'] = 'urn:ebay:api:PayPalAPI';
-        $UpdateRecurringPaymentsProfileReq =& new SOAP_Value('UpdateRecurringPaymentsProfileReq', false, $UpdateRecurringPaymentsProfileReq, $UpdateRecurringPaymentsProfileReq_attr);
+        $UpdateRecurringPaymentsProfileReq =new SOAP_Value('UpdateRecurringPaymentsProfileReq', false, $UpdateRecurringPaymentsProfileReq, $UpdateRecurringPaymentsProfileReq_attr);
         $result = $this->call('UpdateRecurringPaymentsProfile',
                               $v = array("UpdateRecurringPaymentsProfileReq" => $UpdateRecurringPaymentsProfileReq),
                               array('namespace' => 'urn:ebay:api:PayPalAPI',

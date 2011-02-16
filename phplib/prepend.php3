@@ -6,10 +6,10 @@ ini_set('register_globals','on');
 ini_set('max_execution_time','120');
 ini_set('magic_quotes_gpc','Off');
 
-$lib_dirs=ini_get('include_path').":".
-          $_PHPLIB['libdir'].":".
+$lib_dirs=$_PHPLIB['libdir'].":".
           $CDRTool['Path']."/library:".
-          "/etc/cdrtool/local";
+          "/etc/cdrtool/local:".
+          ini_get('include_path');
 
 ini_set('include_path', $lib_dirs);
 
