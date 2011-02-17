@@ -312,8 +312,8 @@ class SipThorNetworkImage {
           $y = ($radius * sin(deg2rad($angle))); 
      
           if ($dash) { 
-              imageline($img, $cx+$px, $cy+$py, $cx+$x, $cy+$y, 'black');
-              imageline($img, $cx-$px, $cx-$py, $cx-$x, $cy-$y, 'black');
+              imageline($img, $cx+$px, $cy+$py, $cx+$x, $cy+$y, $black);
+              imageline($img, $cx-$px, $cx-$py, $cx-$x, $cy-$y, $black);
           } 
           
           $dash=!$dash; 
@@ -321,8 +321,8 @@ class SipThorNetworkImage {
           $py=$y;
 
           if ($dash) { 
-              imageline($img, $cx+$px, $cy+$py, $cx+$x, $cy+$y, 'black');
-              imageline($img, $cx-$px, $cx-$py, $cx-$x, $cy-$y, 'black');
+              imageline($img, $cx+$px, $cy+$py, $cx+$x, $cy+$y, $black);
+              imageline($img, $cx-$px, $cx-$py, $cx-$x, $cy-$y, $black);
           } 
 
         }
