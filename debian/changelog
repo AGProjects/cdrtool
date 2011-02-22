@@ -1,3 +1,11 @@
+cdrtool (8.0.16) unstable; urgency=low
+
+  [ NGNPro Client ]
+
+  * Allow definition of custom groups for SIP accounts
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 22 Feb 2011 10:31:51 +0100
+
 cdrtool (8.0.15) unstable; urgency=low
 
   * Fixed compatibility with PHP 5.3
