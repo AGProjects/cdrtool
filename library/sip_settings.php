@@ -163,6 +163,7 @@ class SipSettings {
     var $append_domain_to_xcap_root = false;
     var $blink_download_url   = "https://blink.sipthor.net/download.phtml?download";
     var $ownerCredentials = array();
+    var $localGroups = array();
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
 
@@ -322,6 +323,9 @@ class SipSettings {
 
                                     );
 
+
+        $this->availableGroups=array_merge($this->availableGroups, $this->localGroups);
+
         $this->pstnChangesAllowed();
         $this->smsChangesAllowed();
         $this->prepaidChangesAllowed();
@@ -334,7 +338,6 @@ class SipSettings {
                           'contacts'=>_("Contacts"),
                           'calls'=>_('History'),
                           );
-
 
         if (in_array("free-pstn",$this->groups)) {
             if ($this->Preferences['show_barring_tab']) {
