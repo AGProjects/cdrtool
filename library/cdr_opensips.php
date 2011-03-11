@@ -3894,6 +3894,7 @@ class SIP_trace {
             $media_index=0;
             $search_ice=0;
             $search_ip=0;
+            $contact_header='';
 
             foreach ($_lines as $_line) {
                 if (preg_match("/^(Diversion: ).*;(.*)$/",$_line,$m)) {
@@ -3902,6 +3903,10 @@ class SIP_trace {
 
                 if (preg_match("/^Cseq:\s*\d+\s*(.*)$/i",$_line,$m)) {
                     $status_for_method=$m[1];
+                }
+
+                if (preg_match("/^Contact:\s*.*@(.*:\d+).*$/i",$_line,$m)) {
+                    $contact_header=$m[1];
                 }
 
                 if (preg_match("/^c=IN \w+ ([\d|\w\.]+)/i",$_line,$m)) {
@@ -3936,10 +3941,14 @@ class SIP_trace {
             $_els=explode(";",$_lines[0]);
 
             $cell_content = "<a name=\"packet$i\">
-            $status_color $_els[0]
+            $status_color $_els[0]</font>
             ";
 
             if ($status) $cell_content.=" <font color=black>for ".$status_for_method."</font>";
+
+            if ($contact_header) {
+                $cell_content.=sprintf("<br>Contact: %s",htmlspecialchars($contact_header));
+            }
 
             if (is_array($diversions)) {
                 foreach ($diversions as $_diversion) {
@@ -3962,7 +3971,6 @@ class SIP_trace {
 
                 }
             }
-
 
             $cell_content.="
             </font>
