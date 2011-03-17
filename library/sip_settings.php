@@ -164,6 +164,7 @@ class SipSettings {
     var $blink_download_url   = "https://blink.sipthor.net/download.phtml?download";
     var $ownerCredentials = array();
     var $localGroups = array();
+    var $max_credit_per_day = 40;
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
 
@@ -1863,6 +1864,37 @@ class SipSettings {
             return false;
         }
 
+        $this->getBalanceHistory();
+
+        $today_summary = $this->getTodayBalanceSummary();
+
+        if ($today_summary['credit'] >= $this->max_credit_per_day) {
+            print "
+            <tr>
+            <td colspan=3>
+            ";
+            
+            if ($account->login_type!='subscriber') {
+                print "<p>";
+                printf ("<font color=red>Daily Credit Exceeded</font>");
+            } else {
+                print _("Page Not Available");
+                $log=sprintf("CC transaction is not allowed from %s for %s (%s)",$_SERVER['REMOTE_ADDR'],$account->account,$this->fraud_reason);
+                syslog(LOG_NOTICE, $log);
+            }
+            
+            print "</td>
+            </tr>
+            ";
+            
+            return false;
+        }
+
+        if (!count($this->balance_history)) {
+            $this->first_transaction=true;
+        } else {
+            $this->first_transaction=false;
+        }
 
         print "
         <tr>
@@ -1890,14 +1922,6 @@ class SipSettings {
         */
         //}
 
-        $this->getBalanceHistory();
- 
-        if (!count($this->balance_history)) {
-            $this->first_transaction=true;
-        } else {
-            $this->first_transaction=false;
-        }
-
         $credit_amount = 20;
         $basket = array('pstn_credit'=>array('price'       => $credit_amount,
                                              'description' => _('Prepaid Credit'),
@@ -1916,7 +1940,7 @@ class SipSettings {
         	$this->addBalanceReseller($credit_amount,sprintf("CC transaction %s",$payment_processor->transaction_results['id']));
         }
 
-        if ($payment_processor->make_credit_checks) {
+        if ($this->first_transaction && $payment_processor->make_credit_checks) {
             // block account temporary to check the user
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain),"free-pstn");
@@ -4823,7 +4847,36 @@ class SipSettings {
         }
 
         $this->balance_history=$result->entries;
+
     }
+
+    function getTodayBalanceSummary() {
+
+        $total_debit  = 0;
+        $total_credit = 0;
+
+        foreach ($this->balance_history as $_line) {
+            $value=$_line->value;
+
+            if (substr($_line->date,0,10) != date("Y-m-d")) {
+                break;
+            }
+
+            if ($value <0) {
+                $total_debit+=$value;
+            }
+
+            if ($value >0) {
+                $total_credit+=$value;
+            }
+         }
+
+         $total = array('debit'  => $total_debit,
+                        'credit' => $total_credit
+                        );
+         return $total;
+    }
+
 
     function showBalanceHistory() {
     	$this->getBalanceHistory();
@@ -4838,6 +4891,13 @@ class SipSettings {
         <tr>
         <td colspan=2>
         ";
+
+        $today_summary = $this->getTodayBalanceSummary();
+
+        if ($today_summary['credit'] >= $max_credit_per_day) {
+            print "<p>";
+            printf (_("Today's transactions: %.2f credit, %.2f debit"), $today_summary['credit'],$today_summary['debit']);
+        }
 
         print "
         <p>
