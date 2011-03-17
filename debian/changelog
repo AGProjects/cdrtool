@@ -1,3 +1,10 @@
+cdrtool (8.0.17) unstable; urgency=low
+
+  * Display Contact address in sip trace page
+  * Check maximum credit transactions per day
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 17 Mar 2011 14:41:47 +0100
+
 cdrtool (8.0.16) unstable; urgency=low
 
   * Mention skipNormalize variable in sample config file
