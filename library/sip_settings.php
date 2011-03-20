@@ -11,7 +11,6 @@
 
 require_once("ngnpro_client.php");
 
-
 class SipSettings {
 
     var $soapTimeout               = 5;
@@ -36,7 +35,6 @@ class SipSettings {
     var $support_email             = "Support <support@example.com>";
     var $billing_email             = "Billing <billing@example.com>";
     var $sip_settings_page         = "https://cdrtool.example.com/sip_settings.phtml";
-    var $blink_settings_page       = "https://cdrtool.example.com/sip_settings_digest.phtml";
     var $xcap_root                 = "https://cdrtool.example.com/xcap-root";
     var $pstn_access               = false;
     var $sms_access                = false;
@@ -61,7 +59,7 @@ class SipSettings {
 	var $show_barring_tab   = true;
 	var $show_presence_tab  = false;
     var $show_payments_tab  = false;
-    var $show_download_tab  = true;
+    var $show_tls_section   = false;
     var $show_support_tab   = false;
     var $show_did_tab       = false;
     var $show_directory     = false;
@@ -71,6 +69,9 @@ class SipSettings {
 
 	var $payment_processor_class = false;
     var $did_processor_class = false;
+
+    var $show_download_tab    = 'Blink';     // set it to name of the tab or false to disable it
+    var $digest_settings_page = "https://blink.sipthor.net/settings.phtml";
 
     // end variables
 
@@ -165,6 +166,8 @@ class SipSettings {
     var $ownerCredentials = array();
     var $localGroups = array();
     var $max_credit_per_day = 40;
+    var $enrollment_configuration = "/etc/cdrtool/enrollment/config.ini";
+
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
 
@@ -357,7 +360,7 @@ class SipSettings {
         }
 
 		if (!$this->isEmbedded() && $this->show_download_tab) {
-        	$this->tabs['download'] = 'Blink';
+        	$this->tabs['download'] = $this->show_download_tab;
         }
 
         $this->acceptDailyProfiles=array('127' => _('Every day'),
@@ -535,8 +538,8 @@ class SipSettings {
             $this->sip_settings_page = $this->soapEngines[$this->sip_engine]['sip_settings_page'];
         }
 
-        if (strlen($this->soapEngines[$this->sip_engine]['blink_settings_page'])) {
-            $this->blink_settings_page = $this->soapEngines[$this->sip_engine]['blink_settings_page'];
+        if (strlen($this->soapEngines[$this->sip_engine]['digest_settings_page'])) {
+            $this->digest_settings_page = $this->soapEngines[$this->sip_engine]['digest_settings_page'];
         }
 
         if (strlen($this->soapEngines[$this->sip_engine]['xcap_root'])) {
@@ -1561,8 +1564,8 @@ class SipSettings {
             $this->sip_settings_page = $this->resellerProperties['sip_settings_page'];
         }
 
-        if ($this->resellerProperties['blink_settings_page']) {
-            $this->blink_settings_page = $this->resellerProperties['blink_settings_page'];
+        if ($this->resellerProperties['digest_settings_page']) {
+            $this->digest_settings_page = $this->resellerProperties['digest_settings_page'];
         }
 
         if ($this->resellerProperties['xcap_root']) {
@@ -2477,78 +2480,14 @@ class SipSettings {
         </form>
         ";
 
-        if (!$this->isEmbedded()) {
+        if (!$this->isEmbedded() && $this->show_tls_section) {
 
             if ($this->enrollment_url) {
-                include("/etc/cdrtool/enrollment/config.ini");
+                include($this->enrollment_configuration);
     
                 if (is_array($enrollment)) {
                     $chapter=sprintf(_("TLS Certificate"));
                     $this->showChapter($chapter);
-                    if ($this->sip_settings_api_url) {
-                        /*
-                        print "
-                        <tr>
-                        <td colspan=2>";
-                        printf (_("The certificate is used for accessing <a href=%s target=sip_api>SIP Settings API</a>"),$this->sip_settings_api_url);
-                        printf ("
-                        </td>
-                        </tr>
-                        ");
-                        */
-                    }
-    
-                    print "
-                    <tr>
-                    <td>";
-                    print _("X.509 Format");
-                    printf ("
-                    </td>
-                    <td><a href=%s&action=get_crt>%s.crt</a>
-                    </td>
-                    </tr>
-                    ",$this->url, $this->account);
-
-                    /*
-                    print "
-                    <tr>
-                    <td>";
-                    print _("PKCS#12 store format");
-                    printf ("
-                    </td>
-                    <td><a href=%s&action=get_p12>%s.p12</a>
-                    </td>
-                    </tr>
-                    <tr>
-                      <td height=3 colspan=2></td>
-                    </tr>",$this->url, $this->account);
-                    */
-
-                }
-            }
-        }
-
-        if (!$this->isEmbedded()) {
-
-            if ($this->enrollment_url) {
-                include("/etc/cdrtool/enrollment/config.ini");
-    
-                if (is_array($enrollment)) {
-                    $chapter=sprintf(_("TLS Certificate"));
-                    $this->showChapter($chapter);
-                    if ($this->sip_settings_api_url) {
-                        /*
-                        print "
-                        <tr>
-                        <td colspan=2>";
-                        printf (_("The certificate is used for accessing <a href=%s target=sip_api>SIP Settings API</a>"),$this->sip_settings_api_url);
-                        printf ("
-                        </td>
-                        </tr>
-                        ");
-                        */
-                    }
-    
                     print "
                     <tr>
                     <td>";
@@ -2904,7 +2843,7 @@ class SipSettings {
         $_account['sip_address']    = $this->account;
         $_account['password']       = $this->password;
         $_account['email']          = $this->email;
-        $_account['settings_url']   = $this->blink_settings_page;
+        $_account['settings_url']   = $this->digest_settings_page;
 
         print "<table border=0>";
 
@@ -8683,18 +8622,19 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
 }
 
 class Enrollment {
-    var $init=false;
+    var $init                       = false;
     var $create_voicemail           = false;
     var $send_email_notification    = true;
     var $create_email_alias         = false;
 	var $create_customer            = true;
     var $timezones                  = array();
     var $default_timezone           = 'Europe/Amsterdam';
+    var $configuration_file         = '/etc/cdrtool/enrollment/config.ini';
 
     function Enrollment() {
 
-        include("/etc/cdrtool/enrollment/config.ini");
-        include("/etc/cdrtool/ngnpro_engines.inc");
+        require($this->configuration_file);
+        require("/etc/cdrtool/ngnpro_engines.inc");
 
     	$this->soapEngines  = $soapEngines;
         $this->enrollment   = $enrollment;
