@@ -248,7 +248,7 @@ class CreditCardProcessor {
         array("label"=>"Uganda","value"=>"UG"),
         array("label"=>"Ukraine","value"=>"UA"),
         array("label"=>"United Arab Emirates","value"=>"AE"),
-        array("label"=>"United Kingdom","value"=>"GB"),
+        array("label"=>"United Kingdom","value"=>"UK"),
         array("label"=>"United States","value"=>"US"),
         array("label"=>"Uruguay","value"=>"UY"),
         array("label"=>"Vanuatu","value"=>"VU"),
@@ -276,7 +276,7 @@ class CreditCardProcessor {
     public $logger;
     public $log_level;
     
-    function CreditCardProcessor () {
+    function CreditCardProcessor ($parameters=array()) {
         dprint("CreditCardProcessor()");
 
         // process the ini configuration file
@@ -310,28 +310,35 @@ class CreditCardProcessor {
         require_once 'cc_logger.php';
         $this->logger = new cc_logger('CreditCardProcessor', PEAR_LOG_DEBUG);
 
-        foreach ($this->countries as $_country) {
-            $countries_array[$_country['value']]=$_country['label'];
+        if ($parameters['country']) {
+            $this->user_account['Country']=$parameters['country'];
+            foreach ($this->countries as $_country) {
+                 if ($_country['value'] == $parameters['country']) {
+                     $this->countries_array[$_country['value']]=$_country['label'];
+                 }
+            }
+        } else {
+            $this->user_account = null;
+            foreach ($this->countries as $_country) {
+                 $this->countries_array[$_country['value']]=$_country['label'];
+            }
         }
 
-        $us_states_arr = array('AL'=>'Alabama','AK'=>'Alaska','AZ'=>'Arizona','AR'=>'Arkansas','CA'=>'California','CO'=>'Colorado','CT'=>'Connecticut','DE'=>'Delaware','DC'=>'District Of Columbia','FL'=>'Florida','GA'=>'Georgia','HI'=>'Hawaii','ID'=>'Idaho','IL'=>'Illinois', 'IN'=>'Indiana', 'IA'=>'Iowa',  'KS'=>'Kansas','KY'=>'Kentucky','LA'=>'Louisiana','ME'=>'Maine','MD'=>'Maryland', 'MA'=>'Massachusetts','MI'=>'Michigan','MN'=>'Minnesota','MS'=>'Mississippi','MO'=>'Missouri','MT'=>'Montana','NE'=>'Nebraska','NV'=>'Nevada','NH'=>'New Hampshire','NJ'=>'New Jersey','NM'=>'New Mexico','NY'=>'New York','NC'=>'North Carolina','ND'=>'North Dakota','OH'=>'Ohio','OK'=>'Oklahoma', 'OR'=>'Oregon','PA'=>'Pennsylvania','RI'=>'Rhode Island','SC'=>'South Carolina','SD'=>'South Dakota','TN'=>'Tennessee','TX'=>'Texas','UT'=>'Utah','VT'=>'Vermont','VA'=>'Virginia','WA'=>'Washington','WV'=>'West Virginia','WI'=>'Wisconsin','WY'=>'Wyoming');
-        $can_states_arr = array('AB'=>'Alberta','BC'=>'British Columbia','MB'=>'Manitoba','NB'=>'New Brunswick','NL'=>'Newfoundland/Labrador','NS'=>'Nova Scotia','NT'=>'Northwest Territories','NU'=>'Nunavut','ON'=>'Ontario','PE'=>'Prince Edward Island','QC'=>'Quebec','SK'=>'Saskatchewan','YT'=>'Yukon');
+        $this->us_states_arr  = array('AL'=>'Alabama','AK'=>'Alaska','AZ'=>'Arizona','AR'=>'Arkansas','CA'=>'California','CO'=>'Colorado','CT'=>'Connecticut','DE'=>'Delaware','DC'=>'District Of Columbia','FL'=>'Florida','GA'=>'Georgia','HI'=>'Hawaii','ID'=>'Idaho','IL'=>'Illinois', 'IN'=>'Indiana', 'IA'=>'Iowa',  'KS'=>'Kansas','KY'=>'Kentucky','LA'=>'Louisiana','ME'=>'Maine','MD'=>'Maryland', 'MA'=>'Massachusetts','MI'=>'Michigan','MN'=>'Minnesota','MS'=>'Mississippi','MO'=>'Missouri','MT'=>'Montana','NE'=>'Nebraska','NV'=>'Nevada','NH'=>'New Hampshire','NJ'=>'New Jersey','NM'=>'New Mexico','NY'=>'New York','NC'=>'North Carolina','ND'=>'North Dakota','OH'=>'Ohio','OK'=>'Oklahoma', 'OR'=>'Oregon','PA'=>'Pennsylvania','RI'=>'Rhode Island','SC'=>'South Carolina','SD'=>'South Dakota','TN'=>'Tennessee','TX'=>'Texas','UT'=>'Utah','VT'=>'Vermont','VA'=>'Virginia','WA'=>'Washington','WV'=>'West Virginia','WI'=>'Wisconsin','WY'=>'Wyoming');
+        $this->can_states_arr = array('AB'=>'Alberta','BC'=>'British Columbia','MB'=>'Manitoba','NB'=>'New Brunswick','NL'=>'Newfoundland/Labrador','NS'=>'Nova Scotia','NT'=>'Northwest Territories','NU'=>'Nunavut','ON'=>'Ontario','PE'=>'Prince Edward Island','QC'=>'Quebec','SK'=>'Saskatchewan','YT'=>'Yukon');
 
         $this->sql_host = $this->settings['sql_host'];
         $this->sql_user = $this->settings['sql_user'];
-        $this->sql_pw = $this->settings['sql_pw'];
-        $this->sql_db = $this->settings['sql_db'];
+        $this->sql_pw   = $this->settings['sql_pw'];
+        $this->sql_db   = $this->settings['sql_db'];
 
         $this->transaction_type = $this->settings['transaction_type'];
-        $this->sender_email = $this->settings['sender_email'];
-        $this->countries_array = $countries_array;
-        $this->us_states_arr = $us_states_arr;
-        $this->can_states_arr = $can_states_arr;
-        $this->user_account = null;
-        $this->aes_enc_pwd = $this->settings['aes_enc_pwd'];
-        $this->log_path = $this->settings['logging_path'];
-        $this->log_level = $this->settings['log_level'];
-        $this->logger->_logDir = $this->log_path;
+        $this->sender_email     = $this->settings['sender_email'];
+        $this->aes_enc_pwd      = $this->settings['aes_enc_pwd'];
+
+        $this->log_path          = $this->settings['logging_path'];
+        $this->log_level         = $this->settings['log_level'];
+        $this->logger->_logDir   = $this->log_path;
         $this->logger->_logLevel = $this->log_level;
         $this->logger->_log("Started session: ".session_id()."");
     }
@@ -435,7 +442,7 @@ class CreditCardProcessor {
         return $string;
     }
 
-    function showSubmitForm () {
+    function showSubmitForm ($readonly_fields=array()) {
 
 		if (!$this->setEnvironment()) {
             return false;
@@ -472,100 +479,100 @@ class CreditCardProcessor {
             $page_body_content .= "}\n";
     
             $page_body_content .= "function changeStates(frm) {\n";
-            $page_body_content .= "var states_list = document.getElementById('states_list');\n";
-            $page_body_content .= "var id = frm.options[frm.selectedIndex].value;\n";
+            $page_body_content .= "    var states_list = document.getElementById('states_list');\n";
+            $page_body_content .= "    var id = frm.options[frm.selectedIndex].value;\n";
     
-            $page_body_content .= "if(id == 'CA'){\n";
+            $page_body_content .= "    if(id == 'CA'){\n";
             // Canada States
-            $states_arr = $this->can_states_arr;
             $str .= "<select name=\"state\">";
-            foreach($states_arr as $state_abbr => $state_name){
+            foreach($this->can_states_arr as $state_abbr => $state_name){
                 if($state_abbr == $this->user_account['State']){
                     $str .= "<option value=\"".$state_abbr."\" selected>".$state_name."</option>";
-                }else{
+                } else {
                     $str .= "<option value=\"".$state_abbr."\">".$state_name."</option>";
                 }     
             }
             $str .= "</select>";
-            $page_body_content .= "states_list.innerHTML = '".$str."';\n";
-            $page_body_content .= "}else if(id == 'US'){\n";
+            $page_body_content .= "       states_list.innerHTML = '".$str."';\n";
+            $page_body_content .= "   } else if (id == 'US'){\n";
             // US States
-            $states_arr = $this->us_states_arr;
             $str = "<select name=\"state\">";
-            foreach($states_arr as $state_abbr => $state_name){
+            foreach($this->us_states_arr as $state_abbr => $state_name){
                 if($state_abbr == $this->user_account['State']){
                     $str .= "<option value=\"".$state_abbr."\" selected>".$state_name."</option>";
-                }else{
+                } else {
                     $str .= "<option value=\"".$state_abbr."\">".$state_name."</option>";
                 }     
             }
             $str .= "</select>";
-            $page_body_content .= "states_list.innerHTML = '".$str."';\n";
-            $page_body_content .= "}else{\n";
-            $page_body_content .= "states_list.innerHTML = '<select name=\"state\"><option value=\"\">N/A</option></select>';\n";
-            $page_body_content .= "}\n";
+            $page_body_content .= "        states_list.innerHTML = '".$str."';\n";
+            $page_body_content .= "    } else {\n";
+            $page_body_content .= "        states_list.innerHTML = '<select name=\"state\"><option value=\"\">N/A</option></select>';\n";
+            $page_body_content .= "    }\n";
             $page_body_content .= "}\n";
     
             $page_body_content .= "function resetFields() {\n";
             // set labels font color to black
-            $page_body_content .= "var lbl_errors = document.getElementById('lbl_errors');\n";
-            $page_body_content .= "lbl_errors.innerHTML = '';\n";
-            $page_body_content .= "var lbl_fname = document.getElementById('lbl_fname');\n";
-            $page_body_content .= sprintf("lbl_fname.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("First Name"));
-            $page_body_content .= "var lbl_lname = document.getElementById('lbl_lname');\n";
-            $page_body_content .= sprintf("lbl_lname.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("Last Name"));
-            $page_body_content .= "var lbl_email = document.getElementById('lbl_email');\n";
-            $page_body_content .= sprintf("lbl_email.innerHTML = '<font color=\"#000000\">%s</font>';\n",_('Email'));
-            $page_body_content .= "var lbl_ccnum = document.getElementById('lbl_ccnum');\n";
-            $page_body_content .= sprintf("lbl_ccnum.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("Card Number"));
-            $page_body_content .= "var lbl_cvn = document.getElementById('lbl_cvn');\n";
-            $page_body_content .= sprintf("lbl_cvn.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("Card Verification Number"));
-            $page_body_content .= "var lbl_addr1 = document.getElementById('lbl_addr1');\n";
-            $page_body_content .= sprintf("lbl_addr1.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("Address"));
-            $page_body_content .= "var lbl_city = document.getElementById('lbl_city');\n";
-            $page_body_content .= sprintf("lbl_city.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("City"));
-            $page_body_content .= "var lbl_country = document.getElementById('lbl_country');\n";
-            $page_body_content .= sprintf("lbl_country.innerHTML = '<font color=\"#000000\">%s</font>';\n", _("Country"));
-            $page_body_content .= "var lbl_postcode = document.getElementById('lbl_postcode');\n";
-            $page_body_content .= sprintf("lbl_postcode.innerHTML = '<font color=\"#000000\">%s</font>';\n", _("Postcode"));
+            $page_body_content .= "    var lbl_errors = document.getElementById('lbl_errors');\n";
+            $page_body_content .= "    lbl_errors.innerHTML = '';\n";
+            $page_body_content .= "    var lbl_fname = document.getElementById('lbl_fname');\n";
+            $page_body_content .= sprintf("    lbl_fname.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("First Name"));
+            $page_body_content .= "    var lbl_lname = document.getElementById('lbl_lname');\n";
+            $page_body_content .= sprintf("    lbl_lname.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("Last Name"));
+            $page_body_content .= "    var lbl_email = document.getElementById('lbl_email');\n";
+            $page_body_content .= sprintf("    lbl_email.innerHTML = '<font color=\"#000000\">%s</font>';\n",_('Email'));
+            $page_body_content .= "    var lbl_ccnum = document.getElementById('lbl_ccnum');\n";
+            $page_body_content .= sprintf("    lbl_ccnum.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("Card Number"));
+            $page_body_content .= "    var lbl_cvn = document.getElementById('lbl_cvn');\n";
+            $page_body_content .= sprintf("    lbl_cvn.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("Card Verification Number"));
+            $page_body_content .= "    var lbl_addr1 = document.getElementById('lbl_addr1');\n";
+            $page_body_content .= sprintf("    lbl_addr1.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("Address"));
+            $page_body_content .= "    var lbl_city = document.getElementById('lbl_city');\n";
+            $page_body_content .= sprintf("    lbl_city.innerHTML = '<font color=\"#000000\">%s</font>';\n",_("City"));
+            $page_body_content .= "    var lbl_country = document.getElementById('lbl_country');\n";
+            $page_body_content .= sprintf("    lbl_country.innerHTML = '<font color=\"#000000\">%s</font>';\n", _("Country"));
+            $page_body_content .= "    var lbl_postcode = document.getElementById('lbl_postcode');\n";
+            $page_body_content .= sprintf("    lbl_postcode.innerHTML = '<font color=\"#000000\">%s</font>';\n", _("Postcode"));
             //$page_body_content .= "total_purchase.innerHTML = '".$this->cart_items[0]['price']." USD <input type=\"hidden\" name=\"amount\" value=\"".$this->cart_items[0]['price']."\"><input type=\"hidden\" name=\"item\" value=\"".$this->cart_items[0]."\">';\n";
-            $page_body_content .= "var tran_key = document.getElementById('tran_key');\n";
+            $page_body_content .= "    var tran_key = document.getElementById('tran_key');\n";
             $tk = CreditCardProcessor::randomString(26);
-            $page_body_content .= "tran_key.innerHTML = '<input type=\"hidden\" name=\"transactionKey\" value=\"".$tk."\">';\n";
-            $page_body_content .= "var total_purchase = document.getElementById('total_purchase');\n";
-            $page_body_content .= "var vat_purchase = document.getElementById('vat_purchase');\n";
-            $page_body_content .= "total_purchase.innerHTML = '".$total_currency."<input type=\"hidden\" name=\"amount\" value=\"".$total."\">';\n";
-            $page_body_content .= "vat_purchase.innerHTML   = '".$vat_currency.  "<input type=\"hidden\" name=\"vat\" value=\"".$vat_value."\">';\n";
-            $page_body_content .= "var states_list = document.getElementById('states_list');\n";
-            $page_body_content .= "if('".$this->user_account['Country']."' == 'CA'){\n";
-            // Canada States
-            $states_arr = $this->can_states_arr;
-            $str1 .= "<select name=\"state\">";
-            foreach($states_arr as $state_abbr => $state_name){
-                if($state_abbr == $this->user_account['State']){
-                    $str1 .= "<option value=\"".$state_abbr."\" selected>".$state_name."</option>";
-                }else{
-                    $str1 .= "<option value=\"".$state_abbr."\">".$state_name."</option>";
-                }     
+            $page_body_content .= "    tran_key.innerHTML = '<input type=\"hidden\" name=\"transactionKey\" value=\"".$tk."\">';\n";
+            $page_body_content .= "    var total_purchase = document.getElementById('total_purchase');\n";
+            $page_body_content .= "    total_purchase.innerHTML = '".$total_currency."<input type=\"hidden\" name=\"amount\" value=\"".$total."\">';\n";
+            if ($this->vat) {
+                $page_body_content .= "    var vat_purchase = document.getElementById('vat_purchase');\n";
+                $page_body_content .= "    vat_purchase.innerHTML   = '".$vat_currency.  "<input type=\"hidden\" name=\"vat\" value=\"".$vat_value."\">';\n";
             }
-            $str1 .= "</select>";
-            $page_body_content .= "states_list.innerHTML = '".$str1."';\n";
-            $page_body_content .= "}else if('".$this->user_account['Country']."' == 'US'){\n";
-            // US States
-            $states_arr = $this->us_states_arr;
-            $str2 = "<select name=\"state\">";
-            foreach($states_arr as $state_abbr => $state_name){
-                if($state_abbr == $this->user_account['State']){
-                    $str2 .= "<option value=\"".$state_abbr."\" selected>".$state_name."</option>";
-                }else{
-                    $str2 .= "<option value=\"".$state_abbr."\">".$state_name."</option>";
-                }     
+            $page_body_content .= "    var states_list = document.getElementById('states_list');\n";
+            if ($this->user_account['Country'] == 'CA') {
+                // Canada States
+                $str1 .= "<select name=\"state\">";
+                foreach($this->can_states_arr as $state_abbr => $state_name){
+                    if($state_abbr == $this->user_account['State']){
+                        $str1 .= "<option value=\"".$state_abbr."\" selected>".$state_name."</option>";
+                    }else{
+                        $str1 .= "<option value=\"".$state_abbr."\">".$state_name."</option>";
+                    }     
+                }
+                $str1 .= "</select>";
+                $page_body_content .= "    states_list.innerHTML = '".$str1."';\n";
+            } else if ($this->user_account['Country'] == 'US'){
+
+                // US States
+                $str2 = "<select name=\"state\">";
+                foreach($this->us_states_arr as $state_abbr => $state_name){
+                    if ($state_abbr == $this->user_account['State']){
+                        $str2 .= "<option value=\"".$state_abbr."\" selected>".$state_name."</option>";
+                    } else {
+                        $str2 .= "<option value=\"".$state_abbr."\">".$state_name."</option>";
+                    }     
+                }
+                $str2 .= "</select>";
+                $page_body_content .= "    states_list.innerHTML = '".$str2."';\n";
+            } else {
+                $page_body_content .= "    states_list.innerHTML = '<select name=\"state\"><option value=\"\">N/A</option></select>';\n";
             }
-            $str2 .= "</select>";
-            $page_body_content .= "states_list.innerHTML = '".$str2."';\n";
-            $page_body_content .= "}else{\n";
-            $page_body_content .= "states_list.innerHTML = '<select name=\"state\"><option value=\"\">N/A</option></select>';\n";
-            $page_body_content .= "}\n";
+
             $page_body_content .= "}\n";
             $page_body_content .= "</script>\n";
 
@@ -594,42 +601,49 @@ class CreditCardProcessor {
                 $rr=floor($t/2);
                 $mod=$t-$rr*2;
         
-                if ($mod ==0) {
-                    $_class=$this->odd_row_class;
+                if ($mod == 0) {
+                    $_class = $this->odd_row_class;
                 } else {
-                    $_class=$this->even_row_class;
+                    $_class = $this->even_row_class;
                 }
-    
+
                 $page_body_content .= "<tr class=".$_class.">
                 <input type=\"hidden\" name=\"cart_item[]\" value=\"".$item_array."\">
-                    <input type=\"hidden\" name=\"cart_item_price[]\" value=\"".$item_details['price']."\">".
+                <input type=\"hidden\" name=\"cart_item_price[]\" value=\"".$item_details['price']."\">".
                 "<td>".$item_details['description']."</td>".
                 "<td>".money_format('%i', $item_details['price'])."</td></tr>\n";
             }
 
             if ($this->vat) {
-            	$page_body_content .= sprintf ("<tr class=%s>\n",$this->even_odd_class);
+                if ($_class == $this->even_row_class) {
+                    $_class = $this->odd_row_class;
+                } else {
+                    $_class = $this->even_row_class;
+                }
+
+            	$page_body_content .= sprintf ("<tr class=%s>\n",$_class);
             	$page_body_content .= sprintf("<td>%s (%s%s)</td>\n",_("VAT"),$this->vat,'%');
             	$page_body_content .= "<td><div id=\"vat_purchase\"></div></td>\n";
             	$page_body_content .= "</tr>\n";
 
-                $t++;
-    
-                $rr=floor($t/2);
-                $mod=$t-$rr*2;
-        
-                if ($mod ==0) {
-                    $_class=$this->odd_row_class;
+                if ($_class == $this->even_row_class) {
+                    $_class = $this->odd_row_class;
                 } else {
-                    $_class=$this->even_row_class;
+                    $_class = $this->even_row_class;
                 }
 
-            	$page_body_content .= sprintf ("<tr class=%s>\n",$this->even_odd_class);
+            	$page_body_content .= sprintf ("<tr class=%s>\n",$_class);
             	$page_body_content .= sprintf("<td><b>%s</b></td>\n",_("Total Due"));
             	$page_body_content .= "<td><div id=\"total_purchase\"></div></td>\n";
             	$page_body_content .= "</tr>\n";
             } else {
-            	$page_body_content .= sprintf ("<tr class=%s>\n",$this->even_odd_class);
+                if ($_class == $this->even_row_class) {
+                    $_class = $this->odd_row_class;
+                } else {
+                    $_class = $this->even_row_class;
+                }
+
+            	$page_body_content .= sprintf ("<tr class=%s>\n",$_class);
             	$page_body_content .= sprintf("<td><b>%s</b></td>\n",_("Total Due"));
             	$page_body_content .= "<td><div id=\"total_purchase\"></div></td>\n";
             	$page_body_content .= "</tr>\n";
@@ -654,7 +668,7 @@ class CreditCardProcessor {
             $page_body_content .= "</select>\n";
             $page_body_content .= "</td>\n";
             $page_body_content .= "</tr>\n";
-            $page_body_content .= "<tr>\n";
+            $page_body_content .= sprintf ("<tr class=%s>\n",$this->odd_row_class);
             $page_body_content .= "<td><div id=\"lbl_ccnum\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"19\" name=\"creditCardNumber\"></td>\n";
             $page_body_content .= "</tr>\n";
@@ -684,7 +698,7 @@ class CreditCardProcessor {
             $page_body_content .= "</select>\n";
             $page_body_content .= "</td>\n";
             $page_body_content .= "</tr>\n";
-            $page_body_content .= "<tr>\n";
+            $page_body_content .= sprintf ("<tr class=%s>\n",$this->odd_row_class);
             $page_body_content .= "<td><div id=\"lbl_cvn\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"3\" maxlength=\"4\" name=\"cvv2Number\" value=\"\"></td>\n";
             $page_body_content .= "</tr>\n";
@@ -696,7 +710,7 @@ class CreditCardProcessor {
             $page_body_content .= "<td><div id=\"lbl_fname\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"32\" name=\"firstName\" value=\"".$this->user_account['FirstName']."\"></td>\n";
             $page_body_content .= "</tr>\n";
-            $page_body_content .= "<tr>\n";
+            $page_body_content .= sprintf ("<tr class=%s>\n",$this->odd_row_class);
             $page_body_content .= "<td><div id=\"lbl_lname\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"32\" name=\"lastName\" value=\"".$this->user_account['LastName']."\"></td>\n";
             $page_body_content .= "</tr>\n";
@@ -704,10 +718,8 @@ class CreditCardProcessor {
             $page_body_content .= "<td><div id=\"lbl_email\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"50\" name=\"emailAddress\" value=\"".$this->user_account['Email']."\"></td>\n";
             $page_body_content .= "</tr>\n";
-
-
-            $page_body_content .= "<tr>\n";
-            $page_body_content .= sprintf("<td colspan=\"2\" class=%s><b>%s</b></td>\n",$this->chapter_class,_("Billing Address"));
+            $page_body_content .= sprintf ("<tr class=%s>\n",$this->odd_row_class);
+            $page_body_content .= sprintf("<td colspan=\"2\" class=%s><b>%s</b></td>\n",$this->chapter_class,_("Address"));
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
             $page_body_content .= "<td valign=top><div id=\"lbl_addr1\"></div></td>\n";
@@ -721,7 +733,7 @@ class CreditCardProcessor {
             $page_body_content .= "</tr>\n";
             */
     
-            $page_body_content .= "<tr>\n";
+            $page_body_content .= sprintf ("<tr class=%s>\n",$this->odd_row_class);
             $page_body_content .= "<td><div id=\"lbl_city\"></div></td>\n";
             $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"40\" name=\"city\" value=\"".$this->user_account['City']."\"></td>\n";
             $page_body_content .= "</tr>\n";
@@ -740,7 +752,7 @@ class CreditCardProcessor {
             $page_body_content .= "</td>\n";
             $page_body_content .= "</tr>\n";
 
-            $page_body_content .= "<tr>\n";
+            $page_body_content .= sprintf ("<tr class=%s>\n",$this->odd_row_class);
             $page_body_content .= sprintf("<td>%s</td>\n",_("State"));
             $page_body_content .= "<td><div id=\"states_list\"></div>\n";
             $page_body_content .= "</td>\n";
@@ -751,7 +763,7 @@ class CreditCardProcessor {
             $page_body_content .= "<td><input type=\"text\" size=\"8\" maxlength=\"10\" name=\"zip\" value=\"".$this->user_account['PostCode']."\"></td>\n";
             $page_body_content .= "</tr>\n";
 
-            $page_body_content .= "<tr>\n";
+            $page_body_content .= sprintf ("<tr class=%s>\n",$this->odd_row_class);
             $page_body_content .= "<input type=hidden name=purchase value=1>\n";
             $page_body_content .= sprintf("<td colspan=2><input type=\"submit\" name=\"submit\" value=\"%s\">\n",_("Purchase"));
             $page_body_content .= "<input type=\"reset\" value=\"Reset\"></td>\n";
@@ -759,17 +771,16 @@ class CreditCardProcessor {
             $page_body_content .= "</table>\n";
     
             $page_body_content .= $this->hidden_elements;
-    
             $page_body_content .= "</form>\n";
 
-            $page_body_close    = "</body></html>";
+            $page_body_close    = "";
 
         } else{
-            $page_body_content  = "<html><head></head>";
-            $page_body_start    = "<body>";
+            $page_body_content  = "";
+            $page_body_start    = "";
             $page_body_content  = _("You have no items in your cart. ");
             $page_body_content  .= "<a href=\"javascript:history.go(-1);\">"._("Go Back")."</a>";
-            $page_body_close    = "</body></html>";
+            $page_body_close    = "";
         }
 
         $arr_form_page_objects = array(
@@ -1213,7 +1224,7 @@ class CreditCardProcessor {
 
         // send email notifications to AG Projects
         $items_purchase_list = $this->getTransactionItems($this->transaction_data['TRANSACTION_ID']);
-        $msg = "New Site Credit Card Transaction:\n";
+        $msg = "New Credit Card Transaction:\n";
         $msg .= "Transaction Number: ".$this->transaction_data['TRANSACTION_ID']."\n";
         $msg .= "Amount: ".$this->total." ".$this->transaction_data['CURRENCY']."\n\n";
         $msg .= "Items Purchased:\n\n";
