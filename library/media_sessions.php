@@ -35,7 +35,8 @@ class MediaSessions {
         if (preg_match("/^(tls|tcp):(.*):(.*)$/",$this->dispatcher,$m)) {
             $hostname  = $m[1].'://'.$m[2];
             $port      = $m[3];
-            $target= $m[1].'://'.$m[2].':'.$m[3];
+            $target= 'tcp://'.$m[2].':'.$m[3];
+            $transport= $m[1];
 
 		    $this->mp_tls_cert_file  = '/etc/cdrtool/mediaproxy.'.$m[2].'.pem';
 
@@ -58,6 +59,12 @@ class MediaSessions {
         }
 
         if ($fp = stream_socket_client ($target, $errno, $errstr,$this->timeout,STREAM_CLIENT_CONNECT,$context)) {
+            if ( $transport == "tls") {
+                if ( !stream_socket_enable_crypto($fp, true, STREAM_CRYPTO_METHOD_SSLv3_CLIENT)){
+                   printf ("<p><font color=red>Error connecting to %s: (Could not enable crypto) </font>\n", $target);
+                   return false;
+                }
+            }
             return $fp;
         } else {
             printf ("<p><font color=red>Error connecting to %s: %s (%s) </font>\n",$target,$errstr,$errno);
