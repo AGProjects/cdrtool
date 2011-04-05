@@ -6638,11 +6638,7 @@ class RatingEngine {
         $quota   = $this->getQuota($account);
         $blocked = $this->getBlockedByQuotaStatus($account);
 
-        $query=sprintf("update quota_usage set
-        quota = '%s',
-        blocked = '%s'
-        where datasource = '%s'
-        and account = '%s'",
+        $query=sprintf("update quota_usage set quota = '%s', blocked = '%s' where datasource = '%s' and account = '%s'",
         $quota,
         intval($blocked),
         $this->CDRS->cdr_source,
