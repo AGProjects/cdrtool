@@ -442,7 +442,7 @@ class CreditCardProcessor {
         return $string;
     }
 
-    function showSubmitForm ($readonly_fields=array()) {
+    function showSubmitForm() {
 
 		if (!$this->setEnvironment()) {
             return false;
@@ -670,7 +670,7 @@ class CreditCardProcessor {
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->odd_row_class);
             $page_body_content .= "<td><div id=\"lbl_ccnum\"></div></td>\n";
-            $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"19\" name=\"creditCardNumber\"></td>\n";
+            $page_body_content .= "<td><input type=\"text\" size=\"30\" maxlength=\"19\" name=\"creditCardNumber\" value=\"".$this->user_account['card_number']."\"></td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->even_row_class);
             $page_body_content .= sprintf("<td>%s</td>\n",_("Expiration Date"));
@@ -700,7 +700,7 @@ class CreditCardProcessor {
             $page_body_content .= "</tr>\n";
             $page_body_content .= sprintf ("<tr class=%s>\n",$this->odd_row_class);
             $page_body_content .= "<td><div id=\"lbl_cvn\"></div></td>\n";
-            $page_body_content .= "<td><input type=\"text\" size=\"3\" maxlength=\"4\" name=\"cvv2Number\" value=\"\"></td>\n";
+            $page_body_content .= "<td><input type=\"text\" size=\"3\" maxlength=\"4\" name=\"cvv2Number\" value=\"".$this->user_account['card_cvn']."\"</td>\n";
             $page_body_content .= "</tr>\n";
 
             $page_body_content .= "<tr>\n";
@@ -887,7 +887,7 @@ class CreditCardProcessor {
         if($_TransactionKey == ''){
         	$pp_return = array('error'=>array('field'=>'key','desc'=>_('Missing transaction key')));
         } else if (CreditCardProcessor::transaction_exists($_TransactionKey) == true){
-        	$pp_return = array('error'=>array('field'=>'reload','desc'=>_('Transaction already exists, page cannot be reloaded')));
+        	$pp_return = array('error'=>array('field'=>'reload','desc'=>_('Transaction already exists. Do not press the browser reload button.')));
         } else {
 	        $pid = ProfileHandler::generateID();
 	        $handler = & ProfileHandler_Array::getInstance(array(
@@ -1250,7 +1250,7 @@ class CreditCardProcessor {
         	$msg .= sprintf("%s: %s\n",$idx,$extra_information[$idx]);
         }
 
-        return $this->sendEmail($this->sender_email,$this->sender_email,'AG Projects Purchase Notice',$msg);
+        return $this->sendEmail($this->sender_email,$this->sender_email,'Credit Card Purchase Notification',$msg);
     }
 
     function sendEmail ($from, $to, $subject, $msg) {
