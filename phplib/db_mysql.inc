@@ -84,7 +84,26 @@ class DB_Sql {
       }
 
     }
+
+    if ( !mysql_ping( $this->Link_ID ) ) {
     
+      $this->Link_ID=mysql_pconnect($Host, $User, $Password);
+      
+      if (!$this->Link_ID) {
+        syslog(LOG_NOTICE, "Error in connect(): pconnect as $User to $Host failed");
+
+        $this->halt("pconnect as $User to $Host failed.");
+        return 0;
+      }
+
+      if (!@mysql_select_db($Database,$this->Link_ID)) {
+        syslog(LOG_NOTICE, "Error in connect(): cannot use database ".$this->Database);
+        $this->halt("cannot use database ".$this->Database);
+        return 0;
+      }
+
+    }
+
     return $this->Link_ID;
   }
 
