@@ -6645,7 +6645,7 @@ class RatingEngine {
         $account);
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log=sprintf ("Database error for query '%s': %s (%s)",$query,$this->db->Error,$this->db->Errno);
             syslog(LOG_NOTICE, $log);
             return 0;
         }
