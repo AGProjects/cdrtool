@@ -439,10 +439,10 @@ class CDRS {
             $j++;
 
             $reseller_id = $this->cdrtool->Record['reseller_id'];
-            $gateway     = $this->cdrtool->Record['gateway'];
-            $domain      = $this->cdrtool->Record['domain'];
-            $subscriber  = $this->cdrtool->Record['subscriber'];
-            $dest_id     = $this->cdrtool->Record['dest_id'];
+            $gateway     = trim($this->cdrtool->Record['gateway']);
+            $domain      = trim($this->cdrtool->Record['domain']);
+            $subscriber  = trim($this->cdrtool->Record['subscriber']);
+            $dest_id     = trim($this->cdrtool->Record['dest_id']);
             $region      = $this->cdrtool->Record['region'];
             $name        = $this->cdrtool->Record['dest_name'];
 
