@@ -9282,11 +9282,11 @@ class PaypalProcessor {
                 }
                 
                 if ($account->Preferences['ip'] && $_loc=geoip_record_by_name($account->Preferences['ip'])) {
-                    $registration_location=$_loc['country_name'].'/'.$_loc['city'];
+                    $enrollment_location=$_loc['country_name'].'/'.$_loc['city'];
                 } else if ($account->Preferences['ip'] && $_loc=geoip_country_name_by_name($account->Preferences['ip'])) {
-                    $registration_location=$_loc;
+                    $enrollment_location=$_loc;
                 } else {
-                    $registration_location='Unknown';
+                    $enrollment_location='Unknown';
                 }
                 
                 if ($_loc=geoip_record_by_name($_SERVER['REMOTE_ADDR'])) {
@@ -9303,18 +9303,17 @@ class PaypalProcessor {
                     $timezone='Unknown';
                 }
                 
-                $extra_information=array('SIP account' => $account->admin_url_absolute,
-                'SIP Account Timezone'  => $account->timezone,
-                'Registration IP'       => $account->Preferences['ip'],
-                'Registration Location' => $registration_location,
-                'Registration Email'    => $account->Preferences['registration_email'],
-                'Registration Timezone' => $timezone,
-                'Transaction Location'  => $transaction_location
-                );
-                
-                if ($this->make_credit_checks) {
-                    $extra_information['First Payment']='Yes';
-                }
+                $extra_information=array(
+                                         'Account Page'         => $account->admin_url_absolute,
+                                         'Account First Name'   => $account->firstName,
+                                         'Account Last Name '   => $account->lastName,
+                                         'Account Timezone'     => $account->timezone,
+                                         'Enrollment IP'        => $account->Preferences['ip'],
+                                         'Enrollment Location'  => $enrollment_location,
+                                         'Enrollment Email'     => $account->Preferences['registration_email'],
+                                         'Enrollment Timezone'  => $timezone,
+                                         'Transaction Location' => $transaction_location
+                                         );
                 
                 if ($CardProcessor->saveOrder($_POST,$pay_process_results,$extra_information)) {
 
@@ -9329,13 +9328,12 @@ class PaypalProcessor {
                 } else {
                     $log=sprintf("Error: SIP Account %s - CC transaction %s failed to Save Order",$account->account, $CardProcessor->transaction_data['TRANSACTION_ID']);
                     syslog(LOG_NOTICE, $log);
-                    //print _("Error Saving Order");
                     return false;
                 }
                 
                 
             } else {
-                print _("Invalid Request");
+                print _("Invalid CC Request");
                 return false;
             }
             
