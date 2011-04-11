@@ -2637,7 +2637,7 @@ class CDR_opensips extends CDR {
                 }
             }
         } else {
-            if ($this->BillingPartyIdIsLocal()) {
+            if ($this->isBillingPartyLocal()) {
                 // call is diverted by local user
                 if ($this->CalleeIsLocal) {
                     $this->flow = 'diverted-on-net';
@@ -3229,7 +3229,7 @@ class CDR_opensips extends CDR {
         }
     }
 
-    function BillingPartyIdIsLocal() {
+    function isBillingPartyLocal() {
         $els=explode("@",$this->BillingPartyId);
 
         if ($els[1] && in_array($els[1],array_keys($this->CDRS->localDomains))) {

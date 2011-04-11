@@ -2050,7 +2050,6 @@ class CDR {
             }
 
             if (strlen($this->durationNormalized) && $this->durationNormalized != $this->duration) {
-
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s ='%s' ",$this->CDRS->durationField,$this->durationNormalized);
@@ -2207,7 +2206,7 @@ class CDR {
 
                 if ($this->CDRS->CDRdb1->query($query1)) {
                     if ($this->CDRS->CDRdb1->affected_rows()) {
-        				if ($this->CallerIsLocal) {
+        				if ($this->isBillingPartyLocal()) {
                         	if ($table == $this->CDRS->table) {
                                 // cache usage only if current month
         
@@ -2231,7 +2230,7 @@ class CDR {
 
                             if ($this->CDRS->CDRdb1->query($query2)) {
                     			if ($this->CDRS->CDRdb1->affected_rows()) {
-        							if ($this->CallerIsLocal) {
+        				            if ($this->isBillingPartyLocal()) {
                                         if ($previousTable == $this->CDRS->table) {
                                             // cache usage only if current month
                     
@@ -2306,6 +2305,10 @@ class CDR {
     }
 
     function isCalleeLocal() {
+        return false;
+    }
+
+    function isBillingPartyLocal() {
         return false;
     }
 
