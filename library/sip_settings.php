@@ -2841,6 +2841,7 @@ class SipSettings {
         }
 
         $_account['sip_address']    = $this->account;
+        $_account['display_name']   = sprintf("%s %s",$this->firstName,$this->lastName);
         $_account['password']       = $this->password;
         $_account['email']          = $this->email;
         $_account['settings_url']   = $this->digest_settings_page;
