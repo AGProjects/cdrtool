@@ -40,5 +40,20 @@ mysql> select now_usec();
 Storage
 -------
 
-To store these values create columns as varchar(26)
+To store these values in radius tables create that start time and stop time
+columns as varchar(26) and set the session time column to a decimal type.
+
+alter table radacct_usec change column AcctStartTime AcctStartTime
+varchar(26) not NULL default '0000-00-00 00:00:00.000000';
+
+alter table radacct_usec change column AcctStopTime AcctStopTime varchar(26)
+not NULL default '0000-00-00 00:00:00.000000';
+
+alter table radacct_usec change column AcctSessionTime AcctSessionTime
+decimal(32,6) not NULL default 0;
+
+To calculate the session duration:
+
+update radacct_usec set AcctSessionTime = TIME_FORMAT(TIMEDIFF(AcctStopTime,
+AcctStartTime),'%s.%f');
 
