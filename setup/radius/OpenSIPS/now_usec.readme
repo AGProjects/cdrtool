@@ -1,0 +1,44 @@
+
+MySQL User Defined Function (UDF) to generate datetime with microseconds accuracy
+
+http://www.xaprb.com/blog/2007/10/30/how-i-built-the-now_usec-udf-for-mysql/
+
+
+Install dependencies
+--------------------
+
+sudo apt-get install libmysqlclient15-dev
+
+
+Build the library 
+-----------------
+
+gcc -fPIC -Wall -I/usr/include/mysql -shared -o now_usec.so now_usec.cc
+
+
+Install the library
+-------------------
+
+sudo mv now_usec.so /usr/lib/
+
+
+Load the library
+----------------
+
+Connect using mysql client to the radius database:
+mysql> create function now_usec returns string soname 'now_usec.so';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select now_usec();
++----------------------------+
+| now_usec()                 |
++----------------------------+
+| 2007-10-23 10:28:13.862116 | 
++----------------------------+
+
+
+Storage
+-------
+
+To store these values create columns as varchar(26)
+
