@@ -924,7 +924,7 @@ class CDRS {
 
     	$this->whereUnnormalized = sprintf(" %s = '0'",$this->normalizedField);
 
-        if ($this->stopTimeField) $this->whereUnnormalized .= " and $this->stopTimeField != '0000-00-00 00:00:00' ";
+        if ($this->stopTimeField) $this->whereUnnormalized .= " and $this->stopTimeField not like '0000-00-00 00:00:00%' ";
 
         if ($this->CDRFields['MediaTimeout']) {
             /*
