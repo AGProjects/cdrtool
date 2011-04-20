@@ -167,7 +167,7 @@ class SipSettings {
     var $localGroups = array();
     var $max_credit_per_day = 40;
     var $enrollment_configuration = "/etc/cdrtool/enrollment/config.ini";
-
+    var $require_proof_of_identity = true;
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
 
@@ -1912,18 +1912,19 @@ class SipSettings {
         </tr>
         ";
 
-		//if (!$this->isEmbedded()) {
-        /*
-        if ($this->login_type == 'subscriber') {
-            if (!in_array("payments",$this->groups)) {
+        if ($this->require_proof_of_identity) {
+            if ($this->login_type == 'subscriber') {
+                if (!in_array("payments",$this->groups)) {
+                    $this->showIdentityProof();
+                }
+            } else {
                 $this->showIdentityProof();
+            }
+
+            if (!in_array("payments",$this->groups)) {
                 return false;
             }
-        } else {
-        	$this->showIdentityProof();
         }
-        */
-        //}
 
         $credit_amount = 20;
         $basket = array('pstn_credit'=>array('price'       => $credit_amount,
@@ -2169,6 +2170,8 @@ class SipSettings {
 
             print "<p>";
             printf (_("To become verified, upload a copy of your passport or driving license that matches the Credit Card owner. "),$this->billing_email, $this->account, $this->billing_email);
+            print "<p>";
+            printf (_("This copy will be kept on your profile until the credit card transaction has been approved. "));
 
             print "
             </td>
