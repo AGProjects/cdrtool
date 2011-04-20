@@ -11901,7 +11901,7 @@ class Customers extends Records {
                                             'logs'       => array('success' => sprintf('Customer id %s has been deleted',$this->filters['customer'])))
                         );
 
-        if ($this->SoapEngine->execute($function,$this->html)) {
+        if ($this->SoapEngine->execute($function,$this->hide_html)) {
             if (is_object($this->SoapEngineRemote)) {
 
                 $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
@@ -12567,7 +12567,7 @@ class Customers extends Records {
 
         //dprint_r($customer);
 
-        if ($this->SoapEngine->execute($function,$this->html,$this->adminonly)) {
+        if ($this->SoapEngine->execute($function,$this->hide_html,$this->adminonly)) {
 
             // update remote
             if (is_object($this->SoapEngineRemote)) {
@@ -12603,7 +12603,7 @@ class Customers extends Records {
                                                                 )
                                             );
                          
-                            $this->SoapEngine->execute($function,$this->html);
+                            $this->SoapEngine->execute($function,$this->hide_html);
                     		return false;
 
                         } else {
@@ -12620,7 +12620,7 @@ class Customers extends Records {
                                                             )
                                         );
                      
-                        $this->SoapEngine->execute($function,$this->html);
+                        $this->SoapEngine->execute($function,$this->hide_html);
                     	return false;
                     }
 
@@ -12750,7 +12750,7 @@ class Customers extends Records {
                                                 'logs'       => array('success' => sprintf('Customer id %s has been copied',$customer->id)))
                             );
     
-            if ($this->SoapEngine->execute($function,$this->html)) {
+            if ($this->SoapEngine->execute($function,$this->hide_html)) {
                 // update remote
                 if (is_object($this->SoapEngineRemote)) {
                     if ($_id = $this->getCustomerId($customer_new->username)) {
@@ -12772,7 +12772,7 @@ class Customers extends Records {
                                                                 'logs'       => array('success' => sprintf('Customer id %s could not be copied ',$this->filters['customer'])))
                                             );
                     
-                            $this->SoapEngine->execute($function,$this->html);
+                            $this->SoapEngine->execute($function,$this->hide_html);
                             return false;
                         }
                     }
@@ -13044,7 +13044,7 @@ class Customers extends Records {
                                             )
                        );
 
-        if ($result = $this->SoapEngine->execute($function,$this->html)) {
+        if ($result = $this->SoapEngine->execute($function,$this->hide_html)) {
             // update remote
             if (is_object($this->SoapEngineRemote)) {
                 if ($_id = $this->getCustomerId($customer['username'])) {
@@ -13065,7 +13065,7 @@ class Customers extends Records {
                                                             'logs'       => array('success' => sprintf('Customer id %s could not be created ',$this->filters['customer'])))
                                         );
                 
-                        $this->SoapEngine->execute($function,$this->html);
+                        $this->SoapEngine->execute($function,$this->hide_html);
                         return false;
                     }
                 }
@@ -14421,7 +14421,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
 
             } else if ($action=='deblock') {
 
@@ -14433,7 +14433,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
 
             } else if ($action=='removefromgroup') {
                 if (!strlen($sub_action_parameter)) {
@@ -14449,7 +14449,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
 
             } else if ($action=='addtogroup') {
                 if (!strlen($sub_action_parameter)) {
@@ -14465,7 +14465,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
 
             } else if ($action=='deblock_quota') {
 
@@ -14477,7 +14477,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
 
             } else if ($action=='disable_pstn') {
 
@@ -14489,7 +14489,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
 
             } else if ($action=='enable_pstn') {
 
@@ -14501,7 +14501,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
 
             } else if ($action=='delete') {
 
@@ -14513,7 +14513,7 @@ class SipAccountsActions extends Actions {
         
                                 );
 
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
 
             } else if ($action=='prepaid') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -14543,7 +14543,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             } else if ($action=='postpaid') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -14571,7 +14571,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
 
                 }
             } else if ($action=='setquota') {
@@ -14600,7 +14600,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
 
                 }
                 
@@ -14639,7 +14639,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
 
                 }
             } else if ($action=='rpidasusername') {
@@ -14670,7 +14670,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
 
                 }
             } else if ($action=='prefixtorpid') {
@@ -14705,7 +14705,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
 
                 }
             } else if ($action=='changecustomer' && $this->version > 1) {
@@ -14740,7 +14740,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
 
                 }
             } else if ($action=='changeowner') {
@@ -14775,7 +14775,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
 
                 }
             } else if ($action=='changefirstname') {
@@ -14804,7 +14804,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
 
                 }
             } else if ($action=='changelastname') {
@@ -14833,7 +14833,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
 
                 }
             } else if ($action=='changepassword') {
@@ -14862,7 +14862,7 @@ class SipAccountsActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
 
                 }
             } else if ($action=='addbalance') {
@@ -14894,7 +14894,7 @@ class SipAccountsActions extends Actions {
                                                    )
         
                                 );
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
 
             }
         }
@@ -14937,7 +14937,7 @@ class SipAliasesActions extends Actions {
                                                                           )
                                                    )
                                 );
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
             }
         }
         print "</ol>";
@@ -14990,7 +14990,7 @@ class EnumMappingsActions extends Actions {
         
                                 );
     
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
             } else if ($action  == 'changettl') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                 $number     = $this->SoapEngine->soapclient->getNumber($enum_id);
@@ -15035,7 +15035,7 @@ class EnumMappingsActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             } else if ($action  == 'changeowner') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15068,7 +15068,7 @@ class EnumMappingsActions extends Actions {
                                                                               )
                                                        )
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             } else if ($action  == 'changeinfo') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15096,7 +15096,7 @@ class EnumMappingsActions extends Actions {
                                                                               )
                                                        )
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             }
         }
@@ -15141,7 +15141,7 @@ class DnsRecordsActions extends Actions {
         
                                 );
     
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
             } else if ($action  == 'changettl') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                 $record     = $this->SoapEngine->soapclient->getRecord($key['id']);
@@ -15168,7 +15168,7 @@ class DnsRecordsActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             } else if ($action  == 'changepriority') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15195,7 +15195,7 @@ class DnsRecordsActions extends Actions {
                                                        )
                                     );
 
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             } else if ($action  == 'changevalue') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15217,7 +15217,7 @@ class DnsRecordsActions extends Actions {
                                                        )
                                     );
 
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             }
         }
@@ -15265,7 +15265,7 @@ class DnsZonesActions extends Actions {
         
                                 );
     
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
             } else if ($action  == 'changettl') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
@@ -15292,7 +15292,7 @@ class DnsZonesActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             } else if ($action  == 'changeexpire') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15320,7 +15320,7 @@ class DnsZonesActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             } else if ($action  == 'changeminimum') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15348,7 +15348,7 @@ class DnsZonesActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             } else if ($action  == 'addnsrecord') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15372,7 +15372,7 @@ class DnsZonesActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             } else if ($action  == 'removensrecord') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15400,7 +15400,7 @@ class DnsZonesActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             } else if ($action  == 'changeretry') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15428,7 +15428,7 @@ class DnsZonesActions extends Actions {
                                                        )
             
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             } else if ($action  == 'changeinfo') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15449,7 +15449,7 @@ class DnsZonesActions extends Actions {
                                                                               )
                                                        )
                                     );
-                    $this->SoapEngine->execute($function,$this->html);
+                    $this->SoapEngine->execute($function,$this->hide_html);
                 }
             }
         }
@@ -15486,7 +15486,7 @@ class CustomersActions extends Actions {
                                                    'logs'       => array('success' => sprintf('Customer id %s has been deleted',$key)))
                                 );
 
-                $this->SoapEngine->execute($function,$this->html);
+                $this->SoapEngine->execute($function,$this->hide_html);
             }
         }
 
