@@ -19,7 +19,7 @@ gcc -fPIC -Wall -I/usr/include/mysql -shared -o now_usec.so now_usec.cc
 Install the library
 -------------------
 
-sudo mv now_usec.so /usr/lib/
+sudo mv now_usec.so /usr/lib/mysql/plugin/
 
 
 Load the library
@@ -54,6 +54,7 @@ decimal(32,6) not NULL default 0;
 
 To calculate the session duration:
 
-update radacct_usec set AcctSessionTime = TIME_FORMAT(TIMEDIFF(AcctStopTime,
-AcctStartTime),'%s.%f');
+update radacct_usec set AcctSessionTime = CONCAT(TIME_TO_SEC(TIMEDIFF(
+AcctStopTime, AcctStartTime)), '.', MICROSECOND(TIMEDIFF(AcctStopTime, 
+AcctStartTime)) ),
 
