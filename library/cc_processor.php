@@ -1267,6 +1267,77 @@ class CreditCardProcessor {
             return false;
         }
     }
+
+    function refundPayment ($transaction_id, $type='Full', $amount='', $note='') {
+        if (!$this->setEnvironment()) {
+            return false;
+        }
+
+        if (!$transaction_id) {
+            return false;
+        }
+
+        if (!$note) {
+        	$note=sprintf('Refund %s', $transaction_id);
+        }
+
+        $pid = ProfileHandler::generateID();
+        $handler = & ProfileHandler_Array::getInstance(array(
+                                                             'username' => $this->pp_username,
+                                                             'certificateFile' => null,
+                                                             'subject' => null,
+                                                             'environment' => $this->environment
+                                                             )
+                                                       );
+    
+        $profile = new APIProfile($pid, $handler);
+        $profile->setAPIUsername($this->pp_username);
+        $profile->setAPIPassword($this->pricepp_pass);
+        $profile->setSignature($this->pp_signature); 
+        $profile->setCertificateFile(null);
+        $profile->setEnvironment($this->environment);
+        
+        $ref_details =& PayPal::getType('RefundTransactionRequestType');
+        $ref_details->setVersion("51.0");
+    
+        $transactionID = filter_var($transaction_id, FILTER_SANITIZE_STRING);
+        $refundType = filter_var($type, FILTER_SANITIZE_STRING);
+        $refundAmount = filter_var($amount, FILTER_SANITIZE_STRING);
+        $refundNote = filter_var($note, FILTER_SANITIZE_STRING);
+        
+        $ref_details->setTransactionID($transactionID, 'iso-8859-1');
+        $ref_details->setRefundType($refundType, 'iso-8859-1');
+        $ref_details->setAmount($refundAmount, 'iso-8859-1');
+        $ref_details->setMemo($refundNote, 'iso-8859-1');
+    
+        $caller =& PayPal::getCallerServices($profile);
+        $this->logger->_log("Refund Profile: ".print_r($profile, true)."");
+        $this->logger->_log("Refund Request Details: ".print_r($ref_details, true)."");
+        
+        $response = $caller->RefundTransaction($ref_details);
+        $this->logger->_log("Refund Response Details: ".print_r($response, true)."");
+        
+        $ack = $response->getAck(); 
+        
+        $ref_return = array();
+        
+        if ($ack == 'Success') {
+            $ref_return = array('success'=>array('field' => 'Refund Processing',
+                                                 'desc'  => $response
+                                                 )
+                               );
+        } else {
+            $ref_return = array('error'=>array('field'          => 'Refund Processing',
+                                               'desc'           => $response->Errors->LongMessage,
+                                               'short_message'  => $response->Errors->ShortMessage,
+                                               'error_code'     => $response->Errors->ErrorCode,
+                                               'correlation_id' => $response->CorrelationID
+                                               )
+                               );
+        }
+
+        return $ref_return;
+    }
 }
 
 ?>
