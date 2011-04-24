@@ -4570,15 +4570,36 @@ class SipSettings {
                     }
                 }
             } else if ($issuer=='reseller' || $issuer=='admin') {
-                $description = $_REQUEST['description'];
-                $value       = $_REQUEST['value'];
-    
-                if (strlen($value) && $result = $this->addBalanceReseller($value,$description)) {
-    
-                    print "<p><font color=green>";
-                    printf (_("Old balance was %s, new balance is %s. "),$result->old_balance, $result->new_balance);
-                    print "</font>";
-                    $_done=true;
+                if ($_REQUEST['task'] == 'add') {
+                    $description = $_REQUEST['description'];
+                    $value       = $_REQUEST['value'];
+        
+                    if (strlen($value) && $result = $this->addBalanceReseller($value,$description)) {
+                        print "<p><font color=green>";
+                        printf (_("Old balance was %s, new balance is %s. "),$result->old_balance, $result->new_balance);
+                        print "</font>";
+                        $_done=true;
+                    }
+                } else if ($_REQUEST['task'] == 'refund') {
+                    $transaction = json_decode(base64_decode($_REQUEST['transaction']));
+                    printf ("Refunding transaction id %s in value of %s", $transaction->id, $transaction->value);
+
+                    require('cc_processor.php');
+                    $ccp = new CreditCardProcessor();
+                    $refund_results = $ccp->refundPayment($transaction->id);
+
+                    if(count($refund_results['error']) > 0 ){
+                        printf ("<p><font color=red>Error %d: %s (%s)",$refund_results['error']['error_code'], $refund_results['error']['desc'], $refund_results['error']['short_message']);
+                    } else {
+                        printf ("<p>Transaction %s refunded with %s: %s",$transaction->id, $refund_results['success']['desc']->RefundTransactionID,$refund_results['success']['desc']->GrossRefundAmount->_value);
+                        $description=sprintf("Refund %s with %s",$transaction->id, $refund_results['success']['desc']->RefundTransactionID);
+                        if ($result = $this->addBalanceReseller($transaction->value,$description)) {
+                            print "<p><font color=green>";
+                            printf (_("Old balance was %s, new balance is %s. "),$result->old_balance, $result->new_balance);
+                            print "</font>";
+                            $_done=true;
+                        }
+                    }
                 }
             }
     
@@ -4617,14 +4638,14 @@ class SipSettings {
             </tr>
             ";
     
-            $this->showIncreaseBalanceReseller();
-            $this->showIncreaseBalanceSubscriber();
+            $this->showChangeBalanceReseller();
+            $this->showChangeBalanceSubscriber();
             $this->showBalanceHistory();
 
         }
     }
 
-    function showIncreaseBalanceReseller () {
+    function showChangeBalanceReseller () {
     	if (!$this->prepaid_changes_allowed) return false;
 
 	    $chapter=sprintf(_("Add Balance")).' ('.$this->login_type.')';
@@ -4658,9 +4679,48 @@ class SipSettings {
         </tr>
         ";
 
+        $transactions = $this->getPaymentIds();
+
+        if (count($transactions)) {
+            $chapter=sprintf(_("Refund Transaction"));
+            $this->showChapter($chapter);
+    
+            print "
+            <tr>
+            <form action=$this->url method=post>
+            <input type=hidden name=tab value=credit>
+            <input type=hidden name=issuer value=reseller>
+            <input type=hidden name=task value=refund>
+            <td align=left colspan=2><nobr>
+            ";
+    
+            print _("Transaction Id");
+    
+            print "
+            <select name=transaction> ";
+            foreach (array_keys($transactions) as $tran) {
+                $t=array('id' => $tran, 'value' => $transactions[$tran]);
+                printf ("<option value='%s'>%s",base64_encode(json_encode($t)),$tran);
+            }
+    
+            print "
+            </select>
+            ";
+            print "
+            Notify
+            <input type=checkbox name=notify value=1>
+            <input type=submit value=";
+            print _("Refund");
+            print ">
+            </td>
+            </form>
+            </tr>
+            ";
+        }
+
     }
 
-    function showIncreaseBalanceSubscriber () {
+    function showChangeBalanceSubscriber () {
         $this->showPrepaidVoucherForm();
     }
 
@@ -4791,6 +4851,30 @@ class SipSettings {
 
         $this->balance_history=$result->entries;
 
+    }
+
+    function getPaymentIds() {
+        $transactions = array();
+        $this->SipPort->addHeader($this->SoapAuth);
+
+        $result     = $this->SipPort->getCreditHistory($this->sipId,200);
+ 
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            if ($error_fault->detail->exception->errorcode != "2000") {
+                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            }
+        }
+
+        foreach ($result->entries as $entry) {
+             if (preg_match("/^CC transaction (.*)$/",$entry->description,$m)) {
+                $transactions[$m[1]]=$entry->value;
+             }
+        }
+
+        return $transactions;
     }
 
     function getTodayBalanceSummary() {
