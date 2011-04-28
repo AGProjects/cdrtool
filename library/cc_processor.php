@@ -877,6 +877,7 @@ class CreditCardProcessor {
         dprint("processPayment()");
 
 		if (!$this->setEnvironment()) {
+            print "Fail to set environment!";
             return false;
         }
         // return sucess and set relevant data from the transaction to variables belonging to the class
@@ -903,9 +904,8 @@ class CreditCardProcessor {
 	        $profile->setAPIPassword($this->pricepp_pass);
 	        $profile->setSignature($this->pp_signature); 
 	        $profile->setCertificateFile(null);
-	
 	        $profile->setEnvironment($this->environment);
-	
+
 	        $dp_request =& PayPal::getType('DoDirectPaymentRequestType');
 	        $paymentType = $this->transaction_type;
 	
@@ -993,7 +993,7 @@ class CreditCardProcessor {
 	        // Execute SOAP request
 	        $response = $caller->DoDirectPayment($dp_request);
 	        $this->logger->_log("Response Details: ".print_r($response, true)."");
-	
+
 	        if (!method_exists($response,'getAck')) {
 	            $error = 'Response is a '.get_class($response).' object:';
 	            if(method_exists($response,'getMessage')){
@@ -1296,7 +1296,7 @@ class CreditCardProcessor {
         $profile->setSignature($this->pp_signature); 
         $profile->setCertificateFile(null);
         $profile->setEnvironment($this->environment);
-        
+
         $ref_details =& PayPal::getType('RefundTransactionRequestType');
         $ref_details->setVersion("51.0");
     
