@@ -23,7 +23,11 @@ if ($credentials=getSipAccountFromHTTPDigest()) {
     die('HTP digest Credentials error');
 }
 
-$_class='SipSettings';
+if ($CDRTool['sip_settings_class']) {
+    $_class=$CDRTool['sip_settings_class'];
+} else {
+    $_class='SipSettings';
+}
 $_reseller_class=$_class.$reseller;
 
 if (class_exists($_reseller_class)) {

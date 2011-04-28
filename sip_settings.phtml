@@ -13,6 +13,7 @@ Header('Content-Type: text/html; charset=utf-8');
 
 require("/etc/cdrtool/global.inc");
 require("/etc/cdrtool/ngnpro_engines.inc");
+require('sip_settings.php');
 
 if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
     page_open(
@@ -79,7 +80,6 @@ if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
 
 }
 
-require('sip_settings.php');
 
 $_class='SipSettings';
 $_reseller_class=$_class.$_REQUEST['reseller'];
@@ -89,7 +89,6 @@ if (class_exists($_reseller_class)) {
 } else {
 	$SipSettings_class=$_class;
 }
-
 
 if ($resellerFilters[$login_credentials['reseller']]['sip_engine']) {
 	$login_credentials['sip_engine']      = $resellerFilters[$login_credentials['reseller']]['sip_engine'];
