@@ -1828,6 +1828,10 @@ class SipSettings {
             return false;
         }
 
+        if ($this->login_type == 'subscriber' && in_array("blocked",$this->groups)) {
+            return false;
+        }
+
         if ($_REQUEST['task'] == 'showprices') {
             $chapter=sprintf(_("Price list"));
             $this->showChapter($chapter);
@@ -4548,6 +4552,10 @@ class SipSettings {
     }
 
     function showCreditTab() {
+        if ($this->login_type == 'subscriber' && in_array("blocked",$this->groups)) {
+            return false;
+        }
+
         $task        = $_REQUEST['task'];
         $issuer      = $_REQUEST['issuer'];
         $prepaidCard = $_REQUEST['prepaidCard'];
