@@ -22,6 +22,8 @@ if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
                   "perm" => "CDRTool_Perm"));
 
     $account     = $_REQUEST['account'];
+    $reseller    = $_REQUEST['reseller'];
+    $customer    = $_REQUEST['customer'];
     $sip_engine  = $_REQUEST['sip_engine'];
 
     $perm->check("provisioning");
@@ -55,6 +57,7 @@ if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
             printf ("Error: Invalid impersonate value %s",$CDRTool['impersonate']);
             exit;
         }
+
     } else {
             page_close();
             printf ("Error: Missing impersonate setting");
@@ -82,7 +85,7 @@ if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
 
 
 $_class='SipSettings';
-$_reseller_class=$_class.$_REQUEST['reseller'];
+$_reseller_class=$_class.$reseller;
 
 if (class_exists($_reseller_class)) {
 	$SipSettings_class=$_reseller_class;
