@@ -695,3 +695,5 @@ alter table log change column login login varchar(128)  not null;
 alter table billing_customers add column increment smallint unsigned not null;
 alter table billing_customers add column min_duration smallint unsigned not null;
 
+8.0.20
+INSERT INTO sip_status VALUES (476,'UnresolvableDestination','Client-Error','0');
