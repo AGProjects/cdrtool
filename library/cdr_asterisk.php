@@ -1380,12 +1380,12 @@ class CDRS_asterisk extends CDRS {
 
 class CDR_asterisk extends CDR {
 
-    function CDR_asterisk(&$parent,$CDRfields) {
+    function CDR_asterisk($parent,$CDRfields) {
 
         dprint("<hr>Init CDR");
         dprint_r($CDRfields);
 
-        $this->CDRS= &$parent;
+        $this->CDRS= $parent;
 
         foreach (array_keys($this->CDRS->CDRFields) as $field) {
         	$key=$this->CDRS->CDRFields[$field];

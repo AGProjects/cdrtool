@@ -2355,9 +2355,9 @@ class CDR_opensips extends CDR {
     var $show_in_icon=0;
     var $show_out_icon=0;
 
-    function CDR_opensips(&$parent, $CDRfields) {
+    function CDR_opensips($parent, $CDRfields) {
 
-        $this->CDRS = &$parent;
+        $this->CDRS = $parent;
 
         $this->cdr_source  = $this->CDRS->cdr_source;
 

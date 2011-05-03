@@ -27,11 +27,11 @@ class Rate {
     var $rateValuesCache        = array(); // used to speed up prepaid apoplication
     var $broken_rate            = false;
 
-    function Rate($settings=array(),&$db) {
+    function Rate($settings=array(),$db) {
 
         $this->settings = $settings;
 
-        $this->db = &$db;
+        $this->db = $db;
 
         $this->db->Halt_On_Error="no";
 
@@ -67,10 +67,10 @@ class Rate {
 
     }
 
-    function calculateAudio(&$dictionary) {
+    function calculateAudio($dictionary) {
         // used for calculate rate for audio application
 
-        $this->RatingTables      = &$dictionary['RatingTables'];
+        $this->RatingTables      = $dictionary['RatingTables'];
 
         $this->callId            = $dictionary['callId'];
         $this->timestamp         = $dictionary['timestamp'];
@@ -439,10 +439,10 @@ class Rate {
         return true;
     }
 
-    function calculateMessage(&$dictionary) {
+    function calculateMessage($dictionary) {
         // used for calculate rate for SMS application
 
-        $this->RatingTables      = &$dictionary['RatingTables'];
+        $this->RatingTables      = $dictionary['RatingTables'];
 
         $this->callId            = $dictionary['callId'];
         $this->timestamp         = $dictionary['timestamp'];
@@ -1170,7 +1170,7 @@ class Rate {
         return $rate;
     }
 
-    function MaxSessionTime(&$dictionary) {
+    function MaxSessionTime($dictionary) {
         // Used for prepaid application to return maximum session time based on a prepaid balance
 
 		$this->rateValuesCache=array();
@@ -1191,7 +1191,7 @@ class Rate {
         $this->aNumber           = $dictionary['aNumber'];
         $this->cNumber           = $dictionary['cNumber'];
         $this->gateway           = $dictionary['gateway'];
-        $this->RatingTables      = &$dictionary['RatingTables'];
+        $this->RatingTables      = $dictionary['RatingTables'];
         $this->application       = $dictionary['application'];
         $this->ResellerId        = $dictionary['ResellerId'];
         $Balance                 = $dictionary['Balance'];
@@ -5648,18 +5648,18 @@ class OpenSIPSQuota {
     var $timeout       = 5;       // soap connection timeout
     var $daily_quota   = 0;       // by default do not check daily quota
 
-    function OpenSIPSQuota(&$parent) {
+    function OpenSIPSQuota($parent) {
 
         global $DATASOURCES;
 
-        $this->CDRdb           = &$parent->CDRdb;
-        $this->table           = &$parent->table;
-        $this->CDRTool         = &$parent->CDRTool;
-        $this->cdr_source      = &$parent->cdr_source;
+        $this->CDRdb           = $parent->CDRdb;
+        $this->table           = $parent->table;
+        $this->CDRTool         = $parent->CDRTool;
+        $this->cdr_source      = $parent->cdr_source;
 
         $this->path=$this->CDRTool['Path'];
 
-        $this->db_subscribers = &$parent->db_subscribers;
+        $this->db_subscribers = $parent->db_subscribers;
         if (!class_exists($this->db_subscribers)) {
             print("Info: No database defined for SIP accounts $this->cdr_source.\n");
             return false;
@@ -5670,11 +5670,11 @@ class OpenSIPSQuota {
 
         $parent->LoadDomains();
 
-        $this->localDomains        = &$parent->localDomains;
-        $this->cdr_source          = &$parent->cdr_source;
-        $this->BillingPartyIdField = &$parent->CDRFields['BillingPartyId'];
+        $this->localDomains        = $parent->localDomains;
+        $this->cdr_source          = $parent->cdr_source;
+        $this->BillingPartyIdField = $parent->CDRFields['BillingPartyId'];
 
-        $this->parent = &$parent;
+        $this->parent = $parent;
 
         $this->db = new DB_cdrtool;
         $this->db->Halt_On_Error="no";
@@ -5685,10 +5685,10 @@ class OpenSIPSQuota {
         $this->db1 = new DB_cdrtool;
         $this->db1->Halt_On_Error="no";
 
-        $this->CDRS = &$parent;
+        $this->CDRS = $parent;
 
-        $this->quota_init_flag   = &$parent->quota_init_flag;
-        $this->quota_reset_flag  = &$parent->quota_reset_flag;
+        $this->quota_init_flag   = $parent->quota_init_flag;
+        $this->quota_reset_flag  = $parent->quota_reset_flag;
 
         if ($parent->daily_quota && is_numeric($parent->daily_quota) && $parent->daily_quota > 1 && $parent->daily_quota < 100) {
        		$this->daily_quota = $parent->daily_quota;
@@ -6002,7 +6002,7 @@ class OpenSIPSQuota {
             $accounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['traffic']  = $this->CDRdb->f('traffic');
             $accounts[$this->CDRdb->f($this->BillingPartyIdField)]['usage']['cost_today'] = 0;
 
-            $this->CDRS->cacheQuotaUsage(&$accounts);
+            $this->CDRS->cacheQuotaUsage($accounts);
             $j++;
         }
     }
@@ -6580,7 +6580,7 @@ class RatingEngine {
         $this->CDRS->RatingTables->LoadRatingTables();
 
         // init subscribers database
-        $this->db_subscribers_class = &$this->CDRS->db_subscribers;
+        $this->db_subscribers_class = $this->CDRS->db_subscribers;
 
         if (!class_exists($this->db_subscribers_class)) {
             syslog(LOG_NOTICE,"Error: No database defined for SIP accounts");
@@ -7308,7 +7308,7 @@ class RatingEngine {
                               'skip_fix_prepaid_duration'              => true
                               );
 
-            $CDR = new $this->CDRS->CDR_class(&$this->CDRS, &$CDRStructure);
+            $CDR = new $this->CDRS->CDR_class($this->CDRS, $CDRStructure);
             $CDR->normalize();
 
             $this->runtime['normalize_cdr']=microtime_float();
@@ -7431,7 +7431,7 @@ class RatingEngine {
                                       'gateway'         => $CDR->gateway,
                                       'BillingPartyId'  => $CDR->BillingPartyId,
                                       'ENUMtld'         => $CDR->ENUMtld,
-                                      'RatingTables'    => &$this->CDRS->RatingTables
+                                      'RatingTables'    => $this->CDRS->RatingTables
                                       );
     
                 $Rate = new Rate($this->settings, $this->db);
@@ -7471,7 +7471,7 @@ class RatingEngine {
                                       'gateway'         => $CDR->gateway,
                                       'BillingPartyId'  => $CDR->BillingPartyId,
                                       'ENUMtld'         => $CDR->ENUMtld,
-                                      'RatingTables'    => &$this->CDRS->RatingTables
+                                      'RatingTables'    => $this->CDRS->RatingTables
                                       );
     
                 $Rate = new Rate($this->settings, $this->db);
@@ -7647,7 +7647,7 @@ class RatingEngine {
                                   'gateway'         => $CDR->gateway,
                                   'BillingPartyId'  => $CDR->BillingPartyId,
                                   'ENUMtld'         => $CDR->ENUMtld,
-                                  'RatingTables'    => &$this->CDRS->RatingTables
+                                  'RatingTables'    => $this->CDRS->RatingTables
                                   );
 
 
@@ -7814,7 +7814,7 @@ class RatingEngine {
                               'skip_fix_prepaid_duration'              => true
                               );
 
-            $CDR = new $this->CDRS->CDR_class(&$this->CDRS, &$CDRStructure);
+            $CDR = new $this->CDRS->CDR_class($this->CDRS, $CDRStructure);
             $CDR->normalize();
 
             $Rate    = new Rate($this->settings, $this->db);
@@ -7829,7 +7829,7 @@ class RatingEngine {
                                   'gateway'         => $CDR->gateway,
                                   'BillingPartyId'  => $CDR->BillingPartyId,
                                   'ENUMtld'         => $CDR->ENUMtld,
-                                  'RatingTables'    => &$this->CDRS->RatingTables
+                                  'RatingTables'    => $this->CDRS->RatingTables
                                   );
 
             $Rate->calculateAudio($RateDictionary);
@@ -8048,7 +8048,7 @@ class RatingEngine {
                                   'domain'          => $active_sessions[$_session]['domain'],
                                   'BillingPartyId'  => $active_sessions[$_session]['BillingPartyId'],
                                   'ENUMtld'         => $active_sessions[$_session]['ENUMtld'],
-                                  'RatingTables'    => &$this->CDRS->RatingTables
+                                  'RatingTables'    => $this->CDRS->RatingTables
                                   );
     
             $Rate_session->calculateAudio($RateDictionary_session);
@@ -8096,7 +8096,7 @@ class RatingEngine {
                                   'domain'          => $active_sessions[$_session]['domain'],
                                   'BillingPartyId'  => $active_sessions[$_session]['BillingPartyId'],
                                   'ENUMtld'         => $active_sessions[$_session]['ENUMtld'],
-                                  'RatingTables'    => &$this->CDRS->RatingTables,
+                                  'RatingTables'    => $this->CDRS->RatingTables,
                                   'skipConnectCost' => true
                                   );
     

@@ -605,7 +605,7 @@ class CDRS {
                          );
         }
 
-        $this->ENUMtlds    = &$_ENUMtlds;
+        $this->ENUMtlds    = $_ENUMtlds;
         $c=count($this->ENUMtlds);
 
         return count($this->ENUMtlds);
@@ -1082,12 +1082,12 @@ class CDRS {
 
             $found++;
 
-            $CDR = new $this->CDR_class(&$this, &$Structure);
+            $CDR = new $this->CDR_class($this, $Structure);
 
             if ($CDR->normalize("Save",$table)) {
                 $this->status['normalized']++;
                 if ($this->csv_file_ready) {
-                    if (!$this->csv_writter->write_cdr(&$CDR)) {
+                    if (!$this->csv_writter->write_cdr($CDR)) {
                         // stop writing future records if we have a failure
                     	$this->csv_file_cannot_be_opened = true;
                     }
@@ -2148,13 +2148,13 @@ class CDR {
                                           'ResellerId'      => $this->ResellerId,
                                           'domain'          => $this->domain,
                                           'gateway'         => $this->gateway,
-                                          'RatingTables'    => &$this->CDRS->RatingTables,
+                                          'RatingTables'    => $this->CDRS->RatingTables,
                                           'aNumber'         => $this->aNumber,
                                           'cNumber'         => $this->cNumber
                                           );
     
 
-                    $Rate->calculateMessage(&$RateDictionary);
+                    $Rate->calculateMessage($RateDictionary);
                 } else {
                     $RateDictionary=array(
                                           'callId'          => $this->callId,
@@ -2167,14 +2167,14 @@ class CDR {
                                           'ResellerId'      => $this->ResellerId,
                                           'domain'          => $this->domain,
                                           'gateway'         => $this->gateway,
-                                          'RatingTables'    => &$this->CDRS->RatingTables,
+                                          'RatingTables'    => $this->CDRS->RatingTables,
                                           'aNumber'         => $this->aNumber,
                                           'cNumber'         => $this->cNumber,
                                           'ENUMtld'         => $this->ENUMtld
                                           );
     
 
-                    $Rate->calculateAudio(&$RateDictionary);
+                    $Rate->calculateAudio($RateDictionary);
                 }
 
                 $this->pricePrint   = $Rate->pricePrint;
@@ -2318,14 +2318,14 @@ class CDR {
     	}
     }
 
-    function lookupRateFromNetwork(&$RateDictionary,&$fp) {
+    function lookupRateFromNetwork($RateDictionary,$fp) {
     	$this->rateInfo='';
         $this->pricePrint='';
         $this->price='';
 
     	$countEndofLines=0;
         $cmd="ShowPrice";
-        foreach (array_keys(&$RateDictionary) as $key) {
+        foreach (array_keys($RateDictionary) as $key) {
             $cmd .=" ".$key."=".$RateDictionary[$key]." ";
         }
 
