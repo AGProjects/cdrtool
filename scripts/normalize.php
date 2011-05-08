@@ -36,12 +36,13 @@ if ($f=fopen($lockFile,"w")) {
 }
 
 while (list($k,$v) = each($DATASOURCES)) {
-    if (strlen($v["normalizedField"])) {
+    if (strlen($v["normalizedField"] and !$v["skipNormalize"])) {
         $b=time();
         $class_name=$v["class"];
 
         unset($CDRS);
         $CDRS = new $class_name($k);
+
 
 		if (is_array($CDRS->db_class)) {
         	$db_class=$CDRS->db_class[0];
