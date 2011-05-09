@@ -578,3 +578,12 @@ the default behaviour with your own custom functionality.
 For example you can chage the way the geolocation information is displayed
 for each CDR line by overwriting the function CDR->lookupGeoLocation();
 
+
+Datetime columns accuracy
+-------------------------
+
+By default the session start time, stop time and duration fields have 1 second
+accuracy. If you require accurancy higher than 1 second see:
+
+setup/radius/OpenSIPS/now_usec.readme
+

@@ -697,3 +697,8 @@ alter table billing_customers add column min_duration smallint unsigned not null
 
 8.0.20
 INSERT INTO sip_status VALUES (476,'UnresolvableDestination','Client-Error','0');
+
+8.1.0
+To setup SQL tables to support microsecond datetime accuracy see:
+setup/radius/OpenSIPS/now_usec.readme
+

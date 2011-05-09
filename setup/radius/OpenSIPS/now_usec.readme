@@ -3,6 +3,8 @@ MySQL User Defined Function (UDF) to generate datetime with microseconds accurac
 
 http://www.xaprb.com/blog/2007/10/30/how-i-built-the-now_usec-udf-for-mysql/
 
+The following instructions must be executed on the SQL server machine. 
+
 
 Install dependencies
 --------------------
@@ -18,6 +20,8 @@ gcc -fPIC -Wall -I/usr/include/mysql -shared -o now_usec.so now_usec.cc
 
 Install the library
 -------------------
+
+The library must be installed in the plugin search path of MySQL server:
 
 sudo mv now_usec.so /usr/lib/mysql/plugin/
 
@@ -37,11 +41,18 @@ mysql> select now_usec();
 +----------------------------+
 
 
-Storage
--------
+Column Storage
+--------------
 
-To store these values in radius tables create that start time and stop time
-columns as varchar(26) and set the session time column to a decimal type.
+To store microseconds values in radius tables create that start time and
+stop time columns as varchar(26) and set the session time column to a
+decimal type.
+
+This is done automatically if you use the SQL stored procedure mechanism in
+sql.conf and remove the %S argument passed to the stored procedures.
+
+The following explain how to migrate an existing table schema to use
+microseconds accuracy:
 
 alter table radacct_usec change column AcctStartTime AcctStartTime
 varchar(26) not NULL default '0000-00-00 00:00:00.000000';
@@ -57,4 +68,3 @@ To calculate the session duration:
 update radacct_usec set AcctSessionTime = CONCAT(TIME_TO_SEC(TIMEDIFF(
 AcctStopTime, AcctStartTime)), '.', MICROSECOND(TIMEDIFF(AcctStopTime, 
 AcctStartTime)) ),
-
