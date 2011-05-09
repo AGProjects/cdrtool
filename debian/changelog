@@ -1,3 +1,27 @@
+cdrtool (8.1.0) unstable; urgency=low
+
+  [ Rating Engine ]
+
+  * Added microseconds accuracy for datetime storage columns
+    See setup/radius/OpenSIPS/now_usec.readme
+  * Skip printing data source names that are not going to be normalized
+  * Removed pass by reference statements incompatible with PHP 5.3.3
+  * Added code 476 to SIP response codes
+
+  [ NGNPro client ]
+
+  * Fixed setting reseller in sip settings page
+  * Refactored card processor to support refunds
+  * Hide payment page if account is blocked
+  * Added refund functionality to credit tab in sip settings page
+  * Added refundPayment function in paypal processor
+  * Improved validation of CC payments
+  * Fixed hiding html output when making ngnpro request
+  * Update readme about microseconds accuracy
+  * Added display_name to Blink download applet
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 09 May 2011 08:58:08 +0200
+
 cdrtool (8.0.19) unstable; urgency=low
 
   * Increased quota usage when billing party is local
