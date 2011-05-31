@@ -124,8 +124,8 @@ class Session {
       break;
       case "get":
         if ( isset($_SERVER['QUERY_STRING']) ) {
-          $_SERVER['QUERY_STRING'] = ereg_replace(
-            "(^|&)".quotemeta(urlencode($this->name))."=".$id."(&|$)",
+          $_SERVER['QUERY_STRING'] = preg_replace(
+            "/(^|&)".quotemeta(urlencode($this->name))."=".$id."(&|$)/",
             "\\1", $_SERVER['QUERY_STRING']);
         }
       break;
@@ -176,7 +176,7 @@ class Session {
   ## session $id.
    
   function url($url){
-    $url=ereg_replace("[&?]+$", "", $url);
+    $url=preg_replace("/[&?]+$/", "", $url);
  
     switch ($this->mode) {
       case "get":
@@ -256,7 +256,7 @@ class Session {
         $str .= "\$$prefix = array(); ";
         while ( "array" == $l ) {
           ## Structural recursion
-          $this->serialize($prefix."['".ereg_replace("([\\\'])", "\\\\1", $k)."']", &$str);
+          $this->serialize($prefix."['".preg_replace("/([\\\'])/", "\\\\1", $k)."']", &$str);
           eval("\$l = gettype(list(\$k)=each(\$$prefix));");
         }
 
@@ -275,7 +275,7 @@ class Session {
       default:
         ## $$prefix is an atom. Extract it to $l, then generate code.
         eval("\$l = \$$prefix;");
-        $str.="\$$prefix = '".ereg_replace("([\\\\'])", "\\\\1", $l)."'; ";
+        $str.="\$$prefix = '".preg_replace("/([\\\\'])/", "\\\\1", $l)."'; ";
 
 
       break;

@@ -115,14 +115,14 @@ class CT_Sql {
       $str  = $this->db->f("val");
       $str2 = base64_decode( $str );
 
-      if ( ereg("^".$name.":.*", $str2) ) {
-         $str = ereg_replace("^".$name.":", "", $str2 );
+      if ( preg_match("/^$name:.*/", $str2) ) {
+         $str = preg_replace("/^$name:/", "", $str2 );
       } else {
 
         $str3 = stripslashes( $str );
 
-        if ( ereg("^".$name.":.*", $str3) ) {
-          $str = ereg_replace("^".$name.":", "", $str3 );
+        if ( preg_match("/^$name:.*/", $str3) ) {
+          $str = preg_replace("/^$name:/", "", $str3 );
         } else {
 
           switch ( $this->encoding_mode ) {

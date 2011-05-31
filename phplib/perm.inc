@@ -36,8 +36,8 @@ class Perm {
     if (! isset($auth->auth["perm"]) ) {
       $auth->auth["perm"] = "";
     }
-    $pageperm = split(",", $p);
-    $userperm = split(",", $auth->auth["perm"]);
+    $pageperm = preg_split("/,/", $p);
+    $userperm = preg_split("/,/", $auth->auth["perm"]);
     
     list ($ok0, $pagebits) = $this->permsum($pageperm);
     list ($ok1, $userbits) = $this->permsum($userperm);
