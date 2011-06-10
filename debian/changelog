@@ -1,3 +1,10 @@
+cdrtool (8.1.1) unstable; urgency=low
+
+  * Fixed link to individual calls when group by canonical uri
+  * Fixed export for OpenSIPS CDRs to csv file
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 10 Jun 2011 12:04:58 +0200
+
 cdrtool (8.1.0) unstable; urgency=low
 
   [ Rating Engine ]
