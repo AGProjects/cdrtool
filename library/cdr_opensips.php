@@ -3155,14 +3155,13 @@ class CDR_opensips extends CDR {
         print ",$this->duration";
         print ",$this->price";
         print ",$this->SipProxyServer";
-        print ",$this->application";
         print ",$this->inputTraffic";
         print ",$this->outputTraffic";
-        print ",$CallingUserAgent";
-        print ",$CalledUserAgent";
+        printf(",%s",preg_replace("/,/","/",quoted_printable_decode($CallingUserAgent)));
+        printf(",%s",preg_replace("/,/","/",quoted_printable_decode($CalledUserAgent)));
         print ",$this->disconnect";
         print ",$disconnectName";
-        print ",$this->SipCodec";
+        printf(",%s",preg_replace("/,/","/",quoted_printable_decode($this->SipCodec)));
         print ",$this->application";
         print "\n";
     }

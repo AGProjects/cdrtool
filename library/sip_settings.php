@@ -7930,7 +7930,7 @@ class SipSettings {
                 if ($this->isEmbedded()) {
 
                     $add_contact_url=sprintf("<a href=\"javascript:blink.addContact_withDisplayName_('%s', '%s');\">%s</a>",$sip_account,$name,$this->plus_sign_img);
-                    printf ("<tr class=%s><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
+                    printf ("<tr class=%s><td>2 %d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
                     $_class,
                     $index,
                     $name,
@@ -7941,7 +7941,7 @@ class SipSettings {
                     );
                 } else {
 
-                    printf ("<tr class=%s><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
+                    printf ("<tr class=%s><td>1 %d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
                     $_class,
                     $index,
                     $name,
