@@ -28,7 +28,7 @@ class CDRS_opensips extends CDRS {
                          'RemoteAddress'   => 'SipTranslatedRequestURI',
                          'SipCodec'        => 'SipCodecs',
                          'SipUserAgents'   => 'SipUserAgents',
-                         'application' => 'SipApplicationType',
+                         'application'     => 'SipApplicationType',
 			             'ServiceType'     => 'ServiceType',
                          'BillingPartyId'  => 'UserName',
                          'SipRPID'         => 'SipRPID',
@@ -1555,6 +1555,7 @@ class CDRS_opensips extends CDRS {
                     }
 
                     $traceValue="";
+					$mygroup_print=quoted_printable_decode($mygroup);
 
                     if ($this->group_byOrig==$this->DestinationIdField) {
                         if ($this->CDRTool['filter']['domain'] && $this->destinations[$this->CDRTool['filter']['domain']]) {
@@ -1566,7 +1567,6 @@ class CDRS_opensips extends CDRS {
                             //$description=$_dst_name;
                         }
 
-                        $mygroup_print=$mygroup;
                         if ($mygroup) {
                             $traceValue=$mygroup;
                         } else {
@@ -1580,22 +1580,18 @@ class CDRS_opensips extends CDRS {
                         $description="";
                         $traceField="a_number";
                         $traceValue=urlencode($mygroup);
-                    } else if ($this->group_byOrig==$this->cNumberField) {
+                    } else if ($this->group_byOrig==$this->CanonicalURIField) {
                         $traceField="c_number";
                         $traceValue=urlencode($mygroup);
                     } else if ($this->group_byOrig==$this->SipProxyServerField) {
                         $traceField="sip_proxy";
                         $traceValue=urlencode($mygroup);
-                        $mygroup_print = $mygroup;
                     } else if ($this->group_byOrig==$this->SipCodecField) {
                         $traceField="SipCodec";
-                        $mygroup_print = $mygroup;
                     } else if (preg_match("/UserAgent/",$this->group_byOrig)) {
                         $traceField="UserAgent";
-                        $mygroup_print = $mygroup;
                     } else if (preg_match("/^BY/",$this->group_byOrig)) {
                         $traceField="MONTHYEAR";
-                        $mygroup_print = $mygroup;
                     } else if ($this->group_byOrig==$this->callIdField) {
                         $traceField="call_id";
                     } else if ($this->group_byOrig=="DAYOFWEEK") {
@@ -1614,30 +1610,20 @@ class CDRS_opensips extends CDRS {
                         } else if ($mygroup == "7") {
                             $description="Saturday";
                         }
-                        $mygroup_print=$mygroup;
-
                     } else if ($this->group_byOrig=="DAYOFMONTH") {
                         $description    =$this->CDRdb->f('day');
-                        $mygroup_print = $mygroup;
                     } else if ($this->group_byOrig=="DAYOFYEAR") {
                         $description    =$this->CDRdb->f('day');
-                        $mygroup_print = $mygroup;
                     } else if ($this->group_byOrig=="SourceIP") {
                         $traceField="gateway";
-                        $mygroup_print = $mygroup;
                     } else if ($this->group_byOrig=="SipResponseCode") {
                         $description    =$this->disconnectCodesDescription[$mygroup];
-                        $mygroup_print = $mygroup;
                         $traceField="sip_status";
                     } else if ($this->group_byOrig=="SipApplicationType") {
-                        $mygroup_print = $mygroup;
                         $traceField="application";
                     } else {
                         $description   = "";
-                        $mygroup_print = $mygroup;
                     }
-
-					$mygroup_print=quoted_printable_decode($mygroup_print);
 
                     if (!$traceField) {
                         $traceField    = $group_by;
