@@ -16,7 +16,7 @@ class Rate {
     var $ENUMdiscount           = 0;     // how much percentage to substract from the final price
     var $price                  = 0;
     var $spans                  = 0;     // number of spans we looped through
-	var $connectCost            = 0;
+    var $connectCost            = 0;
     var $increment              = 0;     // used to consider the duration of the call in increments (default 1 second)
     var $min_duration           = 0;     // minimum duration considered for calculating the price
     var $max_duration           = 0;     // maximum duration considered for calculating the price
@@ -103,15 +103,15 @@ class Rate {
         }
 
         if (!$this->gateway) {
-        	$this->gateway="0.0.0.0";
+            $this->gateway="0.0.0.0";
         }
 
         if (!$this->duration) {
-        	$this->duration = 0;
+            $this->duration = 0;
         }
 
         if (!$this->traffic) {
-        	$this->traffic = 0;
+            $this->traffic = 0;
         }
 
         $this->application='audio';
@@ -125,7 +125,7 @@ class Rate {
             return false;
         }
 
-		if (!$this->lookupDestinationDetails()) {
+        if (!$this->lookupDestinationDetails()) {
             // get region, increment and other per destination details
             syslog(LOG_NOTICE, "Error: Cannot find destination details for call_id=$this->callId, dest_id=$this->DestinationId)");
             return false;
@@ -138,7 +138,7 @@ class Rate {
         }
 
         // lookup discounts if any
-		$this->lookupDiscounts();
+        $this->lookupDiscounts();
 
         $this->startTimeBilling   = getLocalTime($this->billingTimezone,$this->timestamp);
         list($dateText,$timeText) = explode(" ",trim($this->startTimeBilling));
@@ -205,20 +205,20 @@ class Rate {
             }
 
             if ($this->discount_duration || $this->discount_connect) {
-            	$this->rateInfo .=
+                $this->rateInfo .=
                 "    Discount: ";
             }
 
             if ($this->discount_connect) {
-            	$this->rateInfo .= " connect $this->discount_connect% ";
+                $this->rateInfo .= " connect $this->discount_connect% ";
             }
 
             if ($this->discount_duration) {
-	            $this->rateInfo .= " duration $this->discount_duration% ";
+                $this->rateInfo .= " duration $this->discount_duration% ";
             }
 
             if ($this->discount_duration || $this->discount_connect) {
-            	$this->rateInfo .= "\n";
+                $this->rateInfo .= "\n";
             }
 
             if ($this->ENUMtld && $this->ENUMtld != 'none' && $this->ENUMtld != 'n/a') {
@@ -351,7 +351,7 @@ class Rate {
             $spanPricePrintIn = number_format($spanPriceIn,$this->priceDecimalDigits);
 
             if ($span=="1" && $thisRate['profile']) {
-            	if ($connectCostIn) {
+                if ($connectCostIn) {
                 $this->rateInfo .= 
                 "  Connect in: $connectCostPrintIn\n";
                 }
@@ -420,7 +420,7 @@ class Rate {
         $this->rateInfo=trim($this->rateInfo);
 
         if ($this->max_price && $this->price > $this->max_price) {
-        	$this->price=$this->max_price;
+            $this->price=$this->max_price;
         }
 
         if ($this->ENUMdiscount) {
@@ -458,7 +458,7 @@ class Rate {
         $this->cNumber           = $dictionary['cNumber'];
 
         if (!$this->gateway) {
-        	$this->gateway="0.0.0.0";
+            $this->gateway="0.0.0.0";
         }
 
         $this->application='sms';
@@ -477,7 +477,7 @@ class Rate {
         }
 
         // lookup discounts if any
-		$this->lookupDiscounts();
+        $this->lookupDiscounts();
 
         $this->startTimeBilling = getLocalTime($this->billingTimezone,$this->timestamp);
 
@@ -520,7 +520,7 @@ class Rate {
 
         if (is_array($foundRate)) {
             $this->price=number_format($foundRate['values']['connectCost']/$this->priceDenominator,$this->priceDecimalDigits);
-        	$this->price=sprintf("%.4f",$this->price);
+            $this->price=sprintf("%.4f",$this->price);
             $this->pricePrint=$this->price;
 
             $this->rateInfo .= 
@@ -528,7 +528,7 @@ class Rate {
             "      RateId: $foundRate[rate]\n".
             "       Price: $this->price\n";
 
-        	return true;
+            return true;
         } else {
             return false;
         }
@@ -537,18 +537,18 @@ class Rate {
     function lookupDiscounts() {
         // get discounts for customer per region if set otherwise per destination id
 
-		if (!$this->CustomerProfile) {
+        if (!$this->CustomerProfile) {
             return false;
         }
 
         if ($this->region) {
-        	$_field='region';
+            $_field='region';
             $_value=$this->region;
         } else {
-        	$_field='destination';
+            $_field='destination';
             $_value=$this->DestinationId;
         }
-		
+        
         if ($this->CustomerProfile == 'default') {
 
             $query=sprintf("select * from billing_discounts
@@ -563,7 +563,7 @@ class Rate {
             addslashes($_value)
             );
         } else {
-        	$els=explode("=",$this->CustomerProfile);
+            $els=explode("=",$this->CustomerProfile);
 
             $query=sprintf("select * from billing_discounts
             where %s = '%s'
@@ -587,11 +587,11 @@ class Rate {
             $this->db->next_record();
 
             if ($this->db->f('connect') > 0 && $this->db->f('connect') <=100) {
-            	$this->discount_connect  = $this->db->f('connect');
+                $this->discount_connect  = $this->db->f('connect');
             }
 
             if ($this->db->f('duration') > 0 && $this->db->f('duration') <=100) {
-            	$this->discount_duration = $this->db->f('duration');
+                $this->discount_duration = $this->db->f('duration');
             }
         }
 
@@ -1173,7 +1173,7 @@ class Rate {
     function MaxSessionTime($dictionary) {
         // Used for prepaid application to return maximum session time based on a prepaid balance
 
-		$this->rateValuesCache=array();
+        $this->rateValuesCache=array();
 
         $this->MaxSessionTimeSpans=0;
 
@@ -1204,7 +1204,7 @@ class Rate {
             return false;
         }
 
-		if (!$this->lookupDestinationDetails()) {
+        if (!$this->lookupDestinationDetails()) {
             return false;
         }
 
@@ -1265,7 +1265,7 @@ class Rate {
             $durationRate    = $thisRate['values']['durationRate'];
 
             if ($span=="1" && !$dictionary['skipConnectCost']) {
-				$this->connectCost=number_format($connectCost/$this->priceDenominator,$this->priceDecimalDigits);
+                $this->connectCost=number_format($connectCost/$this->priceDenominator,$this->priceDecimalDigits);
 
                 $connectCostSpan=$connectCost;
                 $setupBalanceRequired=$connectCost/$this->priceDenominator;
@@ -1321,7 +1321,7 @@ class Rate {
 
     function lookupRateValuesAudio($rateName,$DestinationId) {
 
-    	if (is_array($this->rateValuesCache[$rateName][$DestinationId]['audio'])) {
+        if (is_array($this->rateValuesCache[$rateName][$DestinationId]['audio'])) {
             return $this->rateValuesCache[$rateName][$DestinationId]['audio'];
         }
 
@@ -1386,7 +1386,7 @@ class Rate {
 
     function lookupRateValuesMessage($rateName,$DestinationId) {
 
-    	if (is_array($this->rateValuesCache[$rateName][$DestinationId]['sms'])) {
+        if (is_array($this->rateValuesCache[$rateName][$DestinationId]['sms'])) {
             return $this->rateValuesCache[$rateName][$DestinationId]['sms'];
         }
 
@@ -1455,7 +1455,7 @@ class RatingTables {
                            "billing_rates"         => "rates.csv",
                            "billing_rates_history" => "ratesHistory.csv",
                            "billing_discounts"     => "discounts.csv",
-                           "prepaid"   	           => "prepaid.csv",
+                           "prepaid"                  => "prepaid.csv",
                            "billing_enum_tlds"     => "enumtld.csv",
                            "quota_usage"           => "quotausage.csv"
                            );
@@ -1470,7 +1470,7 @@ class RatingTables {
 
     var $previously_imported_files=0;
     var $maxrowsperpage=15;
-	var $insertDomainOption=array();
+    var $insertDomainOption=array();
     var $delimiter=",";
     var $filesToImport=array();
     var $importFilesPatterns=array('ratesHistory',
@@ -1958,7 +1958,7 @@ class RatingTables {
         $this->settings = $RatingEngine;
         $this->CDRTool  = $CDRTool;
 
-		$this->table = $_REQUEST['table'];
+        $this->table = $_REQUEST['table'];
         if (!$this->table || !in_array($this->table,array_keys($this->tables))) $this->table="destinations";
 
         $this->readonly=$readonly;
@@ -1973,8 +1973,8 @@ class RatingTables {
             $this->delimiter=$this->settings['csv_delimiter'];
         }
 
-		if (!strlen($this->CDRTool['filter']['customer'])) {
-        	$this->whereResellerFilter = sprintf ("reseller_id = %d",'99999999');
+        if (!strlen($this->CDRTool['filter']['customer'])) {
+            $this->whereResellerFilter = sprintf ("reseller_id = %d",'99999999');
         } else {
             if ($this->CDRTool['filter']['customer'] && $this->tables[$this->table]['fields']['reseller_id']) {
                 $this->whereResellerFilter = sprintf ("reseller_id = %d",$this->CDRTool['filter']['customer']);
@@ -1986,11 +1986,11 @@ class RatingTables {
             $this->tables['billing_rates']['fields']['name']['readonly']=1;
         }
 
-		if (strlen($this->settings['socketIP'])) {
+        if (strlen($this->settings['socketIP'])) {
             if ($this->settings['socketIP'] == '0.0.0.0' || $this->settings['socketIP'] == '0') {
-            	$this->settings['socketIPforClients']='127.0.0.1';
+                $this->settings['socketIPforClients']='127.0.0.1';
             } else {
-            	$this->settings['socketIPforClients']=$this->settings['socketIP'];
+                $this->settings['socketIPforClients']=$this->settings['socketIP'];
             }
         }
 
@@ -2002,11 +2002,11 @@ class RatingTables {
 
         $this->scanFilesForImport($dir);
 
-		if ($this->previously_imported_files) {
+        if ($this->previously_imported_files) {
             printf("Skipping %d previously imported files\n",$this->previously_imported_files);
         }
 
-		$results=0;
+        $results=0;
         foreach (array_keys($this->filesToImport) as $file) {
             $importFunction="Import".ucfirst($this->filesToImport[$file]['type']);
 
@@ -2046,7 +2046,7 @@ class RatingTables {
             $durationRateIn = trim($p[8]);
 
             if ($reseller) {
-            	$reseller_id    = intval($reseller);
+                $reseller_id    = intval($reseller);
             } else {
                 $reseller_id    = intval($p[1]);
             }
@@ -2054,17 +2054,17 @@ class RatingTables {
             if (!is_numeric($destination) && !strstr($destination,'@')) {
                 // skip invalid destinations
                 $skipped++;
-            	continue;
+                continue;
             }
 
             if (strlen($connectCost) && !is_numeric($connectCost)) {
                 $skipped++;
-            	continue;
+                continue;
             }
 
             if (strlen($durationRate) && !is_numeric($durationRate)) {
                 $skipped++;
-            	continue;
+                continue;
             }
 
             if (!$application) $application='audio';
@@ -2444,7 +2444,7 @@ class RatingTables {
             $endDate        = trim($p[10]);
 
             if ($reseller) {
-            	$reseller_id    = intval($reseller);
+                $reseller_id    = intval($reseller);
             } else {
                 $reseller_id    = intval($p[1]);
             }
@@ -2452,27 +2452,27 @@ class RatingTables {
             if (!is_numeric($destination) && !strstr($destination,'@')) {
                 // skip invalid destinations
                 $skipped++;
-            	continue;
+                continue;
             }
 
             if (strlen($connectCost) && !is_numeric($connectCost)) {
                 $skipped++;
-            	continue;
+                continue;
             }
 
             if (strlen($durationRate) && !is_numeric($durationRate)) {
                 $skipped++;
-            	continue;
+                continue;
             }
 
             if (preg_match("/^\d{4}\-{\d{2}\-\d{2}$/",$startDate)) {
                 $skipped++;
-            	continue;
+                continue;
             }
 
             if (preg_match("/^\d{4}\-{\d{2}\-\d{2}$/",$endDate)) {
                 $skipped++;
-            	continue;
+                continue;
             }
 
             if ($ops=="1") {
@@ -2714,14 +2714,14 @@ class RatingTables {
             $timezone          = trim($p[9]);
 
             if ($reseller) {
-            	$reseller_id    = intval($reseller);
+                $reseller_id    = intval($reseller);
             } else {
                 $reseller_id    = intval($p[1]);
             }
 
             if (strlen($reseller_id) && !is_integer($reseller_id)) {
                 $skipped++;
-            	continue;
+                continue;
             }
 
             if ($ops=="1") {
@@ -2940,7 +2940,7 @@ class RatingTables {
             $max_price       = trim($p[11]);
 
             if ($reseller) {
-            	$reseller_id    = intval($reseller);
+                $reseller_id    = intval($reseller);
             } else {
                 $reseller_id    = intval($p[1]);
             }
@@ -2948,7 +2948,7 @@ class RatingTables {
             if (!is_numeric($dest_id) && !strstr($dest_id,'@')) {
                 // skip invalid destinations
                 $skipped++;
-            	continue;
+                continue;
             }
 
             if ($ops=="1") {
@@ -3057,7 +3057,7 @@ class RatingTables {
                     max_duration       = '%s',
                     max_price          = '%s'
                     where gateway      = '%s'
-	                and reseller_id    = '%s'
+                    and reseller_id    = '%s'
                     and domain         = '%s'
                     and subscriber     = '%s'
                     and dest_id        = '%s'
@@ -3069,7 +3069,7 @@ class RatingTables {
                     addslashes($max_duration),
                     addslashes($max_price),
                     addslashes($gateway),
-	                addslashes($reseller_id),
+                    addslashes($reseller_id),
                     addslashes($domain),
                     addslashes($subscriber),
                     addslashes($dest_id)
@@ -3185,7 +3185,7 @@ class RatingTables {
             $duration        = intval($p[9]);
 
             if ($reseller) {
-            	$reseller_id    = intval($reseller);
+                $reseller_id    = intval($reseller);
             } else {
                 $reseller_id    = intval($p[1]);
             }
@@ -3193,7 +3193,7 @@ class RatingTables {
             if (!is_numeric($destination) && !strstr($destination,'@')) {
                 // skip invalid destinations
                 $skipped++;
-            	continue;
+                continue;
             }
 
             if ($ops=="1") {
@@ -3302,7 +3302,7 @@ class RatingTables {
                     connect            = '%s',
                     duration           = '%s',
                     where gateway      = '%s'
-	                and reseller_id    = '%s'
+                    and reseller_id    = '%s'
                     and domain         = '%s'
                     and subscriber     = '%s'
                     and application    = '%s'
@@ -3312,7 +3312,7 @@ class RatingTables {
                     addslashes($connect),
                     addslashes($duration),
                     addslashes($gateway),
-	                addslashes($reseller_id),
+                    addslashes($reseller_id),
                     addslashes($domain),
                     addslashes($subscriber),
                     addslashes($application),
@@ -3426,7 +3426,7 @@ class RatingTables {
             $hour4      = trim($p[10]);
 
             if ($reseller) {
-            	$reseller_id    = intval($reseller);
+                $reseller_id    = intval($reseller);
             } else {
                 $reseller_id    = intval($p[1]);
             }
@@ -3766,7 +3766,7 @@ class RatingTables {
 
     function checkRatingEngineConnection () {
         if ($this->settings['socketIPforClients'] && $this->settings['socketPort'] &&
-          	$fp = fsockopen ($this->settings['socketIPforClients'], $this->settings['socketPort'], $errno, $errstr, 2)) {
+              $fp = fsockopen ($this->settings['socketIPforClients'], $this->settings['socketPort'], $errno, $errstr, 2)) {
             fclose($fp);
             return true;
         }
@@ -3802,7 +3802,7 @@ class RatingTables {
     }
 
     function scanFilesForImport($dir) {
-		$import_dirs[$this->cvs_import_dir]=array('path'=>$this->cvs_import_dir,
+        $import_dirs[$this->cvs_import_dir]=array('path'=>$this->cvs_import_dir,
                                  'reseller' => 0
                                  );
 
@@ -3831,9 +3831,9 @@ class RatingTables {
                                 if ($content=file_get_contents($fullPath)) {
                                     $watermark=$filename."-".md5($content);
                                     if ($this->hasFileBeenImported($filename,$watermark)) {
-						                $this->previously_imported_files++;
+                                        $this->previously_imported_files++;
 
-                                    	break;
+                                        break;
                                     }
     
                                     $this->filesToImport[$filename]=array( 'name'      => $filename,
@@ -4029,7 +4029,7 @@ class RatingTables {
         if (!$table) return false;
 
         if ($this->readonly) {
-        	return true;
+            return true;
         }
 
         // Init table structure
@@ -4083,7 +4083,7 @@ class RatingTables {
                     $k=0;
                     while ($k < $cc ) {
                         if ($metadata[$k]['name'] == 'change_date') {
-                        	$update_set .= sprintf("%s %s = NOW() ",$comma,$metadata[$k]['name']);
+                            $update_set .= sprintf("%s %s = NOW() ",$comma,$metadata[$k]['name']);
                             break;
                         }
                         $k++;
@@ -4149,7 +4149,7 @@ class RatingTables {
                                     );
 
                                     if (!$this->db->query($query)) {
-                                    	$log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                                         print $log;
                                         syslog(LOG_NOTICE, $log);
                                     }
@@ -4315,7 +4315,7 @@ class RatingTables {
                     // build where clause
                     // Search build for each field
 
-	                $where = $this->whereResellerFilter;
+                    $where = $this->whereResellerFilter;
 
                     $j=0;
                     while ($j < $cc ) {
@@ -4437,7 +4437,7 @@ class RatingTables {
                         $toRate);
                     }
 
-	                $where = $this->whereResellerFilter;
+                    $where = $this->whereResellerFilter;
 
                     $j=0;
                     while ($j < $cc ) {
@@ -4559,9 +4559,9 @@ class RatingTables {
                                 $comma="";
                             }
                             if ($Fname == 'reseller_id' && $this->CDRTool['filter']['reseller']) {
-                            	$query .= $comma."'".$this->CDRTool['filter']['reseller']."'";
+                                $query .= $comma."'".$this->CDRTool['filter']['reseller']."'";
                             } else {
-                            	$query .= $comma."'".$value."'";
+                                $query .= $comma."'".$value."'";
                             }
                             $kkk++;
                         }
@@ -4588,8 +4588,8 @@ class RatingTables {
 
                     if (!$empty_insert) {
                         if ($this->db->query($query)) {
-                        	$affected_rows=$this->db->affected_rows();
-                        	if ($affected_rows) {
+                            $affected_rows=$this->db->affected_rows();
+                            if ($affected_rows) {
 
                                 $this->db->query("select LAST_INSERT_ID() as lid");
                                 $this->db->next_record();
@@ -4719,7 +4719,7 @@ class RatingTables {
         if (!is_array($this->tables[$this->table]['fields']))     $this->tables[$this->table]['fields']=array();
 
         if ($this->table=='prepaid' && strlen($_REQUEST['search_session_counter'])) {
-        	$this->readonly=true;
+            $this->readonly=true;
         }
 
         if ($this->readonly) {
@@ -4840,7 +4840,7 @@ class RatingTables {
         }
         
         if (!$order && $this->tables[$this->table]['order']) {
-        	$order=sprintf(" order by %s  ",$this->tables[$this->table]['order']);
+            $order=sprintf(" order by %s  ",$this->tables[$this->table]['order']);
         }
         
         $query=sprintf("select * from %s where (1=1) %s and %s %s limit %s, %s",
@@ -4934,7 +4934,7 @@ class RatingTables {
                     }
             
                     if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
-                    	print "<td><input type=text size=$field_size maxlength=$maxlength name=search_$Fname value=\"$value\"></td>";
+                        print "<td><input type=text size=$field_size maxlength=$maxlength name=search_$Fname value=\"$value\"></td>";
         
                     } else {
                         print "<td></td>";
@@ -5005,7 +5005,7 @@ class RatingTables {
                 <input type='hidden' name=table value=%s>
                 <input type='submit' value=\"Import\">
                 <input type='hidden' name='MAX_FILE_SIZE' value=1024000>
-			    <input type='file'   name='%s'>
+                <input type='file'   name='%s'>
                 ",$this->table,$this->table
                 );
             
@@ -5054,7 +5054,7 @@ class RatingTables {
             
                     if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
-                        	print "<td><input type=text size=$field_size maxlength=$size name=$Fname></td>";
+                            print "<td><input type=text size=$field_size maxlength=$size name=$Fname></td>";
                         } else {
                             print "<td></td>";
                         }
@@ -5108,7 +5108,7 @@ class RatingTables {
                         $this->db1->next_record();
                         $_rateName=$this->db1->f('name');
 
-        		        $_rateName=preg_replace("/%/","",$_rateName);
+                        $_rateName=preg_replace("/%/","",$_rateName);
 
                         if (preg_match("/^(.*)_(\d+)$/",$_rateName,$m)) {
                             $_idx=$m[2]+1;
@@ -5170,7 +5170,7 @@ class RatingTables {
             
                     if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
-                        	print "<td><input type=text size=$field_size maxlength=$size name=$Fname></td>";
+                            print "<td><input type=text size=$field_size maxlength=$size name=$Fname></td>";
                         } else {
                             print "<td></td>";
                 
@@ -5245,21 +5245,21 @@ class RatingTables {
                     $t=0;
                     foreach (array_keys($active_sessions) as $_session) {
                         $t++;
-                    	$maxsessiontime=$active_sessions[$_session]['MaxSessionTime'];
+                        $maxsessiontime=$active_sessions[$_session]['MaxSessionTime'];
 
                         $extraInfo.=sprintf ("<tr bgcolor=lightgrey><td class=border>%d. Session id</td><td>%s</td></tr>",$t,$_session);
                         $duration=time()-$active_sessions[$_session]['timestamp'];
                         foreach (array_keys($active_sessions[$_session]) as $key) {
                             if ($key=='timestamp') {
-                            	$extraInfo.= sprintf ("<tr><td class=border><b>StartTime</b></td><td>%s</td></tr>",Date("Y-m-d H:i",$active_sessions[$_session]['timestamp']));
+                                $extraInfo.= sprintf ("<tr><td class=border><b>StartTime</b></td><td>%s</td></tr>",Date("Y-m-d H:i",$active_sessions[$_session]['timestamp']));
                                 $extraInfo.= sprintf ("<tr><td class=border><b>Progress</b></td><td>%s (%s s)</td></tr>",sec2hms($duration),$duration);
                             } else {
-                            	$extraInfo.= sprintf ("<tr><td class=border><b>%s</b></td><td>%s</td></tr>",ucfirst($key),$active_sessions[$_session][$key]);
+                                $extraInfo.= sprintf ("<tr><td class=border><b>%s</b></td><td>%s</td></tr>",ucfirst($key),$active_sessions[$_session][$key]);
                             }
                         }
                         if ($maxsessiontime < $duration ) {
                             $extraInfo.= sprintf ("<tr><td class=border colspan=2><font color=red><b>Session expired since %d s</b></font></td></tr>",$duration-$maxsessiontime);
-                    		$extraInfo.= sprintf("<tr><td colspan=2><input type=submit name=subweb_task value='Delete session'></td></tr>");
+                            $extraInfo.= sprintf("<tr><td colspan=2><input type=submit name=subweb_task value='Delete session'></td></tr>");
                         }
                         //if (!$this->readonly) {
                         //}
@@ -5332,7 +5332,7 @@ class RatingTables {
                                 printf("<td onClick=\"return toggleVisibility('row%s')\"><a href=#>%s</td>",$found,$session_counter_txt);
 
                             } else {
-                            	print "<td>$value</td>";
+                                print "<td>$value</td>";
                             }
 
                         }
@@ -5370,7 +5370,7 @@ class RatingTables {
             }
         
             if (!$export) {
-            	if (!$this->tables[$this->table]['readonly']) {
+                if (!$this->tables[$this->table]['readonly']) {
                     if ($subweb_task=="Delete" && $idForDeletion == $id && !$confirmDelete) {
                         print "<td class=border bgcolor=lightgrey>";
                         print "<input type=hidden name=confirmDelete value=1>";
@@ -5517,29 +5517,29 @@ class RatingTables {
         $k=1;
         while ($k < count($metadata)) {
             $db_name   = $metadata[$k]['name'];
-        	$k++;
+            $k++;
 
             $web_name  = $this->tables[$table]['fields'][$db_name]['name'];
             $value     = $values[$db_name];
-			$checkType = $this->tables[$table]['fields'][$db_name]['checkType'];
+            $checkType = $this->tables[$table]['fields'][$db_name]['checkType'];
             $mustExist = $this->tables[$table]['fields'][$db_name]['mustExist'];
 
             if ($web_name) {
-            	$name_print=$web_name;
+                $name_print=$web_name;
             } else {
-            	$name_print=$db_name;
+                $name_print=$db_name;
             }
 
             if ($mustExist) {
                 if (!strlen($value)) {
-                	printf ("Error: field '%s' must be filled in\n",$name_print);
-                	return false;
+                    printf ("Error: field '%s' must be filled in\n",$name_print);
+                    return false;
                 }
             }
 
             if ($checkType) {
                 if (!strlen($value)) {
-                	if (!$mustExist) continue;
+                    if (!$mustExist) continue;
                 }
 
                 if ($checkType == 'sip_account') {
@@ -5550,22 +5550,22 @@ class RatingTables {
                 }
 
                 if ($checkType == 'domain') {
-                	if (stristr($value,"-.") || !preg_match("/^([a-zA-Z0-9][a-zA-Z0-9-]*\.)+[a-zA-Z]{2,}$/i",$value)) {
+                    if (stristr($value,"-.") || !preg_match("/^([a-zA-Z0-9][a-zA-Z0-9-]*\.)+[a-zA-Z]{2,}$/i",$value)) {
                         printf ("Error: value '%s' for field '%s' must be of format 'example.com'\n",$value,$name_print);
-        				return false;
-    				}
+                        return false;
+                    }
                 }
 
                 if ($checkType == 'ip') {
-                	if (!preg_match("/^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/i",$value,$m)) {
+                    if (!preg_match("/^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/i",$value,$m)) {
                         printf ("Error: value '%s' for field '%s' must be of format 'X.X.X.X'\n",$value,$name_print);
-        				return false;
-    				} else {
+                        return false;
+                    } else {
                         $i=1;
                         while ($i<=4) {
                             if ($m[$i] < 0 || $m[$i] > 255) {
-                        		printf ("Error: value '%s' for field '%s' must be of a valid IP address\n",$value,$name_print);
-        						return false;
+                                printf ("Error: value '%s' for field '%s' must be of a valid IP address\n",$value,$name_print);
+                                return false;
                             }
                             $i++;
                         }
@@ -5586,22 +5586,22 @@ class RatingTables {
 
     function importTable($table='') {
         // import a table from web
-    	if (!is_array($_FILES[$table]) || $_FILES[$table]['size'] == 0) return false;
+        if (!is_array($_FILES[$table]) || $_FILES[$table]['size'] == 0) return false;
 
         foreach ($this->importFilesPatterns as $_pattern) {
             if (strstr($_FILES[$table]['name'],$_pattern) && preg_match("/\.csv$/",$_FILES[$table]['name'])) {
 
                 if ($this->CDRTool['filters']['reseller']) {
-                	$dir=$this->cvs_import_dir.'/'.$this->CDRTool['filters']['reseller'];
+                    $dir=$this->cvs_import_dir.'/'.$this->CDRTool['filters']['reseller'];
                     if (!is_dir($dir)) {
                         if (!mkdir($dir)) {
                             printf ("<font color=red>Error: cannot create directory %s</font>",$dir);
                             return false;
                         }
                     }
-                	$fullPath=$this->cvs_import_dir.'/'.$this->CDRTool['filters']['reseller'].'/'.$_FILES[$table]['name'];
+                    $fullPath=$this->cvs_import_dir.'/'.$this->CDRTool['filters']['reseller'].'/'.$_FILES[$table]['name'];
                 } else {
-                	$fullPath=$this->cvs_import_dir.'/'.$_FILES[$table]['name'];
+                    $fullPath=$this->cvs_import_dir.'/'.$_FILES[$table]['name'];
                 }
 
                 if (!is_file($fullPath)) {
@@ -5611,14 +5611,14 @@ class RatingTables {
                         return false;
                     }
                 } else {
-                	list($basename,$extension)=explode('.',$_FILES[$table]['name']);
+                    list($basename,$extension)=explode('.',$_FILES[$table]['name']);
                     $j=0;
                     while (1) {
                         $j++;
                         if ($this->CDRTool['filters']['reseller']) {
-                    		$fullPath=$this->cvs_import_dir.'/'.$this->CDRTool['filters']['reseller'].'/'.$basename.'-'.$j.'.'.$extension;
+                            $fullPath=$this->cvs_import_dir.'/'.$this->CDRTool['filters']['reseller'].'/'.$basename.'-'.$j.'.'.$extension;
                         } else {
-                    		$fullPath=$this->cvs_import_dir.'/'.$basename.'-'.$j.'.'.$extension;
+                            $fullPath=$this->cvs_import_dir.'/'.$basename.'-'.$j.'.'.$extension;
                         }
 
                         if (is_file($fullPath)) continue;
@@ -5691,7 +5691,7 @@ class OpenSIPSQuota {
         $this->quota_reset_flag  = $parent->quota_reset_flag;
 
         if ($parent->daily_quota && is_numeric($parent->daily_quota) && $parent->daily_quota > 1 && $parent->daily_quota < 100) {
-       		$this->daily_quota = $parent->daily_quota;
+               $this->daily_quota = $parent->daily_quota;
         }
 
         // load e-mail addresses for quota notifications
@@ -5734,7 +5734,7 @@ class OpenSIPSQuota {
                 $this->soapclient->_options['timeout'] = $this->timeout;
         
             } else {
-            	$e=$DATASOURCES[$this->cdr_source]['soapEngineId'];
+                $e=$DATASOURCES[$this->cdr_source]['soapEngineId'];
                 $log=sprintf("Error: soap engine id $e not found in /etc/cdrtool/ngnpro_engines.inc\n");
                 print $log;
                 syslog(LOG_NOTICE, $log);
@@ -5981,7 +5981,7 @@ class OpenSIPSQuota {
         syslog(LOG_NOTICE, $log);
 
         $j=0;
-		$progress=0;
+        $progress=0;
 
         while($this->CDRdb->next_record()) {
 
@@ -5990,7 +5990,7 @@ class OpenSIPSQuota {
                     $progress++;
                     if ($progress%10 == 0) {
                         print "$progress% ";
-                    	flush();
+                        flush();
                     }
                 }
             }
@@ -6036,7 +6036,7 @@ class OpenSIPSQuota {
                 $quota_exceeded=true;
                 $exceeded_period='daily';
             } else {
-            	$quota_exceeded= false;
+                $quota_exceeded= false;
             }
 
             if ($quota_exceeded) {
@@ -6457,7 +6457,7 @@ class OpenSIPSQuota {
             return false;
         }
 
-		$reset_quota_for= array();
+        $reset_quota_for= array();
 
         if ($this->db->num_rows()) {
             $this->db->next_record();
@@ -6525,11 +6525,11 @@ class RatingEngine {
     var $method        = '';
     var $log_runtime   = false;
     var $prepaid_table = "prepaid";
-	var $init_ok       = false;
+    var $init_ok       = false;
 
     function RatingEngine () {
 
-    	global $RatingEngine;   // set in global.inc
+        global $RatingEngine;   // set in global.inc
         global $DATASOURCES;    // set in global.inc
 
         if (!strlen($RatingEngine['socketIP']) || !$RatingEngine['socketPort'] || !$RatingEngine['cdr_source']) {
@@ -6591,7 +6591,7 @@ class RatingEngine {
 
         $this->enableThor       = $this->CDRS->enableThor;
 
-		$this->init_ok = true;
+        $this->init_ok = true;
     }
 
     function reloadRatingTables () {
@@ -6606,7 +6606,7 @@ class RatingEngine {
             syslog(LOG_NOTICE,$log);
         }
 
-		$this->CDRS->RatingTables->LoadRatingTables();
+        $this->CDRS->RatingTables->LoadRatingTables();
         $e=time();
         $d=$e-$b;
 
@@ -6778,7 +6778,7 @@ class RatingEngine {
         );
 
         if (!$this->db->query($query)) {
-        	$log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             syslog(LOG_NOTICE, $log);
             return 0;
         }
@@ -6786,7 +6786,7 @@ class RatingEngine {
         if ($balance > 0) {
             list($prepaidUser,$prepaidDomain)=explode("@",$account);
 
-			if ($this->enableThor) {
+            if ($this->enableThor) {
                 $this->domain_table          = "sip_domains";
             } else {
                 $this->domain_table          = "domain";
@@ -6800,10 +6800,10 @@ class RatingEngine {
             }
     
             if ($this->AccountsDB->num_rows()){
-            	$this->AccountsDB->next_record();
-            	$_reseller=$this->AccountsDB->f('reseller_id');
+                $this->AccountsDB->next_record();
+                $_reseller=$this->AccountsDB->f('reseller_id');
             } else {
-            	$_reseller=0;
+                $_reseller=0;
             }
 
             $query=sprintf("insert into prepaid_history
@@ -6897,7 +6897,7 @@ class RatingEngine {
         );
 
         if (!$this->db->query($query)) {
-        	$log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             syslog(LOG_NOTICE, $log);
             return 0;
         }
@@ -6905,7 +6905,7 @@ class RatingEngine {
         if ($balance > 0) {
             list($prepaidUser,$prepaidDomain)=explode("@",$account);
 
-			if ($this->enableThor) {
+            if ($this->enableThor) {
                 $this->domain_table          = "sip_domains";
             } else {
                 $this->domain_table          = "domain";
@@ -6919,10 +6919,10 @@ class RatingEngine {
             }
     
             if ($this->AccountsDB->num_rows()){
-            	$this->AccountsDB->next_record();
-            	$_reseller=$this->AccountsDB->f('reseller_id');
+                $this->AccountsDB->next_record();
+                $_reseller=$this->AccountsDB->f('reseller_id');
             } else {
-            	$_reseller=0;
+                $_reseller=0;
             }
 
             $query=sprintf("insert into prepaid_history
@@ -7246,9 +7246,9 @@ class RatingEngine {
             $_dict  = explode("=",$_els[$i]);
             $_key   = strtolower(trim($_dict[0]));
             if ($_key == 'callid') {
-            	$_value = trim($_dict[1]);
+                $_value = trim($_dict[1]);
             } else {
-            	$_value = strtolower(trim($_dict[1]));
+                $_value = strtolower(trim($_dict[1]));
             }
 
             if ($_key && $seenField[$_key]) {
@@ -7295,7 +7295,7 @@ class RatingEngine {
             }
 
             if (!$NetFields['duration'] && $this->settings['MaxSessionTime']) {
-            	$NetFields['duration']=$this->settings['MaxSessionTime'];
+                $NetFields['duration']=$this->settings['MaxSessionTime'];
             }
 
             $CDRStructure=array (
@@ -7336,14 +7336,14 @@ class RatingEngine {
             $max_sessions        = $this->db->f('max_sessions');
 
             if (strlen($this->db->f('active_sessions'))) {
-            	// load active sessions
+                // load active sessions
                 $active_sessions = json_decode($this->db->f('active_sessions'),true);
 
                 if (count($active_sessions)) {
         
                     $active_sessions_new=array();
 
-        		 	$expired=0;
+                     $expired=0;
 
                     foreach (array_keys($active_sessions) as $_session) {
                     
@@ -7370,7 +7370,7 @@ class RatingEngine {
                 }
 
             } else {
-            	$active_sessions=array();
+                $active_sessions=array();
             }
 
             if (!$Balance) {
@@ -7398,7 +7398,7 @@ class RatingEngine {
                 }
             }
 
-			$session_counter=count($active_sessions);
+            $session_counter=count($active_sessions);
 
             if ($max_sessions && $session_counter >= $max_sessions) {
                 $log = sprintf ("Locked: maximum number of concurrent calls %s reached, $max_sessions allowed");
@@ -7410,7 +7410,7 @@ class RatingEngine {
             $maxduration=0;
             // Build Rate dictionary containing normalized CDR fields plus customer Balance
 
-			if (count($active_sessions)) {
+            if (count($active_sessions)) {
                 // set  $this->remaining_balance and $this->parallel_calls for ongoing calls:
                 if (!$this->getActivePrepaidSessions($active_sessions,$Balance,$CDR->BillingPartyId,array($CDR->callId))) {
                     $ret="0"."\n"."type=prepaid";
@@ -7436,9 +7436,9 @@ class RatingEngine {
     
                 $Rate = new Rate($this->settings, $this->db);
 
-            	$_maxduration = round($Rate->MaxSessionTime($RateDictionary));
+                $_maxduration = round($Rate->MaxSessionTime($RateDictionary));
 
-	            $log = sprintf ("Maximum duration for session %s of %s to destination %s having balance=%s is %s",
+                $log = sprintf ("Maximum duration for session %s of %s to destination %s having balance=%s is %s",
                 $CDR->callId,
                 $CDR->BillingPartyId,
                 $CDR->DestinationId,
@@ -7455,9 +7455,9 @@ class RatingEngine {
                     return $ret;
                 }
 
-    			$this->parallel_calls[$CDR->callId]=array('pricePerSecond' => $this->remaining_balance/$_maxduration);
+                $this->parallel_calls[$CDR->callId]=array('pricePerSecond' => $this->remaining_balance/$_maxduration);
 
-			    $maxduration=$this->getAggregatedMaxSessiontime($this->parallel_calls,$this->remaining_balance,$CDR->BillingPartyId);
+                $maxduration=$this->getAggregatedMaxSessiontime($this->parallel_calls,$this->remaining_balance,$CDR->BillingPartyId);
 
             } else {
                 $RateDictionary=array(
@@ -7477,13 +7477,13 @@ class RatingEngine {
                 $Rate = new Rate($this->settings, $this->db);
     
                 $this->runtime['instantiate_rate']=microtime_float();
-            	$maxduration = round($Rate->MaxSessionTime($RateDictionary));
+                $maxduration = round($Rate->MaxSessionTime($RateDictionary));
             }
 
             // add new active session
-			$active_sessions[$CDR->callId]= array('timestamp'       => $CDR->timestamp,
-            			                          'duration'        => $CDR->duration,
-                                      			  'BillingPartyId'  => $CDR->BillingPartyId,
+            $active_sessions[$CDR->callId]= array('timestamp'       => $CDR->timestamp,
+                                                  'duration'        => $CDR->duration,
+                                                    'BillingPartyId'  => $CDR->BillingPartyId,
                                                   'MaxSessionTime'  => $maxduration,
                                                   'domain'          => $CDR->domain,
                                                   'gateway'         => $CDR->gateway,
@@ -7493,8 +7493,8 @@ class RatingEngine {
                                                   'connectCost'     => $Rate->connectCost
                                                   );
 
-			if ($CDR->ENUMtld) {
-            	$active_sessions[$CDR->callId]['ENUMtld']=$CDR->ENUMtld;
+            if ($CDR->ENUMtld) {
+                $active_sessions[$CDR->callId]['ENUMtld']=$CDR->ENUMtld;
             }
 
             $this->runtime['calculate_maxduration']=microtime_float();
@@ -7538,7 +7538,7 @@ class RatingEngine {
 
             syslog(LOG_NOTICE, $log);
 
-			if ($maxduration > 0) {
+            if ($maxduration > 0) {
                 $query=sprintf("update %s
                 set
                 active_sessions = '%s',
@@ -7561,7 +7561,7 @@ class RatingEngine {
 
             $this->logRuntime();
 
-			$ret=$maxduration."\n"."type=prepaid";
+            $ret=$maxduration."\n"."type=prepaid";
             return $ret;
 
         } else if ($NetFields['action'] == "debitbalance") {
@@ -7588,14 +7588,14 @@ class RatingEngine {
 
             if (strlen($NetFields['application'])) {
                 if ($NetFields['application'] == 'audio' || $NetFields['application'] == 'sms' ) {
-                	$application=$NetFields['application'];
+                    $application=$NetFields['application'];
                 } else {
                     $log=sprintf ("error: unsupported application %s",$NetFields['application']);
                     syslog(LOG_NOTICE, $log);
                     return $log;
                 }
             } else {
-            	$application='audio';
+                $application='audio';
             }
 
             if (!$NetFields['gateway']) {
@@ -7613,7 +7613,7 @@ class RatingEngine {
             if ($NetFields['force']) {
                 $force=true;
             } else {
-            	$force=false;
+                $force=false;
             }
 
             $timestamp=time();
@@ -7701,7 +7701,7 @@ class RatingEngine {
                 // return Ok, No credit, Error
                 if ($Rate->calculateMessage($RateDictionary)) {
 
-    	            if ($this->DebitBalanceMessage($CDR->BillingPartyId,$CDR->destinationPrint,$Rate->price,$NetFields['callid'])) {
+                    if ($this->DebitBalanceMessage($CDR->BillingPartyId,$CDR->destinationPrint,$Rate->price,$NetFields['callid'])) {
     
                         $log = sprintf ("Price=%s CallId=%s BillingParty=%s DestId=%s Application=sms",
                         $Rate->price,
@@ -7723,7 +7723,7 @@ class RatingEngine {
 
                         return $RateReturn;
                     } else {
-                    	return "Failed";
+                        return "Failed";
                     }
 
                 } else {
@@ -7945,8 +7945,8 @@ class RatingEngine {
             }
 
             if ($this->AccountsDB->num_rows()) {
-            	$this->AccountsDB->next_record();
-            	$_profile=json_decode(trim($this->AccountsDB->f('profile')));
+                $this->AccountsDB->next_record();
+                $_profile=json_decode(trim($this->AccountsDB->f('profile')));
                 return $_profile->quota;
 
             } else {
@@ -7962,7 +7962,7 @@ class RatingEngine {
             }
 
             if ($this->AccountsDB->num_rows()) {
-            	$this->AccountsDB->next_record();
+                $this->AccountsDB->next_record();
                 return $this->AccountsDB->f('quota');
             } else {
                 return 0;
@@ -7985,9 +7985,9 @@ class RatingEngine {
             }
 
             if ($this->AccountsDB->num_rows()) {
-            	$this->AccountsDB->next_record();
+                $this->AccountsDB->next_record();
 
-            	$_profile=json_decode(trim($this->AccountsDB->f('profile')));
+                $_profile=json_decode(trim($this->AccountsDB->f('profile')));
                 if (in_array('quota',$_profile->groups)) {
                     return 1;
                 } else {
@@ -8022,14 +8022,14 @@ class RatingEngine {
         $ongoing_rates=array();
 
         foreach (array_keys($active_sessions) as $_session) {
-			if (in_array($_session,$exceptSessions)) {
+            if (in_array($_session,$exceptSessions)) {
                 /*
                 $log = sprintf ("Ongoing prepaid session %s for %s updated",
                 $_session,
                 $BillingPartyId
                 );
                 syslog(LOG_NOTICE, $log);
-            	*/
+                */
                 continue;
             }
 
@@ -8083,7 +8083,7 @@ class RatingEngine {
         }
     
         foreach (array_keys($active_sessions) as $_session) {
-			if (in_array($_session,$exceptSessions)) {
+            if (in_array($_session,$exceptSessions)) {
                 continue;
             }
 
@@ -8130,7 +8130,7 @@ class RatingEngine {
     }
 
     function getAggregatedMaxSessiontime($parallel_calls=array(),$balance,$BillingPartyId) {
-    	$maxduration=0;
+        $maxduration=0;
         $sum_price_per_second=0;
 
         foreach (array_keys($parallel_calls) as $_call) {
@@ -8141,9 +8141,9 @@ class RatingEngine {
             $maxduration=intval($balance/$sum_price_per_second);
 
             if (count($parallel_calls) > 1) {
-            	$log = sprintf ("Maximum duration agregated for %s is (Balance=%s)/(Sum of price per second for each destination=%s)=%s s",
-            	$BillingPartyId,$balance,sprintf("%0.4f",$sum_price_per_second),$maxduration);
-            	syslog(LOG_NOTICE, $log);
+                $log = sprintf ("Maximum duration agregated for %s is (Balance=%s)/(Sum of price per second for each destination=%s)=%s s",
+                $BillingPartyId,$balance,sprintf("%0.4f",$sum_price_per_second),$maxduration);
+                syslog(LOG_NOTICE, $log);
             }
     
         } else {
@@ -8178,10 +8178,10 @@ function reloadRatingEngineTables () {
 
     if (strlen($RatingEngine['socketIP']) && $RatingEngine['socketPort']) {
 
-		if ($RatingEngine['socketIP']=='0.0.0.0' || $RatingEngine['socketIP'] == '0') {
-        	$RatingEngine['socketIPforClients']= '127.0.0.1';
+        if ($RatingEngine['socketIP']=='0.0.0.0' || $RatingEngine['socketIP'] == '0') {
+            $RatingEngine['socketIPforClients']= '127.0.0.1';
         } else {
-        	$RatingEngine['socketIPforClients']=$RatingEngine['socketIP'];
+            $RatingEngine['socketIPforClients']=$RatingEngine['socketIP'];
         }
 
         // init CDR datasource
@@ -8190,9 +8190,9 @@ function reloadRatingEngineTables () {
         $CDRS->CacheDestinations();
 
         if ($fp = fsockopen ($RatingEngine['socketIPforClients'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
-        	fputs($fp, "ReloadRatingTables\n");
-	        fclose($fp);
-    	    return true;
+            fputs($fp, "ReloadRatingTables\n");
+            fclose($fp);
+            return true;
         }
     }
     return false;
@@ -8202,16 +8202,16 @@ function keepAliveRatingEngine() {
     global $RatingEngine;
     if (strlen($RatingEngine['socketIP']) && $RatingEngine['socketPort']) {
 
-		if ($RatingEngine['socketIP']=='0.0.0.0' || $RatingEngine['socketIP'] == '0') {
-        	$RatingEngine['socketIPforClients']= '127.0.0.1';
+        if ($RatingEngine['socketIP']=='0.0.0.0' || $RatingEngine['socketIP'] == '0') {
+            $RatingEngine['socketIPforClients']= '127.0.0.1';
         } else {
-        	$RatingEngine['socketIPforClients']=$RatingEngine['socketIP'];
+            $RatingEngine['socketIPforClients']=$RatingEngine['socketIP'];
         }
 
         if ($fp = fsockopen ($RatingEngine['socketIPforClients'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
-        	fputs($fp, "KeepAlive\n");
-	        fclose($fp);
-    	    return true;
+            fputs($fp, "KeepAlive\n");
+            fclose($fp);
+            return true;
         }
     }
     return false;
@@ -8244,7 +8244,7 @@ function testRatingTables () {
         $command=sprintf("ShowPrice From=sip:123@example.com To=sip:%s Gateway=10.0.0.1 Duration=%d\n",$number,$duration);
         fputs($fp, $command,strlen($command));
         $response = fgets($fp, 8192);
-    	fclose($fp);
+        fclose($fp);
     }
 
     $e=time();

@@ -13,13 +13,13 @@ class CDRS {
     var $DestinationIdField  = 'DestinationId';
     var $BillingIdField      = 'UserName';
     var $defaults            = array();
-	var $whereUnnormalized   = '';
-	var $skipNormalize       = false;
-	var $reNormalize         = false;
-	var $usageKeysForDeletionFromCache = array();
-	var $localDomains        = array();
+    var $whereUnnormalized   = '';
+    var $skipNormalize       = false;
+    var $reNormalize         = false;
+    var $usageKeysForDeletionFromCache = array();
+    var $localDomains        = array();
     var $trustedPeers        = array();
-	var $maxCDRsNormalizeWeb = 500;
+    var $maxCDRsNormalizeWeb = 500;
     var $E164_class          = 'E164_Europe';
     var $quotaEnabled        = false;
     var $csv_writter         = false;
@@ -27,19 +27,19 @@ class CDRS {
     var $CallerIsLocal       = false;
     var $CalleeIsLocal       = false;
 
-    var $CDRNormalizationFields=array('id'   	        => 'RadAcctId',
+    var $CDRNormalizationFields=array('id'               => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
                                       'username'        => 'UserName',
-                                      'domain'	        => 'Realm',
+                                      'domain'            => 'Realm',
                                       'gateway'         => 'NASIPAddress',
                                       'duration'        => 'AcctSessionTime',
                                       'startTime'       => 'AcctStartTime',
                                       'stopTime'        => 'AcctStopTime',
                                       'inputTraffic'    => 'AcctInputOctets',
                                       'outputTraffic'   => 'AcctOutputOctets',
-                                      'aNumber'  	    => 'CallingStationId',
-                                      'cNumber'   	    => 'CalledStationId',
-                                      'timestamp'	    => 'timestamp',
+                                      'aNumber'          => 'CallingStationId',
+                                      'cNumber'           => 'CalledStationId',
+                                      'timestamp'        => 'timestamp',
                                       'BillingPartyId'  => 'UserName',
                                       'ResellerId'      => 'BillingId',
                                       'price'           => 'Price',
@@ -67,7 +67,7 @@ class CDRS {
 
         global $CDRTool;
         global $DATASOURCES;
-   		global $RatingEngine;
+           global $RatingEngine;
 
         if (!$cdr_source) {
             $log="Error: cdr_source not defined\n";
@@ -81,9 +81,9 @@ class CDRS {
             return 0;
         }
 
-		$this->initDefaults();
+        $this->initDefaults();
 
-        $this->cdrtool  	   = new DB_CDRTool();
+        $this->cdrtool         = new DB_CDRTool();
         $this->cdr_source      = $cdr_source;
         $this->CDRTool         = $CDRTool;
         $this->rating_settings = $RatingEngine;
@@ -101,7 +101,7 @@ class CDRS {
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['rating']) {
-        	$this->ratingEnabled   = 1;
+            $this->ratingEnabled   = 1;
             $this->rating  = $this->DATASOURCES[$this->cdr_source]['rating'];
             if ($this->DATASOURCES[$this->cdr_source]['showRate'])   $this->showRate    = $this->DATASOURCES[$this->cdr_source]['showRate'];
             if ($this->DATASOURCES[$this->cdr_source]['rateField'])  $this->rateField   = $this->DATASOURCES[$this->cdr_source]['rateField'];
@@ -109,7 +109,7 @@ class CDRS {
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['UserQuotaClass']) {
-        	$this->quotaEnabled     = 1;
+            $this->quotaEnabled     = 1;
             $this->quota_init_flag  = $this->cdr_source.':quotaCheckInit';
             $this->quota_reset_flag = $this->cdr_source.':reset_quota_for';
             if ($this->DATASOURCES[$this->cdr_source]['daily_quota']) {
@@ -118,7 +118,7 @@ class CDRS {
         }
 
         // connect to the CDR database(s)
-		if(!$this->DATASOURCES[$this->cdr_source]['db_class']) {
+        if(!$this->DATASOURCES[$this->cdr_source]['db_class']) {
             $log=sprintf("Error: \$DATASOURCES['%s']['db_class'] is not defined",$this->cdr_source);
             syslog(LOG_NOTICE, $log);
             return 0;
@@ -133,13 +133,13 @@ class CDRS {
             $this->primary_database = $_dbClass;
         }
 
-		if(!class_exists($this->primary_database)) {
+        if(!class_exists($this->primary_database)) {
             $log=sprintf("Error: database class '%s' is not defined",$this->primary_database);
             syslog(LOG_NOTICE, $log);
             return 0;
         }
 
-		$this->CDRdb    = new $this->primary_database;
+        $this->CDRdb    = new $this->primary_database;
 
         // check db connectivity
         if (!$this->CDRdb->query('SELECT 1')) {
@@ -147,53 +147,53 @@ class CDRS {
             syslog(LOG_NOTICE, $log);
 
             if ($this->secondary_database) {
-				$this->CDRdb    = new $this->secondary_database;
-		        if (!$this->CDRdb->query('SELECT 1')) {
+                $this->CDRdb    = new $this->secondary_database;
+                if (!$this->CDRdb->query('SELECT 1')) {
                     $log=sprintf("Error: failed to connect to the secondary CDR database %s\n",$this->secondary_database);
                     syslog(LOG_NOTICE, $log);
                     return 0;
                 } else {
-        			$this->CDRdb1         = new $this->secondary_database;
-		            $this->db_class       = $this->secondary_database;
+                    $this->CDRdb1         = new $this->secondary_database;
+                    $this->db_class       = $this->secondary_database;
                 }
             } else {
                 return 0;
             }
         } else {
-        	$this->CDRdb1         = new $this->primary_database;
+            $this->CDRdb1         = new $this->primary_database;
             $this->db_class       = $this->primary_database;
         }
 
-		if ($this->DATASOURCES[$this->cdr_source]['DestinationIdField']) {
-        	$this->DestinationIdField = $this->DATASOURCES[$this->cdr_source]['DestinationIdField'];
+        if ($this->DATASOURCES[$this->cdr_source]['DestinationIdField']) {
+            $this->DestinationIdField = $this->DATASOURCES[$this->cdr_source]['DestinationIdField'];
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['normalizedField']) {
-        	$this->normalizedField=$this->DATASOURCES[$this->cdr_source]['normalizedField'];
+            $this->normalizedField=$this->DATASOURCES[$this->cdr_source]['normalizedField'];
         }
 
         if (strlen($this->DATASOURCES[$this->cdr_source]['intAccessCode'])) {
-        	$this->intAccessCode=$this->DATASOURCES[$this->cdr_source]['intAccessCode'];
+            $this->intAccessCode=$this->DATASOURCES[$this->cdr_source]['intAccessCode'];
         }
     
         if (strlen($this->DATASOURCES[$this->cdr_source]['natAccessCode'])) {
-        	$this->natAccessCode  = $this->DATASOURCES[$this->cdr_source]['natAccessCode'];
+            $this->natAccessCode  = $this->DATASOURCES[$this->cdr_source]['natAccessCode'];
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['db_subscribers']) {
-        	if (class_exists($this->DATASOURCES[$this->cdr_source]['db_subscribers'])) {
-            	$this->AccountsDB       = new $this->DATASOURCES[$this->cdr_source]['db_subscribers'];
-            	$this->db_subscribers  = $this->DATASOURCES[$this->cdr_source]['db_subscribers'];
+            if (class_exists($this->DATASOURCES[$this->cdr_source]['db_subscribers'])) {
+                $this->AccountsDB       = new $this->DATASOURCES[$this->cdr_source]['db_subscribers'];
+                $this->db_subscribers  = $this->DATASOURCES[$this->cdr_source]['db_subscribers'];
             } else {
-            	$log=sprintf("Error: subscribers database class %s is not defined",$this->DATASOURCES[$this->cdr_source]['db_subscribers']);
-            	syslog(LOG_NOTICE, $log);
-            	return 0;
+                $log=sprintf("Error: subscribers database class %s is not defined",$this->DATASOURCES[$this->cdr_source]['db_subscribers']);
+                syslog(LOG_NOTICE, $log);
+                return 0;
             }
         } else if (class_exists('DB_opensips')) {
             $this->AccountsDB      = new DB_opensips();
             $this->db_subscribers  = 'DB_opensips';
         } else {
-        	$log=sprintf("Error: subscribers database is not defined, please define 'db_subscribers' in datasource '%s'",$this->cdr_source);
+            $log=sprintf("Error: subscribers database is not defined, please define 'db_subscribers' in datasource '%s'",$this->cdr_source);
             syslog(LOG_NOTICE, $log);
             return 0;
         }
@@ -204,7 +204,7 @@ class CDRS {
 
         if ($this->DATASOURCES[$this->cdr_source]['E164_class']) {
             if (class_exists($this->DATASOURCES[$this->cdr_source]['E164_class'])) {
-            	$this->E164_class=$this->DATASOURCES[$this->cdr_source]['E164_class'];
+                $this->E164_class=$this->DATASOURCES[$this->cdr_source]['E164_class'];
             } else {
                 printf ("Error: E164 class '%s' defined in datasource %s does not exist, using default '%s'",$this->DATASOURCES[$this->cdr_source]['E164_class'],$this->cdr_source,$this->E164_class);
             }
@@ -233,8 +233,8 @@ class CDRS {
         if (is_array($this->CDRTool['normalize']['CS_CODES'])) $this->CS_CODES=array_keys($this->CDRTool['normalize']['CS_CODES']);
 
         $this->missed_calls      = $this->DATASOURCES[$this->cdr_source]['missed_calls'];
-        $this->traceInURL	     = $this->DATASOURCES[$this->cdr_source]['traceInURL'];
-        $this->traceOutURL	     = $this->DATASOURCES[$this->cdr_source]['traceOutURL'];
+        $this->traceInURL         = $this->DATASOURCES[$this->cdr_source]['traceInURL'];
+        $this->traceOutURL         = $this->DATASOURCES[$this->cdr_source]['traceOutURL'];
         $this->protocolTraceURL  = $this->DATASOURCES[$this->cdr_source]['protocolTraceURL'];
 
         $spath = explode("/",$_SERVER["PHP_SELF"]);
@@ -268,7 +268,7 @@ class CDRS {
         $this->getCDRtables();
 
         if ($this->DATASOURCES[$this->cdr_source]['csv_writer_class']) {
-        	$csv_writter_class=$this->DATASOURCES[$this->cdr_source]['csv_writer_class'];
+            $csv_writter_class=$this->DATASOURCES[$this->cdr_source]['csv_writer_class'];
             if (class_exists($csv_writter_class)) {
                 $this->csv_writter = new $csv_writter_class($this->cdr_source,$this->DATASOURCES[$this->cdr_source]['csv_directory'],$this->db_subscribers);
             }
@@ -301,7 +301,7 @@ class CDRS {
 
     function LoadDestinations() {
 
- 		$_destinations     = array();
+        $_destinations     = array();
         $_destinations_sip = array();
 
         $this->destinations_count     = 0;
@@ -320,17 +320,17 @@ class CDRS {
             $b=time();
 
             $this->cdrtool->next_record();
-			$_destinations=json_decode($this->cdrtool->f('value'),true);
+            $_destinations=json_decode($this->cdrtool->f('value'),true);
 
             foreach (array_keys($_destinations) as $_key1) {
                 foreach(array_keys($_destinations[$_key1]) as $_key2) {
-                	$this->destinations_count=$this->destinations_count+count($_destinations[$_key1][$_key2]);
+                    $this->destinations_count=$this->destinations_count+count($_destinations[$_key1][$_key2]);
                 }
             }
 
             if (!$this->destinations_count) {
-            	$log=sprintf("Error: cached destinations key contains no data");
-            	syslog(LOG_NOTICE,$log);
+                $log=sprintf("Error: cached destinations key contains no data");
+                syslog(LOG_NOTICE,$log);
             }
 
             $query=sprintf("select `value` from memcache where `key` = 'destinations_sip'");
@@ -342,7 +342,7 @@ class CDRS {
                 return false;
             }
 
-        	if ($this->cdrtool->num_rows()) {
+            if ($this->cdrtool->num_rows()) {
 
                $this->cdrtool->next_record();
                $_destinations_sip=json_decode($this->cdrtool->f('value'),true);
@@ -381,20 +381,20 @@ class CDRS {
         }
 
         if (is_array($this->destinations)) {
-			foreach (array_keys($this->destinations) as $_reseller) {
+            foreach (array_keys($this->destinations) as $_reseller) {
                 foreach ($this->destinations[$_reseller] as $key => $val) {
                     $this->destinations_length[$_reseller][$key] = max(array_map(strlen, array_keys($val)));
                 }
             }
         }
 
-		$c=$this->destinations_count + $this->destinations_sip_count;
+        $c=$this->destinations_count + $this->destinations_sip_count;
         return $c;
     }
 
     function CacheDestinations() {
 
- 		$this->_destinations     = array();
+        $this->_destinations     = array();
         $this->_destinations_sip = array();
 
         $this->destinations_count     = 0;
@@ -591,7 +591,7 @@ class CDRS {
 
     function LoadENUMtlds() {
 
-		$_ENUMtlds =array();
+        $_ENUMtlds =array();
 
         $query="select * from billing_enum_tlds";
 
@@ -834,7 +834,7 @@ class CDRS {
         $f->show_element("cdr_source","");
         if (count($this->tables) > 0) {
             print " Table: ";
-        	$this->f->show_element("cdr_table","");
+            $this->f->show_element("cdr_table","");
         }
         print "
         </td>
@@ -913,8 +913,8 @@ class CDRS {
         $c=0;
 
         if ($this->CDRdb->query($query)) {
-        	$c=$this->CDRdb->affected_rows();
-        	$this->reNormalize=true;
+            $c=$this->CDRdb->affected_rows();
+            $this->reNormalize=true;
         }
 
         return $c;
@@ -922,7 +922,7 @@ class CDRS {
 
     function buildWhereForUnnormalizedSessions () {
 
-    	$this->whereUnnormalized = sprintf(" %s = '0'",$this->normalizedField);
+        $this->whereUnnormalized = sprintf(" %s = '0'",$this->normalizedField);
 
         if ($this->stopTimeField) $this->whereUnnormalized .= " and $this->stopTimeField not like '0000-00-00 00:00:00%' ";
 
@@ -983,7 +983,7 @@ class CDRS {
             return 1;
         }
 
-		$this->buildWhereForUnnormalizedSessions();
+        $this->buildWhereForUnnormalizedSessions();
 
         $query=sprintf("select count(*) as c from %s where %s and %s",
         $table,
@@ -1024,7 +1024,7 @@ class CDRS {
             return true;
         }
 
-		$this->buildWhereForUnnormalizedSessions();
+        $this->buildWhereForUnnormalizedSessions();
 
         $query=sprintf("select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
         from %s where %s and %s order by %s asc",
@@ -1040,8 +1040,8 @@ class CDRS {
 
 
         if (!$this->CDRdb->query($query)) {
-    	    $log=sprintf ("Database error: %s (%s)\n",$this->CDRdb->Error,$this->CDRdb->Errno);
-        	syslog(LOG_NOTICE,$log);
+            $log=sprintf ("Database error: %s (%s)\n",$this->CDRdb->Error,$this->CDRdb->Errno);
+            syslog(LOG_NOTICE,$log);
             print $log;
             return false;
         }
@@ -1052,7 +1052,7 @@ class CDRS {
 
         if ($this->status['cdr_to_normalize'] > 0) {
 
-        	if ($this->ratingEnabled) {
+            if ($this->ratingEnabled) {
                 // Load rating tables
                 $this->RatingTables = new RatingTables();
                 $this->RatingTables->LoadRatingTables();
@@ -1062,13 +1062,13 @@ class CDRS {
             return 0;
         }
 
-		$this->usageKeysForDeletionFromCache=array();
+        $this->usageKeysForDeletionFromCache=array();
 
         while ($this->CDRdb->next_record()) {
 
-			$Structure=$this->_readCDRNormalizationFieldsFromDB();
+            $Structure=$this->_readCDRNormalizationFieldsFromDB();
 
-			if ($this->csv_writter) {
+            if ($this->csv_writter) {
                 if (!$this->csv_file_cannot_be_opened) {
                     if (!$this->csv_writter->ready) {
                         if (!$this->csv_writter->open_file($Structure[$this->CDRNormalizationFields['id']])) {
@@ -1089,20 +1089,20 @@ class CDRS {
                 if ($this->csv_file_ready) {
                     if (!$this->csv_writter->write_cdr($CDR)) {
                         // stop writing future records if we have a failure
-                    	$this->csv_file_cannot_be_opened = true;
+                        $this->csv_file_cannot_be_opened = true;
                     }
                 }
 
                 if ($CDR->broken_rate) {
-                	$this->brokenRates[$CDR->DestinationId]++;
+                    $this->brokenRates[$CDR->DestinationId]++;
                 }
 
             } else {
                 $this->status['normalize_failures']++;
             }
 
-			if ($this->reNormalize && !$this->usageKeysForDeletionFromCache[$CDR->BillingPartyId]) {
-            	$this->usageKeysForDeletionFromCache[$CDR->BillingPartyId]++;
+            if ($this->reNormalize && !$this->usageKeysForDeletionFromCache[$CDR->BillingPartyId]) {
+                $this->usageKeysForDeletionFromCache[$CDR->BillingPartyId]++;
             }
 
             if ($this->status['cdr_to_normalize'] > 1000) {
@@ -1110,7 +1110,7 @@ class CDRS {
                     $progress++;
                     if ($progress%10==0) {
                         print "$progress% ";
-                   	 	flush();
+                            flush();
                     }
                 }
             }
@@ -1142,7 +1142,7 @@ class CDRS {
             $body='';
             foreach($this->missing_destinations as $_dest) {
                 if (!$seen[$_dest]) {
-                	$body.=sprintf("No destination for number %s\n",$_dest);
+                    $body.=sprintf("No destination for number %s\n",$_dest);
                 }
                 $seen[$_dest]++;
             }
@@ -1156,12 +1156,12 @@ class CDRS {
     
         }
 
-		if ($this->csv_file_ready) {
-        	$this->csv_writter->close_file();
+        if ($this->csv_file_ready) {
+            $this->csv_writter->close_file();
         }
 
         if (count($this->usageKeysForDeletionFromCache)) {
-			$this->resetQuota(array_keys($this->usageKeysForDeletionFromCache));
+            $this->resetQuota(array_keys($this->usageKeysForDeletionFromCache));
         }
 
         return 1;
@@ -1177,29 +1177,29 @@ class CDRS {
             // this is a SIP URI
             $NumberStack['username']  = substr($Number,0,$pos);
             if (strlen($NumberStack['username']) < 1) {
-            	$NumberStack['username'] = "unknown";
+                $NumberStack['username'] = "unknown";
             }
             $NumberStack['domain']    = substr($Number,$pos+1);
             $NumberStack['delimiter'] = "@";
 
             $pos = strpos($NumberStack['username'], ":");
             if ($pos) {
-            	$NumberStack['protocol'] = substr($NumberStack['username'],0,$pos+1);
-            	$NumberStack['username'] = substr($NumberStack['username'],$pos+1);
+                $NumberStack['protocol'] = substr($NumberStack['username'],0,$pos+1);
+                $NumberStack['username'] = substr($NumberStack['username'],$pos+1);
             }
 
             if (preg_match("/^(.*)[=:;]/U",$NumberStack['domain'],$p)){
                 $NumberStack['domain']    = $p[1];
-	    	}
+            }
 
         } else if (preg_match("/^([a-z0-9]+:)(.*)$/i",$Number,$m)) {
             $oct=preg_split("/\./",$m[2]);
-    	    if(sizeof($oct)==4) {
-	        // This is a SIP address without username
+            if(sizeof($oct)==4) {
+            // This is a SIP address without username
                 $NumberStack['username']  = "";
                 $NumberStack['domain']    = $m[2];
             } else {
-	        // This is a SIP address without domain
+            // This is a SIP address without domain
                 $NumberStack['username']  = $m[2];
                 $NumberStack['domain']    = "";
             }
@@ -1238,9 +1238,9 @@ class CDRS {
                 }
             }
 
-			if (!$CountryCode) $CountryCode=$this->CDRTool['normalize']['defaultCountryCode'];
+            if (!$CountryCode) $CountryCode=$this->CDRTool['normalize']['defaultCountryCode'];
 
-			$e164class=$this->E164_class;
+            $e164class=$this->E164_class;
             $E164 =  new $e164class($this->intAccessCode, $this->natAccessCode,$CountryCode,$this->ENUMtlds[$ENUMtld]['e164_regexp']);
 
             $NumberStack['E164']=$E164->E164Format($NumberStack['username']);
@@ -1323,7 +1323,7 @@ class CDRS {
         }
 
         if ($destinations_sip[$destination]) {
-        	$ret=array($destination,$destinations_sip[$destination]['name']);
+            $ret=array($destination,$destinations_sip[$destination]['name']);
             return $ret;
         } else {
             return false;
@@ -1382,7 +1382,7 @@ class CDRS {
         $log=sprintf("Error: cannot find destination id for %s of customer = '%s', total destinations = %d\n",$destination,$fCustomer,count($_destinations));
         syslog(LOG_NOTICE,$log);
 
-		$this->missing_destinations[]=$destination;
+        $this->missing_destinations[]=$destination;
         return false;
     }
 
@@ -1390,21 +1390,21 @@ class CDRS {
     }
 
     function RadiusRecordRead($fp) {
-    	$keepreading=1;
+        $keepreading=1;
 
         while ($keepreading) {
             $contents = fgets($fp, 8192);
             if (preg_match("/^$/",$contents)) {
                 $keepreading=0;
             } else {
-            	$record[]=$contents;
+                $record[]=$contents;
             }
         }
         return $record;
     }
 
     function RadiusRecordParse($record) {
-    	unset($radiusParsed);
+        unset($radiusParsed);
         if (!is_array($record)) {
             return 0;
         }
@@ -1414,7 +1414,7 @@ class CDRS {
             foreach (array_keys($this->radiusAttributes) as $attribute) {
                 if (preg_match("/$attribute = (.*)$/",$line,$m)) {
                     $value=preg_replace("/\"/","",trim($m[1]));
-                	$radiusParsed[$attribute]= $value;
+                    $radiusParsed[$attribute]= $value;
                 }
             }
         }
@@ -1426,7 +1426,7 @@ class CDRS {
         $_tables=$this->CDRdb->table_names();
         $t=count($_tables);
 
-		if ($this->table) $this->tables[]=$this->table;
+        if ($this->table) $this->tables[]=$this->table;
 
         while ($t <> 0 ) {
             $_table=$_tables[$t]["table_name"];
@@ -1449,50 +1449,50 @@ class CDRS {
 
         if (!$month) $month=date('Ym', mktime(0, 0, 0, date("m")-1, "01", date("Y")));
 
-		if (!$sourceTable) $sourceTable=$this->table;
+        if (!$sourceTable) $sourceTable=$this->table;
 
         if (preg_match("/^(\w+)\d{6}$/",$sourceTable,$m)) {
-			$destinationTable=$m[1].$month;
+            $destinationTable=$m[1].$month;
         } else {
-			$destinationTable=$sourceTable.$month;
+            $destinationTable=$sourceTable.$month;
         }
 
         print("rotateTable($sourceTable,$month,$destinationTable)\n");
 
-		if ($sourceTable == $destinationTable) {
-        	$log=sprintf("Error: cannot copy records to the same table %s.\n",$destinationTable);
-        	syslog(LOG_NOTICE,$log);
+        if ($sourceTable == $destinationTable) {
+            $log=sprintf("Error: cannot copy records to the same table %s.\n",$destinationTable);
+            syslog(LOG_NOTICE,$log);
             print $log;
-        	return 0;;
+            return 0;;
         }
 
-		$createTableFile=$this->CDRTool['Path'].$this->createTableFile;
+        $createTableFile=$this->CDRTool['Path'].$this->createTableFile;
 
-		if (!$this->createTableFile || !is_readable($createTableFile)) {
-        	$log=sprintf("Error: cannot locate mysql creation file\n");
-        	syslog(LOG_NOTICE,$log);
+        if (!$this->createTableFile || !is_readable($createTableFile)) {
+            $log=sprintf("Error: cannot locate mysql creation file\n");
+            syslog(LOG_NOTICE,$log);
             print $log;
-        	return 0;;
+            return 0;;
         }
 
-		$lockFile="/var/lock/CDRTool_".$this->cdr_source."_rotateTable.lock";
+        $lockFile="/var/lock/CDRTool_".$this->cdr_source."_rotateTable.lock";
 
-		$f=fopen($lockFile,"w");
-		if (flock($f, LOCK_EX + LOCK_NB, $w)) {
-    		if ($w) {
-        		$log=sprintf("Another CDRTool rotate table is in progress. Aborting.\n");
-        		syslog(LOG_NOTICE,$log);
+        $f=fopen($lockFile,"w");
+        if (flock($f, LOCK_EX + LOCK_NB, $w)) {
+            if ($w) {
+                $log=sprintf("Another CDRTool rotate table is in progress. Aborting.\n");
+                syslog(LOG_NOTICE,$log);
                 print $log;
-        		return 0;;
-    		}
-		} else {
-        	$log=sprintf("Another CDRTool rotate table is in progress. Aborting.\n");
-        	syslog(LOG_NOTICE,$log);
+                return 0;;
+            }
+        } else {
+            $log=sprintf("Another CDRTool rotate table is in progress. Aborting.\n");
+            syslog(LOG_NOTICE,$log);
             print $log;
-        	return 0;;
-		}
+            return 0;;
+        }
 
-		$b=time();
+        $b=time();
 
         if (!preg_match("/^(\d{4})(\d{2})$/",$month,$m)) {
             print "Error: Month $month must be in YYYYMM format\n";
@@ -1516,28 +1516,28 @@ class CDRS {
                     $this->CDRFields['startTime'],$stopSQL);
 
 
-		if ($this->CDRdb->query($query)) {
+        if ($this->CDRdb->query($query)) {
             $this->CDRdb->next_record();
             $rowsSourceTable=$this->CDRdb->f('c');
-		    $log=sprintf ("Source table %s has %d records in month %s\n",$sourceTable,$rowsSourceTable,$month);
-        	syslog(LOG_NOTICE,$log);
+            $log=sprintf ("Source table %s has %d records in month %s\n",$sourceTable,$rowsSourceTable,$month);
+            syslog(LOG_NOTICE,$log);
             print $log;
             if (!$rowsSourceTable) return 1;
 
-		} else {
-    	    $log=sprintf ("Error: %s (%s)\n",$this->table,$this->CDRdb->Error);
-        	syslog(LOG_NOTICE,$log);
+        } else {
+            $log=sprintf ("Error: %s (%s)\n",$this->table,$this->CDRdb->Error);
+            syslog(LOG_NOTICE,$log);
             print $log;
             return 0;
-		}
+        }
 
         $query=sprintf("select count(*) as c from %s\n", $destinationTable);
 
-		if ($this->CDRdb->query($query)) {
+        if ($this->CDRdb->query($query)) {
             $this->CDRdb->next_record();
             $rowsDestinationTable = $this->CDRdb->f('c');
-		    $log=sprintf ("Destination table %s has %d records\n",$destinationTable,$rowsDestinationTable);
-        	syslog(LOG_NOTICE,$log);
+            $log=sprintf ("Destination table %s has %d records\n",$destinationTable,$rowsDestinationTable);
+            syslog(LOG_NOTICE,$log);
             print $log;
     
             if ($rowsDestinationTable != $rowsSourceTable) {
@@ -1545,14 +1545,14 @@ class CDRS {
                 syslog(LOG_NOTICE,$log);
                 print $log;
             } else {
-		    	$log=sprintf ("Tables are in sync\n");
-        		syslog(LOG_NOTICE,$log);
-            	print $log;
+                $log=sprintf ("Tables are in sync\n");
+                syslog(LOG_NOTICE,$log);
+                print $log;
             }
 
-		} else {
-    	    $log=sprintf ("%s (%s)\n",$this->CDRdb->Error,$this->CDRdb->Errno);
-        	syslog(LOG_NOTICE,$log);
+        } else {
+            $log=sprintf ("%s (%s)\n",$this->CDRdb->Error,$this->CDRdb->Errno);
+            syslog(LOG_NOTICE,$log);
             print $log;
 
             if ($this->CDRdb->Errno==1146) {
@@ -1612,7 +1612,7 @@ class CDRS {
                 }
             }
         }
-	}
+    }
 
     function purgeTable($sourceTable,$month) {
         // delete records for a given month with minimal locking of database
@@ -1620,16 +1620,16 @@ class CDRS {
         $begin=time();
 
         if ($month) {
-        	if (!preg_match("/^(\d{4})(\d{2})$/",$month,$m)) {
-            	print "Error: Month must be in YYYYMM format\n";
-            	return 0;
+            if (!preg_match("/^(\d{4})(\d{2})$/",$month,$m)) {
+                print "Error: Month must be in YYYYMM format\n";
+                return 0;
             } else {
-        		$beginDate=$m[1]."-".$m[2]."-01";
-        		$endDate=date('Y-m-d', mktime(0, 0, 0, $m[2]+1, '01', $m[1]));
+                $beginDate=$m[1]."-".$m[2]."-01";
+                $endDate=date('Y-m-d', mktime(0, 0, 0, $m[2]+1, '01', $m[1]));
             }
         } else if (is_int($this->DATASOURCES[$this->cdr_source]['purgeCDRsAfter'])) {
-        	$beginDate="1970-01-01";
-        	$endDate=date('Y-m-d', mktime(0, 0, 0, Date('m'), Date('d')-$this->DATASOURCES[$this->cdr_source]['purgeCDRsAfter'], Date('Y')));
+            $beginDate="1970-01-01";
+            $endDate=date('Y-m-d', mktime(0, 0, 0, Date('m'), Date('d')-$this->DATASOURCES[$this->cdr_source]['purgeCDRsAfter'], Date('Y')));
         } else {
             return 0;
         }
@@ -1653,7 +1653,7 @@ class CDRS {
         if (!$min || !$max) {
             $log=sprintf("No CDRs found in %s between %s and %s\n",$sourceTable,$beginDate,$endDate);
             print $log;
-        	syslog(LOG_NOTICE,$log);
+            syslog(LOG_NOTICE,$log);
             return 0;
         }
 
@@ -1687,8 +1687,8 @@ class CDRS {
             if ($this->CDRdb->query($query)) {
                 $deleted=$deleted+$this->CDRdb->affected_rows();
             } else {
-        		$log=sprintf("Error: %s (%s)",$this->CDRdb->Error,$this->CDRdb->Errno);
-        		syslog(LOG_NOTICE,$log);
+                $log=sprintf("Error: %s (%s)",$this->CDRdb->Error,$this->CDRdb->Errno);
+                syslog(LOG_NOTICE,$log);
                 print $log;
                 return 0;
             }
@@ -1710,7 +1710,7 @@ class CDRS {
 
         print "\n";
 
-        $end	  = time();
+        $end      = time();
         $duration = $end-$begin;
         $rps=0;
 
@@ -1724,7 +1724,7 @@ class CDRS {
 
     function cacheQuotaUsage($accounts=array()) {
 
-    	if (!$this->quotaEnabled) return true;
+        if (!$this->quotaEnabled) return true;
 
         $saved_keys=0;
         $failed_keys=0;
@@ -1737,7 +1737,7 @@ class CDRS {
                 $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                 syslog(LOG_NOTICE, $log);
                 print($log);
-            	return false;
+                return false;
             }
 
             if ($this->cdrtool->num_rows()) {
@@ -1762,16 +1762,16 @@ class CDRS {
                     $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     syslog(LOG_NOTICE, $log);
                     $failed_keys++;
-            	} else {
-                	$saved_keys++;
+                } else {
+                    $saved_keys++;
                 }
 
             } else {
 
-				$quota=$this->getQuota($_key);
-				$blocked=$this->getBlockedByQuotaStatus($_key);
+                $quota=$this->getQuota($_key);
+                $blocked=$this->getBlockedByQuotaStatus($_key);
 
-				list($_u,$_d)=explode("@",$_key);
+                list($_u,$_d)=explode("@",$_key);
 
                 $query=sprintf("insert into quota_usage
                 (datasource,account,domain,quota,calls,duration,cost,cost_today,traffic,blocked,reseller_id)
@@ -1795,8 +1795,8 @@ class CDRS {
                     $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
                     syslog(LOG_NOTICE, $log);
                     $failed_keys++;
-            	} else {
-                	$saved_keys++;
+                } else {
+                    $saved_keys++;
                 }
             }
         }
@@ -1823,7 +1823,7 @@ class CDRS {
             return 0;
         }
      
-     	unset($this->lock_connection_id);
+         unset($this->lock_connection_id);
 
         register_shutdown_function("unLockNormalization",$locker,$lockname);
      
@@ -1840,13 +1840,13 @@ class CDRS {
             }
 
             if ($return == 0) {
-            	$log=sprintf("Lock %s already aquired by another process with id %s ",$lockname,$this->lock_connection_id);
-            	syslog(LOG_NOTICE, $log);
+                $log=sprintf("Lock %s already aquired by another process with id %s ",$lockname,$this->lock_connection_id);
+                syslog(LOG_NOTICE, $log);
                 print "$log\n";
                 return 0;
             } else {
-            	$log=sprintf("Normalize lock id %s aquired for %s ",$this->lock_connection_id,$lockname);
-            	syslog(LOG_NOTICE, $log);
+                $log=sprintf("Normalize lock id %s aquired for %s ",$this->lock_connection_id,$lockname);
+                syslog(LOG_NOTICE, $log);
                 //print "$log\n";
                 return 1;
             }
@@ -1867,7 +1867,7 @@ class CDRS {
 
     function resetQuota($accounts=array()) {
 
-    	if (!$this->quotaEnabled) return true;
+        if (!$this->quotaEnabled) return true;
 
         $_reset_array=array_unique($accounts);
 
@@ -2003,7 +2003,7 @@ class CDR {
     var $traceIn              = "";
     var $traceOut             = "";
     var $defaultApplicationType    = "audio";
-  	var $supportedApplicationTypes = array('audio',
+      var $supportedApplicationTypes = array('audio',
                                            'message',
                                            'video',
                                            'chat',
@@ -2014,7 +2014,7 @@ class CDR {
     }
 
     function NormalizeDisconnect() {
-		$causePrint=$this->CDRS->disconnectCodesDescription[$this->disconnect]." (".$this->disconnect.")";
+        $causePrint=$this->CDRS->disconnectCodesDescription[$this->disconnect]." (".$this->disconnect.")";
         return $causePrint;
     }
 
@@ -2071,7 +2071,7 @@ class CDR {
                 $query.=sprintf(" %s = '%s' ",$this->CDRS->ResellerIdField,$this->ResellerId);
             }
 
-			if ($this->usernameNormalized && $this->usernameNormalized!=$this->username) {
+            if ($this->usernameNormalized && $this->usernameNormalized!=$this->username) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",$this->CDRS->usernameField,addslashes($this->usernameNormalized));
@@ -2139,7 +2139,7 @@ class CDR {
 
             if ($this->CDRS->ratingEnabled && $this->DestinationId && ($this->duration || $this->application == 'message')) {
 
-  		        $Rate    = new Rate($this->CDRS->rating_settings, $this->CDRS->cdrtool);
+                  $Rate    = new Rate($this->CDRS->rating_settings, $this->CDRS->cdrtool);
 
                 if ($this->application == 'message') {
                     $RateDictionary=array(
@@ -2209,8 +2209,8 @@ class CDR {
 
                 if ($this->CDRS->CDRdb1->query($query1)) {
                     if ($this->CDRS->CDRdb1->affected_rows()) {
-        				if ($this->isBillingPartyLocal()) {
-                        	if ($table == $this->CDRS->table) {
+                        if ($this->isBillingPartyLocal()) {
+                            if ($table == $this->CDRS->table) {
                                 // cache usage only if current month
         
                                 $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
@@ -2232,8 +2232,8 @@ class CDR {
                             $query2 = sprintf("update %s set %s where %s = '%s'",$previousTable,$query,$this->idField,$this->id);
 
                             if ($this->CDRS->CDRdb1->query($query2)) {
-                    			if ($this->CDRS->CDRdb1->affected_rows()) {
-        				            if ($this->isBillingPartyLocal()) {
+                                if ($this->CDRS->CDRdb1->affected_rows()) {
+                                    if ($this->isBillingPartyLocal()) {
                                         if ($previousTable == $this->CDRS->table) {
                                             // cache usage only if current month
                     
@@ -2261,7 +2261,7 @@ class CDR {
 
                     return 1;
                 } else {
-                	$log=sprintf ("Database error for query %s: %s (%s)",$query1,$this->CDRS->CDRdb1->Error,$this->CDRS->CDRdb1->Errno);
+                    $log=sprintf ("Database error for query %s: %s (%s)",$query1,$this->CDRS->CDRdb1->Error,$this->CDRS->CDRdb1->Errno);
                     syslog(LOG_NOTICE, $log);
                     print($log);
                     return 0;
@@ -2269,15 +2269,15 @@ class CDR {
             }
         } else {
             if ($this->CDRS->BillingPartyIdField && $CarrierInfo['BillingPartyId']) {
-            	$this->domain = $CarrierInfo['BillingDomain'];
+                $this->domain = $CarrierInfo['BillingDomain'];
             }
 
-			if ($this->usernameNormalized && $this->usernameNormalized!=$this->username) {
-            	$this->username=$this->usernameNormalized;
+            if ($this->usernameNormalized && $this->usernameNormalized!=$this->username) {
+                $this->username=$this->usernameNormalized;
             }
 
             if ($this->aNumberNormalized && $this->aNumberNormalized!=$this->aNumber) {
-            	$this->aNumber=$this->aNumberNormalized;
+                $this->aNumber=$this->aNumberNormalized;
             }
 
             if ($this->domainNormalized && $this->domainNormalized != $this->domain) {
@@ -2299,7 +2299,7 @@ class CDR {
 
         if (!is_array($usage)) return ;
 
-		$accounts[$this->BillingPartyId]['usage']=$usage;
+        $accounts[$this->BillingPartyId]['usage']=$usage;
         $this->CDRS->cacheQuotaUsage($accounts);
     }
 
@@ -2318,23 +2318,23 @@ class CDR {
     function obfuscateCallerId() {
         global $obfuscateCallerId;
         if ($obfuscateCallerId) {
-    	}
+        }
     }
 
     function lookupRateFromNetwork($RateDictionary,$fp) {
-    	$this->rateInfo='';
+        $this->rateInfo='';
         $this->pricePrint='';
         $this->price='';
 
-    	$countEndofLines=0;
+        $countEndofLines=0;
         $cmd="ShowPrice";
         foreach (array_keys($RateDictionary) as $key) {
             $cmd .=" ".$key."=".$RateDictionary[$key]." ";
         }
 
-        $this->price	   = 0;
+        $this->price       = 0;
         $this->pricePrint  = "";
-		$this->rateInfo    = "";
+        $this->rateInfo    = "";
 
         if (fputs($fp,"$cmd\n") !== false) {
     
@@ -2354,8 +2354,8 @@ class CDR {
                 }
 
                 if ($i == 1) {
-                	$this->price = trim($line);
-                	$this->pricePrint = number_format($this->price,4);
+                    $this->price = trim($line);
+                    $this->pricePrint = number_format($this->price,4);
                     continue;
                 }
     
@@ -2365,10 +2365,10 @@ class CDR {
     }
 
     function lookupGeoLocation ($ip) {
-    	if ($_loc=geoip_record_by_name($ip)) {
-        	return $_loc['country_name'].'/'.$_loc['city'];
+        if ($_loc=geoip_record_by_name($ip)) {
+            return $_loc['country_name'].'/'.$_loc['city'];
         } else if ($_loc=geoip_country_name_by_name($ip)) {
-        	return $_loc;
+            return $_loc;
         } else {
             return '';
         }
@@ -2376,10 +2376,10 @@ class CDR {
 }
 
 function getLocalTime($timezone,$timestamp) {
-	global $CDRTool;
+    global $CDRTool;
 
     if (!$timezone || $timezone == $CDRTool['provider']['timezone']) {
-    	return date("Y-m-d H:i:s", $timestamp);
+        return date("Y-m-d H:i:s", $timestamp);
     }
 
     putenv("TZ=$timezone");
@@ -2393,7 +2393,7 @@ function validDay($month,$day,$year) {
         return $day;
     }
     while (1) {
-    	if (!checkdate($month,$day,$year) && $day) {
+        if (!checkdate($month,$day,$year) && $day) {
             $day--;
             next;
         } else {
@@ -2412,20 +2412,20 @@ if (is_array($CDRToolModules)) {
 }
 
 function unLockNormalization ($dbid,$lockname) {
-	$query=sprintf("SELECT RELEASE_LOCK('%s')",$lockname);
+    $query=sprintf("SELECT RELEASE_LOCK('%s')",$lockname);
     $log=sprintf("Unlock %s",$lockname);
     syslog(LOG_NOTICE, $log);
 
     if (!$dbid->query($query)) {
-    	$log="Error in unLockNormalization()";
-    	syslog(LOG_NOTICE, $log);
+        $log="Error in unLockNormalization()";
+        syslog(LOG_NOTICE, $log);
     }
 }
 
 class SIPonline {
 
     function SIPonline ($datasource='',$database='db',$table='location') {
-		global $CDRTool;
+        global $CDRTool;
 
         $expandAll  = $_REQUEST['expandAll'];
         $domain     = $_REQUEST['domain'];
@@ -2434,8 +2434,8 @@ class SIPonline {
         $this->domain     = $domain;
         $this->datasource = $datasource;
 
-		if (strlen($CDRTool['filter']['domain'])) {
-        	$this->allowedDomains=explode(" ",$CDRTool['filter']['domain']);
+        if (strlen($CDRTool['filter']['domain'])) {
+            $this->allowedDomains=explode(" ",$CDRTool['filter']['domain']);
             $allowed_domains_sql="";
             $j=0;
             foreach ($this->allowedDomains as $_domain) {
@@ -2448,13 +2448,13 @@ class SIPonline {
         $this->locationDB = new $database;
         $this->locationTable = $table;
 
-		$this->Registered=array();
+        $this->Registered=array();
         $this->countUA=array();
 
         $where = " where (1=1) " ;
 
         if ($allowed_domains_sql) {
-        	$where.= sprintf("and domain in (%s)",$allowed_domains_sql) ;
+            $where.= sprintf("and domain in (%s)",$allowed_domains_sql) ;
         }
 
         $query=sprintf("select count(*) as c, domain
@@ -2488,7 +2488,7 @@ class SIPonline {
     }
 
     function showHeader() {
-    	print "<table border=0 cellspacing=1 class=border>";
+        print "<table border=0 cellspacing=1 class=border>";
         print "<tr bgcolor=lightgrey>
         ";
 
@@ -2533,7 +2533,7 @@ class SIPonline {
         $this->showHeader();
         foreach (array_keys($this->Registered) as $ld) {
 
-        	$onlines=$this->Registered[$ld];
+            $onlines=$this->Registered[$ld];
             $rr  = floor($found/2);
             $mod = $found-$rr*2;
         
@@ -2543,10 +2543,10 @@ class SIPonline {
                 $bgcolor="white";
             }
 
-        	if ($this->expandAll || ($this->domain && $this->domain==$ld)) {
-           		$this->show($ld);
+            if ($this->expandAll || ($this->domain && $this->domain==$ld)) {
+                   $this->show($ld);
             } else {
-            	$found++;
+                $found++;
 
                 $url = sprintf("%s?datasource=%s&domain=%s",
                 $_SERVER['PHP_SELF'],
@@ -2595,7 +2595,7 @@ class SIPonline {
 
         $this->locationDB->query($query);
 
- 		while ($this->locationDB->next_record()) {
+         while ($this->locationDB->next_record()) {
 
             $rr  = floor($found/2);
             $mod = $found-$rr*2;
@@ -2627,13 +2627,13 @@ class SIPonline {
                 $transport=strtoupper($m[1]);
             }
 
-			$sip_account=$username."@".$domain;
+            $sip_account=$username."@".$domain;
 
             print "
             <tr bgcolor=$bgcolor>
             <td valign=top align=right class=border>$found</td>
             <td valign=top align=right class=border>$username@</td>
-        	<td valign=top bgcolor=lightyellow class=border>$domain</td>
+            <td valign=top bgcolor=lightyellow class=border>$domain</td>
             <td valign=top class=border>$transport</td>
             <td valign=top align=right class=border>$c_els[0]</td>
             <td valign=top align=right class=border>$r_els[0]</td>
@@ -2709,14 +2709,14 @@ class CSVWritter {
 
     function CSVWritter($cdr_source='',$csv_directory='') {
         if ($cdr_source) {
-    		$this->cdr_source = $cdr_source;
+            $this->cdr_source = $cdr_source;
         } else {
-    		$this->cdr_source = 'unknown';
+            $this->cdr_source = 'unknown';
         }
 
         if ($csv_directory) {
             if (is_dir($csv_directory)) {
-    			$this->csv_directory = $csv_directory;
+                $this->csv_directory = $csv_directory;
             } else {
                 $log=sprintf ("CSV writter error: %s is not a directory\n",$csv_directory);
                 syslog(LOG_NOTICE,$log);
@@ -2724,7 +2724,7 @@ class CSVWritter {
             }
         }
 
-    	$this->directory=$this->csv_directory."/".date("Ymd");
+        $this->directory=$this->csv_directory."/".date("Ymd");
 
         if (!is_dir($this->directory)) {
             if (!mkdir($this->directory)) {
@@ -2735,11 +2735,11 @@ class CSVWritter {
             chmod($this->directory, 0775);
         }
 
-    	$this->directory_ready = true;
+        $this->directory_ready = true;
     }
 
     function open_file ($filename_suffix='') {
-    	if ($this->ready) return true;
+        if ($this->ready) return true;
 
         if (!$this->directory_ready) return false;
 
@@ -2749,7 +2749,7 @@ class CSVWritter {
             return false;
         }
 
-    	$this->filename_prefix = strtolower($this->cdr_source).'-'.date('YmdHi');
+        $this->filename_prefix = strtolower($this->cdr_source).'-'.date('YmdHi');
 
         $this->full_path=rtrim($this->directory,'/').'/'.$this->filename_prefix.'-'.$filename_suffix.$this->filename_extension;
 
@@ -2761,12 +2761,12 @@ class CSVWritter {
             return false;
         }
 
-    	$this->ready = true;
+        $this->ready = true;
         return true;
     }
 
     function close_file () {
-    	if (!$this->ready) return false;
+        if (!$this->ready) return false;
 
         fclose($this->fp);
 
@@ -2780,7 +2780,7 @@ class CSVWritter {
     }
 
     function write_cdr ($CDR) {
-    	if (!$this->ready) return false;
+        if (!$this->ready) return false;
 
         $line = sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
                         $CDR->id,
@@ -2799,7 +2799,7 @@ class CSVWritter {
                         );
 
         if (!fputs($this->fp,$line)) {
-    		$this->ready = false;
+            $this->ready = false;
             return false;
         }
 
@@ -2821,10 +2821,10 @@ class MaxRate extends CSVWritter {
     var $translate_uris  = array();
  
     function MaxRate ($cdr_source='', $csv_directory='', $db_subscribers='') {
-    	global $MaxRateSettings;   // set in global.inc
+        global $MaxRateSettings;   // set in global.inc
 
         /*
-		$MaxRateSettings= array('inbound_trunks'  => array('10.0.0.1' => 'KPNtrunk1',
+        $MaxRateSettings= array('inbound_trunks'  => array('10.0.0.1' => 'KPNtrunk1',
                                                            '10.0.0.1' => 'KPNtrunk1'
                                                            ),
 
@@ -2889,7 +2889,7 @@ class MaxRate extends CSVWritter {
     }
 
     function write_cdr($CDR) {
-    	if (!$this->ready) return false;
+        if (!$this->ready) return false;
 
         # skip if no audio
         if ($CDR->application != 'audio') return true;
@@ -2899,12 +2899,12 @@ class MaxRate extends CSVWritter {
 
         # normalize destination
         if ($CDR->CanonicalURIE164) {
-        	$cdr['destination'] = '+'.$CDR->CanonicalURIE164;
+            $cdr['destination'] = '+'.$CDR->CanonicalURIE164;
         } else {
-        	$cdr['destination'] = $CDR->CanonicalURI;
+            $cdr['destination'] = $CDR->CanonicalURI;
         }
 
-		list($canonical_username, $canonical_domain)=explode("@",$cdr['destination']);
+        list($canonical_username, $canonical_domain)=explode("@",$cdr['destination']);
 
         # skip domains
         if ($canonical_domain && in_array($canonical_domain,$this->skip_domains)) return true;
@@ -2921,39 +2921,39 @@ class MaxRate extends CSVWritter {
 
         # get RPID if caller is local
         if ($CDR->flow != 'incoming') {
-        	$CallerRPID=$this->getRPIDforAccount($CDR->aNumberPrint);
+            $CallerRPID=$this->getRPIDforAccount($CDR->aNumberPrint);
         }
 
-		if ($CallerRPID) {
+        if ($CallerRPID) {
             # normalize RPID
-        	$cdr['origin']      = '+31'.ltrim($CallerRPID,'0');
+            $cdr['origin']      = '+31'.ltrim($CallerRPID,'0');
         } else {
             # normalize caller id numbers from PSTN gateway to +E.164
             if (preg_match("/^0([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
-            	$cdr['origin'] = "+31".$m[1];
+                $cdr['origin'] = "+31".$m[1];
             } else if (preg_match("/^00([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
-            	$cdr['origin'] = "+".$m[1];
+                $cdr['origin'] = "+".$m[1];
             } else if (preg_match("/^anonymous@(.*)$/",$CDR->aNumberPrint) && $CDR->SipRPID) {
                 if (preg_match("/^0([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
                     $cdr['origin'] = "+31".$m[1];
                 } else if (preg_match("/^00([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
                     $cdr['origin'] = "+".$m[1];
                 } else {
-        			$cdr['origin'] = $CDR->SipRPID;
+                    $cdr['origin'] = $CDR->SipRPID;
                 }
             } else {
-        		$cdr['origin'] = $CDR->aNumberPrint;
+                $cdr['origin'] = $CDR->aNumberPrint;
             }
         }
 
         # normalize short origins
         if (preg_match("/^\d{1,3}@.*$/",$cdr['origin'])) {
-        	$cdr['origin']='+31000000000';
+            $cdr['origin']='+31000000000';
         }
 
         # normalize anonymous origins
         if (preg_match("/^anonymous@.*$/",$cdr['origin'])) {
-        	$cdr['origin']='+31000000000';
+            $cdr['origin']='+31000000000';
         }
 
         #translate destination uris
@@ -2976,17 +2976,17 @@ class MaxRate extends CSVWritter {
 
         # normalize duration based on billed duration
         if ($CDR->rateDuration) {
-        	$cdr['duration']    = $CDR->rateDuration;
+            $cdr['duration']    = $CDR->rateDuration;
         } else {
-        	$cdr['duration']    = $CDR->duration;
+            $cdr['duration']    = $CDR->duration;
         }
 
         $cdr['extra']=$CDR->callId;
 
-		if ($CDR->flow == 'on-net') {
+        if ($CDR->flow == 'on-net') {
             # RFP 4.2.1
 
-        	$cdr['charge_info'] = sprintf("(%s,1)",$cdr['origin']);
+            $cdr['charge_info'] = sprintf("(%s,1)",$cdr['origin']);
 
             $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
 
@@ -2997,13 +2997,13 @@ class MaxRate extends CSVWritter {
         } else if ($CDR->flow == 'outgoing') {
             # RFP 4.2.2
 
-        	if ($this->outbound_trunks[$CDR->CanonicalURIDomain]) {
-            	$outbound_trunk = $this->outbound_trunks[$CDR->CanonicalURIDomain];
+            if ($this->outbound_trunks[$CDR->CanonicalURIDomain]) {
+                $outbound_trunk = $this->outbound_trunks[$CDR->CanonicalURIDomain];
             } else {
                 $outbound_trunk = 'unknown';
             }
 
-        	$cdr['charge_info'] = sprintf("(%s,1),(%s,2)",
+            $cdr['charge_info'] = sprintf("(%s,1),(%s,2)",
                                           $cdr['origin'],
                                           $outbound_trunk
                                           );
@@ -3011,13 +3011,13 @@ class MaxRate extends CSVWritter {
         } else if ($CDR->flow == 'incoming') {
             # RFP 4.2.3
 
-           	if ($this->inbound_trunks[$CDR->SourceIP]) {
-            	$inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
+               if ($this->inbound_trunks[$CDR->SourceIP]) {
+                $inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
             } else {
                 $inbound_trunk = 'unknown';
             }
 
-        	$cdr['charge_info']=sprintf("(%s,2)",$inbound_trunk);
+            $cdr['charge_info']=sprintf("(%s,2)",$inbound_trunk);
 
             $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
 
@@ -3034,18 +3034,18 @@ class MaxRate extends CSVWritter {
                 $cdr['destination'] = '+31'.ltrim($CalleeRPID,'0');
             }
 
-        	if ($this->inbound_trunks[$CDR->SourceIP]) {
-            	$inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
+            if ($this->inbound_trunks[$CDR->SourceIP]) {
+                $inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
             } else {
                 $inbound_trunk = 'unknown';
             }
 
-        	$cdr['charge_info'] = sprintf("(%s,2)",$inbound_trunk);
+            $cdr['charge_info'] = sprintf("(%s,2)",$inbound_trunk);
 
         } else if ($CDR->flow == 'diverted-off-net') {
             # RFP 4.2.5
 
-	        $DiverterRPID=$this->getRPIDforAccount($CDR->username);
+            $DiverterRPID=$this->getRPIDforAccount($CDR->username);
 
             if ($DiverterRPID) {
                 $diverter_origin = '+31'.ltrim($DiverterRPID,'0');
@@ -3053,19 +3053,19 @@ class MaxRate extends CSVWritter {
                 $diverter_origin = $CDR->username;
             }
 
-        	if ($this->inbound_trunks[$CDR->SourceIP]) {
-            	$inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
+            if ($this->inbound_trunks[$CDR->SourceIP]) {
+                $inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
             } else {
                 $inbound_trunk = 'unknown';
             }
 
-        	if ($this->outbound_trunks[$CDR->remoteGateway]) {
-            	$outbound_trunk = $this->outbound_trunks[$CDR->remoteGateway];
+            if ($this->outbound_trunks[$CDR->remoteGateway]) {
+                $outbound_trunk = $this->outbound_trunks[$CDR->remoteGateway];
             } else {
                 $outbound_trunk = 'unknown';
             }
 
-           	$cdr['charge_info'] = sprintf("(%s,1),(%s,2),(%s,2)",
+               $cdr['charge_info'] = sprintf("(%s,1),(%s,2),(%s,2)",
                                           $diverter_origin,
                                           $inbound_trunk,
                                           $outbound_trunk
@@ -3074,7 +3074,7 @@ class MaxRate extends CSVWritter {
         } else if ($CDR->flow == 'on-net-diverted-on-net') {
             # RFP 4.2.6
 
-	        $DiverterRPID=$this->getRPIDforAccount($CDR->username);
+            $DiverterRPID=$this->getRPIDforAccount($CDR->username);
 
             if ($DiverterRPID) {
                 $diverter_origin = '+31'.ltrim($DiverterRPID,'0');
@@ -3088,12 +3088,12 @@ class MaxRate extends CSVWritter {
                 $cdr['destination'] = '+31'.ltrim($CalleeRPID,'0');
             }
 
-        	$cdr['charge_info'] = sprintf("(%s,1),(%s,1)",$cdr['origin'],$diverter_origin);
+            $cdr['charge_info'] = sprintf("(%s,1),(%s,1)",$cdr['origin'],$diverter_origin);
 
         } else if ($CDR->flow == 'on-net-diverted-off-net') {
             # RFP 4.2.7
 
-	        $DiverterRPID=$this->getRPIDforAccount($CDR->username);
+            $DiverterRPID=$this->getRPIDforAccount($CDR->username);
 
             if ($DiverterRPID) {
                 $diverter_origin = '+31'.ltrim($DiverterRPID,'0');
@@ -3101,13 +3101,13 @@ class MaxRate extends CSVWritter {
                 $diverter_origin = $CDR->username;
             }
 
-        	if ($this->outbound_trunks[$CDR->remoteGateway]) {
-            	$outbound_trunk = $this->outbound_trunks[$CDR->remoteGateway];
+            if ($this->outbound_trunks[$CDR->remoteGateway]) {
+                $outbound_trunk = $this->outbound_trunks[$CDR->remoteGateway];
             } else {
                 $outbound_trunk = 'unknown';
             }
 
-           	$cdr['charge_info'] = sprintf("(%s,1),(%s,2)",
+               $cdr['charge_info'] = sprintf("(%s,1),(%s,2)",
                                           $diverter_origin,
                                           $outbound_trunk
                                           );
@@ -3133,7 +3133,7 @@ class MaxRate extends CSVWritter {
             syslog(LOG_NOTICE,$log);
 
             $this->close_file();
-    		$this->ready = false;
+            $this->ready = false;
             return false;
         }
 
