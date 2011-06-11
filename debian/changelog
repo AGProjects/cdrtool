@@ -1,3 +1,10 @@
+cdrtool (8.1.2) unstable; urgency=low
+
+  * Fixed detection of reseller id for trusted peers
+  * Replaced tabs with spaces in some files
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 11 Jun 2011 11:12:34 +0200
+
 cdrtool (8.1.1) unstable; urgency=low
 
   * Fixed link to individual calls when group by canonical uri
