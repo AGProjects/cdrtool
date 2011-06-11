@@ -2422,16 +2422,28 @@ class CDR_opensips extends CDR {
             $this->BillingPartyId=$this->aNumberPrint;
         }
 
-        // calculate reseller either from trusted ip or domain
+        $this->ResellerId=0;
+        // calculate reseller
         $_els=explode("@",$this->BillingPartyId);
+        if ($this->isBillingPartyLocal()) {
+            $this->ResellerId = $this->CDRS->localDomains[$_els[1]]['reseller'];
+        } else {
+            if (!strlen($_els[0])) $this->BillingPartyId=$_els[1];
+            if (count($_els)==2) {
+                if (!$this->domain) $this->domain=$_els[1];
+                if ($this->CDRS->localDomains[$_els[1]]['reseller']) {
+                    $this->ResellerId = $this->CDRS->localDomains[$_els[1]]['reseller'];
+                } else if ($this->CDRS->trustedPeers[$_els[1]]['reseller']) {
+                    $this->ResellerId = $this->CDRS->trustedPeers[$_els[1]]['reseller'];
+                }
+            } else if (count($_els)==1) {
+                $this->ResellerId=$this->CDRS->trustedPeers[$_els[0]]['reseller'];
+            }
+        }
 
-        if (!strlen($_els[0])) $this->BillingPartyId=$_els[1];
-
-        if (count($_els)==2) {
-        	if (!$this->domain) $this->domain=$_els[1];
-        	$this->ResellerId=$this->CDRS->localDomains[$_els[1]]['reseller'];
-        } else if (count($_els)==1) {
-        	$this->ResellerId=$this->CDRS->trustedPeers[$_els[0]]['reseller'];
+        if (!strlen($this->ResellerId)) {
+            $log=sprintf("Error: cannot find reseller id for callid %s",$this->callId);
+            syslog(LOG_NOTICE,$log);
         }
 
         $this->BillingPartyId=strtolower($this->BillingPartyId);

@@ -1364,6 +1364,9 @@ class CDRS {
             $_destinations = $this->destinations[0]['default'];
             $maxLength = $this->destinations_length[0]['default'];
             $fCustomer="default";
+        } else {
+            $log=sprintf("Error: cannot find destinations for subscriber='%s', domain ='%s', gateway='%s', reseller='%s'\n",$subscriber,$domain,$gateway,$reseller_id);
+            syslog(LOG_NOTICE,$log);
         }
     
         if (count($_destinations)>0) {
@@ -1376,7 +1379,7 @@ class CDRS {
             }
         }
 
-        $log=sprintf("Error: cannot find destination id for %s, customer = %s, total destinations = %d\n",$destination,$fCustomer,count($_destinations));
+        $log=sprintf("Error: cannot find destination id for %s of customer = '%s', total destinations = %d\n",$destination,$fCustomer,count($_destinations));
         syslog(LOG_NOTICE,$log);
 
 		$this->missing_destinations[]=$destination;
