@@ -279,13 +279,16 @@ class SipSettings {
                                         "ResellerMaySeeIt"=>1
                                         );
 
-        $this->availableGroups['payments'] = array("Group"=>"payments",
-                                        "WEBName" =>sprintf(_("CC Payments")),
-                                        "SubscriberMayEditIt"=>0,
-                                        "SubscriberMaySeeIt"=>0,
-                                        "ResellerMayEditIt"=>1,
-                                        "ResellerMaySeeIt"=>1
-                                        );
+
+        if ($this->require_proof_of_identity) {
+            $this->availableGroups['payments'] = array("Group"=>"payments",
+                                            "WEBName" =>sprintf(_("CC Payments")),
+                                            "SubscriberMayEditIt"=>0,
+                                            "SubscriberMaySeeIt"=>0,
+                                            "ResellerMayEditIt"=>1,
+                                            "ResellerMaySeeIt"=>1
+                                            );
+        }
 
         $this->getResellerSettings();
         $this->getCustomerSettings();
