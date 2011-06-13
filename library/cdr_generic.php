@@ -354,6 +354,7 @@ class CDRS {
                }
             }
 
+            /*
             $e=time();
             $log=sprintf("Read %d PSTN destinations from cache in %d seconds",$this->destinations_count,$e-$b);
             syslog(LOG_NOTICE,$log);
@@ -363,7 +364,7 @@ class CDRS {
                 $log=sprintf("Read %d SIP destinations from cache in %d seconds",$this->destinations_sip_count,$e-$b);
                 syslog(LOG_NOTICE,$log);
             }
-
+            */
             $this->destinations     = $_destinations;
             $this->destinations_sip = $_destinations_sip;
             unset($_destinations);
