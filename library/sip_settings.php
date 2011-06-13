@@ -2714,7 +2714,7 @@ class SipSettings {
 
                 /*
                 if (class_exists($this->payment_processor_class)) {
-                    $payment_processor = new $this->payment_processor_class(&$this,$basket);
+                    $payment_processor = new $this->payment_processor_class($this,$basket);
                 }
 
                 if ($payment_processor->transaction_results['success']) {
@@ -8913,7 +8913,7 @@ class Enrollment {
             $customerEngine           = 'customers@'.$this->customerEngine;
             $this->CustomerSoapEngine = new SoapEngine($customerEngine,$this->soapEngines,$this->customerLoginCredentials);
             $_customer_class          = $this->CustomerSoapEngine->records_class;
-            $this->customerRecords    = new $_customer_class(&$this->CustomerSoapEngine);
+            $this->customerRecords    = new $_customer_class($this->CustomerSoapEngine);
             $this->customerRecords->html=false;
     
             $properties=$this->customerRecords->setInitialCredits(array('sip_credit'         => 1,
@@ -9013,7 +9013,7 @@ class Enrollment {
 
         $this->SipSoapEngine = new SoapEngine($sipEngine,$this->soapEngines,$this->sipLoginCredentials);
         $_sip_class          = $this->SipSoapEngine->records_class;
-        $this->sipRecords    = new $_sip_class(&$this->SipSoapEngine);
+        $this->sipRecords    = new $_sip_class($this->SipSoapEngine);
         $this->sipRecords->html=false;
 
 
@@ -9109,7 +9109,7 @@ class Enrollment {
                 $emailEngine           = 'email_aliases@'.$this->emailEngine;
                 $this->EmailSoapEngine = new SoapEngine($emailEngine,$this->soapEngines,$this->sipLoginCredentials);
                 $_email_class          = $this->EmailSoapEngine->records_class;
-                $this->emailRecords    = new $_email_class(&$this->EmailSoapEngine);
+                $this->emailRecords    = new $_email_class($this->EmailSoapEngine);
                 $this->emailRecords->html=false;
 
                 $emailAlias = array('name'    => strtolower($sip_address),
