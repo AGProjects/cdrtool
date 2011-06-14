@@ -1,5 +1,5 @@
 <?
-define_syslog_variables();
+//define_syslog_variables();
 openlog("cdrtool", LOG_PID, LOG_LOCAL0);
 
 ini_set('register_globals','on');

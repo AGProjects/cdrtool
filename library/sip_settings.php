@@ -171,7 +171,7 @@ class SipSettings {
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
 
-		define_syslog_variables();
+		//define_syslog_variables();
 
         $this->soapEngines        = $soapEngines;
 
