@@ -8122,7 +8122,6 @@ class RatingEngine {
                 $log = sprintf ("Maxduration for session %s of %s will be negative",$_session,$active_sessions[$_session]['BillingPartyId']);
                 syslog(LOG_NOTICE, $log);
                 */
-                return 0;
             }
         }
 
