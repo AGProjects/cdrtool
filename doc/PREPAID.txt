@@ -255,7 +255,7 @@ calculate_aggregated_maxsession_time(active_sessions,balance)  {
     balance_new=balance-due_balance
 
     // simulate we start parallel sessions from scratch at this moment
-    // including the new sessionn setup request
+    // including the new session setup request
     // we skip any connect cost for session already in progress
     active_sessions_new[from]=active_sessions[from]
     active_sessions_new[from][]=session
