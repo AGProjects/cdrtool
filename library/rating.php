@@ -7194,6 +7194,7 @@ class RatingEngine {
         "DeleteBalanceHistory  From=123@example.com\n".
         "ReloadQuota           Account=abc@example.com\n".
         "GetEntityProfiles     Entity=abc@example.com\n".
+        "DumpPrepaidSessions   Account=123@example.com\n".
         "ReloadRatingTables\n".
         "ReloadDomains\n".
         "ShowProfiles\n".
@@ -7572,6 +7573,36 @@ class RatingEngine {
 
             $ret=$maxduration."\n"."type=prepaid";
             return $ret;
+
+        } else if ($NetFields['action'] == "dumpprepaidsessions") {
+            if (!$NetFields['account']) {
+                $log=sprintf ("error: missing account parameter");
+                syslog(LOG_NOTICE, $log);
+                return $log;
+            }
+
+            $query=sprintf("select * from %s where account = '%s'",
+            addslashes($this->prepaid_table),
+            addslashes($NetFields['account'])
+            );
+    
+            if (!$this->db->query($query)) {
+                $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                syslog(LOG_NOTICE,$log);
+                $this->logRuntime();
+                return 0;
+            }
+    
+            if (!$this->db->num_rows()) {
+                $log=sprintf ("DebitBalanceAudio() error: account $account does not exist");
+                syslog(LOG_NOTICE, $log);
+                $this->logRuntime();
+                return 0;
+            }
+    
+            $this->db->next_record();
+    
+            return var_export(json_decode($this->db->f('active_sessions'),true), true);
 
         } else if ($NetFields['action'] == "debitbalance") {
 
