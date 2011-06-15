@@ -6685,6 +6685,9 @@ class RatingEngine {
 
     function DebitBalanceAudio($account,$balance,$session_id,$duration,$force=false) {
 
+        $this->old_session_count = 0;
+        $this->new_session_count = 0;
+
         $els=explode(":",$account);
 
         if (count($els) == 2) {
@@ -6759,10 +6762,13 @@ class RatingEngine {
         $next_balance=$this->db->f('balance')-$balance;
 
         //get parallel calls and remaining_balance
-        $this->getActivePrepaidSessions($active_sessions,$next_balance,$account);
+        $this->getActivePrepaidSessions($active_sessions, $next_balance, $account);
 
         // calculate the updated maxsessiontime
         $maxsessiontime=$this->getAggregatedMaxSessiontime($this->parallel_calls,$this->remaining_balance,$account);
+
+        $this->old_session_count = count($old_active_sessions);
+        $this->new_session_count = count($active_sessions);
 
         $query=sprintf("update %s
         set balance          = balance - '%s',
@@ -7331,19 +7337,19 @@ class RatingEngine {
             }
 
             $this->db->next_record();
-            $Balance             = $this->db->f('balance');
-            $session_counter     = $this->db->f('session_counter');
+            $current_balance     = $this->db->f('balance');
+            $old_session_counter = $this->db->f('session_counter');
             $max_sessions        = $this->db->f('max_sessions');
-
             if (strlen($this->db->f('active_sessions'))) {
                 // load active sessions
                 $active_sessions = json_decode($this->db->f('active_sessions'),true);
 
                 if (count($active_sessions)) {
+                    // purge stale sessions
         
                     $active_sessions_new=array();
 
-                     $expired=0;
+                    $expired=0;
 
                     foreach (array_keys($active_sessions) as $_session) {
                     
@@ -7373,7 +7379,8 @@ class RatingEngine {
                 $active_sessions=array();
             }
 
-            if (!$Balance) {
+
+            if (!$current_balance) {
                 $log=sprintf ("No balance found");
                 syslog(LOG_NOTICE,$log);
                 $this->logRuntime();
@@ -7412,14 +7419,14 @@ class RatingEngine {
 
             if (count($active_sessions)) {
                 // set  $this->remaining_balance and $this->parallel_calls for ongoing calls:
-                if (!$this->getActivePrepaidSessions($active_sessions,$Balance,$CDR->BillingPartyId,array($CDR->callId))) {
+                if (!$this->getActivePrepaidSessions($active_sessions, $current_balance, $CDR->BillingPartyId, array($CDR->callId))) {
                     $ret="0"."\n"."type=prepaid";
                     return $ret;
                 }
 
                 $this->runtime['get_parallel_calls']=microtime_float();
 
-                // add current call to the list of parallel calls
+                // add this new call to the list of parallel calls
                 $RateDictionary=array(
                                       'duration'        => $CDR->duration,
                                       'callId'          => $CDR->callId,
@@ -7438,7 +7445,7 @@ class RatingEngine {
 
                 $_maxduration = round($Rate->MaxSessionTime($RateDictionary));
 
-                $log = sprintf ("Maximum duration for session %s of %s to destination %s having balance=%s is %s",
+                $log = sprintf ("Maximum duration for new session %s of %s to destination %s having balance=%s is %s",
                 $CDR->callId,
                 $CDR->BillingPartyId,
                 $CDR->DestinationId,
@@ -7447,23 +7454,23 @@ class RatingEngine {
                 syslog(LOG_NOTICE, $log);
 
                 if ($_maxduration > 0) {
-                    $this->parallel_calls[$CDR->callId]=array('pricePerSecond' => $this->remaining_balance/$_maxduration);
+                    $this->parallel_calls[$CDR->callId]=array('remainingBalancePerSecond' => $this->remaining_balance/$_maxduration);
                 } else {
-                    $log = sprintf ("Maxduration for session %s of %s will become negative",$CDR->callId,$CDR->BillingPartyId);
+                    $log = sprintf ("Maximum duration for new session %s of %s <=0",$CDR->callId,$CDR->BillingPartyId);
                     syslog(LOG_NOTICE, $log);
                     $ret="0"."\n"."type=prepaid";
                     return $ret;
                 }
 
-                $this->parallel_calls[$CDR->callId]=array('pricePerSecond' => $this->remaining_balance/$_maxduration);
+                $this->parallel_calls[$CDR->callId]=array('remainingBalancePerSecond' => $this->remaining_balance/$_maxduration);
 
-                $maxduration=$this->getAggregatedMaxSessiontime($this->parallel_calls,$this->remaining_balance,$CDR->BillingPartyId);
+                $maxduration=$this->getAggregatedMaxSessiontime($this->parallel_calls, $this->remaining_balance, $CDR->BillingPartyId);
 
             } else {
                 $RateDictionary=array(
                                       'duration'        => $CDR->duration,
                                       'callId'          => $CDR->callId,
-                                      'Balance'         => $Balance,
+                                      'Balance'         => $current_balance,
                                       'timestamp'       => $CDR->timestamp,
                                       'DestinationId'   => $CDR->DestinationId,
                                       'region'          => $CDR->region,
@@ -7527,13 +7534,15 @@ class RatingEngine {
                 return $ret;
             }
 
-            $log=sprintf ("MaxSessionTime=%s Type=prepaid CallId=%s BillingParty=%s DestId=%s Balance=%s Spans=%d",
+            $log=sprintf("MaxSessionTime=%s Type=prepaid CallId=%s BillingParty=%s DestId=%s Balance=%s Spans=%d Counter=%d->%d",
             $maxduration,
             $NetFields['callid'],
             $CDR->BillingPartyId,
             $CDR->DestinationId,
             $RateDictionary['Balance'],
-            $Rate->MaxSessionTimeSpans
+            $Rate->MaxSessionTimeSpans,
+            $old_session_counter,
+            count($active_sessions)
             );
 
             syslog(LOG_NOTICE, $log);
@@ -7670,18 +7679,18 @@ class RatingEngine {
         
                     $this->runtime['debit_balance']=microtime_float();
         
-                    if ($CDR->duration) {
-                        $log = sprintf ("Price=%s Duration=%s CallId=%s BillingParty=%s DestId=%s MaxSessionTime=%d",
-                        $Rate->price,
-                        $CDR->duration,
-                        $NetFields['callid'],
-                        $CDR->BillingPartyId,
-                        $CDR->DestinationId,
-                        $result
-                        );
-        
-                        syslog(LOG_NOTICE, $log);
-                    }
+                    $log = sprintf ("DebitBalance=%s Duration=%s CallId=%s BillingParty=%s DestId=%s MaxSessionTime=%d Counter=%d->%d",
+                    $Rate->price,
+                    $CDR->duration,
+                    $NetFields['callid'],
+                    $CDR->BillingPartyId,
+                    $CDR->DestinationId,
+                    $result,
+                    $this->old_session_count,
+                    $this->new_session_count
+                    );
+    
+                    syslog(LOG_NOTICE, $log);
         
                     $RateReturn = "Ok";
                     $RateReturn.= sprintf("\nMaxSessionTime=%d",$result);
@@ -8015,9 +8024,9 @@ class RatingEngine {
         return 0;
     }
 
-    function getActivePrepaidSessions($active_sessions,$Balance,$BillingPartyId,$exceptSessions=array()) {
+    function getActivePrepaidSessions($active_sessions, $current_balance, $BillingPartyId, $exceptSessions=array()) {
         $this->parallel_calls=array();
-        $this->remaining_balance=$Balance;
+        $this->remaining_balance=$current_balance;
 
         $ongoing_rates=array();
 
@@ -8053,7 +8062,7 @@ class RatingEngine {
     
             $Rate_session->calculateAudio($RateDictionary_session);
     
-            $log = sprintf ("Ongoing prepaid session %s for %s to %s: duration=%s, price=%s ",
+            $log = sprintf ("Active sessions %s for %s to %s: duration=%s, price=%s ",
             $_session,
             $BillingPartyId,
             $active_sessions[$_session]['Destination'],
@@ -8069,16 +8078,15 @@ class RatingEngine {
         }
     
         if (count($ongoing_rates)) {
-            // calculate de virtual balance of the user at this moment in time
+            // calculate the virtual balance of the user at this moment in time
             $due_balance=0;
             foreach (array_keys($ongoing_rates) as $_o) {
-                $due_balance = $due_balance+$ongoing_rates[$_o]['price'];
+                $due_balance = $due_balance + $ongoing_rates[$_o]['price'];
             }
     
             $this->remaining_balance = $this->remaining_balance-$due_balance;
     
-            $log = sprintf ("Balance for %s having %d ongoing sessions: database=%s, due=%s, real=%s",
-            $BillingPartyId,count($ongoing_rates),sprintf("%0.4f",$Balance),sprintf("%0.4f",$due_balance),sprintf("%0.4f",$this->remaining_balance));
+            $log = sprintf ("Balance for %s having %d active sessions: database=%s, due=%s, real=%s",$BillingPartyId,count($ongoing_rates),sprintf("%0.4f",$current_balance),sprintf("%0.4f",$due_balance),sprintf("%0.4f",$this->remaining_balance));
             syslog(LOG_NOTICE, $log);
         }
     
@@ -8107,7 +8115,7 @@ class RatingEngine {
             $Rate = new Rate($this->settings, $this->db);
             $_maxduration = round($Rate->MaxSessionTime($RateDictionary_session));
     
-            $log = sprintf("Maximum duration for session %s of %s to destination %s having balance=%s is %s",
+            $log = sprintf("Remaining duration for active session %s of %s to destination %s having balance=%s is %s",
             $_session,
             $BillingPartyId,
             $active_sessions[$_session]['DestinationId'],
@@ -8116,7 +8124,7 @@ class RatingEngine {
             syslog(LOG_NOTICE, $log);
     
             if ($_maxduration > 0) {
-                $this->parallel_calls[$_session]=array('pricePerSecond' => $this->remaining_balance/$_maxduration);
+                $this->parallel_calls[$_session]=array('remainingBalancePerSecond' => $this->remaining_balance/$_maxduration);
             } else {
                 /*
                 $log = sprintf ("Maxduration for session %s of %s will be negative",$_session,$active_sessions[$_session]['BillingPartyId']);
@@ -8128,26 +8136,25 @@ class RatingEngine {
         return 1;
     }
 
-    function getAggregatedMaxSessiontime($parallel_calls=array(),$balance,$BillingPartyId) {
+    function getAggregatedMaxSessiontime($parallel_calls=array(), $balance, $BillingPartyId) {
         $maxduration=0;
-        $sum_price_per_second=0;
+        $sum_remaining_balance_per_second=0;
 
         foreach (array_keys($parallel_calls) as $_call) {
-            $sum_price_per_second=$sum_price_per_second+$parallel_calls[$_call]['pricePerSecond'];
+            $sum_remaining_balance_per_second = $sum_remaining_balance_per_second + $parallel_calls[$_call]['remainingBalancePerSecond'];
         }
     
-        if ($sum_price_per_second >0 ) {
-            $maxduration=intval($balance/$sum_price_per_second);
+        if ($sum_remaining_balance_per_second > 0 ) {
+            $maxduration =intval($balance/$sum_remaining_balance_per_second);
 
             if (count($parallel_calls) > 1) {
-                $log = sprintf ("Maximum duration agregated for %s is (Balance=%s)/(Sum of price per second for each destination=%s)=%s s",
-                $BillingPartyId,$balance,sprintf("%0.4f",$sum_price_per_second),$maxduration);
+                $log = sprintf ("Maximum agregated duration for all sessions of %s to terminate at same moment for is %s seconds", $BillingPartyId,$maxduration);
                 syslog(LOG_NOTICE, $log);
             }
     
         } else {
             /*
-            $log = sprintf ("Error: sum_price_per_second for %s is negative",$BillingPartyId);
+            $log = sprintf ("Error: sum_remaining_balance_per_second for %s is negative",$BillingPartyId);
             syslog(LOG_NOTICE, $log);
             */
             $maxduration = 0;
