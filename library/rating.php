@@ -7483,7 +7483,7 @@ class RatingEngine {
             // add new active session
             $active_sessions[$CDR->callId]= array('timestamp'       => $CDR->timestamp,
                                                   'duration'        => $CDR->duration,
-                                                    'BillingPartyId'  => $CDR->BillingPartyId,
+                                                  'BillingPartyId'  => $CDR->BillingPartyId,
                                                   'MaxSessionTime'  => $maxduration,
                                                   'domain'          => $CDR->domain,
                                                   'gateway'         => $CDR->gateway,

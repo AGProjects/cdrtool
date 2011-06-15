@@ -13046,6 +13046,7 @@ class Customers extends Records {
 
         if ($result = $this->SoapEngine->execute($function,$this->html)) {
             // update remote
+
             if (is_object($this->SoapEngineRemote)) {
                 if ($_id = $this->getCustomerId($customer['username'])) {
                     $customerRemote=$customer;
