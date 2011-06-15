@@ -7234,6 +7234,12 @@ class RatingEngine {
 
         $tinput=preg_replace("/\s+/"," ",$tinput);
 
+        if ($tinput == "/" and strlen($this->last_input)) {
+            $tinput = $this->last_input;
+        } else {
+            $this->last_input = $tinput;
+        }
+
         $_els=explode(" ",trim($tinput));
 
         $this->runtime['start']=microtime_float();
