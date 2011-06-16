@@ -8186,7 +8186,7 @@ class RatingEngine {
             $maxduration =intval($balance/$sum_remaining_balance_per_second);
 
             if (count($parallel_calls) > 1) {
-                $log = sprintf ("Maximum agregated duration for all sessions of %s to terminate at same moment for is %s seconds", $BillingPartyId,$maxduration);
+                $log = sprintf ("Maximum agregated duration for %s is %s", $BillingPartyId,$maxduration);
                 syslog(LOG_NOTICE, $log);
             }
     
