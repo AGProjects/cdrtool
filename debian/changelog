@@ -2,16 +2,18 @@ cdrtool (8.1.2) unstable; urgency=low
 
   [ Rating Engine ]
 
-  * Fixed prepaid engine bug that appeared under heavy load
+  * Fixed prepaid engine bug that appeared under certain load conditions
   * Fixed inclusion of missing patches for PHP 5.3.3 compatibility
   * Fixed detection of reseller id for trusted peers
+  * Fixed rate calculation when minimum charge duration is set
 
   [ NGNPro client ]
 
   * Replaced tabs with spaces in some files
   * Rollback Fixed hiding html output when making ngnpro request
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 15 Jun 2011 10:07:03 +0200
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 16 Jun 2011 09:57:31 +0200
 
 cdrtool (8.1.1) unstable; urgency=low
 
