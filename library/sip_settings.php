@@ -1937,7 +1937,7 @@ class SipSettings {
 
         if ($payment_processor->fraudDetected()) {
             $chapter=sprintf(_("Payments"));
-            $account->showChapter($chapter);
+            $this->showChapter($chapter);
             
             print "
             <tr>
