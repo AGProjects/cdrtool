@@ -92,7 +92,7 @@ class Rate {
         if ($this->rate_longer_than && $this->duration < $this->rate_longer_than) {
             //syslog(LOG_NOTICE, "Duration less than minimum $this->rate_longer_than");
             $this->rateInfo .= "   Duration < $this->rate_longer_than s\n";
-            return false;
+            return true;
         }
 
         if ($this->ENUMtld && $this->ENUMtld != 'n/a' && $this->ENUMtld != 'none' && $this->RatingTables->ENUMtlds[$this->ENUMtld]) {
@@ -7741,6 +7741,7 @@ class RatingEngine {
         
                     return $RateReturn;
                 } else {
+                    syslog(LOG_NOTICE, 'Failed to calculate rate in DebitBalance()');
                     return "Failed\n";
                 }
             } else if ($application == 'sms') {
