@@ -494,6 +494,7 @@ destinations
 | domain       |
 | subscriber   |
 | dest_id      |
+| region       |
 | dest_name    |
 | increment    |
 | min_duration |
