@@ -484,7 +484,20 @@ class SIP_Subscriber_Auth extends Auth {
             return false;
         }
 
-        $pass_md5  	       = md5($result->password);
+
+        //dprint_r($result->properties);
+
+        $web_password='';
+        foreach ($result->properties as $_property) {
+            if ($_property->name == 'web_password') {
+                $web_password=$_property->value;
+                break;
+            }
+        }
+
+        if (!$web_password) $web_password=$result->password;
+
+        $pass_md5  	   = md5($web_password);
         $expected_response = md5("$username:$pass_md5:$challenge");
 
         $SIP['customer'] = $result->customer;

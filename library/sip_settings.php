@@ -89,6 +89,7 @@ class SipSettings {
                                            'free-pstn',
                                            'blocked',
                                            'sip_password',
+                                           'web_password',
                                            'first_name',
                                            'last_name',
                                            'quota',
@@ -279,6 +280,13 @@ class SipSettings {
                                         "ResellerMaySeeIt"=>1
                                         );
 
+        $this->availableGroups['deny-password-change']  = array("Group"=>"deny-password-change",
+                                        "WEBName" =>sprintf(_("Deny password change")),
+                                        "SubscriberMayEditIt"=>0,
+                                        "SubscriberMaySeeIt"=>0,
+                                        "ResellerMayEditIt"=>1,
+                                        "ResellerMaySeeIt"=>1
+                                        );
 
         if ($this->require_proof_of_identity) {
             $this->availableGroups['payments'] = array("Group"=>"payments",
@@ -801,7 +809,6 @@ class SipSettings {
         }
 
         //print_r($result);
-
         $this->owner     = $result->owner;
 
         if (!is_array($result->properties))   $result->properties=array();
@@ -2877,6 +2884,7 @@ class SipSettings {
         $_account['sip_address']    = $this->account;
         $_account['display_name']   = sprintf("%s %s",$this->firstName,$this->lastName);
         $_account['password']       = $this->password;
+        $_account['web_password']   = $this->Preferences['web_password'];
         $_account['email']          = $this->email;
         $_account['settings_url']   = $this->digest_settings_page;
 
@@ -3007,9 +3015,29 @@ class SipSettings {
         </td>
         <td>";
 
-        print "<input type=text size=15 name=sip_password>";
-        print _("Enter text to change the current password");
-        printf ("\n\n<!-- \nSIP Account password: %s\n -->\n\n",$this->password);
+        if ($this->login_type == 'subscriber' && in_array("deny-password-change",$this->groups)) {
+            print _("Password can be changed only by the operator");
+        } else {
+            print "<input type=text size=15 name=sip_password>";
+            print _("Enter text to change the current password");
+            printf ("\n\n<!-- \nSIP Account password: %s\n -->\n\n",$this->password);
+        }
+
+        print "
+        </td>
+        </tr>
+        ";
+
+        print "
+        <tr class=even>
+        <td>";
+        print _("Web Password");
+        print "
+        </td>
+        <td>";
+
+        print "<input type=text size=15 name=web_password>";
+        print _("Enter text to change the password to access this web page");
 
         print "
         </td>
@@ -4078,7 +4106,8 @@ class SipSettings {
             $this->somethingChanged=1;
         }
 
-        if ($sip_password) {
+        if ($this->login_type == 'subscriber' && in_array("deny-password-change",$this->groups)) {
+        } else if ($sip_password) {
         	if ($this->store_clear_text_passwords) {
             	$result->password=$sip_password;
             } else {
@@ -4087,6 +4116,18 @@ class SipSettings {
                 $result->password=md5($md1).':'.md5($md2);
             }
 
+            $this->somethingChanged=1;
+        }
+
+        if ($web_password) {
+        	if (!$this->store_clear_text_passwords) {
+            	$web_password_new=$web_password;
+            } else {
+                $md1=strtolower($this->username).':'.strtolower($this->domain).':'.$web_password;
+                $md2=strtolower($this->username).'@'.strtolower($this->domain).':'.strtolower($this->domain).':'.$web_password;
+                $web_password_new=md5($md1).':'.md5($md2);
+            }
+            $this->setPreference('web_password',$web_password);
             $this->somethingChanged=1;
         }
 
