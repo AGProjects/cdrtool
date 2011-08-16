@@ -8310,7 +8310,18 @@ function getSipAccountFromHTTPDigest () {
         die('Wrong Credentials!');
     }
 
-    $A1 = md5($data['username'] . ':' . $realm . ':' . $result->password);
+
+    $web_password='';
+    foreach ($result->properties as $_property) {
+        if ($_property->name == 'web_password') {
+            $web_password=$_property->value;
+            break;
+        }
+    }
+
+    if (!$web_password) $web_password=$result->password;
+
+    $A1 = md5($data['username'] . ':' . $realm . ':' . $web_password);
     $A2 = md5($_SERVER['REQUEST_METHOD'].':'.$data['uri']);
     $valid_response = md5($A1.':'.$data['nonce'].':'.$data['nc'].':'.$data['cnonce'].':'.$data['qop'].':'.$A2);
     
