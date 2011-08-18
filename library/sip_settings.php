@@ -9274,7 +9274,7 @@ class PaypalProcessor {
     var $deny_countries      = array();
 	var $allow_countries     = array();
 	var $deny_ips            = array();
-    var $make_credit_checks  = false;
+    var $make_credit_checks  = true;
     var $transaction_results = array('success' => false);
     var $vat                 = 0;
 
