@@ -631,8 +631,13 @@ class SipThor_DomainAuth {
 
             $profile=json_decode($this->userDB->f('profile'),'true');
 
-            if ($profile['password'] == $password) {
-    
+            if ($profile['properties']['web_password']) {
+                $check_password = $profile['properties']['web_password'];
+            } else {
+                $check_password = $profile['password'];
+            }
+
+            if ($check_password == $password) {
                 $uid = $this->userDB->f('username');
                 if ($uid) {
                     return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
