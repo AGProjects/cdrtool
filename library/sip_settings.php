@@ -837,6 +837,7 @@ class SipSettings {
         $this->email     = $result->email;
         $this->groups    = $result->groups;
         $this->createDate= $result->createDate;
+        $this->web_password = $this->Preferences['web_password'];
 
         if ($this->SOAPversion > 1) {
             $this->quickdial = $result->quickdialPrefix;

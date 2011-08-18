@@ -55,7 +55,11 @@ To access your account settings go to {$client->sip_settings_page}
 Your login details:
 
    Username: {$client->account}
+{if $client->web_password}
+   Password: {$client->web_password}
+{else}
    Password: {$client->password}
+{/if}
 
 How to use your SIP account:
 
