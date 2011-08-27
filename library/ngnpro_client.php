@@ -465,7 +465,7 @@ class SoapEngine {
                 $this->digest_settings_page=$this->soapEngines[$this->soapEngine]['digest_settings_page'];
             }
 
-            if (strlen($this->soapEngines[$this->soapEngine]['customer_properties'])) {
+            if (is_array($this->soapEngines[$this->soapEngine]['customer_properties'])) {
                 $this->customer_properties=$this->soapEngines[$this->soapEngine]['customer_properties'];
             }
 
