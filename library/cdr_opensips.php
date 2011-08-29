@@ -4576,23 +4576,26 @@ class Media_trace {
                 $w_duration   = intval($_duration*$w_legend_bar/$this->info->duration);
                 $w_timeout    = intval($_timeout*$w_legend_bar/$this->info->duration);
 
-            } else if ($_val->status == 'closed') {
+            } else if ($_val->status == 'closed' ) {
                 $w_duration   = intval($_duration * $w_legend_bar / $this->info->duration);
                 $w_timeout    = 0;
             }
+
 
             $w_start_time = intval($_index*$w_legend_bar/$this->info->duration);
             $w_rest       = $w_legend_bar-$w_duration-$w_timeout-$w_start_time;
 
             //printf ("%s, %s, %s, %s<br>\n",$w_start_time,$w_duration,$w_timeout,$w_rest);
+            
+            if ($_val->caller_packets != '0' && $_val->callee_packets != '0'){
 
-            print "<tr><td width=$w_text class=border>$_val->media_type</td>";
+                print "<tr><td width=$w_text class=border>$_val->media_type</td>";
 
-            print "<td width=$w_legend_bar>\n";
+                print "<td width=$w_legend_bar>\n";
                 print "<table width=100% border=0 cellpadding=0 cellspacing=0><tr>\n";
                 print "<td width=$w_start_time bgcolor=white></td>\n";
                 print "<td width=$w_duration bgcolor=green align=center><font color=white>$duration_print</font></td>\n";
-    
+
                 if ($_val->timeout_wait) {
                     print "<td width=$w_timeout bgcolor=red align=center><font color=white>$_timeout</font></td>\n";
                 } else {
@@ -4602,8 +4605,12 @@ class Media_trace {
 
                 print "</table>\n";
 
-            print "</td></tr>";
-
+                print "</td></tr>";
+            } elseif ( $_val->status == 'unselected ICE candidate')  {
+                print "<tr><td>ICE session</td></tr>";
+            } else {
+                print "<tr><td>No stream data found</td></tr>";
+            }
         }
 
         print "</table>";
