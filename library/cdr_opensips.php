@@ -511,7 +511,8 @@ class CDRS_opensips extends CDRS {
                 array("label"=>"greater than 5 hours","value"=>"> 18000"),
                 array("label"=>"Un-normalized calls","value"=>"unnormalized"),
                 array("label"=>"Un-normalized calls > 0s","value"=>"unnormalized_duration"),
-                array("label"=>"One way media","value"=>"onewaymedia")
+                array("label"=>"One way media","value"=>"onewaymedia"),
+                array("label"=>"No media","value"=>"nomedia")
                 );
         } else {
             $durations_els = array(
@@ -1377,8 +1378,9 @@ class CDRS_opensips extends CDRS {
                 $where .= " and $this->durationField > 0";
             } elseif ($duration == "onewaymedia") {
                 $where .= " and (($this->inputTrafficField > 0 && $this->outputTrafficField = 0) || ($this->inputTrafficField = 0 && $this->outputTrafficField > 0)) " ;
+            } elseif ($duration == "nomedia") {
+                $where .= " and ($this->inputTrafficField = 0 && $this->outputTrafficField = 0) " ;
             }
-
             $this->url.=sprintf("&duration=%s",urlencode($duration));
         }
 
