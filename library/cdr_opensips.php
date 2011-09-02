@@ -1160,6 +1160,24 @@ class CDRS_opensips extends CDRS {
             $this->url.=sprintf("&a_number_comp=%s",urlencode($a_number_comp));
         }
 
+        $c_number=trim($c_number);
+        if ($c_number_comp == "empty") {
+            $where .= " and $this->CanonicalURIField = ''";
+            $this->url.=sprintf("&c_number_comp=%s",urlencode($c_number_comp));
+        } else if (strlen($c_number)) {
+            $c_number=urldecode($c_number);
+            if (!$c_number_comp) $c_number_comp="begin";
+
+            if (!$c_number_comp || $c_number_comp=="begin") {
+                $where .= " and $this->CanonicalURIField like '".addslashes($c_number)."%'";
+            } elseif ($c_number_comp=="equal") {
+                $where .= " and $this->CanonicalURIField = '".addslashes($c_number)."'";
+            } elseif ($c_number_comp=="contain") {
+                $where .= " and $this->CanonicalURIField like '%".addslashes($c_number)."%'";
+            }
+            $this->url.=sprintf("&c_number=%s&c_number_comp=%s",urlencode($c_number),urlencode($c_number_comp));
+        }
+
         $Realm=trim($Realm);
 
         if ($this->CDRTool['filter']['domain']) {
@@ -1289,19 +1307,23 @@ class CDRS_opensips extends CDRS {
             $this->url.=sprintf("&gateway=%s",urlencode($gateway));
         }
 
-        $c_number=trim($c_number);
+        if ($UserName_comp == "empty") {
+            $where .= " and $this->usernameField = ''";
+            $this->url.=sprintf("&UserName_comp=%s",urlencode($UserName_comp));
+        } else if (strlen($UserName)) {
+            if (!$UserName_comp) $UserName_comp='begin';
 
-        if (strlen($c_number)) {
-            $c_number=urldecode($c_number);
-
-            if (!$c_number_comp || $c_number_comp=="begin") {
-                $where .= " and $this->CanonicalURIField like '".addslashes($c_number)."%'";
-            } elseif ($c_number_comp=="equal") {
-                $where .= " and $this->CanonicalURIField = '".addslashes($c_number)."'";
-            } elseif ($c_number_comp=="contain") {
-                $where .= " and $this->CanonicalURIField like '%".addslashes($c_number)."%'";
+            if ($UserName_comp=="begin") {
+                $where .= " and $this->usernameField like '".addslashes($UserName)."%'";
+            } elseif ($UserName_comp=="contain") {
+                $where .= " and $this->usernameField like '%".addslashes($UserName)."%'";
+            } elseif ($UserName_comp=="equal") {
+                $where .= " and $this->usernameField = '".addslashes($UserName)."'";
+            } else {
+                $where .= " and $this->usernameField = '' ";
             }
-            $this->url.=sprintf("&c_number=%s&c_number_comp=%s",urlencode($c_number),$c_number_comp);
+
+            $this->url.=sprintf("&UserName=%s&UserName_comp=%s",urlencode($UserName),$UserName_comp);
         }
 
         if ($duration) {
@@ -1638,7 +1660,10 @@ class CDRS_opensips extends CDRS {
                     }
 
                     if (!$traceValue) {
-                        $traceValue="empty";
+                        $traceValue="";
+                        $comp_type="empty";
+                    } else {
+                        $comp_type="begin";
                     }
 
                     $traceValue_enc=urlencode($traceValue);
@@ -1668,7 +1693,7 @@ class CDRS_opensips extends CDRS {
                         <td>$mygroup_print</td>
                         <td>$description</td>
                         <td>";
-                        printf("<a href=%s&%s=%s&%s_comp=begin target=_new>Display calls</a></td>",$url_calls,$traceField,$traceValue_enc,$traceField);
+                        printf("<a href=%s&%s=%s&%s_comp=%s target=_new>Display calls</a></td>",$url_calls,$traceField,$traceValue_enc,$traceField,$comp_type);
                         print "
                         </tr>
                         ";
