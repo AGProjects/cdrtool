@@ -1118,8 +1118,12 @@ class CDRS_opensips extends CDRS {
             $UserName=$this->CDRTool['filter']['aNumber'];
         }
 
-        if ($UserName) {
+        if ($UserName_comp == "empty") {
+            $where .= " and $this->usernameField = ''";
+            $this->url.=sprintf("&UserName_comp=%s",urlencode($UserName_comp));
+        } else if (strlen($UserName)) {
             if (!$UserName_comp) $UserName_comp='begin';
+
             if ($UserName_comp=="begin") {
                 $where .= " and $this->usernameField like '".addslashes($UserName)."%'";
             } elseif ($UserName_comp=="contain") {
