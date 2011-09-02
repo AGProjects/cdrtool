@@ -16,6 +16,7 @@ class CDRS_opensips extends CDRS {
                          'stopTime'        => 'AcctStopTime',
                          'inputTraffic'    => 'AcctInputOctets',
                          'outputTraffic'   => 'AcctOutputOctets',
+                         'flow'            => 'ServiceType',
                          'aNumber'         => 'CallingStationId',
                          'username'        => 'UserName',
                          'domain'          => 'Realm',
@@ -29,7 +30,6 @@ class CDRS_opensips extends CDRS {
                          'SipCodec'        => 'SipCodecs',
                          'SipUserAgents'   => 'SipUserAgents',
                          'application'     => 'SipApplicationType',
-                         'ServiceType'     => 'ServiceType',
                          'BillingPartyId'  => 'UserName',
                          'SipRPID'         => 'SipRPID',
                          'SipProxyServer'  => 'NASIPAddress',
@@ -66,8 +66,8 @@ class CDRS_opensips extends CDRS {
                                       'CanonicalURI'    => 'CanonicalURI',
                                       'SipRPID'         => 'SipRPID',
                                       'SipMethod'       => 'SipMethod',
-                                      'application' => 'SipApplicationType',
-                                      'ServiceType'     => 'ServiceType',
+                                      'application'     => 'SipApplicationType',
+                                      'flow'            => 'ServiceType',
                                       'BillingPartyId'  => 'UserName',
                                       'ResellerId'      => 'BillingId',
                                       'price'           => 'Price',
@@ -89,6 +89,7 @@ class CDRS_opensips extends CDRS {
                        'SipApplicationType'   => 'Application',
                        'SipResponseCode'      => 'SIP status code',
                        'BillingId'            => 'Tech prefix',
+                       'ServiceType'          => 'Call Flow',
                        ' '                    => '-------------',
                        'hour'                 => 'Hour of day',
                        'DAYOFWEEK'            => 'Day of Week',
@@ -110,7 +111,7 @@ class CDRS_opensips extends CDRS {
         "duration","action","MONTHYEAR",
         "order_by","order_type","group_by",
         "cdr_source","trace",
-        "unnormalize","media_info","cdr_table","maxrowsperpage"
+        "unnormalize","media_info","cdr_table","maxrowsperpage", "flow"
         );
 
     var $createTableFile="/setup/radius/OpenSIPS/radacct.mysql";
@@ -537,6 +538,25 @@ class CDRS_opensips extends CDRS {
 
         }
         
+        $flow_els = array(
+                array("label"=>"Any Call Flow","value"=>""),
+                array("label"=>"On Net","value"=>"on-net"),
+                array("label"=>"Incoming","value"=>"incoming"),
+                array("label"=>"Outgoing","value"=>"outgoing"),
+                array("label"=>"Transit","value"=>"transit"),
+                array("label"=>"Diverted On Net","value"=>"diverted-on-net"),
+                array("label"=>"Diverted Off Net","value"=>"diverted-off-net"),
+                array("label"=>"On Net Diverted On Net","value"=>"on-net-diverted-on-net"),
+                array("label"=>"On Net Diverted Off Net","value"=>"on-net-diverted-off-net")
+                );
+
+        $this->f->add_element(array(    "name"=>"flow",
+                                "type"=>"select",
+                                "options"=>$flow_els,
+                                "value"=>"",
+                                "size"=>"1"
+                    ));
+
         $this->f->add_element(array(    "name"=>"duration",
                                 "type"=>"select",
                                 "options"=>$durations_els,
@@ -836,15 +856,27 @@ class CDRS_opensips extends CDRS {
         print "
         <tr> 
             <td align=left>
-            <b>Duration / Application / Status</b>
+            <b>Application / Call Flow</b>
+            </td>
+            <td valign=top>   ";
+            $this->f->show_element("flow","");
+            $this->f->show_element("application","");
+            print " Media Info: ";
+            $this->f->show_element("media_info","");
+            print "
+            </td>
+        </tr>
+        ";
+
+        print "
+        <tr> 
+            <td align=left>
+            <b>Duration / Status</b>
             </td>
             <td valign=top>   ";
             $this->f->show_element("duration","");
-            $this->f->show_element("application","");
             $this->f->show_element("sip_status","");
             $this->f->show_element("sip_status_class","");
-            print " Media Info: ";
-            $this->f->show_element("media_info","");
             print "
             </td>
         </tr>
@@ -1116,6 +1148,11 @@ class CDRS_opensips extends CDRS {
                              );
             $UserName_comp='equal';
             $UserName=$this->CDRTool['filter']['aNumber'];
+        }
+
+        if ($flow) {
+            $this->url.=sprintf("&flow=%s",urlencode($flow));
+            $where .=  " and $this->flowField = '$flow' ";
         }
 
         if ($UserName_comp == "empty") {
@@ -1543,11 +1580,11 @@ class CDRS_opensips extends CDRS {
                     $found=$i+1;
                     $this->CDRdb->next_record();
 
-                    $calls                 = $this->CDRdb->f('calls');
-                    $seconds               = $this->CDRdb->f($this->durationField);
-                    $seconds_print            = number_format($this->CDRdb->f($this->durationField),0);
-                    $minutes               = number_format($this->CDRdb->f($this->durationField)/60,0,"","");
-                    $minutes_print           = number_format($this->CDRdb->f($this->durationField)/60,0);
+                    $calls              = $this->CDRdb->f('calls');
+                    $seconds            = $this->CDRdb->f($this->durationField);
+                    $seconds_print      = number_format($this->CDRdb->f($this->durationField),0);
+                    $minutes            = number_format($this->CDRdb->f($this->durationField)/60,0,"","");
+                    $minutes_print      = number_format($this->CDRdb->f($this->durationField)/60,0);
                     $hours              = $this->CDRdb->f('hours');
 
                     $AcctInputOctets    = number_format($this->CDRdb->f($this->inputTrafficField),2,".","");
@@ -1558,7 +1595,7 @@ class CDRS_opensips extends CDRS {
                     $AcctTerminateCause = $this->CDRdb->f($this->disconnectField);
                     $mygroup            = $this->CDRdb->f('mygroup');
 
-                    $zero                = $this->CDRdb->f('zero');
+                    $zero               = $this->CDRdb->f('zero');
                     $nonzero            = $this->CDRdb->f('nonzero');
                     $success            = number_format($nonzero/$calls*100,2,".","");
                     $failure            = number_format($zero/$calls*100,2,".","");
@@ -1647,8 +1684,10 @@ class CDRS_opensips extends CDRS {
                         $traceField="sip_status";
                     } else if ($this->group_byOrig=="SipApplicationType") {
                         $traceField="application";
+                    } else if ($this->group_byOrig=="ServiceType") {
+                        $traceField="flow";
                     } else {
-                        $description   = "";
+                        $description="";
                     }
 
                     if (!$traceField) {
@@ -2649,7 +2688,7 @@ class CDR_opensips extends CDR {
         if ($this->CallerIsLocal) {
             if ($this->aNumberPrint == $this->BillingPartyId) {
                 // call is not diverted
-    
+
                 if ($this->CalleeIsLocal) {
                     $this->flow = 'on-net';
                 } else {
