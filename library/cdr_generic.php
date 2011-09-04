@@ -2092,11 +2092,10 @@ class CDR {
                 $this->application=$this->applicationNormalized;
             }
 
-            if ($this->CDRS->ServiceTypeField && $this->flow) {
+            if ($this->CDRS->flowField && $this->flow) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->ServiceTypeField,addslashes($this->flow));
-                $this->ServiceType=$this->flow;
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->flowField,addslashes($this->flow));
             }
 
             if ($this->domainNormalized && $this->domainNormalized != $this->domain) {
@@ -2205,6 +2204,7 @@ class CDR {
             }
 
             $query1 = sprintf("update %s set %s where %s = '%s'",$table,$query,$this->idField,$this->id);
+            dprint($query1);
 
             if ($updatedFields) {
 

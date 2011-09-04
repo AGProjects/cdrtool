@@ -547,7 +547,8 @@ class CDRS_opensips extends CDRS {
                 array("label"=>"Diverted On Net","value"=>"diverted-on-net"),
                 array("label"=>"Diverted Off Net","value"=>"diverted-off-net"),
                 array("label"=>"On Net Diverted On Net","value"=>"on-net-diverted-on-net"),
-                array("label"=>"On Net Diverted Off Net","value"=>"on-net-diverted-off-net")
+                array("label"=>"On Net Diverted Off Net","value"=>"on-net-diverted-off-net"),
+                array("label"=>"Unknown Flow","value"=>"Sip-Session")
                 );
 
         $this->f->add_element(array(    "name"=>"flow",
@@ -1441,7 +1442,7 @@ class CDRS_opensips extends CDRS {
             from $cdr_table where ".$where;
         }
 
-        //dprint($query);
+        dprint($query);
 
         if ($this->CDRdb->query($query)) {
              $this->CDRdb->next_record();
