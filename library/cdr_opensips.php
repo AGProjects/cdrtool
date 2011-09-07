@@ -502,7 +502,7 @@ class CDRS_opensips extends CDRS {
                 array("label"=>"All calls","value"=>""),
                 array("label"=>"0 seconds","value"=>"zero"),
                 array("label"=>"non 0 seconds","value"=>"nonzero"),
-                array("label"=>"non 0 seconds with 0 price","value"=>"zeroprice"),
+                array("label"=>"non 0 seconds withour price","value"=>"zeroprice"),
                 array("label"=>"less than 5 seconds","value"=>"< 5"),
                 array("label"=>"more than 5 seconds","value"=>"> 5"),
                 array("label"=>"less than 60 seconds","value"=>"< 60"),
@@ -1372,7 +1372,7 @@ class CDRS_opensips extends CDRS {
             } elseif ($duration == "zero") {
                 $where .= " and $this->durationField = 0";
             } elseif ($duration == "zeroprice" && $this->priceField) {
-                $where .= " and $this->durationField > 0 and $this->priceField ='' ";
+                $where .= " and $this->durationField > 0 and ($this->priceField = '' or $this->priceField is NULL)";
             } elseif ($duration == "nonzero") {
                 $where .= " and $this->durationField > 0";
             } elseif ($duration == "onewaymedia") {
