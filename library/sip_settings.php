@@ -118,7 +118,7 @@ class SipSettings {
                                            'show_presence_tab',
                                            'show_barring_tab',
                                            'ip_access_list',
-                                           'max_sessions'
+                                           'callLimit'
                                            );
 
     var $presence_statuses   = array('allow','deny','confirm');
@@ -176,6 +176,8 @@ class SipSettings {
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
 
 		//define_syslog_variables();
+
+        $this->platform_call_limit = _('unlimited');
 
         $this->soapEngines        = $soapEngines;
 
@@ -576,6 +578,10 @@ class SipSettings {
             $this->pstn_access     = $this->soapEngines[$this->sip_engine]['pstn_access'];
         }
 
+        if ($this->soapEngines[$this->sip_engine]['call_limit']) {
+            $this->platform_call_limit    = $this->soapEngines[$this->sip_engine]['call_limit'];
+        }
+
         if ($this->soapEngines[$this->sip_engine]['sms_access']) {
             $this->sms_access     = $this->soapEngines[$this->sip_engine]['sms_access'];
         }
@@ -775,11 +781,9 @@ class SipSettings {
             printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassCustomerPort,$this->SOAPurlCustomer,$this->SOAPurlCustomer,$this->soapEngines[$this->customer_engine]['username']);
         }
 
-        // presence
         if ($this->presence_engine) {
             $this->SOAPurlPresence = $this->soapEngines[$this->presence_engine]['url'];
             $this->PresencePort    = new $this->soapClassPresencePort($this->SOAPurlPresence);
-
             if (strlen($this->soapEngines[$this->presence_engine]['timeout'])) {
                 $this->PresencePort->_options['timeout'] = intval($this->soapEngines[$this->presence_engine]['timeout']);
             } else {
@@ -841,9 +845,13 @@ class SipSettings {
         $this->groups         = $result->groups;
         $this->createDate     = $result->createDate;
         $this->web_password   = $this->Preferences['web_password'];
-        $this->ip_access_list = $this->Preferences['ip_access_list'];
-        $this->max_sessions   = $this->Preferences['max_sessions'];
-
+        if ($this->soapEngines[$this->sip_engine]['call_limit']) {
+            if ($result->callLimit) {
+                $this->callLimit   = $result->callLimit;
+            } else  {
+                $this->callLimit = '';
+            }
+        }
         $this->quickdial = $result->quickdialPrefix;
         $this->timeout   = intval($result->timeout);
         $this->quota     = $result->quota;
@@ -3368,8 +3376,8 @@ class SipSettings {
         $this->showQuickDial();
 
         $this->showMobileNumber();
-        $this->showAccessControl();
-        $this->showMaxSessions();
+        //$this->showAccessControl();
+        $this->showCallLimit();
 
         print "
         <tr class=even>
@@ -4121,13 +4129,17 @@ class SipSettings {
         }
 
         if ($this->checkAntiFraudMeasuresChangePolicy()) {
+            /*
             if ($this->ip_access_list != $ip_access_list) {
                 $this->setPreference('ip_access_list',$ip_access_list);
                 $this->somethingChanged=1;
             }
-            if ($this->max_sessions != $max_sessions) {
-                $this->setPreference('max_sessions',$max_sessions);
-                $this->somethingChanged=1;
+            */
+            if ($this->soapEngines[$this->sip_engine]['call_limit']) {
+                if ($this->callLimit != $callLimit) {
+                    $result->callLimit=intval($callLimit);
+                    $this->somethingChanged=1;
+                }
             }
         }
 
@@ -5533,22 +5545,48 @@ class SipSettings {
         ",$this->ip_access_list);
     }
 
-    function showMaxSessions() {
-        if (!$this->checkAntiFraudMeasuresChangePolicy()) {
+    function showCallLimit() {
+        if (!$this->soapEngines[$this->sip_engine]['call_limit']) {
+            return;
+        }
+        if (!in_array("free-pstn",$this->groups)) {
             return;
         }
 
-        print "
-        <tr class=odd>
-          <td>";
-            print _("Max Sessions");
-            printf ("
-          </td>
-          <td align=left>
-            <input type=text size=3 name=max_sessions value='%s'>
-          </td>
-        </tr>
-        ",$this->max_sessions);
+        $limit_text = sprintf(_("Default is %s"), $this->platform_call_limit);
+
+        if (strlen($this->callLimit)) {
+            $limit_text_ro=$this->callLimit;
+        } else {
+            $limit_text_ro=$this->platform_call_limit;
+        }
+
+        if (!$this->checkAntiFraudMeasuresChangePolicy()) {
+            print "
+            <tr class=odd>
+              <td>";
+                print _("PSTN Call Limit");
+                printf ("
+              </td>
+              <td align=left>
+                %s
+              </td>
+            </tr>
+            ",$limit_text_ro);
+        } else {
+
+            print "
+            <tr class=odd>
+              <td>";
+                print _("PSTN Call Limit");
+                printf ("
+              </td>
+              <td align=left>
+                <input type=text size=3 name=callLimit value='%s'> %s
+              </td>
+            </tr>
+            ",$this->callLimit, $limit_text);
+        }
     }
 
     function showCallsTab() {
@@ -7327,7 +7365,6 @@ class SipSettings {
         }
 
         $result = $this->PresencePort->getPresenceInformation(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
-
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
@@ -7335,8 +7372,6 @@ class SipSettings {
             printf ("<p><font color=red>Error (PresencePort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         }
-
-        dprint_r($result);
 
         $this->presentity['activity'] = $result->activity;
         $this->presentity['note']     = $result->note;

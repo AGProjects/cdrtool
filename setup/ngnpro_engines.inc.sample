@@ -46,7 +46,8 @@ $soapEngines=array(
                                          'show_presence_tab'   => false,
                                          'show_directory'      => false,
                                          'emergency_regions'   => array(),
-                                         'disableExtraGroups'  => true
+                                         'disableExtraGroups'  => true,
+                                         'call_limit'          => '3'
                                          ),
                            'vm' => array('name'=> 'Voicemail server',
                                          'username'=> 'admin',
