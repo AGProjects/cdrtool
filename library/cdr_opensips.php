@@ -3714,7 +3714,7 @@ class SIP_trace {
                                    'fromport'  => $fromport,
                                    'toport'    => $toport,
                                    'transport' => $transport,
-                                   'date'      => $this->db->f('date'),
+                                   'date'      => $this->db->f('time_stamp'),
                                    'status'    => $this->db->f('status'),
                                    'timestamp' => $this->db->f('timestamp'),
                                    'msg'       => $this->db->f('msg'),
