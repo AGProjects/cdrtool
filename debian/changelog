@@ -4,11 +4,17 @@ cdrtool (8.2.0) unstable; urgency=low
 
   * Fixed selecting calls with no price
   * Fixed normalizing the flow column
+  * Added destinations.region field to documentation
+  * Removed define_syslog_variables() for php 5.3
+
+  [ Web Interface ]
+
   * Added search and group by call flow
   * Fixed search and group by an empty field
   * Fixed searching for an empty billing party
-  * Added destinations.region field to documentation
-  * Removed define_syslog_variables() for php 5.3
+  * Fixed fieldname time_stamp for text export SIP trace on MSP
+  * Hide media graph if there are no streams
+  * Added search option for calls with no media
 
   [ NGNPro client ]
 
@@ -21,7 +27,8 @@ cdrtool (8.2.0) unstable; urgency=low
   * Fixed check of array of customer properties
   * Enable credit check by defaukt
 
- -- Adriang Georgescu <adigeo@mail2.dns-hosting.info>  Wed, 07 Sep 2011 11:42:13 +0200
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 14 Sep 2011 13:31:01 +0200
 
 cdrtool (8.1.2) unstable; urgency=low
 
