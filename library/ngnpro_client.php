@@ -445,6 +445,10 @@ class SoapEngine {
             	$this->default_timezone  = $this->soapEngines[$this->soapEngine]['default_timezone'];
             }
 
+            if ($this->soapEngines[$this->soapEngine]['default_country']) {
+                $this->default_country  = $this->soapEngines[$this->soapEngine]['default_country'];
+            }
+
             if (strlen($this->soapEngines[$this->soapEngine]['sip_engine'])) {
                 $this->sip_engine=$this->soapEngines[$this->soapEngine]['sip_engine'];
             }
@@ -12873,8 +12877,12 @@ class Customers extends Records {
                 print "<td class=border>
                 <select name=country_form>";
 
-                if (!$_REQUEST[$item_form]) {
-                    $_value='NL';
+		        if (!$_REQUEST[$item_form]) {
+                    if ($this->SoapEngine->default_country) {
+                        $_value=$this->SoapEngine->default_country;
+                    } else {
+                        $_value='NL';
+                    }
                 } else {
                     $_value=$_REQUEST[$item_form];
                 }

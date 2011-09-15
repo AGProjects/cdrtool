@@ -48,6 +48,7 @@ $soapEngines=array(
                                          'emergency_regions'   => array(),
                                          'disableExtraGroups'  => true,
                                          'default_timezone'    => 'Netherlands/Amsterdam',
+                                         'default_country'     => 'NL',
                                          'call_limit'          => '3'
                                          ),
                            'vm' => array('name'=> 'Voicemail server',
