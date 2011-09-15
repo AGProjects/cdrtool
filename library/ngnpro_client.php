@@ -12837,7 +12837,13 @@ class Customers extends Records {
 
             if ($item=='timezone') {
                 $_value=$_REQUEST['timezone_form'];
-                if (!$_value) $_value='Europe/Amsterdam';
+                if (!$_value) {
+                    if ($this->SoapEngine->default_timezone) {
+                        $_value=$this->SoapEngine->default_timezone;
+                    } else {
+                        $_value='Europe/Amsterdam';
+                    }
+                }
 
                 printf ("<tr>
                 <td class=border valign=top>%s</td>",
