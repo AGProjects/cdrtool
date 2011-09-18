@@ -9418,10 +9418,16 @@ class PaypalProcessor {
             if ($_SERVER['HTTP_REFERER'] == $this->CardProcessor->getPageURL()) {
                     
                 // check submitted values
-                $formcheck1 = $this->CardProcessor->checkForm($_POST);
-                if (count($formcheck1) > 0){
-                    // we have errors; let's print and stop
-                    print $this->CardProcessor->displayProcessErrors($formcheck1);
+                $errors = $this->CardProcessor->checkForm($_POST);
+                if (count($errors) > 0){
+                    print $this->CardProcessor->displayFormErrors($errors);
+
+                    foreach (array_keys($errors) as $key) {
+                        $log_text.=sprintf("%s:%s ",$errors[$key]['field'],$errors[$key]['desc']);
+                    }
+
+                    $log=sprintf("CC transaction for %s failed with error: %s",$this->account->account,$log_text);
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
                 
@@ -9442,7 +9448,7 @@ class PaypalProcessor {
                     $e=time();
                     $d=$e-$b;
                     
-                    $log=sprintf("Error, CC transaction failed for %s: %s (%s) after %d seconds",
+                    $log=sprintf("CC transaction for %s failed with error: %s (%s) after %d seconds",
                     $this->account->account,
                     $pay_process_results['error']['short_message'],
                     $pay_process_results['error']['error_code'],
@@ -9457,9 +9463,9 @@ class PaypalProcessor {
                     $e=time();
                     $d=$e-$b;
                     
-                    $log=sprintf("CC transaction for %s %s completed succesfully in %d seconds",
-                    $this->account->account,
+                    $log=sprintf("CC transaction %s for %s completed succesfully in %d seconds",
                     $pay_process_results['success']['desc']->TransactionID,
+                    $this->account->account,
                     $d
                     );
                     syslog(LOG_NOTICE, $log);
@@ -9538,7 +9544,7 @@ class PaypalProcessor {
                     return true;
                 
                 } else {
-                    $log=sprintf("Error: SIP Account %s - CC transaction %s failed to Save Order",$this->account->account, $this->CardProcessor->transaction_data['TRANSACTION_ID']);
+                    $log=sprintf("Error: SIP Account %s - CC transaction %s failed to save order",$this->account->account, $this->CardProcessor->transaction_data['TRANSACTION_ID']);
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }

@@ -308,7 +308,7 @@ class CreditCardProcessor {
 
         // Add logger process file
         require_once 'cc_logger.php';
-        $this->logger = new cc_logger('CreditCardProcessor', PEAR_LOG_DEBUG);
+        $this->logger = new cc_logger('CreditCardProcessor', PEAR_LOG_INFO);
 
         if ($parameters['country']) {
             $this->user_account['Country']=$parameters['country'];
@@ -425,7 +425,7 @@ class CreditCardProcessor {
         }
         $pageURL .= "://";
         $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
-        $this->logger->_log("Set submit action to ".$pageURL."");
+        //$this->logger->_log("Set submit action to ".$pageURL."");
         return $pageURL;
     }
     
@@ -846,7 +846,11 @@ class CreditCardProcessor {
             $errors = array_merge($errors,array('zip'=>array('field'=>'Postcode','desc'=>'A postal code must be provided')));
         }
         if(count($errors) > 0){
-            $this->logger->_log("Errors found in form ".print_r($errors, true)."");
+            $log=sprintf("Form transaction errors for %s %s: ",$post_vars['firstName'],$post_vars['lastName']);
+            foreach (array_keys($errors) as $key) {
+                $log.=sprintf("%s:%s ",$errors[$key]['field'],$errors[$key]['desc']);
+            }
+            $this->logger->_log($log);
         }
         return $errors;
     }
@@ -868,6 +872,22 @@ class CreditCardProcessor {
         }
 
         $page_body_content .= "</table>\n";
+        $page_body_content .= "<p><a href=\"javascript:history.go(-1);\">"._("Go Back")."</a>, "._("correct the errors and re-submit. ")."\n";
+
+        return $page_body_content;
+    }
+
+    function displayFormErrors($errors=array()){
+        dprint("displayFormErrors()");
+
+        $page_body_content .= "<h2>"._("Transaction failed")."</h2>";
+        // we have errors; let's print and stop
+        $page_body_content .= sprintf("<table border=1><tr><th>Field</th><th>Error</th></tr>");
+        foreach (array_keys($errors) as $key) {
+            $page_body_content .= sprintf("<tr><td>%s</td><td>%s</td></tr>",$errors[$key]['field'],$errors[$key]['desc']);
+        }
+        $page_body_content .= "</table>";
+
         $page_body_content .= "<p><a href=\"javascript:history.go(-1);\">"._("Go Back")."</a>, "._("correct the errors and re-submit. ")."\n";
 
         return $page_body_content;
@@ -1023,15 +1043,21 @@ class CreditCardProcessor {
                                                       'desc'           => $response->Errors->LongMessage,
                                                       'short_message'  => $response->Errors->ShortMessage,
                                                       'error_code'     => $response->Errors->ErrorCode,
-                                                      'correlation_id' => $response->CorrelationID
+                                                      'correlation_id' => $response->CorrelationID,
+                                                      'card_type'      => $creditCardType,
+                                                      'first_name'     => $firstName,
+                                                      'last_name'      => $lastName
                                                       )
                                       );
 
-                    $log=sprintf("Error: %s (%s) %s, correlation id %s",
-                                 $response->Errors->ShortMessage,
+                    $log=sprintf("%s card of %s %s - Transaction %s Error: %s/%s (%s)",
+                                 $creditCardType,
+                                 $firstName,
+                                 $lastName,
+                                 $response->CorrelationID,
                                  $response->Errors->ErrorCode,
-                                 $response->Errors->LongMessage,
-                                 $response->CorrelationID
+                                 $response->Errors->ShortMessage,
+                                 $response->Errors->LongMessage
                                  );
 	                $this->logger->_log($log);
 	            }
