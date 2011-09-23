@@ -845,13 +845,6 @@ class SipSettings {
         $this->groups         = $result->groups;
         $this->createDate     = $result->createDate;
         $this->web_password   = $this->Preferences['web_password'];
-        if ($this->soapEngines[$this->sip_engine]['call_limit']) {
-            if ($result->callLimit) {
-                $this->callLimit   = $result->callLimit;
-            } else  {
-                $this->callLimit = '';
-            }
-        }
         $this->quickdial = $result->quickdialPrefix;
         $this->timeout   = intval($result->timeout);
         $this->quota     = $result->quota;
@@ -861,6 +854,25 @@ class SipSettings {
         $this->account   = $this->username."@".$this->domain;
         $this->fullName  = $this->firstName." ".$this->lastName;
         $this->name      = $this->firstName; // used by smarty
+
+        if ($this->soapEngines[$this->sip_engine]['call_limit']) {
+            if ($result->callLimit) {
+                $this->callLimit   = $result->callLimit;
+            } else  {
+                $this->callLimit = '';
+            }
+        }
+
+        if ($this->soapEngines[$this->sip_engine]['ip_access_list']) {
+            if (is_array($result->ipAccessList) and count($result->ipAccessList)) {
+                foreach ($result->ipAccessList as $key) {
+                    $this->ip_access_list .= sprintf('%s/%s\n',$result->ipAccessList[$key]->ip, $result->ipAccessList[$key]->mask);
+                }
+                $this->ip_access_list = trim($this->ip_access_list);
+            } else  {
+                $this->ip_access_list = $this->soapEngines[$this->sip_engine]['ip_access_list'];
+            }
+        }
 
         $this->sipId=array("username" => $this->username,
                            "domain" => $this->domain
@@ -3376,7 +3388,7 @@ class SipSettings {
         $this->showQuickDial();
 
         $this->showMobileNumber();
-        //$this->showAccessControl();
+        $this->showAccessControl();
         $this->showCallLimit();
 
         print "
@@ -4129,12 +4141,24 @@ class SipSettings {
         }
 
         if ($this->checkAntiFraudMeasuresChangePolicy()) {
-            /*
             if ($this->ip_access_list != $ip_access_list) {
-                $this->setPreference('ip_access_list',$ip_access_list);
+                $ip_access_list=preg_replace("/\s+/","\n", trim($ip_access_list));
+                $list=explode("\n", $ip_access_list);
+                $ip_access_list=array();
+                foreach ($list as $el) {
+                    list($ip,$mask) = explode("/",$el);
+                    if ($mask <0 or $mask > 32) {
+                        continue;
+                    }
+                    if (!preg_match("/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/",$ip)) {
+                        continue;
+                    }
+                    $ip_access_list[]=array('ip'=>$ip, 'mask'=>$mask);
+                }
+                $result->ipAccessList=$ip_access_list;
                 $this->somethingChanged=1;
             }
-            */
+
             if ($this->soapEngines[$this->sip_engine]['call_limit']) {
                 if ($this->callLimit != $callLimit) {
                     $result->callLimit=intval($callLimit);
@@ -5529,20 +5553,34 @@ class SipSettings {
     }
 
     function showAccessControl() {
-        if (!$this->checkAntiFraudMeasuresChangePolicy()) {
+        if (!$this->soapEngines[$this->sip_engine]['ip_access_list']) {
             return;
         }
-        print "
-        <tr class=odd>
-          <td>";
-            print _("IP Access List");
-            printf ("
-          </td>
-          <td align=left>
-            <textarea cols=60 rows=2 name=ip_access_list>%s</textarea>
-          </td>
-        </tr>
-        ",$this->ip_access_list);
+        if (!$this->checkAntiFraudMeasuresChangePolicy()) {
+            print "
+            <tr class=odd>
+              <td>";
+                print _("IP Access List");
+                printf ("
+              </td>
+              <td align=left>
+                %s
+              </td>
+            </tr>
+            ",$this->ip_access_list);
+        } else {
+            print "
+            <tr class=odd>
+              <td>";
+                print _("IP Access List");
+                printf ("
+              </td>
+              <td align=left>
+                <textarea cols=60 rows=2 name=ip_access_list>%s</textarea>
+              </td>
+            </tr>
+            ",$this->ip_access_list);
+        }
     }
 
     function showCallLimit() {
@@ -5574,7 +5612,6 @@ class SipSettings {
             </tr>
             ",$limit_text_ro);
         } else {
-
             print "
             <tr class=odd>
               <td>";
