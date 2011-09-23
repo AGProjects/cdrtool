@@ -25,7 +25,7 @@ cdrtool (8.2.0) unstable; urgency=low
   * Added separate password to login to the web page
   * Use web password in digest authentication
   * Fixed check of array of customer properties
-  * Enable credit check by defaukt
+  * Enable credit check by default
 
 
  -- Adrian Georgescu <ag@ag-projects.com>  Wed, 14 Sep 2011 13:31:01 +0200
