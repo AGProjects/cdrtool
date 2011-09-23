@@ -5558,7 +5558,7 @@ class SipSettings {
         }
         if (!$this->checkAntiFraudMeasuresChangePolicy()) {
             print "
-            <tr class=odd>
+            <tr class=even>
               <td>";
                 print _("IP Access List");
                 printf ("
