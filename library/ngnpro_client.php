@@ -8790,7 +8790,7 @@ class TrustedPeers extends Records {
 
         $function=array('commit'   => array('name'       => 'addTrustedPeer',
                                             'parameters' => array($peer),
-                                            'logs'       => array('success' => sprintf('Trusted peers %s has been added',$ipaddress)))
+                                            'logs'       => array('success' => sprintf('Trusted peer %s has been added',$ipaddress)))
                         );
      
         return $this->SoapEngine->execute($function,$this->html);
@@ -8809,7 +8809,7 @@ class TrustedPeers extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteTrustedPeer',
                                             'parameters' => array($this->filters['ip']),
-                                            'logs'       => array('success' => sprintf('Trusted peers %s has been deleted',$this->filters['ip'])))
+                                            'logs'       => array('success' => sprintf('Trusted peer %s has been deleted',$this->filters['ip'])))
                         );
      
         unset($this->filters);
