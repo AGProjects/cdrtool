@@ -864,9 +864,9 @@ class SipSettings {
         }
 
         if ($this->soapEngines[$this->sip_engine]['ip_access_list']) {
-            if (is_array($result->ipAccessList) and count($result->ipAccessList)) {
-                foreach ($result->ipAccessList as $key) {
-                    $this->ip_access_list .= sprintf('%s/%s\n',$result->ipAccessList[$key]->ip, $result->ipAccessList[$key]->mask);
+            if (is_array($result->acl) and count($result->acl)) {
+                foreach (array_keys($result->acl) as $key) {
+                    $this->ip_access_list .= sprintf("%s/%s\n",$result->acl[$key]->ip, $result->acl[$key]->mask);
                 }
                 $this->ip_access_list = trim($this->ip_access_list);
             } else  {
@@ -4143,7 +4143,7 @@ class SipSettings {
         if ($this->checkAntiFraudMeasuresChangePolicy()) {
             if ($this->ip_access_list != $ip_access_list) {
                 $ip_access_list=preg_replace("/\s+/","\n", trim($ip_access_list));
-                $list=explode("\n", $ip_access_list);
+                $list=explode("\n", trim($ip_access_list));
                 $ip_access_list=array();
                 foreach ($list as $el) {
                     list($ip,$mask) = explode("/",$el);
@@ -4153,9 +4153,9 @@ class SipSettings {
                     if (!preg_match("/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/",$ip)) {
                         continue;
                     }
-                    $ip_access_list[]=array('ip'=>$ip, 'mask'=>$mask);
+                    $ip_access_list[]=array('ip'=>$ip, 'mask'=>intval($mask));
                 }
-                $result->ipAccessList=$ip_access_list;
+                $result->acl=$ip_access_list;
                 $this->somethingChanged=1;
             }
 
