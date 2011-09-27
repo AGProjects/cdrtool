@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-09-23 10:22+0200\n"
-"PO-Revision-Date: 2011-09-27 10:26+0100\n"
+"PO-Revision-Date: 2011-09-27 11:31+0100\n"
 "Last-Translator: Tijmen de Mes <tijmen@ag-projects.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -97,7 +97,7 @@ msgstr "Blokkeringen"
 #: /var/www/CDRTool/library/sip_settings.php:370
 #: /var/www/CDRTool/library/sip_settings.php:3420
 msgid "Presence"
-msgstr "Aanwezigheid"
+msgstr "Presence"
 
 #: /var/www/CDRTool/library/sip_settings.php:375
 msgid "DID"
@@ -295,9 +295,8 @@ msgid "Calling to telephone numbers is possible at the costs set forth in the <a
 msgstr "Bellen naar normale nummers is mogelijk met de kosten die staan in de <a href=%s&tab=payments&task=showprices>prijslijst</a>."
 
 #: /var/www/CDRTool/library/sip_settings.php:1928
-#, fuzzy
 msgid "You can purchase credit with a Credit Card. "
-msgstr "Voeg beltegoed toe door het te kopen met een Credit Card"
+msgstr "U kunt beltegoed kopen met een Credit Card"
 
 #: /var/www/CDRTool/library/sip_settings.php:1978
 msgid "Prepaid Credit"
@@ -623,9 +622,8 @@ msgid "Web Password"
 msgstr "Web wachtwoord"
 
 #: /var/www/CDRTool/library/sip_settings.php:3046
-#, fuzzy
 msgid "Enter text to change the password to access this web page"
-msgstr "Voer tekst in om het huidige wachtwoord te veranderen"
+msgstr "Voer tekst in om het wachtwoord te veranderen om toegang te krijgen tot de webpagina"
 
 #: /var/www/CDRTool/library/sip_settings.php:3056
 msgid "Language"
