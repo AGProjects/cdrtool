@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-09-23 10:22+0200\n"
-"PO-Revision-Date: 2010-11-29 11:33+0100\n"
+"PO-Revision-Date: 2011-09-27 10:26+0100\n"
 "Last-Translator: Tijmen de Mes <tijmen@ag-projects.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -19,7 +19,7 @@ msgstr ""
 #. define_syslog_variables();
 #: /var/www/CDRTool/library/sip_settings.php:180
 msgid "unlimited"
-msgstr ""
+msgstr "Onbeperkt"
 
 #: /var/www/CDRTool/library/sip_settings.php:206
 msgid "Error: missing sip_engine in login credentials"
@@ -33,7 +33,7 @@ msgstr "Status"
 #: /var/www/CDRTool/library/sip_settings.php:289
 #, php-format
 msgid "Deny password change"
-msgstr ""
+msgstr "Verbied veranderen wachtwoord"
 
 #: /var/www/CDRTool/library/sip_settings.php:298
 #, php-format
@@ -291,12 +291,8 @@ msgstr "Pagina niet beschikbaar"
 
 #: /var/www/CDRTool/library/sip_settings.php:1926
 #, php-format
-msgid ""
-"Calling to telephone numbers is possible at the costs set forth in the <a "
-"href=%s&tab=payments&task=showprices>Price List</a>. "
-msgstr ""
-"Bellen naar normale nummers is mogelijk met de kosten die staan in de <a "
-"href=%s&tab=payments&task=showprices>prijslijst</a>."
+msgid "Calling to telephone numbers is possible at the costs set forth in the <a href=%s&tab=payments&task=showprices>Price List</a>. "
+msgstr "Bellen naar normale nummers is mogelijk met de kosten die staan in de <a href=%s&tab=payments&task=showprices>prijslijst</a>."
 
 #: /var/www/CDRTool/library/sip_settings.php:1928
 #, fuzzy
@@ -330,9 +326,7 @@ msgstr "Fout: Laatste getallen dienen nummers te zijn"
 #: /var/www/CDRTool/library/sip_settings.php:2026
 #, php-format
 msgid "Error: Mobile Number must be in international format starting with +"
-msgstr ""
-"Fout: Het mobiele nummer moet in het internationale formaat zijn en beginnen "
-"met een +"
+msgstr "Fout: Het mobiele nummer moet in het internationale formaat zijn en beginnen met een +"
 
 #: /var/www/CDRTool/library/sip_settings.php:2031
 #, php-format
@@ -340,11 +334,8 @@ msgid "Error: Maximum file size is %s"
 msgstr "Error: maximale grootte is %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:2149
-msgid ""
-"Credit Card payments will be activated after your identity is verified. "
-msgstr ""
-"Credit card betalingen zullen actief worden wanneer uw identiteit is "
-"geverifieerd."
+msgid "Credit Card payments will be activated after your identity is verified. "
+msgstr "Credit card betalingen zullen actief worden wanneer uw identiteit is geverifieerd."
 
 #: /var/www/CDRTool/library/sip_settings.php:2157
 #: /var/www/CDRTool/library/sip_settings.php:6101
@@ -389,24 +380,17 @@ msgstr "Bevestigen"
 
 #: /var/www/CDRTool/library/sip_settings.php:2213
 msgid "Credit Card payments are available only to verified customers. "
-msgstr ""
-"Credit card betalingen zijn alleen beschikbaar voor geverifieerde klanten."
+msgstr "Credit card betalingen zijn alleen beschikbaar voor geverifieerde klanten."
 
 #: /var/www/CDRTool/library/sip_settings.php:2216
 #, php-format
-msgid ""
-"To become verified, upload a copy of your passport or driving license that "
-"matches the Credit Card owner. "
-msgstr ""
-"Om geverifieerd te worden, dient u een kopie van paspoort of rijbewijs te "
-"uploaden  waarvan de naam overeenkomt met de eigenaar van de Credit Card."
+msgid "To become verified, upload a copy of your passport or driving license that matches the Credit Card owner. "
+msgstr "Om geverifieerd te worden, dient u een kopie van paspoort of rijbewijs te uploaden  waarvan de naam overeenkomt met de eigenaar van de Credit Card."
 
 #: /var/www/CDRTool/library/sip_settings.php:2218
 #, php-format
-msgid ""
-"This copy will be kept on your profile until the credit card transaction has "
-"been approved. "
-msgstr ""
+msgid "This copy will be kept on your profile until the credit card transaction has been approved. "
+msgstr "Deze kopie zal worden bewaard in uw profiel totdat de credit card transactie is goedgekeurd"
 
 #: /var/www/CDRTool/library/sip_settings.php:2235
 msgid "Name printed on the Credit Card"
@@ -592,12 +576,8 @@ msgstr "Voor meer informatie bezoek %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:2902
 #, php-format
-msgid ""
-"Download and install <a href=http://icanblink.com target=blink>Blink</a> "
-"preconfigured with your SIP account:"
-msgstr ""
-"Download en installeer <a href=http://icanblink.com target=blink>Blink</a> "
-"geconfigureerd met uw SIP account:"
+msgid "Download and install <a href=http://icanblink.com target=blink>Blink</a> preconfigured with your SIP account:"
+msgstr "Download en installeer <a href=http://icanblink.com target=blink>Blink</a> geconfigureerd met uw SIP account:"
 
 #: /var/www/CDRTool/library/sip_settings.php:2924
 #, php-format
@@ -606,20 +586,12 @@ msgstr "Om Blink te downloaden bezoek <a href='%s' target=blink>%s</a>"
 
 #: /var/www/CDRTool/library/sip_settings.php:2930
 #, php-format
-msgid ""
-"If you have already installed Blink, you can configure it to use your SIP "
-"account:"
-msgstr ""
-"Als U Blink heeft geïnstalleerd, kunt U Blink configureren om uw SIP account "
-"te gebruiken:"
+msgid "If you have already installed Blink, you can configure it to use your SIP account:"
+msgstr "Als U Blink heeft geïnstalleerd, kunt U Blink configureren om uw SIP account te gebruiken:"
 
 #: /var/www/CDRTool/library/sip_settings.php:2951
-msgid ""
-"<a href='http://www.java.com/en/download/manual.jsp'>Java Runtime "
-"Environment</a> (JRE) must be activated in the web browser. "
-msgstr ""
-"<a href='http://www.java.com/en/download/manual.jsp'>Java Runtime "
-"Environment</a> (JRE) moet zijn geïnstalleerd voor de browser. "
+msgid "<a href='http://www.java.com/en/download/manual.jsp'>Java Runtime Environment</a> (JRE) must be activated in the web browser. "
+msgstr "<a href='http://www.java.com/en/download/manual.jsp'>Java Runtime Environment</a> (JRE) moet zijn geïnstalleerd voor de browser. "
 
 #: /var/www/CDRTool/library/sip_settings.php:2987
 #: /var/www/CDRTool/library/sip_settings.php:7873
@@ -640,16 +612,15 @@ msgstr "Wachtwoord"
 
 #: /var/www/CDRTool/library/sip_settings.php:3025
 msgid "Password can be changed only by the operator"
-msgstr ""
+msgstr "Wachtwoord kan alleen worden veranderd door de operator"
 
 #: /var/www/CDRTool/library/sip_settings.php:3028
 msgid "Enter text to change the current password"
 msgstr "Voer tekst in om het huidige wachtwoord te veranderen"
 
 #: /var/www/CDRTool/library/sip_settings.php:3040
-#, fuzzy
 msgid "Web Password"
-msgstr "Wachtwoord"
+msgstr "Web wachtwoord"
 
 #: /var/www/CDRTool/library/sip_settings.php:3046
 #, fuzzy
@@ -854,16 +825,15 @@ msgstr "Toevoegen"
 #: /var/www/CDRTool/library/sip_settings.php:4779
 #, php-format
 msgid "Refund Transaction"
-msgstr ""
+msgstr "Terugbetalingstransactie"
 
 #: /var/www/CDRTool/library/sip_settings.php:4791
-#, fuzzy
 msgid "Transaction Id"
-msgstr "Transactie Resultaten"
+msgstr "Transactie Id"
 
 #: /var/www/CDRTool/library/sip_settings.php:4807
 msgid "Refund"
-msgstr ""
+msgstr "Terugbetaling"
 
 #: /var/www/CDRTool/library/sip_settings.php:4825
 #, php-format
@@ -873,9 +843,7 @@ msgstr "Prepaid kaart"
 #: /var/www/CDRTool/library/sip_settings.php:4834
 #, php-format
 msgid "To add Credit to your account using a Prepaid Card enter it below. "
-msgstr ""
-"Om tegoed toe te voegen op uw account met een Prepaid kaart dient u het "
-"hierbeneden in te voeren."
+msgstr "Om tegoed toe te voegen op uw account met een Prepaid kaart dient u het hierbeneden in te voeren."
 
 #: /var/www/CDRTool/library/sip_settings.php:4850
 msgid "Card Id"
@@ -898,7 +866,7 @@ msgstr "Balans Geschiedenis"
 #: /var/www/CDRTool/library/sip_settings.php:5033
 #, php-format
 msgid "Today's transactions: %.2f credit, %.2f debit"
-msgstr ""
+msgstr "Transacties van vandaag: %.2f credit, %.2f debet"
 
 #: /var/www/CDRTool/library/sip_settings.php:5043
 msgid "Date and Time"
@@ -972,20 +940,18 @@ msgstr "Voorvoegsel om korte nummers aan te vullen"
 
 #: /var/www/CDRTool/library/sip_settings.php:5559
 #: /var/www/CDRTool/library/sip_settings.php:5571
-#, fuzzy
 msgid "IP Access List"
-msgstr "PSTN Toegang"
+msgstr "IP toegangslijst"
 
 #: /var/www/CDRTool/library/sip_settings.php:5590
 #, php-format
 msgid "Default is %s"
-msgstr ""
+msgstr "Standaard is %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:5602
 #: /var/www/CDRTool/library/sip_settings.php:5614
-#, fuzzy
 msgid "PSTN Call Limit"
-msgstr "Beltegoed"
+msgstr "PSTN limiet"
 
 #: /var/www/CDRTool/library/sip_settings.php:5630
 #, php-format
@@ -1025,12 +991,8 @@ msgid "Directory"
 msgstr "Telefoonboek"
 
 #: /var/www/CDRTool/library/sip_settings.php:5992
-msgid ""
-"To find other SIP Addresses fill in the First Name or the Last Name and "
-"click the Search button. "
-msgstr ""
-"Om andere SIP adressen te vinden, vul de voornaam of achternaam in en klik "
-"op de Zoek knop"
+msgid "To find other SIP Addresses fill in the First Name or the Last Name and click the Search button. "
+msgstr "Om andere SIP adressen te vinden, vul de voornaam of achternaam in en klik op de Zoek knop"
 
 #: /var/www/CDRTool/library/sip_settings.php:6016
 #, php-format
@@ -1044,12 +1006,8 @@ msgid "Groups"
 msgstr "Groepen"
 
 #: /var/www/CDRTool/library/sip_settings.php:6022
-msgid ""
-"You can organize contacts into groups that can be used to accept incoming "
-"calls in Don't Disturb section. "
-msgstr ""
-"U kan contacten in groepen plaatsen die kunnen worden gebruikt om gesprekken "
-"te accepteren in de Niet Storen sectie."
+msgid "You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. "
+msgstr "U kan contacten in groepen plaatsen die kunnen worden gebruikt om gesprekken te accepteren in de Niet Storen sectie."
 
 #: /var/www/CDRTool/library/sip_settings.php:6090
 msgid "(wildcard %)"
@@ -1093,19 +1051,12 @@ msgid "You can reject calls depending on the time of day and Caller-ID. "
 msgstr "U kan gesprekken blokkeren afhankelijk van de tijd en het nummer."
 
 #: /var/www/CDRTool/library/sip_settings.php:6512
-msgid ""
-"You can create custom groups in the Contacts page like Family or Coworkers. "
-msgstr ""
-"U kan eigen groepen definiëren in de Contacten pagina zoals Familie of "
-"Collega's"
+msgid "You can create custom groups in the Contacts page like Family or Coworkers. "
+msgstr "U kan eigen groepen definiëren in de Contacten pagina zoals Familie of Collega's"
 
 #: /var/www/CDRTool/library/sip_settings.php:6514
-msgid ""
-"Rejected calls are diverted based on the Unavailable condition in the Call "
-"Forwarding page. "
-msgstr ""
-"Geweigerde gesprekken worden omgeleid met de Niet Beschikbaar conditie op de "
-"Doorschakelingen pagina"
+msgid "Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. "
+msgstr "Geweigerde gesprekken worden omgeleid met de Niet Beschikbaar conditie op de Doorschakelingen pagina"
 
 #: /var/www/CDRTool/library/sip_settings.php:6517
 #, php-format
@@ -1158,11 +1109,8 @@ msgid "Rejected Callers"
 msgstr "Geweigerde Gesprekken"
 
 #: /var/www/CDRTool/library/sip_settings.php:6868
-msgid ""
-"Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
-msgstr ""
-"Gebruik %Nummer@% om PSTN nummers en gebruiker@domein om SIP adressen te "
-"filteren"
+msgid "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
+msgstr "Gebruik %Nummer@% om PSTN nummers en gebruiker@domein om SIP adressen te filteren"
 
 #: /var/www/CDRTool/library/sip_settings.php:6949
 msgid "Please fill in the e-mail address. "
@@ -1317,9 +1265,8 @@ msgid "Transaction completed sucessfully. "
 msgstr "Transactie succesvol afgerond"
 
 #: /var/www/CDRTool/library/sip_settings.php:9587
-#, fuzzy
 msgid "Invalid CC Request"
-msgstr "Ongeldig verzoek"
+msgstr "Ongeldig CC verzoek"
 
 #: /etc/cdrtool/local/sip_settings.php:79
 msgid "Error inserting article"
@@ -1337,9 +1284,7 @@ msgstr "Credit Card"
 #: /etc/cdrtool/local/sip_settings.php:507
 #, php-format
 msgid "To add credit to your account go to <a href=%s>Payments</a> tab. "
-msgstr ""
-"Om tegoed toe te voegen op uw account met een Prepaid kaart kunt U naar de "
-"<a href=%s>Betalingen</a> tab gaan."
+msgstr "Om tegoed toe te voegen op uw account met een Prepaid kaart kunt U naar de <a href=%s>Betalingen</a> tab gaan."
 
 #: /etc/cdrtool/local/sip_settings.php:226
 #: /etc/cdrtool/local/sip_settings.php:389
@@ -1357,8 +1302,7 @@ msgstr "Voor help over de SIP2SIP service bezoek http://wiki.sip2sip.info"
 #: /etc/cdrtool/local/sip_settings.php:400
 #, php-format
 msgid "For help about SIP2SIP service visit <a href=%s target=sip2sip>%s</a>"
-msgstr ""
-"Voor help over de SIP2SIP service bezoek <a href=%s target=sip2sip>%s</a>"
+msgstr "Voor help over de SIP2SIP service bezoek <a href=%s target=sip2sip>%s</a>"
 
 #: /etc/cdrtool/local/sip_settings.php:247
 #: /etc/cdrtool/local/sip_settings.php:410
@@ -1374,19 +1318,14 @@ msgstr "Extra support wordt gegeven door een externe website."
 #: /etc/cdrtool/local/sip_settings.php:261
 #: /etc/cdrtool/local/sip_settings.php:424
 #, php-format
-msgid ""
-"Use your web browser and open a ticket at http://support.ag-projects.com"
-msgstr ""
-"Gebruik uw web browser en open een 'ticket' op http://support.ag-projects.com"
+msgid "Use your web browser and open a ticket at http://support.ag-projects.com"
+msgstr "Gebruik uw web browser en open een 'ticket' op http://support.ag-projects.com"
 
 #: /etc/cdrtool/local/sip_settings.php:263
 #: /etc/cdrtool/local/sip_settings.php:426
 #, php-format
-msgid ""
-"Use your web browser and open a ticket at <a href='%s' target=support>%s</a>"
-msgstr ""
-"Gebruik uw web browser en open een 'ticket' op <a href='%s' target=support>"
-"%s</a>"
+msgid "Use your web browser and open a ticket at <a href='%s' target=support>%s</a>"
+msgstr "Gebruik uw web browser en open een 'ticket' op <a href='%s' target=support>%s</a>"
 
 #: /etc/cdrtool/local/sip_settings.php:268
 #: /etc/cdrtool/local/sip_settings.php:431
@@ -1395,12 +1334,8 @@ msgstr "Gebruik de volgende gegevens om in te loggen op de support website:"
 
 #: /etc/cdrtool/local/sip_settings.php:489
 #, php-format
-msgid ""
-"Calling to PSTN numbers is possible at the costs set forth in the <a href="
-"%s>price list</a>. "
-msgstr ""
-"Bellen naar normale nummers is mogelijk met de kosten die staan in de <a "
-"href=%s>prijslijst</a>."
+msgid "Calling to PSTN numbers is possible at the costs set forth in the <a href=%s>price list</a>. "
+msgstr "Bellen naar normale nummers is mogelijk met de kosten die staan in de <a href=%s>prijslijst</a>."
 
 #: /etc/cdrtool/local/sip_settings.php:771
 #, fuzzy
@@ -1418,16 +1353,12 @@ msgstr "E-mail"
 
 #: /etc/cdrtool/local/sip_settings.php:1140
 msgid "Did you already get your SIP address? "
-msgstr ""
+msgstr "Heeft U al uw SIP adres?"
 
 #: /etc/cdrtool/local/sip_settings.php:1141
 #, fuzzy
-msgid ""
-"You may access your account <a href=https://mdns.sipthor.net/sip_settings."
-"phtml>here</a>. "
-msgstr ""
-" U kunt uw SIP account gegevens <a href=https://mdns.sipthor.net/"
-"sip_settings.phtml>hier</a>  bereiken. "
+msgid "You may access your account <a href=https://mdns.sipthor.net/sip_settings.phtml>here</a>. "
+msgstr " U kunt uw SIP account gegevens <a href=https://mdns.sipthor.net/sip_settings.phtml>hier</a>  bereiken. "
 
 #: /etc/cdrtool/local/sip_settings.php:1232
 msgid "My first name"
@@ -1476,7 +1407,7 @@ msgstr "Winkelwagen"
 
 #: /var/www/CDRTool/library/cc_processor.php:625
 msgid "VAT"
-msgstr ""
+msgstr "BTW"
 
 #: /var/www/CDRTool/library/cc_processor.php:636
 #: /var/www/CDRTool/library/cc_processor.php:647
@@ -1563,18 +1494,16 @@ msgid "correct the errors and re-submit. "
 msgstr "verbeter de fouten en probeer opnieuw"
 
 #: /var/www/CDRTool/library/cc_processor.php:882
-#, fuzzy
 msgid "Transaction failed"
-msgstr "Transactie Resultaten"
+msgstr "Transactie mislukt"
 
 #: /var/www/CDRTool/library/cc_processor.php:908
-#, fuzzy
 msgid "Missing transaction key"
-msgstr "Missende Tijdzone"
+msgstr "Missende transactie sleutel"
 
 #: /var/www/CDRTool/library/cc_processor.php:910
 msgid "Transaction already exists. Do not press the browser reload button."
-msgstr ""
+msgstr "De transactie bestaat al. Druk niet op de reload knop van uw browser"
 
 #~ msgid "First"
 #~ msgstr "Eerste"
