@@ -2481,8 +2481,10 @@ class SipAccounts extends Records {
                     	$_url .= sprintf("&username_filter=%s",urlencode($account->id->username));
                     }
 
+                    $_url.= sprintf("&key=%s",urlencode($account->id->username));
+
                     if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['username_filter'] == $account->id->username &&
+                        $_REQUEST['key'] == $account->id->username &&
                         $_REQUEST['domain_filter'] == $account->id->domain) {
                         $_url .= "&confirm=1";
                         $actionText = "<font color=red>Confirm</font>";
@@ -2667,7 +2669,7 @@ class SipAccounts extends Records {
         if ($dictionary['username']) {
             $username=$dictionary['username'];
         } else {
-            $username=$this->filters['username'];
+            $username=$_REQUEST['key'];
         }
 
         if ($dictionary['domain']) {
@@ -2687,7 +2689,7 @@ class SipAccounts extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteAccount',
                                             'parameters' => array($account),
-                                            'logs'       => array('success' => sprintf('SIP account %s@%s has been deleted',$this->filters['username'],$this->filters['domain'])
+                                            'logs'       => array('success' => sprintf('SIP account %s@%s has been deleted',$_REQUEST['key'],$this->filters['domain'])
                                                                   )
                                            )
 
