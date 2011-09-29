@@ -4160,7 +4160,7 @@ class SipSettings {
             }
 
             if ($this->soapEngines[$this->sip_engine]['call_limit']) {
-                if ($this->callLimit != $callLimit) {
+                if (isset($callLimit) && $this->callLimit != $callLimit) {
                     $result->callLimit=intval($callLimit);
                     $this->somethingChanged=1;
                 }
