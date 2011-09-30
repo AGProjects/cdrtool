@@ -171,7 +171,8 @@ class SipSettings {
     var $max_credit_per_day = 40;
     var $enrollment_configuration = "/etc/cdrtool/enrollment/config.ini";
     var $require_proof_of_identity = true;
-    var $anti_fraud_measures_may_by_changed_by = 'reseller'; #subscriber, reseller, admin
+    var $call_limit_may_by_changed_by = 'reseller'; #subscriber, reseller, admin
+    var $ip_access_list_may_by_changed_by = 'reseller'; #subscriber, reseller, admin
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
 
@@ -3388,7 +3389,7 @@ class SipSettings {
         $this->showQuickDial();
 
         $this->showMobileNumber();
-        $this->showAccessControl();
+        $this->showIPAccessList();
         $this->showCallLimit();
 
         print "
@@ -4140,8 +4141,8 @@ class SipSettings {
             $this->somethingChanged=1;
         }
 
-        if ($this->checkAntiFraudMeasuresChangePolicy()) {
-            if ($this->ip_access_list != $ip_access_list) {
+        if ($this->IPAccessListChangePolicy()) {
+            if (isset($ip_access_list) and $this->ip_access_list != $ip_access_list) {
                 $ip_access_list=preg_replace("/\s+/","\n", trim($ip_access_list));
                 $list=explode("\n", trim($ip_access_list));
                 $ip_access_list=array();
@@ -4158,7 +4159,9 @@ class SipSettings {
                 $result->acl=$ip_access_list;
                 $this->somethingChanged=1;
             }
+        }
 
+        if ($this->CallLimitChangePolicy()) {
             if ($this->soapEngines[$this->sip_engine]['call_limit']) {
                 if (isset($callLimit) && $this->callLimit != $callLimit) {
                     $result->callLimit=intval($callLimit);
@@ -5530,33 +5533,55 @@ class SipSettings {
         ",$this->Preferences['mobile_number'],_("International format starting with +"));
     }
 
-    function checkAntiFraudMeasuresChangePolicy() {
-        if ($this->login_type == 'subscriber' and $this->anti_fraud_measures_may_by_changed_by == 'reseller') {
+    function CallLimitChangePolicy() {
+        if ($this->login_type == 'subscriber' and $this->call_limit_may_by_changed_by == 'reseller') {
             return false;
         }
-        if ($this->login_type == 'subscriber' and $this->anti_fraud_measures_may_by_changed_by == 'customer') {
+        if ($this->login_type == 'subscriber' and $this->call_limit_may_by_changed_by == 'customer') {
             return false;
         }
-        if ($this->login_type == 'subscriber' and $this->anti_fraud_measures_may_by_changed_by == 'admin') {
+        if ($this->login_type == 'subscriber' and $this->call_limit_may_by_changed_by == 'admin') {
             return false;
         }
-        if ($this->login_type == 'customer' and $this->anti_fraud_measures_may_by_changed_by == 'reseller') {
+        if ($this->login_type == 'customer' and $this->call_limit_may_by_changed_by == 'reseller') {
             return false;
         }
-        if ($this->login_type == 'customer' and $this->anti_fraud_measures_may_by_changed_by == 'admin') {
+        if ($this->login_type == 'customer' and $this->call_limit_may_by_changed_by == 'admin') {
             return false;
         }
-        if ($this->login_type == 'reseller' and $this->anti_fraud_measures_may_by_changed_by == 'admin') {
+        if ($this->login_type == 'reseller' and $this->call_limit_may_by_changed_by == 'admin') {
             return false;
         }
         return true;
     }
 
-    function showAccessControl() {
+    function IPAccessListChangePolicy() {
+        if ($this->login_type == 'subscriber' and $this->ip_access_list_may_by_changed_by == 'reseller') {
+            return false;
+        }
+        if ($this->login_type == 'subscriber' and $this->ip_access_list_may_by_changed_by == 'customer') {
+            return false;
+        }
+        if ($this->login_type == 'subscriber' and $this->ip_access_list_may_by_changed_by == 'admin') {
+            return false;
+        }
+        if ($this->login_type == 'customer' and $this->ip_access_list_may_by_changed_by == 'reseller') {
+            return false;
+        }
+        if ($this->login_type == 'customer' and $this->ip_access_list_may_by_changed_by == 'admin') {
+            return false;
+        }
+        if ($this->login_type == 'reseller' and $this->ip_access_list_may_by_changed_by == 'admin') {
+            return false;
+        }
+        return true;
+    }
+
+    function showIPAccessList() {
         if (!$this->soapEngines[$this->sip_engine]['ip_access_list']) {
             return;
         }
-        if (!$this->checkAntiFraudMeasuresChangePolicy()) {
+        if (!$this->IPAccessListChangePolicy()) {
             print "
             <tr class=even>
               <td>";
@@ -5599,7 +5624,7 @@ class SipSettings {
             $limit_text_ro=$this->platform_call_limit;
         }
 
-        if (!$this->checkAntiFraudMeasuresChangePolicy()) {
+        if (!$this->CallLimitChangePolicy()) {
             print "
             <tr class=odd>
               <td>";
