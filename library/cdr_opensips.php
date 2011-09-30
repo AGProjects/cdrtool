@@ -3863,7 +3863,7 @@ class SIP_trace {
         <table cellpadding=2 cellspacing=0 border=0 width=100%>
         <tr bgcolor=lightgrey>
         <td></td>
-        <td align=center><b>Id</b></td>
+        <td align=center><b>Packet</b></td>
         <td align=center><b>Size</b></td>
         <td align=center><b>Time</b></td>
         ";
