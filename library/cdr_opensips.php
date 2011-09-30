@@ -1905,7 +1905,7 @@ class CDRS_opensips extends CDRS {
         if (strlen($this->DATASOURCES[$this->cdr_source]['enableThor'])) {
             $this->trusted_table          = "sip_trusted";
         } else {
-            $this->trusted_table          = "trusted";
+            $this->trusted_table          = "trusted_peers";
         }
 
         $query=sprintf("select * from %s",$this->trusted_table);
@@ -1918,8 +1918,8 @@ class CDRS_opensips extends CDRS {
         }
 
         while($this->AccountsDB->next_record()) {
-            if ($this->AccountsDB->f('src_ip')) {
-                $this->trustedPeers[$this->AccountsDB->f('src_ip')]=array('ip'     => $this->AccountsDB->f('src_ip'),
+            if ($this->AccountsDB->f('ip')) {
+                $this->trustedPeers[$this->AccountsDB->f('ip')]=array('ip'     => $this->AccountsDB->f('ip'),
                                                                           'reseller' => intval($this->AccountsDB->f('reseller_id'))
                                                                           );
             }
