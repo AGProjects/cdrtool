@@ -2237,6 +2237,15 @@ class SipAccounts extends Records {
 
     var $store_clear_text_passwords=true;
     var $default_account_type = 'postpaid';
+    var $group_filter_list = array('blocked'          => 'Blocked',
+                                   'quota'            => 'Quota Exceeded',
+                                   'prepaid'          => 'Prepaid',
+                                   'free-pstn'        => 'PSTN Access',
+                                   'anonymous'        => 'Anonymous',
+                                   'anonymous-reject' => 'Reject Anonymous',
+                                   'voicemail'        => 'Has Voicemail',
+                                   'missed-calls'     => 'Missed Calls'
+                                   );
 
     function SipAccounts($SoapEngine) {
         dprint("init SipAccounts");
@@ -2249,7 +2258,8 @@ class SipAccounts extends Records {
                                'email'    => trim($_REQUEST['email_filter']),
                                'owner'    => trim($_REQUEST['owner_filter']),
                                'customer' => trim($_REQUEST['customer_filter']),
-                               'reseller' => trim($_REQUEST['reseller_filter'])
+                               'reseller' => trim($_REQUEST['reseller_filter']),
+                               'group'    => trim($_REQUEST['group_filter'])
                               );
 
         $this->Records($SoapEngine);
@@ -2276,7 +2286,8 @@ class SipAccounts extends Records {
                       'email'    => $this->filters['email'],
                       'owner'    => intval($this->filters['owner']),
                       'customer' => intval($this->filters['customer']),
-                      'reseller' => intval($this->filters['reseller'])
+                      'reseller' => intval($this->filters['reseller']),
+                      'groups'   => array($this->filters['group'])
                       );
 
         // Range
@@ -2341,7 +2352,8 @@ class SipAccounts extends Records {
                       'email'    => $this->filters['email'],
                       'owner'    => intval($this->filters['owner']),
                       'customer' => intval($this->filters['customer']),
-                      'reseller' => intval($this->filters['reseller'])
+                      'reseller' => intval($this->filters['reseller']),
+                      'groups'   => array($this->filters['group'])
                       );
 
         // Range
@@ -2652,12 +2664,18 @@ class SipAccounts extends Records {
             printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
         }
 
-        if ($this->version > 1) {
-            printf (" FN<input type=text size=10 name=firstname_filter value='%s'>",$this->filters['firstname']);
-            printf (" LN<input type=text size=10 name=lastname_filter value='%s'>",$this->filters['lastname']);
-            printf (" Email<input type=text size=25 name=email_filter value='%s'>",$this->filters['email']);
-            printf (" Owner<input type=text size=7 name=owner_filter value='%s'>",$this->filters['owner']);
+        printf (" FN<input type=text size=10 name=firstname_filter value='%s'>",$this->filters['firstname']);
+        printf (" LN<input type=text size=10 name=lastname_filter value='%s'>",$this->filters['lastname']);
+        printf (" Email<input type=text size=25 name=email_filter value='%s'>",$this->filters['email']);
+        printf (" Owner<input type=text size=7 name=owner_filter value='%s'> ",$this->filters['owner']);
+
+        $selected_group[$this->filters['group']]='selected';
+        print _("Feature");
+        print "<select name=group_filter><option>";
+        foreach (array_keys($this->group_filter_list) as $key) {
+            printf("<option  value=%s %s>%s",$key,$selected_group[$key], $this->group_filter_list[$key]);
         }
+        print "</select>";
     }
 
     function deleteRecord($dictionary=array()) {
