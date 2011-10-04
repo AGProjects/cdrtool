@@ -867,7 +867,7 @@ class SipSettings {
         if ($this->soapEngines[$this->sip_engine]['ip_access_list']) {
             if (is_array($result->acl) and count($result->acl)) {
                 foreach (array_keys($result->acl) as $key) {
-                    $this->ip_access_list .= sprintf("%s/%s\n",$result->acl[$key]->ip, $result->acl[$key]->mask);
+                    $this->ip_access_list .= sprintf("%s/%s ",$result->acl[$key]->ip, $result->acl[$key]->mask);
                 }
                 $this->ip_access_list = trim($this->ip_access_list);
             } else  {
@@ -5601,7 +5601,7 @@ class SipSettings {
                 printf ("
               </td>
               <td align=left>
-                <textarea cols=60 rows=2 name=ip_access_list>%s</textarea>
+                <textarea cols=60 rows=1 name=ip_access_list>%s</textarea>
               </td>
             </tr>
             ",$this->ip_access_list);
