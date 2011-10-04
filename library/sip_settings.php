@@ -1121,7 +1121,7 @@ class SipSettings {
 
         $this->EntityProfiles=array();
 
-        $this->RatingPort->addHeader($this->SoapAuth);
+        $this->RatingPort->addHeader($this->SoapAuthRating);
         $entity="subscriber://".$this->username."@".$this->domain;
         $result     = $this->RatingPort->getEntityProfiles($entiry);
 
@@ -7546,7 +7546,7 @@ class SipSettings {
     function getBillingProfiles() {
         dprint("getBillingProfiles()");
         // Get getBillingProfiles
-        $this->RatingPort->addHeader($this->SoapAuth);
+        $this->RatingPort->addHeader($this->SoapAuthRating);
         $result     = $this->RatingPort->getEntityProfiles("subscriber://".$this->account);
 
         if (PEAR::isError($result)) {
@@ -7647,7 +7647,7 @@ class SipSettings {
             return true;
         }
 
-        $this->RatingPort->addHeader($this->SoapAuth);
+        $this->RatingPort->addHeader($this->SoapAuthRating);
         $result     = $this->RatingPort->getEntityProfiles("subscriber://".$this->account);
 
         if (PEAR::isError($result)) {
@@ -7672,7 +7672,7 @@ class SipSettings {
 
         //print_r($profiles);
 
-        $this->RatingPort->addHeader($this->SoapAuth);
+        $this->RatingPort->addHeader($this->SoapAuthRating);
         if ($this->billingProfiles->profileWeekday && !$profiles['profileWeekday']) {
             // delete profile
             $result     = $this->RatingPort->deleteEntityProfiles('subscriber://'.$this->account);
