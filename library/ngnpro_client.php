@@ -465,6 +465,10 @@ class SoapEngine {
                 $this->sip_settings_page=$this->soapEngines[$this->soapEngine]['sip_settings_page'];
             }
 
+            if (strlen($this->soapEngines[$this->soapEngine]['call_limit'])) {
+                $this->call_limit=$this->soapEngines[$this->soapEngine]['call_limit'];
+            }
+
             if (strlen($this->soapEngines[$this->soapEngine]['digest_settings_page'])) {
                 $this->digest_settings_page=$this->soapEngines[$this->soapEngine]['digest_settings_page'];
             }
@@ -2264,8 +2268,10 @@ class SipAccounts extends Records {
 
         $this->Records($SoapEngine);
 
-		if (strlen($this->SoapEngine->store_clear_text_passwords)) {
-        	$this->store_clear_text_passwords=$this->SoapEngine->store_clear_text_passwords;
+        if (strlen($this->SoapEngine->call_limit)) {
+            $this->platform_call_limit    = $this->SoapEngine->call_limit;
+        } else {
+            $this->platform_call_limit;
         }
 
 		$this->getTimezones();
@@ -2405,10 +2411,10 @@ class SipAccounts extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>Account</b></td>
-                <td><b>Full name</b></td>
-                <td><b>Email</b></td>
+                <td><b>Full Name</b></td>
+                <td><b>Email Address</b></td>
                 <td><b>Timezone</b></td>
-                <td><b>Features</b></td>
+                <td align=right><b>Call Limit</b></td>
                 <td align=right><b>Quota</b></td>
                 <td align=right><b>Balance</b></td>
                 <td><b>Owner</b></td>
@@ -2567,6 +2573,14 @@ class SipAccounts extends Records {
                         }          
                         $prepaid_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
 
+                        if ($account->callLimit) {
+                            $callLimit = $account->callLimit;
+                        } else if ($this->platform_call_limit) {
+                            $callLimit = $this->platform_call_limit;
+                        } else {
+                            $callLimit = '';
+                        }
+
                         printf("
                         <tr bgcolor=%s>
                         <td>%s</td>
@@ -2574,7 +2588,7 @@ class SipAccounts extends Records {
                         <td>%s %s</td>
                         <td><a href=mailto:%s>%s</a></td>
                         <td align=right>%s</td>
-                        <td>%s</td>
+                        <td align=right>%s</td>
                         <td align=right>%s</td>
                         <td align=right>%s</td>
                         <td>%s</td>
@@ -2590,7 +2604,7 @@ class SipAccounts extends Records {
                         $account->email,
                         $account->email,
                         $account->timezone,
-                        $groups,
+                        $callLimit,
                         $account->quota,
                         $_prepaid_balance[$prepaid_account],
                         $_owner_url,
@@ -8563,37 +8577,12 @@ class TrustedPeers extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
-                ";
-                if ($this->version > 3) {
-                	print "
-                    <td><b>Reseller</b></td>
-                    <td><b>IP address</b></td>
-                    <td><b>Protocol</b></td>
-                    <td><b>From pattern</b></td>
-                    <td><b>Description</b></td>
-                    <td><b>Change date</b></td>
-                    ";
-
-                } else if ($this->version > 1) {
-                	print "
-                    <td><b>Customer</b></td>
-                    <td><b>IP address</b></td>
-                    <td><b>Protocol</b></td>
-                    <td><b>From pattern</b></td>
-                    <td><b>Description</b></td>
-                    <td><b>Change date</b></td>
-                    ";
-                } else {
-                	print "
-                    <td><b>IP address</b></td>
-                    <td><b>Protocol</b></td>
-                    <td><b>From pattern</b></td>
-                    <td><b>Description</b></td>
-                    ";
-                }
-                print "<td><b>Actions</b></td>
-
-
+                <td><b>Reseller</b></td>
+                <td><b>IP address</b></td>
+                <td><b>Protocol</b></td>
+                <td><b>Description</b></td>
+                <td><b>Change date</b></td>
+                <td><b>Actions</b></td>
             </tr>
             ";
 
@@ -8639,90 +8628,33 @@ class TrustedPeers extends Records {
                         $actionText = "Delete";
                     }
 
-                    if ($this->version > 3) {
-                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                        urlencode($this->SoapEngine->customer_engine),
-                        urlencode($peer->reseller)
-                        );
-
-                        printf("
-                        <tr bgcolor=%s>
-                        <td>%s</td>
-                        <td><a href=%s>%s</a></td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td><a href=%s>%s</a></td>
-                        </tr>",
-                        $bgcolor,
-                        $index,
-                        $_customer_url,
-                        $peer->reseller,
-                        $peer->ip,
-                        $peer->protocol,
-                        $peer->fromPattern,
-                        $peer->description,
-                        $peer->changeDate,
-                        $_url,
-                        $actionText
-                        );
-
-                    } else if ($this->version > 1) {
-                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                        urlencode($this->SoapEngine->customer_engine),
-                        urlencode($peer->customer)
-                        );
-
-                        printf("
-                        <tr bgcolor=%s>
-                        <td>%s</td>
-                        <td><a href=%s>%s.%s</a></td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td><a href=%s>%s</a></td>
-                        </tr>",
-                        $bgcolor,
-                        $index,
-                        $_customer_url,
-                        $peer->reseller,
-                        $peer->customer,
-                        $peer->ip,
-                        $peer->protocol,
-                        $peer->fromPattern,
-                        $peer->description,
-                        $peer->changeDate,
-                        $_url,
-                        $actionText
-                        );
-                    } else {
-                        printf("
-                        <tr bgcolor=%s>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td><a href=%s>%s</a></td>
-                        </tr>",
-                        $bgcolor,
-                        $index,
-                        $peer->ip,
-                        $peer->protocol,
-                        $peer->fromPattern,
-                        $peer->description,
-                        $_url,
-                        $actionText
-                        );
-                    }
+                    $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
+                    urlencode($this->SoapEngine->customer_engine),
+                    urlencode($peer->reseller)
+                    );
 
                     printf("
-                    </tr>
-                    ");
+                    <tr bgcolor=%s>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
+                    </tr>",
+                    $bgcolor,
+                    $index,
+                    $_customer_url,
+                    $peer->reseller,
+                    $peer->ip,
+                    $peer->protocol,
+                    $peer->description,
+                    $peer->changeDate,
+                    $_url,
+                    $actionText
+                    );
+
                     $i++;
                 }
             }
