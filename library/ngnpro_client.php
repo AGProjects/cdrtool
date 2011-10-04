@@ -2684,8 +2684,7 @@ class SipAccounts extends Records {
         printf (" Owner<input type=text size=7 name=owner_filter value='%s'> ",$this->filters['owner']);
 
         $selected_group[$this->filters['group']]='selected';
-        print _("Feature");
-        print "<select name=group_filter><option>";
+        print "<select name=group_filter><option value=''>Feature...";
         foreach (array_keys($this->group_filter_list) as $key) {
             printf("<option  value=%s %s>%s",$key,$selected_group[$key], $this->group_filter_list[$key]);
         }
