@@ -25,6 +25,11 @@ if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
     $reseller    = $_REQUEST['reseller'];
     $customer    = $_REQUEST['customer'];
     $sip_engine  = $_REQUEST['sip_engine'];
+    if ($reseller && !$customer) {
+        $customer = $reseller;
+    } else if ($customer && !$reseller) {
+        $reseller =  $customer;
+    }
 
     $perm->check("provisioning");
 
@@ -50,6 +55,8 @@ if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
                             );
         } else if ($CDRTool['impersonate'] == '0' || $CDRTool['impersonate'] = '0.0') {
             $login_credentials=array(
+                            'customer'           => $customer,
+                            'reseller'           => $reseller,
                             'login_type'          => 'admin'
                             );
         } else {
