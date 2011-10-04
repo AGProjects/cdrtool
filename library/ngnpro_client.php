@@ -2511,13 +2511,13 @@ class SipAccounts extends Records {
                     }
 
                     if ($account->reseller) {
-                        $resellersip_settings_page=$account->reseller;
+                        $reseller_sip_settings_page=$account->reseller;
                     } else if ($this->SoapEngine->impersonate) {
                         // use the reseller from the soap engine
-                        $resellersip_settings_page=$this->SoapEngine->impersonate;
+                        $reseller_sip_settings_page=$this->SoapEngine->impersonate;
                     } else {
                         // use the reseller from the login
-                        $resellersip_settings_page=$this->reseller;
+                        $reseller_sip_settings_page=$this->reseller;
                     }
 
                     if ($this->sip_settings_page) {
@@ -2525,10 +2525,10 @@ class SipAccounts extends Records {
                         $this->sip_settings_page,$account->id->username,$account->id->domain,$this->SoapEngine->sip_engine);
 
                         if ($this->adminonly) {
-                        	$url  .= sprintf('&reseller=%s',$resellersip_settings_page);
+                        	$url  .= sprintf('&reseller=%s',$reseller_sip_settings_page);
                         	$url  .= sprintf('&adminonly=%s',$this->adminonly);
                         } else {
-                        	if ($account->reseller == $this->reseller) $url  .= sprintf('&reseller=%s',$resellersip_settings_page);
+                        	if ($account->reseller == $this->reseller) $url .= sprintf('&reseller=%s',$reseller_sip_settings_page);
                         }
 
                         foreach (array_keys($this->SoapEngine->extraFormElements) as $element) {
