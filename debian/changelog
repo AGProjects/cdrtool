@@ -1,3 +1,20 @@
+cdrtool (8.2.1) unstable; urgency=low
+
+  [ NGNPro client ]
+
+  * Requires NGNPro server 4.3.0
+  * Added search by group to SIP accounts port
+  * Added IP access list management per subscriber
+  * Adapted Trusted peers to changes in permissions module
+  * Fixed passing reseller and customer to soap credentials
+  * Use proper soap credentials when accessing rating port
+  * Show SIP account call limit instead of groups
+  * Fixed sip account wildcards in delete URL
+  * Updated translations
+  * Fixed saving PSTN max calls limit
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 05 Oct 2011 09:33:05 +0200
+
 cdrtool (8.2.0) unstable; urgency=low
 
   [ Rating Engine ]
