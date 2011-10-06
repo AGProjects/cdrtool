@@ -14656,13 +14656,12 @@ class DnsZonesActions extends Actions {
             if ($action=='delete') {
 
                 $function=array('commit'   => array('name'       => 'deleteZone',
-                                                    'parameters' => $key['name'],
+                                                    'parameters' => array($key['name']),
                                                     'logs'       => array('success' => sprintf('Zone %s has been deleted',$key['name'])
                                                                           )
                                                    )
         
                                 );
-    
                 $this->SoapEngine->execute($function,$this->html);
             } else if ($action  == 'changettl') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
