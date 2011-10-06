@@ -1575,60 +1575,6 @@ class Records {
         print "</pre>\n";
     }
 
-    function initRemoteReplicationEngine($reseller) {
-        if (!$reseller) return false;
-        if (!$this->remote_engine_name)  return false;
-
-        dprint_r($this->SoapEngine->login_credentials['reseller_filters'][$reseller]);
-
-        $remote_engine=$this->SoapEngine->login_credentials['reseller_filters'][$reseller][$this->remote_engine_name];
-
-        if (!strlen($remote_engine)) {
-        	return false;
-        }
-
-        if ($this->SoapEngine->soapEngine == $remote_engine) {
-        	return false;
-        }
-
-        if (!in_array($remote_engine,array_keys($this->SoapEngine->soapEngines))) {
-        	return false;
-        }
-
-        $this->SOAPloginRemote = array(
-                               "username"    => $this->SoapEngine->soapEngines[$remote_engine]['username'],
-                               "password"    => $this->SoapEngine->soapEngines[$remote_engine]['password'],
-                               "admin"       => true,
-                               "impersonate" => intval($reseller)
-                           );
-
-        $this->SOAPloginRemoteAdmin = array(
-                               "username"    => $this->SoapEngine->soapEngines[$remote_engine]['username'],
-                               "password"    => $this->SoapEngine->soapEngines[$remote_engine]['password'],
-                               "admin"       => true
-                           );
-
-        $this->SOAPurlRemote=$this->SoapEngine->soapEngines[$remote_engine]['url'];
-
-        $log=sprintf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
-        dprint($log);
-
-        $this->SoapAuthRemote  = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
-        $this->SoapAuthRemoteAdmin  = array('auth', $this->SOAPloginRemoteAdmin , 'urn:AGProjects:NGNPro', 0, '');
-
-        $this->SoapEngineRemote = new $this->SoapEngine->soap_class($this->SOAPurlRemote);
-
-        if (strlen($this->soapEngines[$remote_engine]['timeout'])) {
-            $this->SoapEngineRemote->_options['timeout'] = intval($this->soapEngines[$remote_engine]['timeout']);
-        } else {
-            $this->SoapEngineRemote->_options['timeout'] = $this->soapTimeout;
-        }
-
-        $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-        $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-
-        return true;
-    }
 }
 
 class SipDomains extends Records {
@@ -1901,10 +1847,7 @@ class SipDomains extends Records {
     }
 
     function showSeachFormCustom() {
-
-        if ($this->version > 1) {
-            printf (" SIP domain<input type=text size=20 name=domain_filter value='%s'>",$this->filters['domain']);
-        }
+        printf (" SIP domain<input type=text size=20 name=domain_filter value='%s'>",$this->filters['domain']);
     }
 
     function deleteRecord($dictionary=array()) {
@@ -3934,7 +3877,6 @@ class SipAliases extends Records {
 
 class EnumRanges extends Records {
     var $selectionActiveExceptions=array('tld');
-    var $remote_engine_name='enum_engine_remote';
 	var $record_generator='';
 
     // only admin can add prefixes below
@@ -3993,7 +3935,7 @@ class EnumRanges extends Records {
         }
 
         if ($this->login_credentials['reseller_filters'][$this->reseller]['record_generator']) {
-            printf ("Engine: %s",$this->SoapEngine->soapEngine);
+            //printf ("Engine: %s",$this->SoapEngine->soapEngine);
             if (is_array($this->login_credentials['reseller_filters'][$this->reseller]['record_generator'])) {
                 $_rg=$this->login_credentials['reseller_filters'][$this->reseller]['record_generator'];
                 if ($_rg[$this->SoapEngine->soapEngine]) {
@@ -4291,12 +4233,6 @@ class EnumRanges extends Records {
         $rangeId=array('prefix'=>$this->filters['prefix'],
                        'tld'=>$this->filters['tld']);
 
-        if ($this->adminonly) {
-			$this->initRemoteReplicationEngine($this->filters['reseller']);
-        } else {
-			$this->initRemoteReplicationEngine($this->reseller);
-        }
-
         $function=array('commit'   => array('name'       => 'deleteRange',
                                             'parameters' => array($rangeId),
                                             'logs'       => array('success' => sprintf('ENUM range +%s under %s has been deleted',$this->filters['prefix'],$this->filters['tld'])
@@ -4316,24 +4252,7 @@ class EnumRanges extends Records {
 
             return false;
         } else {
-            // delete remote if remote engine is set
-            if (is_object($this->SoapEngineRemote)) {
-                $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                $result = $this->SoapEngineRemote->deleteRange($rangeId);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                } else {
-					unset($this->selectionActive);
-                    return true;
-                }
-            } else {
-                return true;
-            }
+            return true;
         }
     }
 
@@ -4418,8 +4337,6 @@ class EnumRanges extends Records {
 
         list($customer,$reseller)=$this->customerFromLogin($dictionary);
 
-		$this->initRemoteReplicationEngine($reseller);
-
         if (!trim($_REQUEST['ttl'])) {
             $ttl=3600;
         } else {
@@ -4467,25 +4384,7 @@ class EnumRanges extends Records {
 
             return false;
         } else {
-
-            if (is_object($this->SoapEngineRemote)) {
-                $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                $result = $this->SoapEngineRemote->addRange($range);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-        			unset($this->filters);
-
-                    return false;
-                } else {
-                    return true;
-                }
-            } else {
-                return true;
-            }
+            return true;
         }
     }
 
@@ -4715,8 +4614,6 @@ class EnumRanges extends Records {
             return false;
         }
 
-		$this->initRemoteReplicationEngine($range->reseller);
-
         $range_old=$range;
 
         foreach (array_keys($this->Fields) as $item) {
@@ -4769,24 +4666,7 @@ class EnumRanges extends Records {
 
             return false;
         } else {
-
-            // update remote if remote engine is set
-            if (is_object($this->SoapEngineRemote)) {
-                $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                $result = $this->SoapEngineRemote->updateRange($range);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                } else {
-                    return true;
-                }
-            } else {
-                return true;
-            }
+            return true;
         }
 
     }
@@ -4838,8 +4718,6 @@ class EnumRanges extends Records {
 }
 
 class EnumMappings extends Records {
-    var $remote_engine_name='enum_engine_remote';
-
     var $default_ttl = 3600;
     var $default_priority = 5;
 
@@ -5528,12 +5406,6 @@ class EnumMappings extends Records {
                        'tld'    => $tld
                        );
 
-        if ($this->adminonly) {
-			$this->initRemoteReplicationEngine($this->filters['reseller']);
-        } else {
-			$this->initRemoteReplicationEngine($this->reseller);
-        }
-
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $result     = $this->SoapEngine->soapclient->getNumber($enum_id);
 
@@ -5572,24 +5444,7 @@ class EnumMappings extends Records {
         
                     return false;
                 } else {
-                    // update remote if remote engine is set
-                    if (is_object($this->SoapEngineRemote)) {
-                        $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                        $result = $this->SoapEngineRemote->updateNumber($result);
-        
-                        if (PEAR::isError($result)) {
-                            $error_msg  = $result->getMessage();
-                            $error_fault= $result->getFault();
-                            $error_code = $result->getCode();
-                            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngineRemote->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                            return false;
-                        } else {
-							unset($this->selectionActive);
-                            return true;
-                        }
-                    } else {
-                        return true;
-                    }
+                    return true;
                 }
 
             } else {
@@ -5608,25 +5463,7 @@ class EnumMappings extends Records {
         
                     return false;
                 } else {
-
-                    // update remote if remote engine is set
-                    if (is_object($this->SoapEngineRemote)) {
-                        $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                        $result = $this->SoapEngineRemote->deleteNumber($enum_id);
-        
-                        if (PEAR::isError($result)) {
-                            $error_msg  = $result->getMessage();
-                            $error_fault= $result->getFault();
-                            $error_code = $result->getCode();
-                            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngineRemote->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                            return false;
-                        } else {
-							unset($this->selectionActive);
-                            return true;
-                        }
-                    } else {
-                        return true;
-                    }
+                    return true;
                 }
             }
 
@@ -5846,8 +5683,6 @@ class EnumMappings extends Records {
             return false;
         }
 
-		$this->initRemoteReplicationEngine($reseller);
-
         if ($dictionary['ttl']) {
             $ttl = intval($dictionary['ttl']);
         } else {
@@ -5984,24 +5819,7 @@ class EnumMappings extends Records {
         
                     return false;
                 } else {
-
-                    // add remote if remote engine is set
-                    if (is_object($this->SoapEngineRemote)) {
-                        $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                        $result = $this->SoapEngineRemote->addNumber($result);
-        
-                        if (PEAR::isError($result)) {
-                            $error_msg  = $result->getMessage();
-                            $error_fault= $result->getFault();
-                            $error_code = $result->getCode();
-                            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngineRemote->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                            return false;
-                        } else {
-                            return true;
-                        }
-                    } else {
-                        return true;
-                    }
+                   return true;
                 }
 
             } else {
@@ -6048,24 +5866,7 @@ class EnumMappings extends Records {
     
                 return false;
             } else {
-
-                // add remote if remote engine is set
-                if (is_object($this->SoapEngineRemote)) {
-                    $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                    $result = $this->SoapEngineRemote->updateNumber($result);
-    
-                    if (PEAR::isError($result)) {
-                        $error_msg  = $result->getMessage();
-                        $error_fault= $result->getFault();
-                        $error_code = $result->getCode();
-                        printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngineRemote->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                        return false;
-                    } else {
-                        return true;
-                    }
-                } else {
-                    return true;
-                }
+                return true;
             }
 
         }
@@ -6291,8 +6092,6 @@ class EnumMappings extends Records {
             return false;
         }
 
-		$this->initRemoteReplicationEngine($number->reseller);
-
         $number_old=$number;
 
         $new_mappings=array();
@@ -6383,31 +6182,12 @@ class EnumMappings extends Records {
 
             return false;
         } else {
-
-            // update remote if remote engine is set
-            if (is_object($this->SoapEngineRemote)) {
-                $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                $result = $this->SoapEngineRemote->updateNumber($result);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngineRemote->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                } else {
-                    return true;
-                }
-            } else {
-                return true;
-            }
+            return true;
         }
     }
 }
 
 class DnsZones extends Records {
-    var $remote_engine_name='dns_engine_remote';
-
     var $FieldsAdminOnly=array(
                               'reseller'      => array('type'=>'integer',
                                                    'help' => 'Zone owner')
@@ -6458,43 +6238,6 @@ class DnsZones extends Records {
                                              'name'=>'Name servers',
                                              'help'=>'Authoritative name servers'
                                              );
-
-        if ($this->reseller) {
-        	dprint_r($this->SoapEngine->login_credentials['reseller_filters'][$this->reseller]);
-
-            $dns_engine_remote=$this->SoapEngine->login_credentials['reseller_filters'][$this->reseller]['dns_engine_remote'];
- 
-            if (strlen($dns_engine_remote) && $this->SoapEngine->soapEngine != $dns_engine_remote) {
-                // replicate change
- 
-                if (in_array($dns_engine_remote,array_keys($this->SoapEngine->soapEngines))) {
-                    $this->SOAPloginRemote = array(
-                                           "username"    => $this->SoapEngine->soapEngines[$dns_engine_remote]['username'],
-                                           "password"    => $this->SoapEngine->soapEngines[$dns_engine_remote]['password'],
-                                           "admin"       => true,
-                                           "impersonate" => intval($this->reseller)
-                                       );
-    
-                    $this->SOAPurlRemote=$this->SoapEngine->soapEngines[$dns_engine_remote]['url'];
-    
-                    $log=sprintf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
-                    dprint($log);
- 
-                    $this->SoapAuthRemote  = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
- 
-                    $this->SoapEngineRemote = new $this->SoapEngine->soap_class($this->SOAPurlRemote);
- 
-                    if (strlen($this->soapEngines[$dns_engine_remote]['timeout'])) {
-                        $this->SoapEngineRemote->_options['timeout'] = intval($this->soapEngines[$dns_engine_remote]['timeout']);
-                    } else {
-                        $this->SoapEngineRemote->_options['timeout'] = $this->soapTimeout;
-                    }
- 
-                    $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-                    $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-                }
-            }
-        }
 
     }
 
@@ -6704,12 +6447,6 @@ class DnsZones extends Records {
 
 		$name=$this->filters['name'];
 
-        if ($this->adminonly) {
-			$this->initRemoteReplicationEngine($this->filters['reseller']);
-        } else {
-			$this->initRemoteReplicationEngine($this->reseller);
-        }
-
         $function=array('commit'   => array('name'       => 'deleteZone',
                                             'parameters' => array($name),
                                             'logs'       => array('success' => sprintf('Dns zone %s has been deleted',$this->filters['name'])
@@ -6729,22 +6466,7 @@ class DnsZones extends Records {
 
             return false;
         } else {
-            if (is_object($this->SoapEngineRemote)) {
-                $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                $result = $this->SoapEngineRemote->deleteZone($name);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    return false;
-                } else {
-                    return true;
-                }
-            } else {
-                return true;
-            }
+            return true;
         }
 
     }
@@ -6803,8 +6525,6 @@ class DnsZones extends Records {
 
         list($customer,$reseller)=$this->customerFromLogin($dictionary);
 
-		$this->initRemoteReplicationEngine($reseller);
-
         if (!trim($_REQUEST['ttl'])) {
             $ttl=3600;
         } else {
@@ -6846,25 +6566,7 @@ class DnsZones extends Records {
 
             return false;
         } else {
-
-            if (is_object($this->SoapEngineRemote)) {
-                $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                $result = $this->SoapEngineRemote->addZone($zone);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-        			unset($this->filters);
-
-                    return false;
-                } else {
-                    return true;
-                }
-            } else {
-                return true;
-            }
+            return true;
         }
 
     }
@@ -7007,8 +6709,6 @@ class DnsZones extends Records {
             return false;
         }
 
-		$this->initRemoteReplicationEngine($zone->reseller);
-
         $zone_old=$zone;
 
         foreach (array_keys($this->Fields) as $item) {
@@ -7062,24 +6762,7 @@ class DnsZones extends Records {
 
             return false;
         } else {
-            if (is_object($this->SoapEngineRemote)) {
-                $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                $result = $this->SoapEngineRemote->updateZone($zone);
-    
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    unset($this->filters);
-    
-                    return false;
-                } else {
-                    return true;
-                }
-            } else {
-                return true;
-            }
+            return true;
         }
 
     }
@@ -7177,7 +6860,6 @@ class DnsZones extends Records {
 }
 
 class DnsRecords extends Records {
-    var $remote_engine_name  = 'dns_engine_remote';
 	var $max_zones_selection = 50;
 	var $typeFilter          = false;
     var $default_ttl         = 3600;
@@ -7756,12 +7438,6 @@ class DnsRecords extends Records {
             return false;
         }
 
-        if ($this->adminonly) {
-			$this->initRemoteReplicationEngine($this->filters['reseller']);
-        } else {
-			$this->initRemoteReplicationEngine($this->reseller);
-        }
-
         $function=array('commit'   => array('name'       => $this->deleteRecordFunction,
                                             'parameters' => array($id),
                                             'logs'       => array('success' => sprintf('Dns record %s has been deleted',$id)))
@@ -7781,20 +7457,7 @@ class DnsRecords extends Records {
 
             return false;
         } else {
-            if (is_object($this->SoapEngineRemote)) {
-                $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                $result = call_user_func_array(array($this->SoapEngineRemote,$this->deleteRecordFunction),array($id));
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    unset($this->filters);
-                }
-            } else {
-                return true;
-            }
+            return true;
         }
 
     }
@@ -8008,17 +7671,13 @@ class DnsRecords extends Records {
 
         if ($this->adminonly) {
             if ($dictionary['reseller']) {
-				$this->initRemoteReplicationEngine($dictionary['reseller']);
             } else if ($this->filters['reseller']) {
-				$this->initRemoteReplicationEngine($this->filters['reseller']);
             } else {
                 if ($this->html) {
                 	printf ("<p><font color=red>Error: Missing reseller, please first search zones for a given reseller </font>");
                 }
                 return false;
             }
-        } else {
-			$this->initRemoteReplicationEngine($this->reseller);
         }
 
         if ($dictionary['ttl']) {
@@ -8094,26 +7753,7 @@ class DnsRecords extends Records {
                 }
                 return false;
             } else {
-                if (is_object($this->SoapEngineRemote)) {
-                    $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-	                $result = call_user_func_array(array($this->SoapEngineRemote,$this->addRecordFunction),array($result));
-
-                    if (PEAR::isError($result)) {
-                        $error_msg  = $result->getMessage();
-                        $error_fault= $result->getFault();
-                        $error_code = $result->getCode();
-			        	if ($this->html) {
-            	            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                        }
-                        unset($this->filters);
-    
-                        return false;
-                    } else {
-                        return true;
-                    }
-                } else {
-                    return true;
-                }
+                return true;
             }
 
         } else if (in_array($type,array_keys($this->recordTypesTemplate))) {
@@ -8196,21 +7836,7 @@ class DnsRecords extends Records {
 
                     return false;
                 } else {
-                    if (is_object($this->SoapEngineRemote)) {
-                        $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-
-                        $result = call_user_func_array(array($this->SoapEngineRemote,$this->addRecordFunction),array($result));
-
-                        if (PEAR::isError($result)) {
-                            $error_msg  = $result->getMessage();
-                            $error_fault= $result->getFault();
-                            $error_code = $result->getCode();
-				        	if ($this->html) {
-                            	printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                            }
-                            unset($this->filters);
-                        }
-                    }
+                    return true;
                 }
             }
 
@@ -8412,8 +8038,6 @@ class DnsRecords extends Records {
             return false;
         }
 
-		$this->initRemoteReplicationEngine($record->reseller);
-
         $record_old=$record;
 
         foreach (array_keys($this->Fields) as $item) {
@@ -8442,25 +8066,7 @@ class DnsRecords extends Records {
 
             return false;
         } else {
-            if (is_object($this->SoapEngineRemote)) {
-                $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-
-                $result = call_user_func_array(array($this->SoapEngineRemote,$this->updateRecordFunction),array($result));
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    unset($this->filters);
-
-                    return false;
-                } else {
-                    return true;
-                }
-            } else {
-                return true;
-            }
+            return true;
         }
     }
 }
@@ -11502,52 +11108,6 @@ class Customers extends Records {
 
         $this->allProperties=array_merge($this->propertiesItems,$this->customer_properties);
 
-        if ($_REQUEST['action'] == 'Add' || $_REQUEST['action'] == 'Copy' ||
-            $_REQUEST['action'] == 'Delete' || $_REQUEST['action'] == 'Update') {
-
-            if ($this->reseller) {
-                $customer_engine_remote=$this->SoapEngine->login_credentials['reseller_filters'][$this->reseller]['customer_engine_remote'];
-
-                if (strlen($customer_engine_remote) && $this->SoapEngine->soapEngine != $customer_engine_remote) {
-                    // replicate change
-
-                    if (in_array($customer_engine_remote,array_keys($this->SoapEngine->soapEngines))) {
-                        $this->SOAPloginRemote = array(
-                                               "username"    => $this->SoapEngine->soapEngines[$customer_engine_remote]['username'],
-                                               "password"    => $this->SoapEngine->soapEngines[$customer_engine_remote]['password'],
-                                               "admin"       => true,
-                                               "impersonate" => intval($this->reseller)
-                                           );
-
-                        $this->SOAPloginRemoteAdmin = array(
-                                               "username"    => $this->SoapEngine->soapEngines[$customer_engine_remote]['username'],
-                                               "password"    => $this->SoapEngine->soapEngines[$customer_engine_remote]['password'],
-                                               "admin"       => true
-                                           );
-        
-                        //dprint_r($this->SOAPloginRemote);
-                        $this->SOAPurlRemote=$this->SoapEngine->soapEngines[$customer_engine_remote]['url'];
-        
-                        $log=sprintf ("and syncronize changes to <a href=%swsdl target=wsdl>%s</a>",$this->SOAPurlRemote,$this->SOAPurlRemote);
-                        dprint($log);
-    
-                        $this->SoapAuthRemote      = array('auth', $this->SOAPloginRemote , 'urn:AGProjects:NGNPro', 0, '');
-                        $this->SoapAuthRemoteAdmin = array('auth', $this->SOAPloginRemoteAdmin , 'urn:AGProjects:NGNPro', 0, '');
-    
-                        $this->SoapEngineRemote = new $this->SoapEngine->soap_class($this->SOAPurlRemote);
-
-                        if (strlen($this->soapEngines[$customer_engine_remote]['timeout'])) {
-                            $this->SoapEngineRemote->_options['timeout'] = intval($this->soapEngines[$customer_engine_remote]['timeout']);
-                        } else {
-                            $this->SoapEngineRemote->_options['timeout'] = $this->soapTimeout;
-                        }
-
-                        $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-                        $this->SoapEngineRemote->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-                    }
-                }
-            }
-        }
     }
 
     function showSeachForm() {
@@ -11857,21 +11417,6 @@ class Customers extends Records {
                         );
 
         if ($this->SoapEngine->execute($function,$this->html)) {
-            if (is_object($this->SoapEngineRemote)) {
-
-                $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                $result     = $this->SoapEngineRemote->deleteAccount(intval($this->filters['customer']));
-                
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    if ($error_fault->detail->exception->errorcode != 5000)  {
-                        printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    }
-                }
-            }
-
             unset($this->filters);
             return true;
 
@@ -12523,67 +12068,6 @@ class Customers extends Records {
         //dprint_r($customer);
 
         if ($this->SoapEngine->execute($function,$this->html,$this->adminonly)) {
-
-            // update remote
-            if (is_object($this->SoapEngineRemote)) {
-
-                if ($this->adminonly) {
-                	$this->SoapEngineRemote->addHeader($this->SoapAuthRemoteAdmin);
-                } else {
-                	$this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                }
-                $result     = $this->SoapEngineRemote->updateAccount($customer);
-
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-
-                    if ($error_fault->detail->exception->errorcode == 5000) {
-                        // try add the missing customer
-                        $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                        $result     = $this->SoapEngineRemote->addAccount($customer);
-
-                        if (PEAR::isError($result)) {
-                            $error_msg  = $result->getMessage();
-                            $error_fault= $result->getFault();
-                            $error_code = $result->getCode();
-                            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
-        		            // roll back local changes
-
-                            $function=array('commit'   => array('name'       => 'updateAccount',
-                                                                'parameters' => array($customer_old),
-                                                                'logs'       => array('success' => sprintf('Customer id %s has been rolled back',$customer->id))
-                                                                )
-                                            );
-                         
-                            $this->SoapEngine->execute($function,$this->html);
-                    		return false;
-
-                        } else {
-                    		return true;
-                        }
-
-                    } else {
-                    	// roll back local changes
-                        printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-    
-                        $function=array('commit'   => array('name'       => 'updateAccount',
-                                                            'parameters' => array($customer_old),
-                                                            'logs'       => array('success' => sprintf('Customer id %s has been rolled back',$customer->id))
-                                                            )
-                                        );
-                     
-                        $this->SoapEngine->execute($function,$this->html);
-                    	return false;
-                    }
-
-                } else {
-                    return true;
-                }
-            }
-
             $this->updateAfter($customer,$customer_old);
             return true;
         } else {
@@ -12706,33 +12190,6 @@ class Customers extends Records {
                             );
     
             if ($this->SoapEngine->execute($function,$this->html)) {
-                // update remote
-                if (is_object($this->SoapEngineRemote)) {
-                    if ($_id = $this->getCustomerId($customer_new->username)) {
-
-                        $customerRemote=$customer_new;
-                        $customerRemote->id = intval($_id);
-    
-                        $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                        $result     = $this->SoapEngineRemote->addAccount($customerRemote);
-
-                        if (PEAR::isError($result)) {
-                            $error_msg  = $result->getMessage();
-                            $error_fault= $result->getFault();
-                            $error_code = $result->getCode();
-                            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-    
-                            $function=array('commit'   => array('name'       => 'deleteAccount',
-                                                                'parameters' => array(intval($_id)),
-                                                                'logs'       => array('success' => sprintf('Customer id %s could not be copied ',$this->filters['customer'])))
-                                            );
-                    
-                            $this->SoapEngine->execute($function,$this->html);
-                            return false;
-                        }
-                    }
-                }
-
                 // Reset filters to find the copy
                 $this->filters=array();
                 $this->filters['username']=$customer_new->username;
@@ -13010,32 +12467,6 @@ class Customers extends Records {
                        );
 
         if ($result = $this->SoapEngine->execute($function,$this->html)) {
-            // update remote
-
-            if (is_object($this->SoapEngineRemote)) {
-                if ($_id = $this->getCustomerId($customer['username'])) {
-                    $customerRemote=$customer;
-                    $customerRemote['id'] = intval($_id);
-
-                    $this->SoapEngineRemote->addHeader($this->SoapAuthRemote);
-                    $result     = $this->SoapEngineRemote->addAccount($customerRemote);
-
-                    if (PEAR::isError($result)) {
-                        $error_msg  = $result->getMessage();
-                        $error_fault= $result->getFault();
-                        $error_code = $result->getCode();
-                        printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurlRemote,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
-                        $function=array('commit'   => array('name'       => 'deleteAccount',
-                                                            'parameters' => array(intval($_id)),
-                                                            'logs'       => array('success' => sprintf('Customer id %s could not be created ',$this->filters['customer'])))
-                                        );
-                
-                        $this->SoapEngine->execute($function,$this->html);
-                        return false;
-                    }
-                }
-            }
 
             // We have succesfully added customer entry
             $this->showAddForm=false;
@@ -15220,6 +14651,7 @@ class DnsZonesActions extends Actions {
         foreach($selectionKeys as $key) {
             flush();
             print "<li>";
+            //printf ("Performing action=%s on key=%s",$action,$key['name']);
 
             if ($action=='delete') {
 
