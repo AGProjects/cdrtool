@@ -13,8 +13,9 @@ cdrtool (8.2.1) unstable; urgency=low
   * Updated translations
   * Fixed saving PSTN max calls limit
   * Removed compatibility with NGNPro version 1
+  * Allow setting global show_barring_tab
 
- -- Adrian Georgescu <ag@ag-projects.com>  Sun, 09 Oct 2011 10:38:22 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 09 Oct 2011 10:55:27 +0200
 
 cdrtool (8.2.0) unstable; urgency=low
 

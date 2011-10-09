@@ -56,7 +56,7 @@ class SipSettings {
     var $check_privacy_access_number    = "*68";
     var $reject_anonymous_access_number = "*69";
 
-	var $show_barring_tab   = true;
+	var $show_barring_tab   = false;
 	var $show_presence_tab  = false;
     var $show_payments_tab  = false;
     var $show_tls_section   = false;
@@ -361,7 +361,7 @@ class SipSettings {
                           );
 
         if (in_array("free-pstn",$this->groups)) {
-            if ($this->Preferences['show_barring_tab']) {
+            if ($this->show_barring_tab || $this->Preferences['show_barring_tab']) {
             	$this->tabs['barring']=_("Barring");
             }
         }
@@ -3425,14 +3425,12 @@ class SipSettings {
             printf ("<input type=checkbox %s value=1 name='show_presence_tab'>%s\n",$check_show_presence_tab,_("Presence"));
         }
 
-        if (in_array("free-pstn",$this->groups)) {
-
+        if (in_array("free-pstn",$this->groups) && !$this->show_barring_tab) {
             if ($this->Preferences['show_barring_tab']){
                 $check_show_barring_tab="checked";
             } else {
                 $check_show_barring_tab="";
             }
-    
             printf ("<input type=checkbox %s value=1 name='show_barring_tab'>%s\n",$check_show_barring_tab,_("Barring"));
         }
 
