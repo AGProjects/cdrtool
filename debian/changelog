@@ -12,8 +12,9 @@ cdrtool (8.2.1) unstable; urgency=low
   * Fixed sip account wildcards in delete URL
   * Updated translations
   * Fixed saving PSTN max calls limit
+  * Removed compatibility with NGNPro version 1
 
- -- Adrian Georgescu <ag@ag-projects.com>  Wed, 05 Oct 2011 09:33:05 +0200
+ -- Adrian Georgescu <ag@ag-projects.com>  Sun, 09 Oct 2011 10:38:22 +0200
 
 cdrtool (8.2.0) unstable; urgency=low
 
