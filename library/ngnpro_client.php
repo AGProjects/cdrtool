@@ -2355,7 +2355,7 @@ class SipAccounts extends Records {
                 <td><b>Id</b></th>
                 <td><b>Account</b></td>
                 <td><b>Full Name</b></td>
-                <td><b>Email Address</b></td>
+                <td><b>Email address</b></td>
                 <td><b>Timezone</b></td>
                 <td align=right><b>Call Limit</b></td>
                 <td align=right><b>Quota</b></td>
@@ -2623,7 +2623,7 @@ class SipAccounts extends Records {
 
         printf (" FN<input type=text size=10 name=firstname_filter value='%s'>",$this->filters['firstname']);
         printf (" LN<input type=text size=10 name=lastname_filter value='%s'>",$this->filters['lastname']);
-        printf (" Email<input type=text size=25 name=email_filter value='%s'>",$this->filters['email']);
+        printf (" Email<input type=text size=15 name=email_filter value='%s'>",$this->filters['email']);
         printf (" Owner<input type=text size=7 name=owner_filter value='%s'> ",$this->filters['owner']);
 
         $selected_group[$this->filters['group']]='selected';
@@ -2708,7 +2708,7 @@ class SipAccounts extends Records {
             $_account=$this->getCustomerProperty('sip_accounts_last_username');
         }
 
-        printf ("User<input type=text size=15 name=account value='%s'>",$_account);
+        printf ("Account<input type=text size=15 name=account value='%s'>",$_account);
 
         if ($_REQUEST['domain']) {
             $_domain=$_REQUEST['domain'];
@@ -3332,7 +3332,7 @@ class SipAliases extends Records {
 
         // Range
         $range=array('start' => 0,
-                     'count' => 1000
+                     'count' => 500
                      );
 
         // Order
@@ -13737,7 +13737,7 @@ class Actions {
         </td>
         <td align=right>
         ";
-        print "
+        print " Maximum of 500 records
         </td>
         ";
 
