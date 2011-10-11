@@ -13058,7 +13058,6 @@ class recordGenerator extends SoapEngine {
 
 
     function generateRecords() {
-
         print "<p>";
         if (!$this->checkGenerateRequest()) {
             return false;
@@ -13143,14 +13142,6 @@ class recordGenerator extends SoapEngine {
 
                 $groups=array();
 
-                if ($this->template['pstn']) {
-                    $groups[]='free-pstn';
-                }
-
-                if ($this->template['prepaid']) {
-                    $groups[]='prepaid';
-                }
-
                 printf ('and sip account %s@%s ',$username,$this->template['domain']);
     
                 $sipAccount = array('account'  => $username.'@'.$this->template['domain'],
@@ -13158,7 +13149,8 @@ class recordGenerator extends SoapEngine {
                                     'prepaid'  => $this->template['prepaid'],
                                     'password' => $this->template['password'],
                                     'groups'   => $groups,
-                                    'owner'    => $this->template['owner']
+                                    'owner'    => $this->template['owner'],
+                                    'pstn'     => $this->template['pstn']
                                     );
 
                 if ($this->template['firstName']) {
