@@ -12623,7 +12623,7 @@ class recordGenerator extends SoapEngine {
     function showGeneratorForm() {
 
         print "
-        <form method=post target=_new>
+        <form method=post>
         <table cellspacing=1 cellpadding=1 bgcolor=black>
         <tr>
         <td>
