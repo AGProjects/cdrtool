@@ -12632,7 +12632,7 @@ class recordGenerator extends SoapEngine {
         <td>
         <font color=white>
         <b>";
-        print _("Record generator");
+        print _("ENUM number generator");
         print "</b>
         </font>
         </td>
