@@ -3858,7 +3858,7 @@ class EnumRanges extends Records {
                     }
 
                     if ($this->record_generator) {
-                        $generator_url=sprintf('<a href=%s&generatorId=%s&range=%s@%s&number_length=%s&reseller_filter=%s target=generator>G</a>',$this->url,$this->record_generator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
+                        $generator_url=sprintf('<a href=%s&generatorId=%s&range=%s@%s&number_length=%s&reseller_filter=%s target=generator>+Numbers</a>',$this->url,$this->record_generator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
                     } else {
                         $generator_url='';
                     }
@@ -3881,7 +3881,7 @@ class EnumRanges extends Records {
                     }
                     printf("
                     <tr bgcolor=%s>
-                    <td>%s %s</td>
+                    <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
                     <td>+%s</td>
                     <td>%s</td>
@@ -3894,11 +3894,10 @@ class EnumRanges extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td><a href=%s>%s</a></td>
+                    <td><a href=%s>%s</a> %s</td>
                     </tr>",
                     $bgcolor,
                     $index,
-                    $generator_url,
                     $_customer_url,
                     $range->customer,
                     $range->reseller,
@@ -3914,7 +3913,8 @@ class EnumRanges extends Records {
                     $bar,
                     $range->changeDate,
                     $_url,
-                    $actionText
+                    $actionText,
+                    $generator_url
                     );
                     $i++;
     
