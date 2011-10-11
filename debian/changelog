@@ -1,3 +1,14 @@
+cdrtool (8.2.2) unstable; urgency=low
+
+  [ NGNPro client ]
+
+  * Fixed setting pstn and prepaid for ENUM generator SIP accounts
+  * Change ENUM generator table title
+  * Open enum generator results in the same page
+  * Change html link to ENUM generator
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 11 Oct 2011 10:57:05 +0200
+
 cdrtool (8.2.1) unstable; urgency=low
 
   [ NGNPro client ]
