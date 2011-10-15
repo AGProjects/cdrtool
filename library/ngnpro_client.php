@@ -2252,7 +2252,7 @@ class SipAccounts extends Records {
                 <td><b>Full name</b></td>
                 <td><b>Email address</b></td>
                 <td><b>Timezone</b></td>
-                <td align=right><b>Call Limit</b></td>
+                <td align=right><b>Call limit</b></td>
                 <td align=right><b>Quota</b></td>
                 <td align=right><b>Balance</b></td>
                 <td><b>Owner</b></td>
@@ -2726,6 +2726,18 @@ class SipAccounts extends Records {
         	$groups=array();
         }
 
+        if (is_array($dictionary['ip_access_list'])) {
+            $ip_access_list=$dictionary['ip_access_list'];
+        } else {
+        	$ip_access_list=array();
+        }
+
+        if (strlen($dictionary['call_limit'])) {
+            $call_limit=$dictionary['call_limit'];
+        } else {
+            $call_limit=$_REQUEST['call_limit'];
+        }
+
         if($dictionary['pstn'] || $_REQUEST['pstn']) {
             $_pstn=1;
             $groups[]='free-pstn';
@@ -2858,9 +2870,13 @@ class SipAccounts extends Records {
                      'groups'     => $groups,
                      'prepaid'    => $prepaid,
                      'quota'      => $quota,
-                     'region'     => '',
+                     'acl'        => $ip_access_list,
                      'properties' => $properties
                      );
+
+        if (isset($call_limit)) {
+            $account['callLimit'] = intval($call_limit);
+        }
 
         //print_r($account);
         $deleteAccount=array('username' => $username,
@@ -12844,7 +12860,7 @@ class recordGenerator extends SoapEngine {
             print "
             <tr>
             <td>";
-            print _("PSTN");
+            print _("PSTN access");
             printf ("
             <td align=right><input type=checkbox name=pstn value=1 %s>
             </td>
@@ -12904,6 +12920,38 @@ class recordGenerator extends SoapEngine {
             </tr>
             ",$_REQUEST['password']);
 
+            if (isset($_REQUEST['call_limit'])) {
+                $call_limit=$_REQUEST['call_limit'];
+            } else {
+                $call_limit = $this->sipRecords->getCustomerProperty('call_limit');
+            }
+
+            print "
+            <tr>
+            <td>";
+            print _("PSTN call limit");
+            printf ("
+            <td align=right><input type=text size=10 name=call_limit value='%s'>
+            </td>
+            </tr>
+            ",$call_limit);
+
+            if (isset($_REQUEST['ip_access_list'])) {
+                $ip_access_list=$_REQUEST['ip_access_list'];
+            } else {
+                $ip_access_list = $this->sipRecords->getCustomerProperty('enum_generator_ip_access_list');
+            }
+
+            print "
+            <tr>
+            <td>";
+            print _("IP access list");
+            printf ("
+            <td align=right><input type=text size=40 name=ip_access_list value='%s'>
+            </td>
+            </tr>
+            ",$ip_access_list);
+
         }
 
         if ($_REQUEST['nr_records']) {
@@ -12960,6 +13008,21 @@ class recordGenerator extends SoapEngine {
     function checkGenerateRequest() {
         // check number of records
         $this->template['create_sip']=trim($_REQUEST['create_sip']);
+
+        $ip_access_list = preg_replace("/\s+/"," ", $_REQUEST['ip_access_list']);
+        if (strlen($ip_access_list) and !check_ip_access_list(trim($ip_access_list), true)) {
+            printf ("<font color=red>Error: IP access lists must be a space separated list of IP network/mask, example: 10.0.20.40/24</font>");
+            return false;
+        }
+
+        $this->template['ip_access_list'] = trim($ip_access_list);
+
+        if (strlen($_REQUEST['call_limit']) && !is_numeric($_REQUEST['call_limit'])) {
+            printf ("<font color=red>Error: PSTN call limit must be numeric</font>");
+            return false;
+        }
+
+        $this->template['call_limit']=$_REQUEST['call_limit'];
 
         $this->template['rpid_strip_digits']=intval($_REQUEST['rpid_strip_digits']);
 
@@ -13095,6 +13158,16 @@ class recordGenerator extends SoapEngine {
                         'category'   => 'web',
                         'value'      => strval($this->template['rpid_strip_digits']),
                         'permission' => 'customer'
+                       ),
+                  array('name'       => 'enum_generator_call_limit',
+                        'category'   => 'web',
+                        'value'      => strval($this->template['call_limit']),
+                        'permission' => 'customer'
+                       ),
+                  array('name'       => 'enum_generator_ip_access_list',
+                        'category'   => 'web',
+                        'value'      => strval($this->template['ip_access_list']),
+                        'permission' => 'customer'
                        )
                   );
 
@@ -13143,14 +13216,18 @@ class recordGenerator extends SoapEngine {
                 $groups=array();
 
                 printf ('and sip account %s@%s ',$username,$this->template['domain']);
+
+                $ip_access_list = check_ip_access_list($this->template['ip_access_list']);
     
-                $sipAccount = array('account'  => $username.'@'.$this->template['domain'],
-                                    'quota'    => $this->template['quota'],
-                                    'prepaid'  => $this->template['prepaid'],
-                                    'password' => $this->template['password'],
-                                    'groups'   => $groups,
-                                    'owner'    => $this->template['owner'],
-                                    'pstn'     => $this->template['pstn']
+                $sipAccount = array('account'        => $username.'@'.$this->template['domain'],
+                                    'quota'          => $this->template['quota'],
+                                    'prepaid'        => $this->template['prepaid'],
+                                    'password'       => $this->template['password'],
+                                    'groups'         => $groups,
+                                    'owner'          => $this->template['owner'],
+                                    'pstn'           => $this->template['pstn'],
+                                    'ip_access_list' => $ip_access_list,
+                                    'call_limit'     => $this->template['call_limit']
                                     );
 
                 if ($this->template['firstName']) {
@@ -14452,6 +14529,44 @@ class CustomersActions extends Actions {
         }
 
         print "</ol>";
+    }
+}
+
+function check_ip_access_list($acl_string, $check=false) {
+    $list=explode(" ",$acl_string);
+    $ip_access_list = array();
+
+    foreach ($list as $el) {
+        $els = explode("/",$el);
+        if (count($els) != 2) {
+            if ($check) {
+                return false;
+            } else {
+                continue;
+            }
+        }
+        list($ip,$mask) = $els;
+        if ($mask <0 or $mask > 32) {
+            if ($check) {
+                return false;
+            } else {
+                continue;
+            }
+        }
+        if (!preg_match("/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/",$ip)) {
+            if ($check) {
+                return false;
+            } else {
+                continue;
+            }
+        }
+        $ip_access_list[]=array('ip'=>$ip, 'mask'=>intval($mask));
+    }
+
+    if ($check) {
+        return true;
+    } else {
+        return $ip_access_list;
     }
 }
 
