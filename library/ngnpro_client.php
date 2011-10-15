@@ -2249,7 +2249,7 @@ class SipAccounts extends Records {
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
                 <td><b>Account</b></td>
-                <td><b>Full Name</b></td>
+                <td><b>Full name</b></td>
                 <td><b>Email address</b></td>
                 <td><b>Timezone</b></td>
                 <td align=right><b>Call Limit</b></td>

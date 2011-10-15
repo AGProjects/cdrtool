@@ -502,7 +502,7 @@ class CDRS_opensips extends CDRS {
                 array("label"=>"All calls","value"=>""),
                 array("label"=>"0 seconds","value"=>"zero"),
                 array("label"=>"non 0 seconds","value"=>"nonzero"),
-                array("label"=>"non 0 seconds withour price","value"=>"zeroprice"),
+                array("label"=>"non 0 seconds without price","value"=>"zeroprice"),
                 array("label"=>"less than 5 seconds","value"=>"< 5"),
                 array("label"=>"more than 5 seconds","value"=>"> 5"),
                 array("label"=>"less than 60 seconds","value"=>"< 60"),
