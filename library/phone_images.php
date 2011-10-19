@@ -38,7 +38,7 @@ $userAgentImages = array("Asterisk"       => "asterisk.png",
                          "CopperJet"	  => "copperjet16162p.png",
                          "Ekiga"	  => "ekiga.png",
                          "sofia-sip"      => "Nokia810.png",
-                         "sipsimple"      => "blink.png",
+                         "csipsimple"      => "csipsimple.png",
                          "blink"          => "blink.png",
                          "fring"          => "fring.png",
                          "ARRIS-TM722"    => "Arris_TM722b.png",
@@ -49,7 +49,8 @@ $userAgentImages = array("Asterisk"       => "asterisk.png",
                          "nimbuzz" => "nimbuzz.png",
                          "ipkall" => "ipkall.png",
                          "a580" => "G580.png",
-                         "teles" => "teles.png"
+                         "teles" => "teles.png",
+                         "N300" => "gigaset.png"
                          );
 
 ?>
