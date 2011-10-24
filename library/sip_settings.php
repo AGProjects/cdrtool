@@ -834,6 +834,10 @@ class SipSettings {
             $this->Preferences['language'] ='en';
         }
 
+        if ( $this->Preferences['blocked_by'] && !in_array("blocked",$result->groups)) {
+            $this->Preferences['blocked_by']='';
+        }
+
         $this->username       = $result->id->username;
         $this->domain         = $result->id->domain;
         $this->password       = $result->password;
