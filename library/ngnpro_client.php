@@ -12923,7 +12923,7 @@ class recordGenerator extends SoapEngine {
             if (isset($_REQUEST['call_limit'])) {
                 $call_limit=$_REQUEST['call_limit'];
             } else {
-                $call_limit = $this->sipRecords->getCustomerProperty('call_limit');
+                $call_limit = $this->sipRecords->getCustomerProperty('enum_generator_call_limit');
             }
 
             print "
