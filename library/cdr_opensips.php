@@ -1140,6 +1140,11 @@ class CDRS_opensips extends CDRS {
             $this->url.= sprintf("&MONTHYEAR=%s",urlencode($MONTHYEAR));
         }
 
+        if ($flow) {
+            $this->url.=sprintf("&flow=%s",urlencode($flow));
+            $where .=  " and $this->flowField = '$flow' ";
+        }
+
         if ($this->CDRTool['filter']['aNumber']) {
             // force user to see only CDRS with his a_numbers
             $where .= sprintf(" and ( %s = '%s' or %s = '%s') ",
@@ -1150,11 +1155,6 @@ class CDRS_opensips extends CDRS {
                              );
             $UserName_comp='equal';
             $UserName=$this->CDRTool['filter']['aNumber'];
-        }
-
-        if ($flow) {
-            $this->url.=sprintf("&flow=%s",urlencode($flow));
-            $where .=  " and $this->flowField = '$flow' ";
         }
 
         if ($UserName_comp == "empty") {
