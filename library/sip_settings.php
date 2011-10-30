@@ -9596,6 +9596,11 @@ class PaypalProcessor {
                                          'Enrollment Timezone'  => $timezone,
                                          'Transaction Location' => $transaction_location
                                          );
+
+                $result = $this->account->addInvoice($this->CardProcessor);
+                if ($result) {
+                    $extra_information['Invoice Page']=sprintf("https://admin.ag-projects.com/admin/invoice.phtml?iId=%d&adminonly=1",$result['invoice']);
+                }
                 
                 if ($this->CardProcessor->saveOrder($_POST,$pay_process_results,$extra_information)) {
 
@@ -9603,8 +9608,6 @@ class PaypalProcessor {
                                                      'id'      => $this->CardProcessor->transaction_data['TRANSACTION_ID']
                                                      );
 
-                    $this->account->addInvoice($this->CardProcessor);
-                    
                     return true;
                 
                 } else {
@@ -9612,7 +9615,6 @@ class PaypalProcessor {
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
-                
                 
             } else {
                 print _("Invalid CC Request");
