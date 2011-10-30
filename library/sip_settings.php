@@ -2464,7 +2464,7 @@ class SipSettings {
         print "
         <tr>
         <td colspan=2>";
-        printf (_("You may create new aliases under the same domain"));
+        printf (_("You may create new aliases for incoming calls"));
         printf ("
         </td>
         </tr>
