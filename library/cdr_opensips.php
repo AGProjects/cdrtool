@@ -1160,7 +1160,7 @@ class CDRS_opensips extends CDRS {
         if ($UserName_comp == "empty") {
             $where .= " and $this->usernameField = ''";
             $this->url.=sprintf("&UserName_comp=%s",urlencode($UserName_comp));
-        } else if (strlen($UserName)) {
+        } else if (strlen($UserName) && !$this->CDRTool['filter']['aNumber']) {
             if (!$UserName_comp) $UserName_comp='begin';
 
             if ($UserName_comp=="begin") {
@@ -1344,25 +1344,6 @@ class CDRS_opensips extends CDRS {
             $gateway=urldecode($gateway);
             $where .= " and $this->gatewayField = '".addslashes($gateway)."'";
             $this->url.=sprintf("&gateway=%s",urlencode($gateway));
-        }
-
-        if ($UserName_comp == "empty") {
-            $where .= " and $this->usernameField = ''";
-            $this->url.=sprintf("&UserName_comp=%s",urlencode($UserName_comp));
-        } else if (strlen($UserName)) {
-            if (!$UserName_comp) $UserName_comp='begin';
-
-            if ($UserName_comp=="begin") {
-                $where .= " and $this->usernameField like '".addslashes($UserName)."%'";
-            } elseif ($UserName_comp=="contain") {
-                $where .= " and $this->usernameField like '%".addslashes($UserName)."%'";
-            } elseif ($UserName_comp=="equal") {
-                $where .= " and $this->usernameField = '".addslashes($UserName)."'";
-            } else {
-                $where .= " and $this->usernameField = '' ";
-            }
-
-            $this->url.=sprintf("&UserName=%s&UserName_comp=%s",urlencode($UserName),$UserName_comp);
         }
 
         if ($duration) {
