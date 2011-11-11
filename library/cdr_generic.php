@@ -2050,7 +2050,12 @@ class CDR {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s='1' ",$this->CDRS->normalizedField);
+            }
+
+            if ($this->CDRS->BillingPartyIdField && $this->BillingPartyId) {
+                if ($updatedFields) $query .= ", ";
                 $updatedFields++;
+                $query.=sprintf(" %s = '%s' ",$this->CDRS->BillingPartyIdField,addslashes($this->BillingPartyId));
             }
 
             if (strlen($this->durationNormalized) && $this->durationNormalized != $this->duration) {
