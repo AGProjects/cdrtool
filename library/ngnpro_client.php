@@ -12566,6 +12566,8 @@ class recordGenerator extends SoapEngine {
     var $maxRecords   = 500;
     var $minimum_number_length = 4;
     var $maximum_number_length = 15;
+    var $default_ip_access_list = '';
+    var $default_call_limit = '';
 
     function recordGenerator($generatorId,$record_generators,$soapEngines,$login_credentials=array()) {
         $this->record_generators = $record_generators;
@@ -12598,6 +12600,13 @@ class recordGenerator extends SoapEngine {
                 $this->sipRecords    = new $_sip_class($this->SipSoapEngine);
 
                 $this->sipRecords->getAllowedDomains();
+                print_r($this->record_generators[$generatorId]['sip_engine']);
+                if ($this->soapEngines[$this->record_generators[$generatorId]['sip_engine']]['ip_access_list']){
+                    $this->default_ip_access_list = $this->soapEngines[$this->record_generators[$generatorId]['sip_engine']]['ip_access_list'];
+                }
+                if ($this->soapEngines[$this->record_generators[$generatorId]['sip_engine']]['call_limit']){
+                    $this->default_call_limit = $this->soapEngines[$this->record_generators[$generatorId]['sip_engine']]['call_limit'];
+                }
             }
         } else {
             printf ("<font color=red>Error: sip_engine %s does not exist</font>",$this->record_generators[$generatorId]['sip_engine']);
@@ -12926,6 +12935,10 @@ class recordGenerator extends SoapEngine {
                 $call_limit = $this->sipRecords->getCustomerProperty('enum_generator_call_limit');
             }
 
+            if (!strlen($call_limit) && strlen($this->default_call_limit)) {
+                $call_limit = $this->default_call_limit;
+            }
+
             print "
             <tr>
             <td>";
@@ -12942,6 +12955,9 @@ class recordGenerator extends SoapEngine {
                 $ip_access_list = $this->sipRecords->getCustomerProperty('enum_generator_ip_access_list');
             }
 
+            if (!$ip_access_list && $this->default_ip_access_list) {
+                $ip_access_list = $this->default_ip_access_list;
+            }
             print "
             <tr>
             <td>";
