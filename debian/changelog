@@ -1,3 +1,21 @@
+cdrtool (8.2.3) unstable; urgency=low
+
+  [ Rating Engine ]
+
+  * Save decoded value of radius username in database
+  * Fixed showing incoming calls when logged in as user account
+  * Added gigaset and csipsimple logos
+
+  [ NGNPro client ]
+
+  * Do not set preferences if the account is not really blocked
+  * Show invoice link in card purchase email notifications
+  * Fix selection by flow
+  * Improve description of aliases
+  * Use soap engine default values for call limit and ip access list
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Fri, 11 Nov 2011 10:34:27 +0100
+
 cdrtool (8.2.2) unstable; urgency=low
 
   [ NGNPro client ]
