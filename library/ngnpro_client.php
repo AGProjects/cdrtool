@@ -2357,7 +2357,7 @@ class SipAccounts extends Records {
 
                     if ($this->sip_settings_page) {
                         $url=sprintf('%s?account=%s@%s&sip_engine=%s',
-                        $this->sip_settings_page,$account->id->username,$account->id->domain,$this->SoapEngine->sip_engine);
+                        $this->sip_settings_page,urlencode($account->id->username),$account->id->domain,$this->SoapEngine->sip_engine);
 
                         if ($this->adminonly) {
                         	$url  .= sprintf('&reseller=%s',$reseller_sip_settings_page);
@@ -4681,7 +4681,7 @@ class EnumMappings extends Records {
 
                         if (preg_match("/^sip:(.*)$/",$_mapping->mapto,$m) && $this->sip_settings_page) {
                             $url=sprintf('%s?account=%s&reseller=%s&sip_engine=%s',
-                            $this->sip_settings_page,$m[1], $number->reseller,$sip_engine);
+                            $this->sip_settings_page,urlencode($m[1]), $number->reseller,$sip_engine);
     
                             if ($this->adminonly) $url  .= sprintf('&adminonly=%s',$this->adminonly);
     
