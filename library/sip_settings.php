@@ -8135,6 +8135,14 @@ class SipSettings {
 
 }
 
+function lookupGeoLocation($ip) {
+    if ($_loc=geoip_record_by_name($ip)) {
+        return $_loc;
+    } else {
+        return array();
+    }
+}
+
 function normalizeURI($uri) {
     $uri=quoted_printable_decode($uri);
     if (preg_match("/^(.*<sips?:.*)@(.*>)/",$uri,$m)) {
@@ -9068,14 +9076,27 @@ class Enrollment {
             	$timezone=$this->default_timezone;
             }
 
+            $location = lookupGeoLocation($_SERVER['REMOTE_ADDR']);
+
             $customer=array(
                          'firstName'  => $firstName,
                          'lastName'   => $lastName,
                          'timezone'   => $timezone,
                          'password'   => trim($_REQUEST['password']),
                          'email'      => trim($_REQUEST['email']),
+                         'country'    => $location['country_code'],
+                         'state'      => $location['region'],
+                         'city'       => $location['city'],
                          'properties' => $properties
                         );
+
+            if ($location['country_code'] == 'NL') {
+                $customer['tel'] = '+31999999999';
+            } else if ($location['country_code'] == 'US') {
+                $customer['tel'] = sprintf ("+1%s9999999",$location['area_code']);
+            } else {
+                $customer['tel'] = '+19999999999';
+            }
     
             $_customer_created=false;
 
