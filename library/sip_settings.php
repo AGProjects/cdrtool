@@ -8150,7 +8150,13 @@ function lookupGeoLocation($ip) {
 
 function get_region($country, $region) {
     if ($country == "US" || $country =="CA" ) {
-        $full_region=$region;
+        $full_region = $region;
+        // If region can't be found make it a default region to prevent NGNpro error
+        if ($full_region == '' && $country == "US") {
+            $full_region = "NY";
+        } else if ($full_region == '' && $country == "CA") {
+            $full_region = "QC";
+        }
     } else {
         $full_region='';
     }
