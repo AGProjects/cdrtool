@@ -8144,6 +8144,15 @@ function lookupGeoLocation($ip) {
     }
 }
 
+function get_region($country, $region) {
+    if ($country == "US" || $country =="CA" ) {
+        $full_region=$region;
+    } else {
+        $full_region='';
+    }
+    return $full_region; 
+}
+
 function get_time_zone($country, $region) {
       switch ($country) { 
     case "US":
@@ -11205,7 +11214,7 @@ class Enrollment {
             } else {
                 $customer['tel'] = '+19999999999';
             }
-    
+
             $_customer_created=false;
 
             $j=0;
