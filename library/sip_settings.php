@@ -8138,6 +8138,10 @@ class SipSettings {
 function lookupGeoLocation($ip) {
     if ($_loc=geoip_record_by_name($ip)) {
         $_loc['timezone'] = get_time_zone($_loc['country_code'], $_loc['region']);
+        $_loc['region'] = get_region($_loc['country_code'], $_loc['region']);
+        if ($_loc['country_code'] == "GB") {
+            $_loc['country_code'] = "UK";
+        }
         return $_loc;
     } else {
         return array();
