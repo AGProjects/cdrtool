@@ -8139,9 +8139,17 @@ function lookupGeoLocation($ip) {
     if ($_loc=geoip_record_by_name($ip)) {
         $_loc['timezone'] = get_time_zone($_loc['country_code'], $_loc['region']);
         $_loc['region'] = get_region($_loc['country_code'], $_loc['region']);
-        if ($_loc['country_code'] == "GB") {
-            $_loc['country_code'] = "UK";
+
+        $country_transition = array(
+            "A1" => "N/A",
+            "A2" => "N/A",
+            "O1" => "N/A",
+            "GB" => "UK");
+        
+        if (array_key_exists($_loc['country_code'],$country_transition)) {
+            $_loc['country_code'] = $country_transition[$_loc['country_code']];
         }
+
         return $_loc;
     } else {
         return array();
