@@ -1,3 +1,14 @@
+cdrtool (8.2.4) unstable; urgency=low
+
+  [ NGNPro client ]
+
+  * Fixed call limit in enum generator page
+  * Added timezone lookup
+  * Added geoip lookup to sip enrollment
+  * Urlencode link to settings page
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Wed, 04 Jan 2012 11:09:03 +0100
+
 cdrtool (8.2.3) unstable; urgency=low
 
   [ Rating Engine ]
