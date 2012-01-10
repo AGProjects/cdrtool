@@ -2935,15 +2935,31 @@ class MaxRate extends CSVWritter {
             $cdr['origin']      = '+31'.ltrim($CallerRPID,'0');
         } else {
             # normalize caller id numbers from PSTN gateway to +E.164
-            if (preg_match("/^0([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+            if (preg_match("/^\+?0([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
                 $cdr['origin'] = "+31".$m[1];
-            } else if (preg_match("/^00([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+            } else if (preg_match("/^\+?00([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
                 $cdr['origin'] = "+".$m[1];
+            } else if (preg_match("/^([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+                $cdr['origin'] = "+31".$m[1];
+            } else if (preg_match("/^\+0+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+                $cdr['origin'] = "+31123456789";
+            } else if (preg_match("/^(\+[1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+                $cdr['origin'] = $m[1];
+            } else if (preg_match("/^ims.imscore.net.*$/",$CDR->aNumberPrint,$m)) {
+                $cdr['origin'] = "+31123456789";
             } else if (preg_match("/^anonymous@(.*)$/",$CDR->aNumberPrint) && $CDR->SipRPID) {
-                if (preg_match("/^0([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
+                if (preg_match("/^\+?0([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
                     $cdr['origin'] = "+31".$m[1];
-                } else if (preg_match("/^00([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
+                } else if (preg_match("/^\+?00([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
                     $cdr['origin'] = "+".$m[1];
+                } else if (preg_match("/^([1-9][0-9]+)@(.*)$/",$CDR->SipRPID,$m)) {
+                    $cdr['origin'] = "+31".$m[1];
+                } else if (preg_match("/^(\+[1-9][0-9]+)@(.*)$/",$CDR->SipRPID,$m)) {
+                   $cdr['origin'] = $m[1];
+                } else if (preg_match("/^\+0+)@(.*)$/",$CDR->SipRPID,$m)) {
+                   $cdr['origin'] = "+31123456789";
+                } else if (preg_match("/^ims.imscore.net.*$/",$CDR->SipRPID,$m)) {
+                   $cdr['origin'] = "+31123456789";
                 } else {
                     $cdr['origin'] = $CDR->SipRPID;
                 }
