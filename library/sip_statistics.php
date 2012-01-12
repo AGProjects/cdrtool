@@ -378,8 +378,9 @@ class SipThorNetworkImage {
               } else if (strlen($this->node_statistics[$node_names[$j]]['online_accounts'])) {
                 if (!$this->display_options['hide_accounts']) {
               		$extra_text1=intval($this->node_statistics[$node_names[$j]][$this->accounts_item]). ' accounts';
+                } else {
+                    $extra_text1=$node_names[$j];
                 }
-
                	$extra_text2="";
               } else if (strlen($this->node_statistics[$node_names[$j]]['sessions'])) {
                 if (!$this->display_options['hide_sessions']) {
@@ -393,9 +394,9 @@ class SipThorNetworkImage {
                 imagestring ($img, 3, $cx+$px-70, $cy+$py-62, $extra_text1, $black);
                 imagestring ($img, 3, $cx+$px-70, $cy+$py-52, $extra_text2, $black);
               } else {
-                imagestring ($img, 3, $cx+$px-130, $cy+$py-30, $text, $black);
-                imagestring ($img, 3, $cx+$px-130, $cy+$py-20, $extra_text1, $black);
-                imagestring ($img, 3, $cx+$px-130, $cy+$py-10, $extra_text2, $black);
+                imagestring ($img, 3, $cx+$px-110, $cy+$py-30, $text, $black);
+                imagestring ($img, 3, $cx+$px-110, $cy+$py-20, $extra_text1, $black);
+                imagestring ($img, 3, $cx+$px-110, $cy+$py-10, $extra_text2, $black);
               }
               imagecopy ($img,$sip_thor_node_img, $cx+$px-$nw/2+7, $cy+$py-$nh/2+5, 0, 0, $nw-20, $nh-20);
               $j++;
