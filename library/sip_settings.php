@@ -2899,6 +2899,19 @@ class SipSettings {
         $_account['web_password']   = $this->Preferences['web_password'];
         $_account['email']          = $this->email;
         $_account['settings_url']   = $this->digest_settings_page;
+        $_account['xcap_root']      = $this->xcap_root;
+        $_account['outbound_proxy'] = $this->sip_proxy;
+
+        if ($this->enrollment_url) {
+            include($this->enrollment_configuration);
+            if (is_array($enrollment)) {
+                $_account['msrp_relay']        = $enrollment['msrp_relay'];
+                $_account['conference_server'] = $enrollment['conference_server'];
+                $_account['settings_url']      = $enrollment['settings_url'];
+                $_account['ldap_hostname']     = $enrollment['ldap_hostname'];
+                $_account['ldap_dn']           = $enrollment['ldap_dn'];
+            }
+        }
 
         print "<table border=0>";
 
@@ -11098,6 +11111,8 @@ class Enrollment {
         $this->xcap_root      = $this->enrollment['xcap_root'];
         $this->msrp_relay     = $this->enrollment['msrp_relay'];
         $this->settings_url   = $this->enrollment['settings_url'];
+        $this->ldap_hostname  = $this->enrollment['ldap_hostname'];
+        $this->ldap_dn        = $this->enrollment['ldap_dn'];
 
         if ($this->enrollment['sip_class']) {
         	$this->sipClass = $this->enrollment['sip_class'];
@@ -11414,7 +11429,12 @@ class Enrollment {
                           'sip_address'    => $sip_address,
                           'email'          => $result->email,
                           'passport'       => $passport,
-                          'settings_url'   => $this->settings_url
+                          'settings_url'   => $this->settings_url,
+                          'outbound_proxy' => $this->outbound_proxy,
+                          'xcap_root'      => $this->xcap_root,
+                          'msrp_relay'     => $this->msrp_relay,
+                          'ldap_hostname'  => $this->ldap_hostname,
+                          'ldap_dn'        => $this->ldap_dn
                           );
 
                           /*
@@ -11424,6 +11444,8 @@ class Enrollment {
                           'outbound_proxy' => $this->outbound_proxy,
                           'xcap_root'      => $this->xcap_root,
                           'msrp_relay'     => $this->msrp_relay,
+                          'ldap_hostname'  => $this->ldap_hostname,
+                          'ldap_dn'        => $this->ldap_dn
                           */
 
             print (json_encode($return));

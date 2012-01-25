@@ -7355,7 +7355,6 @@ class DnsRecords extends Records {
             }
 
         } else if (in_array($type,array_keys($this->recordTypesTemplate))) {
-
             foreach (array_values($this->recordTypesTemplate[$type]['records']) as $_records) {
                 $value_new='';
 
