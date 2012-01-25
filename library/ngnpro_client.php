@@ -6461,6 +6461,7 @@ class DnsRecords extends Records {
 	var $typeFilter          = false;
     var $default_ttl         = 3600;
     var $fancy               = false;
+    var $default_sip_proxy   = "proxy.sipthor.net";
 
     var $sortElements=array('changeDate' => 'Change date',
                             'type'       => 'Type',
