@@ -7433,8 +7433,6 @@ class DnsRecords extends Records {
                     }
 
                     return false;
-                } else {
-                    return true;
                 }
             }
 
@@ -7445,7 +7443,7 @@ class DnsRecords extends Records {
             }
             return false;
         }
-
+        return true;
     }
 
     function getRecordKeys() {
