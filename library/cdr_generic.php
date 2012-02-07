@@ -3003,7 +3003,7 @@ class MaxRate extends CSVWritter {
             $cdr['duration']    = $CDR->duration;
         }
 
-        $cdr['extra']=$CDR->callId;
+        $cdr['extra']="$CDR->callId $CDR->flow";
 
         if ($CDR->flow == 'on-net') {
             # RFP 4.2.1
