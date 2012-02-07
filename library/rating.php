@@ -6178,9 +6178,9 @@ class OpenSIPSQuota {
 
         // get account information
         if ($this->enableThor) {
-            $query=sprintf("select first_name,last_name,email from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+            $query=sprintf("select first_name,last_name,email,profile from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
         } else {
-            $query=sprintf("select first_name,last_name,email_address as email from subscriber where username = '%s' and domain = '%s'",$username,$domain);
+            $query=sprintf("select first_name,last_name,email_address as email,profile from subscriber where username = '%s' and domain = '%s'",$username,$domain);
         }
 
         if (!$this->AccountsDB->query($query)) {
@@ -6194,6 +6194,7 @@ class OpenSIPSQuota {
 
         $fullname = $this->AccountsDB->f('first_name')." ".$this->AccountsDB->f('last_name');
         $toEmail  = $this->AccountsDB->f('email');
+        $profile  = json_decode($this->AccountsDB->f('profile'),true);
 
         $providerName=$this->notificationAddresses[$domain]['providerName'];
 
@@ -6225,11 +6226,13 @@ class OpenSIPSQuota {
 
         $body=preg_replace("/__NAME__/",$fullname,$body);
         $body=preg_replace("/__ACCOUNT__/",$account,$body);
+        $body=preg_replace("/__CALLERID__/","$profile[rpid]",$body);
 
         if (!$subject) {
             $subject=sprintf("Monthly quota exceeded for account %s",$account);
         } else {
             $subject=preg_replace("/__ACCOUNT__/",$account,$subject);
+            $subject=preg_replace("/__CALLERID__/","$profile[rpid]",$subject);
         }
 
         if (!$toEmail || !$fromEmail) {
