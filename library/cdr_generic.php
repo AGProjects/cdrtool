@@ -1916,6 +1916,7 @@ class CDRS {
             return 1;
         }
     }
+
 }
 
 class CDRS_unknown extends CDRS {
@@ -2142,60 +2143,65 @@ class CDR {
                 $query.=sprintf(" %s = '%s' ",$this->CDRS->stopTimeField,addslashes($this->stopTimeNormalized));
             }
 
-            if ($this->CDRS->ratingEnabled && $this->DestinationId && ($this->duration || $this->application == 'message')) {
+            if ($this->CDRS->ratingEnabled && ($this->duration || $this->application == 'message')) {
 
-                  $Rate    = new Rate($this->CDRS->rating_settings, $this->CDRS->cdrtool);
-
-                if ($this->application == 'message') {
-                    $RateDictionary=array(
-                                          'callId'          => $this->callId,
-                                          'timestamp'       => $this->timestamp,
-                                          'duration'        => $this->duration,
-                                          'DestinationId'   => $this->DestinationId,
-                                          'BillingPartyId'  => $this->BillingPartyId,
-                                          'ResellerId'      => $this->ResellerId,
-                                          'domain'          => $this->domain,
-                                          'gateway'         => $this->gateway,
-                                          'RatingTables'    => $this->CDRS->RatingTables,
-                                          'aNumber'         => $this->aNumber,
-                                          'cNumber'         => $this->cNumber
-                                          );
+                if ($this->DestinationId) {
+                    $Rate    = new Rate($this->CDRS->rating_settings, $this->CDRS->cdrtool);
     
-
-                    $Rate->calculateMessage($RateDictionary);
+                    if ($this->application == 'message') {
+                        $RateDictionary=array(
+                                              'callId'          => $this->callId,
+                                              'timestamp'       => $this->timestamp,
+                                              'duration'        => $this->duration,
+                                              'DestinationId'   => $this->DestinationId,
+                                              'BillingPartyId'  => $this->BillingPartyId,
+                                              'ResellerId'      => $this->ResellerId,
+                                              'domain'          => $this->domain,
+                                              'gateway'         => $this->gateway,
+                                              'RatingTables'    => $this->CDRS->RatingTables,
+                                              'aNumber'         => $this->aNumber,
+                                              'cNumber'         => $this->cNumber
+                                              );
+        
+    
+                        $Rate->calculateMessage($RateDictionary);
+                    } else {
+                        $RateDictionary=array(
+                                              'callId'          => $this->callId,
+                                              'timestamp'       => $this->timestamp,
+                                              'duration'        => $this->duration,
+                                              'DestinationId'   => $this->DestinationId,
+                                              'inputTraffic'    => $this->inputTraffic,
+                                              'outputTraffic'   => $this->outputTraffic,
+                                              'BillingPartyId'  => $this->BillingPartyId,
+                                              'ResellerId'      => $this->ResellerId,
+                                              'domain'          => $this->domain,
+                                              'gateway'         => $this->gateway,
+                                              'RatingTables'    => $this->CDRS->RatingTables,
+                                              'aNumber'         => $this->aNumber,
+                                              'cNumber'         => $this->cNumber,
+                                              'ENUMtld'         => $this->ENUMtld
+                                              );
+        
+    
+                        $Rate->calculateAudio($RateDictionary);
+                    }
+    
+                    $this->pricePrint   = $Rate->pricePrint;
+                    $this->price        = $Rate->price;
+                    $this->rateInfo     = $Rate->rateInfo;
+                    $this->rateDuration = $Rate->duration;
+    
+                    if ($Rate->broken_rate) {
+                        $this->broken_rate=true;
+                    }
                 } else {
-                    $RateDictionary=array(
-                                          'callId'          => $this->callId,
-                                          'timestamp'       => $this->timestamp,
-                                          'duration'        => $this->duration,
-                                          'DestinationId'   => $this->DestinationId,
-                                          'inputTraffic'    => $this->inputTraffic,
-                                          'outputTraffic'   => $this->outputTraffic,
-                                          'BillingPartyId'  => $this->BillingPartyId,
-                                          'ResellerId'      => $this->ResellerId,
-                                          'domain'          => $this->domain,
-                                          'gateway'         => $this->gateway,
-                                          'RatingTables'    => $this->CDRS->RatingTables,
-                                          'aNumber'         => $this->aNumber,
-                                          'cNumber'         => $this->cNumber,
-                                          'ENUMtld'         => $this->ENUMtld
-                                          );
-    
-
-                    $Rate->calculateAudio($RateDictionary);
-                }
-
-                $this->pricePrint   = $Rate->pricePrint;
-                $this->price        = $Rate->price;
-                $this->rateInfo     = $Rate->rateInfo;
-                $this->rateDuration = $Rate->duration;
-
-                if ($Rate->broken_rate) {
-                    $this->broken_rate=true;
+                    $this->rateInfo='';
+                    $this->pricePrint='';
+                    $this->price='';
                 }
 
                 if ($this->CDRS->priceField) {
-
                     if ($updatedFields) $query .= ", ";
                     $updatedFields++;
                     $query.=sprintf(" %s = '%s' ",$this->CDRS->priceField,$this->pricePrint);

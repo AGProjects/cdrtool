@@ -8,6 +8,9 @@ class CDRS_opensips extends CDRS {
     var $sipTrace              = 'sip_trace';
     var $mediaTrace            = 'media_trace';
     var $missed_calls_group    = 'missed-calls';
+    var $rate_on_net_group     = 'rate-on-net';
+
+    var $callerid_cache        = array();
 
     var $CDRFields=array('id'              => 'RadAcctId',
                          'callId'          => 'AcctSessionId',
@@ -1926,8 +1929,8 @@ class CDRS_opensips extends CDRS {
 
         if ($this->enableThor) {
 
-            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
-    
+            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
+
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query 1 %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
                 syslog(LOG_NOTICE,$log);
@@ -1977,7 +1980,7 @@ class CDRS_opensips extends CDRS {
         list($username,$domain) = explode("@",$account);
 
         if ($this->enableThor) {
-            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
     
             if (!$this->AccountsDB->query($query)) {
 
@@ -2053,7 +2056,7 @@ class CDRS_opensips extends CDRS {
         if ($this->enableThor) {
             $query=sprintf("select * from sip_accounts");
             if (strlen($account)) {
-                $query.= sprintf (" where username = '%s' and domain = '%s' ",$username,$domain);
+                $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
             }
     
             if (!$this->AccountsDB->query($query)) {
@@ -2386,12 +2389,79 @@ class CDRS_opensips extends CDRS {
             }
         }
     }
+
+    function getCallerId($account) {
+        if (!$account) {
+            return NULL;
+        }
+
+        if ($this->callerid_cache[$account]) {
+            return $this->callerid_cache[$account];
+        }
+
+        list($username,$domain) = explode('@',$account);
+
+        if ($this->enableThor) {
+            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
+    
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return NULL;
+            }
+    
+            if ($this->AccountsDB->num_rows()) {
+                $this->AccountsDB->next_record();
+                $_profile=json_decode(trim($this->AccountsDB->f('profile')));
+                $this->callerid_cache[$account]=$_profile->rpid;
+                return $_profile->rpid;
+            }
+        } else {
+            $query=sprintf("select rpid from subscriber where username = '%s' and domain = '%s'",$username,$domain);
+
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return NULL;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+                $this->AccountsDB->next_record();
+                $rpid = $this->AccountsDB->f('rpid');
+                $this->callerid_cache[$account]=$rpid;
+                return $rpid;
+            }
+        }
+        return NULL;
+    }
+
+    function rate_on_net_enabled($username, $domain) {
+        if ($this->enableThor) {
+            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
+            if (!$this->AccountsDB->query($query)) {
+                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                syslog(LOG_NOTICE,$log);
+                return false;
+            }
+
+            if ($this->AccountsDB->num_rows()) {
+                while ($this->AccountsDB->next_record()) {
+                    $_profile=json_decode(trim($this->AccountsDB->f('profile')));
+                    if (in_array($this->rate_on_net_group,$_profile->groups)) {
+                       return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 }
 
 class CDR_opensips extends CDR {
 
-    var $show_in_icon=0;
-    var $show_out_icon=0;
+    var $show_in_icon  = 0;
+    var $show_out_icon = 0;
+    var $CalleeCallerId = NULL;
 
     function CDR_opensips($parent, $CDRfields) {
 
@@ -2476,20 +2546,20 @@ class CDR_opensips extends CDR {
 
         $this->ResellerId=0;
         // calculate reseller
-        $_els=explode("@",$this->BillingPartyId);
+        $_billing_party_els=explode("@",$this->BillingPartyId);
         if ($this->isBillingPartyLocal()) {
-            $this->ResellerId = $this->CDRS->localDomains[$_els[1]]['reseller'];
+            $this->ResellerId = $this->CDRS->localDomains[$_billing_party_els[1]]['reseller'];
         } else {
-            if (!strlen($_els[0])) $this->BillingPartyId=$_els[1];
-            if (count($_els)==2) {
-                if (!$this->domain) $this->domain=$_els[1];
-                if ($this->CDRS->localDomains[$_els[1]]['reseller']) {
-                    $this->ResellerId = $this->CDRS->localDomains[$_els[1]]['reseller'];
-                } else if ($this->CDRS->trustedPeers[$_els[1]]['reseller']) {
-                    $this->ResellerId = $this->CDRS->trustedPeers[$_els[1]]['reseller'];
+            if (!strlen($_billing_party_els[0])) $this->BillingPartyId=$_billing_party_els[1];
+            if (count($_billing_party_els)==2) {
+                if (!$this->domain) $this->domain=$_billing_party_els[1];
+                if ($this->CDRS->localDomains[$_billing_party_els[1]]['reseller']) {
+                    $this->ResellerId = $this->CDRS->localDomains[$_billing_party_els[1]]['reseller'];
+                } else if ($this->CDRS->trustedPeers[$_billing_party_els[1]]['reseller']) {
+                    $this->ResellerId = $this->CDRS->trustedPeers[$_billing_party_els[1]]['reseller'];
                 }
-            } else if (count($_els)==1) {
-                $this->ResellerId=$this->CDRS->trustedPeers[$_els[0]]['reseller'];
+            } else if (count($_billing_party_els)==1) {
+                $this->ResellerId=$this->CDRS->trustedPeers[$_billing_party_els[0]]['reseller'];
             }
         }
 
@@ -2519,8 +2589,6 @@ class CDR_opensips extends CDR {
         $this->domainNormalized=strtolower($this->domainNormalized);
 
         $this->RemoteAddressPrint=quoted_printable_decode($this->RemoteAddress);
-
-        $this->SipRPIDPrint=quoted_printable_decode($this->SipRPID);
 
         $_timestamp_stop=$this->timestamp+$this->duration;
 
@@ -2588,8 +2656,55 @@ class CDR_opensips extends CDR {
     
         }
 
-        if ($this->application=="presence") {
+        $this->isCalleeLocal();
+        $this->isCallerLocal();
 
+        if ($this->CallerIsLocal) {
+            if ($this->aNumberPrint == $this->BillingPartyId) {
+                // call is not diverted
+
+                if ($this->CalleeIsLocal) {
+                    $this->flow = 'on-net';
+                } else {
+                    $this->flow = 'outgoing';
+                }
+            } else {
+                // call is diverted
+                if ($this->CalleeIsLocal) {
+                    $this->flow = 'on-net-diverted-on-net';
+                } else {
+                    $this->flow = 'on-net-diverted-off-net';
+                }
+            }
+        } else {
+            if ($this->isBillingPartyLocal()) {
+                // call is diverted by local user
+                if ($this->CalleeIsLocal) {
+                    $this->flow = 'diverted-on-net';
+                } else {
+                    $this->flow = 'diverted-off-net';
+                }
+            } else if ($this->CalleeIsLocal) {
+                $this->flow = 'incoming';
+            } else {
+                // transit from trusted peer
+                $this->flow = 'transit';
+            }
+        }
+
+        if ($this->flow == 'on-net' &&
+            $this->application == 'audio' &&
+            $this->CDRS->rating_settings['rate_on_net_calls'] &&
+            $this->CDRS->rate_on_net_enabled($_billing_party_els[0], $_billing_party_els[1]) &&
+            !$this->DestinationId &&
+            $this->CalleeCallerId) {
+            $_dest = preg_replace("/^\+(\d+)$/","00$1", $this->CalleeCallerId);
+            $NormalizedNumber = $this->CDRS->NormalizeNumber($_dest,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld,$this->ResellerId);
+            $this->DestinationId = $NormalizedNumber['DestinationId'];
+            $this->destinationName = $NormalizedNumber['destinationName'];
+        }
+
+        if ($this->application == "presence") {
             $this->destinationPrint     = $this->cNumberUsername.$this->cNumberDelimiter.$this->cNumberDomain;
             $this->DestinationForRating = $this->cNumberNormalized;
 
@@ -2665,42 +2780,6 @@ class CDR_opensips extends CDR {
         $this->traceOut();
 
         $this->obfuscateCallerId();
-
-        $this->isCalleeLocal();
-        $this->isCallerLocal();
-
-        if ($this->CallerIsLocal) {
-            if ($this->aNumberPrint == $this->BillingPartyId) {
-                // call is not diverted
-
-                if ($this->CalleeIsLocal) {
-                    $this->flow = 'on-net';
-                } else {
-                    $this->flow = 'outgoing';
-                }
-            } else {
-                // call is diverted
-                if ($this->CalleeIsLocal) {
-                    $this->flow = 'on-net-diverted-on-net';
-                } else {
-                    $this->flow = 'on-net-diverted-off-net';
-                }
-            }
-        } else {
-            if ($this->isBillingPartyLocal()) {
-                // call is diverted by local user
-                if ($this->CalleeIsLocal) {
-                    $this->flow = 'diverted-on-net';
-                } else {
-                    $this->flow = 'diverted-off-net';
-                }
-            } else if ($this->CalleeIsLocal) {
-                $this->flow = 'incoming';
-            } else {
-                // transit from trusted peer
-                $this->flow = 'transit';
-            }
-        }
 
         if ($this->CDRS->rating) {
             global $perm;
@@ -2864,12 +2943,22 @@ class CDR_opensips extends CDR {
             ";
         }
 
-        if ($this->SipRPID && $this->SipRPID!='n/a') {
+        if ($this->SipRPID) {
             $this->cdr_details .= "
             <tr>
             <td></td>
             <td>Caller ID:  </td>
             <td>$this->SipRPIDPrint</td>
+            </tr>
+            ";
+        }
+
+        if ($this->CalleeCallerId) {
+            $this->cdr_details .= "
+            <tr>
+            <td></td>
+            <td>Called ID:  </td>
+            <td>$this->CalleeCallerId</td>
             </tr>
             ";
         }
@@ -3272,12 +3361,6 @@ class CDR_opensips extends CDR {
         }
     }
 
-    function isCallerLocal() {
-        if (in_array($this->aNumberDomain,array_keys($this->CDRS->localDomains))) {
-            $this->CallerIsLocal=true;
-        }
-    }
-
     function isBillingPartyLocal() {
         $els=explode("@",$this->BillingPartyId);
 
@@ -3288,9 +3371,19 @@ class CDR_opensips extends CDR {
         return false;
     }
 
+    function isCallerLocal() {
+        if (in_array($this->aNumberDomain,array_keys($this->CDRS->localDomains))) {
+            $this->CallerIsLocal=true;
+            $this->SipRPID = $this->CDRS->getCallerId($this->BillingPartyId);
+            $this->SipRPIDPrint = $this->SipRPID;
+            #$this->SipRPIDPrint = quoted_printable_decode($this->SipRPID);
+        }
+    }
+
     function isCalleeLocal() {
         if (in_array($this->CanonicalURIDomain,array_keys($this->CDRS->localDomains)) && !preg_match("/^0/",$this->CanonicalURIUsername)) {
             $this->CalleeIsLocal=true;
+            $this->CalleeCallerId=$this->CDRS->getCallerId($this->CanonicalURI);
         }
     }
 
@@ -3392,6 +3485,7 @@ class CDR_opensips extends CDR {
             $this->SourceIP='xxx.xxx.xxx.xxx';
         }
     }
+
 }
 
 class SIP_trace {

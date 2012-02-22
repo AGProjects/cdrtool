@@ -286,6 +286,14 @@ class SipSettings {
                                         "ResellerMaySeeIt"=>1
                                         );
 
+        $this->availableGroups['rate-on-net']  = array("Group"=>"rate-on-net",
+                                        "WEBName" =>sprintf(_("Rate on net")),
+                                        "SubscriberMayEditIt"=>0,
+                                        "SubscriberMaySeeIt"=>0,
+                                        "ResellerMayEditIt"=>1,
+                                        "ResellerMaySeeIt"=>1
+                                        );
+
         $this->availableGroups['deny-password-change']  = array("Group"=>"deny-password-change",
                                         "WEBName" =>sprintf(_("Deny password change")),
                                         "SubscriberMayEditIt"=>0,
