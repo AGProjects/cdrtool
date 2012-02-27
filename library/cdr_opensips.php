@@ -2692,7 +2692,7 @@ class CDR_opensips extends CDR {
             }
         }
 
-        if ($this->flow == 'on-net' &&
+        if (($this->flow == 'on-net' || $this->flow == 'diverted-on-net' || $this->flow == 'on-net-diverted-on-net') &&
             $this->application == 'audio' &&
             $this->CDRS->rating_settings['rate_on_net_calls'] &&
             $this->CDRS->rate_on_net_enabled($_billing_party_els[0], $_billing_party_els[1]) &&
