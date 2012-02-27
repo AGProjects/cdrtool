@@ -859,9 +859,7 @@ class Rate {
                         }
 
                     } else {
-                        if (!$this->rateValues) {
-                            $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->DestinationId);
-                        }
+                        $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->DestinationId);
                     }
                 }
             }
@@ -931,9 +929,7 @@ class Rate {
                         }
 
                     } else {
-                        if (!$this->rateValues) {
-                            $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->DestinationId);
-                        }
+                        $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->DestinationId);
                     }
                 }
             }
@@ -1102,9 +1098,7 @@ class Rate {
                         $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->DestinationId);
                     }
                 } else {
-                    if (!$this->rateValues) {
-                        $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->DestinationId);
-                    }
+                    $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->DestinationId);
                 }
             }
         }
@@ -1142,9 +1136,7 @@ class Rate {
                     }
 
                 } else {
-                    if (!$this->rateValues) {
-                        $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->DestinationId);
-                    }
+                    $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->DestinationId);
                 }
             }
         }
