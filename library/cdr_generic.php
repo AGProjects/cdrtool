@@ -1361,7 +1361,7 @@ class CDRS {
             $_destinations = $this->destinations[0][$gateway];
             $maxLength = $this->destinations_length[0][$gateway];
             $fCustomer="gateway=$gateway";
-        } else if ($this->destinations_length[0]['default']){
+        } else if ($this->destinations[0]['default']){
             $_destinations = $this->destinations[0]['default'];
             $maxLength = $this->destinations_length[0]['default'];
             $fCustomer="default";
