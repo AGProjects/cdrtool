@@ -2564,8 +2564,7 @@ class CDR_opensips extends CDR {
         }
 
         if (!strlen($this->ResellerId)) {
-            $log=sprintf("Error: cannot find reseller id for callid %s",$this->callId);
-            syslog(LOG_NOTICE,$log);
+            $this->ResellerId = 0;
         }
 
         $this->BillingPartyId=strtolower($this->BillingPartyId);
