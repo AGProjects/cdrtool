@@ -2494,6 +2494,10 @@ class CDR_opensips extends CDR {
             $this->cNumber        = quoted_printable_decode($this->cNumber);
         }
 
+        if ($this->SipRPID) {
+            $this->SipRPID        = quoted_printable_decode($this->SipRPID);
+        }
+        
         if (!$this->application && $this->SipMethod) {
             $_method=strtolower($this->SipMethod);
             if ($_method == 'message') {
