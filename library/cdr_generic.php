@@ -2949,10 +2949,6 @@ class MaxRate extends CSVWritter {
                 $cdr['origin'] = "+31".$m[1];
             } else if (preg_match("/^(\+[1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
                 $cdr['origin'] = $m[1];
-            } else if (preg_match("/^\+?0[0-9]?+@?(.*)?$/",$CDR->aNumberPrint,$m)) {
-                $cdr['origin'] = "+31123456789";
-            } else if (preg_match("/^ims.imscore.net.*$/",$CDR->aNumberPrint,$m)) {
-                $cdr['origin'] = "+31123456789";
             } else if (preg_match("/^anonymous@(.*)$/",$CDR->aNumberPrint) && $CDR->SipRPID) {
                 if (preg_match("/^\+?0([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
                     $cdr['origin'] = "+31".$m[1];
@@ -2970,7 +2966,8 @@ class MaxRate extends CSVWritter {
                     $cdr['origin'] = $CDR->SipRPID;
                 }
             } else {
-                $cdr['origin'] = $CDR->aNumberPrint;
+                $cdr['origin'] = "+31123456789";
+                //$cdr['origin'] = $CDR->aNumberPrint;
             }
         }
 
