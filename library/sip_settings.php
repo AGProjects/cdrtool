@@ -286,14 +286,6 @@ class SipSettings {
                                         "ResellerMaySeeIt"=>1
                                         );
 
-        $this->availableGroups['rate-on-net']  = array("Group"=>"rate-on-net",
-                                        "WEBName" =>sprintf(_("Rate on net")),
-                                        "SubscriberMayEditIt"=>0,
-                                        "SubscriberMaySeeIt"=>0,
-                                        "ResellerMayEditIt"=>1,
-                                        "ResellerMaySeeIt"=>1
-                                        );
-
         $this->availableGroups['deny-password-change']  = array("Group"=>"deny-password-change",
                                         "WEBName" =>sprintf(_("Deny password change")),
                                         "SubscriberMayEditIt"=>0,
@@ -301,16 +293,6 @@ class SipSettings {
                                         "ResellerMayEditIt"=>1,
                                         "ResellerMaySeeIt"=>1
                                         );
-
-        if ($this->require_proof_of_identity) {
-            $this->availableGroups['payments'] = array("Group"=>"payments",
-                                            "WEBName" =>sprintf(_("CC Payments")),
-                                            "SubscriberMayEditIt"=>0,
-                                            "SubscriberMaySeeIt"=>0,
-                                            "ResellerMayEditIt"=>1,
-                                            "ResellerMaySeeIt"=>1
-                                            );
-        }
 
         $this->getResellerSettings();
         $this->getCustomerSettings();
@@ -320,14 +302,6 @@ class SipSettings {
         } else {
             $_comment='';
         }
-        $this->availableGroups['anonymous']=array("Group"=>"anonymous",
-                                    "WEBName" =>sprintf (_("PSTN Privacy")),
-                                    "WEBComment"=>$_comment,
-                                    "SubscriberMaySeeIt"=>1,
-                                    "SubscriberMayEditIt"=>1,
-                                    "ResellerMayEditIt"=>1,
-                                    "ResellerMaySeeIt"=>1
-                                    );
         if ($this->change_privacy_access_number) {
             $_comment=sprintf(_("Dial %s to change"),$this->reject_anonymous_access_number);
         } else {
@@ -1528,18 +1502,44 @@ class SipSettings {
                                                     "ResellerMayEditIt"=>1,
                 				                    "ResellerMaySeeIt"=>1
                                                     );
-            }
-
-            if ($this->sms_access) {
-                $this->availableGroups['sms']  = array("Group"=>"sms",
-                                                "WEBName" =>sprintf(_("Mobile SMS")),
+                $this->availableGroups['anonymous']=array("Group"=>"anonymous",
+                                            "WEBName" =>sprintf (_("PSTN Privacy")),
+                                            "WEBComment"=>$_comment,
+                                            "SubscriberMaySeeIt"=>1,
+                                            "SubscriberMayEditIt"=>1,
+                                            "ResellerMayEditIt"=>1,
+                                            "ResellerMaySeeIt"=>1
+                                            );
+                $this->availableGroups['rate-on-net']  = array("Group"=>"rate-on-net",
+                                                "WEBName" =>sprintf(_("Rate on net")),
                                                 "SubscriberMayEditIt"=>0,
-                                                "SubscriberMaySeeIt"=>1,
-                                                "ResellerMayEditIt"=>0,
+                                                "SubscriberMaySeeIt"=>0,
+                                                "ResellerMayEditIt"=>1,
                                                 "ResellerMaySeeIt"=>1
                                                 );
+        
+                if ($this->sms_access) {
+                    $this->availableGroups['sms']  = array("Group"=>"sms",
+                                                    "WEBName" =>sprintf(_("Mobile SMS")),
+                                                    "SubscriberMayEditIt"=>0,
+                                                    "SubscriberMaySeeIt"=>1,
+                                                    "ResellerMayEditIt"=>0,
+                                                    "ResellerMaySeeIt"=>1
+                                                    );
+    
+                }
 
+                if ($this->require_proof_of_identity) {
+                    $this->availableGroups['payments'] = array("Group"=>"payments",
+                                                    "WEBName" =>sprintf(_("CC Payments")),
+                                                    "SubscriberMayEditIt"=>0,
+                                                    "SubscriberMaySeeIt"=>0,
+                                                    "ResellerMayEditIt"=>1,
+                                                    "ResellerMaySeeIt"=>1
+                                                    );
+                }
             }
+
             return true;
         }
 
@@ -2271,20 +2271,22 @@ class SipSettings {
             </tr>
             ";
 
-            print "
-            <tr class=even>
-            <td>";
-            print _("Mobile Number");
-            print "
-            </td>
-            <td colspan=2>
-            ";
-            printf("<input type=text size=15 name='mobile_number' value='%s'> %s",$_REQUEST['mobile_number'],_("International format starting with +"));
-    
-            print "
-            </td>
-            </tr>
-            ";
+            if (in_array("free-pstn",$this->groups)) {
+                print "
+                <tr class=even>
+                <td>";
+                print _("Mobile Number");
+                print "
+                </td>
+                <td colspan=2>
+                ";
+                printf("<input type=text size=15 name='mobile_number' value='%s'> %s",$_REQUEST['mobile_number'],_("International format starting with +"));
+        
+                print "
+                </td>
+                </tr>
+                ";
+            }
 
             print "
             <tr class=even>
@@ -3651,8 +3653,6 @@ class SipSettings {
 
     function showOwner() {
         //if ($this->login_type == 'subscriber') return true;
-
-        if ($this->pstn_changes_allowed) {
             print "
             <tr>
             <td>";
@@ -3665,20 +3665,6 @@ class SipSettings {
             </td>
             </tr>
             ";
-        } else {
-            print "
-            <tr>
-            <td>";
-            print _("Owner");
-            print "</td>
-            <td>
-            $this->owner
-            ";
-            print "
-            </td>
-            </tr>
-            ";
-        }
     }
 
     function showDevicesTab() {
@@ -3970,12 +3956,13 @@ class SipSettings {
                 $this->somethingChanged=1;
             }
 
-            $owner=intval($owner);
-            if ($owner != $this->owner) {
-                dprint ("change the owner");
-                $result->owner=$owner;
-                $this->somethingChanged=1;
-            }
+        }
+
+        $owner=intval($owner);
+        if ($owner != $this->owner) {
+            dprint ("change the owner");
+            $result->owner=$owner;
+            $this->somethingChanged=1;
         }
 
         if ($this->prepaid_changes_allowed) {
@@ -5543,17 +5530,20 @@ class SipSettings {
 
 
     function showMobileNumber() {
-        print "
-        <tr class=odd>
-          <td>";
-            print _("Mobile Number");
-            printf ("
-          </td>
-          <td align=left>
-            <input type=text size=15 maxsize=64 name=mobile_number value='%s'> %s
-          </td>
-        </tr>
-        ",$this->Preferences['mobile_number'],_("International format starting with +"));
+        if (in_array("free-pstn",$this->groups)) {
+            print "
+            <tr class=odd>
+              <td>";
+                print _("Mobile Number");
+                printf ("
+              </td>
+              <td align=left>
+                <input type=text size=15 maxsize=64 name=mobile_number value='%s'> %s
+              </td>
+            </tr>
+            ",$this->Preferences['mobile_number'],_("International format starting with +"));
+        }
+
     }
 
     function CallLimitChangePolicy() {
