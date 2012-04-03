@@ -689,7 +689,7 @@ class pageLayout {
 	$logo=$CDRTool['tld']."/images/CDRTool.png";
         print "<a href=http://cdrtool.ag-projects.com target=agprojects><img src=$logo border=0></a>";
         print "
-        <form action=\"$url\" method=post>
+        <form action=\"$url\" method=post name=login>
         <p>
         <table align=center cellspacing=0 cellpadding=2 width=400 border=5>
         <tr>
@@ -795,7 +795,8 @@ class pageLayout {
                 print "Please fill in your One Time Password!";
             }
         }
-        
+        print "<input type=\"hidden\" name=\"response\"  value=\"\">";
+        print "<input type=\"hidden\" name=\"challenge\" value=\"$challenge\">";
         print "
         </table>
         </form>
