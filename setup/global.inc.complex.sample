@@ -28,6 +28,7 @@ $CDRTool['provider']['fromEmail']               = "support@example.com";
 $CDRTool['provider']['toEmail']                 = "support@example.com";
 $CDRTool['provider']['sampleLoginSubscriber']   = "317100000@example.com";
 $CDRTool['provider']['sampleLoginDomain']       = "317100001@subdomain.example.com";
+$CDRTool['provider']['clear_text_passwords']     = "0";
 
 ###########################################
 # Where the rating engine listens for network requests:

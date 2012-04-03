@@ -216,8 +216,28 @@ class CDRTool_Auth extends Auth {
             $this->db->next_record();
             $uid   		        = $this->db->f("user_id");
             $perm  		        = $this->db->f("perms");
-            $pass  		        = $this->db->f("password");
-            $pass_md5  	        = md5($this->db->f("password"));
+            if ($CDRTool['provider']['clear_text_passwords']!=1) {
+
+                // Update hashed pass if none set and we need hashed ones 
+                if ( $this->db->f("password_hashed") == '' && $this->db->f("password") != '') {
+                    $newpassmd5=md5($this->db->f("password"));
+                    $this->db->query(sprintf(
+                        "UPDATE %s".
+                        " set password_hashed='%s', password=''".
+                        " where username='%s'",
+                        $this->database_table,
+                        addslashes($newpassmd5),
+                        addslashes($username)));
+                    $pass     =  $newpassmd5;
+                    $pass_md5 =  $newpassmd5;
+                } else {
+                    $pass  		        = $this->db->f("password_hashed");
+                    $pass_md5  	        = $this->db->f("password_hashed");
+                }
+            } else {
+                $pass  		        = $this->db->f("password");
+                $pass_md5  	        = md5($this->db->f("password"));
+            }
             $otp_passwd 	    = $this->db->f("otp_passwd");
             if (strlen($this->db->f('otp_passwd'))) {
             	$otp_passwd_md5	=md5($this->db->f('otp_passwd'));
@@ -338,6 +358,9 @@ class CDRTool_Auth extends Auth {
         
             ## True when JS is disabled
             if ($response == "") {
+                if ($CDRTool['provider']['clear_text_passwords']!= 1 ) {
+                    $password=md5($password);
+                }
                 if ($password == $pass || ($password == $otp_passwd && $timestamp_otp > $timestamp_now)) {
                     $this->auth["perm"] = $perm;
                     return $uid;

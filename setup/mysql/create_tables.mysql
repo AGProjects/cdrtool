@@ -101,6 +101,7 @@ CREATE TABLE `auth_user` (
   `user_id` varchar(32) NOT NULL default '',
   `username` varchar(32) NOT NULL default '',
   `password` varchar(32) NOT NULL default '',
+  `password_hashed` varchar(32) not null default '',
   `perms` varchar(255) default NULL,
   `expire` date NOT NULL default '0000-00-00',
   `organization` varchar(255) NOT NULL default '',

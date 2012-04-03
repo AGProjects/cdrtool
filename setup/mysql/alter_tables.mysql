@@ -702,3 +702,6 @@ INSERT INTO sip_status VALUES (476,'UnresolvableDestination','Client-Error','0')
 To setup SQL tables to support microsecond datetime accuracy see:
 setup/radius/OpenSIPS/now_usec.readme
 
+8.2.6
+alter table auth_user add password_hashed varchar(32) not null default '' after password;
+update auth_user set password_hashed=MD5(password),password='' where password!='';
