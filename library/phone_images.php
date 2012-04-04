@@ -52,7 +52,8 @@ $userAgentImages = array("Asterisk"       => "asterisk.png",
                          "ipkall" => "ipkall.png",
                          "a580" => "G580.png",
                          "teles" => "teles.png",
-                         "N300" => "gigaset.png"
+                         "N300" => "gigaset.png",
+                         "qutecom" => "qutecom.png"
                          );
 
 ?>
