@@ -692,15 +692,6 @@ class pageLayout {
           }
         
         </script>
-        <script language=JavaScript>
-        <!--
-          if (document.forms[0][0].value != '') {
-              document.forms[0][1].focus();
-          } else {
-              document.forms[0][0].focus();
-          }
-        // -->
-        </script>
         ";
         
         $url=$auth->url();
@@ -823,6 +814,15 @@ class pageLayout {
         print "
         </table>
         </form>
+        <script language=JavaScript>
+        <!--
+          if (document.login.username.value != '') {
+              document.login.password.focus();
+          } else {
+              document.login.username.focus();
+          }
+        // -->
+        </script>
         ";
     }
  
