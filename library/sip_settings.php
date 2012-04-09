@@ -3573,7 +3573,7 @@ class SipSettings {
         ";
 
         if ($this->voicemail['Account'] &&
-            ($this->login_type == 'admin' || $this->login_type == 'reseller')) {
+            ($this->login_type != 'subscriber')) {
             print " (";
             print _("Mailbox");
             printf (" %s) ",$this->voicemail['Account']);
@@ -3897,7 +3897,7 @@ class SipSettings {
             $this->voicemailOptionsHaveChanged=1;
         }
 
-        if ($this->login_type == "admin" || $this->login_type == "reseller") {
+        if ($this->login_type != "subscriber") {
             if ($first_name && $this->firstName != $first_name) {
                 $result->firstName = $first_name;
                 $this->firstName  = $first_name;
