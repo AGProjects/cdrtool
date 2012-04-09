@@ -3370,7 +3370,6 @@ class SipSettings {
                        $key,
                        _("Active"),
                        $selected_blocked_by['customer'],
-                       $selected_blocked_by['reseller'],
                        _("Blocked")
                        );
                    }
