@@ -248,7 +248,7 @@ class CreditCardProcessor {
         array("label"=>"Uganda","value"=>"UG"),
         array("label"=>"Ukraine","value"=>"UA"),
         array("label"=>"United Arab Emirates","value"=>"AE"),
-        array("label"=>"United Kingdom","value"=>"UK"),
+        array("label"=>"United Kingdom","value"=>"GB"),
         array("label"=>"United States","value"=>"US"),
         array("label"=>"Uruguay","value"=>"UY"),
         array("label"=>"Vanuatu","value"=>"VU"),
