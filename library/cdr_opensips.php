@@ -166,9 +166,9 @@ class CDRS_opensips extends CDRS {
         <td><b>Start Time</b></td>
         <td><b>Flow</b></td>
         <td><b>SIP Caller</b></td>
-        <td><b>Location</b></td>
+        <td><b>Caller Location</b></td>
         <td><b>Sip Proxy</b></td>
-        <td><b>Apps</b></td>
+        <td><b>Media</b></td>
         <td><b>SIP Destination</b></td>
         <td><b>Dur</b></td>
         <td><b>Price</b></td>
@@ -181,7 +181,7 @@ class CDRS_opensips extends CDRS {
     }
 
     function showExportHeader() {
-        print "id,StartTime,StopTime,BillingParty,BillingDomain,PSTNCallerId,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,Application\n";
+        print "id,StartTime,StopTime,BillingParty,BillingDomain,PSTNCallerId,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,Media\n";
     }
 
     function showTableHeaderSubscriber($begin_datetime,$end_datetime) {
@@ -201,7 +201,7 @@ class CDRS_opensips extends CDRS {
             <td>Id</td>
             <td><b>Start Time</b>
             <td><b>SIP Caller</b></td>
-            <td><b>Location</b></td>
+            <td><b>Caller Location</b></td>
             <td><b>Sip Proxy</b></td>
             <td><b>SIP Destination</b></td>
             <td><b>Duration</b></td>
