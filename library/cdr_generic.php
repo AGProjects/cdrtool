@@ -2209,7 +2209,7 @@ class CDR {
                     if ($this->CDRS->rateField ) {
                         if ($updatedFields) $query .= ", ";
                         $updatedFields++;
-                        $query.=sprintf(" %s = '%s' ",$this->CDRS->rateField,$this->rateInfo);
+                        $query.=sprintf(" %s = '%s' ",$this->CDRS->rateField,addslashes($this->rateInfo));
                     }
                 }
             }

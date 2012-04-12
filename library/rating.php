@@ -1325,15 +1325,15 @@ class Rate {
             }
             $query=sprintf("select * from %s where destination = '%s' and application = 'audio'",
             $table,
-            $DestinationId
+            addslashes($DestinationId)
             );
 
         } else {
             $table="billing_rates";
             $query=sprintf("select * from %s where name = '%s' and destination = '%s' and application = 'audio'",
             $table,
-            $rateName,
-            $DestinationId
+            addslashes($rateName),
+            addslashes($DestinationId)
             );
         }
 
@@ -1348,8 +1348,8 @@ class Rate {
             // try the main table
             // lookup rate from MySQL
             $query=sprintf("select * from billing_rates where name = '%s' and destination = '%s' and application = 'audio'",
-            $rateName,
-            $DestinationId
+            addslashes($rateName),
+            addslashes($DestinationId)
             );
 
             if (!$this->db->query($query)) {
@@ -1390,15 +1390,15 @@ class Rate {
             }
             $query=sprintf("select * from %s where (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
             $table,
-            $DestinationId
+            addslashes($DestinationId)
             );
 
         } else {
             $table="billing_rates";
             $query=sprintf("select * from %s where name = '%s' and (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
             $table,
-            $rateName,
-            $DestinationId
+            addslashes($rateName),
+            addslashes($DestinationId)
             );
         }
 
@@ -1413,8 +1413,8 @@ class Rate {
             // try the main table
             // lookup rate from MySQL
             $query=sprintf("select * from billing_rates where name = '%s' and (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
-            $rateName,
-            $DestinationId
+            addslashes($rateName),
+            addslashes($DestinationId)
             );
 
             if (!$this->db->query($query)) {
