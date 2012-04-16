@@ -7306,6 +7306,8 @@ class RatingEngine {
                 $NetFields['duration']=$this->settings['MaxSessionTime'];
             }
 
+            list($username_t,$domain_t)=explode("@",$NetFields['from']);
+
             $CDRStructure=array (
                               $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
                               $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
@@ -7313,6 +7315,7 @@ class RatingEngine {
                               $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
                               $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
                               $this->CDRS->CDRFields['timestamp']      => time(),
+                              $this->CDRS->CDRFields['domain']         => $domain_t,
                               'skip_fix_prepaid_duration'              => true
                               );
 
@@ -7658,6 +7661,8 @@ class RatingEngine {
             }
 
             $timestamp=time();
+            
+            list($username_t,$domain_t)=explode("@",$NetFields['from']);
 
             $CDRStructure=array (
                               $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
@@ -7667,6 +7672,7 @@ class RatingEngine {
                               $this->CDRS->CDRFields['ENUMtld']        => $NetFields['enumtld'],
                               $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
                               $this->CDRS->CDRFields['timestamp']      => time(),
+                              $this->CDRS->CDRFields['domain']         => $domain_t,
                               'skip_fix_prepaid_duration'              => true
                               );
 
@@ -7845,6 +7851,8 @@ class RatingEngine {
                 return $log;
             }
 
+            list($username_t,$domain_t)=explode("@",$NetFields['from']);
+
             $CDRStructure=array (
                               $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
                               $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
@@ -7853,6 +7861,7 @@ class RatingEngine {
                               $this->CDRS->CDRFields['ENUMtld']        => $NetFields['enumtld'],
                               $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
                               $this->CDRS->CDRFields['timestamp']      => time(),
+                              $this->CDRS->CDRFields['domain']         => $domain_t,
                               'skip_fix_prepaid_duration'              => true
                               );
 
