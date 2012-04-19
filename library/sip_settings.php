@@ -11051,6 +11051,10 @@ class Enrollment {
     var $timezones                  = array();
     var $default_timezone           = 'Europe/Amsterdam';
     var $configuration_file         = '/etc/cdrtool/enrollment/config.ini';
+    var $allow_pstn                 = 1;
+    var $quota                      = 50;
+    var $prepaid                    = 1;
+    var $create_certificate         = 1;
 
     function Enrollment() {
 
@@ -11334,9 +11338,9 @@ class Enrollment {
                             'email'     => $_REQUEST['email'],
                             'password'  => $_REQUEST['password'],
                             'timezone'  => $timezone,
-                            'prepaid'   => 1,
-                            'pstn'      => 1,
-                            'quota'     => 50,
+                            'prepaid'   => $this->prepaid,
+                            'pstn'      => $this->allow_pstn,
+                            'quota'     => $this->quota,
                             'owner'     => intval($owner),
                             'groups'    => $this->groups,
                             'properties'=> $sip_properties
@@ -11380,17 +11384,19 @@ class Enrollment {
         } else {
             $sip_address=$result->id->username.'@'.$result->id->domain;
 
-        	if (!$passport = $this->generateCertificate($sip_address,$_REQUEST['email'],$_REQUEST['password'])) {
-                $return=array('success'       => false,
-                              'error'         => 'internal_error',
-                              'error_message' => 'failed to generate certificate'
-                              );
-                print (json_encode($return));
-                return false;
+            if ($this->create_certificate) {
+                if (!$passport = $this->generateCertificate($sip_address,$_REQUEST['email'],$_REQUEST['password'])) {
+                    $return=array('success'       => false,
+                                  'error'         => 'internal_error',
+                                  'error_message' => 'failed to generate certificate'
+                                  );
+                    print (json_encode($return));
+                    return false;
+                }
             }
-
-            // Generic code for all sip settings pages
-
+    
+                // Generic code for all sip settings pages
+    
             if ($this->create_voicemail || $this->send_email_notification) {
                 if ($SipSettings = new $this->sipClass($sip_address,$this->sipLoginCredentials,$this->soapEngines)) {
     
@@ -11425,14 +11431,24 @@ class Enrollment {
             $return=array('success'        => true,
                           'sip_address'    => $sip_address,
                           'email'          => $result->email,
-                          'passport'       => $passport,
                           'settings_url'   => $this->settings_url,
                           'outbound_proxy' => $this->outbound_proxy,
                           'xcap_root'      => $this->xcap_root,
-                          'msrp_relay'     => $this->msrp_relay,
-                          'ldap_hostname'  => $this->ldap_hostname,
-                          'ldap_dn'        => $this->ldap_dn
+                          'msrp_relay'     => $this->msrp_relay
                           );
+
+            if ($this->create_certificate) {
+                $return['passport'] = $passport;
+            }
+
+            if ($this->ldap_hostname) {
+                $return['ldap_hostname']  = $this->ldap_hostname;
+                $return['ldap_dn']        = $this->ldap_dn;
+            }
+
+            if ($this->ldap_dn) {
+                $return['ldap_dn']        = $this->ldap_dn;
+            }
 
                           /*
                           'mdns_username'  => $customer['username'],
