@@ -1,3 +1,35 @@
+cdrtool (8.3.0) unstable; urgency=low
+
+  [ Rating Engine ]
+
+  * Fixed populating domain field in prepaid queries
+  * Fixed escaping of destination names
+  * Changed SipRPID field to be saved decoded
+  * Fixed on-net rating for divert-on-net and on-net-divert-on-net
+  * Fixed fallback to default destinations
+  * Fixed rating calculation when crossing spans
+  * Several MaxRate additions and fixes
+
+  [ NGNPro client ]
+
+  * Fixed changing diplay name when logged in as customer
+  * Fixed login_type when accessing sip settings page as customer/reseller
+  * Hide pstn related settings if PSTN access is not granted
+  * Added CallerID support to email templates
+  * Fixed UK country in CC processor
+  * Fixed showing Blocked option
+
+  [ Web Interface ]
+
+  * Change CDR column header
+  * Added image for CISCO spa303 phone
+  * Added jitsi sip ua logo
+  * Added qutecom sip ua logo
+  * Added MD5 password hashing support
+  * Fixed loginform to be able to use the JS
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 19 Apr 2012 11:09:43 +0200
+
 cdrtool (8.2.5) unstable; urgency=low
 
   * Added rate-on-net capability
