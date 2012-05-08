@@ -1159,6 +1159,7 @@ class CDRS {
 
         if ($this->csv_file_ready) {
             $this->csv_writter->close_file();
+            $this->csv_writter->ready = false;
         }
 
         if (count($this->usageKeysForDeletionFromCache)) {
