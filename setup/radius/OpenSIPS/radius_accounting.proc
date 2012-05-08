@@ -1,5 +1,5 @@
 /*
-LAST UPDATED: 2010-02-17 - 14:17:00 MST
+LAST UPDATED: 2012-05-08
 
 CHANGELOG:
 - Added support for using usec when no Start/Stop time are given by radius.
@@ -530,8 +530,8 @@ BEGIN
 		-- WE HAVE A TABLE BASED ON StopTime
 		-- SO LET'S TRY TO UPDATE
 
-       	IF @usec=1 THEN
-			SET @updstmt1 = CONCAT("UPDATE ", @var_tbl_month, " SET
+        IF @usec=1 THEN
+            SET @updstmt1 = CONCAT("UPDATE ", @var_tbl_month, " SET
                 AcctStopTime = ?,
                 AcctSessionTime = CONCAT( TIME_TO_SEC(TIMEDIFF(?, AcctStartTime)), '.', MICROSECOND(TIMEDIFF(?, AcctStartTime)) ),
                 AcctStopDelay = ?,
@@ -542,13 +542,13 @@ BEGIN
                 AcctSessionId = ?
                 AND ((SipToTag = ? AND SipFromTag = ?) OR (SipToTag = ? AND SipFromTag = ?))
                 AND ConnectInfo_stop IS NULL AND (MediaInfo IS NULL OR MediaInfo != 'timeout');");
-			PREPARE update_rad1 FROM @updstmt1;
-			EXECUTE update_rad1 USING @v_AcctStopTime, @v_AcctStopTime, @v_AcctStopTime,
-				@v_AcctStopDelay, @v_RTPStatistics,
-				@v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
-				@v_SipFromTag, @v_SipToTag;
-	    ELSE
-      		SET @updstmt1 = CONCAT("UPDATE ", @var_tbl_month, " SET
+            PREPARE update_rad1 FROM @updstmt1;
+            EXECUTE update_rad1 USING @v_AcctStopTime, @v_AcctStopTime, @v_AcctStopTime,
+                @v_AcctStopDelay, @v_RTPStatistics,
+                @v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
+                @v_SipFromTag, @v_SipToTag;
+        ELSE
+            SET @updstmt1 = CONCAT("UPDATE ", @var_tbl_month, " SET
                 AcctStopTime = ?,
                 AcctSessionTime = UNIX_TIMESTAMP(?) - UNIX_TIMESTAMP(AcctStartTime),
                 AcctStopDelay = ?,
@@ -559,22 +559,22 @@ BEGIN
                 AcctSessionId = ?
                 AND ((SipToTag = ? AND SipFromTag = ?) OR (SipToTag = ? AND SipFromTag = ?))
                 AND ConnectInfo_stop IS NULL AND (MediaInfo IS NULL OR MediaInfo != 'timeout');");
-			PREPARE update_rad1 FROM @updstmt1;
-			EXECUTE update_rad1 USING @v_AcctStopTime, @v_AcctStopTime,
-				@v_AcctStopDelay, @v_RTPStatistics,
-				@v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
-				@v_SipFromTag, @v_SipToTag;
+            PREPARE update_rad1 FROM @updstmt1;
+            EXECUTE update_rad1 USING @v_AcctStopTime, @v_AcctStopTime,
+                @v_AcctStopDelay, @v_RTPStatistics,
+                @v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
+                @v_SipFromTag, @v_SipToTag;
 
-      	END IF;	
+        END IF;
 
-		SET @updatedrows = (SELECT ROW_COUNT()),
-		    @updstmt1 = null;
+        SET @updatedrows = (SELECT ROW_COUNT()),
+            @updstmt1 = null;
 
-		DEALLOCATE PREPARE update_rad1;
+        DEALLOCATE PREPARE update_rad1;
 
-	ELSE
-		SET @updatedrows = 0;
-	END IF;
+    ELSE
+        SET @updatedrows = 0;
+    END IF;
 
 
 	IF @updatedrows = 0 THEN
@@ -589,8 +589,8 @@ BEGIN
 
 		IF @var_tbl_cnt2 = 1 THEN
 			-- UPDATE PREVIOUS MONTH TABLE
-			IF @usec=1 THEN
-    			SET @updstmt2 = CONCAT("UPDATE ", @var_tbl_pmonth, " SET
+            IF @usec=1 THEN
+                SET @updstmt2 = CONCAT("UPDATE ", @var_tbl_pmonth, " SET
                     AcctStopTime = ?,
                     AcctSessionTime = CONCAT( TIME_TO_SEC(TIMEDIFF(?, AcctStartTime)), '.', MICROSECOND(TIMEDIFF(?, AcctStartTime))),
                     AcctStopDelay = ?,
@@ -602,12 +602,12 @@ BEGIN
                     AND ((SipToTag = ? AND SipFromTag = ?) OR (SipToTag = ? AND SipFromTag = ?))
                     AND ConnectInfo_stop IS NULL AND (MediaInfo IS NULL OR MediaInfo != 'timeout') ;");
                 PREPARE update_rad2 FROM @updstmt2;
-				EXECUTE update_rad2 USING @v_AcctStopTime, @v_AcctStopTime, @v_AcctStopTime,
-					@v_AcctStopDelay, @v_RTPStatistics,
-					@v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
-					@v_SipFromTag, @v_SipToTag;
+                EXECUTE update_rad2 USING @v_AcctStopTime, @v_AcctStopTime, @v_AcctStopTime,
+                    @v_AcctStopDelay, @v_RTPStatistics,
+                    @v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
+                    @v_SipFromTag, @v_SipToTag;
             ELSE
-    			SET @updstmt2 = CONCAT("UPDATE ", @var_tbl_pmonth, " SET
+                SET @updstmt2 = CONCAT("UPDATE ", @var_tbl_pmonth, " SET
                     AcctStopTime = ?,
                     AcctSessionTime = UNIX_TIMESTAMP(?) - UNIX_TIMESTAMP(AcctStartTime),
                     AcctStopDelay = ?,
@@ -618,32 +618,32 @@ BEGIN
                     AcctSessionId = ?
                     AND ((SipToTag = ? AND SipFromTag = ?) OR (SipToTag = ? AND SipFromTag = ?))
                     AND ConnectInfo_stop IS NULL AND (MediaInfo IS NULL OR MediaInfo != 'timeout') ;");
-				PREPARE update_rad2 FROM @updstmt2;
-				EXECUTE update_rad2 USING @v_AcctStopTime, @v_AcctStopTime,
-					@v_AcctStopDelay, @v_RTPStatistics,
-					@v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
-					@v_SipFromTag, @v_SipToTag;
+                PREPARE update_rad2 FROM @updstmt2;
+                EXECUTE update_rad2 USING @v_AcctStopTime, @v_AcctStopTime,
+                    @v_AcctStopDelay, @v_RTPStatistics,
+                    @v_AcctSessionId, @v_SipToTag, @v_SipFromTag,
+                    @v_SipFromTag, @v_SipToTag;
             END IF;
-			
-			SET @updatedrows = (SELECT ROW_COUNT()),
-			    @updstmt = null;
 
-			DEALLOCATE PREPARE update_rad2;
-		ELSE
-			SET @updatedrows = 0;
-		END IF;
+            SET @updatedrows = (SELECT ROW_COUNT()),
+                @updstmt = null;
 
-	END IF;
+            DEALLOCATE PREPARE update_rad2;
+        ELSE
+            SET @updatedrows = 0;
+        END IF;
 
-	-- CLEAN UP
-	SET @v_AcctStopTime = null,
-	    @v_AcctStopDelay = null,
-	    @v_RTPStatistics = null,
- 	    @usec = null,
-	    @v_AcctSessionId = null,
-	    @v_SipToTag = null,
-    	@v_SipFromTag = null,
-	    @v_db_name = null;
+    END IF;
+
+    -- CLEAN UP
+    SET @v_AcctStopTime = null,
+        @v_AcctStopDelay = null,
+        @v_RTPStatistics = null,
+        @usec = null,
+        @v_AcctSessionId = null,
+        @v_SipToTag = null,
+        @v_SipFromTag = null,
+        @v_db_name = null;
 
 END $$
 
