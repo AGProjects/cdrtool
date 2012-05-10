@@ -8154,6 +8154,7 @@ function lookupGeoLocation($ip) {
             "A1" => "N/A",
             "A2" => "N/A",
             "O1" => "N/A",
+            "AP" => "N/A",
             "GB" => "UK");
         
         if (array_key_exists($_loc['country_code'],$country_transition)) {
