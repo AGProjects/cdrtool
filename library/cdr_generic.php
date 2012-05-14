@@ -3007,7 +3007,7 @@ class MaxRate extends CSVWritter {
             $cdr['duration']    = $CDR->duration;
         }
 
-        $cdr['extra']="$CDR->callId $CDR->flow";
+        $cdr['extra']="$CDR->callId";
 
         if ($CDR->flow == 'on-net') {
             # RFP 4.2.1
@@ -3019,7 +3019,8 @@ class MaxRate extends CSVWritter {
             if ($CalleeRPID) {
                 $cdr['destination'] = '+31'.ltrim($CalleeRPID,'0');
             }
-
+            
+            $cdr['extra'] = $cdr['extra']." $CDR->flow";
         } else if ($CDR->flow == 'outgoing') {
             # RFP 4.2.2
 
@@ -3033,6 +3034,8 @@ class MaxRate extends CSVWritter {
                                           $cdr['origin'],
                                           $outbound_trunk
                                           );
+
+            $cdr['extra'] = $cdr['extra']." $CDR->flow";
 
         } else if ($CDR->flow == 'incoming') {
             # RFP 4.2.3
@@ -3051,6 +3054,8 @@ class MaxRate extends CSVWritter {
                 $cdr['destination'] = '+31'.ltrim($CalleeRPID,'0');
             }
 
+            $cdr['extra'] = $cdr['extra']." $CDR->flow";
+
         } else if ($CDR->flow == 'diverted-on-net') {
             # RFP 4.2.4
 
@@ -3067,6 +3072,8 @@ class MaxRate extends CSVWritter {
             }
 
             $cdr['charge_info'] = sprintf("(%s,2)",$inbound_trunk);
+
+            $cdr['extra'] = $cdr['extra']." incoming-diverted-on-net";
 
         } else if ($CDR->flow == 'diverted-off-net') {
             # RFP 4.2.5
@@ -3097,6 +3104,8 @@ class MaxRate extends CSVWritter {
                                           $outbound_trunk
                                           );
 
+            $cdr['extra'] = $cdr['extra']." incoming-diverted-off-net";
+
         } else if ($CDR->flow == 'on-net-diverted-on-net') {
             # RFP 4.2.6
 
@@ -3115,6 +3124,8 @@ class MaxRate extends CSVWritter {
             }
 
             $cdr['charge_info'] = sprintf("(%s,1),(%s,1)",$cdr['origin'],$diverter_origin);
+
+            $cdr['extra'] = $cdr['extra']." $CDR->flow";
 
         } else if ($CDR->flow == 'on-net-diverted-off-net') {
             # RFP 4.2.7
@@ -3138,6 +3149,7 @@ class MaxRate extends CSVWritter {
                                           $outbound_trunk
                                           );
 
+            $cdr['extra'] = $cdr['extra']." $CDR->flow";
         }
 
         $line = sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
