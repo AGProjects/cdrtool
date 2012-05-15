@@ -2908,7 +2908,7 @@ class MaxRate extends CSVWritter {
         if ($CDR->application != 'audio') return true;
 
         # skip if no duration
-        if (!$CDR->duration) return true;
+        if (!$CDR->duration && ($CDR->disconnect != 200)) return true;
 
         # normalize destination
         if ($CDR->CanonicalURIE164) {

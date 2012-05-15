@@ -65,6 +65,7 @@ class CDRS_opensips extends CDRS {
                                       'aNumber'         => 'CallingStationId',
                                       'cNumber'         => 'CalledStationId',
                                       'timestamp'       => 'timestamp',
+                                      'disconnect'      => 'SipResponseCode',
                                       'RemoteAddress'   => 'SipTranslatedRequestURI',
                                       'CanonicalURI'    => 'CanonicalURI',
                                       'SipRPID'         => 'SipRPID',
