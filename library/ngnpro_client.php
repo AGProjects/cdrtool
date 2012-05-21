@@ -10332,7 +10332,7 @@ class Customers extends Records {
                               'city'        => array('type'=>'text'),
                               'state'       => array('type'=>'text'),
                               'country'     => array('type'=>'text'),
-                              'timezone'    => array('type'=>'text'),
+                              'timezone'    => array('type'=>'text')
                               );
 
         var $states=array(
@@ -11992,8 +11992,10 @@ class Customers extends Records {
         if (!strlen($customer['postcode'])) $customer['postcode'] = 'Unknown';
         if (!strlen($customer['timezone'])) $customer['timezone'] = 'Europe/Amsterdam';
 
-        if ($this->adminonly && $this->filters['reseller']) {
-        	$customer['reseller']=intval($this->filters['reseller']);
+        if ($dictionary['reseller']) {
+            $customer['reseller']=intval($dictionary['reseller']);
+        } else if ($this->adminonly && $this->filters['reseller']) {
+            $customer['reseller']=intval($this->filters['reseller']);
         }
 
         $customer['username'] = strtolower(preg_replace ("/\s+/",".",trim($customer['username'])));

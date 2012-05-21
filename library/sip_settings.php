@@ -11056,6 +11056,7 @@ class Enrollment {
     var $quota                      = 50;
     var $prepaid                    = 1;
     var $create_certificate         = 1;
+    var $customer_belongs_to_reseller = false;
 
     function Enrollment() {
 
@@ -11241,6 +11242,10 @@ class Enrollment {
                          'city'       => $location['city'],
                          'properties' => $properties
                         );
+
+            if ($this->customer_belongs_to_reseller) {
+                $customer['reseller'] =intval($this->reseller);
+            }
 
             if ($location['country_code'] == 'NL') {
                 $customer['tel'] = '+31999999999';
