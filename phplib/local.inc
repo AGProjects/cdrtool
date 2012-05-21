@@ -144,7 +144,7 @@ class CDRTool_Auth extends Auth {
         
             $domainAuth = new DomainAuthLocal();
 
-            $ret=$domainAuth->validate($a[0],$a[1],$password);
+            $ret=$domainAuth->validate($a[0],$a[1],$password,$response);
 
             if ($ret[0]) {
                 foreach ($ret[2] as $allowedDS) {
@@ -640,7 +640,7 @@ class SipThor_DomainAuth {
         $this->allowedDataSourcesSubscriber = array('sipthor','sip_trace_thor','media_trace_thor');
     }
 
-    function validate ($user, $domain, $password) {
+    function validate ($user, $domain, $password,$response) {
     	$query = sprintf("SELECT * FROM sip_accounts
                   WHERE username = '%s'
                   AND     domain = '%s'
@@ -660,7 +660,15 @@ class SipThor_DomainAuth {
                 $check_password = $profile['password'];
             }
 
-            if ($check_password == $password) {
+            $check_password_md5 = md5("$check_password");
+            $expected_response = md5("$user@$domain:$check_password_md5:$challenge");
+
+            if ($expected_response == $response) {
+                $uid = $this->userDB->f('username');
+                if ($uid) {
+                    return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
+                }
+            } else if ($check_password == $password) {
                 $uid = $this->userDB->f('username');
                 if ($uid) {
                     return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
