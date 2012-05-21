@@ -9,7 +9,6 @@ class CDRS_opensips extends CDRS {
     var $mediaTrace            = 'media_trace';
     var $missed_calls_group    = 'missed-calls';
     var $rate_on_net_group     = 'rate-on-net';
-
     var $callerid_cache        = array();
 
     var $CDRFields=array('id'              => 'RadAcctId',
@@ -1477,13 +1476,15 @@ class CDRS_opensips extends CDRS {
                 $this->CDRdb->query($query);
             }
 
-            if ($UnNormalizedCalls=$this->getUnNormalized($where,$cdr_table)) {
-                if ($UnNormalizedCalls < $this->maxCDRsNormalizeWeb) {
-                    $this->NormalizeCDRS($where,$cdr_table);
-                    if (!$this->export && $this->status['normalized'] ) {
-                        printf ("%d CDRs normalized. ",$this->status['normalized']);
-                        if ($this->status['cached_keys']['saved_keys']) {
-                            printf ("Quota usage updated for %d accounts. ",$this->status['cached_keys']['saved_keys']);
+            if (!$this->DATASOURCES[$this->cdr_source]['skipNormalizeOnPageLoad']) {
+                if ($UnNormalizedCalls=$this->getUnNormalized($where,$cdr_table)) {
+                    if ($UnNormalizedCalls < $this->maxCDRsNormalizeWeb) {
+                        $this->NormalizeCDRS($where,$cdr_table);
+                        if (!$this->export && $this->status['normalized'] ) {
+                            printf ("%d CDRs normalized. ",$this->status['normalized']);
+                            if ($this->status['cached_keys']['saved_keys']) {
+                                printf ("Quota usage updated for %d accounts. ",$this->status['cached_keys']['saved_keys']);
+                            }
                         }
                     }
                 }

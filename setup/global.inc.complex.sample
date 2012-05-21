@@ -183,6 +183,7 @@ $DATASOURCES=array(
                     "priceField"         => "Price",
                     "DestinationIdField" => "DestinationId",
                     "normalizedField"    => "Normalized",
+                    "skipNormalizeOnPageLoad" => 0,
                     "skipNormalize"      => 0,              // set it it to true to disable the normalization process
                     "BillingPartyIdField"=> "UserName",
                     "db_susbcribers"	 => "DB_opensips",
