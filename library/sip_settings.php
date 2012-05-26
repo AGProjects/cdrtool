@@ -5721,6 +5721,13 @@ class SipSettings {
                 $htmlURI     = $this->htmlURI($uri);
                 $urlURI      = urlencode($this->normalizeURI($uri));
 
+                $sessionId    = urlencode(quoted_printable_decode($this->calls_received[$call]['sessionId']));
+                $fromTag      = urlencode(quoted_printable_decode($this->calls_received[$call]['fromTag']));
+                $toTag        = urlencode(quoted_printable_decode($this->calls_received[$call]['toTag']));
+                $proxyIP      = urlencode(quoted_printable_decode($this->calls_received[$call]['proxyIP']));
+                $trace_link   = "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?callid=$sessionId&fromtag=$fromTag&totag=$toTag&proxyIP=$proxyIP', 'Trace',
+                'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">Trace</a>";
+
                 if (!$this->calls_received[$call]['duration']) {
                     $htmlURI = "<font color=red>$htmlURI</font>";
                 }
@@ -5745,7 +5752,9 @@ class SipSettings {
                 <td align=right width=10></td>
                 <td align=left><nobr>$htmlURI</nobr></td>
                 ";
-                print "<td align=right><a href=$this->url&tab=contacts&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
+                print "<td align=right width=15><nobr>$trace_link</nobr></td>";
+                print "<td align=right width=10></td>";
+                print "<td align=right width=10><a href=$this->url&tab=contacts&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
                 print "
                 </tr>
                 </table>";
@@ -5778,6 +5787,13 @@ class SipSettings {
                 $htmlURI     = $this->htmlURI($uri);
                 $urlURI      = urlencode($this->normalizeURI($uri));
 
+                $sessionId    = urlencode(quoted_printable_decode($this->calls_received[$call]['sessionId']));
+                $fromTag      = urlencode(quoted_printable_decode($this->calls_received[$call]['fromTag']));
+                $toTag        = urlencode(quoted_printable_decode($this->calls_received[$call]['toTag']));
+                $proxyIP      = urlencode(quoted_printable_decode($this->calls_received[$call]['proxyIP']));
+                $trace_link   = "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?callid=$sessionId&fromtag=$fromTag&totag=$toTag&proxyIP=$proxyIP', 'Trace',
+                'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">Trace</a>";
+
                 if ($price) {
                     $price_print =sprintf(" (%s %s)",$price,$this->currency);
                 } else {
@@ -5805,7 +5821,9 @@ class SipSettings {
                 <td align=left><nobr>$htmlURI $price_print</nobr></td>
                 ";
 
-                print "<td align=right><a href=$this->url&tab=contacts&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
+                print "<td align=right width=15><nobr>$trace_link</nobr></td>";
+                print "<td align=right width=10></td>";
+                print "<td align=right width=10><a href=$this->url&tab=contacts&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
                 print "
                 </tr>
                 </table>";
@@ -5849,6 +5867,10 @@ class SipSettings {
                                     "from"     => quoted_printable_decode($callStructure->fromURI),
                                     "duration" => $callStructure->duration,
                                     "status"   => $callStructure->status,
+                                    "fromTag"  => $callStructure->fromTag,
+                                    "toTag"    => $callStructure->toTag,
+                                    "proxyIP"  => $callStructure->proxyIP,
+                                    "sessionId"=> $callStructure->sessionId,
                                     "date"     => getLocalTime($this->timezone,$callStructure->startTime)
                                      );         
         }
@@ -5864,6 +5886,10 @@ class SipSettings {
                                     "price"    => $callStructure->price,
                                     "rate"     => $callStructure->rate,
                                     "status"   => $callStructure->status,
+                                    "fromTag"  => $callStructure->fromTag,
+                                    "toTag"    => $callStructure->toTag,
+                                    "proxyIP"  => $callStructure->proxyIP,
+                                    "sessionId"=> $callStructure->sessionId,
                                     "date"     => getLocalTime($this->timezone,$callStructure->startTime)
                                      );         
         }
