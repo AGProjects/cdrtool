@@ -3872,7 +3872,7 @@ class SIP_trace {
 
         if ($this->mediaTrace) {
             $this->mediaTraceLink=sprintf("<p><a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&totag=%s&proxyIP=%s', 'mediatrace',
-            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here for the media trace</a>",
+            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here for RTP media information</a>",
             $this->mediaTrace,
             urlencode($callid),
             urlencode($fromtag),
@@ -3884,7 +3884,7 @@ class SIP_trace {
         print "</td>
         </form>
         <td align=right>
-        Click on each trace entry to see the full message.
+        Click on each packet to expand its body content.
         $this->mediaTraceLink
 
         </td>
@@ -4573,7 +4573,7 @@ class Media_trace {
 
         if (!count($this->info->streams)) {
             print "<p>
-            No media streams have been established for this session.";
+            No RTP media streams have been established";
             return;
         }
 
