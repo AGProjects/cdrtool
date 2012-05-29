@@ -1,6 +1,6 @@
 <?
 /*
-    Copyright (c) 2007-2010 AG Projects
+    Copyright (c) 2007-2012 AG Projects
     http://ag-projects.com
 
     This library contains classes and functions for rating functionality
