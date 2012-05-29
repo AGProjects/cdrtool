@@ -5725,7 +5725,8 @@ class SipSettings {
                 $fromTag      = urlencode(quoted_printable_decode($this->calls_received[$call]['fromTag']));
                 $toTag        = urlencode(quoted_printable_decode($this->calls_received[$call]['toTag']));
                 $proxyIP      = urlencode(quoted_printable_decode($this->calls_received[$call]['proxyIP']));
-                $trace_link   = "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?callid=$sessionId&fromtag=$fromTag&totag=$toTag&proxyIP=$proxyIP', 'Trace',
+                $cdr_source   = 'sipthor';
+                $trace_link   = "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$cdr_source&callid=$sessionId&fromtag=$fromTag&totag=$toTag&proxyIP=$proxyIP', 'Trace',
                 'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">Trace</a>";
 
                 if (!$this->calls_received[$call]['duration']) {
@@ -5787,11 +5788,12 @@ class SipSettings {
                 $htmlURI     = $this->htmlURI($uri);
                 $urlURI      = urlencode($this->normalizeURI($uri));
 
-                $sessionId    = urlencode(quoted_printable_decode($this->calls_received[$call]['sessionId']));
-                $fromTag      = urlencode(quoted_printable_decode($this->calls_received[$call]['fromTag']));
-                $toTag        = urlencode(quoted_printable_decode($this->calls_received[$call]['toTag']));
-                $proxyIP      = urlencode(quoted_printable_decode($this->calls_received[$call]['proxyIP']));
-                $trace_link   = "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?callid=$sessionId&fromtag=$fromTag&totag=$toTag&proxyIP=$proxyIP', 'Trace',
+                $sessionId    = urlencode(quoted_printable_decode($this->calls_placed[$call]['sessionId']));
+                $fromTag      = urlencode(quoted_printable_decode($this->calls_placed[$call]['fromTag']));
+                $toTag        = urlencode(quoted_printable_decode($this->calls_placed[$call]['toTag']));
+                $proxyIP      = urlencode(quoted_printable_decode($this->calls_placed[$call]['proxyIP']));
+                $cdr_source   = 'sipthor';
+                $trace_link   = "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$cdr_source&callid=$sessionId&fromtag=$fromTag&totag=$toTag&proxyIP=$proxyIP', 'Trace',
                 'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">Trace</a>";
 
                 if ($price) {
