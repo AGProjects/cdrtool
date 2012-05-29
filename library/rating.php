@@ -6003,7 +6003,7 @@ class OpenSIPSQuota {
         global $UserQuota;
         $this->initQuotaUsage();
 
-        $query=sprintf("select * from quota_usage where datasource = '%s' and quota > 0 and cost > quota",$this->CDRS->cdr_source);
+        $query=sprintf("select * from quota_usage where datasource = '%s' and quota > 0 and (cost > quota or cost_today >= quota * $this->daily_quota/100)",$this->CDRS->cdr_source);
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -6024,7 +6024,7 @@ class OpenSIPSQuota {
             if ($this->db->f('cost') >= $this->db->f('quota')) {
                 $quota_exceeded=true;
                 $exceeded_period='monthly';
-            } else if ($this->daily_quota && ($this->db->f('cost_daily') >= $this->db->f('quota') * $this->daily_quota/100)) {
+            } else if ($this->daily_quota && ($this->db->f('cost_today') >= $this->db->f('quota') * $this->daily_quota/100)) {
                 $quota_exceeded=true;
                 $exceeded_period='daily';
             } else {
