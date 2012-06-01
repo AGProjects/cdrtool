@@ -6501,49 +6501,55 @@ class DnsRecords extends Records {
     var $getRecordFunction    = 'getRecord';
 
     var $recordTypesTemplate=array(
-                               'sipudp' =>  array('name'    => 'SIP - UDP transport',
-                                                  'records' =>  array(
-                                                                      'naptr' => array('name'  => '',
-                                                                                       'type'   => 'NAPTR',
-                                                                                       'priority'=> '30',
-                                                                                       'value' => '10 30 "s" "SIP+D2U" "" _sip._udp'
-                                                                                       ),
-                                                                      'srv'   => array('name'   => '_sip._udp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '30',
-                                                                                       'value'  => '10 5060 #VALUE#|10 5060 sip'
-                                                                                       )
-                                                                      ),
-                                                 ),
                                'siptcp' =>  array('name'    => 'SIP - TCP transport',
                                                   'records' =>  array(
                                                                       'naptr' => array('name'    => '',
                                                                                        'type'    => 'NAPTR',
-                                                                                       'priority'=> '20',
-                                                                                       'value' => '10 20 "s" "SIP+D2T" "" _sip._tcp'
+                                                                                       'priority'=> '100',
+                                                                                       'ttl'     => '3600',
+                                                                                       'value' => '10 100 "s" "SIP+D2T" "" _sip._tcp'
                                                                                        ),
                                                                       'srv'   => array('name'  => '_sip._tcp',
                                                                                        'type'   => 'SRV',
-                                                                                       'priority'=> '20',
-                                                                                       'value' => '10 5060 #VALUE#|10 5060 sip'
+                                                                                       'priority'=> '100',
+                                                                                       'ttl'     => '3600',
+                                                                                       'value' => '100 5060 #VALUE#|10 5060 sip'
                                                                                        )
                                                                       ),
                                                   ),
                                'siptls' =>  array('name'    => 'SIP - TLS transport',
-                                                  'records' =>  array('srv'   => array('name'  => '_sips._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '10',
-                                                                                       'value' => '10 5061 #VALUE#|10 5061 sip'
-                                                                                       ),
+                                                  'records' =>  array(
                                                                       'naptr' => array('name'  => '',
                                                                                        'type'   => 'NAPTR',
-                                                                                       'priority'=> '10',
-                                                                                       'value' => '10 10 "s" "SIPS+D2T" "" _sips._tcp'
+                                                                                       'priority'=> '100',
+                                                                                       'ttl'     => '3600',
+                                                                                       'value' => '20 100 "s" "SIPS+D2T" "" _sips._tcp'
+                                                                                       ),
+                                                                      'srv'   => array('name'  => '_sips._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '100',
+                                                                                       'ttl'     => '3600',
+                                                                                       'value' => '100 5061 #VALUE#|10 5061 sip'
                                                                                        )
                                                                       )
 
-
     											),
+                               'sipudp' =>  array('name'    => 'SIP - UDP transport',
+                                                  'records' =>  array(
+                                                                      'naptr' => array('name'  => '',
+                                                                                       'type'   => 'NAPTR',
+                                                                                       'priority'=> '100',
+                                                                                       'ttl'     => '3600',
+                                                                                       'value' => '30 100 "s" "SIP+D2U" "" _sip._udp'
+                                                                                       ),
+                                                                      'srv'   => array('name'   => '_sip._udp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '100',
+                                                                                       'ttl'     => '3600',
+                                                                                       'value'  => '100 5060 #VALUE#|10 5060 sip'
+                                                                                       )
+                                                                      ),
+                                                 ),
                                'stun' =>  array('name'    => 'STUN - NAT mirror',
                                                   'records' =>  array('srv'   => array('name'  => '_stun._udp',
                                                                                        'type'   => 'SRV',
@@ -6571,14 +6577,6 @@ class DnsRecords extends Records {
                                                                                        'type'   => 'SRV',
                                                                                        'priority'=> '0',
                                                                                        'value' => '10 5222 #VALUE#|10 5222 xmpp'
-                                                                                       )
-                                                                      ),
-                                                  ),
-                               'mediaproxy' =>  array('name'    => 'MediaProxy - RTP relay',
-                                                  'records' =>  array('srv'   => array('name'  => '_mediaproxy._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '0',
-                                                                                       'value' => '10 25060 #VALUE#|10 25060 mediaproxy'
                                                                                        )
                                                                       ),
                                                   ),
