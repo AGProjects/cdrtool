@@ -7407,7 +7407,7 @@ class DnsRecords extends Records {
                               'type'     => $_records['type'],
                               'value'    => $value_new,
                               'owner'    => intval($owner),
-                              'ttl'      => intval($_records['value']),
+                              'ttl'      => intval($_records['ttl']),
                               'priority' => intval($_records['priority'])
                               );
 
