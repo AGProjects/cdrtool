@@ -7549,14 +7549,24 @@ class DnsRecords extends Records {
                 $record->$item
                 );
             } else {
+                if ($record->type == 'NAPTR' and $item == 'value') {
+                    $help_text = 'Priority field will be used for the <i>preference</i> part of the value';
+                } else {
+                    $help_text = '';
+                }
+
                 printf ("<tr>
                 <td class=border valign=top>%s</td>
                 <td class=border><input name=%s_form size=40 type=text value='%s'></td>
-                </tr>",
+                ",
                 $item_name,
                 $item,
                 $record->$item
                 );
+                if ($help_text) {
+                printf ("<td class=border valign=top>%s</td>",$help_text);
+                }
+                print "</tr>";
             }
         }
 
