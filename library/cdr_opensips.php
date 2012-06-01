@@ -2419,7 +2419,7 @@ class CDRS_opensips extends CDRS {
                 return $_profile->rpid;
             }
         } else {
-            $query=sprintf("select rpid from subscriber where username = '%s' and domain = '%s'",$username,$domain);
+            $query=sprintf("select rpid from subscriber where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
 
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
