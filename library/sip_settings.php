@@ -143,6 +143,7 @@ class SipSettings {
     var $balance_history     = array();
     var $enrollment_url      = false;
     var $sip_settings_api_url= false;
+    var $journalEntries      = array();
 
 	var $owner_information   =array();
 
@@ -6443,6 +6444,69 @@ class SipSettings {
         }
     }
 
+    function getJournalEntries() {
+        $this->db = new DB_CDRTool();
+
+        $this->journalEntries['success'] = false;
+        $this->journalEntries['error_message']   = NULL;
+        $this->journalEntries['results'] = array();
+
+        $where="";
+        if ($_REQUEST['except_uuid']) {
+            $where.= sprintf(" and uuid <> '%s'", addslashes($_REQUEST['except_uuid']));
+        }
+
+        $query=sprintf("select * from client_journal where account = '%s' %s order by id ASC",  addslashes($this->account), $where);
+        if (!$this->db->query($query)) {
+            $this->journalEntries['error_message'] = 'Database Failure';
+            return false;
+        } else {
+            $this->journalEntries['success'] = true;
+        }
+
+        if ($this->db->num_rows()) {
+        	while ($this->db->next_record()) {
+                $entry = array(
+                               'id'          => $this->db->f('id'),
+                               'timestamp'   => $this->db->f('timestamp'),
+                               'account'     => $this->db->f('account'),
+                               'uuid'        => $this->db->f('uuid'),
+                               'data'        => $this->db->f('data')
+                               );
+                $this->journalEntries['results'][]=$entry;
+            }
+        }
+        return True;
+    }
+
+    function putJournalEntries() {
+        $this->db = new DB_CDRTool();
+        if (strlen($_REQUEST['uuid'])) {
+            $uuid = $_REQUEST['uuid'];
+        } else {
+            $result['success'] = false;
+            $result['error_message'] = 'Missing uuid';
+            return $result;
+        }
+        if (strlen($_REQUEST['data'])) {
+            $entry = $_REQUEST['data'];
+        } else {
+            $result['success'] = false;
+            $result['error_message'] = 'Missing data';
+            return $result;
+        }
+
+        $query=sprintf("insert into client_journal (timestamp, account, uuid, data) values (NOW(),'%s', '%s', '%s')", addslashes($this->account), addslashes($uuid), addslashes($data));
+
+        if (!$this->db->query($query)) {
+            $result['error_message'] = 'Database Insert Failure';
+            return false;
+        } else {
+            $result['success'] = true;
+        }
+        return $result;
+    }
+
     function getAcceptRules() {
 
         dprint("getAcceptRules()");
@@ -10722,6 +10786,13 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
     } else if ($_REQUEST['action'] == 'get_accept_rules'){
         $SipSettings->getAcceptRules();
         print json_encode($SipSettings->acceptRules);
+        return true;
+    } else if ($_REQUEST['action'] == 'get_journal_entries'){
+        $SipSettings->getJournalEntries();
+        print json_encode($SipSettings->journalEntries);
+        return true;
+    } else if ($_REQUEST['action'] == 'put_journal_entries'){
+        print json_encode($SipSettings->putJournalEntries());
         return true;
     } else if ($_REQUEST['action'] == 'get_reject_rules'){
         $SipSettings->getRejectMembers();
