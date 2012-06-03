@@ -5665,7 +5665,7 @@ class SipSettings {
 
     function showCallsTab() {
 
-        $this->getCalls();
+        $this->getHistory();
 
         if ($this->calls) {
             $chapter=sprintf(_("Call Statistics"));
@@ -5837,15 +5837,15 @@ class SipSettings {
 
     }
 
-    function getCalls () {
-        dprint("getCalls()");
+    function getHistory () {
+        dprint("getHistory()");
 
-        $fromDate=time()-3600*24*60; // last two months
+        $fromDate=time()-3600*24*14; // last two weeks
         $toDate=time();
 
         $CallQuery=array("fromDate"=>$fromDate,
                          "toDate"=>$toDate,
-                         "limit"=>30
+                         "limit"=>50
                          );
 
         $CallsQuery=array("placed"=>$CallQuery,
@@ -10724,8 +10724,8 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings->getRejectMembers();
         print json_encode($SipSettings->rejectMembers);
         return true;
-    } else if ($_REQUEST['action'] == 'get_calls'){
-        $SipSettings->getCalls();
+    } else if ($_REQUEST['action'] == 'get_history'){
+        $SipSettings->getHistory();
         print json_encode($SipSettings->call_history);
         return true;
     } else if ($_REQUEST['action'] == 'get_voicemail'){
