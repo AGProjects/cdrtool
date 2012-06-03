@@ -6447,16 +6447,27 @@ class SipSettings {
     function getJournalEntries() {
         $this->db = new DB_CDRTool();
 
-        $this->journalEntries['success'] = false;
-        $this->journalEntries['error_message']   = NULL;
-        $this->journalEntries['results'] = array();
+        $this->journalEntries['success']       = false;
+        $this->journalEntries['error_message'] = NULL;
+        $this->journalEntries['results']       = array();
 
         $where="";
         if ($_REQUEST['except_uuid']) {
             $where.= sprintf(" and uuid <> '%s'", addslashes($_REQUEST['except_uuid']));
         }
+        if ($_REQUEST['from_id']) {
+            $where.= sprintf(" and id >= %d", addslashes(intval($_REQUEST['from_id'])));
+        }
+        if ($_REQUEST['from_timestamp']) {
+            $where.= sprintf(" and timestamp >= '%s'", addslashes(intval($_REQUEST['from_timestamp'])));
+        }
+        if ($_REQUEST['limit']) {
+            $limit = intval($limit);
+        } else {
+            $limit = 1000;
+        }
 
-        $query=sprintf("select * from client_journal where account = '%s' %s order by id ASC",  addslashes($this->account), $where);
+        $query=sprintf("select * from client_journal where account = '%s' %s order by id ASC limit %d",  addslashes($this->account), $where, $limit);
         if (!$this->db->query($query)) {
             $this->journalEntries['error_message'] = 'Database Failure';
             return false;
@@ -6471,6 +6482,7 @@ class SipSettings {
                                'timestamp'   => $this->db->f('timestamp'),
                                'account'     => $this->db->f('account'),
                                'uuid'        => $this->db->f('uuid'),
+                               'ip_address'  => $this->db->f('ip_address'),
                                'data'        => $this->db->f('data')
                                );
                 $this->journalEntries['results'][]=$entry;
@@ -6496,13 +6508,18 @@ class SipSettings {
             return $result;
         }
 
-        $query=sprintf("insert into client_journal (timestamp, account, uuid, data) values (NOW(),'%s', '%s', '%s')", addslashes($this->account), addslashes($uuid), addslashes($data));
+        $query=sprintf("insert into client_journal (timestamp, account, uuid, data, ip_address) values (NOW(),'%s', '%s', '%s', '%s')", addslashes($this->account), addslashes($uuid), addslashes($data), $_SERVER['REMOTE_ADDR']);
 
         if (!$this->db->query($query)) {
             $result['error_message'] = 'Database Insert Failure';
             return false;
         } else {
+            $query="select LAST_INSERT_ID() as id";
+            $this->db->query($query);
+        	$this->db->next_record();
+            $id = $this->db->f('id');
             $result['success'] = true;
+            $result['id'] = $id;
         }
         return $result;
     }

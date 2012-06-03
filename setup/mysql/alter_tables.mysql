@@ -713,6 +713,7 @@ CREATE TABLE `client_journal` (
   `timestamp` datetime NOT NULL default '0000-00-00 00:00:00',
   `account` varchar(128) NOT NULL default '',
   `uuid` varchar(256) NOT NULL default '',
+  `ip_address` varchar(256) NOT NULL default '',
   `data` longblob NOT NULL,
   PRIMARY KEY  (`id`),
   KEY `account_idx` (`account`),
