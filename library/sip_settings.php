@@ -5714,10 +5714,10 @@ class SipSettings {
             foreach (array_keys($this->calls_received) as $call) {
                 $j++;
 
-                $uri         = $this->calls_received[$call][from];
-                $duration    = normalizeTime($this->calls_received[$call][duration]);
+                $uri         = $this->calls_received[$call]['remoteParty'];
+                $duration    = normalizeTime($this->calls_received[$call]['duration']);
                 $dialURI     = $this->PhoneDialURL($uri) ;
-                $htmlDate    = $this->colorizeDate($this->calls_received[$call][date]);
+                $htmlDate    = $this->colorizeDate($this->calls_received[$call]['startTime']);
                 $htmlURI     = $this->htmlURI($uri);
                 $urlURI      = urlencode($this->normalizeURI($uri));
 
@@ -5778,13 +5778,13 @@ class SipSettings {
                     continue;
                 }
 
-                $uri         = $this->calls_placed[$call]['to'];
+                $uri         = $this->calls_placed[$call]['remoteParty'];
                 $price       = $this->calls_placed[$call]['price'];
                 $status      = $this->calls_placed[$call]['status'];
                 $rateinfo    = $this->calls_placed[$call]['rateInfo'];
                 $duration    = normalizeTime($this->calls_placed[$call]['duration']);
                 $dialURI     = $this->PhoneDialURL($uri) ;
-                $htmlDate    = $this->colorizeDate($this->calls_placed[$call]['date']);
+                $htmlDate    = $this->colorizeDate($this->calls_placed[$call]['startTime']);
                 $htmlURI     = $this->htmlURI($uri);
                 $urlURI      = urlencode($this->normalizeURI($uri));
 
@@ -5866,15 +5866,17 @@ class SipSettings {
         // received  calls
         foreach ($result->received as $callStructure) {
             $this->calls_received[]=array(
-                                    "from"     => quoted_printable_decode($callStructure->fromURI),
-                                    "duration" => $callStructure->duration,
-                                    "status"   => $callStructure->status,
-                                    "fromTag"  => $callStructure->fromTag,
-                                    "toTag"    => $callStructure->toTag,
-                                    "proxyIP"  => $callStructure->proxyIP,
-                                    "sessionId"=> $callStructure->sessionId,
-                                    "date"     => getLocalTime($this->timezone,$callStructure->startTime)
-                                     );         
+                                    "remoteParty"  => quoted_printable_decode($callStructure->fromURI),
+                                    "startTime"    => getLocalTime($this->timezone,$callStructure->startTime),
+                                    "stopTime"     => getLocalTime($this->timezone,$callStructure->stopTime),
+                                    "duration"     => $callStructure->duration,
+                                    "status"       => $callStructure->status,
+                                    "sessionId"    => $callStructure->sessionId,
+                                    "fromTag"      => $callStructure->fromTag,
+                                    "toTag"        => $callStructure->toTag,
+                                    "proxyIP"      => $callStructure->proxyIP,
+                                    "media"        => 'audio'
+                                    );
         }
 
         // placed calls
@@ -5883,16 +5885,17 @@ class SipSettings {
             if ($callStructure->status == 435) continue;
 
             $this->calls_placed[]=array(
-                                    "to"       => quoted_printable_decode($callStructure->toURI),
-                                    "duration" => $callStructure->duration,
-                                    "price"    => $callStructure->price,
-                                    "rate"     => $callStructure->rate,
-                                    "status"   => $callStructure->status,
-                                    "fromTag"  => $callStructure->fromTag,
-                                    "toTag"    => $callStructure->toTag,
-                                    "proxyIP"  => $callStructure->proxyIP,
-                                    "sessionId"=> $callStructure->sessionId,
-                                    "date"     => getLocalTime($this->timezone,$callStructure->startTime)
+                                    "remoteParty"  => quoted_printable_decode($callStructure->toURI),
+                                    "startTime"    => getLocalTime($this->timezone,$callStructure->startTime),
+                                    "stopTime"     => getLocalTime($this->timezone,$callStructure->stopTime),
+                                    "duration"     => $callStructure->duration,
+                                    "status"       => $callStructure->status,
+                                    "price"        => $callStructure->price,
+                                    "sessionId"    => $callStructure->sessionId,
+                                    "fromTag"      => $callStructure->fromTag,
+                                    "toTag"        => $callStructure->toTag,
+                                    "proxyIP"      => $callStructure->proxyIP,
+                                    "media"        => 'audio'
                                      );         
         }
 
