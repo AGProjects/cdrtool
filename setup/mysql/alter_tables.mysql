@@ -705,3 +705,17 @@ setup/radius/OpenSIPS/now_usec.readme
 8.2.6
 alter table auth_user add password_hashed varchar(32) not null default '' after password;
 update auth_user set password_hashed=MD5(password),password='' where password!='';
+
+8.3.1
+drop table if exists client_journal;
+CREATE TABLE `client_journal` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `timestamp` datetime NOT NULL default '0000-00-00 00:00:00',
+  `account` varchar(128) NOT NULL default '',
+  `uuid` varchar(256) NOT NULL default '',
+  `data` longblob NOT NULL,
+  PRIMARY KEY  (`id`),
+  KEY `account_idx` (`account`),
+  KEY `uuid_idx` (`uuid`)
+);
+

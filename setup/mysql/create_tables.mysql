@@ -30,7 +30,7 @@ CREATE TABLE `active_sessions` (
   `count` bigint(20) unsigned NOT NULL default '0',
   PRIMARY KEY  (`name`,`sid`),
   KEY `changed` (`changed`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -48,7 +48,7 @@ CREATE TABLE `active_sessions_split` (
   `ct_changed` varchar(14) NOT NULL default '',
   PRIMARY KEY  (`ct_name`,`ct_sid`,`ct_pos`),
   KEY `ct_changed` (`ct_changed`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -87,7 +87,7 @@ CREATE TABLE `asterisk_cdr` (
   KEY `channel_idx` (`channel`),
   KEY `dstchannel_idx` (`dstchannel`),
   KEY `normalized_idx` (`Normalized`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -125,7 +125,7 @@ CREATE TABLE `auth_user` (
   `impersonate` varchar(50) NOT NULL,
   PRIMARY KEY  (`user_id`),
   UNIQUE KEY `k_username` (`username`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -155,7 +155,7 @@ CREATE TABLE `billing_customers` (
   KEY `gate_idx` (`gateway`),
   KEY `sub_idx` (`subscriber`),
   KEY `reseller_idx` (`reseller_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -175,7 +175,7 @@ CREATE TABLE `billing_enum_tlds` (
   UNIQUE KEY `enum_idx` (`enum_tld`),
   KEY `tld_idx` (`enum_tld`),
   KEY `reseller_idx` (`reseller_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -188,7 +188,7 @@ SET character_set_client = utf8;
 CREATE TABLE `billing_holidays` (
   `day` date NOT NULL default '0000-00-00',
   UNIQUE KEY `day_idx` (`day`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -214,7 +214,7 @@ CREATE TABLE `billing_profiles` (
   UNIQUE KEY `profile_idx` (`name`),
   KEY `name_idx` (`name`),
   KEY `reseller_idx` (`reseller_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -239,7 +239,7 @@ CREATE TABLE `billing_rates` (
   KEY `name_idx` (`name`),
   KEY `dest_idx` (`destination`),
   KEY `reseller_idx` (`reseller_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -266,7 +266,7 @@ CREATE TABLE `billing_rates_history` (
   KEY `name_idx` (`name`),
   KEY `dest_idx` (`destination`),
   KEY `reseller_idx` (`reseller_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -286,7 +286,7 @@ CREATE TABLE `cc_purchase_items` (
   UNIQUE KEY `unq_cc_purchase_items` (`CCPurchaseID`),
   KEY `idx_cc_purchase_items_TransactionNum` (`TransactionNum`),
   KEY `idx_cc_purchase_items_Item` (`Item`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -318,7 +318,7 @@ CREATE TABLE `cc_transactions` (
   UNIQUE KEY `unq_ cc_transactions` (`TransactionID`),
   KEY `idx_ cc_transactions_ TransactionNum` (`TransactionNum`),
   KEY `idx_ cc_transactions_ CorrelationID` (`CorrelationID`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -356,7 +356,7 @@ CREATE TABLE `cc_user_info` (
   KEY `idx_cc_user_info_LastName` (`LastName`),
   KEY `idx_cc_user_info_UserAcct` (`UserAcct`),
   KEY `idx_cc_user_info_Email` (`Email`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -370,7 +370,7 @@ CREATE TABLE `db_sequence` (
   `seq_name` varchar(127) NOT NULL default '',
   `nextid` int(10) unsigned NOT NULL default '0',
   PRIMARY KEY  (`seq_name`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -397,7 +397,7 @@ CREATE TABLE `destinations` (
   KEY `dest_idx` (`dest_id`),
   KEY `reseller_idx` (`reseller_id`),
   KEY `cust_dest_idx` (`reseller_id`,`gateway`,`domain`,`subscriber`,`dest_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -410,7 +410,7 @@ SET character_set_client = utf8;
 CREATE TABLE `isdncause` (
   `cause` int(11) NOT NULL default '0',
   `description` varchar(255) NOT NULL default ''
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -425,7 +425,7 @@ CREATE TABLE `lastquery` (
   `date` datetime NOT NULL default '0000-00-00 00:00:00',
   `query` text,
   PRIMARY KEY  (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -451,7 +451,7 @@ CREATE TABLE `log` (
   KEY `log_date` (`date`),
   KEY `login_idx` (`login`),
   KEY `reseller_idx` (`reseller_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -465,7 +465,7 @@ CREATE TABLE `memcache` (
   `key` varchar(255) NOT NULL default '',
   `value` longblob NOT NULL,
   PRIMARY KEY  (`key`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -477,7 +477,7 @@ SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8;
 CREATE TABLE `normalize_lock` (
   `notused` char(1) default NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -499,7 +499,7 @@ CREATE TABLE `prepaid` (
   PRIMARY KEY  (`id`),
   UNIQUE KEY `acc_id` (`account`),
   KEY `reseller_idx` (`reseller_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -523,7 +523,7 @@ CREATE TABLE `prepaid_cards` (
   UNIQUE KEY `card_idx` (`number`),
   KEY `nr_id` (`number`),
   KEY `reseller_idx` (`reseller_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -550,7 +550,7 @@ CREATE TABLE `prepaid_history` (
   KEY `acct_id` (`username`,`domain`),
   KEY `session_idx` (`session`),
   KEY `reseller_idx` (`reseller_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -578,7 +578,7 @@ CREATE TABLE `quota_usage` (
   PRIMARY KEY  (`id`),
   UNIQUE KEY `account_idx` (`datasource`,`account`),
   KEY `reseller_idx` (`reseller_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -600,7 +600,7 @@ CREATE TABLE `settings` (
   `var_module` varchar(255) default NULL,
   PRIMARY KEY  (`id`),
   KEY `name` (`var_name`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
+) AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -615,7 +615,7 @@ CREATE TABLE `sip_status` (
   `description` varchar(255) NOT NULL default '',
   `code_type` varchar(255) NOT NULL default '',
   `isdn_cause` smallint(5) unsigned NOT NULL default '0'
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -631,7 +631,7 @@ CREATE TABLE `spam` (
   `login` varchar(255) default NULL,
   `stamp` int(10) unsigned NOT NULL default '0',
   UNIQUE KEY `spam_ip` (`ip`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) DEFAULT CHARSET=latin1;
 SET character_set_client = @saved_cs_client;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -659,7 +659,7 @@ CREATE TABLE `subscriber_docs` (
   `mobile_number` varchar(15) NOT NULL,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `document_idx` (`username`,`domain`,`document`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) DEFAULT CHARSET=latin1;
 
 drop table if exists billing_discounts;
 CREATE TABLE `billing_discounts` (
@@ -677,6 +677,19 @@ CREATE TABLE `billing_discounts` (
   UNIQUE KEY `rate_idx` (`gateway`,`domain`,`subscriber`,`destination`,`region`),
   KEY `name_idx` (`region`),
   KEY `dest_idx` (`destination`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) DEFAULT CHARSET=latin1;
+
+drop table if exists client_journal;
+CREATE TABLE `client_journal` (
+  `id` bigint(20) unsigned NOT NULL auto_increment,
+  `timestamp` datetime NOT NULL default '0000-00-00 00:00:00',
+  `account` varchar(128) NOT NULL default '',
+  `uuid` varchar(256) NOT NULL default '',
+  `data` longblob NOT NULL,
+  PRIMARY KEY  (`id`),
+  KEY `account_idx` (`account`),
+  KEY `uuid_idx` (`uuid`)
+);
 
 -- Dump completed on 2009-12-11 22:53:58
+
