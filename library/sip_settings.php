@@ -1680,6 +1680,15 @@ class SipSettings {
                                                 "ResellerMaySeeIt"=>1
         										);
         }
+
+        $this->availableGroups['rate-on-net']  = array("Group"=>"rate-on-net",
+                                "WEBName" =>sprintf(_("Rate on net")),
+                                "SubscriberMayEditIt"=>0,
+                                "SubscriberMaySeeIt"=>0,
+                                "ResellerMayEditIt"=>1,
+                                "ResellerMaySeeIt"=>1
+                                );
+
         if ($this->sms_access) {
             $this->availableGroups['sms']  = array("Group"=>"sms",
                                             "WEBName" =>sprintf(_("Mobile SMS")),
