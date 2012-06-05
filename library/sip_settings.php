@@ -5729,6 +5729,7 @@ class SipSettings {
                 foreach ($this->calls_received[$call]['media'] as $m) {
                      $media.="$m,";
                 }
+                $media=quoted_printable_decode($media);
                 $media=rtrim($media,",");
 
                 $duration    = normalizeTime($this->calls_received[$call]['duration']);
@@ -5799,6 +5800,7 @@ class SipSettings {
                 foreach ($this->calls_received[$call]['media'] as $m) {
                      $media.="$m,";
                 }
+                $media=quoted_printable_decode($media);
                 $media=rtrim($media,",");
                 $price       = $this->calls_placed[$call]['price'];
                 $status      = $this->calls_placed[$call]['status'];
