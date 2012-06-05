@@ -1,4 +1,4 @@
-INSERT INTO auth_user (user_id,username,password,password_hashed,perms,expire,name,email,display_cli,sources,impersonate) VALUES ('c14cbf141ab1b7cd009356f555b607dc','admin','admin','456b7016a916a4b178dd72b947c152b7','admin,callsearch,statistics,rates,showPrice,showCallerId','2099-01-01','Administrator','user@example.com','1','opensips_radius,sip_trace,media_trace','0.0');
+INSERT INTO auth_user (user_id,username,password,password_hashed,perms,expire,name,email,display_cli,sources,impersonate) VALUES ('c14cbf141ab1b7cd009356f555b607dc','admin','admin','21232f297a57a5a743894a0e4a801fc3','admin,callsearch,statistics,rates,showPrice,showCallerId','2099-01-01','Administrator','user@example.com','1','opensips_radius,sip_trace,media_trace','0.0');
 
 INSERT INTO sip_status VALUES (488,'NotAcceptableMedia','Client-Error',127);
 INSERT INTO sip_status VALUES (487,'Canceled','Client-Error',127);
