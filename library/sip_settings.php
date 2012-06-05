@@ -5725,6 +5725,12 @@ class SipSettings {
                 $j++;
 
                 $uri         = $this->calls_received[$call]['remoteParty'];
+                $media="";
+                foreach ($this->calls_received[$call]['media'] as $m) {
+                     $media.="$m,";
+                }
+                $media=rtrim($media,",");
+
                 $duration    = normalizeTime($this->calls_received[$call]['duration']);
                 $dialURI     = $this->PhoneDialURL($uri) ;
                 $htmlDate    = $this->colorizeDate($this->calls_received[$call]['startTime']);
@@ -5758,10 +5764,10 @@ class SipSettings {
                 <td>
                 <table border=0 width=100% cellspacing=0 cellpadding=0>
                 <tr>
-                <td align=left width=10>$dialURI</td>
+                <td align=left width=10><nobr>$dialURI</nobr></td>
                 <td align=right width=40>$duration</td>
                 <td align=right width=10></td>
-                <td align=left><nobr>$htmlURI</nobr></td>
+                <td align=left><nobr>$htmlURI ($media)</nobr></td>
                 ";
                 print "<td align=right width=15><nobr>$trace_link</nobr></td>";
                 print "<td align=right width=10></td>";
@@ -5789,6 +5795,11 @@ class SipSettings {
                 }
 
                 $uri         = $this->calls_placed[$call]['remoteParty'];
+                $media="";
+                foreach ($this->calls_received[$call]['media'] as $m) {
+                     $media.="$m,";
+                }
+                $media=rtrim($media,",");
                 $price       = $this->calls_placed[$call]['price'];
                 $status      = $this->calls_placed[$call]['status'];
                 $rateinfo    = $this->calls_placed[$call]['rateInfo'];
@@ -5827,10 +5838,10 @@ class SipSettings {
                 <td>
                 <table border=0 width=100% cellspacing=0 cellpadding=0>
                 <tr>
-                <td align=left width=10>$dialURI</td>
+                <td align=left width=10><nobr>$dialURI<nobr></td>
                 <td align=right width=40>$duration</td>
                 <td align=right width=10></td>
-                <td align=left><nobr>$htmlURI $price_print</nobr></td>
+                <td align=left><nobr>$htmlURI ($media) $price_print</nobr></td>
                 ";
 
                 print "<td align=right width=15><nobr>$trace_link</nobr></td>";
@@ -5885,7 +5896,7 @@ class SipSettings {
                                     "fromTag"      => $callStructure->fromTag,
                                     "toTag"        => $callStructure->toTag,
                                     "proxyIP"      => $callStructure->proxyIP,
-                                    "media"        => 'audio'
+                                    "media"        => $callStructure->applicationTypes
                                     );
         }
 
@@ -5905,7 +5916,7 @@ class SipSettings {
                                     "fromTag"      => $callStructure->fromTag,
                                     "toTag"        => $callStructure->toTag,
                                     "proxyIP"      => $callStructure->proxyIP,
-                                    "media"        => 'audio'
+                                    "media"        => $callStructure->applicationTypes
                                      );         
         }
 
