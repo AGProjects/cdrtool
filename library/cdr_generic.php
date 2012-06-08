@@ -2985,7 +2985,7 @@ class MaxRate extends CSVWritter {
             $cdr['origin']='+31000000000';
         }
 
-        #translate destination uris
+        #translate destination URIs to desired format
         if ($CDR->CanonicalURINormalized && count($this->translate_uris)) {
             foreach ($this->translate_uris as $key => $uri) {
                 if ( preg_match("/^$key/", $CDR->CanonicalURINormalized)) {
@@ -3043,7 +3043,7 @@ class MaxRate extends CSVWritter {
         } else if ($CDR->flow == 'incoming') {
             # RFP 4.2.3
 
-               if ($this->inbound_trunks[$CDR->SourceIP]) {
+            if ($this->inbound_trunks[$CDR->SourceIP]) {
                 $inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
             } else {
                 $inbound_trunk = 'unknown';
@@ -3064,9 +3064,20 @@ class MaxRate extends CSVWritter {
 
             $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
 
-            if ($CalleeRPID) {
-                $cdr['destination'] = '+31'.ltrim($CalleeRPID,'0');
+            $DiverterRPID=$this->getRPIDforAccount($CDR->username);
+
+            if ($DiverterRPID) {
+                $diverter_origin = '+31'.ltrim($DiverterRPID,'0');
+            } else {
+                $diverter_origin = $CDR->username;
             }
+
+            if ($CalleeRPID) {
+                $cdr['c_num'] = '+31'.ltrim($CalleeRPID,'0');
+            }
+
+            # Set destination to B-Number
+            $cdr['destination'] = $diverter_origin;
 
             if ($this->inbound_trunks[$CDR->SourceIP]) {
                 $inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
@@ -3074,7 +3085,13 @@ class MaxRate extends CSVWritter {
                 $inbound_trunk = 'unknown';
             }
 
-            $cdr['charge_info'] = sprintf("(%s,2)",$inbound_trunk);
+            $cdr['charge_info'] = sprintf(  "(%s,2),(%s,2,%s,%s,%s)",
+                                            $inbound_trunk,
+                                            $cdr['destination'],
+                                            $cdr['destination'],
+                                            $cdr['c_num'],
+                                            $cdr['feature_set']
+                                         );
 
             $cdr['extra'] = $cdr['extra']." incoming-diverted-on-net";
 
@@ -3089,6 +3106,11 @@ class MaxRate extends CSVWritter {
                 $diverter_origin = $CDR->username;
             }
 
+            $cdr['c_num'] = $cdr['destination'];
+
+            # Set destination to B-Number
+            $cdr['destination']=$diverter_origin;
+
             if ($this->inbound_trunks[$CDR->SourceIP]) {
                 $inbound_trunk = $this->inbound_trunks[$CDR->SourceIP];
             } else {
@@ -3101,11 +3123,14 @@ class MaxRate extends CSVWritter {
                 $outbound_trunk = 'unknown';
             }
 
-               $cdr['charge_info'] = sprintf("(%s,1),(%s,2),(%s,2)",
-                                          $diverter_origin,
-                                          $inbound_trunk,
-                                          $outbound_trunk
-                                          );
+            $cdr['charge_info'] = sprintf(  "(%s,1),(%s,2,%s,%s,%s,(%s,3)",
+                                            $inbound_trunk,
+                                            $diverter_origin,
+                                            $diverter_origin,
+                                            $cdr['c_num'],
+                                            $cdr['feature_set'],
+                                            $outbound_trunk
+                                        );
 
             $cdr['extra'] = $cdr['extra']." incoming-diverted-off-net";
 
@@ -3123,10 +3148,19 @@ class MaxRate extends CSVWritter {
             $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
 
             if ($CalleeRPID) {
-                $cdr['destination'] = '+31'.ltrim($CalleeRPID,'0');
+                $cdr['c_num'] = '+31'.ltrim($CalleeRPID,'0');
             }
+            
+            # Set destination to B-Number
+            $cdr['destination'] = $diverter_origin;
 
-            $cdr['charge_info'] = sprintf("(%s,1),(%s,1)",$cdr['origin'],$diverter_origin);
+            $cdr['charge_info'] = sprintf(  "(%s,1),(%s,2,%s,%s,%s)",
+                                            $cdr['origin'],
+                                            $diverter_origin,
+                                            $diverter_origin,
+                                            $cdr['c_num'],
+                                            $cdr['feature_set']
+                                            );
 
             $cdr['extra'] = $cdr['extra']." $CDR->flow";
 
@@ -3140,6 +3174,11 @@ class MaxRate extends CSVWritter {
             } else {
                 $diverter_origin = $CDR->username;
             }
+            
+            $cdr['c_num']= $cdr['destination'];
+
+            # Set destination to B-Number
+            $cdr['destination'] = $diverter_origin;
 
             if ($this->outbound_trunks[$CDR->remoteGateway]) {
                 $outbound_trunk = $this->outbound_trunks[$CDR->remoteGateway];
@@ -3147,10 +3186,14 @@ class MaxRate extends CSVWritter {
                 $outbound_trunk = 'unknown';
             }
 
-               $cdr['charge_info'] = sprintf("(%s,1),(%s,2)",
+            $cdr['charge_info'] = sprintf("(%s,1),(%s,2,%s,%s,%s),(%s,3)",
+                                          $cdr['origin'],
                                           $diverter_origin,
+                                          $diverter_origin,
+                                          $cdr['c_num'],
+                                          $cdr['feature_set'],
                                           $outbound_trunk
-                                          );
+                                      );
 
             $cdr['extra'] = $cdr['extra']." $CDR->flow";
         }
