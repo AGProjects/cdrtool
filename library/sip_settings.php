@@ -6477,11 +6477,14 @@ class SipSettings {
         if ($_REQUEST['except_uuid']) {
             $where.= sprintf(" and uuid <> '%s'", addslashes($_REQUEST['except_uuid']));
         }
-        if ($_REQUEST['from_id']) {
-            $where.= sprintf(" and id >= %d", addslashes(intval($_REQUEST['from_id'])));
+        if ($_REQUEST['after_id']) {
+            $after_id = intval($_REQUEST['after_id']);
+        } else {
+            $after_id = 0;
         }
-        if ($_REQUEST['from_timestamp']) {
-            $where.= sprintf(" and timestamp >= '%s'", addslashes(intval($_REQUEST['from_timestamp'])));
+        $where.= sprintf(" and id > %d", addslashes());
+        if ($_REQUEST['after_timestamp']) {
+            $where.= sprintf(" and timestamp > '%s'", addslashes($_REQUEST['after_timestamp']));
         }
         if ($_REQUEST['limit']) {
             $limit = intval($limit);
@@ -6489,18 +6492,21 @@ class SipSettings {
             $limit = 1000;
         }
 
-        $query=sprintf("select * from client_journal where account = '%s' %s order by id ASC limit %d",  addslashes($this->account), $where, $limit);
+        $query=sprintf("select * from client_journal where account = '%s' %s order by timestamp ASC limit %d",  addslashes($this->account), $where, $limit);
         if (!$this->db->query($query)) {
             $this->journalEntries['error_message'] = 'Database Failure';
+            $this->journalEntries['rows'] = 0;
             return false;
         } else {
             $this->journalEntries['success'] = true;
+            $this->journalEntries['rows'] = $this->db->num_rows();
         }
 
         if ($this->db->num_rows()) {
-        	while ($this->db->next_record()) {
+            while ($this->db->next_record()) {
                 $entry = array(
                                'id'          => $this->db->f('id'),
+                               'source'      => 'default',
                                'timestamp'   => $this->db->f('timestamp'),
                                'account'     => $this->db->f('account'),
                                'uuid'        => $this->db->f('uuid'),
@@ -6510,6 +6516,7 @@ class SipSettings {
                 $this->journalEntries['results'][]=$entry;
             }
         }
+
         return True;
     }
 
@@ -6523,25 +6530,36 @@ class SipSettings {
             return $result;
         }
         if (strlen($_REQUEST['data'])) {
-            $entry = $_REQUEST['data'];
+            $data = $_REQUEST['data'];
         } else {
             $result['success'] = false;
             $result['error_message'] = 'Missing data';
             return $result;
         }
-
-        $query=sprintf("insert into client_journal (timestamp, account, uuid, data, ip_address) values (NOW(),'%s', '%s', '%s', '%s')", addslashes($this->account), addslashes($uuid), addslashes($data), $_SERVER['REMOTE_ADDR']);
-
-        if (!$this->db->query($query)) {
-            $result['error_message'] = 'Database Insert Failure';
-            return false;
-        } else {
-            $query="select LAST_INSERT_ID() as id";
-            $this->db->query($query);
-        	$this->db->next_record();
-            $id = $this->db->f('id');
+        if ($rows=json_decode($data)) {
+            foreach ($rows as $row) {
+                $entry = $row->data;
+                $query=sprintf("insert into client_journal (timestamp, account, uuid, data, ip_address) values (NOW(),'%s', '%s', '%s', '%s')", addslashes($this->account), addslashes($uuid), addslashes($entry), $_SERVER['REMOTE_ADDR']);
+                if (!$this->db->query($query)) {
+                    $result['results'][]=array('id'         => $row->id,
+                                               'journal_id' => NULL,
+                                               'source'     => 'default'
+                                            );
+                } else {
+                    $query="select LAST_INSERT_ID() as id";
+                    $this->db->query($query);
+                    $this->db->next_record();
+                    $id = $this->db->f('id');
+                    $result['results'][]=array('id'         => $row->id,
+                                               'journal_id' => $id,
+                                               'source'     => 'default'
+                                               );
+                }
+            }
             $result['success'] = true;
-            $result['id'] = $id;
+        } else {
+            $result['success'] = false;
+            $result['error_message'] = 'Json decode error';
         }
         return $result;
     }
@@ -10753,6 +10771,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
 
     if (!strstr($_REQUEST['action'],'get_') &&
         !strstr($_REQUEST['action'],'set_') &&
+        !strstr($_REQUEST['action'],'put_') &&
         !strstr($_REQUEST['action'],'export_') &&
         !strstr($_REQUEST['action'],'add_')) {
         $title  = "SIP settings of $account";
