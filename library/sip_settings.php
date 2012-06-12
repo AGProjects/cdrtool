@@ -5738,10 +5738,10 @@ class SipSettings {
                 $htmlURI     = $this->htmlURI($uri);
                 $urlURI      = urlencode($this->normalizeURI($uri));
 
-                $sessionId    = urlencode(quoted_printable_decode($this->calls_received[$call]['sessionId']));
-                $fromTag      = urlencode(quoted_printable_decode($this->calls_received[$call]['fromTag']));
-                $toTag        = urlencode(quoted_printable_decode($this->calls_received[$call]['toTag']));
-                $proxyIP      = urlencode(quoted_printable_decode($this->calls_received[$call]['proxyIP']));
+                $sessionId    = urlencode($this->calls_received[$call]['sessionId']);
+                $fromTag      = urlencode($this->calls_received[$call]['fromTag']);
+                $toTag        = urlencode($this->calls_received[$call]['toTag']);
+                $proxyIP      = urlencode($this->calls_received[$call]['proxyIP']);
                 $cdr_source   = 'sipthor';
                 $trace_link   = "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$cdr_source&callid=$sessionId&fromtag=$fromTag&totag=$toTag&proxyIP=$proxyIP', 'Trace',
                 'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">Trace</a>";
@@ -5795,12 +5795,11 @@ class SipSettings {
                     continue;
                 }
 
-                $uri         = $this->calls_placed[$call]['remoteParty'];
-                $media="";
-                foreach ($this->calls_received[$call]['media'] as $m) {
+                $uri = $this->calls_placed[$call]['remoteParty'];
+                $media = "";
+                foreach ($this->calls_placed[$call]['media'] as $m) {
                      $media.="$m,";
                 }
-                $media=quoted_printable_decode($media);
                 $media=rtrim($media,",");
                 $price       = $this->calls_placed[$call]['price'];
                 $status      = $this->calls_placed[$call]['status'];
@@ -5811,10 +5810,10 @@ class SipSettings {
                 $htmlURI     = $this->htmlURI($uri);
                 $urlURI      = urlencode($this->normalizeURI($uri));
 
-                $sessionId    = urlencode(quoted_printable_decode($this->calls_placed[$call]['sessionId']));
-                $fromTag      = urlencode(quoted_printable_decode($this->calls_placed[$call]['fromTag']));
-                $toTag        = urlencode(quoted_printable_decode($this->calls_placed[$call]['toTag']));
-                $proxyIP      = urlencode(quoted_printable_decode($this->calls_placed[$call]['proxyIP']));
+                $sessionId    = urlencode($this->calls_placed[$call]['sessionId']);
+                $fromTag      = urlencode($this->calls_placed[$call]['fromTag']);
+                $toTag        = urlencode($this->calls_placed[$call]['toTag']);
+                $proxyIP      = urlencode($this->calls_placed[$call]['proxyIP']);
                 $cdr_source   = 'sipthor';
                 $trace_link   = "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$cdr_source&callid=$sessionId&fromtag=$fromTag&totag=$toTag&proxyIP=$proxyIP', 'Trace',
                 'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">Trace</a>";
@@ -5888,24 +5887,34 @@ class SipSettings {
 
         // received  calls
         foreach ($result->received as $callStructure) {
+            $media = array();
+            $apps = explode(",",quoted_printable_decode($callStructure->applicationTypes[0]));
+            foreach ($apps as $app) {
+                $media[]=trim($app);
+            }
             $this->calls_received[]=array(
                                     "remoteParty"  => quoted_printable_decode($callStructure->fromURI),
                                     "startTime"    => getLocalTime($this->timezone,$callStructure->startTime),
                                     "stopTime"     => getLocalTime($this->timezone,$callStructure->stopTime),
                                     "duration"     => $callStructure->duration,
                                     "status"       => $callStructure->status,
-                                    "sessionId"    => $callStructure->sessionId,
-                                    "fromTag"      => $callStructure->fromTag,
-                                    "toTag"        => $callStructure->toTag,
+                                    "sessionId"    => quoted_printable_decode($callStructure->sessionId),
+                                    "fromTag"      => quoted_printable_decode($callStructure->fromTag),
+                                    "toTag"        => quoted_printable_decode($callStructure->toTag),
                                     "proxyIP"      => $callStructure->proxyIP,
-                                    "media"        => $callStructure->applicationTypes
+                                    "media"        => $media
                                     );
         }
 
         // placed calls
         foreach ($result->placed as $callStructure) {
-
             if ($callStructure->status == 435) continue;
+
+            $media = array();
+            $apps = explode(",",quoted_printable_decode($callStructure->applicationTypes[0]));
+            foreach ($apps as $app) {
+                $media[]=trim($app);
+            }
 
             $this->calls_placed[]=array(
                                     "remoteParty"  => quoted_printable_decode($callStructure->toURI),
@@ -5914,12 +5923,12 @@ class SipSettings {
                                     "duration"     => $callStructure->duration,
                                     "status"       => $callStructure->status,
                                     "price"        => $callStructure->price,
-                                    "sessionId"    => $callStructure->sessionId,
-                                    "fromTag"      => $callStructure->fromTag,
-                                    "toTag"        => $callStructure->toTag,
+                                    "sessionId"    => quoted_printable_decode($callStructure->sessionId),
+                                    "fromTag"      => quoted_printable_decode($callStructure->fromTag),
+                                    "toTag"        => quoted_printable_decode($callStructure->toTag),
                                     "proxyIP"      => $callStructure->proxyIP,
-                                    "media"        => $callStructure->applicationTypes
-                                     );         
+                                    "media"        => $media
+                                     );
         }
 
         $this->call_history=array('placed'=>$this->calls_placed,
