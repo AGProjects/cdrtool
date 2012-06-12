@@ -6491,11 +6491,11 @@ class SipSettings {
         } else {
             $after_id = 0;
         }
-        $where.= sprintf(" and id > %d", addslashes());
+        $where.= sprintf(" and id > %d", addslashes($after_id));
         if ($_REQUEST['after_timestamp']) {
             $where.= sprintf(" and timestamp > '%s'", addslashes($_REQUEST['after_timestamp']));
         }
-        if ($_REQUEST['limit']) {
+        if ($_REQUEST['limit'] and intval($_REQUEST['limit']) < 1000) {
             $limit = intval($limit);
         } else {
             $limit = 1000;
