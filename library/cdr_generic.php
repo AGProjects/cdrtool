@@ -3049,7 +3049,7 @@ class MaxRate extends CSVWritter {
                 $inbound_trunk = 'unknown';
             }
 
-            $cdr['charge_info']=sprintf("(%s,2)",$inbound_trunk);
+            $cdr['charge_info']=sprintf("(%s,1)",$inbound_trunk);
 
             $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
 
