@@ -906,7 +906,7 @@ class CDRS_opensips extends CDRS {
 
             print "</nobr>&nbsp";
 
-            if (!$perm->have_perm('readonly') && !$this->DATASOURCES[$this->cdr_source]['skipNormalizeOnPageLoad']) {
+            if (!$perm->have_perm('readonly')) {
                 print ";&nbsp;&nbsp; <nobr>ReNormalize";
                 print "<input type=checkbox name=ReNormalize value=1>
                 </nobr>";
