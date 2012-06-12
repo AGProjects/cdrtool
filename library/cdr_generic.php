@@ -3085,12 +3085,13 @@ class MaxRate extends CSVWritter {
                 $inbound_trunk = 'unknown';
             }
 
-            $cdr['charge_info'] = sprintf(  "(%s,2),(%s,2,%s,%s,%s)",
+            $cdr['charge_info'] = sprintf(  "(%s,2),(%s,2,%s,%s,%s,%s)",
                                             $inbound_trunk,
                                             $cdr['destination'],
                                             $cdr['destination'],
                                             $cdr['c_num'],
-                                            $cdr['feature_set']
+                                            $cdr['feature_set'],
+                                            $cdr['product']
                                          );
 
             $cdr['extra'] = $cdr['extra']." incoming-diverted-on-net";
@@ -3123,12 +3124,13 @@ class MaxRate extends CSVWritter {
                 $outbound_trunk = 'unknown';
             }
 
-            $cdr['charge_info'] = sprintf(  "(%s,1),(%s,2,%s,%s,%s,(%s,3)",
+            $cdr['charge_info'] = sprintf(  "(%s,1),(%s,2,%s,%s,%s,%s),(%s,3)",
                                             $inbound_trunk,
                                             $diverter_origin,
                                             $diverter_origin,
                                             $cdr['c_num'],
                                             $cdr['feature_set'],
+                                            $cdr['product'],
                                             $outbound_trunk
                                         );
 
@@ -3154,12 +3156,13 @@ class MaxRate extends CSVWritter {
             # Set destination to B-Number
             $cdr['destination'] = $diverter_origin;
 
-            $cdr['charge_info'] = sprintf(  "(%s,1),(%s,2,%s,%s,%s)",
+            $cdr['charge_info'] = sprintf(  "(%s,1),(%s,2,%s,%s,%s,%s)",
                                             $cdr['origin'],
                                             $diverter_origin,
                                             $diverter_origin,
                                             $cdr['c_num'],
-                                            $cdr['feature_set']
+                                            $cdr['feature_set'],
+                                            $cdr['product']
                                             );
 
             $cdr['extra'] = $cdr['extra']." $CDR->flow";
@@ -3186,12 +3189,13 @@ class MaxRate extends CSVWritter {
                 $outbound_trunk = 'unknown';
             }
 
-            $cdr['charge_info'] = sprintf("(%s,1),(%s,2,%s,%s,%s),(%s,3)",
+            $cdr['charge_info'] = sprintf("(%s,1),(%s,2,%s,%s,%s,%s),(%s,3)",
                                           $cdr['origin'],
                                           $diverter_origin,
                                           $diverter_origin,
                                           $cdr['c_num'],
                                           $cdr['feature_set'],
+                                          $cdr['product'],
                                           $outbound_trunk
                                       );
 
