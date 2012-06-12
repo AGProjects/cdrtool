@@ -3085,7 +3085,7 @@ class MaxRate extends CSVWritter {
                 $inbound_trunk = 'unknown';
             }
 
-            $cdr['charge_info'] = sprintf(  "(%s,2),(%s,2,%s,%s,%s,%s)",
+            $cdr['charge_info'] = sprintf(  "(%s,1),(%s,2,%s,%s,%s,%s)",
                                             $inbound_trunk,
                                             $cdr['destination'],
                                             $cdr['destination'],
