@@ -41,6 +41,7 @@ class CDRS {
                                       'cNumber'           => 'CalledStationId',
                                       'timestamp'        => 'timestamp',
                                       'BillingPartyId'  => 'UserName',
+                                      'sipRPID'         => 'SipRPID',
                                       'ResellerId'      => 'BillingId',
                                       'price'           => 'Price',
                                       'DestinationId'   => 'DestinationId'

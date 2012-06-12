@@ -1476,8 +1476,8 @@ class CDRS_opensips extends CDRS {
                 $this->CDRdb->query($query);
             }
 
-            if (!$this->DATASOURCES[$this->cdr_source]['skipNormalizeOnPageLoad']) {
-                if ($UnNormalizedCalls=$this->getUnNormalized($where,$cdr_table)) {
+            if ($UnNormalizedCalls=$this->getUnNormalized($where,$cdr_table)) {
+                if (!$this->DATASOURCES[$this->cdr_source]['skipNormalizeOnPageLoad']) {
                     if ($UnNormalizedCalls < $this->maxCDRsNormalizeWeb) {
                         $this->NormalizeCDRS($where,$cdr_table);
                         if (!$this->export && $this->status['normalized'] ) {
