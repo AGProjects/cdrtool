@@ -3027,8 +3027,8 @@ class MaxRate extends CSVWritter {
         } else if ($CDR->flow == 'outgoing') {
             # RFP 4.2.2
 
-            if ($this->outbound_trunks[$CDR->CanonicalURIDomain]) {
-                $outbound_trunk = $this->outbound_trunks[$CDR->CanonicalURIDomain];
+            if ($this->outbound_trunks[$CDR->remoteGateway]) {
+                $outbound_trunk = $this->outbound_trunks[$CDR->remoteGateway];
             } else {
                 $outbound_trunk = 'unknown';
             }
