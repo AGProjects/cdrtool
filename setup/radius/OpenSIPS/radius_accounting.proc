@@ -811,7 +811,6 @@ BEGIN
                 MediaInfo = ?,
                 SipUserAgents = ?,
                 SipCodecs = ?,
-                SipApplicationType = ?,
                 Normalized = '0' 
                 WHERE 
                 AcctSessionId = ?
@@ -821,12 +820,11 @@ BEGIN
             SET @v_MediaInfo = var_MediaInfo,
                 @v_SipUserAgents = var_SipUserAgents,
                 @v_SipCodecs = var_SipCodecs,
-                @v_SipApplicationType = var_SipApplicationType,
                 @v_AcctSessionId = var_AcctSessionId,
                 @v_SipToTag = var_SipToTag,
                 @v_SipFromTag = var_SipFromTag;
 
-            EXECUTE update_rad USING @v_MediaInfo, @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
+            EXECUTE update_rad USING @v_MediaInfo, @v_SipUserAgents, @v_SipCodecs, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
 
             SET @rcnt = (SELECT ROW_COUNT());
             DEALLOCATE PREPARE update_rad;
@@ -838,7 +836,6 @@ BEGIN
                 AcctOutputOctets = AcctOutputOctets + ?,
                 SipUserAgents = ?,
                 SipCodecs = ?,
-                SipApplicationType = ?,
                 MediaInfo = ?,
                 Normalized = ?
                 WHERE
@@ -851,7 +848,6 @@ BEGIN
 			    @v_AcctOutputOctets = var_AcctOutputOctets,
 			    @v_SipUserAgents = var_SipUserAgents,
 			    @v_SipCodecs = var_SipCodecs,
-			    @v_SipApplicationType = var_SipApplicationType,
 			    @v_MediaInfo = var_MediaInfo,
 			    @v_Normalized = var_Normalized,
 			    @v_AcctSessionId = var_AcctSessionId,
@@ -859,7 +855,7 @@ BEGIN
 			    @v_SipFromTag = var_SipFromTag;
 
 			EXECUTE update_rad USING @v_AcctSessionTime, @v_AcctInputOctets, @v_AcctOutputOctets,
-				@v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
+				@v_SipUserAgents, @v_SipCodecs,
 				@v_MediaInfo, @v_Normalized, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
 			SET @rcnt = (SELECT ROW_COUNT());
 			DEALLOCATE PREPARE update_rad;
