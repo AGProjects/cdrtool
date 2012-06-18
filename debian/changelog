@@ -1,3 +1,39 @@
+cdrtool (8.4.0) unstable; urgency=low
+
+  [ Rating Engine ]
+
+  * Fixed admin password hash in install file
+  * Fixed daily quota check and variable name. Contributed by Brian Chamberlain
+  * Fixed getting sip traces
+  * Hide renormalize checkbox if web page normalization is disabled
+  * Added disconnect code to normalize init and added calls with 0 duration(200 OK) to MaxRate CSV
+  * Use default number when RPID contains letters for MaxRate 
+  * Fixed CDRwritter MaxRate flow names
+  * Added setting to skip normalize on web page load
+  * Fixed writing to the same file in CSVWritter/Normalize process
+  * Updated time in radius procedure and formatted code better
+
+  [ NGNPro client ]
+
+  * Added storage for client journals
+  * Added get and put journal for clients API calls
+  * Fixed on-net display for resellers
+  * Refactor get history api
+  * Fixed get calls functions
+  * Fixed decoding of audio types in history panel
+  * Fixed settings ttl for DNS record templates
+  * Fixed quoting sql query
+
+  [ Web Interface ]
+
+  * Update SIP DNS record template
+  * Print help for NAPTR record edit form
+  * Fixed subscriber login
+  * Fixed AP 'country' by rewriting to N/A
+  * Fixed time addition after media update and formatted some code
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 18 Jun 2012 11:43:36 +0200
+
 cdrtool (8.3.0) unstable; urgency=low
 
   [ Rating Engine ]
