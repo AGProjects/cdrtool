@@ -1678,7 +1678,15 @@ class SipSettings {
                                                 "SubscriberMaySeeIt"  => 1,
                                                 "ResellerMayEditIt"=>1,
                                                 "ResellerMaySeeIt"=>1
-        										);
+                                            );
+            $this->availableGroups['anonymous']=array("Group"=>"anonymous",
+                            "WEBName" =>sprintf (_("PSTN Privacy")),
+                            "WEBComment"=>$_comment,
+                            "SubscriberMaySeeIt"=>1,
+                            "SubscriberMayEditIt"=>1,
+                            "ResellerMayEditIt"=>1,
+                            "ResellerMaySeeIt"=>1
+                            );
         }
 
         $this->availableGroups['rate-on-net']  = array("Group"=>"rate-on-net",
