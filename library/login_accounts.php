@@ -463,9 +463,9 @@ function accountList() {
 
     $query="select * from auth_user";
     if (!$perm->have_perm("admin")) {
-            $query=$query. " where user_id = '$uid'";
+        $query.= sprintf(" where user_id = '%s'", addslashes($uid));
     }
-    $query=$query." order by name asc";
+    $query .= " order by name asc";
     $db->query($query);
     dprint($query);
     $rows=$db->num_rows();

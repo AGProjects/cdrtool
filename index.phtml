@@ -19,7 +19,7 @@ if ($DATASOURCES) {
     $query=sprintf("select * from settings
     where billing_party = '%s'
     and var_module= 'login'
-    and var_name = 'I_agree_with_license'",$loginname);
+    and var_name = 'I_agree_with_license'",addslashes($loginname));
     if ($db->query($query)) {
     	if ($db->num_rows()) {
         	$refreshURL='callsearch.phtml';

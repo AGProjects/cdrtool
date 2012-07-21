@@ -2095,8 +2095,8 @@ class SipSettings {
                 '%s'
                 )",
                 addslashes($_REQUEST['name']),
-                $this->username,
-                $this->domain,
+                addslashes($this->username),
+                addslashes($this->domain),
                 addslashes($content),
                 addslashes($_FILES['tmpfile']['name']),
                 addslashes($_FILES['tmpfile']['size']),
@@ -2144,8 +2144,8 @@ class SipSettings {
             where username = '%s'
             and domain = '%s'
             and document = 'identity'",
-            $this->username,
-            $this->domain
+            addslashes($this->username),
+            addslashes($this->domain)
             );
     
             if (!$this->db->query($query)) {
@@ -2159,8 +2159,8 @@ class SipSettings {
         where username = '%s'
         and domain = '%s'
         and document = 'identity'",
-        $this->username,
-        $this->domain
+        addslashes($this->username),
+        addslashes($this->domain)
         );
 
         if (!$this->db->query($query)) {
@@ -2345,8 +2345,8 @@ class SipSettings {
         where username = '%s'
         and domain = '%s'
         and document = 'identity'",
-        $this->username,
-        $this->domain
+        addslashes($this->username),
+        addslashes($this->domain)
         );
 
         if (!$this->db->query($query)) {
@@ -6556,7 +6556,7 @@ class SipSettings {
         if ($rows=json_decode($data)) {
             foreach ($rows as $row) {
                 $entry = $row->data;
-                $query=sprintf("insert into client_journal (timestamp, account, uuid, data, ip_address) values (NOW(),'%s', '%s', '%s', '%s')", addslashes($this->account), addslashes($uuid), addslashes($entry), $_SERVER['REMOTE_ADDR']);
+                $query=sprintf("insert into client_journal (timestamp, account, uuid, data, ip_address) values (NOW(),'%s', '%s', '%s', '%s')", addslashes($this->account), addslashes($uuid), addslashes($entry), addslashes($_SERVER['REMOTE_ADDR']));
                 if (!$this->db->query($query)) {
                     $result['results'][]=array('id'         => $row->id,
                                                'journal_id' => NULL,
@@ -12146,7 +12146,7 @@ class DIDProcessor {
 
     function getPrefixes () {
 
-        $query=sprintf("select * from ddi_cache where environment = '%s' and DATE_ADD(date, INTERVAL +1 day) > NOW()",$this->environment);
+        $query=sprintf("select * from ddi_cache where environment = '%s' and DATE_ADD(date, INTERVAL +1 day) > NOW()",addslashes($this->environment));
 
         if (!$this->db->query($query)) return false;
 
@@ -12166,10 +12166,10 @@ class DIDProcessor {
     function cachePrefixes() {
         if ($prefixes = $this->getPrefixesFromRemote()) {
 
-            $query=sprintf("delete from ddi_cache where environment = '%s'",$this->environment);
+            $query=sprintf("delete from ddi_cache where environment = '%s'",addslashes($this->environment));
             $this->db->query($query);
 
-            $query=sprintf("insert into ddi_cache (cache,date,environment) values ('%s', NOW(),'%s')",json_encode($prefixes),$this->environment);
+            $query=sprintf("insert into ddi_cache (cache,date,environment) values ('%s', NOW(),'%s')",addslashes(json_encode($prefixes)),addslashes($this->environment));
             $this->db->query($query);
             return $prefixes;
         } else {
@@ -12259,21 +12259,21 @@ class DIDProcessor {
                                          '%s'
                                          )
                                         ",
-                                        $data['customer_id'],
-                                        $result->country_name,
-                                        $result->city_name,
-                                        $result->did_number,
-                                        $result->did_status,
-                                        $result->did_timeleft,
-                                        $result->did_expire_date_gmt,
-                                        $result->order_id,
-                                        $result->order_status,
-                                        $data['map_data']['map_detail'],
-                                        $result->did_setup,
-                                        $result->did_monthly,
-                                        $result->did_period,
-                                        $result->prepaid_balance,
-                                        $this->environment
+                                        addslashes($data['customer_id']),
+                                        addslashes($result->country_name),
+                                        addslashes($result->city_name),
+                                        addslashes($result->did_number),
+                                        addslashes($result->did_status),
+                                        addslashes($result->did_timeleft),
+                                        addslashes($result->did_expire_date_gmt),
+                                        addslashes($result->order_id),
+                                        addslashes($result->order_status),
+                                        addslashes($data['map_data']['map_detail']),
+                                        addslashes($result->did_setup),
+                                        addslashes($result->did_monthly),
+                                        addslashes($result->did_period),
+                                        addslashes($result->prepaid_balance),
+                                        addslashes($this->environment)
                                         );
 
             if (!$this->db->query($query)) {
@@ -12310,9 +12310,9 @@ class DIDProcessor {
         } else {
             $query=sprintf ("update ddi_numbers set did_timeleft = '%s' and did_expire_date_gmt = '%s' where did_number = '%s'
                                         ",
-                                        $result->did_timeleft,
-                                        $result->did_expire_date_gmt,
-                                        $result->did_number
+                                        addslashes($result->did_timeleft),
+                                        addslashes($result->did_expire_date_gmt),
+                                        addslashes($result->did_number)
                                         );
 
             if (!$this->db->query($query)) {
@@ -12346,10 +12346,7 @@ class DIDProcessor {
             printf ("<p><font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         } else {
-            $query=sprintf ("delete from  ddi_numbers where did_number = '%s'
-                                        ",
-                                        $result->did_number
-                                        );
+            $query=sprintf ("delete from ddi_numbers where did_number = '%s'",addslashes($result->did_number));
 
             if (!$this->db->query($query)) {
                 $log=sprintf ("Database error for DID cancelOrder: %s (%s)",$this->db->Error,$this->db->Errno);
@@ -12365,7 +12362,7 @@ class DIDProcessor {
     function getOrders($sip_address) {
         $orders=array();
 
-        $query=sprintf ("select * from ddi_numbers where sip_address = '%s' and environment = '%s'",$sip_address,$this->environment);
+        $query=sprintf ("select * from ddi_numbers where sip_address = '%s' and environment = '%s'",addslashes($sip_address),addslashes($this->environment));
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for DID createOrder: %s (%s)",$this->db->Error,$this->db->Errno);

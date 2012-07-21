@@ -164,8 +164,7 @@ class CDRTool_Auth extends Auth {
             
         } else {
         	$username_sql=addslashes($username);
-            $this->db->query("select * from auth_user where
-            username = '$username_sql' and expire > NOW()");
+            $this->db->query("select * from auth_user where username = '$username_sql' and expire > NOW()");
             $this->db->next_record();
             $otp_enabled_db =$this->db->f('otp_enable');
             $otp_email      =$this->db->f('email');

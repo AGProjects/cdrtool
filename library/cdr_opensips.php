@@ -1122,38 +1122,38 @@ class CDRS_opensips extends CDRS {
         }
 
         if ($this->CDRTool['filter']['after_date']) {
-            $where .= sprintf(" and %s >= '%s' ",$this->startTimeField,$this->CDRTool['filter']['after_date']);
+            $where .= sprintf(" and %s >= '%s' ",addslashes($this->startTimeField),addslashes($this->CDRTool['filter']['after_date']));
         }
 
         if ($order_by) {
-            $this->url.=sprintf("&order_by=%s&order_type=%s",$order_by,$order_type);
+            $this->url.=sprintf("&order_by=%s&order_type=%s",addslashes($order_by),addslashes($order_type));
         }
 
         $this->url.=sprintf("&begin_datetime=%s",urlencode($begin_datetime_timestamp));
         $this->url.=sprintf("&end_datetime=%s",urlencode($end_datetime_timestamp));
 
         if (!$call_id && $begin_datetime && $end_datetime) {
-            $where .= " ($this->startTimeField >= '$begin_datetime' and $this->startTimeField < '$end_datetime') ";
+            $where .= sprintf(" (%s >= '%s' and %s < '%s') ",addslashes($this->startTimeField),addslashes($begin_datetime),addslashes($this->startTimeField), addslashes($end_datetime));
         } else {
-            $where .= " ($this->startTimeField >= '1970-01-01' ) ";
+            $where .= sprintf(" (%s >= '1970-01-01' ) ",addslashes($this->startTimeField));
         }
 
         if ($MONTHYEAR) {
-            $where .=  " and $this->startTimeField like '$MONTHYEAR%' ";
+            $where .=  sprintf(" and %s like '%s%s' ", addslashes($this->startTimeField), addslashes($MONTHYEAR), '%');
             $this->url.= sprintf("&MONTHYEAR=%s",urlencode($MONTHYEAR));
         }
 
         if ($flow) {
             $this->url.=sprintf("&flow=%s",urlencode($flow));
-            $where .=  " and $this->flowField = '$flow' ";
+            $where .=  sprintf(" and %s = '%s' ", addslashes($this->flowField), addslashes($flow));
         }
 
         if ($this->CDRTool['filter']['aNumber']) {
             // force user to see only CDRS with his a_numbers
             $where .= sprintf(" and ( %s = '%s' or %s = '%s') ",
-                                $this->usernameField,
+                                addslashes($this->usernameField),
                                 addslashes($this->CDRTool['filter']['aNumber']),
-                                $this->CanonicalURIField,
+                                addslashes($this->CanonicalURIField),
                                 addslashes($this->CDRTool['filter']['aNumber'])
                              );
             $UserName_comp='equal';
@@ -1161,19 +1161,19 @@ class CDRS_opensips extends CDRS {
         }
 
         if ($UserName_comp == "empty") {
-            $where .= " and $this->usernameField = ''";
+            $where .= sprintf(" and %s = ''", addslashes($this->usernameField));
             $this->url.=sprintf("&UserName_comp=%s",urlencode($UserName_comp));
         } else if (strlen($UserName) && !$this->CDRTool['filter']['aNumber']) {
             if (!$UserName_comp) $UserName_comp='begin';
 
             if ($UserName_comp=="begin") {
-                $where .= " and $this->usernameField like '".addslashes($UserName)."%'";
+                $where .= sprintf(" and %s like '%s%s'", addslashes($this->usernameField), addslashes($UserName), '%');
             } elseif ($UserName_comp=="contain") {
-                $where .= " and $this->usernameField like '%".addslashes($UserName)."%'";
+                $where .= sprintf(" and %s like '%s%s%s'", addslashes($this->usernameField), '%s', addslashes($UserName), '%');
             } elseif ($UserName_comp=="equal") {
-                $where .= " and $this->usernameField = '".addslashes($UserName)."'";
+                $where .= sprintf(" and %s = '%s'", addslashes($this->usernameField), addslashes($UserName));
             } else {
-                $where .= " and $this->usernameField = '' ";
+                $where .= sprintf(" and %s = ''", addslashes($this->usernameField));
             }
 
             $this->url.=sprintf("&UserName=%s&UserName_comp=%s",urlencode($UserName),$UserName_comp);
@@ -1181,7 +1181,7 @@ class CDRS_opensips extends CDRS {
 
         $a_number=trim($a_number);
         if ($a_number_comp == "empty") {
-            $where .= " and $this->aNumberField = ''";
+            $where .= sprintf(" and %s = ''", addslashes($this->aNumberField));
             $this->url.=sprintf("&a_number_comp=%s",urlencode($a_number_comp));
         } else if (strlen($a_number)) {
             $a_number=urldecode($a_number);
@@ -1190,32 +1190,29 @@ class CDRS_opensips extends CDRS {
             $this->url.=sprintf("&a_number=%s",urlencode($a_number));
 
             if ($a_number_comp=="begin") {
-                $where .= " and $this->aNumberField like '".addslashes($a_number)."%'";
-                $s=1;
+                $where .= sprintf(" and %s like '%s%s'", addslashes($this->aNumberField), addslashes($a_number), '%s');
             } elseif ($a_number_comp=="contain") {
-                $where .= " and $this->aNumberField like '%".addslashes($a_number)."%'";
-                $s=1;
+                $where .= sprintf(" and %s like '%s%s%s'", addslashes($this->aNumberField), '%s', addslashes($a_number), '%s');
             } elseif ($a_number_comp=="equal") {
-                $where .= " and $this->aNumberField = '".addslashes($a_number)."'";
-                $s=1;
+                $where .= sprintf(" and %s = '%s'", addslashes($this->aNumberField), addslashes($a_number));
             }
             $this->url.=sprintf("&a_number_comp=%s",urlencode($a_number_comp));
         }
 
         $c_number=trim($c_number);
         if ($c_number_comp == "empty") {
-            $where .= " and $this->CanonicalURIField = ''";
+            $where .= sprintf(" and %s = ''", addslashes($this->CanonicalURIField));
             $this->url.=sprintf("&c_number_comp=%s",urlencode($c_number_comp));
         } else if (strlen($c_number)) {
             $c_number=urldecode($c_number);
             if (!$c_number_comp) $c_number_comp="begin";
 
             if (!$c_number_comp || $c_number_comp=="begin") {
-                $where .= " and $this->CanonicalURIField like '".addslashes($c_number)."%'";
-            } elseif ($c_number_comp=="equal") {
-                $where .= " and $this->CanonicalURIField = '".addslashes($c_number)."'";
+                $where .= sprintf(" and %s like '%s%s'", addslashes($this->CanonicalURIField), addslashes($c_number), '%s');
             } elseif ($c_number_comp=="contain") {
-                $where .= " and $this->CanonicalURIField like '%".addslashes($c_number)."%'";
+                $where .= sprintf(" and %s like '%s%s%s'", addslashes($this->CanonicalURIField), '%s', addslashes($c_number), '%s');
+            } elseif ($c_number_comp=="equal") {
+                $where .= sprintf(" and %s = '%s'", addslashes($this->CanonicalURIField), addslashes($c_number));
             }
             $this->url.=sprintf("&c_number=%s&c_number_comp=%s",urlencode($c_number),urlencode($c_number_comp));
         }
@@ -1370,10 +1367,10 @@ class CDRS_opensips extends CDRS {
 
         if ($media_info) {
             $this->url.=sprintf("&media_info=%s",urlencode($media_info));
-            $where .= sprintf(" and %s = '%s' ",$this->MediaInfoField, $media_info);
+            $where .= sprintf(" and %s = '%s' ",addslashes($this->MediaInfoField), addslashes($media_info));
         }
 
-        $this->url.=sprintf("&maxrowsperpage=%s",$this->maxrowsperpage);
+        $this->url.=sprintf("&maxrowsperpage=%s",addslashes($this->maxrowsperpage));
         $url_calls = $this->scriptFile.$this->url."&action=search";
 
         if ($group_by) {
@@ -1411,21 +1408,21 @@ class CDRS_opensips extends CDRS {
             $this->group_by=$group_by;
 
             if ($group_by==$this->callIdField) {
-                $having=" having count($group_by) > 1 ";
+                $having=sprintf(" having count(%s) > 1 ", addslashes($group_by));
             }
 
-            $query= "select sum($this->durationField) as duration,
-            SEC_TO_TIME(sum($this->durationField)) as duration_print,
-            count($group_by) as calls,
-            $group_by
-            from $cdr_table
-            where $where
-            group by $group_by
+            $query= sprintf("select sum(%s) as duration, SEC_TO_TIME(sum(%s)) as duration_print, count(%s) as calls, %s from %s where %s group by %s %s ",
+            addslashes($this->durationField),
+            addslashes($this->durationField),
+            addslashes($group_by),
+            addslashes($group_by),
+            addslashes($cdr_table),
+            $where,
+            addslashes($group_by),
             $having
-            ";
+            );
         } else {
-            $query = "select count(*) as records
-            from $cdr_table where ".$where;
+            $query = sprintf("select count(*) as records from %s where ", addslashes($cdr_table)). $where;
         }
 
         dprint($query);
@@ -1570,6 +1567,7 @@ class CDRS_opensips extends CDRS {
                     $this->CDRdb->next_record();
 
                     $calls              = $this->CDRdb->f('calls');
+                    $seconds            = $this->CDRdb->f($this->durationField);
                     $seconds            = $this->CDRdb->f($this->durationField);
                     $seconds_print      = number_format($this->CDRdb->f($this->durationField),0);
                     $minutes            = number_format($this->CDRdb->f($this->durationField)/60,0,"","");
@@ -1767,11 +1765,15 @@ class CDRS_opensips extends CDRS {
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
                     $order_by="timestamp";
                 }
-                $query="select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
-                from $cdr_table where ".
-                $where.
-                " order by $order_by $order_type ".
-                " limit $i,$this->maxrowsperpage";
+                $query=sprintf("select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
+                from %s where %s order by %s %s limit %d, %d",
+                addslashes($cdr_table),
+                $where,
+                addslashes($order_by),
+                addslashes($order_type),
+                $i,
+                $this->maxrowsperpage
+                );
 
                 $this->CDRdb->query($query);
 
@@ -1848,10 +1850,10 @@ class CDRS_opensips extends CDRS {
 
         if ($this->CDRTool['filter']['aNumber']) {
             $els=explode("@",$this->CDRTool['filter']['aNumber']);
-            $query.=" where domain = '$els[1]' ";
+            $query.= sprintf(" where domain = '%s' ", addslashes($els[1]));
         } else if ($this->CDRTool['filter']['domain']) {
             $fdomain=$this->CDRTool['filter']['domain'];
-            $query.=" where domain = '$fdomain' ";
+            $query.=sprintf(" where domain = '%s' ", addslashes($fdomain));
         }
 
         if (!$this->AccountsDB->query($query)) {
@@ -1894,7 +1896,7 @@ class CDRS_opensips extends CDRS {
             $this->trusted_table          = "trusted_peers";
         }
 
-        $query=sprintf("select * from %s",$this->trusted_table);
+        $query=sprintf("select * from %s",addslashes($this->trusted_table));
 
         if (!$this->AccountsDB->query($query)) {
             $log=sprintf ("Database %s error: %s (%d) %s\n",$this->db_subscribers,$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
@@ -1949,7 +1951,7 @@ class CDRS_opensips extends CDRS {
             }
         } else {
 
-            $query=sprintf("select quota from subscriber where username = '%s' and domain = '%s'",$username,$domain);
+            $query=sprintf("select quota from subscriber where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
 
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -2004,7 +2006,7 @@ class CDRS_opensips extends CDRS {
                 return 0;
             }
         } else {
-            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = 'quota' and username = '%s' and domain = '%s'",$username,$domain);
+            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = 'quota' and username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
     
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -2079,7 +2081,7 @@ class CDRS_opensips extends CDRS {
             }
 
         } else {
-            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",$this->missed_calls_group);
+            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",addslashes($this->missed_calls_group));
             if (strlen($account)) {
                 $query.= sprintf (" and username = '%s' and domain = '%s' ",$username,$domain);
             }
@@ -2109,14 +2111,15 @@ class CDRS_opensips extends CDRS {
             unset($htmlBody);
 
             $query = sprintf("SELECT *, UNIX_TIMESTAMP(%s) as timestamp FROM %s where (%s = '%s' or %s = '%s') and %s > DATE_ADD(NOW(), INTERVAL -1 day) order by %s desc limit 200",
-            $this->startTimeField,
-            $this->table,
-            $this->usernameField,
-            $_subscriber,
-            $this->CanonicalURIField,
-            $_subscriber,
-            $this->startTimeField,
-            $this->startTimeField);
+            addslashes($this->startTimeField),
+            addslashes($this->table),
+            addslashes($this->usernameField),
+            addslashes($_subscriber),
+            addslashes($this->CanonicalURIField),
+            addslashes($_subscriber),
+            addslashes($this->startTimeField),
+            addslashes($this->startTimeField)
+            );
 
             if (!$this->CDRdb->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRdb->Error,$this->CDRdb->Errno);
@@ -2139,12 +2142,13 @@ class CDRS_opensips extends CDRS {
                 if (preg_match("/^(\w+)(\d{4})(\d{2})$/",$this->table,$m))  {
                     $previousTable=$m[1].date('Ym', mktime(0, 0, 0, $m[3]-1, "01", $m[2]));
                     $query = sprintf("SELECT *, UNIX_TIMESTAMP(%s) as timestamp FROM %s where %s = '%s' and %s > DATE_ADD(NOW(), INTERVAL -1 day) order by %s desc limit 200",
-                    $this->startTimeField,
-                    $previousTable,
-                    $this->CanonicalURIField,
-                    $_subscriber,
-                    $this->startTimeField,
-                    $this->startTimeField);
+                    addslashes($this->startTimeField),
+                    addslashes($previousTable),
+                    addslashes($this->CanonicalURIField),
+                    addslashes($_subscriber),
+                    addslashes($this->startTimeField),
+                    addslashes($this->startTimeField)
+                    );
 
                     if (!$this->CDRdb->query($query)) {
                         $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->CDRdb->Error,$this->CDRdb->Errno);
@@ -2753,8 +2757,8 @@ class CDR_opensips extends CDR {
                 where session = '%s'
                 and destination = '%s'
                 order by id desc limit 1",
-                $this->callId,
-                $this->destinationPrint     // must be synced with maxsession time
+                addslashes($this->callId),
+                addslashes($this->destinationPrint)     // must be synced with maxsession time
                 );
     
                 if ($this->CDRS->cdrtool->query($query)) {
@@ -3725,8 +3729,8 @@ class SIP_trace {
 
             $query=sprintf("select *,UNIX_TIMESTAMP(time_stamp) as timestamp
             from %s where callid = '%s' order by id asc",
-            $this->table,
-            $callid);
+            addslashes($this->table),
+            addslashes($callid));
     
             if (!$this->db->query($query)) {
                 printf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -4333,7 +4337,7 @@ class SIP_trace {
         $beforeDate=Date("Y-m-d", time()-$this->purgeRecordsAfter*3600*24);
 
         $query=sprintf("select id as min, time_stamp from %s order by id ASC limit 1",
-                       $this->table);
+                       addslashes($this->table));
         
         if ($this->db->query($query)) {
             if ($this->db->num_rows()) {
@@ -4355,7 +4359,7 @@ class SIP_trace {
         }
 
         $query=sprintf("select id as max from %s where time_stamp < '%s' order by id DESC limit 1",
-                $this->table,$beforeDate);
+                addslashes($this->table),addslashes($beforeDate));
 
 
         if ($this->db->query($query) && $this->db->num_rows()) {
@@ -4389,7 +4393,7 @@ class SIP_trace {
             }
             $query=sprintf("delete low_priority from %s
                             where id >= '%d' and id <='%d'",
-                            $this->table,$min,$top);
+                            addslashes($this->table),addslashes($min),addslashes($top));
             if ($this->db->query($query)) {
                 $deleted=$deleted+$this->db->affected_rows();
             } else {
@@ -4538,7 +4542,7 @@ class Media_trace {
 
             // get trace from SQL
             $query=sprintf("select info from %s where call_id = '%s' and from_tag = '%s' and to_tag= '%s'",
-            $this->table,
+            addslashes($this->table),
             addslashes($callid),
             addslashes($fromtag),
             addslashes($totag)

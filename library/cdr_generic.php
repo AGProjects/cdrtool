@@ -407,16 +407,13 @@ class CDRS {
         $query="select * from destinations";
         if ($this->CDRTool['filter']['aNumber']) {
             $faNumber=$this->CDRTool['filter']['aNumber'];
-            $query .= " where subscriber = '$faNumber' or
-            (subscriber = '' and domain = '' and gateway = '') ";
+            $query .= sprintf(" where subscriber = '%s' or (subscriber = '' and domain = '' and gateway = '') ", addslashes($faNumber));
         } else if ($this->CDRTool['filter']['domain']) {
             $fdomain=$this->CDRTool['filter']['domain'];
-            $query .= " where domain = '$fdomain' or
-            (subscriber = '' and domain = '' and gateway = '') ";
+            $query .= sprintf(" where domain = '%s' or (subscriber = '' and domain = '' and gateway = '') ", addslashes($fdomain));
         } else if ($this->CDRTool['filter']['gateway']) {
             $fgateway=$this->CDRTool['filter']['gateway'];
-            $query .= " where gateway = '$fgateway' or
-            (subscriber = '' and domain = '' and gateway = '') ";
+            $query .= sprintf(" where gateway = '%s' or (subscriber = '' and domain = '' and gateway = '') ",addslashes($fgateway));
         }
 
         $this->cdrtool->query($query);
@@ -576,7 +573,7 @@ class CDRS {
             syslog(LOG_NOTICE, $log);
 
         } else {
-            $query=sprintf("insert into memcache (`key`,`value`) values ('destinations_sip','%s')",$destinations_sip_cache);
+            $query=sprintf("insert into memcache (`key`,`value`) values ('destinations_sip','%s')",addslashes($destinations_sip_cache));
 
             if (!$this->cdrtool->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
@@ -646,13 +643,13 @@ class CDRS {
             values
             (NOW(),'%s','%s','%s','%s','%s','%s','%s',%d)",
             addslashes($loginname),
-            $_SERVER["REMOTE_ADDR"],
-            $this->url,
-            $this->rows,
-            $this->url_run,
-            $this->url_edit,
-            $this->cdr_source,
-            $this->CDRTool['filter']['reseller']
+            addslashes($_SERVER["REMOTE_ADDR"]),
+            addslashes($this->url),
+            addslashes($this->rows),
+            addslashes($this->url_run),
+            addslashes($this->url_edit),
+            addslashes($this->cdr_source),
+            addslashes($this->CDRTool['filter']['reseller'])
             );
 
             if ($this->cdrtool->query($log_query)) {
@@ -720,12 +717,12 @@ class CDRS {
             values
             (NOW(),'%s','%s','%s','%s','%s','%s','%s',%d)",
             addslashes($loginname),
-            $_SERVER["REMOTE_ADDR"],
-            $this->url,
-            $this->rows,
-            $this->url_run,
-            $this->url_edit,
-            $this->cdr_source,
+            addslashes($_SERVER["REMOTE_ADDR"]),
+            addslashes($this->url),
+            addslashes($this->rows),
+            addslashes($this->url_run),
+            addslashes($this->url_edit),
+            addslashes($this->cdr_source),
             0
             );
 
@@ -907,8 +904,8 @@ class CDRS {
         }
 
         $query=sprintf("update %s set %s = '0' where %s ",
-        $table,
-        $this->normalizedField,
+        addslashes($table),
+        addslashes($this->normalizedField),
         $where
         );
 
@@ -988,7 +985,7 @@ class CDRS {
         $this->buildWhereForUnnormalizedSessions();
 
         $query=sprintf("select count(*) as c from %s where %s and %s",
-        $table,
+        addslashes($table),
         $where,
         $this->whereUnnormalized
         );
@@ -1030,10 +1027,10 @@ class CDRS {
 
         $query=sprintf("select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
         from %s where %s and %s order by %s asc",
-        $table,
+        addslashes($table),
         $where,
         $this->whereUnnormalized,
-        $this->CDRFields['id']
+        addslashes($this->CDRFields['id'])
         );
 
         $this->status['cdr_to_normalize']=0;
@@ -1511,12 +1508,13 @@ class CDRS {
             $stopSQL =date('Y-m-01', mktime(0, 0, 0, $m[2]+1, "01", $m[1]));
         }
 
-        $query=sprintf("select count(*) as c from %s
-                    where %s >='%s'
-                    and %s < '%s'\n",
-                    $sourceTable,
-                    $this->CDRFields['startTime'],$startSQL,
-                    $this->CDRFields['startTime'],$stopSQL);
+        $query=sprintf("select count(*) as c from %s where %s >='%s' and %s < '%s'\n",
+                    addslashes($sourceTable),
+                    addslashes($this->CDRFields['startTime']),
+                    addslashes($startSQL),
+                    addslashes($this->CDRFields['startTime']),
+                    addslashes($stopSQL)
+                    );
 
 
         if ($this->CDRdb->query($query)) {
@@ -1534,7 +1532,7 @@ class CDRS {
             return 0;
         }
 
-        $query=sprintf("select count(*) as c from %s\n", $destinationTable);
+        $query=sprintf("select count(*) as c from %s\n", addslashes($destinationTable));
 
         if ($this->CDRdb->query($query)) {
             $this->CDRdb->next_record();
@@ -1561,7 +1559,7 @@ class CDRS {
             if ($this->CDRdb->Errno==1146) {
 
                 $destinationTableTmp=$destinationTable."_tmp";
-                $query=sprintf("drop table if exists %s",$destinationTableTmp);
+                $query=sprintf("drop table if exists %s",addslashes($destinationTableTmp));
                 print($query);
                 $this->CDRdb->query($query);
     
@@ -1581,16 +1579,15 @@ class CDRS {
                 }
 
                 // if we reached this point we start to copy records
-                $query=sprintf("insert into %s
-                select * from %s
-                where %s >='%s'
-                and %s < '%s'",
-                $destinationTableTmp,
-                $sourceTable,
-                $this->CDRFields['startTime'],$startSQL,
-                $this->CDRFields['startTime'],$stopSQL);
+                $query=sprintf("insert into %s select * from %s where %s >='%s' and %s < '%s'",
+                addslashes($destinationTableTmp),
+                addslashes($sourceTable),
+                addslashes($this->CDRFields['startTime']),
+                addslashes($startSQL),
+                addslashes($this->CDRFields['startTime']),
+                addslashes($stopSQL)
+                );
         
-                print ($query);
                 return ;
         
                 if ($this->CDRdb->query($query)) {
@@ -1603,7 +1600,7 @@ class CDRS {
                     syslog(LOG_NOTICE,$log);
                     print $log;
         
-                    $query="rename table $destinationTableTmp to $destinationTableTmp";
+                    $query=sprinf("rename table %s to %s", addslashes($destinationTableTmp),addslashes($destinationTableTmp));
         
                     if (!$this->CDRdb->query($query)) {
                         printf ("Error renaming table %s to %s: %s\n",$destinationTableTmp,$destinationTable,$this->CDRdb->Error);
@@ -1640,7 +1637,14 @@ class CDRS {
         if (!$sourceTable) $sourceTable=$this->table;
 
         $query=sprintf("select min(%s) as min,max(%s) as max from %s where %s >= '%s' and %s < '%s' ",
-        $this->CDRFields['id'],$this->CDRFields['id'],$sourceTable,$this->CDRFields['startTime'],$beginDate,$this->CDRFields['startTime'],$endDate);
+        addslashes($this->CDRFields['id']),
+        addslashes($this->CDRFields['id']),
+        addslashes($sourceTable),
+        addslashes($this->CDRFields['startTime']),
+        addslashes($beginDate),
+        addslashes($this->CDRFields['startTime']),
+        addslashes($endDate)
+        );
 
         dprint($query);
 
@@ -1678,13 +1682,13 @@ class CDRS {
                 $top=$max;
             }
 
-            $query=sprintf("delete low_priority from %s
-                            where %s <= '%d' and %s >= '%d'",
-                            $sourceTable,
-                            $this->CDRFields['id'],
-                            $top,
-                            $this->CDRFields['id'],
-                            $min);
+            $query=sprintf("delete low_priority from %s where %s <= '%d' and %s >= '%d'",
+                            addslashes($sourceTable),
+                            addslashes($this->CDRFields['id']),
+                            addslashes($top),
+                            addslashes($this->CDRFields['id']),
+                            addslashes($min)
+                            );
 
 
             if ($this->CDRdb->query($query)) {
@@ -1734,7 +1738,7 @@ class CDRS {
 
         foreach (array_keys($accounts) as $_key) {
 
-            $query=sprintf("select id from quota_usage where datasource = '%s' and account = '%s'",$this->cdr_source,$_key);
+            $query=sprintf("select id from quota_usage where datasource = '%s' and account = '%s'",addslashes($this->cdr_source),addslashes($_key));
 
             if (!$this->cdrtool->query($query)){
                 $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
@@ -1753,12 +1757,12 @@ class CDRS {
                 traffic = traffic + '%s'
                 where account = '%s'
                 ",
-                $accounts[$_key]['usage']['calls'],
-                $accounts[$_key]['usage']['duration'],
-                $accounts[$_key]['usage']['cost'],
-                $accounts[$_key]['usage']['cost_today'],
-                $accounts[$_key]['usage']['traffic'],
-                $_key
+                addslashes($accounts[$_key]['usage']['calls']),
+                addslashes($accounts[$_key]['usage']['duration']),
+                addslashes($accounts[$_key]['usage']['cost']),
+                addslashes($accounts[$_key]['usage']['cost_today']),
+                addslashes($accounts[$_key]['usage']['traffic']),
+                addslashes($_key)
                 );
 
                 if (!$this->cdrtool->query($query)){
@@ -1781,17 +1785,17 @@ class CDRS {
                 values
                 ('%s','%s','%s',%d,%d,'%s','%s','%s','%s','%s',%d)
                 ",
-                $this->cdr_source,
-                $_key,
-                $_d,
-                $quota,
-                $accounts[$_key]['usage']['calls'],
-                $accounts[$_key]['usage']['duration'],
-                $accounts[$_key]['usage']['cost'],
-                $accounts[$_key]['usage']['cost_today'],
-                $accounts[$_key]['usage']['traffic'],
+                addslashes($this->cdr_source),
+                addslashes($_key),
+                addslashes($_d),
+                addslashes($quota),
+                addslashes($accounts[$_key]['usage']['calls']),
+                addslashes($accounts[$_key]['usage']['duration']),
+                addslashes($accounts[$_key]['usage']['cost']),
+                addslashes($accounts[$_key]['usage']['cost_today']),
+                addslashes($accounts[$_key]['usage']['traffic']),
                 intval($blocked),
-                $this->localDomains[$_d]['reseller']
+                addslashes($this->localDomains[$_d]['reseller'])
                 );
 
                 if (!$this->cdrtool->query($query)){
@@ -1830,13 +1834,13 @@ class CDRS {
 
         register_shutdown_function("unLockNormalization",$locker,$lockname);
      
-        $query=sprintf("SELECT GET_LOCK('%s',0)",$lockname);
+        $query=sprintf("SELECT GET_LOCK('%s',0)",addslashes($lockname));
 
         if ($locker->query($query)) {
             $locker->next_record();
             $return = $locker->Record[0];
 
-            $query=sprintf("SELECT IS_USED_LOCK('%s')",$lockname);
+            $query=sprintf("SELECT IS_USED_LOCK('%s')",addslashes($lockname));
             if ($locker->query($query)) {
                 $locker->next_record();
                 $this->lock_connection_id=$locker->Record[0];
@@ -1883,7 +1887,7 @@ class CDRS {
         $log=sprintf("Next quota check will rebuild the counters for %s accounts",count($_reset_array));
         syslog(LOG_NOTICE,$log );
 
-        $query=sprintf("delete from memcache where `key` in ('%s','%s')",$this->quota_init_flag,$this->quota_reset_flag);
+        $query=sprintf("delete from memcache where `key` in ('%s','%s')",addslashes($this->quota_init_flag),addslashes($this->quota_reset_flag));
         if (!$this->cdrtool->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
             print $log;
@@ -1891,7 +1895,7 @@ class CDRS {
             return false;
         }
 
-        $query=sprintf("insert into memcache (`key`,`value`) values ('%s','%s')",$this->quota_reset_flag,json_encode($_reset_array));
+        $query=sprintf("insert into memcache (`key`,`value`) values ('%s','%s')",addslashes($this->quota_reset_flag),addslashes(json_encode($_reset_array)));
         if (!$this->cdrtool->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
             print $log;
@@ -2052,64 +2056,64 @@ class CDR {
             if ($this->CDRS->normalizedField) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s='1' ",$this->CDRS->normalizedField);
+                $query.=sprintf(" %s='1' ",addslashes($this->CDRS->normalizedField));
             }
 
             if ($this->CDRS->BillingPartyIdField && $this->BillingPartyId) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->BillingPartyIdField,addslashes($this->BillingPartyId));
+                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->BillingPartyIdField),addslashes($this->BillingPartyId));
             }
 
             if (strlen($this->durationNormalized) && $this->durationNormalized != $this->duration) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s ='%s' ",$this->CDRS->durationField,$this->durationNormalized);
+                $query.=sprintf(" %s ='%s' ",addslashes($this->CDRS->durationField),addslashes($this->durationNormalized));
                 $this->duration=$this->durationNormalized;
             }
 
             if ($this->CDRS->DestinationIdField) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->DestinationIdField,$this->DestinationId);
+                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->DestinationIdField),addslashes($this->DestinationId));
             }
 
             if ($this->CDRS->ResellerIdField) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->ResellerIdField,$this->ResellerId);
+                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->ResellerIdField),addslashes($this->ResellerId));
             }
 
             if ($this->usernameNormalized && $this->usernameNormalized!=$this->username) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->usernameField,addslashes($this->usernameNormalized));
+                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->usernameField),addslashes($this->usernameNormalized));
             }
 
             if ($this->aNumberNormalized && $this->aNumberNormalized!=$this->aNumber) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->aNumberField,addslashes($this->aNumberNormalized));
+                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->aNumberField),addslashes($this->aNumberNormalized));
                 $this->aNumber=$this->aNumberNormalized;
             }
 
             if ($this->CDRS->applicationField && $this->applicationNormalized) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->applicationField,addslashes($this->applicationNormalized));
+                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->applicationField), addslashes($this->applicationNormalized));
                 $this->application=$this->applicationNormalized;
             }
 
             if ($this->CDRS->flowField && $this->flow) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->flowField,addslashes($this->flow));
+                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->flowField),addslashes($this->flow));
             }
 
             if ($this->domainNormalized && $this->domainNormalized != $this->domain) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->domainField,addslashes($this->domainNormalized));
+                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->domainField),addslashes($this->domainNormalized));
                 $this->domainNumber=$this->domainNormalized;
                 $this->domain=$this->domainNormalized;
             }
@@ -2117,32 +2121,32 @@ class CDR {
             if ($this->cNumberNormalized && $this->cNumberNormalized!=$this->cNumber) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->cNumberField,addslashes($this->cNumberNormalized));
+                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->cNumberField),addslashes($this->cNumberNormalized));
                 $this->cNumber=$this->cNumberNormalized;
             }
 
             if ($this->CDRS->BillingIdField && $this->BillingId) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->BillingIdField,addslashes($this->BillingId));
+                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->BillingIdField),addslashes($this->BillingId));
             }
 
             if ($this->CDRS->RemoteAddressField && $this->RemoteAddressNormalized && $this->RemoteAddressNormalized!= $this->RemoteAddress) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->RemoteAddressField,addslashes($this->RemoteAddressNormalized));
+                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->RemoteAddressField),addslashes($this->RemoteAddressNormalized));
             }
 
             if ($this->CDRS->CanonicalURIField && $this->CanonicalURINormalized && $this->CanonicalURINormalized!= $this->CanonicalURI) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->CanonicalURIField,addslashes($this->CanonicalURINormalized));
+                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->CanonicalURIField),addslashes($this->CanonicalURINormalized));
             }
 
             if ($this->stopTimeNormalized) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",$this->CDRS->stopTimeField,addslashes($this->stopTimeNormalized));
+                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->stopTimeField),addslashes($this->stopTimeNormalized));
             }
 
             if ($this->CDRS->ratingEnabled && ($this->duration || $this->application == 'message')) {
@@ -2206,17 +2210,17 @@ class CDR {
                 if ($this->CDRS->priceField) {
                     if ($updatedFields) $query .= ", ";
                     $updatedFields++;
-                    $query.=sprintf(" %s = '%s' ",$this->CDRS->priceField,$this->pricePrint);
+                    $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->priceField),addslashes($this->pricePrint));
     
                     if ($this->CDRS->rateField ) {
                         if ($updatedFields) $query .= ", ";
                         $updatedFields++;
-                        $query.=sprintf(" %s = '%s' ",$this->CDRS->rateField,addslashes($this->rateInfo));
+                        $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->rateField),addslashes($this->rateInfo));
                     }
                 }
             }
 
-            $query1 = sprintf("update %s set %s where %s = '%s'",$table,$query,$this->idField,$this->id);
+            $query1 = sprintf("update %s set %s where %s = '%s'",addslashes($table),$query,addslashes($this->idField),addslashes($this->id));
             dprint($query1);
 
             if ($updatedFields) {
@@ -2243,7 +2247,7 @@ class CDR {
 
                         if (preg_match("/^(\w+)(\d{4})(\d{2})$/",$table,$m)) {
                             $previousTable=$m[1].date('Ym', mktime(0, 0, 0, $m[3]-1, "01", $m[2]));
-                            $query2 = sprintf("update %s set %s where %s = '%s'",$previousTable,$query,$this->idField,$this->id);
+                            $query2 = sprintf("update %s set %s where %s = '%s'",addslashes($previousTable),$query,addslashes($this->idField),addslashes($this->id));
 
                             if ($this->CDRS->CDRdb1->query($query2)) {
                                 if ($this->CDRS->CDRdb1->affected_rows()) {
@@ -2426,7 +2430,7 @@ if (is_array($CDRToolModules)) {
 }
 
 function unLockNormalization ($dbid,$lockname) {
-    $query=sprintf("SELECT RELEASE_LOCK('%s')",$lockname);
+    $query=sprintf("SELECT RELEASE_LOCK('%s')",addslashes($lockname));
     $log=sprintf("Unlock %s",$lockname);
     syslog(LOG_NOTICE, $log);
 
@@ -2468,13 +2472,13 @@ class SIPonline {
         $where = " where (1=1) " ;
 
         if ($allowed_domains_sql) {
-            $where.= sprintf("and domain in (%s)",$allowed_domains_sql) ;
+            $where.= sprintf("and domain in (%s)",addslashes($allowed_domains_sql)) ;
         }
 
         $query=sprintf("select count(*) as c, domain
         from %s %s
         group by domain
-        order by domain ASC",$this->locationTable,$where);
+        order by domain ASC",addslashes($this->locationTable),$where);
 
 
         $this->locationDB->query($query);
@@ -2484,10 +2488,9 @@ class SIPonline {
             $this->total=$this->total+$this->locationDB->f('c');
         }
 
-        $query=sprintf("select count(*) as c, user_agent
-        from %s %s",$this->locationTable,$where);
+        $query=sprintf("select count(*) as c, user_agent from %s %s",addslashes($this->locationTable),$where);
         if ($this->domain) {
-            $query.=sprintf(" and domain = '%s' ",$this->domain);
+            $query.=sprintf(" and domain = '%s' ",addslashes($this->domain));
         }
 
         $query.="
@@ -2498,7 +2501,6 @@ class SIPonline {
         while ($this->locationDB->next_record()) {
             $this->countUA[$this->locationDB->f('user_agent')]=$this->locationDB->f('c');
         }
-
     }
 
     function showHeader() {
@@ -2603,7 +2605,7 @@ class SIPonline {
         $query="SELECT *, SEC_TO_TIME(UNIX_TIMESTAMP(expires)-UNIX_TIMESTAMP(NOW())) AS remain
                 FROM location
         ";
-        if ($this->domain) $query.=" where domain = '$this->domain'";
+        if ($this->domain) $query.=sprintf(" where domain = '%s'", addslashes($this->domain));
 
         $query.= " ORDER BY domain ASC, username ASC ";
 
@@ -2699,7 +2701,7 @@ class PrepaidHistory {
         
     function purge($days=7) {
         $beforeDate=Date("Y-m-d", time()-$days*3600*24);
-        $query=sprintf("delete from prepaid_history where date < '%s' and action like 'Debit balance%s'",$beforeDate,'%');
+        $query=sprintf("delete from prepaid_history where date < '%s' and action like 'Debit balance%s'",addslashes($beforeDate),'%');
         
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)\n",$query,$this->db->Error,$this->db->Errno);

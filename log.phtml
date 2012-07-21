@@ -84,12 +84,12 @@ if ($current_log ) {
         $query=sprintf("update log set description = '%s' where %s and id = %d",
         addslashes($log_description),
         $where,
-        $current_log);
+        addslashes($current_log));
 
         $db->query($query);
 
     } else if ($task == "mailLog" && $recipient) {
-        $query=sprintf("select * from log where %s and id = %d",$where,$current_log);
+        $query=sprintf("select * from log where %s and id = %d",$where,addslashes($current_log));
 
         $db->query($query);
         $db->next_record();
@@ -159,7 +159,7 @@ if  ($rows>0)  {
         $maxrows=$rows;
     }
 
-    $query = sprintf("select * from log where %s order by id desc limit %d, %d",$where,$i,$maxrowsperpage);
+    $query = sprintf("select * from log where %s order by id desc limit %d, %d",$where,addslashes($i),addslashes($maxrowsperpage));
 
     $db->query($query);
 
