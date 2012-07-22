@@ -1969,7 +1969,7 @@ class RatingTables {
             $this->whereResellerFilter = sprintf ("reseller_id = %d",'99999999');
         } else {
             if ($this->CDRTool['filter']['customer'] && $this->tables[$this->table]['fields']['reseller_id']) {
-                $this->whereResellerFilter = sprintf ("reseller_id = %d",$this->CDRTool['filter']['customer']);
+                $this->whereResellerFilter = sprintf ("reseller_id = %d",addslashes($this->CDRTool['filter']['customer']));
                 $this->tables[$this->table]['fields']['reseller_id']['readonly']=true;
             }
         }
@@ -3846,7 +3846,7 @@ class RatingTables {
     }
 
     function hasFileBeenImported($filename,$watermark) {
-        $query=sprintf("select * from log where url = '%s'\n",$watermark);
+        $query=sprintf("select * from log where url = '%s'\n",addslashes($watermark));
         if ($this->db->query($query)) {
             if ($this->db->num_rows()) {
                 $this->db->next_record();
@@ -3870,7 +3870,7 @@ class RatingTables {
     function logImport($dir,$filename,$watermark,$results=0,$reseller=0) {
         $query=sprintf("insert into log (date,login,ip,url,results,description,datasource,reseller_id)
         values (NOW(),'ImportScript','localhost','%s','%s','Imported %s','%s',%d)",
-        $watermark,$results,$filename,$dir,$reseller);
+        addslashes($watermark),addslashes($results),addslashes($filename),addslashes($dir),addslashes($reseller));
 
         $log=sprintf ("Imported file %s, %d records have been affected\n",$filename,$results);
         syslog(LOG_NOTICE, $log);
@@ -3900,17 +3900,17 @@ class RatingTables {
             $table='billing_rates_default';
         }
 
-        $query=sprintf("create table %s select * from billing_rates where name = '%s'\n",$table,$name);
+        $query=sprintf("create table %s select * from billing_rates where name = '%s'\n",addslashes($table),addslashes($name));
 
         if ($this->db->query($query)) {
-            $query=sprintf("alter table %s add index rate_idx (name)",$table);
+            $query=sprintf("alter table %s add index rate_idx (name)",addslashes($table));
             if (!$this->db->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                 print $log;
                 syslog(LOG_NOTICE, $log);
             }
     
-            $query=sprintf("alter table %s add index destination_idx (destination)",$table);
+            $query=sprintf("alter table %s add index destination_idx (destination)",addslashes($table));
             if (!$this->db->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                 print $log;
@@ -3970,7 +3970,7 @@ class RatingTables {
                 return false;
             }
 
-            $query=sprintf("create table %s select * from billing_rates where name = '%s'\n",$table,$name);
+            $query=sprintf("create table %s select * from billing_rates where name = '%s'\n",addslashes($table),addslashes($name));
 
             if (!$this->db->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -3978,7 +3978,7 @@ class RatingTables {
                 syslog(LOG_NOTICE, $log);
                 return false;
             } else {
-                $query=sprintf("alter table %s add index rate_idx (name)",$table);
+                $query=sprintf("alter table %s add index rate_idx (name)",addslashes($table));
                 if (!$this->db->query($query)) {
                     $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     print $log;
@@ -3986,14 +3986,14 @@ class RatingTables {
                     return false;
                 }
 
-                $query=sprintf("alter table %s add index destination_idx (destination)",$table);
+                $query=sprintf("alter table %s add index destination_idx (destination)",addslashes($table));
                 if (!$this->db->query($query)) {
                     $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
-                $query=sprintf("select count(*) as c from %s",$table);
+                $query=sprintf("select count(*) as c from %s",addslashes($table));
                 $this->db->query($query);
                 $this->db->next_record();
                 $records=$this->db->f('c');
@@ -4065,9 +4065,9 @@ class RatingTables {
                         }
 
                         if (!$this->tables[$table]['skip_math'] && preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
-                            $update_set .= $comma.$Fname."= ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
+                            $update_set .= $comma.addslashes($Fname)."= ROUND(".addslashes($Fname). " ".$sign[1]. "'".$sign[2]."')";
                         } else {
-                            $update_set .= $comma.$Fname."='".$value."'";
+                            $update_set .= $comma.addslashes($Fname)."='".addslashes($value)."'";
                         }
                         $kkk++;
                     }
@@ -4075,7 +4075,7 @@ class RatingTables {
                     $k=0;
                     while ($k < $cc ) {
                         if ($metadata[$k]['name'] == 'change_date') {
-                            $update_set .= sprintf("%s %s = NOW() ",$comma,$metadata[$k]['name']);
+                            $update_set .= sprintf("%s %s = NOW() ",$comma,addslashes($metadata[$k]['name']));
                             break;
                         }
                         $k++;
@@ -4083,7 +4083,7 @@ class RatingTables {
     
                     $log_entity=" id = $id ";
             
-                    $where = " id = '".$id."' and $this->whereResellerFilter";
+                    $where = sprintf(" id = '%s' and %s", addslashes($id), $this->whereResellerFilter);
     
                     if ($table == "billing_rates") {
                         if ($this->settings['split_rating_table']) {
@@ -4115,7 +4115,7 @@ class RatingTables {
                     }
     
                     $query = sprintf("update %s set %s where %s " ,
-                    $table,
+                    addslashes($table),
                     $update_set,
                     $where
                     );
@@ -4151,7 +4151,7 @@ class RatingTables {
                                 if ($this->settings['split_rating_table']) {
                                     foreach ($rate_tables_affected as $extra_rate_table) {
                                         $query_u = sprintf("update %s set %s where %s ",
-                                        $extra_rate_table,
+                                        addslashes($extra_rate_table),
                                         $update_set,
                                         $where
                                         );
@@ -4269,7 +4269,7 @@ class RatingTables {
                     }
 
                     $query = sprintf("update %s set %s where %s " ,
-                    $table,
+                    addslashes($table),
                     $update_set,
                     $where
                     );
@@ -4410,7 +4410,8 @@ class RatingTables {
                         NOW(),
                         NOW()
                         from billing_rates ",
-                        $fromRate);
+                        addslashes($fromRate)
+                        );
         
                     } else {
         
@@ -4426,7 +4427,8 @@ class RatingTables {
                         billing_rates.connectCostIn,
                         billing_rates.durationRateIn
                         from billing_rates ",
-                        $toRate);
+                        addslashes($toRate)
+                        );
                     }
 
                     $where = $this->whereResellerFilter;
@@ -4519,7 +4521,7 @@ class RatingTables {
             } elseif ($subweb_task == "Insert") {
                 //print "<h3>Insert</h3>";
                 if ($this->checkValues($table,$_REQUEST)) {
-                    $query="insert into $table ( ";
+                    $query=sprintf("insert into %s ( ",addslashes($table));
             
                     $k=1;
                     $kkk=0;
@@ -4531,7 +4533,7 @@ class RatingTables {
                             } else {
                                 $comma="";
                             }
-                            $query .= $comma.$Fname;
+                            $query .= $comma.addslashes($Fname);
                             $kkk++;
                         }
                         $k++;
@@ -4551,9 +4553,9 @@ class RatingTables {
                                 $comma="";
                             }
                             if ($Fname == 'reseller_id' && $this->CDRTool['filter']['reseller']) {
-                                $query .= $comma."'".$this->CDRTool['filter']['reseller']."'";
+                                $query .= $comma."'".addslashes($this->CDRTool['filter']['reseller'])."'";
                             } else {
-                                $query .= $comma."'".$value."'";
+                                $query .= $comma."'".addslashes($value)."'";
                             }
                             $kkk++;
                         }
@@ -4606,7 +4608,7 @@ class RatingTables {
                 }
             } elseif ($subweb_task == "Delete") {
                 if ($confirmDelete) {
-                    $query="delete from $table where id = '$id' and $this->whereResellerFilter ";
+                    $query=sprintf("delete from %s where id = '%s' and %s ",addslashes($table), addslashes($id), $this->whereResellerFilter);
                     if ($this->db->query($query)) {
                         $affected_rows=$this->db->affected_rows();
                         if ($affected_rows && in_array($table,$this->requireReload)) {
@@ -4629,7 +4631,7 @@ class RatingTables {
                 }
             } elseif ($subweb_task == "Delete session" && $sessionId && $table=='prepaid') {
 
-                $query=sprintf("select active_sessions from %s where id  = %d and %s",$table,$id,$this->whereResellerFilter);
+                $query=sprintf("select active_sessions from %s where id  = %d and %s",addslashes($table),addslashes($id),$this->whereResellerFilter);
                 if (!$this->db->query($query)) {
                     $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     print $log;
@@ -4657,7 +4659,7 @@ class RatingTables {
                 set active_sessions = '%s',
                 session_counter = %d
                 where id       = %d",
-                $table,
+                addslashes($table),
                 addslashes(json_encode($active_sessions)),
                 count($active_sessions),
                 addslashes($id)
@@ -4684,7 +4686,7 @@ class RatingTables {
                 addslashes($subweb_task),
                 addslashes($table),
                 addslashes($log_entity),
-                $this->CDRTool['filter']['reseller']
+                addslashes($this->CDRTool['filter']['reseller'])
                 );
                 
                 $this->db->query($log_query);
@@ -4730,7 +4732,7 @@ class RatingTables {
         }
 
         $query=sprintf("select count(*) as c from %s where %s",
-        $this->table,
+        addslashes($this->table),
         $this->whereResellerFilter);
         
         $t=0;
@@ -4752,7 +4754,7 @@ class RatingTables {
                 }
 
                 if (strlen($value)) {
-                    $where.=" and $Fname $like $quotes".$likewhat."$quotes";
+                    $where.=sprintf(" and %s %s %s%s%s ", addslashes($Fname),$like, $quotes, addslashes($likewhat),$quotes);
                     $t++;
                 }
                 
@@ -4762,7 +4764,6 @@ class RatingTables {
         }
             
         $query .= $where;
-
         $this->db->query($query);
         $this->db->next_record();
         $rows=$this->db->Record[0];
@@ -4832,11 +4833,11 @@ class RatingTables {
         }
         
         if (!$order && $this->tables[$this->table]['order']) {
-            $order=sprintf(" order by %s  ",$this->tables[$this->table]['order']);
+            $order=sprintf(" order by %s  ",addslashes($this->tables[$this->table]['order']));
         }
         
-        $query=sprintf("select * from %s where (1=1) %s and %s %s limit %s, %s",
-        $this->table,
+        $query=sprintf("select * from %s where (1=1) %s and %s %s limit %d, %d",
+        addslashes($this->table),
         $where,
         $this->whereResellerFilter,
         $order,
@@ -4844,7 +4845,6 @@ class RatingTables {
         $this->maxrowsperpage
         );
 
-        //print $query;
         $this->db->query($query);
         $num_fields=$this->db->num_fields();
         $k=0;
@@ -5094,7 +5094,7 @@ class RatingTables {
                         from billing_rates where
                         name like '%s'
                         order by name DESC
-                        limit 1",$_REQUEST['search_name']);
+                        limit 1",addslashes($_REQUEST['search_name']));
 
                         $this->db1->query($query);
                         $this->db1->next_record();
@@ -5740,7 +5740,7 @@ class OpenSIPSQuota {
 
     function ShowAccountsWithQuota($treshhold='') {
 
-        $query=sprintf("select * from quota_usage where datasource = '%s' and quota > 0 and cost > 0",$this->CDRS->cdr_source);
+        $query=sprintf("select * from quota_usage where datasource = '%s' and quota > 0 and cost > 0",addslashes($this->CDRS->cdr_source));
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -5794,7 +5794,7 @@ class OpenSIPSQuota {
                 $k=0;
                 foreach ($reset_quota_for as $_account) {
                     if ($k) $usage_keys.= ", ";
-                    $usage_keys.="'".$_account."'";
+                    $usage_keys.="'".addslashes($_account)."'";
                     $k++;
                 }
                 $query.= "and CONCAT(username,'@',domain) in (".$usage_keys.")";
@@ -5834,7 +5834,7 @@ class OpenSIPSQuota {
                  $k=0;
                  foreach ($reset_quota_for as $_account) {
                      if ($k) $usage_keys.= ", ";
-                     $usage_keys.="'".$_account."'";
+                     $usage_keys.="'".addslashes($_account)."'";
                      $k++;
                  }
                  $query.= "and CONCAT(username,'@',domain) in (".$usage_keys.")";
@@ -5874,7 +5874,7 @@ class OpenSIPSQuota {
                     $k=0;
                     foreach ($reset_quota_for as $_account) {
                         if ($k) $usage_keys.= ", ";
-                        $usage_keys.="'".$_account."'";
+                        $usage_keys.="'".addslashes($_account)."'";
                         $k++;
                     }
                     $query.= "and CONCAT(username,'@',domain) in (".$usage_keys.")";
@@ -5909,17 +5909,17 @@ class OpenSIPSQuota {
 
         $usage_keys='';
         if (count($reset_quota_for)) {
-            $log=sprintf ("Init quota of data source %s for %d accounts\n",$this->CDRS->cdr_source,count($reset_quota_for));
+            $log=sprintf ("Init quota of data source %s for %d accounts\n",addslashes($this->CDRS->cdr_source),count($reset_quota_for));
             print $log;
             syslog(LOG_NOTICE, $log);
 
             $k=0;
             foreach ($reset_quota_for as $_account) {
                 if ($k) $usage_keys.= ", ";
-                $usage_keys.="'".$_account."'";
+                $usage_keys.="'".addslashes($_account)."'";
                 $k++;
             }
-            $usage_keys="and ".$this->BillingPartyIdField. " in (".$usage_keys.")";
+            $usage_keys="and ".addslashes($this->BillingPartyIdField). " in (".$usage_keys.")";
         } else {
             if (count($this->localDomains)) {
                 $domain_filter="and Realm in (";
@@ -5927,7 +5927,7 @@ class OpenSIPSQuota {
                 foreach (array_keys($this->localDomains) as $_domain) {
                     if (!$_domain) continue;
                     if ($t) $domain_filter .= ",";
-                    $domain_filter .= sprintf("'%s'",$_domain);
+                    $domain_filter .= sprintf("'%s'",addslashes($_domain));
                     $t++;
                 }
                 $domain_filter .= ") ";
@@ -6003,7 +6003,7 @@ class OpenSIPSQuota {
         global $UserQuota;
         $this->initQuotaUsage();
 
-        $query=sprintf("select * from quota_usage where datasource = '%s' and quota > 0 and (cost > quota or cost_today >= quota * $this->daily_quota/100)",$this->CDRS->cdr_source);
+        $query=sprintf("select * from quota_usage where datasource = '%s' and quota > 0 and (cost > quota or cost_today >= quota * $this->daily_quota/100)",addslashes($this->CDRS->cdr_source));
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -6062,7 +6062,7 @@ class OpenSIPSQuota {
                         $this->domain_table          = "domain";
                     }
             
-                    $query=sprintf("select * from %s where domain = '%s'",$this->domain_table,$prepaidDomain);
+                    $query=sprintf("select * from %s where domain = '%s'",addslashes($this->domain_table),addslashes($domain));
         
                     if (!$this->AccountsDB->query($query)) {
                         $log=sprintf ("Database error: %s (%d) %s\n",$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
@@ -6170,9 +6170,9 @@ class OpenSIPSQuota {
 
         // get account information
         if ($this->enableThor) {
-            $query=sprintf("select first_name,last_name,email,profile from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+            $query=sprintf("select first_name,last_name,email,profile from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
         } else {
-            $query=sprintf("select first_name,last_name,email_address as email,profile from subscriber where username = '%s' and domain = '%s'",$username,$domain);
+            $query=sprintf("select first_name,last_name,email_address as email,profile from subscriber where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
         }
 
         if (!$this->AccountsDB->query($query)) {
@@ -6365,7 +6365,7 @@ class OpenSIPSQuota {
     }
 
     function saveQuotaInitFlag() {
-        $query=sprintf("insert into memcache (`key`,`value`) values ('%s','1')",$this->quota_init_flag);
+        $query=sprintf("insert into memcache (`key`,`value`) values ('%s','1')",addslashes($this->quota_init_flag));
         if (!$this->db->query($query)) {
             if ($this->db->Errno != '1062') {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -6378,7 +6378,7 @@ class OpenSIPSQuota {
     }
 
     function deleteQuotaInitFlag() {
-        $query=sprintf("delete from memcache where `key` in ('%s','%s')",$this->quota_init_flag,$this->quota_reset_flag);
+        $query=sprintf("delete from memcache where `key` in ('%s','%s')",addslashes($this->quota_init_flag),addslashes($this->quota_reset_flag));
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             print $log;
@@ -6391,7 +6391,7 @@ class OpenSIPSQuota {
 
     function deleteQuotaUsageFromCache ($reset_quota_for=array()) {
 
-        $query=sprintf("delete from quota_usage where datasource = '%s' ",$this->CDRS->cdr_source);
+        $query=sprintf("delete from quota_usage where datasource = '%s' ",addslashes($this->CDRS->cdr_source));
 
         if (count($reset_quota_for)) {
             $query.= " and account in (";
@@ -6424,7 +6424,7 @@ class OpenSIPSQuota {
 
     function initQuotaUsage() {
 
-        $query=sprintf("select value from memcache where `key` = '%s'",$this->quota_init_flag);
+        $query=sprintf("select value from memcache where `key` = '%s'",addslashes($this->quota_init_flag));
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -6444,7 +6444,7 @@ class OpenSIPSQuota {
             return false;
         }
 
-        $query=sprintf("select value from memcache where `key` = '%s'",$this->quota_reset_flag);
+        $query=sprintf("select value from memcache where `key` = '%s'",addslashes($this->quota_reset_flag));
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             print $log;
@@ -6478,7 +6478,7 @@ class OpenSIPSQuota {
         }
     
         if ($this->saveQuotaInitFlag()) {
-            $query=sprintf("delete from memcache where `key` = '%s'",$this->quota_reset_flag);
+            $query=sprintf("delete from memcache where `key` = '%s'",addslashes($this->quota_reset_flag));
             if (!$this->db->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                 print $log;
@@ -6494,7 +6494,7 @@ class OpenSIPSQuota {
     }
 
     function markBlocked($account) {
-        $query=sprintf("update quota_usage set blocked = '1', notified = NOW() where account = '%s' and datasource = '%s'",$account,$this->CDRS->cdr_source);
+        $query=sprintf("update quota_usage set blocked = '1', notified = NOW() where account = '%s' and datasource = '%s'",addslashes($account),addslashes($this->CDRS->cdr_source));
         if (!$this->db1->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db1->Error,$this->db1->Errno);
             print $log;
@@ -6504,7 +6504,7 @@ class OpenSIPSQuota {
     }
 
     function resetDailyQuota () {
-        $query=sprintf("update quota_usage set cost_today = 0 where datasource = '%s'",$this->CDRS->cdr_source);
+        $query=sprintf("update quota_usage set cost_today = 0 where datasource = '%s'",addslashes($this->CDRS->cdr_source));
         if (!$this->db1->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db1->Error,$this->db1->Errno);
             print $log;
@@ -6637,7 +6637,8 @@ class RatingEngine {
         $quota,
         intval($blocked),
         $this->CDRS->cdr_source,
-        $account);
+        addslashes($account)
+        );
 
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query '%s': %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -6771,8 +6772,8 @@ class RatingEngine {
         active_sessions      = '%s',
         session_counter      = '%s'
         where account        = '%s'",
-        $this->prepaid_table,
-        $balance,
+        addslashes($this->prepaid_table),
+        addslashes($balance),
         addslashes(json_encode($active_sessions)),
         count($active_sessions),
         addslashes($account)
@@ -6793,7 +6794,7 @@ class RatingEngine {
                 $this->domain_table          = "domain";
             }
     
-            $query=sprintf("select * from %s where domain = '%s'",$this->domain_table,$prepaidDomain);
+            $query=sprintf("select * from %s where domain = '%s'",addslashes($this->domain_table),addslashes($prepaidDomain));
 
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error: %s (%d) %s\n",$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
@@ -6814,13 +6815,13 @@ class RatingEngine {
             addslashes($prepaidUser),
             addslashes($prepaidDomain),
             addslashes($destination),
-            $duration,
-            $balance,
-            $next_balance,
+            addslashes($duration),
+            addslashes($balance),
+            addslashes($next_balance),
             addslashes($session_id),
-            $duration,
+            addslashes($duration),
             addslashes($destination),
-            $_reseller
+            addslashes($_reseller)
             );
     
             if (!$this->db->query($query)) {
@@ -6892,8 +6893,8 @@ class RatingEngine {
         set balance          = balance - '%s',
         change_date          = NOW()
         where account        = '%s'",
-        $this->prepaid_table,
-        $balance,
+        addslashes($this->prepaid_table),
+        addslashes($balance),
         addslashes($account)
         );
 
@@ -6912,7 +6913,7 @@ class RatingEngine {
                 $this->domain_table          = "domain";
             }
     
-            $query=sprintf("select * from %s where domain = '%s'",$this->domain_table,$prepaidDomain);
+            $query=sprintf("select * from %s where domain = '%s'",addslashes($this->domain_table),addslashes($prepaidDomain));
 
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error: %s (%d) %s\n",$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
@@ -6933,11 +6934,11 @@ class RatingEngine {
             addslashes($prepaidUser),
             addslashes($prepaidDomain),
             addslashes($destination),
-            $balance,
-            $next_balance,
+            addslashes($balance),
+            addslashes($next_balance),
             addslashes($session_id),
             addslashes($destination),
-            $_reseller
+            addslashes($_reseller)
             );
     
             if (!$this->db->query($query)) {
@@ -6988,8 +6989,8 @@ class RatingEngine {
             set balance   = balance + '%s',
             change_date   = NOW()
             where account = '%s'",
-            $this->prepaid_table,
-            $balance,
+            addslashes($this->prepaid_table),
+            addslashes($balance),
             addslashes($account)
             );
 
@@ -7008,8 +7009,8 @@ class RatingEngine {
                 ('%s','%s','Set balance','Manual update','%s','%s',NOW())",
                 addslashes($prepaidUser),
                 addslashes($prepaidDomain),
-                $balance,
-                $new_balance
+                addslashes($balance),
+                addslashes($new_balance)
                 );
 
                 if (!$this->db->query($query)) {
@@ -7026,8 +7027,8 @@ class RatingEngine {
 
         } else {
             $query=sprintf("insert into %s (balance, account, change_date) values ('%s','%s',NOW())",
-            $this->prepaid_table,
-            $balance,
+            addslashes($this->prepaid_table),
+            addslashes($balance),
             addslashes($account)
             );
 
@@ -7045,8 +7046,8 @@ class RatingEngine {
                 ('%s','%s','Set balance','Manual update','%s','%s',NOW())",
                 addslashes($prepaidUser),
                 addslashes($prepaidDomain),
-                $balance,
-                $balance
+                addslashes($balance),
+                addslashes($balance)
                 );
 
                 if (!$this->db->query($query)) {
@@ -7078,7 +7079,8 @@ class RatingEngine {
         }
 
         $query=sprintf("delete from %s where account = '%s'",
-        $this->prepaid_table,addslashes($account)
+        addslashes($this->prepaid_table),
+        addslashes($account)
         );
 
         if (!$this->db->query($query)) {
@@ -7988,7 +7990,7 @@ class RatingEngine {
         list($username,$domain) = explode("@",$account);
 
         if ($this->enableThor) {
-            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
                 syslog(LOG_NOTICE,$log);
@@ -8004,7 +8006,7 @@ class RatingEngine {
                 return 0;
             }
         } else {
-            $query=sprintf("select quota from subscriber where username = '%s' and domain = '%s'",$username,$domain);
+            $query=sprintf("select quota from subscriber where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
 
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -8027,7 +8029,7 @@ class RatingEngine {
         list($username,$domain) = explode("@",$account);
 
         if ($this->enableThor) {
-            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",$username,$domain);
+            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
             if (!$this->AccountsDB->query($query)) {
 
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -8048,7 +8050,7 @@ class RatingEngine {
                 return 0;
             }
         } else {
-            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = 'quota' and username = '%s' and domain = '%s'",$username,$domain);
+            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = 'quota' and username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
     
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
