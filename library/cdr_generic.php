@@ -1907,7 +1907,7 @@ class CDRS {
         $t=0;
         foreach ($_reset_array as $_el) {
             if ($t) $query.=",";
-            $query.= sprintf("'%s'",$_el);
+            $query.= sprintf("'%s'",addslashes($_el));
             $t++;
         }
 
@@ -2475,11 +2475,10 @@ class SIPonline {
             $where.= sprintf("and domain in (%s)",addslashes($allowed_domains_sql)) ;
         }
 
-        $query=sprintf("select count(*) as c, domain
-        from %s %s
-        group by domain
-        order by domain ASC",addslashes($this->locationTable),$where);
-
+        $query=sprintf("select count(*) as c, domain from %s %s group by domain order by domain ASC",
+        addslashes($this->locationTable),
+        $where
+        );
 
         $this->locationDB->query($query);
         $this->domains=$this->locationDB->num_rows();

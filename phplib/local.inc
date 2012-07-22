@@ -49,7 +49,7 @@ class CDRTool_Auth extends Auth {
 		$challenge = md5(uniqid($this->magic));
 	}
 
-	$query=sprintf("select * from spam where ip = '%s'",$_SERVER['REMOTE_ADDR']);
+	$query=sprintf("select * from spam where ip = '%s'",addslashes($_SERVER['REMOTE_ADDR']));
     $this->db->query($query);
 
     if ($this->db->num_rows()) {
@@ -66,8 +66,8 @@ class CDRTool_Auth extends Auth {
 	}
 
     if ($remains < 0) {
-        $query="delete from spam where ip = '$spam_login_ip'";
-        if ($this->db->query("$query")) {
+        $query=sprintf("delete from spam where ip = '%s'", addslashes($spam_login_ip));
+        if ($this->db->query($query)) {
             unset($spam_login_tries);
         }
     }
@@ -89,7 +89,12 @@ class CDRTool_Auth extends Auth {
             $log_time=Date("Y-m-d H:i:s",time());
             $log_query=sprintf("insert into log (date,login,ip,description,results)
             values ('%s','%s','%s','%s attempts to wrong login', 'IP blocked until %s')",
-            $log_time,addslashes($username),$_SERVER['REMOTE_ADDR'],$spam_login_tries,$next_try);
+            addslashes($log_time),
+            addslashes($username),
+            addslashes($_SERVER['REMOTE_ADDR']),
+            addslashes($spam_login_tries),
+            addslashes($next_try)
+            );
 
             $this->db->query($log_query);
 
@@ -98,7 +103,7 @@ class CDRTool_Auth extends Auth {
         $new_stamp=time();		
         $query=sprintf("update spam
         set tries = tries + 1
-        where ip =  '%s' ",$_SERVER['REMOTE_ADDR']);
+        where ip =  '%s' ",addslashes($_SERVER['REMOTE_ADDR']));
         $this->db->query($query);
     
         print "
@@ -163,8 +168,8 @@ class CDRTool_Auth extends Auth {
             return $ret[0];
             
         } else {
-        	$username_sql=addslashes($username);
-            $this->db->query("select * from auth_user where username = '$username_sql' and expire > NOW()");
+            $query = sprintf("select * from auth_user where username = '%s' and expire > NOW()", addslashes($username));
+            $this->db->query($query);
             $this->db->next_record();
             $otp_enabled_db =$this->db->f('otp_enable');
             $otp_email      =$this->db->f('email');
@@ -179,11 +184,11 @@ class CDRTool_Auth extends Auth {
                     $random_otp=random_passwd_gen();
                     $expire_otp= date("Y-m-d H:i:s", mktime(date("H"),date("i")+$interval,0,date("m") ,date("d"),date("Y")));
         
-                    $update="update auth_user
-                    set otp_passwd='$random_otp',
-                    otp_expire = '$expire_otp'
-                    where username = '$username_sql'
-                    ";
+                    $update=sprintf("update auth_user set otp_passwd='%s', otp_expire = '%s' where username = '%s'",
+                    addslashes($random_otp),
+                    addslashes($expire_otp),
+                    addslashes($username)
+                    );
 
                     if ($this->db->query($update)) {
                         if ($otp_email) {
@@ -209,7 +214,7 @@ class CDRTool_Auth extends Auth {
             "       from %s ".
             "       where username = '%s' " .
             "       and expire > NOW()    " ,
-            $this->database_table,
+            addslashes($this->database_table),
             addslashes($username)));
         
             $this->db->next_record();
@@ -224,7 +229,7 @@ class CDRTool_Auth extends Auth {
                         "UPDATE %s".
                         " set password_hashed='%s', password=''".
                         " where username='%s'",
-                        $this->database_table,
+                        addslashes($this->database_table),
                         addslashes($newpassmd5),
                         addslashes($username)));
                     $pass     =  $newpassmd5;
@@ -799,7 +804,7 @@ class pageLayout {
                 
                 $spam=new DB_CDRTool;
 
-		        $query="select * from spam where ip = '$_SERVER[REMOTE_ADDR]'";
+		        $query=sprintf("select * from spam where ip = '%s'",addslashes($_SERVER[REMOTE_ADDR]));
     			$spam->query($query);
 
                 if (!$spam->num_rows()) {
@@ -808,7 +813,7 @@ class pageLayout {
                     ",$_SERVER[REMOTE_ADDR],addslashes($username),time());
                 } else {
                     $query=sprintf("update spam set
-                    tries = tries +1 where ip = '%s'", $_SERVER[REMOTE_ADDR]);
+                    tries = tries +1 where ip = '%s'", addslashes($_SERVER[REMOTE_ADDR]));
                 }
                 $spam->query($query);
             
