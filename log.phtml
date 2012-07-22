@@ -57,7 +57,7 @@ This month:
 $where = " (1=1) ";
 
 if ($CDRTool['filter']['reseller']) {
-	$where .= sprintf (' and reseller_id = %s',$CDRTool['filter']['reseller']);
+	$where .= sprintf (' and reseller_id = %s',addslashes($CDRTool['filter']['reseller']));
 } else if (!$perm->have_perm("admin")) {
     $where.=sprintf(" and login = '%s'",addslashes($auth->auth["uname"]));
 }
@@ -120,7 +120,9 @@ if ($current_log ) {
 
 if ($search_text) {
     $where.= sprintf(" and (description like '%s%s%s' or url like '%s' or id = '%s')",
-    "%",$search_text,"%",$search_text,$search_text);
+    "%",addslashes($search_text),"%",
+    addslashes($search_text),
+    addslashes($search_text));
     $search_text_enc=urlencode($search_text);
     $url_log .="&search_text=$search_text_enc";
 }
@@ -159,7 +161,7 @@ if  ($rows>0)  {
         $maxrows=$rows;
     }
 
-    $query = sprintf("select * from log where %s order by id desc limit %d, %d",$where,addslashes($i),addslashes($maxrowsperpage));
+    $query = sprintf("select * from log where %s order by id desc limit %d, %d",$where,$i,$maxrowsperpage);
 
     $db->query($query);
 
