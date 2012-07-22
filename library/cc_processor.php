@@ -374,7 +374,7 @@ class CreditCardProcessor {
         $tran_data = array();
         $sql_conn = $this->dbConnection();
         try {
-            $q_result = mysqli_query($sql_conn, "CALL sproc_cc_get_transaction_details('".$tran_id."')");
+            $q_result = mysqli_query($sql_conn, "CALL sproc_cc_get_transaction_details('".addslashes($tran_id)."')");
             while ($row = mysqli_fetch_array($q_result,MYSQLI_ASSOC)) {
                 $tran_data = array_merge($tran_data,$row);
             }
@@ -391,7 +391,7 @@ class CreditCardProcessor {
         $tran_data = array();
         $sql_conn = $this->dbConnection();
         try {
-            $q_result = mysqli_query($sql_conn, "CALL sproc_cc_get_transaction_items('".$tran_id."')");
+            $q_result = mysqli_query($sql_conn, "CALL sproc_cc_get_transaction_items('".addslashes($tran_id)."')");
             $i = 0;
             while ($row = mysqli_fetch_array($q_result,MYSQLI_ASSOC)) {
                 $tran_data[$i] = array_merge($tran_data,$row);
@@ -409,7 +409,7 @@ class CreditCardProcessor {
     	// check if the current transaction key is already in the database
     	$ret = true;
     	$sql_conn = $this->dbConnection();
-    	$q_result = mysqli_query($sql_conn, "SELECT COUNT(TransactionID) AS MYCNT FROM cc_transactions WHERE TransactionKey = '".$tran_key."'");
+    	$q_result = mysqli_query($sql_conn, "SELECT COUNT(TransactionID) AS MYCNT FROM cc_transactions WHERE TransactionKey = '".addslashes($tran_key)."'");
     	$row = mysqli_fetch_array($q_result,MYSQLI_ASSOC);
     	if($row['MYCNT'] == 0){
     		$ret = false;
@@ -1148,13 +1148,13 @@ class CreditCardProcessor {
         // insert transaction information
         try{
             mysqli_query($sql_conn, "CALL sproc_cc_add_transaction(
-                '".$_TransactionKey."', '".$_TransactionNum."', '".$this->environment."', '".$_TotalAmount."', '".$_Currency."', '".$_AVSCode."', '".$_CVV2Code."',
-                '".$_PendingReason."', '".$_PaymentStatus."', '".$_FMFDetails."', '".$_ThreeDSecureResponse."',
-                '".$_APITimestamp."', '".$_AckResponse."', '".$_CorrelationID."', '".$_Errors."', '".$_AES_ENC_PWD."',
-                '".$_FirstName."', '".$_LastName."', '".$_UserAcct."', '".$_Email."', '".$_CCType."', '".$_CCNum."', '".$_CCLast."',
-                '".$_CCVCode."', '".$_CCExpMonth."', '".$_CCExpYear."', '".$_BillingAddress1."', '".$_BillingAddress2."',
-                '".$_BillingCity."', '".$_BillingState."', '".$_BillingPostalCode."', '".$_BillingCountry."',
-                '".$_RequesterIP."', '".$_RequesterSID."'
+                '".addslashes($_TransactionKey)."', '".addslashes($_TransactionNum)."', '".addslashes($this->environment)."', '".addslashes($_TotalAmount)."', '".addslashes($_Currency)."', '".addslashes($_AVSCode)."', '".addslashes($_CVV2Code)."',
+                '".addslashes($_PendingReason)."', '".addslashes($_PaymentStatus)."', '".addslashes($_FMFDetails)."', '".addslashes($_ThreeDSecureResponse)."',
+                '".addslashes($_APITimestamp)."', '".addslashes($_AckResponse)."', '".addslashes($_CorrelationID)."', '".addslashes($_Errors)."', '".addslashes($_AES_ENC_PWD)."',
+                '".addslashes($_FirstName)."', '".addslashes($_LastName)."', '".addslashes($_UserAcct)."', '".addslashes($_Email)."', '".addslashes($_CCType)."', '".addslashes($_CCNum)."', '".addslashes($_CCLast)."',
+                '".addslashes($_CCVCode)."', '".addslashes($_CCExpMonth)."', '".addslashes($_CCExpYear)."', '".addslashes($_BillingAddress1)."', '".addslashes($_BillingAddress2)."',
+                '".addslashes($_BillingCity)."', '".addslashes($_BillingState)."', '".addslashes($_BillingPostalCode)."', '".addslashes($_BillingCountry)."',
+                '".addslashes($_RequesterIP)."', '".addslashes($_RequesterSID)."'
             )");
         } catch (Exception $ex) {
             //print $ex;
@@ -1165,7 +1165,7 @@ class CreditCardProcessor {
         foreach ($form_data['cart_item'] as $cart_item_key => $service_id){
             try{
                 mysqli_query($sql_conn, "CALL sproc_cc_add_purchase_items(
-                    '".$_TransactionNum."', '".$service_id."', '".$form_data['cart_item_price'][$cart_item_key]."', '".$_Currency."'
+                    '".addslashes($_TransactionNum)."', '".addslashes($service_id)."', '".addslashes($form_data['cart_item_price'][$cart_item_key])."', '".addslashes($_Currency)."'
                 )");
             } catch (Exception $ex) {
                 //print $ex;
