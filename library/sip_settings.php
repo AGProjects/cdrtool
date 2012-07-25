@@ -3669,7 +3669,7 @@ class SipSettings {
     }
 
     function showOwner() {
-        //if ($this->login_type == 'subscriber') return true;
+        if ($this->login_type == 'subscriber') return true;
             print "
             <tr>
             <td>";
