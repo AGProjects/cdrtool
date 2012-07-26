@@ -763,10 +763,10 @@ class CreditCardProcessor {
             $page_body_content .= "<td><input type=\"text\" size=\"8\" maxlength=\"10\" name=\"zip\" value=\"".$this->user_account['PostCode']."\"></td>\n";
             $page_body_content .= "</tr>\n";
 
-            $page_body_content .= sprintf ("<tr class=%s>\n",$this->odd_row_class);
+            $page_body_content .= sprintf ("<tr class='form-actions %s'>\n",$this->odd_row_class);
             $page_body_content .= "<input type=hidden name=purchase value=1>\n";
-            $page_body_content .= sprintf("<td colspan=2><input type=\"submit\" name=\"submit\" value=\"%s\">\n",_("Purchase"));
-            $page_body_content .= "<input type=\"reset\" value=\"Reset\"></td>\n";
+            $page_body_content .= sprintf("<td colspan=2><input class='btn btn-primary' type=\"submit\" name=\"submit\" value=\"%s\">\n",_("Purchase"));
+            $page_body_content .= "<input class='btn' type=\"reset\" value=\"Reset\"></td>\n";
             $page_body_content .= "</tr>\n";
             $page_body_content .= "</table>\n";
     

@@ -1246,23 +1246,14 @@ class SipSettings {
 
     function showTitleBar() {
 
-        print "
-        <tr>
-        <td colspan=2 bgcolor=lightgrey>
-        ";
-
-        print "
-        <table border=0 width=100% cellpadding=1 cellspacing=1 bgcolor=lightgrey>
-        <tr>
-        <td align=left>
-        ";
+        print "<div class='row-fluid'>
+            <div class='alert alert-info span12' style='min-height:10px'>
+            <div class='row-fluid'>
+            <div class='span5' style='min-height:10px'>";
         printf (("%s &lt;sip:%s@%s&gt;"),$this->fullName,$this->username,$this->domain);
 
-        print "
-        </td>
-        <td align=right valign=top>
-        ";
-    
+        print "</div>
+            <div class='span7' style='text-align:right; min-height:10px'>";
         if ($this->login_type == 'subscriber' && !$this->isEmbedded()) {
             print "<a href=sip_logout.phtml>";
             print _("Logout");
@@ -1271,6 +1262,7 @@ class SipSettings {
             if ($this->enable_thor) {
                 print " ";
                 if ($this->isEmbedded()) {
+                   print "<i class=\"icon-home icon-white\"></i>";
                     print _("Home Node");
                 } else {
                     print "<a href=\"http://www.ag-projects.com/SIPThor.html\" target=_new>";
@@ -1281,23 +1273,16 @@ class SipSettings {
                 if ($this->homeNode=getSipThorHomeNode($this->account,$this->sip_proxy)) {
                     printf (" <font color=green>%s</font>",$this->homeNode);
                 } else {
-                    print "<font color=red>";
+                    print " <font color=red>";
                     print _("Unknown");
                     print "</font>";
                 }
             }
         }
     
-        print "
-        </td>
-        </tr>
-        </table>
+        print "</div></div></div>
+            </div>
         ";
-        print "
-        </td>
-        </tr>
-        ";
-
     }
 
     function getDivertTargets () {
@@ -1501,7 +1486,7 @@ class SipSettings {
                                                     "SubscriberMayEditIt" => 0,
                                                     "SubscriberMaySeeIt"  => 1,
                                                     "ResellerMayEditIt"=>1,
-                				                    "ResellerMaySeeIt"=>1
+                                                    "ResellerMaySeeIt"=>1
                                                     );
                 $this->availableGroups['anonymous']=array("Group"=>"anonymous",
                                             "WEBName" =>sprintf (_("PSTN Privacy")),
@@ -1798,72 +1783,52 @@ class SipSettings {
 
     function showAboveTabs() {
         print "
-        <tr>
-        <td colspan=3>
+        <div class='row-fluid'>
+        <div class='span12>
         ";
 
         print "
-        </td>
-        </tr>
+        </div>
+        </div>
         ";
 
     }
 
     function showTabs() {
-        print "
-        <tr>
-        ";
-        print "
-        <td colspan=3>
-        ";
-
-        print "<table border=0 width=100%>";
-        print "<tr>";
-        print "<td>";
+        print "<div class='pull-left'>";
 
         if ($this->isEmbedded()) {
             print $this->embedded_img;;
         }
 
-        print "</td>";
-        print "<td align=right>";
-        print "
-        <table border=0 cellspacing=0 cellpadding=0 align=right>
-        <tr>
+        print "</div>
+        <div class='pull-right'>
+        <ul class=\"nav nav-tabs\">
         ";
     
         $items=0;
     
         while (list($k,$v)= each($this->tabs)) {
             if ($this->tab==$k) {
-                $_class='selected_tab';
+                $_class='active selected_tab';
             } else {
-                $_class='tab';
+                $_class='tabs';
             }
-            print "<td class=$_class><a href=$this->url&tab=$k><font color=white>$v</font></a></td>";
+            print "
+                <li class=$_class><a href='$this->url&tab=$k'>$v</a></li>";
         }
         print "
-        </tr>
-        </table>
+        </ul>
         ";
-        print "</td>";
-        print "</tr>";
-        print "</table>";
-        print "
-        </td>
-        </tr>
-        ";
-
+        print "</div>";
     }
 
     function showUnderTabs() {
         print "
-        <tr>
-        <td colspan=2>
+        <div class='row-fluid'>
         ";
         print "
-        </td>
-        </tr>
+        </div>
         ";
     }
 
@@ -1884,17 +1849,7 @@ class SipSettings {
             $chapter=sprintf(_("Price list"));
             $this->showChapter($chapter);
 
-            print "
-            <tr>
-            <td colspan=3>
-            ";
-
             include($this->pstn_termination_price_page);
-
-            print "
-            </td>
-            </tr>
-            ";
 
             return true;
         }
@@ -2379,16 +2334,15 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <tr class=even>
-        <td>";
+            <div class='row-fluid'>
+                <div class=span12>
+                    <table class='table table-condensed table-striped'>
+                        <tr>
+                            <td style=\"width: 20%\">";
         print _("SIP Address");
-        print "
-        </td>
-        <td>sip:$this->account
-        </td>
-        </tr>
-        ";
-
+        print "</td>
+                            <td>sip:$this->account</td>
+                        </tr>";
         /*
         print "
         <tr>
@@ -2403,41 +2357,33 @@ class SipSettings {
         */
 
         print "
-        <tr class=odd>
-        <td>";
+                        <tr>
+                            <td>";
         print _("Username");
+        print "</td>
+                            <td>$this->username</td>
+                        </tr>";
         print "
-        </td>
-        <td>$this->username
-        </td>
-        </tr>
-        ";
-        print "
-        <tr class=even>
-        <td>";
+                        <tr>
+                            <td>";
         print _("Domain/Realm");
-        print "
-        </td>
-        <td>$this->domain
-        </td>
-        </tr>
-        ";
+        print "</td>
+                            <td>$this->domain</td>
+                        </tr>";
 
         print "
-        <tr class=odd>
-        <td>";
+                        <tr>
+                            <td>";
         print _("Outbound Proxy");
-        print "
-        </td>
-        <td>$this->sip_proxy
-        </td>
-        </tr>
+        print "</td>
+                            <td>$this->sip_proxy</td>
+                        </tr>
         ";
 
         if ($this->presence_engine) {
-            print "
-            <tr class=even>
-                <td>";
+                print "
+                    <tr>
+                    <td>";
                 print _("XCAP Root");
                 print "
                 </td>
@@ -2446,14 +2392,17 @@ class SipSettings {
             </tr>
             ";
         }
+        print "</table></div></div>";
 
-		if ($this->pstn_access && $this->rpid) {
+
+        if ($this->pstn_access && $this->rpid) {
             $chapter=sprintf(_("PSTN"));
             $this->showChapter($chapter);
 
             print "
-            <tr>
-              <td>";
+                <div class=row-fluid>
+                <div class=span12>
+                <table class='table table-condensed table-striped'><tr><td style=\"width: 20%\">";
               print _("Caller-ID");
               print "</td>
               <td>$this->rpid</td>
@@ -2475,33 +2424,33 @@ class SipSettings {
             }
 
             print "
-            <tr class=$_class>
-
-              <td>";
-              print _("Phone Number");
-              print "</td>
+                <tr>
+                <td>";
+            print _("Phone Number");
+            print "</td>
               <td>$e</td>
             </tr>
             ";
         }
 
- 
+        print "</table></div></div>";
+
         $chapter=sprintf(_("Aliases"));
         $this->showChapter($chapter);
  
         print "
-        <tr>
-        <td colspan=2>";
+        <div class=row-fluid>
+        <div class=span12>";
         printf (_("You may create new aliases for incoming calls"));
         printf ("
-        </td>
-        </tr>
+            </div>
+            </div>
         ");
  
         $t=0;
  
         print "
-        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        <form class=form-horizontal method=post name=sipsettings onSubmit=\"return checkForm(this)\">
         ";
  
         foreach($this->aliases as $a)  {
@@ -2511,51 +2460,46 @@ class SipSettings {
             $mod=$t-$rr*2;
     
             if ($mod ==0) {
-                $_class='odd';
-            } else {
                 $_class='even';
+            } else {
+                $_class='odd';
             }
  
             print "
-            <tr class=$_class>
+            <div class='control-group $_class'>
  
-              <td>";
+              <label for=aliases[] class=control-label>";
                 print _("SIP Alias");
                 print "
-              </td>
-              <td> <input type=text size=35 name=aliases[] value=\"$a\"></td>
-            </tr>
+              </label>
+              <div class='controls'><input type=text size=35 name=aliases[] value=\"$a\">
+              </div>
+            </div>
             ";
         }
  
         print "
-        <tr>
-          <td>";
+        <div class='control-ground $_class'>
+          <label for=aliases[] class=control-label>";
             print _("New SIP Alias");
             print "
-          </td>
-          <td> <input type=text size=35 name=aliases[]></td>
-        </tr>
-        ";
- 
-        print "
-        <tr>
-          <td align=left>
+          </label>";
+            print "
+          <div class=controls>
             <input type=hidden name=action value=\"set aliases\">
         ";
-        print "
-        <input type=submit value=\"";
+         print '
+             <input name=aliases[] size="35" type="text">
+             </div><div class=form-actions>
+             <input class="btn" type="submit" value="';
         print _("Save aliases");
-        print "\"
-               onClick=saveHandler(this)>
-        ";
+        print '" onClick=saveHandler(this)>
+              </div>
+            </div>
+           '; 
         print "
-          </td>
-          <td align=right>
-          </td>
-        </tr>
+        </div>
         ";
- 
         print $this->hiddenElements;
         print "
         </form>
@@ -2603,17 +2547,18 @@ class SipSettings {
         <form method=post>";
 
         print "
-        <tr>
-          <td align=left colspan=2>
+        <div class=row-fluid>
+          <div class=well span12>
         ";
 
         if ($this->email) {
             printf (_("Email SIP Account information to %s"),$this->email);
             print "
             <input type=hidden name=action value=\"send email\">
-            <input type=submit value=";
+            <button class='btn btn-primary' type=submit>
+            <i class=\"icon-envelope icon-white\"> </i> ";
             print _("Send");
-            print ">";
+            print "</button>";
         }
 
         if ($this->sip_settings_page && $this->login_type != 'subscriber') {
@@ -2622,11 +2567,8 @@ class SipSettings {
         }
 
         print "
-          </td>
-          <td align=right>";
-            print "
-          </td>
-        </tr>
+          </div>
+        </div>
         ";
 
         print $this->hiddenElements;
@@ -2901,7 +2843,7 @@ class SipSettings {
 
         if ($this->support_web) {
             print "<p>";
-			printf (_("For more information visit %s"),$this->support_web);
+            printf (_("For more information visit %s"),$this->support_web);
         }
 
         print "
@@ -3000,8 +2942,7 @@ class SipSettings {
 
     function showFooter() {
         print "
-        <tr>
-          <td height=30 colspan=2 align=right valign=bottom>";
+          <div class='pull-right'>";
 
         if ($this->footerFile) {
             include ("$this->footerFile");
@@ -3009,8 +2950,7 @@ class SipSettings {
             print "<a href=http://ag-projects.com target=agprojects><img src=images/PoweredbyAGProjects.png border=0></a>";
         }
 
-        print "</td>
-        </tr>
+        print "</div>
         ";
 
     }
@@ -3020,7 +2960,7 @@ class SipSettings {
         $this->getVoicemail();
 
         print "
-        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        <form class=form-horizontal method=post name=sipsettings onSubmit=\"return checkForm(this)\">
         ";
 
         $chapter=sprintf(_("SIP Account"));
@@ -3029,84 +2969,82 @@ class SipSettings {
         if ($this->login_type != "subscriber" ) {
     
             print "
-            <tr class=even>
-            <td>";
+            <div class='control-group even'>
+            <label class='control-label' for='first_name'>";
             print _("First Name");
             print "
-            </td>
-            <td>";
+            </label>";
     
-            print "<input type=text size=15 name=first_name value=\"$this->firstName\">";
+            print "<div class=\"controls\"><input class=input-medium type=text size=15 name=first_name value=\"$this->firstName\">";
     
             print "
-            </td>
-            </tr>
+            </div>
+            </div>
             ";
     
             print "
-            <tr class=odd>
-            <td>";
+            <div class='control-group odd'>
+            <label class='control-label' for='last_name'>";
             print _("Last Name");
-            print "
-            </td>
-            <td>";
+            print "</label>
+            <div class='controls'>";
     
-            print "<input type=text size=15 name=last_name value=\"$this->lastName\">";
+            print "<input class=input-medium type=text size=15 name=last_name value=\"$this->lastName\">";
     
             print "
-            </td>
-            </tr>
+            </div>
+            </div>
             ";
 
         }
 
         print "
-        <tr class=even>
-        <td>";
+        <div class='control-group even'>
+        <label class='control-label' for='sip_password'>";
         print _("Password");
-        print "
-        </td>
-        <td>";
 
+        print "
+        </label>
+        <div class='controls'>";
         if ($this->login_type == 'subscriber' && in_array("deny-password-change",$this->groups)) {
             print _("Password can be changed only by the operator");
         } else {
-            print "<input type=text size=15 name=sip_password>";
+            print "<input class=input-medium type=text size=15 name=sip_password><span class=help-inline>";
             print _("Enter text to change the current password");
             printf ("\n\n<!-- \nSIP Account password: %s\n -->\n\n",$this->password);
         }
 
-        print "
-        </td>
-        </tr>
+        print "</span>
+        </div>
+        </div>
         ";
 
         print "
-        <tr class=even>
-        <td>";
+        <div class='control-group odd'>
+        <label class='control-label' for='web_password'>";
         print _("Web Password");
         print "
-        </td>
-        <td>";
+        </label>
+        <div class=controls>";
 
-        print "<input type=text size=15 name=web_password>";
+        print "<input class=input-medium type=text size=15 name=web_password><span class=help-inline>";
         print _("Enter text to change the password to access this web page");
 
-        print "
-        </td>
-        </tr>
+        print "</span>
+        </div>
+        </div>
         ";
 
         print "
-        <tr class=odd>
-        <td>";
+        <div class='control-group even'>
+        <label class='control-label' for='language'>";
         print _("Language");
         print "
-        </td>
-        <td>";
+        </label>
+        <div class=controls>";
 
         print "
-        <select name=language>
+        <select class=input-medium name=language>
         ";
 
         $selected_lang[$this->Preferences['language']]="selected";
@@ -3116,37 +3054,38 @@ class SipSettings {
         }
 
         print "
-        </select>
+            </select>
+            </div></div>
         ";
 
         print "
-        <tr class=even>
-        <td>";
+        <div class='control-group odd'>
+        <label class='control-label' for='timezone'>";
         print _("Timezone");
         print "
-        </td>
-        <td>
+        </label>
+        <div class=controls>
         ";
         $this->showTimezones('timezone',$this->timezone);
         print " ";
         $timestamp=time();
         $LocalTime=getLocalTime($this->timezone,$timestamp);
+        print "<span class=help-inline>";
         print _("Local Time");
         print ": $LocalTime";
         //dprint_r($this->availableGroups);
-        print "
-        </td>
-        </tr>
+        print "</span>
+            </div>
+        </div>
         ";
-
         if (count($this->emergency_regions) > 0) {
             print "
-            <tr>
-            <td>";
+            <div class='control-group'>
+            <label class='control-label' for='region'>";
             print _("Location");
             print "
-            </td>
-            <td>
+            </label>
+            <div class=controls>
             ";
             print "<select name=region>";
             $selected_region[$this->region]="selected";
@@ -3156,28 +3095,26 @@ class SipSettings {
             print "</select>";
 
             print "
-            </td>
-            </tr>
+            </div>
+            </div>
             ";
         }
 
         if (in_array("free-pstn",$this->groups)) {
  
             if (in_array("quota",$this->groups)) {
-                $_class="orange";
+                $_class="alert alert-error";
             } else {
                 $_class="";
             }
 
             if ($this->pstn_changes_allowed) {
                 print "
-                <tr class=$_class>
-                <td>";
+                    <div class='control-group'>
+                    <div class='$_class'>
+                    <label class=control-label>";
                 print _("Quota");
                 print "
-                </td>
-                <td>
-                <table cellspacing=0 cellpadding=0 width=100%>
                 <tr>
                 <td>";
     
@@ -3186,58 +3123,47 @@ class SipSettings {
                 if ($this->quota || in_array("quota",$this->groups)) {
                     $this->getCallStatistics();
                     if ($this->thisMonth['price']) {
-                        print "&nbsp;&nbsp;&nbsp;";
                         printf (_("This month usage: %.2f %s"),$this->thisMonth['price'], $this->currency);
                         printf (" / %d ",$this->thisMonth['calls']);
-                        print _("Calls");
+                        print _("Calls ");
                     }
                 }
+
+                //print "</div>";
      
-                print "
-                </td>
-                <td align=right>
-                ";
 
                 if ($this->pstn_changes_allowed) {
                     print _("Un-block");
                     print "
-                    <input type=checkbox name=quota_deblock value=1>
+                    <input class=inline type=checkbox name=quota_deblock value=1>
                     ";
                 }
     
-                print "</td>
-                </tr>
-                </table>
-                </td>
-                </tr>
+                print "</span></div></div></div>
+                </div>
                 ";
-
             } else if ($this->quota) {
                 print "
-                <tr>
-                <td>";
+                <div class='control-group'>
+                    <label class=control-label>";
                 print _("Quota");
                 print "
-                </td>
-                <td class=$td_class>
-                <table cellspacing=0 cellpadding=0 width=100%>
-                <tr>
-                <td>";
-                printf ("%s %s",$this->quota,$this->currency);
+                    </label>
+                <div class='controls $_class'>
+                    <span style='padding-top:5px; margin-bottom:5px;display:block;'>
+                ";
+                printf ("%s %s ",$this->quota,$this->currency);
                 $this->getCallStatistics();
                 if ($this->thisMonth['price']) {
-                    print "&nbsp;&nbsp;&nbsp;";
                     printf (_("This month usage: %.2f %s"),$this->thisMonth['price'], $this->currency);
                     printf (" / %d ",$this->thisMonth['calls']);
                     print _("Calls");
                 }
 
-                print "</td>
-                </tr>
-                </table>
-                </td>
-                </tr>
+                print "</span></div>
+                </div>
                 ";
+                
             }
         }
 
@@ -3248,14 +3174,16 @@ class SipSettings {
             if (!$this->prepaid_changes_allowed) $disabled_box_prepaid   = "disabled=true";
     
             print "
-            <tr>
-            <td valign=top>";
+            <div class='control-group'>
+            <label class=control-label for=prepaid>";
             print _("Prepaid");
-            print "</td>
-            <td>
-            <input type=checkbox value=1 name=prepaid $checked_box_prepaid $disabled_box_prepaid>
-            </td>
-            </tr>
+            print "</label>
+                <div class=controls>
+                <label class=checkbox>
+                    <input type=checkbox value=1 name=prepaid $checked_box_prepaid $disabled_box_prepaid>
+                </label>
+            </div>
+            </div>
             ";
         }
 
@@ -3297,15 +3225,17 @@ class SipSettings {
             }
 
             if ($key=="blocked" && $checked_box[$key]) {
-                $_class="orange";
+                $_class="alert alert-error";
+                $_class1="error";
             } else {
                 $_class="";
+                $_class1='';
             }
 
             print "
-            <tr class=$_class>
-            <td valign=top>$elementName</td>
-            <td>
+                <div class='control-group $_class1'>
+            <label class=control-label>$elementName</label>
+            <div class='controls $_class'>
             ";
 
             if ($key=="blocked") {
@@ -3400,30 +3330,32 @@ class SipSettings {
                 }
 
             } else if ($key=="free-pstn") {
-                print "
+                print "<label class=checkbox>
                 <input type=checkbox value=1 name=$key $checked_box[$key] $disabled_box>
                 ";
 
                 if ($this->pstn_changes_allowed) {
-                    print "$elementComment: <input type=text size=15 maxsize=15 name=rpid value=\"$this->rpid\">";
+                    print "$elementComment</label>";
+                    print "<input id='rpid_input'style='display:inline-block' class=input-medium type=text size=15 maxsize=15 name=rpid value=\"$this->rpid\">";
                 } else {
                     if ($this->rpid) {
-                        print "$elementComment: $this->rpid";
+                        print "$elementComment: $this->rpid </label>";
                     } else {
-                        print "$elementComment";
+                        print "$elementComment</label>";
                     }
                 }
 
             } else {
                 print "
-                <input type=checkbox value=1 name=$key $checked_box[$key] $disabled_box> $elementComment
+                <label class=checkbox><input type=checkbox value=1 name=$key $checked_box[$key] $disabled_box>$elementComment</label>
                 ";
             }
 
             print "
-            </td>
-            </tr>
+            </div>
+            </div>
             ";
+
         }
 
         $this->showExtraGroups();
@@ -3437,36 +3369,38 @@ class SipSettings {
         $this->showCallLimit();
 
         print "
-        <tr class=even>
-        <td>";
+        <div class='control-group even'>
+        <label for=timeout class=control-label>";
         print _("No-answer Timeout");
         printf ("
-        </td>
-        <td align=left>
+        </label>
+        <div class='controls'>
+        <div class='input-append'>
         ");
  
-        printf ("<input name=timeout value='%d' size=3> s",$this->timeout);
+        printf ("<input class=input-medium name=timeout value='%d' size=3 type=text><span class='add-on'>s</span>",$this->timeout);
  
         print "
-        </td>
-        </tr>
+        </div>
+        </div>
+        </div>
         ";
 
         print "
-        <tr class=odd>
-        <td>";
+        <div class='row-fluid odd'>
+        <label for=extra class=control-label>";
         print _("Tabs");
         print "
-        </td>
-        <td>";
+        </label>
+        <div id='extra' class=controls>";
 
-		if ($this->show_presence_tab) {
+        if ($this->show_presence_tab) {
             if ($this->Preferences['show_presence_tab']){
                 $check_show_presence_tab="checked";
             } else {
                 $check_show_presence_tab="";
             }
-            printf ("<input type=checkbox %s value=1 name='show_presence_tab'>%s\n",$check_show_presence_tab,_("Presence"));
+            printf ("<label class='checkbox'><input type=checkbox %s value=1 name='show_presence_tab'>%s</label>\n",$check_show_presence_tab,_("Presence"));
         }
 
         if (in_array("free-pstn",$this->groups) && !$this->show_barring_tab) {
@@ -3475,12 +3409,12 @@ class SipSettings {
             } else {
                 $check_show_barring_tab="";
             }
-            printf ("<input type=checkbox %s value=1 name='show_barring_tab'>%s\n",$check_show_barring_tab,_("Barring"));
+            printf ("<label class='checkbox'><input type=checkbox %s value=1 name='show_barring_tab'>%s</label>\n",$check_show_barring_tab,_("Barring"));
         }
 
         print "
-        </td>
-        </tr>
+        </div>
+        </div>
         ";
 
         $this->showVoicemail();
@@ -3491,34 +3425,29 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <tr class=even>
-          <td>";
+        <div class='control-group even'>
+          <label for=mailto class=control-label>";
             print _("Email Address");
             print "
-          </td>
-          <td align=left>
-            <input type=text size=40 maxsize=255 name=mailto value=\"$this->email\">
-          </td>
-        </tr>
+          </label>
+          <div class=controls>
+            <input class=span3 type=text size=40 maxsize=255 name=mailto value=\"$this->email\">
+          </div>
+        </div>
         ";
 
         print "
-        <tr>
-          <td align=left>
             <input type=hidden name=action value=\"save settings\">
         ";
 
-        print "
-        <input type=submit value=\"";
+        print "<div class='form-actions'>
+        <input class='btn' type=submit value=\"";
         print _("Save");
         print "\"
                onClick=saveHandler(this)>
         ";
         print "
-          </td>
-          <td align=right>
-          </td>
-        </tr>
+          </div>
         ";
 
         print $this->hiddenElements;
@@ -3533,11 +3462,11 @@ class SipSettings {
 
         $this->getVoicemail();
         $this->getEnumMappings();
-	$this->getDivertTargets();
+        $this->getDivertTargets();
         $this->getDiversions();
 
         print "
-        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        <form class=form-horizontal method=post name=sipsettings onSubmit=\"return checkForm(this)\">
         ";
 
         $chapter=sprintf(_("Call Forwarding"));
@@ -3546,22 +3475,18 @@ class SipSettings {
         $this->showDiversions();
 
         print "
-        <tr>
-          <td align=left>
+          <div class=form-actions>
             <input type=hidden name=action value=\"set diversions\">
         ";
 
         print "
-        <input type=submit value=\"";
+        <input class='btn' type=submit value=\"";
         print _("Save");
         print "\"
                onClick=saveHandler(this)>
         ";
         print "
-          </td>
-          <td align=right>
-          </td>
-        </tr>
+          </div>
         ";
 
         print $this->hiddenElements;
@@ -3582,13 +3507,14 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <tr class=even>
-        <td>";
+        <div class='control-group even'>
+        <label for=voicemail class=control-label>";
         print _("Enable");
-        print "</td>
-        <td>
-        <input type=checkbox value=1 name=voicemail $checked_voicemail $disabled_box>
-        ";
+        print "</label>
+        <div class=controls>
+        <label class=checkbox>
+        <input type=checkbox value=1 name=voicemail $checked_voicemail $disabled_box>";
+        
 
         if ($this->voicemail['Account'] &&
             ($this->login_type != 'subscriber')) {
@@ -3597,20 +3523,20 @@ class SipSettings {
             printf (" %s) ",$this->voicemail['Account']);
         }
 
-        print "
-        </td>
-        </tr>
+        print "</label>
+            </div>
+        </div>
         ";
 
         if ($this->voicemail['Account']) {
 
             print "
-            <tr class=odd>
-            <td>";
+            <div class='control-group odd'>
+            <label for=delete_voicemail class=control-label>";
 
             print _("Delivery");
-            print "</td>
-            <td>
+            print "</label>
+            <div class='controls'>
             ";
 
             if ($this->voicemail['Options']->delete=="True") {
@@ -3623,7 +3549,7 @@ class SipSettings {
             }
 
             if (!$this->voicemail['DisableOptions']) {
-                print "<select name=delete_voicemail>";
+                print "<select class=span6 name=delete_voicemail>";
                 $_text=sprintf(_("Send voice messages by e-mail to %s"),$this->email);
                 printf ("<option value=1 %s>%s",$selected_store_voicemail['email'],$_text);
                 printf ("<option value=0 %s>%s",$selected_store_voicemail['server'],_("Send messages by e-mail and store messages on the server"));
@@ -3633,35 +3559,37 @@ class SipSettings {
             }
 
             print "
-            </td>
-            </tr>
+            </div>
+            </div>
             ";
 
             if (!$this->voicemail['DisableOptions']) {
 
                 print "
-                <tr class=even>
-                <td>";
+                <div class='control-group even'>
+                <label for=voicemail_password class=control-label>";
     
                 print _("Password");
-                print "</td>
-                <td>
+                print "</label>
+                <div class=controls>
                 ";
     
-                printf ("<input type=text size=15 name=voicemail_password value=\"%s\">",$this->voicemail['Password']);
+                printf ("<input class=input-medium type=text size=15 name=voicemail_password value=\"%s\">",$this->voicemail['Password']);
     
                 print "
-                </td>
-                </tr>
+                </div>
+                </div>
                 ";
     
                 if ($this->voicemail_access_number) {
                    print "
-                   <tr>
-                   <td colspan=2>";
+                       <div class=row-fluid>
+                       <div class=span1></div>
+                       <div class='offset1 span10'>
+                       <div class=\"alert alert-info\">";
                    printf(_("Dial %s to listen to your messages or change preferences. "),$this->voicemail_access_number);
-                   print "</td>
-                   </tr>
+                   print "</div></div>
+                   </div>
                    ";
                 }
             }
@@ -3671,16 +3599,16 @@ class SipSettings {
     function showOwner() {
         if ($this->login_type == 'subscriber') return true;
             print "
-            <tr>
-            <td>";
+            <div class='control-group'>
+            <label for=owner class=control-label>";
             print _("Owner");
-            print "</td>
-            <td>
-            <input type=text name=owner size=7 value=\"$this->owner\">
+            print "</label>
+            <div class=controls>
+            <input class=input-medium type=text name=owner size=7 value=\"$this->owner\">
             ";
             print "
-            </td>
-            </tr>
+            </div>
+            </div>
             ";
     }
 
@@ -3688,11 +3616,14 @@ class SipSettings {
         $this->getDeviceLocations();
 
         if (count($this->locations)) {
-            $chapter=sprintf(_("Registered SIP Devices"));
+            $chapter=sprintf(_("SIP Devices"));
             $this->showChapter($chapter);
 
             $j=0;
 
+            print "
+                <div class=row-fluid>
+                <table class='table table-condensed table-striped'>";
             foreach (array_keys($this->locations) as $location) {
                 $j++;
                 $contact       = $this->locations[$location]['contact'];
@@ -3711,50 +3642,43 @@ class SipSettings {
                     $_class='even';
                 }
     
-                print "
-                <tr class=$_class>";
-
-                print "<td align=center>";
+                print "<tr><td align=center>";
                 printf ("<img src='%s/30/%s' border=0>",$this->SipUAImagesPath,$UAImage);
                 print "</td>";
-                print "<td align=left>";
-                    print "<table border=0 width=100%>";
-                    print "<tr>";
-                        print "<td align=left><i>$user_agent</i></td>";
-                        print "<td align=right>";
-                        if ($transport == 'tls') print "<img src=images/lock15.gif border=0><br>";
-                        print "</td>";
-                    print "</tr>";
-                    print "<tr>";
-                        print "<td align=left>";
-                        print _("Location");
-                        print ": ";
-                        if (strlen($transport)) print "$transport:";
-                        print "$contact ";
 
-                        if ($publicContact != $contact) {
-                            print " ($publicContact) ";
-                        }
+                print "<td align=left>
+                    <div class=row-fluid>
+                    <div class=span11>";
+                print "<i>$user_agent</i>";
+                if ($transport == 'tls') print "<img src=images/lock15.gif border=0><br>";
+                print "<br><span class='label label-info'>";
+                print _("Location");
+                print "</span>";
+                print " ";
+                if (strlen($transport)) print "$transport:";
+                print "$contact ";
 
-                        if ($publicContact) {
-                            $_els=explode(":",$publicContact);
-                            if ($_loc=geoip_record_by_name($_els[0])) {
-        						$this->geo_location=$_loc['country_name'].'/'.$_loc['city'];
-        					} else if ($_loc=geoip_country_name_by_name($_els[0])) {
-        						$this->geo_location=$_loc;
-        					} else {
-        						$this->geo_location='';
-        					}
-                            printf ("%s",$this->geo_location);
-                        }
+                if ($publicContact != $contact) {
+                    print " ($publicContact) ";
+                }
 
-                        print "</td>";
-                        print "<td align=right>$expires</td>";
-                    print "</tr>";
-                    print "</table>";
-                print "</td>";
+                if ($publicContact) {
+                    $_els=explode(":",$publicContact);
+                    if ($_loc=geoip_record_by_name($_els[0])) {
+                        $this->geo_location=$_loc['country_name'].'/'.$_loc['city'];
+                    } else if ($_loc=geoip_country_name_by_name($_els[0])) {
+                        $this->geo_location=$_loc;
+                    } else {
+                        $this->geo_location='';
+                    }
+                    printf ("%s",$this->geo_location);
+                }
+
+                print "</div><div class=span1>$expires</div></div></td>";
                 print "</tr>";
+                
             }
+            print "</table></div>";
         }
     }
 
@@ -3806,32 +3730,29 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        <form class=form-horizontal method=post name=sipsettings onSubmit=\"return checkForm(this)\">
         ";
 
         print "
-        <tr>
-        <td colspan=2 align=left>";
+        <div class=row-fluid>
+        <div class=span12>";
         print _("You can deny outbound calls to unwanted PSTN prefixes. ");
-        print "<p>";
-        print "
-        </td>
-        </tr>
-        ";
+        print "</div></div>";
 
         print "
-        <tr>
-        <td align=left>";
+        <div class=control-group>
+        <label class=control-label for=barring_prefixes[]>";
         print _("Destination Prefix");
-        print "</td>";
-        print "<td align=left>
+        print "</label>";
+        print "<div class=controls>
         <input type=text name=barring_prefixes[]>
         ";
+        print "<span class=help-inline>";
         print _("Example");
         print ": +31900";
         print "
-        </td>
-        </tr>
+        </span>
+        </div></div>
         ";
 
         if ($this->getBarringPrefixes()) {
@@ -3848,36 +3769,32 @@ class SipSettings {
                 }
 
                 print "
-                <tr class=$_class>";
+                <div class='control-group $_class'>";
 
-                print "<td align=left>";
+                print "<label for=barring_prefixes[] class=control-label>";
                 print _("Destination Prefix");
-                print "</td>";
-                print "<td align=left>
+                print "</label>";
+                print "<div class=controls>
                 <input type=text name=barring_prefixes[] value=\"$_prefix\">
-                </td>";
-                print "<tr>";
+                </div>";
+                print "</div>";
             }
         }
 
         print "
-        <tr>
-          <td align=left>
             <input type=hidden name=action value=\"set barring\">
         ";
 
-        print "
-        <input type=submit value=\"";
+        print "<div class=form-actions>
+        <input class=btn type=submit value=\"";
         print _("Save");
         print "\"
                onClick=saveHandler(this)>
         ";
 
-        print "
-          </td>
-          <td align=right>
-          </td>
-        </tr>
+        print "</div>
+          </div>
+          </div>
         ";
 
         print $this->hiddenElements;
@@ -4690,7 +4607,7 @@ class SipSettings {
             <td colspan=2 align=left> ";
     
             if ($issuer=='subscriber'){
-        		if ($prepaidCard && $prepaidId) {
+                if ($prepaidCard && $prepaidId) {
                     if ($result = $this->addBalanceSubscriber($prepaidCard,$prepaidId)) {
                         print "<p><font color=green>";
                         printf (_("Old balance was %s, new balance is %s. "),$result->old_balance, $result->new_balance);
@@ -4756,14 +4673,13 @@ class SipSettings {
             $this->showChapter($chapter);
     
             print "
-            <tr>
-            <td align=left colspan=2>";
+            <div class=row-fluid>
+            <div class=span12>";
             print _("Your current balance is");
             print ": ";
             printf ("%.2f %s ",$this->prepaidAccount->balance,$this->currency);
-            print "</td><td align=right>
-            </td>
-            </tr>
+            print "</div>
+            </div>
             ";
     
             $this->showChangeBalanceReseller();
@@ -4774,39 +4690,39 @@ class SipSettings {
     }
 
     function showChangeBalanceReseller () {
-    	if (!$this->prepaid_changes_allowed) return false;
+        if (!$this->prepaid_changes_allowed) return false;
 
-	    $chapter=sprintf(_("Add Balance"));
+        $chapter=sprintf(_("Add Balance"));
         $this->showChapter($chapter);
 
         print "
-        <tr>
-        <form action=$this->url method=post>
+        <form class=form-inline action=$this->url method=post>
         <input type=hidden name=tab value=credit>
         <input type=hidden name=issuer value=reseller>
         <input type=hidden name=task value=change_balance>
-        <td align=left colspan=2><nobr>
-        ";
+        <div class=control-group>
+        <div class=control>";
 
+        print "
+        <input type=text size=10 name=value placeholder=\"";
         print _("Value");
-        print "
-        <input type=text size=10 name=value>
-        ";
+        print "\">";
+        print "<input type=text size=30 name=description placeholder=\"";
         print _("Description");
-
-        print "
-        <input type=text size=30 name=description>
-        Notify
-        <input type=checkbox name=notify value=1>
-
-        <input type=submit value=";
+        print "\">";
+        print "<label class=checkbox>";
+        print "<input type=checkbox name=notify value=1>";
+        print _("Notify");
+        print "</label>
+            ";
+        print "<input class=btn type=submit value=";
         print _("Add");
         print ">
-        </td>
+            </div>
+            </div>
         </form>
-        </tr>
         ";
-
+     
         $transactions = $this->getPaymentIds();
 
         if (count($transactions)) {
@@ -4860,49 +4776,45 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <tr>
-        <td colspan=3>
-        <p>
+        <div class='row-fluid'>
+        <div class='span12'>
         ";
 
         printf (_("To add Credit to your account using a Prepaid Card enter it below. "));
 
         print "
-        </td>
-        </tr>
+            </div>
+            </div>
         ";
 
         print "
-        <tr>
-        <form action=$this->url method=post>
+        <form class=form-inline action=$this->url method=post>
         <input type=hidden name=tab value=credit>
         <input type=hidden name=issuer value=subscriber>
         <input type=hidden name=task value=Add>
-        <td align=left colspan=2><nobr>
+        <div class=control-group>
+        <div class=control>
         ";
 
+        print "
+        <input type=text size=10 name=prepaidId placeholder=\"";
         print _("Card Id");
-        print "
-        <input type=text size=10 name=prepaidId>
-        ";
+        print "\">";
+        print "<input type=text size=20 name=prepaidCard placeholder=\"";
         print _("Card Number");
-        print "
-        <input type=text size=20 name=prepaidCard>
-        ";
-
+        print "\">";
         if ($this->login_type != 'subscriber') {
+            print "<label class=\"checkbox\">";
+            print "<input type=checkbox name=notify value=1>";
             print _("Notify");
-            print "<input type=checkbox name=notify value=1>
-            ";
+            print "</label>";
         }
 
         print "
-        <input type=submit value=";
+        <input class='btn' type=submit value=";
         print _("Add");
-        print "></nobr>
-        </td>
+        print "></div></div>
         </form>
-        </tr>
         ";
 
     }
@@ -5047,8 +4959,8 @@ class SipSettings {
 
 
     function showBalanceHistory() {
-    	$this->getBalanceHistory();
- 
+        $this->getBalanceHistory();
+
         if (!count($this->balance_history)) {
             return;
         }
@@ -5056,8 +4968,8 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <tr>
-        <td colspan=2>
+        <div class=row-fluid>
+        <div class=span12>
         ";
 
         $today_summary = $this->getTodayBalanceSummary();
@@ -5069,26 +4981,28 @@ class SipSettings {
 
         print "
         <p>
-        <table width=100% cellpadding=1 cellspacing=1 border=0>";
+        <table class='table table-striped table-condensed'>";
+        print "<thead>";
         print "<tr>";
-        print "<td class=list_header>";
-        print "</td>";
-        print "<td class=list_header>";
+        print "<th class=list_header>";
+        print "</th>";
+        print "<th class=list_header>";
         print _("Date and Time");
-        print "</td>";
-        print "<td class=list_header>";
+        print "</th>";
+        print "<th class=list_header>";
         print _("Action");
-        print "</td>";
-        print "<td class=list_header>";
+        print "</th>";
+        print "<th class=list_header>";
         print _("Description");
-        print "</td>";
-        print "<td class=list_header align=right>";
+        print "</th>";
+        print "<th class=list_header align=right>";
         print _("Value");
-        print "</td>";
-        print "<td class=list_header align=right>";
+        print "</th>";
+        print "<th class=list_header align=right>";
         print _("Balance");
-        print "</td>";
+        print "</th>";
         print "</tr>";
+        print "</thead>";
 
         foreach ($this->balance_history as $_line) {
 
@@ -5156,7 +5070,7 @@ class SipSettings {
             <td></td>
             <td></td>
             <td></td>
-            <td><b><font color=blue>%s</font></b></td>
+            <td><span class=\"label label-info\">%s</span></td>
             <td align=right><b>%s</b></td>
             <td align=right></td>
             </tr>
@@ -5172,7 +5086,7 @@ class SipSettings {
             <td></td>
             <td></td>
             <td></td>
-            <td><b><font color=red>%s</font></b></td>
+            <td><span class=\"label label-important\">%s</span></td>
             <td align=right><b>%s</b></td>
             <td align=right></td>
             </tr>
@@ -5185,15 +5099,23 @@ class SipSettings {
         print "
         </table>
         ";
-
-		if ($found) {
-			if (!$this->isEmbedded()) {
-        		print "<p><a href=$this->url&tab=credit&action=get_balance_history&csv=1 target=_new>";
+        
+        if ($found) {
+            if (!$this->isEmbedded()) {
+                print "<p class='form-actions'><a rel=popover class=btn href=$this->url&tab=credit&action=get_balance_history&csv=1 target=_new data-original-title='";
+                print _("Export");
+                print "' data-content='";
                 print _("Export balance history in CSV format");
+                print "'>";
+                print _("Export");
                 print "</a>";
             } else {
-        		print "<p><a href=$this->url&tab=credit&action=get_balance_history&csv=1>";
+                print "<p class='form-actions'><a rel=popover class=btn href=$this->url&tab=credit&action=get_balance_history&csv=1 data-original-title='";
+                print _("Export");
+                print "' data-content='";
                 print _("Export balance history in CSV format");
+                print "'>";
+                print _("Export");
                 print "</a>";
             }
         }
@@ -5266,10 +5188,10 @@ class SipSettings {
             }
 
             print "
-            <tr class=$_class>
+            <div class='control-group $_class'>
 
-              <td valign=middle>$pref_name</td>
-              <td valign=middle align=left>
+              <label class=control-label>$pref_name</label>
+              <div class='controls'>
             ";
 
             $phoneValues = array();
@@ -5296,7 +5218,8 @@ class SipSettings {
                 index = elem.selectedIndex;
                 if (index == $otherIdx) {
                     document.sipsettings.$condition.value=${condition}_other;
-                    document.sipsettings.$condition.style.display = 'block';
+                    document.sipsettings.$condition.style.display = 'inline-block';
+                    document.sipsettings.$condition.style.visibility = 'visible';
                 } else {
                     document.sipsettings.$condition.style.display = 'none';
                     document.sipsettings.$condition.value=targets[index];
@@ -5309,8 +5232,6 @@ class SipSettings {
             </SCRIPT>
             ";
 
-            print "<table border=0 cellspacing=0 cellpadding=0>
-            <tr><td>";
 
             print "<select name=$select_name onChange=$set_uri_java(this)>\n";
 
@@ -5357,8 +5278,6 @@ class SipSettings {
 
             print "</select>";
 
-            print "
-            </td><td>";
 
             if ($this->CallPrefUriType[$condition]=='Other')
                 $style = "visible";
@@ -5369,59 +5288,65 @@ class SipSettings {
 
             print "
                 <span>
-                <td>
-                  <input class=$style type=text size=40
+                  <input class='$style' type=text size=40
                          name=$condition value=\"$pref_value\"
                          onChange=$update_text_java(this)>
                 </span>
                 ";
 
             if ($condition=="FUNV" && $this->FUNC_access_number) {
+                print "<div class=help>";
                 printf (_("Dial %s2*X where X = Number of Minutes, 0 to Reset"), $this->access_numbers['FUNC']);
+                print "</div>";
             }
 
-            print "
-            </td>
-            </tr>
-            </table>";
 
             print "
 
-              </td>
-            </tr>
+              </div>
+            </div>
             ";
         }
 
     }
 
     function showHeader() {
-        print "
+        /*print "
         <table class=settings border=0 width=100%>
         <tr>
         <td colspan=2 align=right>
-        ";
+        ";*/
+        print "
+            <div class=row-fluid>
+                <div class='span2 pull-right'>";
         if ($this->logoFile) {
             print "<img src=./$this->logoFile border=0>";
             print "<p>";
         }
 
         print "
+                </div>
+            </div>
+            ";
+/*
+        print "
         </td>
         </tr>
         </table>
         ";
+ */
     }
 
     function chapterTableStart() {
-        print "
-        <table class=settings border=0 width=100%>
-        ";
+        //print "
+        //<table class=settings border=0 width=100%>
+        //";
     }
 
     function chapterTableStop() {
-        print "
-        </table>
-        ";
+        //print "
+        //</table>
+       // ";
     }
 
 
@@ -5508,7 +5433,7 @@ class SipSettings {
             print _("Failed to open timezone file.");
             return false;
         }
-        printf ("<select name=%s>",$name);
+        printf ("<select class=input-medium name=%s>",$name);
         print "\n<option>";
         while ($buffer = fgets($fp,1024)) {
             $buffer=trim($buffer);
@@ -5527,21 +5452,20 @@ class SipSettings {
     function showQuickDial() {
         if (!preg_match("/^\d+$/",$this->username)) return 1;
         print "
-        <tr class=even>
-          <td>";
+        <div class='control-group'>
+          <label class=control-label>";
             print _("Quick Dial");
             print "
-          </td>
-          <td align=left>
-            <input type=text size=15 maxsize=64 name=quickdial value=\"$this->quickdial\">
-            ";
+          </label>
+          <div class=controls>
+            <input class=input-medium type=text size=15 maxsize=64 name=quickdial value=\"$this->quickdial\"><span class=help-inline>";
             if ($this->quickdial && preg_match("/^$this->quickdial/",$this->username)) {
                 $dial_suffix=strlen($this->username) - strlen($this->quickdial);
             }
             printf (_("Prefix to auto-complete short numbers"),$dial_suffix);
-            print "
-          </td>
-        </tr>
+            print "</span>
+          </div>
+        </div>
         ";
     }
 
@@ -5549,18 +5473,16 @@ class SipSettings {
     function showMobileNumber() {
         if (in_array("free-pstn",$this->groups)) {
             print "
-            <tr class=odd>
-              <td>";
+            <div class='control-group'>
+              <label for=mobile_number class=control-label>";
                 print _("Mobile Number");
                 printf ("
-              </td>
-              <td align=left>
-                <input type=text size=15 maxsize=64 name=mobile_number value='%s'> %s
-              </td>
-            </tr>
+              </label>
+              <div class=controls>
+                <input class=input-medium type=text size=15 maxsize=64 name=mobile_number value='%s'>
+              <span class=help-inline>%s</span></div></div>
             ",$this->Preferences['mobile_number'],_("International format starting with +"));
         }
-
     }
 
     function CallLimitChangePolicy() {
@@ -5613,27 +5535,27 @@ class SipSettings {
         }
         if (!$this->IPAccessListChangePolicy()) {
             print "
-            <tr class=even>
-              <td>";
+            <div class='control-group even'>
+              <label class=control-label>";
                 print _("IP Access List");
                 printf ("
-              </td>
-              <td align=left>
+              </label>
+              <div class=controls>
                 %s
-              </td>
-            </tr>
+              </div>
+            </div>
             ",$this->ip_access_list);
         } else {
             print "
-            <tr class=odd>
-              <td>";
+            <div class='control-group odd'>
+              <label class='control-label'>";
                 print _("IP Access List");
                 printf ("
-              </td>
-              <td align=left>
-                <textarea cols=60 rows=1 name=ip_access_list>%s</textarea>
-              </td>
-            </tr>
+              </label>
+              <div class=controls>
+                <textarea class=input-medium cols=60 rows=1 name=ip_access_list>%s</textarea>
+              </div>
+            </div>
             ",$this->ip_access_list);
         }
     }
@@ -5656,27 +5578,27 @@ class SipSettings {
 
         if (!$this->CallLimitChangePolicy()) {
             print "
-            <tr class=odd>
-              <td>";
+            <div class=control-group>
+              <label class=control-label>";
                 print _("PSTN Call Limit");
                 printf ("
-              </td>
-              <td align=left>
-                %s
-              </td>
-            </tr>
+              </label>
+              <div class=controls>
+                <span style='padding-top:5px; margin-bottom:5px;display:block;'>%s</span>
+              </div>
+            </div>
             ",$limit_text_ro);
         } else {
             print "
-            <tr class=odd>
-              <td>";
+            <div class=control-group>
+              <label class=control-label>";
                 print _("PSTN Call Limit");
                 printf ("
-              </td>
-              <td align=left>
-                <input type=text size=3 name=callLimit value='%s'> %s
-              </td>
-            </tr>
+              </label>
+              <div class=controls>
+                <input class=input-medium type=text size=3 name=callLimit value='%s'> %s
+              </div>
+            </div>
             ",$this->callLimit, $limit_text);
         }
     }
@@ -5727,8 +5649,9 @@ class SipSettings {
         if (count($this->calls_received)) {
             $chapter=sprintf(_("Incoming"));
             $this->showChapter($chapter);
-
+            
             $j=0;
+            print "<table class='table table-striped table-condensed'>";
             foreach (array_keys($this->calls_received) as $call) {
                 $j++;
 
@@ -5769,33 +5692,27 @@ class SipSettings {
 
                 print "
                 <tr class=$_class>
-                <td>$htmlDate</td>
-                <td>
-                <table border=0 width=100% cellspacing=0 cellpadding=0>
-                <tr>
-                <td align=left width=10><nobr>$dialURI</nobr></td>
-                <td align=right width=40>$duration</td>
-                <td align=right width=10></td>
-                <td align=left><nobr>$htmlURI ($media)</nobr></td>
+                <td width=175>$htmlDate</td>
+                <td width=12><nobr>$dialURI</nobr></td>
+                <td style='text-align:right' width=60>$duration</td>
+                <td><nobr>$htmlURI ($media)</nobr></td>
                 ";
-                print "<td align=right width=15><nobr>$trace_link</nobr></td>";
-                print "<td align=right width=10></td>";
-                print "<td align=right width=10><a href=$this->url&tab=contacts&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
-                print "
-                </tr>
-                </table>";
+                print "<td width=40><nobr>$trace_link</nobr></td>";
+                print "<td width=19><a href=$this->url&tab=contacts&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
                 print "</td>
                 </tr>
                 ";
             }
+            print "</table>";
         }
-
+        
         if (count($this->calls_placed)) {
             $chapter=sprintf(_("Outgoing"));
             $this->showChapter($chapter);
 
             $j=0;
 
+            print "<table class='table table-striped table-condensed'>";
             foreach (array_keys($this->calls_placed) as $call) {
                 $j++;
 
@@ -5843,26 +5760,19 @@ class SipSettings {
 
                 print "
                 <tr class=$_class>
-                <td>$htmlDate</td>
-                <td>
-                <table border=0 width=100% cellspacing=0 cellpadding=0>
-                <tr>
-                <td align=left width=10><nobr>$dialURI<nobr></td>
-                <td align=right width=40>$duration</td>
-                <td align=right width=10></td>
-                <td align=left><nobr>$htmlURI ($media) $price_print</nobr></td>
+                <td width=175>$htmlDate</td>
+                <td width=12><nobr>$dialURI<nobr></td>
+                <td style='text-align:right' width=75>$duration</td>
+                <td ><nobr>$htmlURI ($media) $price_print</nobr></td>
                 ";
 
-                print "<td align=right width=15><nobr>$trace_link</nobr></td>";
-                print "<td align=right width=10></td>";
-                print "<td align=right width=10><a href=$this->url&tab=contacts&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
-                print "
-                </tr>
-                </table>";
+                print "<td width=40><nobr>$trace_link</nobr></td>";
+                print "<td width=19><a href=$this->url&tab=contacts&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
                 print "</td>
                 </tr>
                 ";
             }
+            print "</table>";
         }
 
     }
@@ -5982,11 +5892,14 @@ class SipSettings {
 
         $uri       = strtolower(trim($_REQUEST['uri']));
         $name      = trim($_REQUEST['name']);
+        $group     = trim($_REQUEST['group']);
 
         if (!strlen($uri)) return false;
 
-        $phonebookEntry=array('uri'       => $uri,
-                              'name'      => $name
+        $phonebookEntry=array(  'uri'       => $uri,
+                                'name'      => $name,
+                                'group'     => $group
+
                               );
 
         dprint("addPhonebookEntry");
@@ -5997,7 +5910,7 @@ class SipSettings {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<div class=row-fluid><div class=span12><span class='alert alert-error'>Error (SipPort): %s (%s): %s</span></div></div>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         }
 
@@ -6056,7 +5969,9 @@ class SipSettings {
 
     function getPhoneBookEntries() {
         dprint("getPhoneBookEntries()");
-        $search_text = trim($_REQUEST['search_text']);
+        if ($_REQUEST['task'] == 'search') {
+            $search_text = trim($_REQUEST['uri']);
+        }
         $group       = trim($_REQUEST['group']);
 
         if (!strlen($search_text)) $search_text="%" ;
@@ -6095,27 +6010,22 @@ class SipSettings {
         dprint("showContactsTab()");
 
         if ($this->show_directory) {
-        	$chapter=sprintf(_("Directory"));
+            $chapter=sprintf(_("Directory"));
             $this->showChapter($chapter);
 
             print "
-            <tr>
-            <td colspan=2 align=left>";
+                <div class=row-fluid>
+                <div class=span12>";
             print _("To find other SIP Addresses fill in the First Name or the Last Name and click the Search button. ");
             print "
-            </td>
-            </tr>
+            </div>
             ";
 
-            print "
-            <tr>
-            <td colspan=3>";
 
-			$this->showSearchDirectory();
+            $this->showSearchDirectory();
 
             print "
-            </td>
-            </tr>
+            </div>
             ";
 
         }
@@ -6129,39 +6039,24 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <tr>
-        <td colspan=2 align=left>";
+        <div class=row-fluid>
+        <div class=span12>";
         print _("You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. ");
         print "
-        </td>
-        </tr>
+        </div>
+        </div>
         ";
 
-        print '
-        <SCRIPT>
-            function toggleVisibility(rowid) {
-                if (document.getElementById) {
-                    row = document.getElementById(rowid);
-                    if (row.style.display == "block") {
-                        row.style.display = "none";
-                    } else {
-                        row.style.display = "block";
-                    }
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-        </SCRIPT>
-        ';
 
-        print "<tr><td colspan=2>";
 
         $adminonly = $_REQUEST['adminonly'];
-        $search_text = $_REQUEST['search_text'];
         $accept = $_REQUEST['accept']; // selected search group;
 
         $task = $_REQUEST['task'];
+        //if ($task == "search" ){
+            $search_text = $_REQUEST['uri'];
+       // }
+
         $confirm = $_REQUEST['confirm'];
 
         $group = $_REQUEST['group'];
@@ -6180,44 +6075,56 @@ class SipSettings {
             $this->addPhonebookEntry();
             unset($task);
         }
-
+        
         $this->getPhoneBookEntries();
         $maxrowsperpage=250;
     
         $url_string=$this->url."&tab=contacts";
 
         print "
-        <p>
-        <table width=100% cellpadding=1 cellspacing=1 border=0>
-        <tr>
-        <form action=$this->url method=post>
+        <script type=\"text/javascript\">
+        <!--//
+
+            function toggleVisibility(rowid) {
+                if (document.getElementById) {
+                    row = document.getElementById(rowid);
+                    if (row.style.display == 'block') {
+                        row.style.display = 'none';
+                    } else {
+                        row.style.display = 'block';
+                    }
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+
+            function changeAction(url) {
+                if (url ==='add') {
+                    document.forms.contacts.action='$this->url&task=add';
+                } else {
+                    document.forms.contacts.action='$this->url&task=search';
+                }
+            }
+
+            //-->
+        </script>
+            
+        <form class=form-inline name=contacts action=$this->url method=post>
         <input type=hidden name=tab value=contacts>
-        <input type=hidden name=task value=add>
-        <td align=left valign=top>
-        <input type=submit value=";
-        print _("Add");
-        print ">
-        <input type=text size=20 name=uri>
+        <div class='control-group'>
+        <div class='control'>
+        <input class=span3 type=text size=20 name=uri placeholder=\"";
+        print _("Add sip address or search for contacts");
+        print "\">
+        <div class=input-append>
         ";
-        print _("(wildcard %)");
-        print "
-        </td>
-        </form>
-        ";
-        if (count($this->PhonebookEntries)){
-            print "
-            <form action=$this->url method=post>
-            <input type=hidden name=tab value=contacts>
-            <td align=right valign=top>
-            ";
-            print _("Name");
-            print "
-            <input type=text size=20 name='search_text' value=\"$search_text\">
-            ";
+
+        if (count($this->PhonebookEntries) || $task=="search"){
     
             $selected[$group]="selected";
     
-            print "<select name=group>";
+            print "<select class=span2 name=group>";
             print "<option value=\"\">";
             print _('Group');
             foreach(array_keys($this->PhonebookGroups) as $key) {
@@ -6228,39 +6135,48 @@ class SipSettings {
     
             print "</select>";
     
-            print "<input type=submit value=";
+            print "<input class='btn btn-primary' type=submit onClick='changeAction(\"search\")' value=";
             print _("Search");
             print ">";
         }
-
-        print "</td>
-        </form>
-        </tr>
-        </table>
+        
+        print "<input class='btn' type=submit onclick='changeAction(\"add\")' value=";
+        print _("Add");
+        print "></div><span class=help-inline>";
+        print _("(wildcard %)");
+        print "</span>
+        </div>
+        </div>
         ";
+
+        print "
+        </form>
+        ";
+
 
         if (count($this->PhonebookEntries)){
             print "
             <p>
-            <table width=100% cellpadding=1 cellspacing=1 border=0>
+            <table class='table table-striped table-condensed' width=100% cellpadding=1 cellspacing=1 border=0>
+            <thead>
             <tr>
-            <td class=list_header align=right></td>
+            <th class=list_header align=right></td>
             ";
-            print "<td class=list_header>";
+            print "<th class=list_header>";
             print _("SIP Address");
             print "</td>";
-            print "<td class=list_header>";
-            print "</td>";
-            print "<td class=list_header>";
+            print "<th class=list_header>";
+            print "</th>";
+            print "<th class=list_header>";
             print _("Display Name");
-            print "</td>";
-            print "<td class=list_header>";
+            print "</th>";
+            print "<th class=list_header>";
             print _("Group");
-            print "</td>";
-            print "<td class=list_header>";
+            print "</th>";
+            print "<th class=list_header>";
             print _("Action");
-            print "</td>";
-            print "</tr>";
+            print "</th>";
+            print "</tr></thead>";
     
             foreach(array_keys($this->PhonebookEntries) as $_entry) {
         
@@ -6276,36 +6192,36 @@ class SipSettings {
                 }
 
                 print "
-                <tr class=$_class valign=top>
-                <form name=\"Entry$found\" action=\"$this->url&tab=$this->tab\">
+                <tr class='$_class contacts_table'>
+                <form name=\"Entry$found\" class=form-inline action=\"$this->url&tab=$this->tab\">
                 $this->hiddenElements
                 <input type=hidden name=tab value=\"$this->tab\">
                 <input type=hidden name=task value=\"update\">
                 ";
                 printf ("<input type=hidden name=uri value=\"%s\">",$this->PhonebookEntries[$_entry]->uri);
 
-                print "<td valign=top>$found</td>
+                print "<td>$found</td>
                 <td>";
                 print $this->PhonebookEntries[$_entry]->uri;
 
                 if (preg_match("/\%/",$this->PhonebookEntries[$_entry]->uri)) {
                    printf ("</td>
-                   <td valign=top></td>
-                   <td valign=top>");
+                   <td></td>
+                   <td>");
                 } else {
                    printf ("</td>
-                   <td valign=top>%s</td>
-                   <td valign=top>",
+                   <td>%s</td>
+                   <td>",
                    $this->PhoneDialURL($this->PhonebookEntries[$_entry]->uri));
                 }
 
-                printf ("<input type=text name=name value='%s'>",$this->PhonebookEntries[$_entry]->name);
-                printf ("<a href=\"javascript: document.Entry$found.submit()\">%s</a>",_("Update"));
+                printf ("<div class='input-append' style='margin-bottom:0px' ><input style='margin-bottom:0' type=text name=name value='%s'>",$this->PhonebookEntries[$_entry]->name);
+                printf ("<a class=btn href=\"javascript: document.Entry$found.submit()\">%s</a></div>",_("Update"));
 
                 print "
                 </td>
-                <td valign=top>";
-                printf ("<select name=group onChange=\"location.href='%s&task=update&uri=%s&name=%s&group='+this.options[this.selectedIndex].value\">",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($this->PhonebookEntries[$_entry]->name));
+                <td>";
+                printf ("<select style='margin-bottom:0' name=group onChange=\"location.href='%s&task=update&uri=%s&name=%s&group='+this.options[this.selectedIndex].value\">",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($this->PhonebookEntries[$_entry]->name));
 
                 print "<option value=\"\">";
                 $selected_grp[$this->PhonebookEntries[$_entry]->group]="selected";
@@ -6322,16 +6238,17 @@ class SipSettings {
 
                 if ($task=="deleteContact" && $uri==$this->PhonebookEntries[$_entry]->uri) {
                     print "
-                    <td bgcolor=red valign=top>
+                    <td bgcolor=red style='vertical-align: middle'>
                     ";
                     printf ("<a href=%s&task=deleteContact&uri=%s&confirm=1&search_text=%s>",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($search_text));
                     print _("Confirm");
                 } else {
                     print "
-                    <td valign=top>";
+                    <td>";
                     printf ("<a href=%s&task=deleteContact&uri=%s&search_text=%s>",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($search_text));
                     if ($this->delete_img) {
-                        print $this->delete_img;
+                        //print $this->delete_img;
+                        print "<i class=\"icon-remove\"></i>";
                     } else {
                         print _("Delete");
                     }
@@ -6345,14 +6262,6 @@ class SipSettings {
             }
     
             print "</table>";
-            print "
-            <p>
-            <center>
-            <table border=0>
-            <tr>
-            <td>
-            ";
-
             print "
             </td>
             </tr>
@@ -6712,15 +6621,17 @@ class SipSettings {
         $this->getDiversions();
 
         print "
-        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        <form method=post class=form-horizontal name=sipsettings onSubmit=\"return checkForm(this)\">
         ";
 
         print "
-        <tr>
-        <td colspan=2 align=left>";
+        <div class=row-fluid>
+            <div class=span12>
+                <p>";
         print _("You can reject calls depending on the time of day and Caller-ID. ");
         print _("You can create custom groups in the Contacts page like Family or Coworkers. ");
-        print  "<p>";
+        print  "</p>
+            <p>";
         print _("Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. ");
         print "<p>";
         print "<p class=desc>";
@@ -6730,74 +6641,107 @@ class SipSettings {
         print " $LocalTime";
 
         print "
-        </td>
-        </tr>
+        </div>
+        </div>
         ";
 
-        $chapter=sprintf(_("Temporary Rule"));
+       // $chapter=sprintf(_("Rules"));
+       // $this->showChapter($chapter);
+
+/*  print "
+        <div class=row-fluid>
+        <div class=span12>";
+        print _("This will override the permanent rules for the chosen duration. ");
+        print "
+        </div>
+        </div>
+        ";
+ */
+        if ($this->acceptRules['temporary']['duration']) {
+            $class_e='error';
+        } else {
+            $class_e='';
+        }
+
+       // print "<div class='control-group $class_e'>
+         //   <label for=duration class=control-label>";
+
+      //  print _("Duration");
+       // print "</label>
+            //";
+
+         // print "<span class=help-inline>";
+       // print _("minute(s)");
+       // print "</span>";
+
+
+        //print "</span></div>
+        //</div>
+
+        //";
+
+        $chapter=sprintf(_("Rules"));
         $this->showChapter($chapter);
 
         print "
-        <tr>
-        <td colspan=2 align=left>";
-        print _("This will override the permanent rules for the chosen duration. ");
-        print "
-        </td>
-        </tr>
+        <div class=row-fluid>
         ";
 
-        print "<tr>";
-        print "<td colspan=2>";
-
-        print "<table border=0 width=100%>
+        print "<table class='table table-condensed table-striped middle' border=0 width=100%>";
+        print "<thead><tr>
             <tr>
-            <td>
+            <th colspan=6>
             ";
+        print _("Temporary");
+        print "</th></tr></thead>";
+        print "<tr><td style='vertical-align: middle'><span>";
         print _("Duration");
-        print ":";
-
+        print "</span></td><td colspan='2' style='vertical-align: middle'>";
         if ($this->acceptRules['temporary']['duration']) {
-            printf ('
-            <script LANGUAGE="JavaScript">
-                var minutes = %s;
-                ID=window.setTimeout("update();", 1000*60);
-                function update() {
-                        minutes--;
-                        document.sipsettings.minutes.value = minutes;
-                        ID=window.setTimeout("update();",1000*60);
-                 }
+                printf ('
+                <script LANGUAGE="JavaScript">
+                    var minutes = %s;
+                    ID=window.setTimeout("update();", 1000*60);
+                    function update() {
+                            minutes--;
+                            document.sipsettings.minutes.value = minutes;
+                            ID=window.setTimeout("update();",1000*60);
+                    }
 
-            </script>
-            ',$this->acceptRules['temporary']['duration']);
+                </script>
+                ',$this->acceptRules['temporary']['duration']);
 
-                print " <font color=red>";
-                print " <input type=text name=minutes size=3 maxsize=3 value=\"";
-                print $this->acceptRules['temporary']['duration'];
-                print "\" disabled=true>";
-                print " <input type=hidden name=accept_temporary_remain value=\"";
-                print $this->acceptRules['temporary']['duration'];
-                print "\"> ";
-                print "</font>";
-        } else {
-                print "<select name=duration> ";
-                print "<option>";
-                print "<option value=1  >  1";
-                print "<option value=5  >  5";
-                print "<option value=10 > 10";
-                print "<option value=20 > 20";
-                print "<option value=30 > 30";
-                print "<option value=45 > 45";
-                print "<option value=60 > 60";
-                print "<option value=90 > 90";
-                print "<option value=120>120";
-                print "<option value=150>150";
-                print "<option value=180>180";
-                print "<option value=240>240";
-                print "<option value=480>480";
-                print "</select> ";
-        }
-
-        print _("minute(s)");
+                    print " <input type=text name=minutes size=3 maxsize=3 value=\"";
+                    print $this->acceptRules['temporary']['duration'];
+                    print "\" disabled=true>";
+                    print " <input type=hidden name=accept_temporary_remain value=\"";
+                    print $this->acceptRules['temporary']['duration'];
+                    print "\"> ";
+            } else {
+                print "<select id=testselect rel='popover' class=input-medium name=duration data-original-title='";
+                print _("Temporary Rules");
+                print "' data-content='";
+                    print _("This will override the permanent rules for the chosen duration.");
+                    print "'> ";
+                    print "<option>";
+                    print "<option value=1  >  1";
+                    print "<option value=5  >  5";
+                    print "<option value=10 > 10";
+                    print "<option value=20 > 20";
+                    print "<option value=30 > 30";
+                    print "<option value=45 > 45";
+                    print "<option value=60 > 60";
+                    print "<option value=90 > 90";
+                    print "<option value=120>120";
+                    print "<option value=150>150";
+                    print "<option value=180>180";
+                    print "<option value=240>240";
+                    print "<option value=480>480";
+                    print "</select><span> ";
+                    print _("Minute(s)");
+                    print "</span>";
+            }
+        print "</td>";
 
         $_name="radio_temporary";
 
@@ -6805,7 +6749,6 @@ class SipSettings {
         $_checked_nobody="";
         $_checked_groups="";
 
-        print "<td>";
         if (is_array($this->acceptRules['temporary']['groups']) &&in_array("everybody",$this->acceptRules['temporary']['groups'])) {
             $_checked_everybody="checked";
         } else if (is_array($this->acceptRules['temporary']['groups']) && in_array("nobody",$this->acceptRules['temporary']['groups'])) {
@@ -6822,8 +6765,8 @@ class SipSettings {
             $class_nobody="note";
         }
 
-        printf ("<td class=note><input type=radio name=%s value=0 %s>%s",$_name,$_checked_everybody,_("Everybody"));
-        printf ("<td class=$class_nobody><input type=radio name=%s value=1 %s>%s",$_name,$_checked_nobody,_("Nobody"));
+        printf ("<td style='vertical-align:middle' class='note'><input type=radio name=%s value=0 %s> %s</td> ",$_name,$_checked_everybody,_("Everybody"));
+        printf ("<td style='vertical-align:middle' class='$class_nobody'><input type=radio name=%s value=1 %s> %s </td>",$_name,$_checked_nobody,_("Nobody"));
 
         $c=count($this->acceptRules['groups']);
 
@@ -6833,7 +6776,7 @@ class SipSettings {
             $class_groups="note";
         }
 
-        print "<td class=$class_groups>";
+        print "<td style='vertical-align:middle' class='$class_groups'>";
 
         if (count($this->acceptRules['groups'])>2) {
 
@@ -6852,7 +6795,7 @@ class SipSettings {
                 }
 
                 $_name="groups_temporary[]";
-                printf ("<input type=checkbox name=%s value=%s onClick=\"document.sipsettings.radio_temporary[2].checked=true\" %s>%s ",
+                printf ("<span><input style='vertical-align:top' type=checkbox name=%s value=%s onClick=\"document.sipsettings.radio_temporary[2].checked=true\" %s> %s</span>\n",
                 $_name,
                 $this->acceptRules['groups'][$_group],
                 $_checked,
@@ -6861,58 +6804,46 @@ class SipSettings {
             }
         }
 
-        print "
-        </tr>
-        </table>
-        ";
-
-        print "
-        </td>
-        </tr>
-
-        ";
-
-        $chapter=sprintf(_("Permanent Rules"));
-        $this->showChapter($chapter);
-
-        print "
-        <tr valign=top>
-        <td colspan=2 align=left valign=top>
-        ";
-
-        print "<table border=0 width=100%>";
-        print "<tr bgcolor=lightgrey>
-        <td>";
+        print "</td></tr>";
+        print "<thead>
+            <th colspan=6>
+            ";
+        print _("Permanent");
+        print "</th></tr><tr>
+            <th>";
         print _("Days");
-        print "</td>
-        <td colspan=2>";
+        print "</th>
+        <th colspan=2>";
         print _("Time Interval");
-        print "</td>
-        <td colspan=3>";
+        print "</th>
+        <th colspan=3>";
         print _("Groups");
-        print "</td>
-        </tr>
+        print "</th>
+        </tr></thead>
         ";
 
         foreach (array_keys($this->acceptDailyProfiles) as $profile) {
 
             if ($this->acceptRules['persistent'][$profile]['start'] || $this->acceptRules['persistent'][$profile]['stop']) {
                 $class="checked_groups";
+                $class2="label label-info";
             } else {
                 $class="mhj";
+                $class2='';
             }
             if ($profile==1) {
-                print "<tr><td colspan=6 heigth=5 bgcolor=lightgrey></td></tr>";
+                print "<tr><td colspan=6 style='height:3px; padding:0px' bgcolor=lightgrey></td></tr>";
             }
 
             print "
             <tr>
-            <td valign=top class=$class>";
+            <td style='vertical-align: middle;'><span class='$class2'>";
 
             printf ("%s",$this->acceptDailyProfiles[$profile]);
+            print "</span></td>";
             unset($selected_StartTime);
             $selected_StartTime[$this->acceptRules['persistent'][$profile]['start']]="selected";
-            printf ("<td valign=top><select name=start_%s>",$profile);
+            printf ("<td><select class=span10 name=start_%s>",$profile);
 
             $t=0;
             $j=0;
@@ -6945,7 +6876,7 @@ class SipSettings {
             unset($selected_StopTime);
 
             $selected_StopTime[$this->acceptRules['persistent'][$profile]['stop']]="selected";
-            printf ("<td valign=top><select name=stop_%s>",$profile);
+            printf ("<td><select class=span10 name=stop_%s>",$profile);
             $t=0;
             $j=0;
             print "<option>";
@@ -6995,8 +6926,8 @@ class SipSettings {
                 $class_nobody="note";
             }
 
-            printf ("<td class=note><input type=radio name=%s value=0 %s>%s",$_name,$_checked_everybody,_("Everybody"));
-            printf ("<td class=$class_nobody><input type=radio name=%s value=1 %s>%s",$_name,$_checked_nobody,_("Nobody"));
+            printf ("<td style='vertical-align: middle;' class='note'><input style='vertical-align: top;' type=radio name=%s value=0 %s> %s</td>",$_name,$_checked_everybody,_("Everybody"));
+            printf ("<td style='vertical-align: middle;' class='$class_nobody'><input style='vertical-align: top;' type=radio name=%s value=1 %s> %s</td>",$_name,$_checked_nobody,_("Nobody"));
 
             $c=count($this->acceptRules['groups']);
 
@@ -7006,9 +6937,9 @@ class SipSettings {
                 $class_groups="note";
             }
 
-            print "<td class=$class_groups>";
+            print "<td style='vertical-align: middle' class='controls $class_groups'>";
             if (count($this->acceptRules['groups'])>2) {
-                printf ("<input type=radio name=%s value=2 %s class=hidden>",$_name,$_checked_groups);
+                printf ("<input style='vertical-align: top;' type=radio name=%s value=2 %s class=hidden>",$_name,$_checked_groups);
                 $i=0;
     
                 foreach(array_keys($this->acceptRules['groups']) as $_group) {
@@ -7022,7 +6953,7 @@ class SipSettings {
                     }
     
                     $_name="groups_".$profile."[]";
-                    printf ("<input type=checkbox name=%s value=%s onClick=\"document.sipsettings.radio_persistent_%s[2].checked=true\" %s>%s ",
+                    printf ("<input style='vertical-align: top;' type=checkbox name=%s value=%s onClick=\"document.sipsettings.radio_persistent_%s[2].checked=true\" %s> %s ",
                     $_name,
                     $this->acceptRules['groups'][$_group],
                     $profile,
@@ -7032,33 +6963,27 @@ class SipSettings {
                 }
             }
 
-            print "
+            print "</td>
             </tr>
             ";
         }
 
-        print "</table>";
-        print "</td>
-        </tr>";
+        print "</table></div>";
 
         print "
-        <tr>
-          <td align=left>
+        <div class='form-actions'>
             <input type=hidden name=action value=\"set accept rules\">
         ";
 
         print "
-        <input type=submit value=\"";
+        <input class='btn' type=submit value=\"";
         print _("Save");
         print "\"
                onClick=saveHandler(this)>
         ";
 
         print "
-          </td>
-          <td align=right>
-          </td>
-        </tr>
+          </div>
         ";
 
         print $this->hiddenElements;
@@ -7070,25 +6995,16 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <form method=post name=reject_form onSubmit=\"return checkForm(this)\">
+        <form class=form-horizontal method=post name=reject_form onSubmit=\"return checkForm(this)\">
         ";
         print "
-        <tr>
-        <td colspan=2 align=left>";
+        <div class=row-fluid>
+        <div class=span12>";
         print _("Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses");
         print "
-        </td>
-        </tr>
+        </div>
+        </div>
         ";
-
-        print "<tr>";
-        print "<td align=left>";
-        print _("SIP Address");
-        print "</td>";
-        print "<td align=left>
-        <input type=text size=35 name=rejectMembers[]>
-        </td>";
-        print "<tr>";
 
         if ($this->getRejectMembers()) {
             foreach ($this->rejectMembers as $_member) {
@@ -7104,37 +7020,37 @@ class SipSettings {
                 }
 
                 print "
-                <tr class=$_class>";
+                <div class='control-group $_class'>";
 
-                print "<td align=left>";
+                print "<label class=control-label>";
                 print _("SIP Address");
-                print "</td>";
-                print "<td align=left>
+                print "</label>";
+                print "<div class=controls>
                 <input type=text size=35 name=rejectMembers[] value=\"$_member\">
-                </td>";
-                print "<tr>";
+                </div>";
+                print "</div>";
             }
         }
 
-        print "
-        <tr>
-          <td align=left>
-            <input type=hidden name=action value=\"set reject\">
-        ";
-
-        print "
-        <input type=submit value=\"";
+        print "<div class=control-group>";
+        print "<label class=control-label>";
+        print _("SIP Address");
+        print "</label>";
+        print "<div class=controls>
+            <input type=text size=35 name=rejectMembers[]>";
+        print "</div></div>";
+        print "<div class='form-actions'>";
+        print "<input class=btn type=submit value=\"";
         print _("Save");
         print "\"
                onClick=saveHandler(this)>
+            ";
+        print "</div></div>";
+        
+        print "
+            <input type=hidden name=action value=\"set reject\">
         ";
 
-        print "
-          </td>
-          <td align=right>
-          </td>
-        </tr>
-        ";
 
         print $this->hiddenElements;
 
@@ -7263,12 +7179,10 @@ class SipSettings {
 
     function showChapter($chapter) {
         print "
-        <tr>
-          <td class=chapter colspan=2><b>";
+           <div class=row-fluid><div class=span12><h4>";
             print $chapter;
-            print "</b>
-          </td>
-        </tr>
+            print "
+          </h4></div></div>
         ";
     }
 
@@ -7292,12 +7206,12 @@ class SipSettings {
     }
 
     function colorizeDate($call_date) {
-          list($date,$time)=explode(" ",$call_date);
+        list($date,$time)=explode(" ",$call_date);
 
         if ($date== Date("Y-m-d",time())) {
-            $datePrint="<b><font color=green>".sprintf(_("Today"))."</font></b> ".$time;
+            $datePrint="<span class=\"label label-success\">".sprintf(_("Today"))."</span> ".$time;
         } else if ($date== Date("Y-m-d",time()-3600*24)) {
-            $datePrint="<font color=blue>".sprintf(_("Yesterday"))."</font> ".$time;
+            $datePrint="<span class=\"label label-info\">".sprintf(_("Yesterday"))."</span> ".$time;
         } else {
             $datePrint=$call_date;
         }
@@ -7758,50 +7672,52 @@ class SipSettings {
         $this->showChapter($chapter);
 
         print "
-        <tr class=even>
-          <td valign=top>";
+        <div class='control-group even'>
+          <label for=profileWeekday class=control-label>";
             print _("Weekdays");
             printf ("
-          </td>
-          <td align=left>
-            <input type=text size=10 maxsize=64 name=profileWeekday value='%s'>/
-            <input type=text size=10 maxsize=64 name=profileWeekdayAlt value='%s'>
+          </label>
+          <div class=controls>
+          <div class=input-append>
+          <input class=input-medium type=text size=10 maxsize=64 name=profileWeekday value='%s'><span class=add-on>/</span><input class=input-medium type=text size=10 maxsize=64 name=profileWeekdayAlt value='%s'>
             ",
             $this->billingProfiles->profileWeekday,
             $this->billingProfiles->profileWeekdayAlt
             );
 
             print "
-          </td>
-        </tr>
+                </div>
+          </div>
+        </div>
         ";
 
         print "
-        <tr class=odd>
-          <td valign=top>";
+        <div class='control-group odd'>
+          <label for=profileWeekend class=control-label>";
             print _("Weekends");
             printf ("
-          </td>
-          <td align=left>
-            <input type=text size=10 maxsize=64 name=profileWeekend value='%s'>/
-            <input type=text size=10 maxsize=64 name=profileWeekendAlt value='%s'>
+          </label>
+          <div class=controls>
+          <div class=input-append>
+          <input class=input-medium type=text size=10 maxsize=64 name=profileWeekend value='%s'><span class=add-on>/</span><input class=input-medium type=text size=10 maxsize=64 name=profileWeekendAlt value='%s'>
             ",
             $this->billingProfiles->profileWeekend,
             $this->billingProfiles->profileWeekendAlt
             );
 
             print "
-          </td>
-        </tr>
+                </div>
+          </div>
+        </div>
         ";
 
         print "
-        <tr class=even>
-          <td valign=top>";
+        <div class='control-group even'>
+          <label for=profileTimezone class=control-label>";
             print _("Timezone");
-            printf ("
-          </td>
-          <td align=left>
+            print ("
+          </label>
+          <div class=controls>
             ");
 
             if ($this->billingProfiles->timezone) {
@@ -7813,8 +7729,8 @@ class SipSettings {
             $this->showTimezones('profileTimezone',$_timezone);
 
             print "
-          </td>
-        </tr>
+          </div>
+        </div>
         ";
 
     }
@@ -7903,7 +7819,7 @@ class SipSettings {
         $foundGroupInAvailableGroups=array();
 
         foreach ($this->groups as $_grp) {
-        	foreach (array_keys($this->availableGroups) as $a_grp) {
+            foreach (array_keys($this->availableGroups) as $a_grp) {
                 if ($_grp == $a_grp) $foundGroupInAvailableGroups[]=$_grp;
                 continue;
             }
@@ -7912,23 +7828,23 @@ class SipSettings {
         $extraGroups = array_unique(array_diff($this->groups,$foundGroupInAvailableGroups));
 
         foreach ($extraGroups as $_eg) {
-        	$extraGroups_text.=$_eg.' ';
+            $extraGroups_text.=$_eg.' ';
         }
 
         if ($this->login_type == 'subscriber') {
             printf ("<input type=hidden name=extra_groups value='%s'>",trim($extraGroups_text));
         } else {
             print "
-            <tr>
-            <td>";
+            <div class=control-group'>
+            <label for=extra_groups class=control-label>";
             print _("Extra Groups");
             print "
-            </td>
-            <td>";
-            printf ("<input type=text size=30 name=extra_groups value='%s'>",trim($extraGroups_text));
+            </label>
+            <div class=controls>";
+            printf ("<input class=input-medium type=text size=30 name=extra_groups value='%s'>",trim($extraGroups_text));
             print "
-            </td>
-            </tr>
+            </div>
+            </div>
             ";
         }
     }
@@ -8071,33 +7987,26 @@ class SipSettings {
 
     function showDirectorySearchForm () {
         print "
-        <p>
-        <table width=100% cellpadding=1 cellspacing=1 border=0>
-        <tr>
-        <form action=$this->url method=post>
+        
+        <form class='form-inline' action=$this->url method=post>
         <input type=hidden name=tab value='contacts'>
         ";
         print $this->hiddenElements;
-        print "
-        <td align=left valign=top colspan=3>";
+        print "<div class=control-group>";
+        print "<input type=text size=20 name='firstname' placeholder='";
         print _("First Name");
-        printf (" <input type=text size=20 name='firstname' value='%s'> ",$_REQUEST['firstname']);
+        printf ("' value='%s'> ",$_REQUEST['firstname']);
 
+        print "<div class=input-append>";
+        print "<input type=text size=20 name='lastname' placeholder='";
         print _("Last Name");
+        printf ("' value='%s'>",$_REQUEST['lastname']);
 
-        printf (" <input type=text size=20 name='lastname' value='%s'>",$_REQUEST['lastname']);
-
-        print "</td>
-        </tr>
-        <tr>
-        <td colpsan=3 valign=top>";
-        print "<br><input type=submit value=";
+        print "<button class=btn type=submit>";
         print _("Search");
-        print ">";
-        print "</td>
+        print "</button>";
+        print "</div></div>
         </form>
-        </tr>
-        </table>
         ";
     }
 
@@ -8107,15 +8016,15 @@ class SipSettings {
             return false;
         }
 
-		$this->maxrowsperpage=20;
+        $this->maxrowsperpage=20;
 
         $this->showDirectorySearchForm();
 
         if ($_REQUEST['firstname'] || $_REQUEST['lastname']) {
-        	if ($_REQUEST['firstname'] && strlen($_REQUEST['firstname']) < 3) {
+            if ($_REQUEST['firstname'] && strlen($_REQUEST['firstname']) < 3) {
                 return false;
             }
-        	if ($_REQUEST['lastname'] && strlen($_REQUEST['lastname']) < 3) {
+            if ($_REQUEST['lastname'] && strlen($_REQUEST['lastname']) < 3) {
                 return false;
             }
 
@@ -8176,8 +8085,8 @@ class SipSettings {
 
         if ($this->rows) {
             print "
-            <table border=0 align=center>
-            <tr><td>";
+            <div class=row-fluid>
+            <div class=span12 style='text-align:center'>";
 
             printf(_("%s contacts found. "),$this->rows);
 
@@ -8191,20 +8100,20 @@ class SipSettings {
             <tr bgcolor=lightgrey>
             <td bgcolor=white></td>";
     
-            print "<td><b>";
+            print "<th><b>";
             print _('Display Name');
-            print "</b></td>";
-            print "<td><b>";
+            print "</b></th>";
+            print "<th><b>";
             print _('SIP Address');
-            print "</b></td>";
-            print "<td><b>";
+            print "</b></th>";
+            print "<th><b>";
             print _('Timezone');
-            print "</b></td>";
-            print "<td><b>";
+            print "</b></th>";
+            print "<th><b>";
             print _('Action');
-            print "</b></td>";
+            print "</b></th>";
             print "
-            </tr>
+            </tr></thead>
             ";
 
             $i=0;
@@ -8228,13 +8137,12 @@ class SipSettings {
     
                 $i++;
                 $name=$account->firstName.' '.$account->lastName;
-	            $sip_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
+                $sip_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
                 $contacts_url=sprintf("<a href=%s&tab=contacts&task=add&uri=%s&name=%s&search_text=%s>%s</a>",$this->url,$sip_account,urlencode($name),$sip_account,$this->phonebook_img);
 
                 if ($this->isEmbedded()) {
-
-                    $add_contact_url=sprintf("<a href=\"javascript:blink.addContact_withDisplayName_('%s', '%s');\">%s</a>",$sip_account,$name,$this->plus_sign_img);
-                    printf ("<tr class=%s><td>2 %d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
+                    //$add_contact_url=sprintf("<a href=\"javascript:blink.addContact_withDisplayName_('%s', '%s');\">%s</a>",$sip_account,$name,$this->plus_sign_img);
+                    printf ("<tr class=%s><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
                     $_class,
                     $index,
                     $name,
@@ -8245,7 +8153,7 @@ class SipSettings {
                     );
                 } else {
 
-                    printf ("<tr class=%s><td>1 %d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
+                    printf ("<tr class=%s><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
                     $_class,
                     $index,
                     $name,
@@ -8262,7 +8170,7 @@ class SipSettings {
             $this->showPagination($maxrows);
     
             return true;
-    	}
+        }
     }
 
     function showPagination($maxrows) {
@@ -10784,7 +10692,7 @@ function http_digest_parse($txt) {
 function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
     // Generic code for all sip settings pages
 
-	$SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
+    $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
 
     if (!strstr($_REQUEST['action'],'get_') &&
         !strstr($_REQUEST['action'],'set_') &&
@@ -10795,7 +10703,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $header = $SipSettings->headerFile;
         $css    = $SipSettings->cssFile;
 
-		$auto_refesh_tab=$SipSettings->auto_refesh_tab;
+        $auto_refesh_tab=$SipSettings->auto_refesh_tab;
         $absolute_url= $SipSettings->absolute_url;
 
         include($header);
@@ -11779,8 +11687,8 @@ class PaypalProcessor {
         }
         
         $this->CardProcessor->chapter_class  = 'chapter';
-        $this->CardProcessor->odd_row_class  = 'odd';
-        $this->CardProcessor->even_row_class = 'even';
+        $this->CardProcessor->odd_row_class  = 'oddc';
+        $this->CardProcessor->even_row_class = 'evenc';
         
         $this->CardProcessor->note = $this->account->account;
         $this->CardProcessor->account = $this->account->account;
