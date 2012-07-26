@@ -3115,11 +3115,11 @@ class SipSettings {
                     <label class=control-label>";
                 print _("Quota");
                 print "
-                <tr>
-                <td>";
+                </label>
+                <div class='controls'><div class='input-prepend'>";
     
-                printf ("<input type=text size=6 maxsize=6 name=quota value='%s'> %s",$this->quota,$this->currency);
-     
+                printf ("<span class='add-on'>%s</span><input class=input-medium type=text size=6 maxsize=6 name=quota value='%s'><span class=help-inline>",$this->currency,$this->quota);
+                //print "<div class=span10>";
                 if ($this->quota || in_array("quota",$this->groups)) {
                     $this->getCallStatistics();
                     if ($this->thisMonth['price']) {
@@ -3361,7 +3361,7 @@ class SipSettings {
         $this->showExtraGroups();
 
         $this->showOwner();
-
+        
         $this->showQuickDial();
 
         $this->showMobileNumber();
@@ -8091,13 +8091,13 @@ class SipSettings {
             printf(_("%s contacts found. "),$this->rows);
 
             if ($this->isEmbedded()) {
-            	printf (_("Click on %s to add a Contact to Blink. "),$this->plus_sign_img);
+                //printf (_("Click on %s to add a Contact to Blink. "),$this->plus_sign_img);
             }
-            print "</td></tr>
-            </table>
-            <p>
-            <table border=0 cellpadding=2 width=100%>
-            <tr bgcolor=lightgrey>
+            print "</div>
+            </div>
+            <table class='table table-condensed table-striped' border=0 cellpadding=2 width=100%>
+            <thead>
+            <tr>
             <td bgcolor=white></td>";
     
             print "<th><b>";
