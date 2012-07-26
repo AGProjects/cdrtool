@@ -48,6 +48,9 @@ install: build
 	cp *.phtml debian/cdrtool/var/www/CDRTool/
 	cp *.css debian/cdrtool/var/www/CDRTool/
 	cp debian/changelog debian/cdrtool/var/www/CDRTool/doc/
+	mdkir debian/cdrtool/var/www/CDRTool/bootstrap
+	cp -a boostrap/css debian/cdrtool/var/www/CDRTool/boostrap/
+	cp -a boostrap/js-used debian/cdrtool/var/www/CDRTool/boostrap/
 
 # Build architecture-independent files here.
 binary-indep: build install
