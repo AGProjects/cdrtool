@@ -1784,7 +1784,7 @@ class SipSettings {
     function showAboveTabs() {
         print "
         <div class='row-fluid'>
-        <div class='span12>
+        <div class='span12'>
         ";
 
         print "
@@ -5318,10 +5318,9 @@ class SipSettings {
         ";*/
         print "
             <div class=row-fluid>
-                <div class='span2 pull-right'>";
+                <div class='span12'>";
         if ($this->logoFile) {
-            print "<img src=./$this->logoFile border=0>";
-            print "<p>";
+            print "<img class='pull-right' src=./$this->logoFile border=0>";
         }
 
         print "
