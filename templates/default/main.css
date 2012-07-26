@@ -35,16 +35,7 @@ label, input, button, select, textarea {
 .control-group:nth-child(2n+1) {
     background-color: #f9f9f9;
 }
-.evenc           { vertical-align: middle ;background-color: #f9f9f9}
-.evenc input, select {
-margin-bottom: 0px;
-}
+.evenc           { background-color: #f9f9f9;}
 
-td.bbot { 
-  border-bottom: 1px solid #666666;
-  vertical-align: middle;
-  padding-top: 1px;
-  background-color: transparent;
-}
 -->
 </style>
