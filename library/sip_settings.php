@@ -5102,21 +5102,21 @@ class SipSettings {
         
         if ($found) {
             if (!$this->isEmbedded()) {
-                print "<p class='form-actions'><a rel=popover class=btn href=$this->url&tab=credit&action=get_balance_history&csv=1 target=_new data-original-title='";
+                print "<p class='form-actions'><a class=btn href=$this->url&tab=credit&action=get_balance_history&csv=1 target=_new data-original-title='";
                 print _("Export");
                 print "' data-content='";
                 print _("Export balance history in CSV format");
-                print "'>";
+                print "' rel='popover' onclick=\"window.open('$this->url&tab=credit&action=get_balance_history&csv=1]')\">";
                 print _("Export");
-                print "</a>";
+                print "</a></p>";
             } else {
                 print "<p class='form-actions'><a rel=popover class=btn href=$this->url&tab=credit&action=get_balance_history&csv=1 data-original-title='";
                 print _("Export");
                 print "' data-content='";
                 print _("Export balance history in CSV format");
-                print "'>";
+                print "' onclick=\"location.href='$this->url&tab=credit&action=get_balance_history&csv=1';\">";
                 print _("Export");
-                print "</a>";
+                print "</a></p>";
             }
         }
         print "</td></tr>";
