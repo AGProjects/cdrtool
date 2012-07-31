@@ -1249,11 +1249,11 @@ class SipSettings {
         print "<div class='row-fluid'>
             <div class='alert alert-info span12' style='min-height:10px'>
             <div class='row-fluid'>
-            <div class='span5' style='min-height:10px'>";
+            <span style='min-height:10px'>";
         printf (("%s &lt;sip:%s@%s&gt;"),$this->fullName,$this->username,$this->domain);
 
-        print "</div>
-            <div class='span7' style='text-align:right; min-height:10px'>";
+        print "</span>
+            <span class='pull-right' style='min-height:10px'>";
         if ($this->login_type == 'subscriber' && !$this->isEmbedded()) {
             print "<a href=sip_logout.phtml>";
             print _("Logout");
@@ -1280,7 +1280,7 @@ class SipSettings {
             }
         }
     
-        print "</div></div></div>
+        print "</span></div></div>
             </div>
         ";
     }
