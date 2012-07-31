@@ -2547,8 +2547,7 @@ class SipSettings {
         <form method=post>";
 
         print "
-        <div class=row-fluid>
-          <div class=well span12>
+          <div class=well>
         ";
 
         if ($this->email) {
@@ -2567,7 +2566,6 @@ class SipSettings {
         }
 
         print "
-          </div>
         </div>
         ";
 
