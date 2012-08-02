@@ -3306,34 +3306,34 @@ class SipAccounts extends Records {
     function showPasswordReminderForm($accounts=array()) {
 
         printf ("
-        <form method=post>
-    	<h2>");
+        <div class=row-fluid><div id=wrapper2><div class=\"page-header\"><h2>");
 
         print _("Login account reminder");
-        print "</h2>
-        <p>";
+        print "</h2></div>
+            <form class=form-inline method=post>";
 
-        print _("Fill in the e-mail address used during the registration of the SIP account:");
+        print _("<p>Fill in the e-mail address used during the registration of the SIP account:</p>");
         printf ("
-        <p>
-        <input type=text size=35 name='email_filter' value='%s'>
-        ",
+        <input type=text size=35 name='email_filter' value='%s' placeholder='",
         $this->filters['email']);
-
+        print _("Email address");
+        print "'>";
         if (count($accounts) > 1 || $_REQUEST['sip_filter']) {
-            printf ("
-            <p>");
-            print _("More than one accounts use this email address. If you wish to receive the password for a particular account fill in the SIP account below:");
+            printf ("<br /><br />
+                <div class=\"alert alert-warning\"><strong>");
+            print _("Waring");
+            print "</strong> ";
+            print _("More than one account uses this email address. If you wish to receive the password for a particular account fill in the SIP account below, default it will send it to the first 5 accounts found");
+            print "</div>";
 
             printf ("
-            <p>
             <input type=text size=35 name='sip_filter' value='%s'>
             ",
             $_REQUEST['sip_filter']);
         }
 
         printf ("
-        <input type=submit value='Submit'>
+            <input class='btn btn-primary' type=submit value='Submit'>
         </form>
         ");
 

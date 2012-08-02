@@ -31,6 +31,11 @@
         e.preventDefault()
       })
 
+    $("input[rel=popover]")
+      .popover()
+      .click(function(e) {
+        e.preventDefault()
+      })
 
     // request built javascript
     $('.download-btn').on('click', function () {
