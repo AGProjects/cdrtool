@@ -632,10 +632,11 @@ class SoapEngine {
             $this->exception   = $this->error_fault->detail->exception;
 
             if ($html) {
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>\n",$this->SOAPurl,
+                $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SOAPurl,
                 $this->error_msg,
                 $this->error_fault->detail->exception->errorcode,
                 $this->error_fault->detail->exception->errorstring);
+                syslog(LOG_NOTICE, $log);
                 return false;
             }
             return false;
@@ -1059,7 +1060,8 @@ class Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -1117,7 +1119,8 @@ class Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -1178,7 +1181,8 @@ class Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             $this->loginAccount=$result->accounts[0];
@@ -1210,7 +1214,8 @@ class Records {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                syslog(LOG_NOTICE, $log);
                 return false;
             } else {
                 $this->resellerProperties=$result->accounts[0]->properties;
@@ -1348,7 +1353,8 @@ class Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             foreach ($result->carriers as $_carrier) {
@@ -1375,7 +1381,8 @@ class Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             foreach ($result->gateways as $_gateway) {
@@ -1481,7 +1488,8 @@ class Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             $this->loginProperties=$result;
@@ -1516,7 +1524,8 @@ class Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -1631,7 +1640,8 @@ class SipDomains extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -1930,7 +1940,8 @@ class SipDomains extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             if ($result->domains[0]){
@@ -2163,7 +2174,8 @@ class SipAccounts extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             foreach ($result->accounts as $account) {
@@ -2229,7 +2241,8 @@ class SipAccounts extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -3009,7 +3022,8 @@ class SipAccounts extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
         } else {
             $i=0;
 
@@ -3057,7 +3071,8 @@ class SipAccounts extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             if ($result->domains[0]){
@@ -3096,7 +3111,8 @@ class SipAccounts extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -3211,7 +3227,8 @@ class SipAliases extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             foreach ($result->aliases as $alias) {
@@ -3271,7 +3288,8 @@ class SipAliases extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -3666,7 +3684,8 @@ class SipAliases extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             foreach ($result->domains as $_domain) {
@@ -3787,7 +3806,8 @@ class EnumRanges extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -3979,8 +3999,8 @@ class EnumRanges extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             return true;
@@ -4107,8 +4127,8 @@ class EnumRanges extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             return true;
@@ -4164,7 +4184,8 @@ class EnumRanges extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             foreach($result->ranges as $range) {
@@ -4368,8 +4389,8 @@ class EnumRanges extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             return true;
@@ -4411,7 +4432,8 @@ class EnumRanges extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             if ($result->ranges[0]){
@@ -4597,7 +4619,8 @@ class EnumMappings extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -4937,7 +4960,8 @@ class EnumMappings extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -5056,8 +5080,8 @@ class EnumMappings extends Records {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-        
+                    $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 } else {
                     return true;
@@ -5075,8 +5099,8 @@ class EnumMappings extends Records {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-        
+                    $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 } else {
                     return true;
@@ -5231,7 +5255,8 @@ class EnumMappings extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             foreach($result->ranges as $range) {
@@ -5412,15 +5437,16 @@ class EnumMappings extends Records {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-        
+                    $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 } else {
                    return true;
                 }
 
             } else {
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                syslog(LOG_NOTICE, $log);
                 return false;
             }
         } else {
@@ -5459,8 +5485,8 @@ class EnumMappings extends Records {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
-                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-    
+                $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                syslog(LOG_NOTICE, $log);
                 return false;
             } else {
                 return true;
@@ -5509,7 +5535,8 @@ class EnumMappings extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             foreach ($result->numbers as $number) {
@@ -5669,7 +5696,8 @@ class EnumMappings extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             return $result;
@@ -5775,8 +5803,8 @@ class EnumMappings extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             return true;
@@ -5880,7 +5908,8 @@ class DnsZones extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -6059,8 +6088,8 @@ class DnsZones extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             return true;
@@ -6159,8 +6188,8 @@ class DnsZones extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             return true;
@@ -6355,8 +6384,8 @@ class DnsZones extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             return true;
@@ -6396,7 +6425,8 @@ class DnsZones extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             if ($result->zones[0]){
@@ -6445,7 +6475,8 @@ class DnsZones extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             foreach ($result->zones as $zone) {
@@ -6771,7 +6802,8 @@ class DnsRecords extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -7049,8 +7081,8 @@ class DnsRecords extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             return true;
@@ -7196,7 +7228,8 @@ class DnsRecords extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
         	if ($result->total  > $this->max_zones_selection) return false;
@@ -7344,14 +7377,14 @@ class DnsRecords extends Records {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
-        		if ($this->html) {
-                	printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                if ($this->html) {
+                  $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 }
+                syslog(LOG_NOTICE, $log);
                 return false;
             } else {
                 return true;
             }
-
         } else if (in_array($type,array_keys($this->recordTypesTemplate))) {
             foreach (array_values($this->recordTypesTemplate[$type]['records']) as $_records) {
                 $value_new='';
@@ -7426,9 +7459,9 @@ class DnsRecords extends Records {
                     $error_code = $result->getCode();
 
                     if ($this->html) {
-                    	printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    	$log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                     }
-
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
             }
@@ -7486,7 +7519,8 @@ class DnsRecords extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             foreach ($result->records as $record) {
@@ -7621,7 +7655,8 @@ class DnsRecords extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             if ($result->records[0]){
@@ -7665,8 +7700,8 @@ class DnsRecords extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             return true;
@@ -7758,7 +7793,8 @@ class TrustedPeers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -8054,7 +8090,8 @@ class Carriers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -8320,7 +8357,8 @@ class Carriers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             if ($result->carriers[0]){
@@ -8431,8 +8469,8 @@ class Carriers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
         	return true;
@@ -8520,7 +8558,8 @@ class Gateways extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -8968,8 +9007,8 @@ class Gateways extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
         	return true;
@@ -9009,7 +9048,8 @@ class Gateways extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             if ($result->gateways[0]){
@@ -9096,7 +9136,8 @@ class GatewayRules extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -9523,8 +9564,8 @@ class GatewayRules extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
         	return true;
@@ -9564,7 +9605,8 @@ class GatewayRules extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             if ($result->gateway_rules[0]){
@@ -9647,7 +9689,8 @@ class Routes extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -9984,7 +10027,8 @@ class Routes extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             if ($result->routes[0]){
@@ -10105,8 +10149,8 @@ class Routes extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
         	return true;
@@ -10812,7 +10856,8 @@ class Customers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
 
@@ -11029,7 +11074,8 @@ class Customers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             return $result;
@@ -11723,7 +11769,8 @@ class Customers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             $i=0;
@@ -12169,7 +12216,8 @@ class Customers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             foreach ($result->accounts as $customer) {
@@ -12204,7 +12252,8 @@ class Customers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             if (count($result->accounts) == 1) {
@@ -12234,7 +12283,8 @@ class Customers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         } else {
             if (count($result->accounts) == 1) {
