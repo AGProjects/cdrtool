@@ -3596,7 +3596,7 @@ class SipSettings {
 
     function showOwner() {
         if ($this->login_type == 'subscriber') {
-          print "<input type=hidden name=owner value=\"$this->owner\">";
+          //print "<input type=hidden name=owner value=\"$this->owner\">";
           return true;
         }
             print "
@@ -3894,10 +3894,12 @@ class SipSettings {
         }
 
         $owner=intval($owner);
-        if ($owner != $this->owner) {
+        if ($owner != $this->owner  && $this->login_type != 'subscriber') {
             dprint ("change the owner");
             $result->owner=$owner;
             $this->somethingChanged=1;
+        } else {
+            $result->owner=$this->owner;
         }
 
         if ($this->prepaid_changes_allowed) {
