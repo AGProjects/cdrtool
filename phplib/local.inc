@@ -320,7 +320,8 @@ class CDRTool_Auth extends Auth {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    $log = sprintf ("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    syslog(LOG_NOTICE, $log);
                 } else {
                     if (count($result->accounts) == 1) {
                         if ($result->accounts[0]->impersonate) {
@@ -338,7 +339,8 @@ class CDRTool_Auth extends Auth {
                                 $error_msg  = $result->getMessage();
                                 $error_fault= $result->getFault();
                                 $error_code = $result->getCode();
-                                printf ("<p><font color=red>Error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                                $log = sprintf ("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                                syslog(LOG_NOTICE, $log);
                             } else {
                                 if (count($result->accounts) == 1) {
                                     $CDRTool["soap_username"] = $result->accounts[0]->username;
@@ -507,7 +509,8 @@ class SIP_Subscriber_Auth extends Auth {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error from %s (SipPort): %s (%s): %s</font>",$soapEngines[$SIP['engine']]['url'],$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log = printf ("SOAP error from %s (SipPort): %s (%s): %s",$soapEngines[$SIP['engine']]['url'],$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
