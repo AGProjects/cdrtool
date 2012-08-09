@@ -7092,11 +7092,11 @@ class SipSettings {
 
         $tpl_html = $this->getEmailTemplateHTML($this->reseller, $this->Preferences['language']);
 
-        if (!$tpl_html && !$skip_html) {
-            print "<p><font color=red>";
-            print _("Error: no HTML email template found");
-            print "</font>";
-        }
+        //if (!$tpl_html && !$skip_html) {
+        //    print "<p><font color=red>";
+        //     print _("Error: no HTML email template found");
+        //    print "</font>";
+        //}
 
         if (in_array("free-pstn",$this->groups)) $this->allowPSTN=1; // used by smarty
 
