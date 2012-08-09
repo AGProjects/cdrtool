@@ -7138,8 +7138,6 @@ class SipSettings {
 
         $mail =& Mail::factory('mail');
 
-        $mail->send($this->billing_email, $hdrs, $body);
-
         if ($mail->send($this->email, $hdrs, $body) && !$skip_html) {
             print "<p>";
             printf (_("SIP settings have been sent to %s"), $this->email);
