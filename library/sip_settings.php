@@ -7083,11 +7083,19 @@ class SipSettings {
 
         $tpl = $this->getEmailTemplate($this->reseller, $this->Preferences['language']);
 
-	    if (!$tpl && !$skip_html) {
+        if (!$tpl && !$skip_html) {
             print "<p><font color=red>";
-        	print _("Error: no email template found");
+            print _("Error: no email template found");
             print "</font>";
             return false;
+        }
+
+        $tpl_html = $this->getEmailTemplateHTML($this->reseller, $this->Preferences['language']);
+
+        if (!$tpl_html && !$skip_html) {
+            print "<p><font color=red>";
+            print _("Error: no HTML email template found");
+            print "</font>";
         }
 
         if (in_array("free-pstn",$this->groups)) $this->allowPSTN=1; // used by smarty
@@ -7102,9 +7110,37 @@ class SipSettings {
         //$smarty->cache_dir = 'templates_c';
 
         $smarty->assign('client', $this);
-        $body = $smarty->fetch($tpl);
+        $bodyt = $smarty->fetch($tpl);
 
-        if (mail($this->email, $subject, $body, "From: $this->support_email") && !$skip_html) {
+        if ($tpl_html) {
+            $bodyhtml = $smarty->fetch($tpl_html);
+        }
+
+        include 'Mail.php';
+        include 'Mail/mime.php' ;
+
+        $hdrs = array(
+            'From'    => $this->support_email,
+            'Subject' => $subject
+        );
+
+        $crlf = "\n";
+        $mime = new Mail_mime($crlf);
+
+        $mime->setTXTBody($bodyt);
+        
+        if ($tpl_html) {
+          $mime->setHTMLBody($bodyhtml);
+        }
+
+        $body = $mime->get();     
+        $hdrs = $mime->headers($hdrs);
+
+        $mail =& Mail::factory('mail');
+
+        $mail->send($this->billing_email, $hdrs, $body);
+
+        if ($mail->send($this->email, $hdrs, $body) && !$skip_html) {
             print "<p>";
             printf (_("SIP settings have been sent to %s"), $this->email);
         }
@@ -7624,6 +7660,25 @@ class SipSettings {
     function getEmailTemplate($language='en') {
         $file = "sip_settings_email_$language.tpl";
         $file2 = "sip_settings_email.tpl";
+
+        //print("templates_path = $this->templates_path");
+
+        if (file_exists("$this->templates_path/$this->reseller/$file")) {
+            return "$this->templates_path/$this->reseller/$file";
+        } elseif (file_exists("$this->templates_path/$this->reseller/$file2")) {
+            return "$this->templates_path/$this->reseller/$file2";
+        } elseif (file_exists("$this->templates_path/default/$file")) {
+            return "$this->templates_path/default/$file";
+        } elseif (file_exists("$this->templates_path/default/$file2")) {
+            return "$this->templates_path/default/$file2";
+        } else {
+            return false;
+        }
+    }
+
+    function getEmailTemplateHTML($language='en') {
+        $file = "sip_settings_email_$language.html.tpl";
+        $file2 = "sip_settings_email.html.tpl";
 
         //print("templates_path = $this->templates_path");
 
