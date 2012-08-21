@@ -2408,7 +2408,7 @@ class SipSettings {
               <td>$this->rpid</td>
             </tr>
             ";
-        }
+        
 
         $t=0;
         foreach($this->enums as $e)  {
@@ -2434,7 +2434,7 @@ class SipSettings {
         }
 
         print "</table></div></div>";
-
+	}
         $chapter=sprintf(_("Aliases"));
         $this->showChapter($chapter);
  
@@ -2497,10 +2497,8 @@ class SipSettings {
               </div>
             </div>
            '; 
-        print "
-        </div>
-        ";
-        print $this->hiddenElements;
+        
+	print $this->hiddenElements;
         print "
         </form>
         ";
