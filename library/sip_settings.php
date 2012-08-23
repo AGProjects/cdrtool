@@ -5296,7 +5296,7 @@ class SipSettings {
                 ";
 
             if ($condition=="FUNV" && $this->FUNC_access_number) {
-                print "<div class=help>";
+                print "<div class=help-block>";
                 printf (_("Dial %s2*X where X = Number of Minutes, 0 to Reset"), $this->access_numbers['FUNC']);
                 print "</div>";
             }
