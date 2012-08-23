@@ -5540,7 +5540,7 @@ class SipSettings {
                 print _("IP Access List");
                 printf ("
               </label>
-              <div class=controls>
+              <div class=controls style='line-height:23px'>
                 %s
               </div>
             </div>
