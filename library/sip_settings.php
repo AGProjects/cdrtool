@@ -4711,7 +4711,7 @@ class SipSettings {
         print "<input type=text size=30 name=description placeholder=\"";
         print _("Description");
         print "\">";
-        print "<label class=checkbox>";
+        print " <label class=checkbox>";
         print "<input type=checkbox name=notify value=1>";
         print _("Notify");
         print "</label>
@@ -4731,18 +4731,16 @@ class SipSettings {
             $this->showChapter($chapter);
     
             print "
-            <tr>
-            <form action=$this->url method=post>
+            <form class='form-inline' action=$this->url method=post>
             <input type=hidden name=tab value=credit>
             <input type=hidden name=issuer value=reseller>
             <input type=hidden name=task value=refund>
-            <td align=left colspan=2><nobr>
             ";
     
             print _("Transaction Id");
     
             print "
-            <select name=transaction> ";
+            <select class=span2 name=transaction> ";
             foreach (array_keys($transactions) as $tran) {
                 $t=array('id' => $tran, 'value' => $transactions[$tran]);
                 printf ("<option value='%s'>%s",base64_encode(json_encode($t)),$tran);
@@ -4754,12 +4752,10 @@ class SipSettings {
             print "
             Notify
             <input type=checkbox name=notify value=1>
-            <input type=submit value=";
+            <input class='btn btn-warning' type=submit value=";
             print _("Refund");
             print ">
-            </td>
             </form>
-            </tr>
             ";
         }
 
@@ -4805,7 +4801,7 @@ class SipSettings {
         print _("Card Number");
         print "\">";
         if ($this->login_type != 'subscriber') {
-            print "<label class=\"checkbox\">";
+            print " <label class=\"checkbox\">";
             print "<input type=checkbox name=notify value=1>";
             print _("Notify");
             print "</label>";
