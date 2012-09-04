@@ -3645,9 +3645,7 @@ class SipSettings {
                 printf ("<img src='%s/30/%s' border=0>",$this->SipUAImagesPath,$UAImage);
                 print "</td>";
 
-                print "<td align=left>
-                    <div class=row-fluid>
-                    <div class=span11>";
+                print "<td>";
                 print "<i>$user_agent</i>";
                 if ($transport == 'tls') print "<img src=images/lock15.gif border=0><br>";
                 print "<br><span class='label label-info'>";
@@ -3673,7 +3671,7 @@ class SipSettings {
                     printf ("%s",$this->geo_location);
                 }
 
-                print "</div><div class=span1>$expires</div></div></td>";
+                print "</td><td>$expires</td>";
                 print "</tr>";
                 
             }
