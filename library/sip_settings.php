@@ -7268,14 +7268,14 @@ class SipSettings {
         $this->getPresenceInformation();
 
         print "
-        <form method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+        <form method=post class=form-inline name=sipsettings onSubmit=\"return checkForm(this)\">
         ";
         $chapter=sprintf(_("Activity"));
         $this->showChapter($chapter);
 
-        print ("
+        print ("<table width='100%'>
         <tr>
-        <td>");
+        <td width=100px>");
         print _("Note");
         print "</td>
         <td>";
@@ -7285,9 +7285,9 @@ class SipSettings {
 
         printf ("
         <tr>
-          <td><input type=text size=50 name=note value='%s'>
+          <td><input class=span3 type=text size=50 name=note value='%s'></td>
           <td>
-          <select name=activity>
+          <select class=span3 name=activity>
         <option>
         ",$this->presentity['note']);
 
@@ -7304,12 +7304,13 @@ class SipSettings {
 
         print "
           </td>
-        </tr>
+        </tr><tr><td colspan=2>
         ";
 
         $chapter=sprintf(_("Watchers"));
         $this->showChapter($chapter);
 
+        print "</td></tr>";
         $j=0;
 
         foreach (array_keys($this->presence_watchers) as $_watcher) {
@@ -7345,7 +7346,7 @@ class SipSettings {
             <input type=hidden name=watcher[] value=%s>
             <td><font color=%s>%s</font></td>
             <td>
-            <select name=watcher_status[]>
+            <select class=span3 name=watcher_status[]>
             ",
             $_watcher,
             $color,
@@ -7366,10 +7367,11 @@ class SipSettings {
             </tr>
             ";
         }
-
+        print "<tr><td colspan=2>";
         $chapter=sprintf(_("Rules"));
         $this->showChapter($chapter);
 
+        print "</td></tr>";
         $j=0;
         foreach (array_keys($this->presence_rules) as $_key) {
             $j++;
@@ -7385,7 +7387,7 @@ class SipSettings {
                 <input type=hidden name=watcher[] value=%s>
                 <td>%s</td>
                 <td>
-                <select name=watcher_status[]>
+                <select class=span3 name=watcher_status[]>
                 ",$_tmp,$_tmp);
 
                 unset($selected);
@@ -7414,9 +7416,9 @@ class SipSettings {
 
         printf ("
         <tr>
-        <td><input type=text name=watcher[]></td>
+        <td><input class=span3 type=text name=watcher[]></td>
         <td>
-        <select name=watcher_status[]>
+        <select class=span3 name=watcher_status[]>
         ");
         $selected['deny']='selected';
         foreach ($this->presence_statuses as $_status) {
@@ -7431,26 +7433,24 @@ class SipSettings {
 
         print "
         <tr>
-          <td align=left>
+          <td colspan=2>
             <input type=hidden name=action value=\"set presence\">
         ";
 
-        print "
-        <input type=submit value=\"";
+        print "<div class='form-actions'>
+        <input class=btn type=submit value=\"";
         print _("Save");
         print "\"
                onClick=saveHandler(this)>
         ";
-        print "
-          </td>
-          <td align=right>
+        print "</div>
           </td>
         </tr>
         ";
 
         print $this->hiddenElements;
 
-        print "
+        print "</table>
         </form>
         ";
 
