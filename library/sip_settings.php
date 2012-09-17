@@ -7647,7 +7647,7 @@ class SipSettings {
         }
     }
     
-    function getEmailTemplate($language='en') {
+    function getEmailTemplate($reseller, $language='en') {
         $file = "sip_settings_email_$language.tpl";
         $file2 = "sip_settings_email.tpl";
 
@@ -7666,7 +7666,7 @@ class SipSettings {
         }
     }
 
-    function getEmailTemplateHTML($language='en') {
+    function getEmailTemplateHTML($reseller, $language='en') {
         $file = "sip_settings_email_$language.html.tpl";
         $file2 = "sip_settings_email.html.tpl";
 
